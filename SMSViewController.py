@@ -192,6 +192,12 @@ class SMSViewController(NSObject):
 
             self.history = ChatHistory()
             self.msg_id_list = set() # prevent display of duplicate messages
+            # Tracks the stable bubble id (the JSON body's `messageId`) for
+            # every Sylk-style location share that has been rendered in this
+            # viewer. The presence of an id here means "we already drew that
+            # bubble" — incoming UPDATE ticks for this id should land via
+            # updateLocationMessage instead of spawning a new one.
+            self.location_bubble_ids = set()
 
             self.local_uri = '%s@%s' % (account.id.username, account.id.domain)
             self.remote_uri = '%s@%s' % (self.target_uri.user.decode(), self.target_uri.host.decode())
@@ -472,6 +478,15 @@ class SMSViewController(NSObject):
         if content_type in ('text/pgp-public-key', 'text/pgp-private-key'):
             return
 
+        # Sylk Mobile location ticks (and other rich metadata messages)
+        # arrive as application/sylk-message-metadata with a JSON body.
+        # Hand them off to a dedicated renderer; they never go through
+        # PGP / OTR processing because they're emitted unencrypted at
+        # this layer (the sender encrypts at the SIP / TLS hop only).
+        if content_type == 'application/sylk-message-metadata':
+            self._receive_metadata_message(message_tuple)
+            return
+
         icon = NSApp.delegate().contactsWindowController.iconPathForURI(format_identity_to_string(sender_identity))
 
         sender_name = format_identity_to_string(sender_identity, format='compact')
@@ -626,6 +641,192 @@ class SMSViewController(NSObject):
             self.log_info(message_tuple)
             import traceback
             self.log_info(traceback.format_exc())
+
+    @staticmethod
+    def _parse_location_metadata(body):
+        """Decode an application/sylk-message-metadata payload.
+
+        Returns a dict ``{'lat': float, 'lng': float, 'accuracy': float|None,
+        'maps_url': str, 'meta_id': str|None, 'origin_id': str|None,
+        'one_shot': bool, 'expires': str|None}`` for messages whose JSON
+        body has ``action == 'location'``. Returns ``None`` for any other
+        metadata flavour or malformed payloads — callers should fall back
+        to rendering the raw text in that case.
+        """
+        if isinstance(body, bytes):
+            try:
+                body = body.decode('utf-8', errors='replace')
+            except Exception:
+                return None
+        if not isinstance(body, str) or not body.strip():
+            return None
+        try:
+            data = json.loads(body)
+        except (TypeError, ValueError):
+            return None
+        if not isinstance(data, dict) or data.get('action') != 'location':
+            return None
+
+        value = data.get('value') or {}
+        try:
+            lat = float(value.get('latitude'))
+            lng = float(value.get('longitude'))
+        except (TypeError, ValueError):
+            return None
+
+        accuracy = value.get('accuracy')
+        if accuracy is not None:
+            try:
+                accuracy = float(accuracy)
+            except (TypeError, ValueError):
+                accuracy = None
+
+        # Apple Maps deep link. macOS resolves https://maps.apple.com/
+        # to the native Maps app when registered, otherwise opens the
+        # web view; both behaviours are acceptable. q= shows a labelled
+        # pin, ll= sets the centre.
+        maps_url = 'https://maps.apple.com/?ll=%.7f,%.7f&q=%.7f,%.7f' % (lat, lng, lat, lng)
+
+        return {
+            'lat': lat,
+            'lng': lng,
+            'accuracy': accuracy,
+            'maps_url': maps_url,
+            'meta_id': data.get('messageId'),
+            'origin_id': data.get('metadataId'),
+            'one_shot': bool(data.get('one_shot')),
+            'expires': data.get('expires'),
+        }
+
+    @objc.python_method
+    def _receive_metadata_message(self, message_tuple):
+        """Render an incoming application/sylk-message-metadata message.
+
+        Sylk Mobile uses ``messageId`` (a UUID stamped by the sender) as the
+        stable id of the chat bubble that represents a sharing session;
+        every subsequent UPDATE tick of that share carries the same
+        ``messageId`` along with ``metadataId`` pointing back at it.
+
+        Strategy:
+          * ORIGIN tick (``metadataId is None``) — render a fresh bubble
+            keyed by ``messageId`` and persist a new history row whose
+            ``msgid`` is the same value, so a restart can find it.
+          * UPDATE tick — find the existing bubble by ``messageId`` and
+            re-render it in place via ``updateLocationMessage``; rewrite
+            the persisted row's body to the latest JSON so the last known
+            position survives a restart.
+          * UPDATE tick for an unknown bubble (we missed the origin —
+            possible after a fresh install or a journal-sync race) — treat
+            it as a bootstrap and create the bubble from this tick so that
+            subsequent updates can land on it.
+
+        Any non-location metadata flavour is persisted with its raw body
+        intact (forward-compat) but does not produce a bubble.
+        """
+        (sender_identity, id, call_id, direction, content, content_type,
+         is_replication_message, window, cpim_imdn_events, imdn_timestamp,
+         account, imdn_message_id, status) = message_tuple
+
+        try:
+            text_content = content.decode('utf-8', errors='replace') if isinstance(content, bytes) else content
+        except Exception:
+            text_content = ''
+
+        try:
+            timestamp = ISOTimestamp(imdn_timestamp)
+        except (DateParserError, TypeError):
+            timestamp = ISOTimestamp.now()
+
+        sender_name = format_identity_to_string(sender_identity, format='compact')
+        if direction == 'incoming':
+            sender_name = self.normalizeSender(sender_name)
+        icon = NSApp.delegate().contactsWindowController.iconPathForURI(format_identity_to_string(sender_identity))
+
+        location = self._parse_location_metadata(text_content)
+        status_label = status or MSG_STATE_DELIVERED
+
+        if location is None:
+            # Non-location metadata — fall back to the basic dedup +
+            # persist-only behaviour. We use the wire SIP id here because
+            # there is no stable bubble id to lean on.
+            wire_id = imdn_message_id if imdn_message_id and is_replication_message else id
+            if wire_id in self.msg_id_list:
+                return
+            self.msg_id_list.add(wire_id)
+            self.log_info('Persisting non-location metadata message %s (content_type=%s)' % (wire_id, content_type))
+            self._persist_metadata_message(wire_id, call_id, direction, sender_identity, timestamp, text_content, content_type, status_label)
+            return
+
+        bubble_id = location['meta_id'] or id
+        is_update = location['origin_id'] is not None and location['origin_id'] in self.location_bubble_ids
+
+        if is_update:
+            # In-place update of an already-rendered bubble. Use the
+            # origin_id (which equals the bubble_id we used at render
+            # time) so DOM lookup finds the right node even when this
+            # tick's own messageId is something different (mobile
+            # actually keeps them equal, but be defensive).
+            target_bubble_id = location['origin_id']
+            self.chatViewController.updateLocationMessage(
+                target_bubble_id, location['lat'], location['lng'], location['accuracy'],
+            )
+            # Rewrite the origin row's body so a chat reload sees the
+            # latest position. update_message_body is decorated with
+            # @run_in_db_thread so it returns immediately.
+            self.history.update_message_body(target_bubble_id, text_content)
+            return
+
+        # Origin tick or first-seen update — render a new bubble keyed by
+        # bubble_id. Subsequent updates to the same share will find it
+        # via location_bubble_ids and route through updateLocationMessage
+        # above instead of stacking a second bubble.
+        if bubble_id in self.location_bubble_ids:
+            # Origin we've already drawn (retransmit / journal-sync race) —
+            # ignore. Updates to it will continue to land in place.
+            return
+
+        self.location_bubble_ids.add(bubble_id)
+        self.msg_id_list.add(bubble_id)
+
+        self.chatViewController.showLocationMessage(
+            call_id, bubble_id, direction, sender_name, icon,
+            location['lat'], location['lng'], location['accuracy'],
+            location['maps_url'], timestamp, state=status_label,
+        )
+        self.notification_center.post_notification(
+            'ChatViewControllerDidDisplayMessage', sender=self,
+            data=NotificationData(
+                id=bubble_id, direction=direction, history_entry=False,
+                status=status_label, is_replication_message=is_replication_message,
+                remote_party=format_identity_to_string(sender_identity),
+                local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour@local',
+                check_contact=True,
+            ),
+        )
+        self._persist_metadata_message(bubble_id, call_id, direction, sender_identity, timestamp, text_content, content_type, status_label)
+
+    @objc.python_method
+    def _persist_metadata_message(self, msgid, call_id, direction, sender_identity, timestamp, text_content, content_type, status_label):
+        """Insert a chat_messages row for a metadata message.
+
+        Centralised here so origin ticks and non-location metadata go
+        through the same path. ``msgid`` is the row's primary key — for
+        location bubbles we deliberately use the bubble's stable id so
+        update ticks can later rewrite the same row via
+        history.update_message_body.
+        """
+        recipient = ChatIdentity(self.target_uri, self.display_name) if direction == 'outgoing' else ChatIdentity(self.account.uri, self.account.display_name)
+        if direction == 'outgoing' and not sender_identity.display_name:
+            try:
+                sender_identity.display_name = self.account.display_name
+            except AttributeError:
+                pass
+        mInfo = MessageInfo(
+            msgid, call_id=call_id, direction=direction, sender=sender_identity,
+            recipient=recipient, timestamp=timestamp, content=text_content,
+            content_type=content_type, status=status_label, encryption='',
+        )
+        self.add_to_history(mInfo)
 
     @objc.python_method
     def _send_read_notification(self, id):
@@ -1616,6 +1817,42 @@ class SMSViewController(NSObject):
                         sender = self.normalizeSender(sender)
                     self.msg_id_list.add(message.id)
                     status = MSG_STATE_DEFERRED if (message.status == MSG_STATE_FAILED_LOCAL and message.direction == 'outgoing') else message.status
+
+                    if message.content_type == 'application/sylk-message-metadata':
+                        location = self._parse_location_metadata(content or message.body)
+                        if location is not None:
+                            # Use the body's stable messageId as the DOM /
+                            # bubble id so multiple persisted update ticks
+                            # for the same share fold into a single bubble.
+                            # Falls back to the row's msgid for forward-
+                            # compat (older rows without a parsed metaId).
+                            bubble_id = location['meta_id'] or message.msgid
+                            if bubble_id in self.location_bubble_ids:
+                                # We've already drawn this share's bubble
+                                # earlier in the loop. Iteration order is
+                                # oldest-first, so this row holds a later
+                                # position — fold it in via the in-place
+                                # updater. Last-update-wins.
+                                self.chatViewController.updateLocationMessage(
+                                    bubble_id, location['lat'], location['lng'], location['accuracy'],
+                                )
+                            else:
+                                self.location_bubble_ids.add(bubble_id)
+                                self.chatViewController.showLocationMessage(
+                                    message.sip_callid, bubble_id, message.direction,
+                                    sender, icon,
+                                    location['lat'], location['lng'], location['accuracy'],
+                                    location['maps_url'], timestamp, state=status,
+                                    history_entry=True,
+                                    encryption=encryption or message.encryption,
+                                    before=before,
+                                )
+                            call_id = message.sip_callid
+                            last_media_type = 'sms'
+                            continue
+                        # Fall through to the regular renderer for non-location
+                        # metadata rows so the user at least sees them as raw
+                        # text instead of an empty bubble.
 
                     self.chatViewController.showMessage(message.sip_callid, message.msgid, message.direction, sender, icon, content or message.body, timestamp, recipient=recipient, state=status, is_html=is_html, history_entry=True, media_type = message.media_type, encryption=encryption or message.encryption, before=before)
 

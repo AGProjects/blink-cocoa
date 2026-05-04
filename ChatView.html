@@ -311,6 +311,52 @@ body
     -webkit-border-radius: 3px;
 }
 
+/* ---- Sylk location bubble (application/sylk-message-metadata, action=location) ---- */
+.location-bubble {
+    display: block;
+}
+.location-bubble .loc-link,
+.location-bubble .loc-link:visited,
+.location-bubble .loc-link:active {
+    color: inherit;
+    text-decoration: none;
+}
+.location-bubble .map-frame {
+    position: relative;
+    width: 300px;
+    height: 200px;
+    overflow: hidden;
+    border-radius: 6px;
+    border: 1px solid #c0c0c0;
+    background: #e6e6e6;
+}
+.location-bubble .map-frame img {
+    /* Tiles are positioned via inline left/top; ensure they stack
+       above the background but below the pin without affecting layout. */
+    pointer-events: none;
+    -webkit-user-drag: none;
+}
+.location-bubble .loc-pin {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    margin-left: -7px;
+    margin-top: -14px;
+    border-radius: 50%;
+    background: #e74c3c;
+    border: 2px solid #ffffff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    pointer-events: none;
+}
+.location-bubble .loc-meta {
+    margin-top: 4px;
+    font-family: Lucida Grande, Helvetica, Arial;
+    font-size: 11px;
+    color: #555;
+}
+.location-bubble .loc-meta .loc-hint {
+    color: #888;
+}
 
 </style>
 
@@ -479,6 +525,209 @@ function updateMessageBodyContent(msgid, text)
   body = document.getElementById('b'+msgid)
   if (body != null)
     body.innerHTML = "<span class='body'>"+text+"</span>";
+}
+
+// Slippy-map helper. Mirrors the OSM/Mapnik formula used in Sylk Mobile's
+// LocationBubble.js so a Blink bubble shows the same tiles as the mobile.
+// Returns {xFrac, yFrac, n} so the caller can compute the integer tile
+// (floor) plus the pixel offset of the requested point inside that tile.
+function locLatLngToTileFrac(latitude, longitude, zoom)
+{
+    var n = Math.pow(2, zoom);
+    var xFrac = ((longitude + 180) / 360) * n;
+    var latRad = (latitude * Math.PI) / 180;
+    // Math.asinh exists in modern WebKit; fall back for safety.
+    var asinh = Math.asinh ? Math.asinh : function (x) { return Math.log(x + Math.sqrt(x * x + 1)); };
+    var yFrac = ((1 - asinh(Math.tan(latRad)) / Math.PI) / 2) * n;
+    return { xFrac: xFrac, yFrac: yFrac, n: n };
+}
+
+// Build the inner HTML for the location bubble's map frame (tile grid +
+// pin). Kept here in JS instead of in the renderMessage Python helper
+// because Python's processHTMLText runs a smiley + URL pass that would
+// mangle the inline style attributes and any maps.apple.com URL with a
+// '?' or ';' character (urlify rewrites those tokens).
+function locBuildMapFrameHTML(lat, lng, zoom, mapWidth, mapHeight)
+{
+    var tileSize = 256;
+    var subdomains = ['a', 'b', 'c'];
+    var f = locLatLngToTileFrac(lat, lng, zoom);
+    var xTile = Math.floor(f.xFrac);
+    var yTile = Math.floor(f.yFrac);
+    var pxInTileX = (f.xFrac - xTile) * tileSize;
+    var pxInTileY = (f.yFrac - yTile) * tileSize;
+    var centerX = mapWidth / 2;
+    var centerY = mapHeight / 2;
+
+    var html = '';
+    // 3x3 tile grid is enough to cover the 300x200 viewport at any
+    // pixel offset (worst case the centre tile contributes ~256 of
+    // each dimension, and the eight neighbours fill the rest).
+    for (var dx = -1; dx <= 1; dx++) {
+        for (var dy = -1; dy <= 1; dy++) {
+            var tx = xTile + dx;
+            var ty = yTile + dy;
+            if (tx < 0 || ty < 0 || tx >= f.n || ty >= f.n) continue;
+            var host = subdomains[((tx + ty) % subdomains.length + subdomains.length) % subdomains.length];
+            var url = 'https://' + host + '.tile.openstreetmap.de/' + zoom + '/' + tx + '/' + ty + '.png';
+            var left = Math.round(centerX - pxInTileX + dx * tileSize);
+            var top = Math.round(centerY - pxInTileY + dy * tileSize);
+            html += '<img src="' + url + '" style="position:absolute;left:' + left
+                  + 'px;top:' + top + 'px;width:' + tileSize + 'px;height:' + tileSize + 'px;"/>';
+        }
+    }
+    // Pin sits exactly at the centre of the frame because the tile
+    // grid is positioned so the requested lat/lng lands at (centerX,
+    // centerY). The pin's CSS uses negative margins to place its tip
+    // precisely on that pixel.
+    html += '<div class="loc-pin" style="left:' + centerX + 'px;top:' + centerY + 'px;"></div>';
+    return html;
+}
+
+// Re-render an existing location bubble with a new lat/lng/accuracy.
+// The chat-bubble chrome (sender row, timestamps, ticks, encryption icon)
+// stays in place; only the map frame + coordinate label are replaced. Used
+// when a Sylk update tick arrives for a share whose origin bubble we've
+// already drawn — keeps the conversation from filling up with a fresh
+// bubble per minute.
+function updateLocationMessage(msgid, lat, lng, accuracy)
+{
+    var bodyEl = document.getElementById('b' + msgid);
+    if (!bodyEl) return;
+
+    var mapWidth = 300;
+    var mapHeight = 200;
+    var zoom = 15;
+    var frameHTML = locBuildMapFrameHTML(lat, lng, zoom, mapWidth, mapHeight);
+
+    var coordsLabel = lat.toFixed(5) + ', ' + lng.toFixed(5);
+    var accuracyLabel = (accuracy != null && !isNaN(accuracy))
+        ? ' (±' + Math.round(accuracy) + ' m)'
+        : '';
+    // Apple Maps deep link must be regenerated for the new coords —
+    // otherwise tapping the bubble would still open the old position.
+    var llStr = lat.toFixed(7) + ',' + lng.toFixed(7);
+    var mapsUrl = 'https://maps.apple.com/?ll=' + llStr + '&q=' + llStr;
+
+    bodyEl.innerHTML =
+        '<a class="loc-link" href="' + mapsUrl + '">' +
+            '<div class="map-frame">' + frameHTML + '</div>' +
+            '<div class="loc-meta">' +
+                '\u{1F4CD} ' + coordsLabel + accuracyLabel +
+                ' <span class="loc-hint">— tap to open in Maps</span>' +
+            '</div>' +
+        '</a>';
+}
+
+function renderLocationMessage(msgid, direction, sender, iconpath, lat, lng, accuracy, mapsUrl, timestamp, state, lockiconpath, previous_msgid, before)
+{
+    // Mirror the box/decoration logic from renderMessage so location
+    // bubbles use the same chrome (delivered/displayed ticks, encryption
+    // icon, delete button, sender row). The body slot is the only thing
+    // that differs — instead of a text span we inject an OSM tile grid
+    // wrapped in an <a> so a click opens the system map.
+    var delivered_class = "delivered_hidden";
+    var displayed_class = "displayed_hidden";
+    var delayed_class = "delayed_hidden";
+    var container_class = direction == "outgoing" ? "local_container" : "remote_container";
+    var ts = formatTimestamp(timestamp);
+    var chat_session = document.getElementById("chat_session");
+    var box_class;
+    var recipient_class;
+    var icon_class;
+    var lock_class = (lockiconpath == "") ? "hidden" : "lock";
+    var default_box_class = "msgbox";
+
+    if (direction == 'outgoing') {
+        recipient_class = "recipient_self";
+        if (state == "sending") {
+            box_class = "msgbox_sending";
+        } else if (state == "deferred") {
+            box_class = "msgbox_deferred"; delayed_class = "delayed";
+        } else if (state == "failed") {
+            box_class = "msgbox_failed"; delayed_class = "delayed_hidden";
+        } else if (state == "failed_local") {
+            box_class = "msgbox_deferred"; delayed_class = "delayed";
+        } else if (state == "delivered") {
+            box_class = "msgbox_delivered"; delivered_class = "delivered"; delayed_class = "delayed_hidden";
+        } else if (state == "displayed") {
+            box_class = "msgbox_displayed"; delivered_class = "delivered"; displayed_class = "displayed"; delayed_class = "delayed_hidden";
+        } else {
+            box_class = default_box_class;
+        }
+    } else {
+        recipient_class = "recipient";
+        box_class = default_box_class;
+    }
+
+    if (iconpath == null) {
+        icon_class = "hidden";
+        recipient_class = "hidden";
+    } else {
+        icon_class = "photobox";
+    }
+
+    var mapWidth = 300;
+    var mapHeight = 200;
+    // Default zoom matches Sylk Mobile's DEFAULT_ZOOM (~1 city block).
+    var zoom = 15;
+    var frameHTML = locBuildMapFrameHTML(lat, lng, zoom, mapWidth, mapHeight);
+
+    var coordsLabel = lat.toFixed(5) + ', ' + lng.toFixed(5);
+    var accuracyLabel = (accuracy != null && !isNaN(accuracy))
+        ? ' (±' + Math.round(accuracy) + ' m)'
+        : '';
+    // String concatenation only — no template literals, since this file
+    // also has to load on older WebKit builds shipped with macOS 10.13.
+    var bodyHTML =
+        '<a class="loc-link" href="' + mapsUrl + '">' +
+            '<div class="map-frame">' + frameHTML + '</div>' +
+            '<div class="loc-meta">' +
+                '\u{1F4CD} ' + coordsLabel + accuracyLabel +
+                ' <span class="loc-hint">— tap to open in Maps</span>' +
+            '</div>' +
+        '</a>';
+
+    var html =
+        "<div clear='both'/>" +
+        "<div class='" + container_class + "' id='container_" + msgid + "'>" +
+            "<img class='" + icon_class + "' src='file:" + iconpath + "'/>" +
+            "<div class='" + box_class + "' id='" + msgid + "'>" +
+                "<div class='header'>" +
+                    "<div class='" + recipient_class + "' id='r" + msgid + "'>" + sender + "</div>" +
+                    "<div class='timestamp'>" +
+                        "<div class='delete_button'><a class='delete_link' href='delete_message?id=" + msgid + "'>&#x2612;</a></div>" +
+                        "<img id='encryption" + msgid + "' class=" + lock_class + " src='file:" + lockiconpath + "'/>" + ts +
+                        "<div class=" + delayed_class + " id='delayed" + msgid + "'>&#128351;</div>" +
+                        "<div class=" + delivered_class + " id='delivered" + msgid + "'>&#10004;</div>" +
+                        "<div class=" + displayed_class + " id='displayed" + msgid + "'>&#10004;</div>" +
+                    "</div>" +
+                "</div>" +
+                "<div class='message location-bubble' id='b" + msgid + "'>" + bodyHTML + "</div>" +
+            "</div>" +
+        "</div>";
+
+    if (before == null) {
+        chat_session.innerHTML += html;
+        if (iconpath == null) {
+            var box = document.getElementById(msgid);
+            if (box) {
+                box.style.marginTop = "0px";
+                box.style.borderTopStyle = "hidden";
+            }
+            var prev = document.getElementById(previous_msgid);
+            if (prev) {
+                prev.style.borderBottomColor = "#EDEDED";
+                prev.borderBottomRightRadius = "0px";
+                prev.borderBottomLeftRadius = "0px";
+            }
+        }
+        lastSender = sender;
+        lastTimestamp = ts;
+        scrollToBottom();
+    } else {
+        chat_session.innerHTML = html + chat_session.innerHTML;
+    }
 }
 
 function renderSystemMessage(msgid, text, timestamp, is_error)

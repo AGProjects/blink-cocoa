@@ -690,7 +690,7 @@ class SMSWindowManagerClass(NSObject):
        sync_contacts = set()
        url = account.sms.history_url.replace("@", "%40")
        last_id = account.sms.history_last_id
-       
+
        if last_id:
            url = "%s/%s" % (url, last_id)
 
@@ -815,7 +815,12 @@ class SMSWindowManagerClass(NSObject):
                            else:
                                 BlinkLogger().log_info(u"No public key detected in the payload")
 
-                       elif content_type.startswith('text/'):
+                       elif content_type.startswith('text/') or content_type == 'application/sylk-message-metadata':
+                           # application/sylk-message-metadata is the wire format
+                           # Sylk Mobile uses for live-location ticks (action='location')
+                           # and other rich metadata. Treat it like a regular text
+                           # message at the persistence layer; the renderer
+                           # branches on content_type to draw a location bubble.
                            if msg['direction'] == 'incoming':
                                sync_contacts.add(msg['contact'])
                                self.syncIncomingMessage(account, msg, account.sms.history_last_id)
@@ -932,6 +937,46 @@ class SMSWindowManagerClass(NSObject):
         self.new_contacts = set()
 
     @objc.python_method
+    def _persist_journal_message(self, account, msg, direction, status, encryption,
+                                 cpim_from, cpim_to):
+        """Insert (or fold) a journal message into chat_messages.
+
+        Behaves like a pass-through to history.add_message except for
+        application/sylk-message-metadata location ticks, where it folds
+        update ticks into the share's origin row by keying on the JSON
+        body's stable ``messageId`` and routing update ticks through
+        history.update_message_body. Result: one row per share, holding
+        the latest known position, regardless of how many ticks the
+        journal hands us.
+        """
+        body = msg['content']
+        content_type = msg['content_type']
+        msgid = msg['message_id']
+
+        if content_type == 'application/sylk-message-metadata':
+            try:
+                data = json.loads(body)
+            except (TypeError, ValueError):
+                data = None
+            if isinstance(data, dict) and data.get('action') == 'location' and data.get('messageId'):
+                bubble_id = data['messageId']
+                if data.get('metadataId') is not None:
+                    # Update tick — refresh the existing row's body so a
+                    # later replay shows the most recent position.
+                    self.history.update_message_body(bubble_id, body)
+                    return
+                # Origin tick — persist under the bubble id so subsequent
+                # update ticks (live or journaled) all rewrite this row.
+                msgid = bubble_id
+
+        self.history.add_message(
+            msgid, 'sms', str(account.id), msg['contact'],
+            direction, cpim_from, cpim_to, msg['timestamp'],
+            body, content_type, "0", status,
+            call_id=msg['message_id'], encryption=encryption,
+        )
+
+    @objc.python_method
     def syncIncomingMessage(self, account, msg, last_id=None):
         direction = 'incoming'
         self.pendingSaveMessage[msg['message_id']] = True
@@ -947,20 +992,10 @@ class SMSWindowManagerClass(NSObject):
             encryption = ''
 
         if not last_id:
-            self.history.add_message(msg['message_id'],
-                                   'sms',
-                                    str(account.id),
-                                    msg['contact'],
-                                    direction,
-                                    msg['contact'],
-                                    str(account.id),
-                                    msg['timestamp'],
-                                    msg['content'],
-                                    msg['content_type'],
-                                    "0",
-                                    status,
-                                    call_id=msg['message_id'],
-                                    encryption=encryption)
+            self._persist_journal_message(
+                account, msg, direction, status, encryption,
+                cpim_from=msg['contact'], cpim_to=str(account.id),
+            )
             return
 
         # Only open windows for messages newer than one week. For older entries
@@ -969,20 +1004,10 @@ class SMSWindowManagerClass(NSObject):
         # surface them when the user opens the conversation.
         create_if_needed = ISOTimestamp.now() - ISOTimestamp(msg['timestamp']) < datetime.timedelta(days=7)
         if not create_if_needed and not self._hasViewerFor(msg['contact'], account):
-            self.history.add_message(msg['message_id'],
-                                     'sms',
-                                     str(account.id),
-                                     msg['contact'],
-                                     direction,
-                                     msg['contact'],
-                                     str(account.id),
-                                     msg['timestamp'],
-                                     msg['content'],
-                                     msg['content_type'],
-                                     "0",
-                                     status,
-                                     call_id=msg['message_id'],
-                                     encryption=encryption)
+            self._persist_journal_message(
+                account, msg, direction, status, encryption,
+                cpim_from=msg['contact'], cpim_to=str(account.id),
+            )
             return
 
         self._presentJournalIncomingMessage(account, msg, status, create_if_needed)
@@ -1038,20 +1063,10 @@ class SMSWindowManagerClass(NSObject):
             encryption = ''
 
         if not last_id:
-            self.history.add_message(msg['message_id'],
-                                    'sms',
-                                    str(account.id),
-                                    msg['contact'],
-                                    direction,
-                                    str(account.id),
-                                    msg['contact'],
-                                    msg['timestamp'],
-                                    msg['content'],
-                                    msg['content_type'],
-                                    "0",
-                                    state,
-                                    call_id=msg['message_id'],
-                                    encryption=encryption)
+            self._persist_journal_message(
+                account, msg, direction, state, encryption,
+                cpim_from=str(account.id), cpim_to=msg['contact'],
+            )
             return
 
         # Only open windows for messages newer than one week. Older replicated
@@ -1059,20 +1074,10 @@ class SMSWindowManagerClass(NSObject):
         # don't pay the GUI-thread cost for every entry in the journal.
         create_if_needed = ISOTimestamp.now() - ISOTimestamp(msg['timestamp']) < datetime.timedelta(days=7)
         if not create_if_needed and not self._hasViewerFor(msg['contact'], account):
-            self.history.add_message(msg['message_id'],
-                                    'sms',
-                                    str(account.id),
-                                    msg['contact'],
-                                    direction,
-                                    str(account.id),
-                                    msg['contact'],
-                                    msg['timestamp'],
-                                    msg['content'],
-                                    msg['content_type'],
-                                    "0",
-                                    state,
-                                    call_id=msg['message_id'],
-                                    encryption=encryption)
+            self._persist_journal_message(
+                account, msg, direction, state, encryption,
+                cpim_from=str(account.id), cpim_to=msg['contact'],
+            )
             return
 
         self._presentJournalOutgoingMessage(account, msg, state, create_if_needed, last_id)
@@ -1428,11 +1433,11 @@ class SMSWindowManagerClass(NSObject):
            self.history.delete_messages(local_uri=msg['content'], remote_uri=str(account.id))
            return
 
-        elif content_type not in ('text/plain', 'text/html', 'application/sylk-message-remove'):
+        elif content_type not in ('text/plain', 'text/html', 'application/sylk-message-remove', 'application/sylk-message-metadata'):
             BlinkLogger().log_warning('Message type %s is not supported' % content_type)
             return
 
-        note_new_message = content_type in ('text/plain', 'text/html') and direction == 'incoming'
+        note_new_message = content_type in ('text/plain', 'text/html', 'application/sylk-message-metadata') and direction == 'incoming'
         viewer = self.getWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, note_new_message=note_new_message, instance_id=instance_id)
 
         if content_type == 'application/sylk-conversation-read':

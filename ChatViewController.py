@@ -7,6 +7,7 @@ __all__ = ['ChatInputTextView', 'ChatViewController', 'processHTMLText',
 import calendar
 import html
 import datetime
+import json
 import objc
 import os
 import re
@@ -564,6 +565,119 @@ class ChatViewController(NSObject):
             self.delegate.chatViewDidGetNewMessage_(self)
 
         self.previous_msgid = msgid
+
+    @objc.python_method
+    @run_in_gui_thread
+    def showLocationMessage(self, call_id, msgid, direction, sender, icon_path, latitude, longitude, accuracy, maps_url, timestamp, state='', is_private=False, history_entry=False, encryption=None, before=False):
+        """Render a Sylk-style location bubble in the chat WebView.
+
+        Mirrors the chrome that showMessage() applies (delivered/displayed
+        ticks, encryption icon, delete button) but the body slot becomes a
+        small OSM tile grid + pin. ``maps_url`` is the URL the bubble's <a>
+        tag points at — typically https://maps.apple.com/?ll=… so a click
+        opens the system Maps app on macOS.
+        """
+        lock_icon_path = ''
+        if encryption is not None:
+            if encryption == '':
+                lock_icon_path = ''
+            else:
+                lock_icon_path = Resources.get('locked-green.png' if encryption == 'verified' else 'locked-red.png')
+
+        if self.last_sender == sender:
+            icon_path = "null"
+        else:
+            icon_path = "'%s'" % icon_path
+
+        self.last_sender = sender
+
+        if not history_entry and not self.delegate.isOutputFrameVisible():
+            self.delegate.showChatViewWhileVideoActive()
+
+        # Track the bubble in the rendered_messages list so search /
+        # smiley-toggle code paths don't trip over an "unknown" message
+        # id. The displayed `content` for a location is just the maps
+        # URL — there's nothing else useful to search on.
+        rendered_message = ChatMessageObject(call_id, msgid, maps_url, True, timestamp, 'sms')
+        self.rendered_messages.append(rendered_message)
+
+        if timestamp.date() != datetime.date.today():
+            displayed_timestamp = time.strftime("%F %H:%M", time.localtime(calendar.timegm(timestamp.utctimetuple())))
+        else:
+            displayed_timestamp = time.strftime("%H:%M", time.localtime(calendar.timegm(timestamp.utctimetuple())))
+
+        before_arg = 1 if before else "null"
+        # accuracy may be missing — pass "null" so the JS branch hides
+        # the ±metres annotation entirely. lat/lng are emitted as plain
+        # numbers (no quotes) to keep them as JavaScript Numbers in the
+        # arg list; JS toFixed(5) is what we use for the display label.
+        try:
+            lat_arg = '%.7f' % float(latitude)
+            lng_arg = '%.7f' % float(longitude)
+        except (TypeError, ValueError):
+            return
+        if accuracy is None:
+            acc_arg = 'null'
+        else:
+            try:
+                acc_arg = '%.1f' % float(accuracy)
+            except (TypeError, ValueError):
+                acc_arg = 'null'
+
+        # Outer label / sender row
+        if hasattr(self.delegate, "sessionController"):
+            label_source = self.delegate.sessionController.nickname or self.account.display_name or self.account.id
+        else:
+            label_source = self.account.display_name or self.account.id
+        label = html.escape(label_source) if sender is None else html.escape(sender)
+
+        # JSON-encode the maps_url so any embedded quotes / specials are
+        # safely passed through into the JavaScript string literal.
+        maps_url_js = json.dumps(maps_url)
+
+        script = (
+            """renderLocationMessage('%s', '%s', '%s', %s, %s, %s, %s, %s, '%s', '%s', '%s', '%s', %s)"""
+            % (msgid, direction, label, icon_path, lat_arg, lng_arg, acc_arg, maps_url_js,
+               displayed_timestamp, state, lock_icon_path, self.previous_msgid, before_arg)
+        )
+
+        if self.finishedLoading:
+            self.executeJavaScript(script)
+        else:
+            self.messageQueue.append(script)
+
+        if hasattr(self.delegate, "chatViewDidGetNewMessage_"):
+            self.delegate.chatViewDidGetNewMessage_(self)
+
+        self.previous_msgid = msgid
+
+    @objc.python_method
+    @run_in_gui_thread
+    def updateLocationMessage(self, msgid, latitude, longitude, accuracy):
+        """Re-render an existing location bubble with new coordinates.
+
+        Mirrors showLocationMessage's argument formatting (numeric literals
+        for lat/lng, ``null`` for missing accuracy) so the JS function
+        receives proper Numbers and not stringly-typed values.
+        """
+        try:
+            lat_arg = '%.7f' % float(latitude)
+            lng_arg = '%.7f' % float(longitude)
+        except (TypeError, ValueError):
+            return
+        if accuracy is None:
+            acc_arg = 'null'
+        else:
+            try:
+                acc_arg = '%.1f' % float(accuracy)
+            except (TypeError, ValueError):
+                acc_arg = 'null'
+
+        script = "updateLocationMessage('%s', %s, %s, %s)" % (msgid, lat_arg, lng_arg, acc_arg)
+        if self.finishedLoading:
+            self.executeJavaScript(script)
+        else:
+            self.messageQueue.append(script)
 
     @objc.python_method
     def toggleSmileys(self, expandSmileys):

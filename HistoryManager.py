@@ -672,6 +672,26 @@ class ChatHistory(object, metaclass=Singleton):
             pass
             #BlinkLogger().log_error("Error updating decrypted message %s: %s" % (msgid, e))
 
+    @run_in_db_thread
+    def update_message_body(self, msgid, body):
+        """Replace the persisted body of an existing chat_messages row.
+
+        Used by the Sylk live-location flow: every UPDATE tick rewrites
+        the origin row's body to the latest JSON payload so a Blink
+        restart replays the share at its last known position rather than
+        the (now stale) origin coordinates.
+        """
+        try:
+            results = ChatMessage.selectBy(msgid=msgid)
+            message = results.getOne()
+            if message:
+                message.body = body
+            else:
+                BlinkLogger().log_error("Error updating message body for %s: not found" % msgid)
+            return True
+        except Exception as e:
+            BlinkLogger().log_error("Error updating message body for %s: %s" % (msgid, e))
+
 
     @run_in_db_thread
     def add_message(self, msgid, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, cpim_timestamp, body, content_type, private, status, time='', uuid='', journal_id='', skip_replication=False, call_id='', encryption=''):
