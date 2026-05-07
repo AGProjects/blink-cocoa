@@ -109,7 +109,7 @@ class PSTNSettings(SettingsGroup):
 
 class RTPSettingsExtension(RTPSettings):
     inband_dtmf = Setting(type=bool, default=True)
-    encryption_type = Setting(type=str, default='opportunistic')
+    encryption_type = Setting(type=str, default='sdes_optional')
     hangup_on_timeout = Setting(type=bool, default=True)
 
 
