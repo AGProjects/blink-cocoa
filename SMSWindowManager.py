@@ -1001,6 +1001,56 @@ class SMSWindowManagerClass(NSObject):
             return plaintext.decode('utf-8', errors='replace')
 
     @objc.python_method
+    def _is_location_update_tick(self, account_id, body):
+        """Return True iff body is a Sylk location *update* tick.
+
+        Origin ticks (``metadataId is None``) and non-location metadata
+        flavours return False. Used by the live receive path to decide
+        whether to raise the SMS viewer window on an incoming
+        application/sylk-message-metadata: only the first/origin tick
+        of a share should pop the window — subsequent map updates must
+        refresh the bubble silently.
+
+        Mirrors the decode/decrypt logic used by
+        ``_persist_journal_message``: PGP-armoured payloads are
+        decrypted with the account's private key (when available) so we
+        can inspect the inner JSON. If the body cannot be decrypted or
+        parsed we conservatively return False — failing to suppress the
+        raise is preferable to suppressing it for the very first share.
+        """
+        if isinstance(body, (bytes, bytearray)):
+            try:
+                text = bytes(body).decode('utf-8')
+            except UnicodeDecodeError:
+                return False
+        else:
+            text = body
+
+        if not isinstance(text, str):
+            return False
+
+        stripped = text.strip()
+        if (stripped.startswith('-----BEGIN PGP MESSAGE-----')
+                and stripped.endswith('-----END PGP MESSAGE-----')):
+            plaintext = self._decrypt_pgp_for_account(account_id, stripped)
+            if plaintext is None:
+                return False
+            stripped = plaintext
+
+        try:
+            data = json.loads(stripped)
+        except (TypeError, ValueError):
+            return False
+
+        if not isinstance(data, dict):
+            return False
+        if data.get('action') != 'location':
+            return False
+        if not data.get('messageId'):
+            return False
+        return data.get('metadataId') is not None
+
+    @objc.python_method
     def _persist_journal_message(self, account, msg, direction, status, encryption,
                                  cpim_from, cpim_to):
         """Insert (or fold) a journal message into chat_messages.
@@ -1534,6 +1584,15 @@ class SMSWindowManagerClass(NSObject):
             return
 
         note_new_message = content_type in ('text/plain', 'text/html', 'application/sylk-message-metadata') and direction == 'incoming'
+        # Live-location shares emit one origin tick followed by many
+        # map-update ticks. The origin tick should raise the viewer like
+        # any other incoming message; the update ticks must refresh the
+        # existing bubble silently — popping the window on every GPS
+        # sample would steal focus continuously while the sender moves.
+        if (note_new_message
+                and content_type == 'application/sylk-message-metadata'
+                and self._is_location_update_tick(str(account.id), content)):
+            note_new_message = False
         viewer = self.getWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, note_new_message=note_new_message, instance_id=instance_id)
 
         if content_type == 'application/sylk-conversation-read':
