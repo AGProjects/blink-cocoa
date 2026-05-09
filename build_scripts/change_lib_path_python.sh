@@ -9,7 +9,7 @@ new_path="@executable_path/../Frameworks/Python.framework/Versions/Current/lib/"
 
 libs=`ls Frameworks/Python.framework/Versions/$pver/lib/python$pver/lib-dynload/*.so`
  for library in $libs; do
-  install_name_tool -id $new_path$library $library
+  install_name_tool -id $new_path$(basename $library) $library
   dependencies=$(otool -L $library | grep $old_path | awk '{print $1}')
   for dependency in $dependencies; do
       new_basename=$(basename $dependency)
@@ -29,7 +29,7 @@ new_dep_path="@executable_path/../Frameworks/Python.framework/Versions/$pver/lib
 
 libs=`ls Frameworks/Python.framework/Versions/$pver/lib/*.dylib`
  for library in $libs; do
-  install_name_tool -id $new_path$library $library
+  install_name_tool -id $new_path$(basename $library) $library
   dependencies=$(otool -L $library | grep $old_path | awk '{print $1}')
   for dependency in $dependencies; do
       new_basename=$(basename $dependency)

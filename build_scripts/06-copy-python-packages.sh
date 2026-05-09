@@ -27,17 +27,17 @@ src_ca_list=`python3 -c "import certifi; print(certifi.where())"`
 dst_ca_list=`python3 -c "import ssl; print(ssl.get_default_verify_paths().openssl_cafile)"`
 cp $src_ca_list $dst_ca_list
 
-# Remove unused libraries
-find Resources/lib/ -name test -exec rm -r {} \;
-find Resources/lib/ -name tests -exec rm -r {} \;
-
 cp -a $site_packages_folder/* Resources/lib/
-rm -r Resources/lib/Cython
-rm -r Resources/lib/rust
-rm -r Resources/lib/enum
-rm -r Resources/lib/*.dist-info 
-rm -r Resources/lib/*.virtualenv 
-rm -r Resources/lib/*.pth
+
+# Remove unused libraries (after the copy, otherwise these find on an empty dir)
+find Resources/lib/ -name test -exec rm -r {} \; 2>/dev/null
+find Resources/lib/ -name tests -exec rm -r {} \; 2>/dev/null
+rm -rf Resources/lib/Cython
+rm -rf Resources/lib/rust
+rm -rf Resources/lib/enum
+rm -rf Resources/lib/*.dist-info
+rm -rf Resources/lib/*.virtualenv
+rm -rf Resources/lib/*.pth
 
 sos=`find ./Resources/lib -name \*.so`; for s in $sos; do ls $s; ../build_scripts/change_lib_paths.sh $s; codesign -f -o runtime --timestamp  -s "Developer ID Application" $s; done
 sos=`find ./Resources/lib -name \*.dylib`; for s in $sos; do ls $s; ../build_scripts/change_lib_paths.sh $s; codesign -f -o runtime --timestamp  -s "Developer ID Application" $s; done

@@ -75,7 +75,7 @@ rm -r Resources/lib/enum
 
 cp ../build_scripts/mimetypes.py Frameworks/Python.framework/Versions/Current/lib/python$pver/
 
-./changelibs-python.sh 
+../build_scripts/change_lib_path_python.sh
 
 sos=`find Frameworks/Python.framework -name \*.so`; for s in $sos; do ls $s; ../build_scripts/change_lib_paths.sh $s; codesign -f -o runtime --timestamp -s "Developer ID Application" $s; done
 sos=`find Frameworks/Python.framework -name \*.dylib`; for s in $sos; do ls $s; ../build_scripts/change_lib_paths.sh $s; codesign -f -o runtime --timestamp -s "Developer ID Application" $s; done

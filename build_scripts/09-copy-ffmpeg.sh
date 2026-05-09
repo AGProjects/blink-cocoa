@@ -1,19 +1,4 @@
 #!/bin/bash
-Non-fat file: libaom.3.dylib is architecture: arm64
-Non-fat file: libavcodec.58.dylib is architecture: arm64
-Non-fat file: libavdevice.58.dylib is architecture: arm64
-Non-fat file: libavfilter.7.dylib is architecture: arm64
-Non-fat file: libavformat.58.dylib is architecture: arm64
-Non-fat file: libavresample.4.dylib is architecture: arm64
-Non-fat file: libavutil.56.dylib is architecture: arm64
-Non-fat file: libpango-1.0.0.dylib is architecture: arm64
-Non-fat file: libpangocairo-1.0.0.dylib is architecture: arm64
-Non-fat file: libpangoft2-1.0.0.dylib is architecture: arm64
-Non-fat file: libpostproc.55.dylib is architecture: arm64
-Non-fat file: librsvg-2.2.dylib is architecture: arm64
-Non-fat file: libswresample.3.dylib is architecture: arm64
-Non-fat file: libswscale.5.dylib is architecture: arm64
-
 
 site_packages_folder=`./get_site_packages_folder.sh`
 pver=`./get_python_version.sh`
