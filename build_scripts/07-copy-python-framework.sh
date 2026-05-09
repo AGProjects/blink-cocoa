@@ -58,6 +58,13 @@ rm -rf  Frameworks/Python.framework/Versions/$pver/lib/pkgconfig
 rm -rf  Frameworks/Python.framework/Versions/$pver/lib/python$pver/lib-dynload/_tkinter.cpython-$cver-darwin.so
 rm -rf  Frameworks/Python.framework/Versions/$pver/lib/python$pver/lib-dynload/_test*
 
+rm -rf  Frameworks/Python.framework/Versions/$pver/lib/python$pver/tkinter
+rm -rf  Frameworks/Python.framework/Versions/$pver/lib/python$pver/test/test_tcl.py
+rm -rf  Frameworks/Python.framework/Versions/$pver/lib/sqlite3.40.0/pkgIndex.tcl
+rm -rf  Frameworks/Python.framework/Versions/$pver/thread2.8.8/pkgIndex.tcl
+rm -rf  Frameworks/Python.framework/Versions/$pver/thread2.8.8/ttrace.tcl
+
+
 #rm -f Frameworks/Python.framework/Versions/$pver/lib/libssl*
 rm -f Frameworks/Python.framework/Versions/$pver/lib/libformw*
 rm -f Frameworks/Python.framework/Versions/$pver/lib/libpanelw*
