@@ -377,16 +377,17 @@ class ContactWindowController(NSWindowController):
             # Get camera permission status
             status = AVCaptureDevice.authorizationStatusForMediaType_("vide")
 
+            # AVAuthorizationStatus: 0 NotDetermined, 1 Restricted, 2 Denied, 3 Authorized
             if status == 0:  # Not determined
                 BlinkLogger().log_info("Camera access is not yet determined. Requesting access...")
                 # Request camera access
                 AVCaptureDevice.requestAccessForMediaType_completionHandler_("vide", lambda granted: BlinkLogger().log_info("Camera access granted!" if granted else "Camera access denied"))
-            elif status == 1:  # Authorized
-                BlinkLogger().log_info("Camera access is granted.")
+            elif status == 1:  # Restricted (parental controls / MDM, user cannot grant)
+                BlinkLogger().log_info("Camera access is restricted.")
             elif status == 2:  # Denied
                 BlinkLogger().log_info("Camera access denied. Please enable it in System Settings.")
-            elif status == 3:  # Restricted
-                BlinkLogger().log_info("Camera access is restricted.")
+            elif status == 3:  # Authorized
+                BlinkLogger().log_info("Camera access is granted.")
             else:
                 BlinkLogger().log_info("Unknown camera access status.")
         
