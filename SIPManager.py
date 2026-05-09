@@ -177,12 +177,19 @@ class SIPManager(object, metaclass=Singleton):
         else:
             cas = trusted_cas(existing_cas)
 
-            hasR11 = any(c for c in cas if c.subject == "C=US,O=Let's Encrypt,CN=R11")
-            hasR10 = any(c for c in cas if c.subject == "C=US,O=Let's Encrypt,CN=R10")
-            hasE6 = any(c for c in cas if c.subject == "C=US,O=Let's Encrypt,CN=E6")
-            hasE5 = any(c for c in cas if c.subject == "C=US,O=Let's Encrypt,CN=E5")
+            # Force a one-time refresh of the user's CA bundle when it still
+            # contains the expired DST Root CA X3 (notAfter Sep 30 2021), or
+            # when it lacks the self-signed ISRG Root X1 (issuer == subject,
+            # valid until Jun 4 2035). Without the self-signed ISRG Root X1,
+            # TLS chains terminating at Let's Encrypt fail to validate after
+            # the cross-signed ISRG Root X1 expired Sep 30 2024.
+            hasDSTX3 = any(c for c in cas
+                           if "DST Root CA X3" in str(c.subject))
+            hasISRGX1SelfSigned = any(c for c in cas
+                                      if "ISRG Root X1" in str(c.subject)
+                                      and str(c.subject) == str(c.issuer))
 
-            existing_cas = existing_cas and hasR11 and hasR10 and hasE6 and hasE5
+            existing_cas = existing_cas and hasISRGX1SelfSigned and not hasDSTX3
 
         if not existing_cas:
             # copy default certificate authority file
