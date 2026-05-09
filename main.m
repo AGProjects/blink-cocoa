@@ -7,12 +7,14 @@ int main(int argc, char *argv[])
 
     NSBundle *mainBundle = [NSBundle mainBundle];
     NSString *libraryPath = [mainBundle privateFrameworksPath];
+    NSString *libsPath = [libraryPath stringByAppendingPathComponent:@"libs"];
     NSString *resourcePath = [mainBundle resourcePath];
     NSArray *pythonPathArray = [NSArray arrayWithObjects: resourcePath, [resourcePath stringByAppendingPathComponent:@"lib"], nil];
     NSString *pythonPath = [pythonPathArray componentsJoinedByString:@":"];
     NSString *pythonHome = [libraryPath stringByAppendingPathComponent:@"Python.framework/Versions/Current"];
 
-    setenv("DYLD_LIBRARY_PATH", [libraryPath UTF8String], 1);
+    NSString *dyldPath = [NSString stringWithFormat:@"%@:%@", libsPath, libraryPath];
+    setenv("DYLD_LIBRARY_PATH", [dyldPath UTF8String], 1);
     setenv("PYTHONPATH", [pythonPath UTF8String], 1);
     setenv("PYTHONHOME", [pythonHome UTF8String], 1);
     setenv("PYTHONDONTWRITEBYTECODE", "1", 1);
