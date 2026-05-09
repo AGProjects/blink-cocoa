@@ -846,9 +846,20 @@ class SMSWindowManagerClass(NSObject):
                if last_message_id:
                    account.sms.history_last_id = last_message_id
                    BlinkLogger().log_info('Sync done till %s' % last_message_id)
-                   nc_title = NSLocalizedString("Offline messages received", "Label")
-                   nc_body = NSLocalizedString("From %d contacts" % len(sync_contacts), "Label")
-                   NSApp.delegate().gui_notify(nc_title, nc_body)
+                   # Only notify when at least one contact actually
+                   # produced a renderable message this round. Bursts
+                   # that only carry key exchanges, contact updates or
+                   # filtered-out metadata advance last_message_id but
+                   # leave sync_contacts empty — surfacing "From 0
+                   # contacts" in that case is noise, not signal.
+                   if sync_contacts:
+                       nc_title = NSLocalizedString("Offline messages received", "Label")
+                       count = len(sync_contacts)
+                       if count == 1:
+                           nc_body = NSLocalizedString("From 1 contact", "Label")
+                       else:
+                           nc_body = NSLocalizedString("From %d contacts" % count, "Label")
+                       NSApp.delegate().gui_notify(nc_title, nc_body)
                    account.save()
                 
                for uri in sync_contacts:
