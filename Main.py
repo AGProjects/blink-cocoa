@@ -55,7 +55,23 @@ class NSLogger(object):
             text = text.rstrip()
         elif not isinstance(text, buffer):
             raise TypeError("write() argument must be a string or read-only buffer")
+        # print() invokes write() twice — once with the message and once
+        # with the trailing '\n'. After rstrip the second call collapses
+        # to an empty string; emitting it would produce a blank line
+        # between every real log line in Xcode's console, so skip it.
+        if not text:
+            del pool
+            return
         Foundation.NSLog("%@", text)
+        # Also mirror to the *original* stderr so the line shows up in
+        # Xcode's debugger console. Since macOS Sonoma/Sequoia, NSLog no
+        # longer writes to stderr by default — it goes only to the
+        # unified-logging system, which Xcode's console doesn't read.
+        try:
+            sys.__stderr__.write(text + '\n')
+            sys.__stderr__.flush()
+        except Exception:
+            pass
         del pool
     def writelines(self, lines):
         pool = Foundation.NSAutoreleasePool.alloc().init()
@@ -64,7 +80,17 @@ class NSLogger(object):
                 line = line.rstrip()
             elif not isinstance(line, buffer):
                 raise TypeError("writelines() argument must be a sequence of strings")
+            if not line:
+                continue
             Foundation.NSLog("%@", line)
+            try:
+                sys.__stderr__.write(line + '\n')
+            except Exception:
+                pass
+        try:
+            sys.__stderr__.flush()
+        except Exception:
+            pass
         del pool
 
 sys.stdout = NSLogger()
