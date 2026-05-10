@@ -17,9 +17,14 @@ if [ ! -d Resources ]; then
     mkdir Resources
 fi
 
-if [ ! -d Resources/lib ]; then
-    mkdir Resources/lib
+# Always start with a clean Resources/lib so leftover files from previous
+# builds don't shadow new ones, and so read-only bundled .dylibs (e.g. inside
+# gmpy2.libs/) don't break the subsequent `cp -a`.
+if [ -d Resources/lib ]; then
+    chmod -R u+w Resources/lib 2>/dev/null || true
+    rm -rf Resources/lib
 fi
+mkdir Resources/lib
 
 # Copy CA certificates
 python3 -c "import ssl; print(ssl.get_default_verify_paths())"
@@ -38,6 +43,26 @@ rm -rf Resources/lib/enum
 rm -rf Resources/lib/*.dist-info
 rm -rf Resources/lib/*.virtualenv
 rm -rf Resources/lib/*.pth
+
+# Blink uses PyObjC for native Cocoa; PyQt6 (and its tooling) is not needed
+# at runtime and ships hundreds of MB of Qt frameworks if left in.
+rm -rf Resources/lib/PyQt6
+rm -rf Resources/lib/PyQt6_sip*
+rm -rf Resources/lib/PyQt6_*
+
+# Tk / IDLE / pip tooling: not used at runtime, just bloat.
+rm -rf Resources/lib/tkinter
+rm -rf Resources/lib/idlelib
+rm -rf Resources/lib/_tkinter*.so
+rm -rf Resources/lib/turtledemo
+rm -rf Resources/lib/pip Resources/lib/setuptools Resources/lib/wheel
+rm -rf Resources/lib/pkg_resources
+
+# Bytecode caches — Python regenerates these on first import inside the
+# bundle, so shipping them just adds 30-60 MB.
+find Resources/lib -name __pycache__ -prune -exec rm -rf {} + 2>/dev/null
+find Resources/lib -name '*.pyc' -delete 2>/dev/null
+find Resources/lib -name '*.pyo' -delete 2>/dev/null
 
 sos=`find ./Resources/lib -name \*.so`; for s in $sos; do ls $s; ../build_scripts/change_lib_paths.sh $s; codesign -f -o runtime --timestamp  -s "Developer ID Application" $s; done
 sos=`find ./Resources/lib -name \*.dylib`; for s in $sos; do ls $s; ../build_scripts/change_lib_paths.sh $s; codesign -f -o runtime --timestamp  -s "Developer ID Application" $s; done

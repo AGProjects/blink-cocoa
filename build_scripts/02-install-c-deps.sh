@@ -1,26 +1,37 @@
 #!/bin/bash
+# Install MacPorts C dependencies for Blink.
+# On Apple Silicon we install +universal so the resulting libs are fat
+# (arm64+x86_64) for the universal Blink build.
 
-# Install C building dependencies
+set -e
+
 echo "Installing port dependencies..."
 
-uname -v|grep ARM64 |grep Darwin > /dev/null
-
-if [ $? -eq 0 ]; then
-    sudo port install yasm +universal x264 +universal gnutls +universal openssl +universal sqlite3 +universal libuuid +universal
-    sudo port install mpfr +universal libmpc +universal libvpx +universal wget +universal gmp +universal mpc +universal
+if uname -v | grep ARM64 | grep Darwin >/dev/null; then
+    # Apple Silicon: build universal so we can lipo with the x86_64 slice later.
+    sudo port install \
+        pkgconfig +universal \
+        yasm +universal x264 +universal \
+        gnutls +universal openssl +universal sqlite3 +universal \
+        libuuid +universal libopus +universal \
+        mpfr +universal libmpc +universal libvpx +universal \
+        gmp +universal
 else
-    sudo port install yasm x264 gnutls openssl sqlite3 mpfr libmpc libvpx wget gmp mpc libuuid
+    # Intel: same set without +universal.
+    sudo port install \
+        pkgconfig yasm x264 gnutls openssl sqlite3 \
+        libuuid libopus mpfr libmpc libvpx gmp
 fi
 
-sudo mv /opt/local/include/uuid/uuid.h /opt/local/include/uuid/uuid.h.old
 sudo port install create-dmg
 
-RESULT=$?
-if [ $RESULT -ne 0 ]; then
-    echo
-    echo "Failed to install all C dependencies"
-    echo
-    exit 1
+# MacPorts' libuuid uuid.h conflicts with the macOS system header; rename it.
+# Idempotent: skip if we've already done it.
+if [ -f /opt/local/include/uuid/uuid.h ] && [ ! -f /opt/local/include/uuid/uuid.h.old ]; then
+    echo "Renaming /opt/local/include/uuid/uuid.h to avoid conflict with system header..."
+    sudo mv /opt/local/include/uuid/uuid.h /opt/local/include/uuid/uuid.h.old
 fi
 
-echo "Please install ffmpeg as described in ffmpeg/readme.txt"
+echo
+echo "C dependencies installed. Next: install ffmpeg as described in ffmpeg/readme.txt"
+echo "(macOS ships curl system-wide; wget is no longer required by these scripts.)"
