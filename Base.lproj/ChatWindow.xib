@@ -104,8 +104,6 @@
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="94A6B932-2B35-4C7C-889C-AA8DABBDD596" explicitItemIdentifier="screen" label="Screen  " paletteLabel="Screen  " toolTip="Screen sharing" tag="204" image="display" autovalidates="NO" id="549">
-                        <size key="minSize" width="48" height="42"/>
-                        <size key="maxSize" width="54" height="47"/>
                         <popUpButton key="view" tag="204" id="543">
                             <rect key="frame" x="0.0" y="14" width="54" height="42"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
@@ -123,8 +121,6 @@
                         </popUpButton>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="A8B34588-AC14-4529-AC47-CEE1FC2F8538" explicitItemIdentifier="screenshot" label="Grab" paletteLabel="Grab" toolTip="Send screenshot" image="screenshot" id="573">
-                        <size key="minSize" width="48" height="42"/>
-                        <size key="maxSize" width="54" height="47"/>
                         <popUpButton key="view" id="567">
                             <rect key="frame" x="0.0" y="14" width="54" height="42"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
@@ -159,8 +155,6 @@
                         </popUpButton>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="31DAD979-72E0-4CE9-8AC5-7F153ECEAEDF" explicitItemIdentifier="encryption" label="Encryption" paletteLabel="Encryption" toolTip="Encryption options" image="unlocked-darkgray" autovalidates="NO" id="666">
-                        <size key="minSize" width="48" height="35"/>
-                        <size key="maxSize" width="55" height="47"/>
                         <popUpButton key="view" id="660">
                             <rect key="frame" x="5" y="14" width="54" height="35"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>

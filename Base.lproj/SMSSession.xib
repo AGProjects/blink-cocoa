@@ -54,8 +54,6 @@
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="NSToolbarFlexibleSpaceItem" id="125"/>
                     <toolbarItem implicitItemIdentifier="E6016DE2-5FD0-4BB0-9F12-4D2C1644ECF1" explicitItemIdentifier="encryption" label="Encryption" paletteLabel="Encryption" toolTip="Encryption options" image="unlocked-darkgray" autovalidates="NO" id="aNE-Hh-xlN">
-                        <size key="minSize" width="48" height="35"/>
-                        <size key="maxSize" width="55" height="47"/>
                         <popUpButton key="view" id="mmD-gS-u3c">
                             <rect key="frame" x="5" y="14" width="54" height="35"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
