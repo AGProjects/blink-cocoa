@@ -66,51 +66,37 @@
             <toolbar key="toolbar" implicitIdentifier="156B0838-4A95-4317-9B22-596B09187778" explicitIdentifier="chat-toolbar2" displayMode="iconAndLabel" sizeMode="small" id="72">
                 <allowedToolbarItems>
                     <toolbarItem implicitItemIdentifier="91FA6B1F-67F1-4778-BE23-5E3E60B93288" explicitItemIdentifier="connect_button" label="Conectar" paletteLabel="Conectar" toolTip="Iniciar sessão de chat" tag="100" image="start_chat" id="81">
-                        <size key="minSize" width="22" height="22"/>
-                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="83"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="D4CB40A5-9102-40F1-8D4D-CAEFE9ADC1E9" explicitItemIdentifier="audio" label="Áudio" paletteLabel="Áudio" toolTip="Inserir Sessão de Áudio" tag="101" image="audio" id="113">
-                        <size key="minSize" width="22" height="22"/>
-                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="114"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="001857D0-D904-4370-B636-2FB046D35BD1" explicitItemIdentifier="hold" label="Espera" paletteLabel="Espera" toolTip="Espera/Retomar áudio" tag="102" image="pause" id="224">
-                        <size key="minSize" width="22" height="22"/>
-                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="225"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="6DF49D6E-2CA2-43C2-A172-A89C93D95550" explicitItemIdentifier="record" label="Gravar" paletteLabel="Gravar" toolTip="Gravar áudio" tag="103" image="record" autovalidates="NO" id="244">
-                        <size key="minSize" width="22" height="22"/>
-                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="245"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="A6D99212-6BF1-48B7-94D2-46D3AFC16163" explicitItemIdentifier="editor" label="Editor" paletteLabel="Editor" toolTip="Exibir Editor Colaborativo" tag="109" image="editor" id="441">
-                        <size key="minSize" width="22" height="22"/>
-                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="442"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="NSToolbarFlexibleSpaceItem" id="78"/>
                     <toolbarItem implicitItemIdentifier="58831C47-CC9F-4CA5-B45A-C67305AECC89" explicitItemIdentifier="sendfile" label="Enviar Arquivo" paletteLabel="Enviar Arquivo" toolTip="Enviar arquivos" tag="105" image="upfile" id="92">
-                        <size key="minSize" width="22" height="22"/>
-                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="102"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="94A6B932-2B35-4C7C-889C-AA8DABBDD596" explicitItemIdentifier="screen" label="Tela" paletteLabel="Tela" toolTip="Compartilhamento de tela" tag="204" image="display" autovalidates="NO" id="549">
-                        <size key="minSize" width="48" height="42"/>
-                        <size key="maxSize" width="54" height="47"/>
                         <popUpButton key="view" tag="204" id="543">
                             <rect key="frame" x="0.0" y="14" width="54" height="42"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
@@ -128,8 +114,6 @@
                         </popUpButton>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="A8B34588-AC14-4529-AC47-CEE1FC2F8538" explicitItemIdentifier="screenshot" label="Capturar" paletteLabel="Capturar" toolTip="Enviar captura de tela" image="screenshot" id="573">
-                        <size key="minSize" width="48" height="42"/>
-                        <size key="maxSize" width="54" height="47"/>
                         <popUpButton key="view" id="567">
                             <rect key="frame" x="0.0" y="14" width="54" height="42"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
@@ -164,8 +148,6 @@
                         </popUpButton>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="31DAD979-72E0-4CE9-8AC5-7F153ECEAEDF" explicitItemIdentifier="encryption" label="Criptografia" paletteLabel="Criptografia" toolTip="Opções de criptografia" image="unlocked-darkgray" autovalidates="NO" id="666">
-                        <size key="minSize" width="48" height="35"/>
-                        <size key="maxSize" width="55" height="47"/>
                         <popUpButton key="view" id="660">
                             <rect key="frame" x="8" y="14" width="54" height="35"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
@@ -222,30 +204,22 @@
                         </popUpButton>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="10454448-2EEC-4B2B-91D8-6B6BCDA3C4AB" explicitItemIdentifier="smileys" label="Emoticons" paletteLabel="Emoticons" toolTip="Alternar a exibição de emoticons" tag="106" image="smiley_on" id="443">
-                        <size key="minSize" width="22" height="22"/>
-                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="444"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="F3F27C08-83DC-4837-8C62-FE767578E229" explicitItemIdentifier="history" label="Histórico" paletteLabel="Histórico" toolTip="Exibir mensages trocadas anteriormente" tag="107" image="time" id="253">
-                        <size key="minSize" width="22" height="22"/>
-                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="254"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="9277B918-C2D9-41A1-A62A-32504D846977" explicitItemIdentifier="participants" label="Participantes" paletteLabel="Participantes" toolTip="Alternar gaveta dos participantes" tag="108" image="NSEveryone" id="208">
-                        <size key="minSize" width="22" height="22"/>
-                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="toggle:" target="136" id="210"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="NSToolbarPrintItem" id="449"/>
                     <toolbarItem implicitItemIdentifier="44E90B12-85D2-4762-8B76-869AE5A9F820" explicitItemIdentifier="video" label="Vídeo" paletteLabel="Vídeo" toolTip="Add audio session" tag="107" image="video" id="GX1-4M-M8b">
-                        <size key="minSize" width="22" height="22"/>
-                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="0Su-Ky-0ed"/>
                         </connections>

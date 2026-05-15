@@ -47,16 +47,12 @@
             <toolbar key="toolbar" implicitIdentifier="C36076B5-C975-4610-88DB-9159B4C1BFAD" autosavesConfiguration="NO" allowsUserCustomization="NO" displayMode="iconAndLabel" sizeMode="regular" id="119">
                 <allowedToolbarItems>
                     <toolbarItem implicitItemIdentifier="F27CFD60-AECF-4FBC-A9C2-259F9AA9C0C8" explicitItemIdentifier="audio" label="Audio" paletteLabel="Audio" tag="1" image="audio" autovalidates="NO" id="133">
-                        <size key="minSize" width="22" height="22"/>
-                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="toolbarButtonClicked:" target="-2" id="134"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="NSToolbarFlexibleSpaceItem" id="125"/>
                     <toolbarItem implicitItemIdentifier="E6016DE2-5FD0-4BB0-9F12-4D2C1644ECF1" explicitItemIdentifier="encryption" label="Encryption" paletteLabel="Encryption" toolTip="Encryption options" image="unlocked-darkgray" autovalidates="NO" id="aNE-Hh-xlN">
-                        <size key="minSize" width="48" height="35"/>
-                        <size key="maxSize" width="55" height="47"/>
                         <popUpButton key="view" id="mmD-gS-u3c">
                             <rect key="frame" x="5" y="14" width="54" height="35"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
@@ -127,16 +123,12 @@
                         </popUpButton>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="2BDEC9B4-0D72-4EFC-8A53-B0B132125519" explicitItemIdentifier="smileys" label="Smileys" paletteLabel="Smileys" toolTip="Toggle the display of smileys" tag="100" image="smiley_on" id="127">
-                        <size key="minSize" width="22" height="22"/>
-                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="toolbarButtonClicked:" target="-2" id="129"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="NSToolbarPrintItem" id="131"/>
                     <toolbarItem implicitItemIdentifier="F706FBD6-3282-4E5A-B901-59387DE517EE" explicitItemIdentifier="history" label="History" paletteLabel="History" toolTip="Show previously exchanged messages" tag="101" image="time" id="128">
-                        <size key="minSize" width="22" height="22"/>
-                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="toolbarButtonClicked:" target="-2" id="130"/>
                         </connections>

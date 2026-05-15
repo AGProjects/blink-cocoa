@@ -719,6 +719,42 @@ class SIPManager(object, metaclass=Singleton):
             bonjour_account.enabled=True
             self.bonjour_disabled_on_sleep=False
 
+        # After wake, the kernel has torn down every TCP/TLS socket the SIP
+        # stack was using during sleep, but PJSIP still has those transports
+        # cached in its transport manager. The first request on each account
+        # discovers the dead socket and triggers a fresh TLS handshake; with
+        # many accounts (or many subscriptions per account) all firing at
+        # once we get an SSL-socket-create storm that previously exhausted
+        # the pool and crashed inside default_pool_callback's longjmp. The
+        # caching pool's OOM callback is now non-throwing (see _core.lib.pxi)
+        # so the storm no longer crashes, but it's still wasteful: we end up
+        # doing N parallel TLS handshakes to the same proxy in many cases.
+        #
+        # Wait a few seconds for the network to stabilize, then refresh
+        # accounts one at a time so registrations and subscriptions are
+        # rebuilt sequentially.
+        reactor.callLater(5, self._refresh_accounts_after_wake)
+
+    @objc.python_method
+    def _refresh_accounts_after_wake(self):
+        accounts = [account for account in AccountManager().iter_accounts()
+                    if not isinstance(account, BonjourAccount) and account.enabled]
+        BlinkLogger().log_info("Refreshing %d account(s) after wake from sleep" % len(accounts))
+        for index, account in enumerate(accounts):
+            # 1.5s gap between accounts is enough for one TLS handshake +
+            # REGISTER round-trip on a typical link without burning much
+            # wall-clock time before the user can place a call.
+            reactor.callLater(index * 1.5, self._refresh_account_after_wake, account)
+
+    @objc.python_method
+    def _refresh_account_after_wake(self, account):
+        try:
+            BlinkLogger().log_debug("Refreshing account %s after wake" % account.id)
+            account.reregister()
+            account.resubscribe()
+        except Exception as e:
+            BlinkLogger().log_info("Failed to refresh account %s after wake: %s" % (account.id, e))
+
     @objc.python_method
     def _NH_XCAPManagerDidChangeState(self, sender, data):
         if data.state.lower() == 'insync':

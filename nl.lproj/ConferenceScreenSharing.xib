@@ -54,8 +54,6 @@
             <toolbar key="toolbar" implicitIdentifier="1F3F523C-0F95-48AF-BC39-5CDB9F9B1441" autosavesConfiguration="NO" allowsUserCustomization="NO" displayMode="iconOnly" sizeMode="small" id="25">
                 <allowedToolbarItems>
                     <toolbarItem implicitItemIdentifier="AD081F30-E862-4F6E-9E2A-3E930931E25F" explicitItemIdentifier="fit" label="" paletteLabel="" toolTip="Klik om inhoud passend te maken in venster" tag="100" image="shrinktofit-pressed" autovalidates="NO" id="43">
-                        <size key="minSize" width="31" height="21"/>
-                        <size key="maxSize" width="31" height="32"/>
                         <button key="view" tag="100" id="44">
                             <rect key="frame" x="0.0" y="14" width="31" height="21"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>

@@ -270,8 +270,6 @@
             <toolbar key="toolbar" implicitIdentifier="48BE55B7-C662-4483-91B1-686E4E16A638" allowsUserCustomization="NO" displayMode="iconAndLabel" sizeMode="regular" id="34">
                 <allowedToolbarItems>
                     <toolbarItem implicitItemIdentifier="518AE8FE-A72E-43F6-9D3D-7AB3FEB40465" label="Resultate Contacte Filtrate" paletteLabel="Resultate Contacte Filtrate" toolTip="Tastează Text și Apasă Enter" id="112">
-                        <size key="minSize" width="97" height="22"/>
-                        <size key="maxSize" width="217" height="22"/>
                         <searchField key="view" verticalHuggingPriority="750" id="113">
                             <rect key="frame" x="0.0" y="14" width="127" height="22"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
@@ -298,23 +296,17 @@
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="6F411DA1-8DE1-40E2-908F-C7609724A924" explicitItemIdentifier="smileys" label="Fețe" paletteLabel="Fețe" toolTip="Comută Icoanele Cu Fețe" tag="100" image="smiley_on" id="61">
-                        <size key="minSize" width="22" height="22"/>
-                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarItem:" target="-2" id="63"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="8C097A50-0FB6-4D94-A38F-75AA87F9C79F" explicitItemIdentifier="delete" label="Șterge" paletteLabel="Șterge" toolTip="Șterge Mesajele" tag="101" image="trash" id="78">
-                        <size key="minSize" width="22" height="22"/>
-                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarItem:" target="-2" id="79"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="2B4E8F2E-3342-434C-A85E-8083D0CE95E6" label="Caută dupa Canal" paletteLabel="Caută dupa Canal" id="106">
                         <nil key="toolTip"/>
-                        <size key="minSize" width="100" height="22"/>
-                        <size key="maxSize" width="162" height="26"/>
                         <popUpButton key="view" toolTip="Filtreză Dupa Canal" verticalHuggingPriority="750" id="100">
                             <rect key="frame" x="0.0" y="14" width="158" height="22"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
@@ -342,8 +334,6 @@
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="2AF7BC69-9C46-4FA9-BA4A-202B661F50F3" label="Caută Dupa Dată" paletteLabel="Caută Dupa Dată" title="Ultima zi" id="121">
                         <nil key="toolTip"/>
-                        <size key="minSize" width="100" height="22"/>
-                        <size key="maxSize" width="172" height="26"/>
                         <popUpButton key="view" toolTip="Filtrează După Dată" verticalHuggingPriority="750" id="122">
                             <rect key="frame" x="0.0" y="14" width="172" height="22"/>
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
@@ -377,8 +367,6 @@
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="1687D524-C80C-4B03-A03B-7E94691D1615" label="Caută conținut" paletteLabel="Caută conținut" toolTip="Tastează Text și Apasă Enter" id="45">
-                        <size key="minSize" width="191" height="22"/>
-                        <size key="maxSize" width="217" height="26"/>
                         <searchField key="view" verticalHuggingPriority="750" id="43">
                             <rect key="frame" x="0.0" y="14" width="205" height="22"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>

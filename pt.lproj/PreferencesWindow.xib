@@ -386,78 +386,56 @@
             <toolbar key="toolbar" implicitIdentifier="46C73AA8-C878-4E81-945F-DA08EFCFC87B" autosavesConfiguration="NO" allowsUserCustomization="NO" displayMode="iconAndLabel" sizeMode="regular" id="243">
                 <allowedToolbarItems>
                     <toolbarItem implicitItemIdentifier="EBC02DE0-FBD7-4988-883A-1FD48678C6E6" explicitItemIdentifier="accounts" label="Contas" paletteLabel="Contas" image="NSUserGroup" autovalidates="NO" selectable="YES" id="251">
-                        <size key="minSize" width="22" height="22"/>
-                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="255"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="AD8D94E1-3CF8-437D-A1C6-C26E571B8712" explicitItemIdentifier="audio" label="Áudio" paletteLabel="Áudio" image="audio" autovalidates="NO" selectable="YES" id="263">
-                        <size key="minSize" width="22" height="22"/>
-                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="271"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="5AD724EF-E683-47C3-ADCD-0E20F3598E83" explicitItemIdentifier="answering_machine" label="Secretária Eletrônica" paletteLabel="Secretária Eletrônica" image="answering_machine" autovalidates="NO" selectable="YES" id="282">
-                        <size key="minSize" width="26" height="22"/>
-                        <size key="maxSize" width="26" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="283"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="B72F1019-EFCB-4603-88EF-079185F7F3D1" explicitItemIdentifier="chat" label="Chat" paletteLabel="Chat" image="pencil" autovalidates="NO" selectable="YES" id="269">
-                        <size key="minSize" width="22" height="22"/>
-                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="272"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="963222D1-D121-470E-9002-64936FCFFCDA" explicitItemIdentifier="file-transfer" label="Transferências" paletteLabel="Transferências" image="upfile" autovalidates="NO" selectable="YES" id="264">
-                        <size key="minSize" width="22" height="22"/>
-                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="273"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="DF3A0ED3-5092-4BBC-8C04-C7CFCB9793D4" explicitItemIdentifier="video" label="Vídeo" paletteLabel="Vídeo" image="video" autovalidates="NO" selectable="YES" id="VXd-Rw-cDk">
-                        <size key="minSize" width="22" height="22"/>
-                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="dC9-9O-uom"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="BFA1BA39-4A16-467F-A060-CC2BEE06DFE5" explicitItemIdentifier="screen-sharing" label="Tela" paletteLabel="Tela" image="display" autovalidates="NO" selectable="YES" id="276">
-                        <size key="minSize" width="22" height="22"/>
-                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="277"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="3842C6BF-5A9E-47A3-BAFB-78A5081C34C5" explicitItemIdentifier="alerts" label="Alertas" paletteLabel="Alertas" image="alerts" autovalidates="NO" selectable="YES" id="265">
-                        <size key="minSize" width="22" height="22"/>
-                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="274"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="7F6CEF6E-EA19-49AD-9637-E43C55808FD8" explicitItemIdentifier="contacts" label="Contatos" paletteLabel="Contatos" image="contacts" autovalidates="NO" selectable="YES" id="286">
-                        <size key="minSize" width="22" height="22"/>
-                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="287"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="3D83F4CC-FBDF-4B08-8E94-B36CD3C2483B" explicitItemIdentifier="advanced" label="Avançado" paletteLabel="Avançado" tag="6" image="NSAdvanced" autovalidates="NO" selectable="YES" id="252">
-                        <size key="minSize" width="22" height="22"/>
-                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="254"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="EA96B188-9160-464B-85E4-3A14A26A039F" explicitItemIdentifier="help" label="Ajuda" paletteLabel="Ajuda" tag="6" image="help" autovalidates="NO" id="288">
-                        <size key="minSize" width="22" height="22"/>
-                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="289"/>
                         </connections>

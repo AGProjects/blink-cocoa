@@ -6080,6 +6080,18 @@ class ContactWindowController(NSWindowController):
         # BlinkLogger().log_info('startup: FileTransferWindowController()')
         self.fileTransfersWindow = FileTransferWindowController()
         # BlinkLogger().log_info('startup: SIPApplicationDidStart exit')
+
+        # Defensive cleanup: silently merge any duplicate Contacts in
+        # the 'Messages' group on startup. Logs only when it actually
+        # deletes something, so a clean launch is silent. The race fix
+        # in SMSWindowManager.getContact() should keep new duplicates
+        # from being created in the first place.
+        try:
+            from SMSWindowManager import SMSWindowManager
+            SMSWindowManager().mergeMessagesGroupDuplicates()
+        except Exception as e:
+            BlinkLogger().log_info(
+                'Messages group merge failed: %s' % e)
         
     @objc.python_method
     def _NH_BlinkShouldTerminate(self, notification):

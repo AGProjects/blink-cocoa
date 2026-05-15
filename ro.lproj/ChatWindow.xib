@@ -66,58 +66,42 @@
             <toolbar key="toolbar" implicitIdentifier="156B0838-4A95-4317-9B22-596B09187778" explicitIdentifier="chat-toolbar2" displayMode="iconAndLabel" sizeMode="small" id="72">
                 <allowedToolbarItems>
                     <toolbarItem implicitItemIdentifier="91FA6B1F-67F1-4778-BE23-5E3E60B93288" explicitItemIdentifier="connect_button" label="Conectează" paletteLabel="Conectează" toolTip="Începe convorbire text" tag="100" image="start_chat" id="81">
-                        <size key="minSize" width="22" height="22"/>
-                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="83"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="D4CB40A5-9102-40F1-8D4D-CAEFE9ADC1E9" explicitItemIdentifier="audio" label="Audio" paletteLabel="Audio" toolTip="Adaugă Audio" tag="101" image="audio" id="113">
-                        <size key="minSize" width="22" height="22"/>
-                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="114"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="001857D0-D904-4370-B636-2FB046D35BD1" explicitItemIdentifier="hold" label="Pauză" paletteLabel="Pauză" toolTip="Pauză audio" tag="102" image="pause" id="224">
-                        <size key="minSize" width="22" height="22"/>
-                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="225"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="6DF49D6E-2CA2-43C2-A172-A89C93D95550" explicitItemIdentifier="record" label="Înregistrează" paletteLabel="Înregistrează" toolTip="Înregistrează Apelul Audio" tag="103" image="record" autovalidates="NO" id="244">
-                        <size key="minSize" width="22" height="22"/>
-                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="245"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="C3E6F7C9-F452-4335-BCFB-4A71AC47C40A" explicitItemIdentifier="video" label="Video" paletteLabel="Video" toolTip="Adaugă audio" tag="107" image="video" id="MK1-En-CVo">
-                        <size key="minSize" width="22" height="22"/>
-                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="n7e-tx-St4"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="A6D99212-6BF1-48B7-94D2-46D3AFC16163" explicitItemIdentifier="editor" label="Editor" paletteLabel="Editor" toolTip="Arată Editorul Colaborativ" tag="109" image="editor" id="441">
-                        <size key="minSize" width="22" height="22"/>
-                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="442"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="NSToolbarFlexibleSpaceItem" id="78"/>
                     <toolbarItem implicitItemIdentifier="58831C47-CC9F-4CA5-B45A-C67305AECC89" explicitItemIdentifier="sendfile" label="Trimite Fișier" paletteLabel="Trimite Fișier" toolTip="Trimite Fișiere" tag="105" image="upfile" id="92">
-                        <size key="minSize" width="22" height="22"/>
-                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="102"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="94A6B932-2B35-4C7C-889C-AA8DABBDD596" explicitItemIdentifier="screen" label="Ecran" paletteLabel="Ecran" toolTip="Partajare Ecran" tag="204" image="display" autovalidates="NO" id="549">
-                        <size key="minSize" width="48" height="42"/>
-                        <size key="maxSize" width="54" height="47"/>
                         <popUpButton key="view" tag="204" id="543">
                             <rect key="frame" x="0.0" y="14" width="54" height="42"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
@@ -135,8 +119,6 @@
                         </popUpButton>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="A8B34588-AC14-4529-AC47-CEE1FC2F8538" explicitItemIdentifier="screenshot" label="Captureză" paletteLabel="Captureză" toolTip="Trimite Copie Dupa Ecran" image="screenshot" id="573">
-                        <size key="minSize" width="48" height="42"/>
-                        <size key="maxSize" width="54" height="47"/>
                         <popUpButton key="view" id="567">
                             <rect key="frame" x="4" y="14" width="54" height="42"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
@@ -171,8 +153,6 @@
                         </popUpButton>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="31DAD979-72E0-4CE9-8AC5-7F153ECEAEDF" explicitItemIdentifier="encryption" label="Criptare" paletteLabel="Criptare" toolTip="Opțiuni Criptare" image="unlocked-darkgray" autovalidates="NO" id="666">
-                        <size key="minSize" width="48" height="35"/>
-                        <size key="maxSize" width="55" height="47"/>
                         <popUpButton key="view" id="660">
                             <rect key="frame" x="0.0" y="14" width="54" height="35"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
@@ -223,22 +203,16 @@
                         </popUpButton>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="10454448-2EEC-4B2B-91D8-6B6BCDA3C4AB" explicitItemIdentifier="smileys" label="Fețe" paletteLabel="Fețe" toolTip="Comută Icoanele Cu Fețe" tag="106" image="smiley_on" id="443">
-                        <size key="minSize" width="22" height="22"/>
-                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="444"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="F3F27C08-83DC-4837-8C62-FE767578E229" explicitItemIdentifier="history" label="Istorie" paletteLabel="Istorie" toolTip="Arată mesajele schimbate anterior" tag="107" image="time" id="253">
-                        <size key="minSize" width="22" height="22"/>
-                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="254"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="9277B918-C2D9-41A1-A62A-32504D846977" explicitItemIdentifier="participants" label="Participanți" paletteLabel="Participanți" toolTip="Comută Panoul Participanților" tag="108" image="NSEveryone" id="208">
-                        <size key="minSize" width="22" height="22"/>
-                        <size key="maxSize" width="22" height="22"/>
                         <connections>
                             <action selector="toggle:" target="136" id="210"/>
                         </connections>

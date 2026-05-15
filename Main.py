@@ -50,7 +50,6 @@ class NSLogger(object):
     def tell(self): raise IOError("NSLogger does not have position")
     def truncate(self, size=0): raise IOError("cannot truncate NSLogger")
     def write(self, text):
-        pool = Foundation.NSAutoreleasePool.alloc().init()
         if isinstance(text, str):
             text = text.rstrip()
         elif not isinstance(text, buffer):
@@ -60,38 +59,34 @@ class NSLogger(object):
         # to an empty string; emitting it would produce a blank line
         # between every real log line in Xcode's console, so skip it.
         if not text:
-            del pool
             return
-        Foundation.NSLog("%@", text)
-        # Also mirror to the *original* stderr so the line shows up in
-        # Xcode's debugger console. Since macOS Sonoma/Sequoia, NSLog no
-        # longer writes to stderr by default — it goes only to the
-        # unified-logging system, which Xcode's console doesn't read.
+        # Write directly to the *original* stderr (preserved by Python
+        # before sys.stderr was reassigned). The dup2-based pipe filter
+        # in main.m sits in front of fd 2, so this is what Xcode's
+        # console actually reads. We deliberately don't go through
+        # Foundation.NSLog here: NSLog feeds the unified-logging system
+        # (os_log), which rate-limits dense bursts and emits its own
+        # "Logging Error: Failed to receive N log messages" warnings.
+        # logs/activity.txt still mirrors every line via BlinkLogger,
+        # so the on-disk log is unaffected.
         try:
             sys.__stderr__.write(text + '\n')
             sys.__stderr__.flush()
         except Exception:
             pass
-        del pool
     def writelines(self, lines):
-        pool = Foundation.NSAutoreleasePool.alloc().init()
-        for line in lines:
-            if isinstance(line, str):
-                line = line.rstrip()
-            elif not isinstance(line, buffer):
-                raise TypeError("writelines() argument must be a sequence of strings")
-            if not line:
-                continue
-            Foundation.NSLog("%@", line)
-            try:
-                sys.__stderr__.write(line + '\n')
-            except Exception:
-                pass
         try:
+            for line in lines:
+                if isinstance(line, str):
+                    line = line.rstrip()
+                elif not isinstance(line, buffer):
+                    raise TypeError("writelines() argument must be a sequence of strings")
+                if not line:
+                    continue
+                sys.__stderr__.write(line + '\n')
             sys.__stderr__.flush()
         except Exception:
             pass
-        del pool
 
 sys.stdout = NSLogger()
 sys.stderr = NSLogger()

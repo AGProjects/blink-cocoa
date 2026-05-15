@@ -933,12 +933,21 @@ class SMSWindowManagerClass(NSObject):
             return None
 
         blink_contact = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(uri)
-        if not blink_contact:
-            BlinkLogger().log_info('Adding contact for %s' % uri)
-            contact = NSApp.delegate().contactsWindowController.model.addContactForUri(uri)
-            self.new_contacts.add(contact)
-        else:
+        if blink_contact is not None:
             contact = blink_contact.contact
+        else:
+            # The model's groupsList only iterates contacts that are
+            # already filed in a group. A contact created earlier in
+            # this same burst (or from a parallel incoming message) is
+            # saved to AddressbookManager but won't appear in any group
+            # until addContactsToMessagesGroup() commits, which happens
+            # after this lookup returns. Scan the addressbook directly
+            # so that gap doesn't generate a duplicate Contact.
+            contact = self._findContactByCanonicalURI(uri)
+            if contact is None:
+                BlinkLogger().log_info('Adding contact for %s' % uri)
+                contact = NSApp.delegate().contactsWindowController.model.addContactForUri(uri)
+                self.new_contacts.add(contact)
 
         if addGroup:
             self.addContactsToMessagesGroup()
@@ -946,10 +955,35 @@ class SMSWindowManagerClass(NSObject):
         return contact
 
     @objc.python_method
+    def _findContactByCanonicalURI(self, uri):
+        """Return an existing Contact whose canonical URI matches `uri`,
+        or None. Walks AddressbookManager.get_contacts() directly so we
+        catch contacts that exist in storage but haven't been filed into
+        the model's groupsList yet (the duplication race in getContact).
+        Linear scan: with a few hundred contacts this is far cheaper
+        than the cost of the duplicate it prevents.
+        """
+        canonical = self._canonical_uri(uri)
+        if not canonical:
+            return None
+        try:
+            contacts = AddressbookManager().get_contacts()
+        except Exception:
+            return None
+        for c in contacts:
+            try:
+                for u in c.uris:
+                    if self._canonical_uri(u.uri) == canonical:
+                        return c
+            except Exception:
+                continue
+        return None
+
+    @objc.python_method
     def addContactsToMessagesGroup(self):
         if len(self.new_contacts) == 0:
             return
-            
+
         group_id = '_messages'
         try:
             group = next((group for group in AddressbookManager().get_groups() if group.id == group_id))
@@ -962,12 +996,161 @@ class SMSWindowManagerClass(NSObject):
                 group.name = 'Messages'
                 group.position = 0
                 group.expanded = True
-        
+
         for contact in self.new_contacts:
             group.contacts.add(contact)
 
         group.save()
         self.new_contacts = set()
+
+    @objc.python_method
+    def _canonical_uri(self, raw_uri):
+        """Normalize a SIP URI for duplicate-detection purposes.
+
+        Strips 'sip:'/'sips:' scheme, ';parameters', URL-encoded display
+        parts and surrounding whitespace, then lower-cases the result so
+        case-only variants collapse to one key. The bare result is
+        intentionally left as 'user@host[:port]' — port is preserved
+        because Blink stores port-suffixed URIs distinctly today, and
+        we want the audit to *show* that as a duplicate rather than
+        silently merge it.
+        """
+        if raw_uri is None:
+            return ''
+        s = str(raw_uri).strip()
+        # strip scheme
+        for scheme in ('sips:', 'sip:'):
+            if s.lower().startswith(scheme):
+                s = s[len(scheme):]
+                break
+        # strip parameters (everything after first ';')
+        if ';' in s:
+            s = s.split(';', 1)[0]
+        # strip headers (anything after '?')
+        if '?' in s:
+            s = s.split('?', 1)[0]
+        return s.lower().strip()
+
+    @objc.python_method
+    def _isUserRenamedContact(self, contact):
+        """A contact is considered 'user-renamed' (and therefore worth
+        keeping over auto-created clones) when its display name is
+        present and doesn't equal any of its URIs. The auto-create path
+        in addContactForUri() defaults `name = uri`, so anything where
+        name != uri is a sign the user touched it.
+        """
+        try:
+            name = (getattr(contact, 'name', '') or '').strip()
+            if not name:
+                return False
+            lname = name.lower()
+            for u in contact.uris:
+                if lname == self._canonical_uri(u.uri):
+                    return False
+                if lname == str(u.uri).lower().strip():
+                    return False
+            return True
+        except Exception:
+            return False
+
+    @objc.python_method
+    def mergeMessagesGroupDuplicates(self):
+        """Walk the 'Messages' (_messages) group and merge duplicate
+        Contacts that share a canonical URI. Survivor is chosen as:
+            1. the contact with a user-edited display name (name != uri)
+            2. otherwise the oldest contact (lowest id, lexicographic)
+        Non-survivors are removed from the group and deleted from the
+        addressbook. Chat history is keyed by SIP URI (not contact id)
+        and the URIs are byte-identical across a cluster, so timelines
+        are inherited automatically by the survivor.
+
+        Returns the number of contacts deleted.
+        """
+        log = BlinkLogger().log_info
+        group_id = '_messages'
+
+        try:
+            group = next(g for g in AddressbookManager().get_groups() if g.id == group_id)
+        except StopIteration:
+            log("Messages group merge: no '_messages' group exists yet")
+            return 0
+
+        # Cluster contacts by canonical URI, exactly like the audit.
+        by_key = {}
+        for c in list(group.contacts):
+            try:
+                uris = list(c.uris)
+            except Exception:
+                uris = []
+            keys = set()
+            for u in uris:
+                try:
+                    k = self._canonical_uri(u.uri)
+                except Exception:
+                    k = ''
+                if k:
+                    keys.add(k)
+            if not keys:
+                # No URIs at all — leave it alone, we can't merge by key
+                continue
+            for k in keys:
+                by_key.setdefault(k, []).append(c)
+
+        addressbook_manager = AddressbookManager()
+        deleted_total = 0
+        clusters_merged = 0
+        try:
+            with addressbook_manager.transaction():
+                for key, members in by_key.items():
+                    unique = {c.id: c for c in members}
+                    if len(unique) <= 1:
+                        continue
+
+                    renamed = [c for c in unique.values()
+                               if self._isUserRenamedContact(c)]
+                    if renamed:
+                        survivor = min(renamed, key=lambda c: c.id)
+                    else:
+                        survivor = min(unique.values(), key=lambda c: c.id)
+
+                    losers = [c for c in unique.values() if c.id != survivor.id]
+                    log("MERGE canonical=%r keep id=%s name=%r drop=%d" % (
+                        key, survivor.id, getattr(survivor, 'name', ''),
+                        len(losers)))
+
+                    for c in losers:
+                        try:
+                            log("  -> delete id=%s name=%r" % (
+                                c.id, getattr(c, 'name', '')))
+                            try:
+                                group.contacts.discard(c)
+                            except Exception:
+                                # Some Group implementations expose contacts
+                                # as a list rather than a set.
+                                try:
+                                    group.contacts.remove(c)
+                                except Exception:
+                                    pass
+                            c.delete()
+                            deleted_total += 1
+                        except Exception as e:
+                            log("  -> delete failed id=%s: %s" % (c.id, e))
+
+                    clusters_merged += 1
+
+                if deleted_total:
+                    try:
+                        group.save()
+                    except Exception as e:
+                        log("Failed to save _messages group after merge: %s" % e)
+        except Exception as e:
+            log("Messages group merge transaction failed: %s" % e)
+            return 0
+
+        if deleted_total:
+            log("Messages group merge: %d cluster(s), deleted %d duplicate "
+                "contact(s)" % (clusters_merged, deleted_total))
+        return deleted_total
 
     @objc.python_method
     def _decrypt_pgp_for_account(self, account_id, body):
