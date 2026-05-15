@@ -15,12 +15,19 @@ if uname -v | grep ARM64 | grep Darwin >/dev/null; then
         gnutls +universal openssl +universal sqlite3 +universal \
         libuuid +universal libopus +universal \
         mpfr +universal libmpc +universal libvpx +universal \
-        gmp +universal
+        gmp +universal \
+        fdk-aac +universal
+    # AV1 (libaom / libdav1d / libsvt-av1) intentionally not pulled in here.
+    # PJSIP can only consume AV1 via ffmpeg, and switching MacPorts ffmpeg to
+    # a version that supports AV1 currently fails on Apple Silicon (Tahoe)
+    # because of a meson/glib2 cross-build issue. Revisit when MacPorts ships
+    # a working ffmpeg-devel +universal build.
 else
     # Intel: same set without +universal.
     sudo port install \
         pkgconfig yasm x264 gnutls openssl sqlite3 \
-        libuuid libopus mpfr libmpc libvpx gmp
+        libuuid libopus mpfr libmpc libvpx gmp \
+        fdk-aac
 fi
 
 sudo port install create-dmg
