@@ -19,8 +19,8 @@ from application.python.descriptor import WriteOnceAttribute
 from resources import ApplicationData, Resources
 from sipsimple.configuration.datatypes import Hostname, CodecList
 
-blink_audio_codecs = ('opus', 'G722', 'PCMU', 'PCMA')
-blink_video_codecs = ('H264', 'VP8', 'VP9')
+blink_audio_codecs = ('opus', 'G722', 'G729', 'PCMU', 'PCMA')
+blink_video_codecs = ('VP9', 'VP8', 'H264')
 
 
 try:
