@@ -18,8 +18,13 @@ set my_name         ffmpeg
 conflicts           ffmpeg-devel
 
 # Please increase the revision of mpv whenever ffmpeg's version is updated.
+# revision 8: explicit --enable-neon / --enable-asm / --cpu=generic for
+# the arm64 slice — see the universal/single-arch configure blocks
+# below. Bumping the revision forces MacPorts to rebuild on
+# `sudo port upgrade ffmpeg` even though the source tarball hash
+# hasn't changed.
 version             4.4.5
-revision            7
+revision            8
 epoch               1
 
 license             LGPL-2.1+
@@ -332,6 +337,25 @@ if {${universal_possible} && [variant_isset universal]} {
                     --enable-x86asm
     lappend merger_configure_args(x86_64) \
                     --enable-x86asm
+    # Apple Silicon (arm64) slice — explicitly enable NEON + the asm
+    # paths in general. ffmpeg 4.4.5's configure usually auto-detects
+    # NEON on --arch=arm64, but the auto-detect runs an `as` probe
+    # with the merger's stripped-down ASFLAGS=-arch arm64 environment
+    # and has been observed to silently fall back to the C reference
+    # loop on macOS 13+ with Xcode 15+. The result is a
+    # libswscale.5.dylib whose sws_scale takes tens of ms per frame
+    # instead of microseconds and pins one P-core at 100% on every
+    # video call (visible in a `sample` of Blink as a clock_thread
+    # parked in sws_scale for the full sample window). Forcing
+    # --enable-neon and --enable-asm here keeps the NEON paths in the
+    # arm64 slice regardless of what auto-detect decides. --cpu=generic
+    # avoids tuning for a specific microarchitecture so the resulting
+    # binary still runs on every Apple Silicon variant (M1 .. M4)
+    # without an illegal-instruction trap.
+    lappend merger_configure_args(arm64) \
+                    --enable-neon \
+                    --enable-asm \
+                    --cpu=generic
 } else {
     configure.args-append \
                     --arch=${configure.build_arch}
@@ -342,6 +366,16 @@ if {${universal_possible} && [variant_isset universal]} {
                     port:nasm
         configure.args-append \
                     --enable-x86asm
+    }
+    if {${build_arch} eq "arm64"} {
+        # Single-arch arm64 build — same NEON + asm enablement as in
+        # the universal merger above. See the comment there for why
+        # the auto-detect path can't be relied on with Xcode 15+ on
+        # macOS Sonoma / Sequoia / Tahoe.
+        configure.args-append \
+                    --enable-neon \
+                    --enable-asm \
+                    --cpu=generic
     }
 }
 
