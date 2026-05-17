@@ -500,6 +500,125 @@ class AlertPanel(NSObject, object):
         else:
             self.conferenceButton.setHidden_(False)
 
+        # The xib pins these buttons to fixed 100/120/182 px frames that
+        # were tuned against a much older AppKit button style. On macOS
+        # 26 Tahoe the new rounded-rect button style renders each
+        # button at its intrinsic content width plus a fatter capsule
+        # padding, so a 100 px frame with a 110 px intrinsic-content
+        # button overlaps the one next to it. Re-pack everything from
+        # natural widths now, after titles / hidden state have been
+        # set, so the layout adapts to whatever bezel padding the
+        # current OS applies. Relayout the bottom-bar once, plus EVERY
+        # session row (titles on existing rows can flip between empty
+        # and non-empty as sessions are added — see the loop above
+        # that updates each row's tag-5..8 hidden state).
+        self._relayoutPanelButtons()
+        for v in list(self.sessions.values()):
+            self._relayoutSessionRowButtons(v)
+
+    @objc.python_method
+    def _relayoutPanelButtons(self):
+        """Re-lay-out the panel's bottom-bar buttons (Reject / Busy /
+        Answering Machine / Conference / Accept / Accept All) so they
+        don't overlap on macOS 26 Tahoe."""
+        try:
+            self._packButtonRow(
+                container=self.panel.contentView(),
+                left_buttons=[self.rejectButton, self.busyButton,
+                              self.answeringMachineButton],
+                right_buttons=[self.acceptAllButton, self.acceptButton,
+                               self.conferenceButton],
+                left_margin=15.0,
+                right_margin=15.0,
+                gap=8.0,
+                min_button_width=80.0,
+            )
+        except Exception as e:
+            BlinkLogger().log_debug(
+                "AlertPanel bottom-bar relayout ignored: %s" % e)
+
+    @objc.python_method
+    def _relayoutSessionRowButtons(self, session_row_view):
+        """Re-lay-out one session row's buttons: tags 5 (Accept),
+        6 (Chat-Only), 7 (Reject), 8 (Busy). Same Tahoe-overlap fix
+        as ``_relayoutPanelButtons`` but applied per-row."""
+        try:
+            accept = session_row_view.viewWithTag_(5)
+            chat_only = session_row_view.viewWithTag_(6)
+            reject = session_row_view.viewWithTag_(7)
+            busy = session_row_view.viewWithTag_(8)
+            self._packButtonRow(
+                container=session_row_view,
+                left_buttons=[reject, busy],
+                right_buttons=[accept, chat_only],
+                left_margin=4.0,
+                right_margin=4.0,
+                gap=8.0,
+                min_button_width=70.0,
+            )
+        except Exception as e:
+            BlinkLogger().log_debug(
+                "AlertPanel session-row relayout ignored: %s" % e)
+
+    @objc.python_method
+    def _packButtonRow(self, container, left_buttons, right_buttons,
+                       left_margin, right_margin, gap, min_button_width):
+        """Pack the visible subset of ``left_buttons`` from the left
+        and ``right_buttons`` from the right, preserving each button's
+        existing y/height. Hidden buttons are skipped — their frames
+        are left untouched so re-showing them later still works.
+
+        ``sizeToFit`` is called first to give the button its natural
+        width under the current OS's button style. We then bump that up
+        to ``min_button_width`` (so short titles like "Busy" stay
+        consistently sized with longer ones like "Reject")."""
+        container_w = container.frame().size.width
+
+        def fit_width(btn):
+            try:
+                btn.sizeToFit()
+            except Exception:
+                pass
+            w = btn.frame().size.width
+            if w < min_button_width:
+                w = min_button_width
+            # Add a couple of pixels of breathing room — sizeToFit on
+            # macOS 26 returns a tight fit that can look cramped
+            # next to the new pill-shaped focus ring.
+            return float(w) + 6.0
+
+        # Left group: pack left-to-right.
+        x = float(left_margin)
+        for btn in left_buttons:
+            if btn is None or btn.isHidden():
+                continue
+            f = btn.frame()
+            w = fit_width(btn)
+            f.origin.x = x
+            f.size.width = w
+            btn.setFrame_(f)
+            x += w + gap
+
+        left_extent = x  # right edge of the left group (after trailing gap)
+
+        # Right group: pack right-to-left.
+        x = float(container_w - right_margin)
+        for btn in right_buttons:
+            if btn is None or btn.isHidden():
+                continue
+            f = btn.frame()
+            w = fit_width(btn)
+            x -= w
+            if x < left_extent:
+                # No horizontal room left — let the button clip rather
+                # than push it into the left group's space (which would
+                # produce the very overlap we're trying to fix).
+                x = max(x, left_extent)
+            f.origin.x = x
+            f.size.width = w
+            btn.setFrame_(f)
+            x -= gap
+
     @objc.python_method
     def format_subject_for_incoming_reinvite(self, session, streams):
         alt_action = None
