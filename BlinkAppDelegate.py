@@ -523,6 +523,36 @@ class BlinkAppDelegate(NSObject):
         self.debug = settings.gui.extended_debug
         self.purge_temporary_files()
 
+        # One-time migration: HD 720p capture has been removed from the
+        # video preferences, only VGA is offered, the framerate /
+        # resolution / max-bitrate / container controls are hidden
+        # from the UI, and video calls always open in a standalone
+        # window (not the audio drawer). Pin every one of those
+        # settings to its canonical value so pjsip doesn't keep using
+        # a value the user can no longer change in preferences.
+        try:
+            from sipsimple.configuration.datatypes import VideoResolution
+            vga = VideoResolution('640x480')
+            changed = False
+            if settings.video.resolution != vga:
+                settings.video.resolution = vga
+                changed = True
+            if settings.video.framerate != 30:
+                settings.video.framerate = 30
+                changed = True
+            # max_bitrate is stored as a float in Mbit/s (matches the
+            # BandwidthOption popup's representedObject values).
+            if settings.video.max_bitrate != 2.5:
+                settings.video.max_bitrate = 2.5
+                changed = True
+            if settings.video.container != 'standalone':
+                settings.video.container = 'standalone'
+                changed = True
+            if changed:
+                settings.save()
+        except Exception:
+            pass
+
     @objc.python_method
     def _NH_SIPApplicationDidEnd(self, notification):
         BlinkLogger().log_info("Core engine stopped")

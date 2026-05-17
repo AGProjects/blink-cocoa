@@ -208,7 +208,12 @@ class VideoController(MediaStream):
     @objc.python_method
     def markMediaReceived(self):
         self.media_received = True
-        if self.videoWindowController and self.videoWindowController.disconnectLabel and self.videoWindowController.disconnectLabel.stringValue() == self.waiting_label:
+        # Hide the status pill once media is flowing, regardless of
+        # what text it currently shows. The legacy check only hid the
+        # "Waiting For Media..." label, leaving any other intermediate
+        # status (e.g. ICE negotiation, "Connecting...") stuck on
+        # screen forever if a keyframe arrived in that window.
+        if self.videoWindowController and self.videoWindowController.disconnectLabel:
             self.videoWindowController.hideStatusLabel()
 
     @objc.python_method
@@ -256,8 +261,16 @@ class VideoController(MediaStream):
 
     @objc.python_method
     def startOutgoing(self, is_update):
+        # Single-window flow: the main video window opens immediately
+        # in "preview" mode (the user sees themselves full-window
+        # while we ring / negotiate). When the remote video stream
+        # actually starts, _NH_MediaStreamDidStart triggers another
+        # show() pass which transitions into the connected layout
+        # (remote video as main, local camera in the corner thumb).
+        # The legacy separate VideoLocalWindowController is no longer
+        # used here.
         if self.videoWindowController:
-            self.videoWindowController.initLocalVideoWindow()
+            self.videoWindowController.show()
 
         self.ended = False
         self.notification_center.add_observer(self, sender=self.stream)
@@ -435,6 +448,21 @@ class VideoController(MediaStream):
         sample_rate = self.stream.sample_rate/1000
         codec = beautify_video_codec(self.stream.codec)
         self.sessionController.log_info("Video stream established to %s:%s using %s codec" % (self.stream.remote_rtp_address, self.stream.remote_rtp_port, codec))
+        # Same encryption-configuration log line as AudioController, so
+        # the Windows Logs panel shows the RTP encryption preference for
+        # each stream at the moment its media starts. Audio and video may
+        # legitimately have different encryption outcomes (e.g. SDES wins
+        # one and times out on the other), so logging per-stream rather
+        # than once per session keeps support diagnostics clean.
+        account = self.sessionController.account
+        rtp_enc = getattr(getattr(account, 'rtp', None), 'encryption', None)
+        if rtp_enc is None:
+            enc_setting = 'n/a'
+        elif not getattr(rtp_enc, 'enabled', False):
+            enc_setting = 'disabled'
+        else:
+            enc_setting = rtp_enc.key_negotiation
+        self.sessionController.log_info("RTP encryption configuration: %s" % enc_setting)
 
         self.changeStatus(STREAM_CONNECTED)
         self.sessionController.setVideoConsumer(self.sessionController.video_consumer)
@@ -565,7 +593,13 @@ class VideoController(MediaStream):
 
     @objc.python_method
     def _NH_RTPStreamDidEnableEncryption(self, sender, data):
-        self.sessionController.log_info("%s video encryption active using %s" % (sender.encryption.type, sender.encryption.cipher))
+        # sender.encryption.cipher is bytes from PJSIP — decode for a
+        # readable log line ('AES_CM_128_HMAC_SHA1_80' instead of
+        # "b'AES_CM_128_HMAC_SHA1_80'").
+        cipher_str = sender.encryption.cipher
+        if isinstance(cipher_str, (bytes, bytearray)):
+            cipher_str = cipher_str.decode('ascii', errors='replace')
+        self.sessionController.log_info("%s video encryption active using %s" % (sender.encryption.type, cipher_str))
         try:
             otr = self.sessionController.encryption['video']
         except KeyError:

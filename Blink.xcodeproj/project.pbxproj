@@ -862,6 +862,9 @@
 		1FF63CD119128A1400A502FB /* MyVideoWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FF63CD019128A1400A502FB /* MyVideoWindowController.py */; };
 		1FF63CD219128A1400A502FB /* MyVideoWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FF63CD019128A1400A502FB /* MyVideoWindowController.py */; };
 		1FF63CD419128A1400A502FB /* MyVideoWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FF63CD019128A1400A502FB /* MyVideoWindowController.py */; };
+		1A2B3C4D5E6F70020000000A /* VideoMirrorController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F70010000000A /* VideoMirrorController.py */; };
+		1A2B3C4D5E6F70030000000A /* VideoMirrorController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F70010000000A /* VideoMirrorController.py */; };
+		1A2B3C4D5E6F70040000000A /* VideoMirrorController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F70010000000A /* VideoMirrorController.py */; };
 		1FF63CD619128C4800A502FB /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FF63CD519128C4800A502FB /* AVFoundation.framework */; };
 		1FF6C3FF1498C06A0019F668 /* ScreensharingPreviewPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FF6C4031498C06A0019F668 /* ScreensharingPreviewPanel.xib */; };
 		1FF6C4001498C06A0019F668 /* ScreensharingPreviewPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FF6C4031498C06A0019F668 /* ScreensharingPreviewPanel.xib */; };
@@ -1758,6 +1761,7 @@
 		1FF5936B110F07C70047E2CD /* unavailable_message.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = unavailable_message.wav; path = sounds/unavailable_message.wav; sourceTree = "<group>"; };
 		1FF622FF140E20C000E81891 /* help.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = help.png; path = icons/help.png; sourceTree = "<group>"; };
 		1FF63CD019128A1400A502FB /* MyVideoWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MyVideoWindowController.py; sourceTree = "<group>"; };
+		1A2B3C4D5E6F70010000000A /* VideoMirrorController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoMirrorController.py; sourceTree = "<group>"; };
 		1FF63CD519128C4800A502FB /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		1FF6C4021498C06A0019F668 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ScreensharingPreviewPanel.xib; sourceTree = "<group>"; };
 		1FF6C40C1498C5560019F668 /* ScreensharingPreviewPanel.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = ScreensharingPreviewPanel.py; sourceTree = "<group>"; };
@@ -2137,6 +2141,7 @@
 				1F4B78A319AEAED300F854CB /* VideoLocalWindow.xib */,
 				1FF63CD019128A1400A502FB /* MyVideoWindowController.py */,
 				1F2436841912B23700E71253 /* MyVideoLocalWindow.xib */,
+				1A2B3C4D5E6F70010000000A /* VideoMirrorController.py */,
 			);
 			name = Video;
 			sourceTree = "<group>";
@@ -3048,6 +3053,7 @@
 				1F536AA61591BBDC00A0FE51 /* SubjectController.py in Resources */,
 				1F536AAD1591BCE500A0FE51 /* Subject.xib in Resources */,
 				1FF63CD219128A1400A502FB /* MyVideoWindowController.py in Resources */,
+				1A2B3C4D5E6F70030000000A /* VideoMirrorController.py in Resources */,
 				1F2D05C715A459DA00A7079A /* ContactController.py in Resources */,
 				DE9790FA15B41BC7005BBAD7 /* VirtualGroups.py in Resources */,
 				1F331DC6193B5CB600831F31 /* voicemail.png in Resources */,
@@ -3335,6 +3341,7 @@
 				1F35D04F17894FFF00C6FE38 /* PresencePublisher.py in Resources */,
 				1F35D05017894FFF00C6FE38 /* OfflineNoteController.py in Resources */,
 				1FF63CD419128A1400A502FB /* MyVideoWindowController.py in Resources */,
+				1A2B3C4D5E6F70040000000A /* VideoMirrorController.py in Resources */,
 				1F419C9619152F400051F3D9 /* branding-sip2sip.py in Resources */,
 				1F35D05117894FFF00C6FE38 /* PresenceInfoPanel.xib in Resources */,
 				1F35D05217894FFF00C6FE38 /* PresenceInfoController.py in Resources */,
@@ -3611,6 +3618,7 @@
 				1F2D05C615A459DA00A7079A /* ContactController.py in Resources */,
 				DE9790F915B41BC7005BBAD7 /* VirtualGroups.py in Resources */,
 				1FF63CD119128A1400A502FB /* MyVideoWindowController.py in Resources */,
+				1A2B3C4D5E6F70020000000A /* VideoMirrorController.py in Resources */,
 				1FD0F0AA15C9537400D2EE39 /* pending_watcher.tiff in Resources */,
 				1FD7AB8A15D2F18B00ECBAF5 /* blocked.png in Resources */,
 				1F331DC5193B5CB600831F31 /* voicemail.png in Resources */,
@@ -4553,7 +4561,7 @@
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 9.1.0;
+				CURRENT_PROJECT_VERSION = 920;
 				DEVELOPMENT_TEAM = 4DFEFUDLKZ;
 				ENABLE_HARDENED_RUNTIME = YES;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
@@ -4580,7 +4588,7 @@
 					"$(PROJECT_DIR)/Distribution/Frameworks/libs",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 11.5;
-				MARKETING_VERSION = 9.1.0;
+				MARKETING_VERSION = 9.2.0;
 				ONLY_ACTIVE_ARCH = NO;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				OTHER_CODE_SIGN_FLAGS = "";
@@ -4604,7 +4612,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 9.1.0;
+				CURRENT_PROJECT_VERSION = 920;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 4DFEFUDLKZ;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -4630,7 +4638,7 @@
 					"$(PROJECT_DIR)/Distribution/Frameworks/libs",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 11.5;
-				MARKETING_VERSION = 9.1.0;
+				MARKETING_VERSION = 9.2.0;
 				ONLY_ACTIVE_ARCH = NO;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				OTHER_CODE_SIGN_FLAGS = "";

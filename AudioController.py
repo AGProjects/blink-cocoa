@@ -982,6 +982,29 @@ class AudioController(MediaStream):
             item = menu.itemWithTag_(11)
             item.setHidden_(self.zrtp_active or not self.encryption_active)
 
+            # Compact two-state title — same convention the InfoPanel
+            # updateAudioStatus uses:
+            #   "zRTP with SAS: XYZW"  when Sylk-ZRTP key-active
+            #   "SDES"                  otherwise (SDES-only).
+            try:
+                sylk = self.sessionController.encryption.get('audio', {}) \
+                    if self.sessionController else {}
+                sylk_state = sylk.get('sylk_zrtp')
+                sas = sylk.get('sylk_zrtp_sas')
+                if not item.isHidden():
+                    if sylk_state == 'active' and sas:
+                        item.setTitle_('zRTP with SAS: %s' % sas)
+                    elif sylk_state == 'active':
+                        item.setTitle_('zRTP')
+                    else:
+                        enc_type = self.stream.encryption.type
+                        if enc_type and enc_type.startswith('SRTP/SDES'):
+                            item.setTitle_('SDES')
+                        else:
+                            item.setTitle_(enc_type or 'Encrypted')
+            except Exception:
+                pass
+
             # not encrypted
             item = menu.itemWithTag_(31)
             item.setHidden_(self.encryption_active)
@@ -1388,6 +1411,20 @@ class AudioController(MediaStream):
     def _NH_MediaStreamDidStart(self, sender, data):
         codec = beautify_audio_codec(self.stream.codec)
         self.sessionController.log_info("Audio stream established to %s:%s using %s codec" % (self.stream.remote_rtp_address, self.stream.remote_rtp_port, codec))
+        # Surface the account's configured RTP encryption preference at
+        # the moment media actually starts. Helps post-mortem the
+        # "why didn't ZRTP kick in" / "is this opportunistic or pure
+        # sdes" question without having to cross-reference settings.
+        # BonjourAccount doesn't have rtp.encryption, so guard.
+        account = self.sessionController.account
+        rtp_enc = getattr(getattr(account, 'rtp', None), 'encryption', None)
+        if rtp_enc is None:
+            enc_setting = 'n/a'
+        elif not getattr(rtp_enc, 'enabled', False):
+            enc_setting = 'disabled'
+        else:
+            enc_setting = rtp_enc.key_negotiation
+        self.sessionController.log_info("RTP encryption configuration: %s" % enc_setting)
 
         self.updateTileStatistics()
 
@@ -1595,7 +1632,13 @@ class AudioController(MediaStream):
     @objc.python_method
     def _NH_RTPStreamDidEnableEncryption(self, sender, data):
         self.update_encryption_icon()
-        self.sessionController.log_info("%s audio encryption active using %s" % (sender.encryption.type, sender.encryption.cipher))
+        # sender.encryption.cipher is bytes from PJSIP — decode for a
+        # readable log line ('AES_CM_128_HMAC_SHA1_80' instead of
+        # "b'AES_CM_128_HMAC_SHA1_80'").
+        cipher_str = sender.encryption.cipher
+        if isinstance(cipher_str, (bytes, bytearray)):
+            cipher_str = cipher_str.decode('ascii', errors='replace')
+        self.sessionController.log_info("%s audio encryption active using %s" % (sender.encryption.type, cipher_str))
         try:
             self.sessionController.encryption['audio']
         except KeyError:

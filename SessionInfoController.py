@@ -520,14 +520,29 @@ class SessionInfoController(NSObject):
             elif self.audio_stream.holdByRemote:
                 self.audio_status.setStringValue_(NSLocalizedString("Hold by Remote", "Label"))
             elif self.audio_stream.status == STREAM_CONNECTED:
-                if self.audio_stream.encryption_active:
+                # Compact two-state display the user asked for:
+                #   - "zRTP with SAS: XYZW"  when Sylk-ZRTP key-active
+                #     (the AES-128-GCM E2EE layer is the meaningful
+                #     security guarantee here, so we replace — not
+                #     append — the SDES label entirely).
+                #   - "SDES"  when SDES is active without Sylk-ZRTP
+                #     (or while Sylk-ZRTP is still in probing /
+                #     key-agreed / failed states).
+                #   - "Not Encrypted"  when no encryption at all.
+                sylk = self.sessionController.encryption.get('audio', {}) if self.sessionController else {}
+                sylk_state = sylk.get('sylk_zrtp')
+                sas = sylk.get('sylk_zrtp_sas')
+                if sylk_state == 'active' and sas:
+                    title = 'zRTP with SAS: %s' % sas
+                elif sylk_state == 'active':
+                    title = 'zRTP'
+                elif self.audio_stream.encryption_active:
                     stype = self.audio_stream.stream.encryption.type
                     if stype.startswith('SRTP/SDES'):
-                        stype = stype[5:]
-                
-                    cipher = self.audio_stream.stream.encryption.cipher
-                    cipher = cipher.decode() if isinstance(cipher, bytes) else cipher
-                    title = '%s (%s)' % (stype, cipher)
+                        # Show just "SDES" as requested.
+                        title = 'SDES'
+                    else:
+                        title = stype
                 else:
                     title = NSLocalizedString("Not Encrypted", "Label")
 
@@ -545,14 +560,23 @@ class SessionInfoController(NSObject):
             elif self.audio_stream and self.audio_stream.holdByRemote:
                 self.video_status.setStringValue_(NSLocalizedString("Hold by Remote", "Label"))
             elif self.video_stream.status == STREAM_CONNECTED:
-                if self.video_stream.encryption_active:
+                # Same compact two-state display as audio above.
+                # H.264 video skips Sylk-ZRTP install (STAP-A
+                # incompatibility) so for H.264 the user will see plain
+                # "SDES" here even when audio shows "zRTP with SAS".
+                sylk = self.sessionController.encryption.get('video', {}) if self.sessionController else {}
+                sylk_state = sylk.get('sylk_zrtp')
+                sas = sylk.get('sylk_zrtp_sas')
+                if sylk_state == 'active' and sas:
+                    title = 'zRTP with SAS: %s' % sas
+                elif sylk_state == 'active':
+                    title = 'zRTP'
+                elif self.video_stream.encryption_active:
                     stype = self.video_stream.stream.encryption.type
                     if stype.startswith('SRTP/SDES'):
-                        stype = stype[5:]
-
-                    cipher = self.video_stream.stream.encryption.cipher
-                    cipher = cipher.decode() if isinstance(cipher, bytes) else cipher
-                    title = '%s (%s)' % (stype, cipher)
+                        title = 'SDES'
+                    else:
+                        title = stype
                 else:
                     title = NSLocalizedString("Not Encrypted", "Label")
                 self.video_status.setStringValue_(title)
@@ -663,6 +687,33 @@ class SessionInfoController(NSObject):
     @objc.python_method
     def _NH_RTPStreamDidChangeHoldState(self, notification):
         self.updateAudioStatus()
+
+    @objc.python_method
+    def _NH_BlinkSessionSylkZRTPStateChanged(self, notification):
+        # Sender is the Blink SessionController (we already observe it via
+        # add_session at line ~178). The SDK-level
+        # SIPSessionSylkZRTPStateChanged notification was re-broadcast by
+        # SessionController._store_sylk_zrtp_state with self as sender so
+        # the InfoPanel can refresh without observing the sipsimple
+        # Session directly. Just re-render both stream labels — the
+        # Sylk-ZRTP suffix logic lives in updateAudioStatus /
+        # updateVideoStatus and reads from sessionController.encryption.
+        try:
+            data = notification.data
+            state = getattr(data, 'state', None)
+            audio_state = (self.sessionController
+                           and self.sessionController.encryption
+                           and self.sessionController.encryption.get('audio', {}).get('sylk_zrtp'))
+            audio_stream_status = (self.audio_stream and self.audio_stream.status)
+            self.sessionController.log_info(
+                "InfoPanel _NH_BlinkSessionSylkZRTPStateChanged: state=%s "
+                "encryption[audio][sylk_zrtp]=%s audio_stream.status=%s — refreshing audio/video status"
+                % (state, audio_state, audio_stream_status))
+        except Exception as e:
+            try: self.sessionController.log_info("InfoPanel _NH_BlinkSessionSylkZRTPStateChanged log threw: %s" % e)
+            except Exception: pass
+        self.updateAudioStatus()
+        self.updateVideoStatus()
 
     @objc.python_method
     def show(self):

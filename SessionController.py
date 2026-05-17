@@ -46,6 +46,16 @@ from sipsimple.application import SIPApplication
 from sipsimple.audio import WavePlayer
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import SIPURI, ToHeader, SIPCoreError, Route, Header
+
+
+# Sylk-flavoured ZRTP-over-in-dialog-MESSAGE is now handled entirely by
+# the SDK: when the local account's RTP encryption is configured for
+# opportunistic or zrtp, sipsimple.session.Session adds the X-Sylk-ZRTP
+# capability header automatically on INVITE/200 OK and runs the
+# X25519+HKDF handshake when SDES was negotiated and the peer signaled
+# the same capability. Apps only observe the new
+# SIPSessionSylkZRTPStateChanged notification — see SessionController's
+# _NH_SIPSessionSylkZRTPStateChanged handler.
 from sipsimple.lookup import DNSLookup
 from sipsimple.session import Session, SessionManager, IllegalStateError, IllegalDirectionError
 from sipsimple.streams.rtp.audio import AudioStream
@@ -1935,7 +1945,7 @@ class SessionController(NSObject):
                 NSRunAlertPanel(NSLocalizedString("Error", "Window title"), message, NSLocalizedString("OK", "Button title"), None, None)
             else:
                 extra_headers.append(Header('P-Asserted-Identity', '<%s>' % asserted_identity))
-                
+
         self.session.connect(ToHeader(target_uri), self.routes, streams, extra_headers=extra_headers)
         self.changeSessionState(STATE_CONNECTING)
         self.notification_center.post_notification("BlinkSessionWillStart", sender=self)
@@ -2208,6 +2218,111 @@ class SessionController(NSObject):
                 self.startSessionWithStreamOfType(oldSession.proposed_streams[0].type)
             else:
                 self.startCompositeSessionWithStreamsOfTypes([s.type for s in oldSession.proposed_streams])
+
+    @objc.python_method
+    def _store_sylk_zrtp_state(self, state, sas, installed_streams, failed_streams):
+        """Track per-stream Sylk-ZRTP state under self.encryption so the
+        Call Info panel can surface it alongside the SRTP/SDES line. We
+        store a separate dict per stream type so an H264 video that's
+        SDES-only can coexist with an OPUS audio that's Sylk-ZRTP-active
+        in the same session.
+        """
+        # Touch the dict so SessionInfoController can read either stream's
+        # state without KeyError. Always reset both to None first so a
+        # state regression (e.g. key-active → failed) is reflected.
+        for stype in ('audio', 'video'):
+            self.encryption.setdefault(stype, {})['sylk_zrtp'] = None
+            self.encryption[stype]['sylk_zrtp_sas'] = None
+        if state == 'key-active' and installed_streams:
+            for entry in installed_streams:
+                try:
+                    typ, codec, vp = entry
+                except (TypeError, ValueError):
+                    continue
+                if typ not in ('audio', 'video'):
+                    continue
+                self.encryption.setdefault(typ, {})['sylk_zrtp'] = 'active'
+                self.encryption[typ]['sylk_zrtp_sas'] = sas
+                self.encryption[typ]['sylk_zrtp_suite'] = 'AES-128-GCM'
+        elif state in ('probing', 'key-agreed'):
+            for stype in ('audio', 'video'):
+                self.encryption.setdefault(stype, {})['sylk_zrtp'] = state
+                self.encryption[stype]['sylk_zrtp_sas'] = sas
+        elif state == 'failed':
+            for stype in ('audio', 'video'):
+                self.encryption.setdefault(stype, {})['sylk_zrtp'] = 'failed'
+                self.encryption[stype]['sylk_zrtp_sas'] = None
+        # Notify any observer (SessionInfoController/Call Info panel) that
+        # the encryption description should be re-rendered. Sender is
+        # `self` so observers that already watch the Blink SessionController
+        # pick it up without extra wiring.
+        try:
+            self.log_info("Sylk-ZRTP _store_sylk_zrtp_state: state=%s audio_zrtp=%s video_zrtp=%s — posting BlinkSessionSylkZRTPStateChanged"
+                          % (state,
+                             self.encryption.get('audio', {}).get('sylk_zrtp'),
+                             self.encryption.get('video', {}).get('sylk_zrtp')))
+            self.notification_center.post_notification(
+                "BlinkSessionSylkZRTPStateChanged", sender=self,
+                data=NotificationData(state=state, sas=sas,
+                                      installed_streams=installed_streams or [],
+                                      failed_streams=failed_streams or []))
+        except Exception as e:
+            try:
+                self.log_info("Sylk-ZRTP _store_sylk_zrtp_state post failed: %s" % e)
+            except Exception:
+                pass
+
+    @objc.python_method
+    def _NH_SIPSessionSylkZRTPStateChanged(self, sender, data):
+        # Sylk-flavoured ZRTP-over-MESSAGE state transitions surfaced by
+        # the SDK. 'key-active' is the cue media is actually being
+        # AEAD-encrypted (the install on the underlying RTPTransport
+        # succeeded); 'key-agreed' only means the keys were derived but
+        # the install may still have failed silently — in that case the
+        # SDK posts 'failed' with per-stream failure reasons.
+        state = getattr(data, 'state', None)
+        sas = getattr(data, 'sas', None)
+        installed = getattr(data, 'installed_streams', None) or []
+        failed_streams = getattr(data, 'failed_streams', None) or []
+        # Stash per-stream state on self.encryption + re-broadcast as a
+        # Blink-level notification so the Call Info panel can refresh.
+        self._store_sylk_zrtp_state(state, sas, installed, failed_streams)
+        if state == 'key-agreed':
+            sas = getattr(data, 'sas', None)
+            if sas:
+                self.log_info("Sylk-ZRTP key agreed — SAS: %s" % sas)
+            else:
+                self.log_info("Sylk-ZRTP key agreed")
+        elif state == 'key-active':
+            installed = getattr(data, 'installed_streams', None) or []
+            failed = getattr(data, 'failed_streams', None) or []
+            install_desc_parts = []
+            for entry in installed:
+                try:
+                    typ, codec, vp = entry
+                    install_desc_parts.append('%s(%s,prefix=%d)' % (typ, codec, vp))
+                except (TypeError, ValueError):
+                    install_desc_parts.append(repr(entry))
+            if install_desc_parts:
+                self.log_info("Sylk-ZRTP active — media now end-to-end encrypted (AES-128-GCM) — installed on: %s"
+                              % ', '.join(install_desc_parts))
+            else:
+                self.log_info("Sylk-ZRTP active — media is now end-to-end encrypted (AES-128-GCM)")
+            for entry in failed:
+                try:
+                    typ, codec, reason = entry
+                    self.log_info("Sylk-ZRTP note — %s stream stayed plain (codec=%s): %s" % (typ, codec, reason))
+                except (TypeError, ValueError):
+                    self.log_info("Sylk-ZRTP note — stream stayed plain: %r" % (entry,))
+        elif state == 'failed':
+            reason = getattr(data, 'error', None) or getattr(data, 'reason', '')
+            failed = getattr(data, 'failed_streams', None) or []
+            self.log_info("Sylk-ZRTP handshake failed%s" % ((': ' + reason) if reason else ''))
+            for typ, codec, why in failed:
+                self.log_info("Sylk-ZRTP    %s stream (codec=%s) — %s" % (typ, codec, why))
+        elif state == 'probing':
+            role = getattr(data, 'role', '?')
+            self.log_info("Sylk-ZRTP handshake started (role=%s)" % role)
 
     @objc.python_method
     def _NH_SIPSessionNewOutgoing(self, session, data):

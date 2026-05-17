@@ -20,6 +20,8 @@ from AppKit import (NSAccessibilityTitleAttribute,
                     NSTableViewDropOn,
                     NSTopTabsBezelBorder,
                     NSViewHeightSizable,
+                    NSViewMaxXMargin,
+                    NSViewMinXMargin,
                     NSViewWidthSizable)
 
 from Foundation import (NSArray,
@@ -51,6 +53,7 @@ from application.system import unlink
 from gnutls.errors import GNUTLSError
 from gnutls.crypto import X509Certificate, X509PrivateKey
 from sipsimple.account import AccountManager, Account, BonjourAccount
+from sipsimple.application import SIPApplication
 from sipsimple.configuration import Setting, SettingsGroupMeta
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.threading import run_in_thread
@@ -187,6 +190,10 @@ class PreferencesController(NSWindowController, object):
         notification_center.add_observer(self, name="CFGSettingsObjectDidChange")
         notification_center.add_observer(self, name="AudioDevicesDidChange")
         notification_center.add_observer(self, name="VideoDevicesDidChange")
+        # So the in-preferences video preview re-binds to the new camera
+        # whenever pjsip actually switches devices (which may lag the
+        # CFGSettingsObjectDidChange that triggered the switch).
+        notification_center.add_observer(self, name="VideoDeviceDidChangeCamera")
 
         applicationName = NSApp.delegate().applicationNamePrint
         self.window().setTitle_(NSLocalizedString("%s Preferences", "Window title") % applicationName)
@@ -313,6 +320,17 @@ class PreferencesController(NSWindowController, object):
             self.sectionDescription.setStringValue_(NSLocalizedString("Video Settings", "Label"))
             self.sectionHelpPlaceholder.setHidden_(False)
             self.window().setTitle_(NSLocalizedString("Video", "Window title"))
+            # (Re-)bind the live preview to the local camera. We release
+            # the producer in windowWillClose_ so the camera turns off
+            # when the panel is dismissed; landing back on the Video
+            # section reconnects it here.
+            preview = getattr(self, '_video_preview_widget', None)
+            if preview is not None:
+                try:
+                    preview.setProducer(SIPApplication.video_device.producer)
+                except Exception as e:
+                    BlinkLogger().log_info(
+                        "Could not start preferences preview: %s" % e)
         elif section_name == 'answering_machine':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.generalTabView.selectTabViewItemWithIdentifier_("answering_machine")
@@ -502,6 +520,37 @@ class PreferencesController(NSWindowController, object):
         else:
             PreferenceOptionTypes['audio.sound_card_delay'] = AecSliderOption
             PreferenceOptionTypes['audio.sample_rate'] = SampleRateOption
+
+        # For the general Video section, prepend a live camera preview
+        # ABOVE the device / codec / resolution rows. Half the previous
+        # footprint (160 px wide, centered) and aspect-aware: the
+        # PreviewVideoWidget resizes its own height to match the camera
+        # so the picture fills the view with no letterbox bars.
+        if section_name == 'video' and not forAccount:
+            try:
+                from VideoMirrorController import (
+                    PreviewVideoWidget, CenteredPreviewContainer)
+                preview_width = 160.0
+                # Initial height assumes 4:3; it'll snap to the real
+                # camera aspect as soon as the first frame arrives.
+                preview_height = 120.0
+                container = CenteredPreviewContainer.alloc().\
+                    initWithFrame_(NSMakeRect(0, 0, preview_width,
+                                              preview_height))
+                preview = PreviewVideoWidget.alloc().\
+                    initWithFrame_(NSMakeRect(0, 0, preview_width,
+                                              preview_height))
+                # Stay fixed-width and centered while the parent's width
+                # changes via the VerticalBoxView's auto-stretch.
+                preview.setAutoresizingMask_(
+                    NSViewMinXMargin | NSViewMaxXMargin)
+                container.setPreview(preview)
+                self._video_preview_widget = preview
+                preview.setProducer(SIPApplication.video_device.producer)
+                settings_box_view.addSubview_(container)
+            except Exception as e:
+                BlinkLogger().log_info(
+                    "Could not create video preview in preferences: %s" % e)
 
         for option_name in options:
             if section_name == 'auth' and option_name == 'password':
@@ -811,8 +860,43 @@ class PreferencesController(NSWindowController, object):
                     settings.video.h264.level = "3.0"
                 elif settings.video.resolution == (1280, 720):
                     settings.video.h264.level = "3.1"
- 
+
                 settings.save()
+
+            # Camera-affecting setting changes: detach the preview from
+            # the about-to-be-torn-down camera so the renderer doesn't
+            # spam errors while pjsip is mid-reconfigure. The re-bind
+            # happens either via _NH_VideoDeviceDidChangeCamera (which
+            # fires once pjsip has swapped in the new camera) or via the
+            # delayed retry below — whichever wins first.
+            camera_settings = {'video.resolution', 'video.device',
+                               'video.framerate'}
+            if camera_settings & set(notification.data.modified):
+                preview = getattr(self, '_video_preview_widget', None)
+                if preview is not None:
+                    try:
+                        preview.setProducer(None)
+                    except Exception as e:
+                        BlinkLogger().log_debug(
+                            "Pre-emptive preview detach ignored: %s" % e)
+                    # Safety net: schedule a delayed re-bind in case
+                    # VideoDeviceDidChangeCamera doesn't fire (it doesn't
+                    # always, e.g. for pure resolution changes that don't
+                    # swap the camera object itself). 1.5 s is enough for
+                    # pjsip to settle into the new configuration.
+                    from util import call_later
+
+                    def _delayed_rebind():
+                        p = getattr(self, '_video_preview_widget', None)
+                        if p is None:
+                            return
+                        try:
+                            p.setProducer(
+                                SIPApplication.video_device.producer)
+                        except Exception as exc:
+                            BlinkLogger().log_info(
+                                "Delayed preview rebind failed: %s" % exc)
+                    call_later(1.5, _delayed_rebind)
 
         if not self.saving and sender in (settings, self.selectedAccount()):
             for option in (o for o in notification.data.modified if o in self.settingViews):
@@ -991,6 +1075,22 @@ class PreferencesController(NSWindowController, object):
     def _NH_BlinkTransportFailed(self, notification):
         self.refresh_account_table()
         self.updateRegistrationStatus()
+
+    @objc.python_method
+    def _NH_VideoDeviceDidChangeCamera(self, notification):
+        # pjsip has actually rebuilt the local camera. Re-bind the
+        # preferences-panel preview to it so the picture comes back.
+        preview = getattr(self, '_video_preview_widget', None)
+        if preview is None:
+            return
+        try:
+            new_producer = getattr(notification.data, 'new_camera', None) or \
+                SIPApplication.video_device.producer
+            preview.setProducer(None)
+            preview.setProducer(new_producer)
+        except Exception as e:
+            BlinkLogger().log_info(
+                "Could not rebind preferences video preview: %s" % e)
 
     @objc.python_method
     def _NH_AudioDevicesDidChange(self, notification):
@@ -1254,6 +1354,22 @@ class PreferencesController(NSWindowController, object):
     def windowShouldClose_(self, sender):
         sender.makeFirstResponder_(None)
         return True
+
+    def windowWillClose_(self, notification):
+        # Release the camera held by the in-prefs video preview when
+        # the panel is dismissed. Without this the AVCaptureSession
+        # stays running (camera LED on, GPU busy) the entire time the
+        # app is alive after the user has visited the Video section
+        # even once. The next time the user comes back to the Video
+        # section, createViewForSection's setProducer call (and the
+        # one in toolbarSelectionDidChange_) re-binds the producer.
+        preview = getattr(self, '_video_preview_widget', None)
+        if preview is not None:
+            try:
+                preview.setProducer(None)
+            except Exception as e:
+                BlinkLogger().log_debug(
+                    "Preferences preview cleanup ignored: %s" % e)
 
     @objc.IBAction
     def openSite_(self, sender):

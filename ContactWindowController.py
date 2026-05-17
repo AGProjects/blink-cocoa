@@ -148,6 +148,7 @@ from PhotoPicker import PhotoPicker
 from PresencePublisher import PresencePublisher, PresenceActivityList, on_the_phone_activity
 from OfflineNoteController import OfflineNoteController
 from MyVideoWindowController import MyVideoWindowController
+from VideoMirrorController import VideoMirrorController
 from configuration.datatypes import UserIcon
 from resources import ApplicationData, Resources
 from util import allocate_autorelease_pool, format_date, format_identity_to_string, format_uri_type, is_anonymous, is_sip_aor_format, normalize_sip_uri_for_outgoing_session
@@ -5464,6 +5465,15 @@ class ContactWindowController(NSWindowController):
         if self.myvideo is None:
             self.myvideo = MyVideoWindowController()
         self.myvideo.show()
+
+    @objc.IBAction
+    def showVideoMirror_(self, sender):
+        # Devices -> Video Mirror. Singleton window that displays the
+        # local camera mirrored, backed by the Metal VideoWidget. Toggles
+        # on each click.
+        if getattr(self, 'video_mirror', None) is None:
+            self.video_mirror = VideoMirrorController.alloc().init()
+        self.video_mirror.toggle()
 
     def historyClicked_(self, sender):
         NSApp.activateIgnoringOtherApps_(True)

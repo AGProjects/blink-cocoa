@@ -271,6 +271,13 @@ CA
                             <menuItem title="Video Cameras" tag="500" enabled="NO" id="mbW-k8-Lkd">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                             </menuItem>
+                            <menuItem isSeparatorItem="YES" id="vmS-Sp-001"/>
+                            <menuItem title="Video Mirror" keyEquivalent="" id="vmI-Tm-001">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="showVideoMirror:" target="389" id="vmA-Ct-001"/>
+                                </connections>
+                            </menuItem>
                         </items>
                         <connections>
                             <outlet property="delegate" destination="389" id="768"/>
@@ -473,7 +480,12 @@ CA
                                     <action selector="showHistoryViewer:" target="389" id="1113"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="My Video" tag="3" hidden="YES" keyEquivalent="7" id="Sf9-1D-yIl">
+                            <menuItem title="Video Mirror" keyEquivalent="7" id="vmW-Tm-001">
+                                <connections>
+                                    <action selector="showVideoMirror:" target="389" id="vmA-Wm-001"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="My Video" tag="3" hidden="YES" id="Sf9-1D-yIl">
                                 <connections>
                                     <action selector="showMyVideo:" target="389" id="gir-as-es0"/>
                                 </connections>

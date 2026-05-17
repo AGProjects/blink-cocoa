@@ -185,6 +185,20 @@ class DebugWindow(NSObject):
         notification_center.add_observer(self, name="RTPStreamICENegotiationDidSucceed")
         notification_center.add_observer(self, name="RTPStreamICENegotiationDidFail")
         notification_center.add_observer(self, name="RTPStreamICENegotiationStateDidChange")
+        # ZRTP negotiation traces — logged into the RTP tab alongside ICE.
+        notification_center.add_observer(self, name="RTPStreamDidEnableEncryption")
+        notification_center.add_observer(self, name="RTPStreamDidNotEnableEncryption")
+        notification_center.add_observer(self, name="RTPStreamZRTPReceivedSAS")
+        notification_center.add_observer(self, name="RTPStreamZRTPVerifiedStateChanged")
+        notification_center.add_observer(self, name="RTPStreamZRTPLog")
+        notification_center.add_observer(self, name="RTPStreamZRTPPeerNameChanged")
+        # Sylk-ZRTP-over-MESSAGE (X25519+HKDF on top of SRTP/SDES) state
+        # transitions. The SDK posts these on the sipsimple Session for
+        # every (probing → key-agreed → key-active) edge so the RTP debug
+        # window can tell the user the layered E2E encryption is up,
+        # alongside the regular SRTP/ZRTP lines that come from the
+        # underlying transport.
+        notification_center.add_observer(self, name="SIPSessionSylkZRTPStateChanged")
 
         # Tracks whether the high-frequency trace observers are
         # currently attached. show() flips this on, windowWillClose_
@@ -472,6 +486,12 @@ class DebugWindow(NSObject):
         notification_center.discard_observer(self, name="RTPStreamICENegotiationDidSucceed")
         notification_center.discard_observer(self, name="RTPStreamICENegotiationDidFail")
         notification_center.discard_observer(self, name="RTPStreamICENegotiationStateDidChange")
+        notification_center.discard_observer(self, name="RTPStreamDidEnableEncryption")
+        notification_center.discard_observer(self, name="RTPStreamDidNotEnableEncryption")
+        notification_center.discard_observer(self, name="RTPStreamZRTPReceivedSAS")
+        notification_center.discard_observer(self, name="RTPStreamZRTPVerifiedStateChanged")
+        notification_center.discard_observer(self, name="RTPStreamZRTPLog")
+        notification_center.discard_observer(self, name="RTPStreamZRTPPeerNameChanged")
 
         # Observers added when settings change
         notification_center.discard_observer(self, name="SIPEngineSIPTrace")
@@ -518,6 +538,45 @@ class DebugWindow(NSObject):
             self.append_line(self.activityTextView, text)
 
     @objc.python_method
+    def _sylk_zrtp_capability_info(self, session):
+        """Return a tuple (account_advertises, peer_advertises) where each
+        element is None if unknown, a string descriptor otherwise. Used
+        by renderAudio/renderVideo to log the Sylk-ZRTP capability
+        exchange alongside the SRTP/ZRTP configuration."""
+        account_str = None
+        peer_str = None
+        try:
+            account = getattr(session, 'account', None)
+            if account is not None:
+                rtp_enc = getattr(account.rtp, 'encryption', None)
+                if rtp_enc is not None and getattr(rtp_enc, 'enabled', False):
+                    if rtp_enc.key_negotiation in ('opportunistic', 'zrtp'):
+                        account_str = 'v=1; suites=AES-128-GCM'
+        except Exception:
+            pass
+        # Peer's capability is in the remote request (incoming) or remote
+        # response (outgoing) headers. The SDK stashes both.
+        for attr in ('remote_request_headers', 'remote_response_headers'):
+            hdrs = getattr(session, attr, None)
+            if not hdrs:
+                continue
+            try:
+                hdr = hdrs.get('X-Sylk-ZRTP') or hdrs.get('x-sylk-zrtp')
+            except Exception:
+                hdr = None
+            if hdr is None:
+                continue
+            value = hdr.body if hasattr(hdr, 'body') else str(hdr)
+            if isinstance(value, bytes):
+                try:
+                    value = value.decode('ascii')
+                except Exception:
+                    value = repr(value)
+            peer_str = value
+            break
+        return account_str, peer_str
+
+    @objc.python_method
     def renderRTP(self, session):
         self.renderAudio(session)
         self.renderVideo(session)
@@ -549,6 +608,25 @@ class DebugWindow(NSObject):
             text += '%s Audio call established using %s codec at %sHz\n' % (session.start_time, audio_stream.codec, audio_stream.sample_rate)
         if audio_stream.encryption.active:
             text += '%s RTP audio stream is encrypted with %s (%s)\n' % (session.start_time, audio_stream.encryption.type, audio_stream.encryption.cipher.decode() if isinstance(audio_stream.encryption.cipher, bytes) else audio_stream.encryption.cipher)
+        # Log the local account's RTP encryption configuration and the
+        # remote party's X-Sylk-ZRTP capability advertisement (if any)
+        # so the trace explains why the negotiated SRTP / ZRTP / Sylk-ZRTP
+        # mode was chosen for the session.
+        try:
+            account = getattr(session, 'account', None)
+            if account is not None:
+                rtp_enc = getattr(account.rtp, 'encryption', None)
+                if rtp_enc is None or not getattr(rtp_enc, 'enabled', False):
+                    text += '%s RTP encryption configuration: disabled\n' % session.start_time
+                else:
+                    text += '%s RTP encryption configuration: %s\n' % (session.start_time, rtp_enc.key_negotiation)
+        except Exception:
+            pass
+        account_str, peer_str = self._sylk_zrtp_capability_info(session)
+        if account_str is not None:
+            text += '%s Local X-Sylk-ZRTP capability advertised: %s\n' % (session.start_time, account_str)
+        if peer_str is not None:
+            text += '%s Remote X-Sylk-ZRTP capability detected: %s\n' % (session.start_time, peer_str)
         if session.remote_user_agent is not None:
             text += '%s Remote SIP User Agent is "%s"\n' % (session.start_time, session.remote_user_agent)
 
@@ -583,7 +661,25 @@ class DebugWindow(NSObject):
         if video_stream.codec and video_stream.sample_rate:
             text += '%s Video call established using %s codec at %sHz\n' % (session.start_time, video_stream.codec, video_stream.sample_rate)
         if video_stream.encryption.active:
-            text += '%s RTP video stream is encrypted with %s (%s)\n' % (session.start_time, video_stream.encryption.type, video_stream.encryption.cipher)
+            text += '%s RTP video stream is encrypted with %s (%s)\n' % (session.start_time, video_stream.encryption.type, video_stream.encryption.cipher.decode() if isinstance(video_stream.encryption.cipher, bytes) else video_stream.encryption.cipher)
+        # Same RTP encryption + X-Sylk-ZRTP capability summary as the
+        # audio renderer above. We re-emit it under the video section so
+        # the trace stays useful for video-only or split renderings.
+        try:
+            account = getattr(session, 'account', None)
+            if account is not None:
+                rtp_enc = getattr(account.rtp, 'encryption', None)
+                if rtp_enc is None or not getattr(rtp_enc, 'enabled', False):
+                    text += '%s RTP encryption configuration: disabled\n' % session.start_time
+                else:
+                    text += '%s RTP encryption configuration: %s\n' % (session.start_time, rtp_enc.key_negotiation)
+        except Exception:
+            pass
+        account_str, peer_str = self._sylk_zrtp_capability_info(session)
+        if account_str is not None:
+            text += '%s Local X-Sylk-ZRTP capability advertised: %s\n' % (session.start_time, account_str)
+        if peer_str is not None:
+            text += '%s Remote X-Sylk-ZRTP capability detected: %s\n' % (session.start_time, peer_str)
         if session.remote_user_agent is not None:
             text += '%s Remote SIP User Agent is "%s"\n' % (session.start_time, session.remote_user_agent)
 
@@ -992,6 +1088,178 @@ class DebugWindow(NSObject):
         self.rtpTextView.textStorage().appendAttributedString_(astring)
         if self.autoScrollCheckbox.state() == NSOnState:
             self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
+
+    @objc.python_method
+    def _append_rtp_line(self, text):
+        """Append a single line to the RTP tab text view + scroll."""
+        if not text.endswith('\n'):
+            text += '\n'
+        astring = NSAttributedString.alloc().initWithString_attributes_(text, self.normalText)
+        self.rtpTextView.textStorage().appendAttributedString_(astring)
+        if self.autoScrollCheckbox.state() == NSOnState:
+            self.rtpTextView.scrollRangeToVisible_(
+                NSMakeRange(self.rtpTextView.textStorage().length() - 1, 1))
+
+    # ----- ZRTP negotiation traces -----------------------------------------
+    # All four notifications are posted by sipsimple's RTP stream wrapper
+    # (see sipsimple.streams.rtp.__init__) as the ZRTP exchange progresses.
+    # Logged into the RTP tab so the user can follow encryption setup
+    # alongside ICE in the same view.
+
+    @objc.python_method
+    def _NH_RTPStreamDidEnableEncryption(self, notification):
+        sender = notification.sender
+        mtype = sender.type.upper()
+        enc = getattr(sender, 'encryption', None)
+        enc_type = getattr(enc, 'type', '?') if enc else '?'
+        cipher = getattr(enc, 'cipher', '?') if enc else '?'
+        # sender.encryption.cipher comes back as bytes from PJSIP
+        # (b'AES_CM_128_HMAC_SHA1_80'). Decode to str so the log line
+        # reads "SRTP/SDES / AES_CM_128_HMAC_SHA1_80" instead of
+        # "SRTP/SDES / b'AES_CM_128_HMAC_SHA1_80'".
+        if isinstance(cipher, (bytes, bytearray)):
+            try:
+                cipher = cipher.decode('ascii')
+            except UnicodeDecodeError:
+                cipher = cipher.decode('ascii', errors='replace')
+        self._append_rtp_line('%s %s encryption active: %s / %s' % (
+            notification.datetime, mtype, enc_type, cipher))
+        # For ZRTP, also report the peer-verified state at the moment
+        # of negotiation completion.
+        if enc_type == 'ZRTP':
+            zrtp = getattr(enc, 'zrtp', None)
+            if zrtp is not None:
+                verified = 'verified' if getattr(zrtp, 'verified', False) \
+                    else 'not yet verified'
+                peer_name = getattr(zrtp, 'peer_name', None) or '<not set>'
+                self._append_rtp_line('%s %s ZRTP peer is %s (peer name: %s)' % (
+                    notification.datetime, mtype, verified, peer_name))
+
+    @objc.python_method
+    def _NH_RTPStreamDidNotEnableEncryption(self, notification):
+        sender = notification.sender
+        mtype = sender.type.upper()
+        reason = getattr(notification.data, 'reason', '<unknown>')
+        if isinstance(reason, bytes):
+            reason = reason.decode('utf-8', 'replace')
+        self._append_rtp_line('%s %s encryption NOT enabled: %s' % (
+            notification.datetime, mtype, reason))
+
+    @objc.python_method
+    def _NH_RTPStreamZRTPReceivedSAS(self, notification):
+        sender = notification.sender
+        mtype = sender.type.upper()
+        data = notification.data
+        sas = getattr(data, 'sas', '?')
+        verified = getattr(data, 'verified', False)
+        peer_name = getattr(data, 'peer_name', None) or '<not set>'
+        self._append_rtp_line(
+            '%s %s ZRTP SAS received: %s (peer %s, name: %s)' % (
+                notification.datetime, mtype, sas,
+                'verified' if verified else 'not verified', peer_name))
+
+    @objc.python_method
+    def _NH_RTPStreamZRTPVerifiedStateChanged(self, notification):
+        sender = notification.sender
+        mtype = sender.type.upper()
+        verified = getattr(notification.data, 'verified', False)
+        self._append_rtp_line(
+            '%s %s ZRTP peer marked as %s' % (
+                notification.datetime, mtype,
+                'verified' if verified else 'NOT verified'))
+
+    @objc.python_method
+    def _NH_RTPStreamZRTPPeerNameChanged(self, notification):
+        sender = notification.sender
+        mtype = sender.type.upper()
+        name = getattr(notification.data, 'name', '') or '<empty>'
+        self._append_rtp_line('%s %s ZRTP peer name set to %s' % (
+            notification.datetime, mtype, name))
+
+    @objc.python_method
+    def _NH_SIPSessionSylkZRTPStateChanged(self, notification):
+        # Sylk-flavoured ZRTP-over-MESSAGE state transitions. Sits on top
+        # of the SRTP/SDES layer the previous lines describe — these
+        # entries tell the user that an extra X25519-derived AES-128-GCM
+        # AEAD is now wrapping the payload above the regular SRTP
+        # transport. Posted with sender=session, NOT a stream, so we
+        # don't have a per-stream tag here. The 'installed_streams'
+        # payload, when present, tells which streams were actually
+        # AEAD-wrapped (the rest stay plain SRTP — typically H.264 video,
+        # which can't be safely AEAD-wrapped under STAP-A).
+        data = notification.data
+        state = getattr(data, 'state', None)
+        role = getattr(data, 'role', '?')
+        ts = notification.datetime
+        if state == 'probing':
+            self._append_rtp_line('%s Sylk-ZRTP handshake started (role=%s)' % (ts, role))
+        elif state == 'key-agreed':
+            sas = getattr(data, 'sas', None)
+            if sas:
+                self._append_rtp_line('%s Sylk-ZRTP key agreed — SAS: %s' % (ts, sas))
+            else:
+                self._append_rtp_line('%s Sylk-ZRTP key agreed' % ts)
+        elif state == 'key-active':
+            # installed_streams is a list of (type, codec, video_prefix)
+            # tuples; failed_streams is a list of (type, codec, reason)
+            # tuples. Guard the format-string against odd shapes so a
+            # legacy SDK that didn't ship the per-stream lists doesn't
+            # produce a misleading "installed on: " trailing-empty line.
+            installed = getattr(data, 'installed_streams', None) or []
+            failed = getattr(data, 'failed_streams', None) or []
+            install_desc_parts = []
+            for entry in installed:
+                try:
+                    typ, codec, vp = entry
+                    install_desc_parts.append('%s(%s,prefix=%d)' % (typ, codec, vp))
+                except (TypeError, ValueError):
+                    install_desc_parts.append(repr(entry))
+            if install_desc_parts:
+                self._append_rtp_line(
+                    '%s Sylk-ZRTP active — media end-to-end encrypted (AES-128-GCM) — installed on: %s'
+                    % (ts, ', '.join(install_desc_parts)))
+            else:
+                self._append_rtp_line(
+                    '%s Sylk-ZRTP active — media end-to-end encrypted (AES-128-GCM)' % ts)
+            for entry in failed:
+                try:
+                    typ, codec, reason = entry
+                    self._append_rtp_line(
+                        '%s Sylk-ZRTP note — %s stream stayed plain (codec=%s): %s'
+                        % (ts, typ, codec, reason))
+                except (TypeError, ValueError):
+                    self._append_rtp_line(
+                        '%s Sylk-ZRTP note — stream stayed plain: %r' % (ts, entry))
+        elif state == 'failed':
+            reason = getattr(data, 'error', None) or getattr(data, 'reason', '') or '<unknown>'
+            self._append_rtp_line('%s Sylk-ZRTP handshake failed: %s' % (ts, reason))
+            for entry in (getattr(data, 'failed_streams', None) or []):
+                try:
+                    typ, codec, why = entry
+                    self._append_rtp_line('%s     %s stream (codec=%s) — %s'
+                                          % (ts, typ, codec, why))
+                except (TypeError, ValueError):
+                    pass
+
+    @objc.python_method
+    def _NH_RTPStreamZRTPLog(self, notification):
+        # Raw log lines from the ZRTP engine (libzrtp). Useful for
+        # following the exact handshake state (Hello, Commit, DHPart1/2,
+        # Confirm1/2, ...) and any handshake errors.
+        sender = notification.sender
+        mtype = sender.type.upper()
+        data = notification.data
+        level = getattr(data, 'level', '')
+        message = getattr(data, 'message', None) or getattr(data, 'log', '')
+        if isinstance(message, bytes):
+            message = message.decode('utf-8', 'replace')
+        # Some sipsimple builds expose the log under .text or .data.
+        if not message:
+            message = str(getattr(data, 'text', '') or
+                          getattr(data, 'data', '') or
+                          '')
+        self._append_rtp_line('%s %s ZRTP [%s] %s' % (
+            notification.datetime, mtype, level, message))
 
     @objc.python_method
     def _NH_SIPEngineLog(self, notification):

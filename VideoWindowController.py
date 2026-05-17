@@ -2,7 +2,8 @@
 #
 
 
-from AppKit import (NSApp,
+from AppKit import (NSAnimationContext,
+                    NSApp,
                     NSRectFillUsingOperation,
                     NSCompositeSourceOver,
                     NSApplication,
@@ -101,6 +102,147 @@ from sipsimple.threading import run_in_thread
 from util import allocate_autorelease_pool, format_identity_to_string, call_in_gui_thread
 
 from Quartz import CIImage, CIContext, kCIFormatARGB8, NSOpenGLPFAWindow, NSOpenGLPFAAccelerated, NSOpenGLPFADoubleBuffer, NSOpenGLPixelFormat, kCGEventMouseMoved, kCGEventSourceStateHIDSystemState, CGColorCreateGenericRGB
+# Phase 1 renderer: CGImage + CALayer.contents (kept as a fallback).
+from Quartz import (CGImageCreate,
+                    CGColorSpaceCreateDeviceRGB,
+                    CGDataProviderCreateWithCFData,
+                    kCGBitmapByteOrder32Big,
+                    kCGImageAlphaNoneSkipFirst,
+                    kCGRenderingIntentDefault,
+                    kCAGravityResizeAspect,
+                    CGAffineTransformMakeScale,
+                    CGAffineTransformIdentity)
+
+# Metal renderer: CAMetalLayer + a tiny vertex/fragment shader that samples
+# the camera bytes (uploaded into a Metal texture) onto an aspect-fit quad.
+# This gives us explicit, deterministic control over every step: byte
+# interpretation (handled via shader swizzle), aspect math (computed
+# CPU-side, applied in the vertex shader), drawable resolution
+# (set explicitly from view bounds * backingScaleFactor). No reliance on
+# CALayer.contentsGravity or any other "do the right thing" black box.
+import struct as _struct
+
+_METAL_IMPORT_ERROR = None
+try:
+    import Metal
+    try:
+        from Quartz import CAMetalLayer
+    except ImportError:
+        from QuartzCore import CAMetalLayer
+    _HAS_METAL = True
+except ImportError as _e:
+    Metal = None
+    CAMetalLayer = None
+    _HAS_METAL = False
+    _METAL_IMPORT_ERROR = str(_e)
+except Exception as _e:
+    Metal = None
+    CAMetalLayer = None
+    _HAS_METAL = False
+    _METAL_IMPORT_ERROR = str(_e)
+
+
+_METAL_SHADER_SOURCE = """
+#include <metal_stdlib>
+using namespace metal;
+
+struct VertexUniforms {
+    float quad_x_scale;     // 1.0 = fills width; <1.0 = pillarbox on sides
+    float quad_y_scale;     // 1.0 = fills height; <1.0 = letterbox top/bottom
+};
+
+struct VertexOut {
+    float4 position [[position]];
+    float2 uv;
+};
+
+vertex VertexOut vertex_main(uint vid [[vertex_id]],
+                              constant VertexUniforms &u [[buffer(0)]]) {
+    // Triangle strip: BL, BR, TL, TR in clip space.
+    const float2 positions[4] = {
+        float2(-1.0, -1.0), float2( 1.0, -1.0),
+        float2(-1.0,  1.0), float2( 1.0,  1.0)
+    };
+    // Flip V so that the top of the texture maps to the top of the quad.
+    const float2 uvs[4] = {
+        float2(0.0, 1.0), float2(1.0, 1.0),
+        float2(0.0, 0.0), float2(1.0, 0.0)
+    };
+    VertexOut out;
+    out.position = float4(positions[vid].x * u.quad_x_scale,
+                          positions[vid].y * u.quad_y_scale,
+                          0.0, 1.0);
+    out.uv = uvs[vid];
+    return out;
+}
+
+fragment float4 fragment_main(VertexOut in [[stage_in]],
+                              texture2d<float> tex [[texture(0)]]) {
+    constexpr sampler s(filter::linear, address::clamp_to_edge);
+    // Bytes in the texture were uploaded as BGRA8Unorm, but pjsip
+    // actually produces them in ARGB order (A,R,G,B in memory). When
+    // Metal samples BGRA8Unorm it returns float4(byte2, byte1, byte0,
+    // byte3) = (G_actual, R_actual, A_actual, B_actual). We swizzle
+    // here to undo that and discard the meaningless alpha byte.
+    float4 c = tex.sample(s, in.uv);
+    return float4(c.g, c.r, c.a, 1.0);
+}
+"""
+
+# Lazily-initialised, process-wide Metal state. Many VideoWidgets can
+# share one device/queue/pipeline; only the per-widget texture is unique.
+_METAL_DEVICE = None
+_METAL_COMMAND_QUEUE = None
+_METAL_PIPELINE_STATE = None
+_METAL_INIT_FAILED = False
+
+
+def _init_metal_once():
+    """Returns True if Metal is ready, False otherwise. Idempotent."""
+    global _METAL_DEVICE, _METAL_COMMAND_QUEUE, _METAL_PIPELINE_STATE, _METAL_INIT_FAILED
+    if _METAL_INIT_FAILED:
+        return False
+    if _METAL_DEVICE is not None:
+        return True
+    if not _HAS_METAL:
+        _METAL_INIT_FAILED = True
+        BlinkLogger().log_info(
+            "Metal init skipped: Python Metal/CAMetalLayer module not "
+            "available (%s); video falls back to the CGImage path." % (
+                _METAL_IMPORT_ERROR or "unknown ImportError"))
+        return False
+    try:
+        device = Metal.MTLCreateSystemDefaultDevice()
+        if device is None:
+            raise RuntimeError("no default Metal device")
+        queue = device.newCommandQueue()
+        if queue is None:
+            raise RuntimeError("could not create Metal command queue")
+        library, err = device.newLibraryWithSource_options_error_(
+            _METAL_SHADER_SOURCE, None, None)
+        if library is None:
+            raise RuntimeError("shader compile failed: %s" % err)
+        vfn = library.newFunctionWithName_("vertex_main")
+        ffn = library.newFunctionWithName_("fragment_main")
+        if vfn is None or ffn is None:
+            raise RuntimeError("could not resolve shader functions")
+        pdesc = Metal.MTLRenderPipelineDescriptor.alloc().init()
+        pdesc.setVertexFunction_(vfn)
+        pdesc.setFragmentFunction_(ffn)
+        pdesc.colorAttachments().objectAtIndexedSubscript_(0).setPixelFormat_(
+            Metal.MTLPixelFormatBGRA8Unorm)
+        pstate, err = device.newRenderPipelineStateWithDescriptor_error_(
+            pdesc, None)
+        if pstate is None:
+            raise RuntimeError("pipeline state failed: %s" % err)
+        _METAL_DEVICE = device
+        _METAL_COMMAND_QUEUE = queue
+        _METAL_PIPELINE_STATE = pstate
+        return True
+    except Exception as e:
+        BlinkLogger().log_info("Metal init failed: %s; falling back to CGImage" % e)
+        _METAL_INIT_FAILED = True
+        return False
 
 from MediaStream import STREAM_CONNECTED, STREAM_IDLE, STREAM_FAILED
 from VideoLocalWindowController import VideoLocalWindowController
@@ -134,6 +276,131 @@ class VideoWidget(NSView):
 
     def awakeFromNib(self):
         self.registerForDraggedTypes_(NSArray.arrayWithObject_(NSFilenamesPboardType))
+        self._setup_video_layer()
+
+    def initWithFrame_(self, frameRect):
+        self = objc.super(VideoWidget, self).initWithFrame_(frameRect)
+        if self is None:
+            return None
+        self._setup_video_layer()
+        return self
+
+    def wantsUpdateLayer(self):
+        # We drive the backing layer's contents (or its sample-buffer queue)
+        # directly from handle_frame() rather than drawing in drawRect_.
+        # Telling AppKit we want updateLayer keeps it from calling drawRect_.
+        return True
+
+    def updateLayer(self):
+        # No-op: contents are set explicitly when a new frame arrives.
+        pass
+
+    def makeBackingLayer(self):
+        # Use a CAMetalLayer if Metal is available. CAMetalLayer is the
+        # right surface for direct GPU video rendering — it gives us
+        # nextDrawable (display-synced) and lets us composite anything
+        # into the layer via a render pipeline.
+        if _HAS_METAL and _init_metal_once():
+            try:
+                layer = CAMetalLayer.alloc().init()
+                layer.setDevice_(_METAL_DEVICE)
+                layer.setPixelFormat_(Metal.MTLPixelFormatBGRA8Unorm)
+                # We only render to the drawable; we never read it back.
+                layer.setFramebufferOnly_(True)
+                layer.setOpaque_(True)
+                # Tag the drawable as sRGB-encoded so CoreAnimation maps
+                # the bytes correctly to the display's profile.
+                try:
+                    from Quartz import CGColorSpaceCreateWithName
+                    srgb = CGColorSpaceCreateWithName('kCGColorSpaceSRGB')
+                    if srgb is not None:
+                        layer.setColorspace_(srgb)
+                except Exception as cs_err:
+                    BlinkLogger().log_debug(
+                        "CAMetalLayer colorspace not set: %s" % cs_err)
+                return layer
+            except Exception as e:
+                BlinkLogger().log_info(
+                    "CAMetalLayer creation failed (%s); falling back to "
+                    "default CALayer." % e)
+        return objc.super(VideoWidget, self).makeBackingLayer()
+
+    @objc.python_method
+    def _setup_video_layer(self):
+        self.setWantsLayer_(True)
+        layer = self.layer()
+        if layer is None:
+            return
+
+        # Black background on the unfilled area, no implicit redisplay
+        # on bounds change (next frame will refresh us).
+        layer.setBackgroundColor_(CGColorCreateGenericRGB(0.0, 0.0, 0.0, 1.0))
+        layer.setNeedsDisplayOnBoundsChange_(False)
+
+        if _HAS_METAL and CAMetalLayer is not None and \
+                isinstance(layer, CAMetalLayer) and _init_metal_once():
+            # Metal path.
+            self._metal_layer = layer
+            self._metal_texture = None       # lazy-created sized to frame
+            self._metal_tex_width = 0
+            self._metal_tex_height = 0
+            # Keep the drawable size in sync with the layer's pixel size.
+            # The CAMetalLayer auto-resizes drawableSize when contentsScale
+            # and bounds change, but only via setNeedsDisplay; we set it
+            # explicitly each frame for safety.
+            try:
+                bsf = self.window().backingScaleFactor() if self.window() else 1.0
+            except Exception:
+                bsf = 1.0
+            layer.setContentsScale_(bsf)
+            # Re-assert colorspace AFTER the layer has been adopted by
+            # the view (AppKit's adoption can replace properties set in
+            # makeBackingLayer alone).
+            try:
+                from Quartz import CGColorSpaceCreateWithName
+                srgb = CGColorSpaceCreateWithName('kCGColorSpaceSRGB')
+                if srgb is not None:
+                    layer.setColorspace_(srgb)
+            except Exception as cs_err:
+                BlinkLogger().log_debug(
+                    "CAMetalLayer colorspace re-assert failed: %s" % cs_err)
+            # Opt INTO EDR. On macOS 26 Tahoe with Apple Silicon, the
+            # call window's fullScreenPrimary collection-behaviour puts
+            # it into the EDR compositor whether we like it or not.
+            # When the layer is tagged EDR=False inside an EDR-active
+            # window, the compositor tone-maps our SDR pixels to a
+            # fraction of SDR-reference white — visibly dim against
+            # the surrounding AppKit chrome and against the Preferences
+            # preview (whose host window stays out of EDR mode entirely
+            # because it isn't fullScreenPrimary). EDR=True keeps the
+            # layer at the display's SDR-reference white level, which
+            # is the brightness the user perceives as "normal". Our
+            # pixels are in [0, 1] so we never actually emit values
+            # above SDR-reference — EDR=True only changes the compositor
+            # behaviour, not the visual range we produce.
+            try:
+                layer.setWantsExtendedDynamicRangeContent_(True)
+            except Exception:
+                pass
+            self._renderer_kind = 'metal'
+        else:
+            # CGImage fallback path. Letterbox via contentsGravity and
+            # disable the implicit ~0.25s contents crossfade that would
+            # otherwise smear video at 30 fps.
+            layer.setContentsGravity_(kCAGravityResizeAspect)
+            layer.setActions_({"contents": None})
+            self._renderer_kind = 'cg'
+
+        # If setProducer already ran (and figured out we're a self-view),
+        # apply the mirror now that the layer is finally available.
+        self._apply_self_view_mirror()
+
+        try:
+            BlinkLogger().log_info(
+                "VideoWidget %s renderer=%s" % (
+                    type(self).__name__, self._renderer_kind))
+        except Exception:
+            pass
 
     def acceptsFirstResponder(self):
         return True
@@ -147,20 +414,96 @@ class VideoWidget(NSView):
     @objc.python_method
     def setProducer(self, producer):
         #BlinkLogger().log_debug("%s setProducer %s" % (self, producer))
+        # Detect whether this widget is displaying the local camera so we
+        # can mirror it horizontally like FaceTime / Zoom / Meet. This is
+        # purely a display transform on our own layer; the remote side
+        # always sees the un-mirrored frame.
+        try:
+            local_producer = SIPApplication.video_device.producer
+        except Exception:
+            local_producer = None
+        self._is_self_view = (producer is not None and producer is local_producer)
+        self._apply_self_view_mirror()
+
         if producer is None:
             if self.renderer is not None:
-                self.renderer.close()
+                # The underlying video device may already be torn down
+                # (pjsip closes it briefly when settings.video.* changes).
+                # Closing a renderer attached to a closed device raises
+                # SIPCoreError; we don't care, the renderer is going
+                # away anyway.
+                try:
+                    self.renderer.close()
+                except Exception as e:
+                    BlinkLogger().log_debug(
+                        "VideoWidget.setProducer close() ignored: %s" % e)
                 self.renderer = None
                 return True
         else:
             if self.renderer is None:
-                self.renderer = FrameBufferVideoRenderer(self.handle_frame)
+                try:
+                    self.renderer = FrameBufferVideoRenderer(self.handle_frame)
+                except Exception as e:
+                    # Camera is in an unusable state right now (e.g. mid
+                    # resolution-change). Bail; we'll be called again when
+                    # VideoDeviceDidChangeCamera fires.
+                    BlinkLogger().log_info(
+                        "VideoWidget.setProducer: cannot create renderer "
+                        "right now (%s); will retry when the camera "
+                        "stabilises." % e)
+                    return False
 
         if self.renderer is not None and self.renderer.producer != producer:
-            self.renderer.producer = producer
+            try:
+                self.renderer.producer = producer
+            except Exception as e:
+                BlinkLogger().log_info(
+                    "VideoWidget.setProducer: pjsip rejected the producer "
+                    "(%s); dropping the renderer and waiting for the "
+                    "camera to come back." % e)
+                try:
+                    self.renderer.close()
+                except Exception:
+                    pass
+                self.renderer = None
+                return False
             return True
 
         return False
+
+    @objc.python_method
+    def _on_aspect_ratio_detected(self, width, height):
+        """Hook called when the camera's aspect ratio is first detected
+        (or changes). Default implementation notifies the host delegate's
+        ``init_aspect_ratio`` so the call window can resize itself to
+        match the remote video. Subclasses can override to do something
+        else entirely — the preferences-panel preview, for instance,
+        resizes its own view to the camera aspect instead of touching
+        any window."""
+        if self.delegate and hasattr(self.delegate, 'init_aspect_ratio'):
+            try:
+                self.delegate.init_aspect_ratio(width, height)
+            except Exception:
+                pass
+
+    @objc.python_method
+    def _apply_self_view_mirror(self):
+        # Applies (or removes) a horizontal flip on the backing layer so the
+        # user sees themselves the way a mirror would. Called from both
+        # setProducer (when we learn which producer we have) and from
+        # _setup_video_layer (in case the layer was created after
+        # setProducer ran). Safe to call repeatedly.
+        layer = self.layer()
+        if layer is None:
+            return
+        try:
+            if getattr(self, '_is_self_view', False):
+                layer.setAffineTransform_(CGAffineTransformMakeScale(-1.0, 1.0))
+            else:
+                layer.setAffineTransform_(CGAffineTransformIdentity)
+        except Exception as e:
+            BlinkLogger().log_info(
+                "VideoWidget mirror toggle failed: %s" % e)
 
     def close(self):
         BlinkLogger().log_debug("Close %s" % self)
@@ -218,27 +561,200 @@ class VideoWidget(NSView):
         aspect_ratio = floor((float(frame.width) / frame.height) * 100)/100
         if self.aspect_ratio != aspect_ratio:
             self.aspect_ratio = aspect_ratio
-            if self.delegate:
-                self.delegate.init_aspect_ratio(*frame.size)
+            self._on_aspect_ratio_detected(frame.width, frame.height)
 
-        self.setNeedsDisplay_(True)
-
-    def drawRect_(self, rect):
-        if self.delegate and self.delegate.full_screen_in_progress:
+        # During a fullscreen transition the window geometry is in flux;
+        # skipping the frame avoids flicker while the system animates.
+        if self.delegate and getattr(self.delegate, 'full_screen_in_progress', False):
             return
 
-        frame = self._frame
-        if frame is None:
+        layer = self.layer()
+        if layer is None:
             return
 
-        data = NSData.dataWithBytesNoCopy_length_freeWhenDone_(frame.data, len(frame.data), False)
-        image = CIImage.imageWithBitmapData_bytesPerRow_size_format_colorSpace_(data,
-                                                                                frame.width * 4,
-                                                                                frame.size,
-                                                                                kCIFormatARGB8,
-                                                                                None)
-        context = NSGraphicsContext.currentContext().CIContext()
-        context.drawImage_inRect_fromRect_(image, rect, image.extent())
+        # Dispatch to whichever renderer this widget was set up with.
+        kind = getattr(self, '_renderer_kind', 'cg')
+
+        if kind == 'metal' and self._metal_layer is not None:
+            try:
+                self._render_metal_frame(frame)
+            except Exception as e:
+                # Drop this frame; do NOT switch _renderer_kind. The
+                # backing layer is CAMetalLayer and calling setContents_
+                # on it (which the CG fallback path would do) is
+                # undefined behaviour — likely showing garbage. Retry
+                # the Metal path on the next frame; one frame dropped
+                # at 30 fps is invisible.
+                BlinkLogger().log_info(
+                    "Metal render failed (frame dropped): %s" % e)
+            return
+
+        # Fallback: CGImage on CALayer.
+        cgimage = self._cgimage_from_frame(frame)
+        if cgimage is not None:
+            layer.setContents_(cgimage)
+
+    # ----- Metal path ------------------------------------------------------
+
+    @objc.python_method
+    def _render_metal_frame(self, frame):
+        device = _METAL_DEVICE
+        queue = _METAL_COMMAND_QUEUE
+        pipeline = _METAL_PIPELINE_STATE
+        layer = self._metal_layer
+        if device is None or queue is None or pipeline is None or layer is None:
+            return
+
+        # Keep the drawable in lockstep with the view's pixel size. Doing
+        # this every frame is cheap and avoids any "drawable too small /
+        # too large" mismatch when the window resizes.
+        try:
+            bsf = self.window().backingScaleFactor() if self.window() else 1.0
+        except Exception:
+            bsf = 1.0
+        bounds = self.bounds()
+        target_w = max(1.0, float(bounds.size.width) * bsf)
+        target_h = max(1.0, float(bounds.size.height) * bsf)
+        cur = layer.drawableSize()
+        if abs(cur.width - target_w) > 0.5 or abs(cur.height - target_h) > 0.5:
+            layer.setDrawableSize_((target_w, target_h))
+
+        # (Re)create the source texture only when the camera resolution
+        # changes — typically once per call, never per-frame.
+        if (self._metal_texture is None
+                or self._metal_tex_width != frame.width
+                or self._metal_tex_height != frame.height):
+            desc = Metal.MTLTextureDescriptor.\
+                texture2DDescriptorWithPixelFormat_width_height_mipmapped_(
+                    Metal.MTLPixelFormatBGRA8Unorm,
+                    frame.width, frame.height, False)
+            desc.setUsage_(Metal.MTLTextureUsageShaderRead)
+            tex = device.newTextureWithDescriptor_(desc)
+            if tex is None:
+                BlinkLogger().log_info(
+                    "Metal newTextureWithDescriptor returned nil")
+                return
+            self._metal_texture = tex
+            self._metal_tex_width = frame.width
+            self._metal_tex_height = frame.height
+
+        # Upload this frame's pixels into the texture. pjsip's frame
+        # buffers are tightly packed (width * 4 bytes per row) for
+        # both the local camera (via avf_dev) and the remote decoder
+        # output. Using len(data) // height as the stride is wrong if
+        # the buffer has *tail* padding (data_len > width*4*height with
+        # tight rows) — we'd overshoot by ~20 bytes per row and the
+        # image becomes diagonally sheared with broken lines. Stick to
+        # the tight assumption and log a warning if data_len doesn't
+        # match, so any real row-padded case is at least visible.
+        data_len = len(frame.data)
+        bpr = frame.width * 4
+        expected = bpr * frame.height
+        if data_len != expected and not getattr(
+                self, '_stride_warning_logged', False):
+            self._stride_warning_logged = True
+            BlinkLogger().log_info(
+                "VideoWidget %s stride note: %dx%d frame, "
+                "data_len=%d, expected %d (using bpr=%d)" % (
+                    type(self).__name__,
+                    frame.width, frame.height, data_len, expected, bpr))
+        region = Metal.MTLRegionMake2D(0, 0, frame.width, frame.height)
+        self._metal_texture.\
+            replaceRegion_mipmapLevel_withBytes_bytesPerRow_(
+                region, 0, frame.data, bpr)
+
+        # Compute the aspect-fit quad scale: how much of the drawable the
+        # texture's natural shape should cover, with the rest left as the
+        # clear color (black bars).
+        dw = float(layer.drawableSize().width)
+        dh = float(layer.drawableSize().height)
+        if dw <= 0 or dh <= 0:
+            return
+        view_aspect = dw / dh
+        tex_aspect = float(frame.width) / float(frame.height)
+        if tex_aspect > view_aspect:
+            qx, qy = 1.0, view_aspect / tex_aspect    # bars top/bottom
+        else:
+            qx, qy = tex_aspect / view_aspect, 1.0    # bars left/right
+
+        drawable = layer.nextDrawable()
+        if drawable is None:
+            return
+
+        # Build the render pass: clear to opaque black, then draw the quad.
+        pass_desc = Metal.MTLRenderPassDescriptor.alloc().init()
+        att = pass_desc.colorAttachments().objectAtIndexedSubscript_(0)
+        att.setTexture_(drawable.texture())
+        att.setLoadAction_(Metal.MTLLoadActionClear)
+        att.setStoreAction_(Metal.MTLStoreActionStore)
+        att.setClearColor_(Metal.MTLClearColorMake(0.0, 0.0, 0.0, 1.0))
+
+        cmd = queue.commandBuffer()
+        enc = cmd.renderCommandEncoderWithDescriptor_(pass_desc)
+        enc.setRenderPipelineState_(pipeline)
+        enc.setFragmentTexture_atIndex_(self._metal_texture, 0)
+
+        uniforms = _struct.pack('ff', qx, qy)
+        enc.setVertexBytes_length_atIndex_(uniforms, len(uniforms), 0)
+
+        enc.drawPrimitives_vertexStart_vertexCount_(
+            Metal.MTLPrimitiveTypeTriangleStrip, 0, 4)
+        enc.endEncoding()
+        cmd.presentDrawable_(drawable)
+        cmd.commit()
+
+    # ----- CALayer + CGImage fallback path ---------------------------------
+
+    @objc.python_method
+    def _cgimage_from_frame(self, frame):
+        # pjsip's framebuffer device produces PJMEDIA_FORMAT_ARGB on Darwin:
+        # byte order is A, R, G, B per pixel. The alpha byte carries no real
+        # alpha data, so we mark it as "skip first" and let CGImage interpret
+        # the remaining three bytes as RGB.
+        #
+        # avf_dev.m sets frame.size = bytesPerRow * height, where bytesPerRow
+        # comes from CVPixelBufferGetBytesPerRow(). CoreVideo can pad rows
+        # for alignment, so deriving bytesPerRow from the actual buffer
+        # length is safer than assuming width * 4.
+        if frame.height <= 0:
+            return None
+        data_len = len(frame.data)
+        # Tight packing — see _render_metal_frame for the reasoning.
+        bytes_per_row = frame.width * 4
+
+        nsdata = NSData.dataWithBytes_length_(frame.data, data_len)
+        provider = CGDataProviderCreateWithCFData(nsdata)
+        if provider is None:
+            return None
+        # pjsip delivers sRGB-encoded BGRA bytes. Tagging the CGImage
+        # with CGColorSpaceCreateDeviceRGB() makes CoreGraphics treat
+        # them as device-native (Display P3 on Apple Silicon), which
+        # then triggers an sRGB->P3 mapping at display time and the
+        # whole picture renders perceptibly dim / desaturated on
+        # wide-gamut displays. Pin to sRGB explicitly so CoreGraphics
+        # knows the bytes are sRGB-encoded and maps to the display
+        # gamut correctly.
+        try:
+            from Quartz import CGColorSpaceCreateWithName
+            colorspace = CGColorSpaceCreateWithName('kCGColorSpaceSRGB')
+            if colorspace is None:
+                colorspace = CGColorSpaceCreateDeviceRGB()
+        except Exception:
+            colorspace = CGColorSpaceCreateDeviceRGB()
+        bitmap_info = kCGBitmapByteOrder32Big | kCGImageAlphaNoneSkipFirst
+        return CGImageCreate(
+            frame.width,
+            frame.height,
+            8,                  # bits per component
+            32,                 # bits per pixel
+            bytes_per_row,
+            colorspace,
+            bitmap_info,
+            provider,
+            None,               # decode array
+            False,              # shouldInterpolate
+            kCGRenderingIntentDefault,
+        )
 
     @objc.python_method
     def show(self):
@@ -299,12 +815,62 @@ class myVideoWidget(VideoWidget):
     initialLocation = None
     initialOrigin = None
     auto_rotate_menu_enabled = True
-    
+
     start_origin = None
     final_origin = None
     temp_origin = None
     is_dragging = False
     allow_drag = True
+
+    # Reference width for the corner thumbnail. The thumbnail's height
+    # is computed from this width + the camera's actual aspect ratio,
+    # so a 4:3 camera shows as ~150x113 and a 16:9 camera as ~150x84.
+    _thumbnail_width = 150.0
+
+    @objc.python_method
+    def _setup_video_layer(self):
+        # Inherit the base VideoWidget renderer setup, then layer on the
+        # PiP look: rounded corners, a hairline border to read against
+        # the remote video behind it.
+        VideoWidget._setup_video_layer(self)
+        layer = self.layer()
+        if layer is None:
+            return
+        try:
+            layer.setCornerRadius_(10.0)
+            layer.setMasksToBounds_(True)
+            layer.setBorderWidth_(1.0)
+            layer.setBorderColor_(
+                CGColorCreateGenericRGB(1.0, 1.0, 1.0, 0.35))
+        except Exception as e:
+            BlinkLogger().log_debug(
+                "myVideoWidget decoration setup failed: %s" % e)
+
+    @objc.python_method
+    def _on_aspect_ratio_detected(self, width, height):
+        # The corner thumbnail must not poke the call window's
+        # init_aspect_ratio (that's reserved for the *remote* video
+        # stream). Instead, resize ourselves so the thumbnail's outer
+        # bounds match the local camera aspect, then re-snap to the
+        # corner we're currently anchored to.
+        if width <= 0 or height <= 0:
+            return
+        aspect = float(width) / float(height)
+        target_w = float(self._thumbnail_width)
+        target_h = max(40.0, target_w / aspect)
+        cur = self.frame()
+        if abs(cur.size.width - target_w) < 0.5 and \
+                abs(cur.size.height - target_h) < 0.5:
+            return
+        # Keep the current top-left anchor consistent — snapToCorner
+        # will fix the position below based on the chosen corner.
+        new_frame = ((cur.origin.x, cur.origin.y), (target_w, target_h))
+        self.setFrame_(new_frame)
+        try:
+            self.snapToCorner()
+        except Exception as e:
+            BlinkLogger().log_debug(
+                "myVideoWidget snapToCorner after resize failed: %s" % e)
 
     def rightMouseDown_(self, event):
         if self.isHidden():
@@ -423,19 +989,42 @@ class myVideoWidget(VideoWidget):
 
     @objc.python_method
     def snapToCorner(self):
+        delegate = self.window().delegate() if self.window() else None
+        if delegate is None:
+            return
+
         newOrigin = self.frame().origin
-        if abs(newOrigin.x - self.window().delegate().myVideoViewTL.frame().origin.x) > abs(newOrigin.x - self.window().delegate().myVideoViewTR.frame().origin.x):
+        if abs(newOrigin.x - delegate.myVideoViewTL.frame().origin.x) > abs(newOrigin.x - delegate.myVideoViewTR.frame().origin.x):
             letter2 = "R"
         else:
             letter2 = "L"
 
-        if abs(newOrigin.y - self.window().delegate().myVideoViewTL.frame().origin.y) > abs(newOrigin.y - self.window().delegate().myVideoViewBL.frame().origin.y):
+        if abs(newOrigin.y - delegate.myVideoViewTL.frame().origin.y) > abs(newOrigin.y - delegate.myVideoViewBL.frame().origin.y):
             letter1 = "B"
         else:
             letter1 = "T"
 
-        finalFrame = "myVideoView" + letter1 + letter2
-        self.setFrameOrigin_(getattr(self.window().delegate(), finalFrame).frame().origin)
+        # The four corner placeholder views in the xib are sized for the
+        # default 150x84 thumbnail. If the thumbnail has been resized to
+        # match the local camera's aspect ratio (Phase 1 follow-up), snap
+        # by the *outer* edge of the placeholder that corresponds to the
+        # window corner, so the thumb still hugs the window edge instead
+        # of slipping inward or overshooting.
+        placeholder = getattr(delegate, "myVideoView" + letter1 + letter2)
+        placeholder_frame = placeholder.frame()
+        size = self.frame().size
+
+        if letter2 == "L":
+            new_x = placeholder_frame.origin.x
+        else:  # right side: align right edges
+            new_x = placeholder_frame.origin.x + placeholder_frame.size.width - size.width
+
+        if letter1 == "B":
+            new_y = placeholder_frame.origin.y
+        else:  # top side: align top edges
+            new_y = placeholder_frame.origin.y + placeholder_frame.size.height - size.height
+
+        self.setFrameOrigin_((new_x, new_y))
         NSUserDefaults.standardUserDefaults().setValue_forKey_(letter1 + letter2, "MyVideoCorner")
 
     def mouseDragged_(self, event):
@@ -525,11 +1114,13 @@ class VideoWindowController(NSWindowController):
 
     @objc.python_method
     def initLocalVideoWindow(self):
-        if self.sessionController.video_consumer == "standalone":
-            sessionControllers = self.sessionController.sessionControllersManager.sessionControllers
-            other_video_sessions = any(sess for sess in sessionControllers if sess.hasStreamOfType("video") and sess.streamHandlerOfType("video") != self.streamController)
-            if not other_video_sessions:
-                self.localVideoWindow = VideoLocalWindowController(self)
+        # Single-window flow: the legacy separate-local-preview-window
+        # (VideoLocalWindowController) is no longer used. The main
+        # video window opens directly in "preview" mode during call
+        # setup and transitions to the connected layout when the
+        # remote video stream starts. Kept as a no-op so any
+        # downstream code that still calls this doesn't break.
+        return
 
     @objc.python_method
     def _NH_BlinkMuteChangedState(self, sender, data):
@@ -652,6 +1243,14 @@ class VideoWindowController(NSWindowController):
         NSApplication.sharedApplication().addWindowsItem_title_filename_(self.window(), title, False)
         self.window().center()
         self.window().setDelegate_(self)
+        # NB: do NOT call self.window().setColorSpace_(sRGB) here.
+        # Pinning the window to sRGB on an Apple Silicon Mac with a
+        # Display P3 screen forces the whole window's compositing to
+        # the smaller sRGB gamut, which visibly dims the Metal-rendered
+        # video. Leaving the window at its default (screen) profile,
+        # while the CAMetalLayer tags itself sRGB, lets CoreAnimation
+        # do a normal sRGB->screen-gamut mapping which renders the
+        # camera bytes at full brightness.
         self.sessionController.log_debug('Init %s in %s' % (self.window(), self))
         self.window().makeFirstResponder_(self.videoView)
         self.window().setAcceptsMouseMovedEvents_(True)
@@ -947,39 +1546,101 @@ class VideoWindowController(NSWindowController):
         self.sessionController.log_debug("Show %s" % self)
         self.init_window()
 
+        if self.window() is None:
+            # init_window() bailed because the stream isn't materialised
+            # yet. Nothing we can do until that lands.
+            return
+
         if self.sessionController.video_consumer == "standalone":
-            self.videoView.setProducer(self.streamController.stream.producer)
-            self.myVideoView.setProducer(SIPApplication.video_device.producer)
+            is_connected = (self.streamController.status == STREAM_CONNECTED)
+
+            if is_connected:
+                # Connected layout: main view = remote video, corner
+                # thumbnail = local camera.
+                first_time = not self.flipped
+                if first_time:
+                    # CRITICAL: switching videoView's producer
+                    # in-place from LOCAL to REMOTE races with pjsip's
+                    # libswscale worker thread, which can dereference
+                    # the converter's sws_ctx after we've torn the old
+                    # one down but before the new one exists
+                    # (EXC_BAD_ACCESS at 0x40 in
+                    # libswscale_conv_convert). Doing it as a clean
+                    # two-step (detach now, attach after the GUI runloop
+                    # has drained) gives pjsip a chance to serialize the
+                    # converter teardown so the worker thread isn't
+                    # mid-conversion when we re-init.
+                    try:
+                        self.videoView.setProducer(None)
+                    except Exception:
+                        pass
+                    self.myVideoView.setProducer(SIPApplication.video_device.producer)
+                    self._crossfade_into_connected_layout()
+                    from util import call_later
+
+                    def _attach_remote():
+                        if self.closed or self.will_close:
+                            return
+                        if not self.streamController or \
+                                not self.streamController.stream:
+                            return
+                        try:
+                            self.videoView.setProducer(
+                                self.streamController.stream.producer)
+                        except Exception as exc:
+                            BlinkLogger().log_info(
+                                "Late videoView attach failed: %s" % exc)
+                    call_later(0.25, _attach_remote)
+                else:
+                    # Subsequent show() passes: producers are already
+                    # set the way we want. Don't re-call setProducer
+                    # (no-op anyway, but safer not to touch pjsip).
+                    self.myVideoView.setAlphaValue_(1.0)
+                    self.myVideoView.setHidden_(False)
+                self.flipped = True
+            else:
+                # Preview layout (used during outgoing call setup): the
+                # main view IS the local camera, full window. No PiP
+                # thumbnail yet — there's nothing to compare it against.
+                self.videoView.setProducer(SIPApplication.video_device.producer)
+                try:
+                    self.myVideoView.setProducer(None)
+                except Exception:
+                    pass
+                self.myVideoView.setHidden_(True)
+                self.myVideoView.setAlphaValue_(0.0)
+        else:
+            self.flipped = True
 
         self.updateAspectRatio()
         self.showButtons()
         self.repositionMyVideo()
 
-        if self.sessionController.video_consumer == "standalone":
-            if self.streamController.status == STREAM_CONNECTED:
-                if self.localVideoWindow and not self.flipped:
-                    self.localVideoWindow.window().orderOut_(None)
-                    if self.streamController.media_received:
-                        self.hideStatusLabel()
-                    self.window().orderOut_(None)
-                    self.flipWnd.flip_to_(self.localVideoWindow.window(), self.window())
-                    self.flipped = True
-                else:
-                    self.window().makeKeyAndOrderFront_(self)
-            else:
-                show_last_label = False
-                if not self.localVideoWindow:
-                    self.localVideoWindow = VideoLocalWindowController(self)
-                    show_last_label = True
-                self.localVideoWindow.show()
-                if show_last_label and self.last_label:
-                    self.showStatusLabel(self.last_label)
-        else:
-            self.flipped = True
-
-        userdef = NSUserDefaults.standardUserDefaults()
+        if not self.window().isVisible():
+            self.window().makeKeyAndOrderFront_(self)
 
         self.update_encryption_icon()
+
+    @objc.python_method
+    def _crossfade_into_connected_layout(self):
+        """Animate the transition from the full-window preview (local
+        camera) to the connected layout (remote video + corner thumb).
+        The producer swap on the main view has already happened by the
+        time this runs; we just fade the corner thumb in so its
+        appearance isn't a hard pop."""
+        # Position the thumb in the user's chosen corner with alpha 0
+        # so it can fade up cleanly.
+        try:
+            self.myVideoView.setHidden_(False)
+            self.myVideoView.setAlphaValue_(0.0)
+        except Exception:
+            pass
+        NSAnimationContext.beginGrouping()
+        try:
+            NSAnimationContext.currentContext().setDuration_(0.45)
+            self.myVideoView.animator().setAlphaValue_(1.0)
+        finally:
+            NSAnimationContext.endGrouping()
 
     def windowDidBecomeKey_(self, notification):
         if self.closed:
@@ -1049,12 +1710,17 @@ class VideoWindowController(NSWindowController):
         self.buttonsView.setFrameOrigin_(origin)
         self.buttonsView.setAutoresizingMask_(NSViewMinXMargin | NSViewMaxXMargin)
 
+        # Keep the status-label pill horizontally centered on resize but
+        # let the xib's anchor-to-bottom autoresizing keep it just above
+        # the buttons bar — the legacy code here recentered it
+        # vertically too, which pinned the label to the middle of the
+        # video and overrode the xib position.
         status_view = self.disconnectLabel.superview()
         mask = status_view.autoresizingMask()
-        origin = NSMakePoint(
-                     (NSWidth(status_view.superview().bounds()) - NSWidth(status_view.frame())) / 2,
-                     (NSHeight(status_view.superview().bounds()) - NSHeight(status_view.frame())) /2)
-        status_view.setFrameOrigin_(origin)
+        sf = status_view.frame()
+        sf.origin.x = (NSWidth(status_view.superview().bounds())
+                       - NSWidth(sf)) / 2
+        status_view.setFrameOrigin_(sf.origin)
         status_view.setAutoresizingMask_(mask)
     
     @objc.python_method
@@ -1159,6 +1825,24 @@ class VideoWindowController(NSWindowController):
     def windowWillClose_(self, sender):
         self.sessionController.log_debug('windowWillClose %s' % self)
         self.will_close = True
+        # Release the camera consumers immediately so the Mac camera
+        # LED turns off the moment the window starts closing — without
+        # waiting for the SIP teardown / VideoController.end() chain to
+        # finish. The full close() pass below (when it eventually runs)
+        # is idempotent: setProducer(None) on an already-released view
+        # is a no-op.
+        if self.myVideoView:
+            try:
+                self.myVideoView.setProducer(None)
+            except Exception as e:
+                BlinkLogger().log_debug(
+                    "windowWillClose myVideoView.setProducer(None) ignored: %s" % e)
+        if self.videoView:
+            try:
+                self.videoView.setProducer(None)
+            except Exception as e:
+                BlinkLogger().log_debug(
+                    "windowWillClose videoView.setProducer(None) ignored: %s" % e)
         if self.sessionController:
             self.sessionController.removeVideoFromSession()
             if not self.sessionController.hasStreamOfType("chat"):
@@ -1182,8 +1866,37 @@ class VideoWindowController(NSWindowController):
         self.notification_center.discard_observer(self, name='VideoDeviceDidChangeCamera')
         self.notification_center = None
 
+        # Release BOTH video views' producers before anything else can
+        # raise. Any exception here would leave the AVCaptureSession (and
+        # the camera LED) running until the next call. We release the PiP
+        # thumbnail's local-camera consumer first, then the main view's
+        # consumer (which may be the remote stream's producer when the
+        # call was connected, or the local camera when we were still in
+        # preview mode), each wrapped in its own try/except so a failure
+        # in one path cannot prevent the other from running.
         if self.myVideoView:
-            self.myVideoView.close()
+            try:
+                self.myVideoView.setProducer(None)
+            except Exception as e:
+                BlinkLogger().log_debug(
+                    "myVideoView.setProducer(None) during cleanup ignored: %s" % e)
+            try:
+                self.myVideoView.close()
+            except Exception as e:
+                BlinkLogger().log_debug(
+                    "myVideoView.close() during cleanup ignored: %s" % e)
+
+        if self.videoView:
+            try:
+                self.videoView.setProducer(None)
+            except Exception as e:
+                BlinkLogger().log_debug(
+                    "videoView.setProducer(None) during cleanup ignored: %s" % e)
+            try:
+                self.videoView.close()
+            except Exception as e:
+                BlinkLogger().log_debug(
+                    "videoView.close() during cleanup ignored: %s" % e)
 
         if self.zrtp_controller:
             self.zrtp_controller.close()
@@ -1199,7 +1912,6 @@ class VideoWindowController(NSWindowController):
             self.localVideoWindow.close()
 
         if self.window():
-            self.videoView.close()
             self.window().close()
 
     def dealloc(self):
@@ -1426,24 +2138,30 @@ class VideoWindowController(NSWindowController):
     def hideButtons(self):
         if not self.window():
             return
-        
+
         if not self.window().isVisible():
             return
 
-        self.buttonsView.hide()
-        self.fullScreenButton.setHidden_(True)
+        # Smooth ~250 ms fade-out via Core Animation, instead of an
+        # abrupt hidden-flag flip. The recording indicator stays at
+        # full opacity if we're currently recording, so the user always
+        # has a visible "REC" cue.
+        recording = bool(self.streamController
+                         and self.streamController.videoRecorder
+                         and self.streamController.videoRecorder.isRecording())
+
+        NSAnimationContext.beginGrouping()
+        try:
+            NSAnimationContext.currentContext().setDuration_(0.25)
+            self.buttonsView.animator().setAlphaValue_(0.0)
+            if self.fullScreenButton is not None:
+                self.fullScreenButton.animator().setAlphaValue_(0.0)
+            if recording and self.recordButton is not None:
+                self.recordButton.animator().setAlphaValue_(1.0)
+        finally:
+            NSAnimationContext.endGrouping()
+
         self.visible_buttons = False
-        self.holdButton.setHidden_(True)
-        self.hangupButton.setHidden_(True)
-        self.chatButton.setHidden_(True)
-        self.infoButton.setHidden_(True)
-        self.muteButton.setHidden_(True)
-        self.aspectButton.setHidden_(True)
-        self.screenshotButton.setHidden_(True)
-        if self.streamController.videoRecorder:
-            self.recordButton.setHidden_(not self.streamController.videoRecorder.isRecording())
-        else:
-            self.recordButton.setHidden_(True)
 
     @objc.python_method
     def showButtons(self):
@@ -1452,22 +2170,36 @@ class VideoWindowController(NSWindowController):
 
         if not self.window().isVisible():
             return
-        
+
         if self.window_too_small:
             self.hideButtons()
             return
 
-        self.buttonsView.show()
+        # Make sure nothing's set hidden from a previous code path
+        # (legacy behavior used setHidden_ extensively); alpha 0 is
+        # what we use to hide now.
+        try:
+            self.buttonsView.setHidden_(False)
+            for btn in (self.fullScreenButton, self.holdButton,
+                        self.hangupButton, self.chatButton,
+                        self.infoButton, self.muteButton,
+                        self.aspectButton, self.screenshotButton,
+                        self.recordButton):
+                if btn is not None:
+                    btn.setHidden_(False)
+        except Exception:
+            pass
+
+        NSAnimationContext.beginGrouping()
+        try:
+            NSAnimationContext.currentContext().setDuration_(0.18)
+            self.buttonsView.animator().setAlphaValue_(1.0)
+            if self.fullScreenButton is not None:
+                self.fullScreenButton.animator().setAlphaValue_(1.0)
+        finally:
+            NSAnimationContext.endGrouping()
+
         self.visible_buttons = True
-        self.fullScreenButton.setHidden_(False)
-        self.holdButton.setHidden_(False)
-        self.hangupButton.setHidden_(False)
-        self.chatButton.setHidden_(False)
-        self.infoButton.setHidden_(False)
-        self.muteButton.setHidden_(False)
-        self.aspectButton.setHidden_(False)
-        self.screenshotButton.setHidden_(False)
-        self.recordButton.setHidden_(False)
 
     def updateRecordingTimer_(self, timer):
         self.recordButton.setEnabled_(self.full_screen)

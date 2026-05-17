@@ -1008,10 +1008,12 @@ class H264ProfileOption(PopUpMenuOption):
 class VideoResolutionOption(PopUpMenuOption):
     def __init__(self, object, name, option, description=None):
         PopUpMenuOption.__init__(self, object, name, option, useRepresented=True, description=description)
-        self.addMissingOptions = True
+        # We deliberately only offer VGA. HD 720p is removed here and
+        # forced to VGA at startup in BlinkAppDelegate (see
+        # _NH_SIPApplicationDidStart), so we don't want the popup to
+        # silently re-add it for users still on the legacy default.
+        self.addMissingOptions = False
         self.popup.sizeToFit()
-        self.popup.addItemWithTitle_(NSLocalizedString("HD 720p", "Menu item"))
-        self.popup.lastItem().setRepresentedObject_(VideoResolution("1280x720"))
         self.popup.addItemWithTitle_(NSLocalizedString("VGA", "Menu item"))
         self.popup.lastItem().setRepresentedObject_(VideoResolution("640x480"))
         frame = self.popup.frame()
@@ -2047,11 +2049,15 @@ PreferenceOptionTypes = {
 "tls.timeout" : HiddenOption,
 "video.device" : VideoDeviceOption,
 "video.enable_colorbar_device" : HiddenOption,
-"video.resolution" : VideoResolutionOption,
-"video.max_bitrate": BandwidthOption,
-"video.framerate" : VideoFramerateOption,
+# Resolution / framerate / max_bitrate / container are all pinned to
+# canonical values at startup (see BlinkAppDelegate._NH_SIPApplication
+# DidStart). Hide their UI controls so the user doesn't see options
+# they can't meaningfully change.
+"video.resolution" : HiddenOption,
+"video.max_bitrate": HiddenOption,
+"video.framerate" : HiddenOption,
 "video.paused" : HiddenOption,
-"video.container": VideoContainerOption,
+"video.container": HiddenOption,
 "h264.profile": H264ProfileOption,
 "h264.level": HiddenOption,
 "xcap.discovered": HiddenOption,
