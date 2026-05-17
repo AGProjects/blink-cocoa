@@ -34,9 +34,14 @@ class VideoSettingsExtension(VideoSettings):
     enable_when_auto_answer = Setting(type=bool, default=False)
     full_screen_after_connect = Setting(type=bool, default=True)
     keep_window_on_top = Setting(type=bool, default=True)
-    resolution = Setting(type=VideoResolution, default=VideoResolution('1280x720'))
-    max_bitrate = Setting(type=float, default=4, nillable=True)
-    framerate = Setting(type=int, default=15)
+    # Defaults aligned with Sylk Mobile (640x480 / 24fps / 0.8 Mbps).
+    # The BlinkAppDelegate startup migration re-pins these on every
+    # launch anyway, but matching the schema default means a fresh
+    # install never even briefly negotiates a 720p / 4 Mbps session
+    # against a peer that can't sustain it.
+    resolution = Setting(type=VideoResolution, default=VideoResolution('640x480'))
+    max_bitrate = Setting(type=float, default=0.8, nillable=True)
+    framerate = Setting(type=int, default=24)
     h264 = H264SettingsExtension
     auto_rotate_cameras = Setting(type=bool, default=True)
     container = Setting(type=str, default='standalone')

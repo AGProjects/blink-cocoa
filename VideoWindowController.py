@@ -273,6 +273,11 @@ class VideoWidget(NSView):
     _frame = None
     renderer = None
     aspect_ratio = None
+    # FPS tracker: count handle_frame() calls over a rolling 1-second
+    # window. current_fps is the value the stats overlay reads.
+    _fps_window_start = 0.0
+    _fps_window_count = 0
+    current_fps = 0
 
     def awakeFromNib(self):
         self.registerForDraggedTypes_(NSArray.arrayWithObject_(NSFilenamesPboardType))
@@ -553,6 +558,19 @@ class VideoWidget(NSView):
     @objc.python_method
     @run_in_gui_thread
     def handle_frame(self, frame):
+        # Always count the frame for FPS, even if we're hidden or the
+        # layer isn't ready yet — that way the overlay shows the true
+        # receive rate, not the render rate.
+        now = time.time()
+        if self._fps_window_start == 0.0:
+            self._fps_window_start = now
+        self._fps_window_count += 1
+        elapsed = now - self._fps_window_start
+        if elapsed >= 1.0:
+            self.current_fps = int(round(self._fps_window_count / elapsed))
+            self._fps_window_start = now
+            self._fps_window_count = 0
+
         if self.isHidden():
             return
 
@@ -1187,10 +1205,160 @@ class VideoWindowController(NSWindowController):
 
         self.updateMuteButton()
         self.updateHoldButton()
-        
+        self._setupStatsOverlay()
+
         self.recording_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(0.5, self, "updateRecordingTimer:", None, True)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.recording_timer, NSRunLoopCommonModes)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.recording_timer, NSEventTrackingRunLoopMode)
+
+        # Refresh the stats overlay once per second, in lockstep with
+        # VideoController.updateStatisticsTimer_ which recomputes the
+        # underlying RTT/codec/etc. on the same cadence.
+        self.stats_overlay_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(
+            1.0, self, "updateStatsOverlayTimer:", None, True)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(
+            self.stats_overlay_timer, NSRunLoopCommonModes)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(
+            self.stats_overlay_timer, NSEventTrackingRunLoopMode)
+
+    @objc.python_method
+    def _setupStatsOverlay(self):
+        """Create a small translucent overlay in the top-right of the
+        video view showing codec, resolution, fps and RTT. The label is
+        a sibling of videoView in the content view so it composes on top
+        of the GPU drawable without being part of the Metal render pass.
+
+        The overlay follows the same auto-hide rules as buttonsView:
+        visible when the user is interacting with the window, hidden
+        when the buttons fade out."""
+        content = self.window().contentView()
+        if content is None:
+            return
+
+        # Top-right corner, fixed pixel size. Pinned to the top-right
+        # so it slides with the window's right edge during a resize.
+        cb = content.bounds()
+        overlay_w = 230.0
+        overlay_h = 20.0
+        margin = 12.0
+        frame = NSMakeRect(
+            cb.size.width - overlay_w - margin,
+            cb.size.height - overlay_h - margin,
+            overlay_w,
+            overlay_h)
+        overlay = NSTextField.alloc().initWithFrame_(frame)
+        overlay.setAutoresizingMask_(NSViewMinXMargin | NSViewMinYMargin)
+        overlay.setEditable_(False)
+        overlay.setSelectable_(False)
+        overlay.setBezeled_(False)
+        overlay.setDrawsBackground_(True)
+        overlay.setBackgroundColor_(
+            NSColor.colorWithCalibratedRed_green_blue_alpha_(0.0, 0.0, 0.0, 0.55))
+        overlay.setTextColor_(NSColor.whiteColor())
+        try:
+            from AppKit import NSFont
+            overlay.setFont_(NSFont.monospacedDigitSystemFontOfSize_weight_(11.0, 0))
+        except Exception:
+            from AppKit import NSFont
+            overlay.setFont_(NSFont.systemFontOfSize_(11.0))
+        overlay.setAlignment_(2)  # NSTextAlignmentRight
+        overlay.setStringValue_("")
+        overlay.setHidden_(True)
+        # Round the corners via the backing layer.
+        try:
+            overlay.setWantsLayer_(True)
+            overlay.layer().setCornerRadius_(4.0)
+            overlay.layer().setMasksToBounds_(True)
+        except Exception:
+            pass
+        content.addSubview_(overlay)
+        self.statsOverlay = overlay
+
+    @objc.python_method
+    def _formatStatsLine(self):
+        """Compose the single-line label content from the most recent
+        stats. Returns None if we don't have enough information yet
+        (e.g. before the first frame arrives)."""
+        sc = self.streamController
+        if sc is None:
+            return None
+
+        # Codec — comes from the negotiated SIP stream once media is
+        # established. Before connect, fall back to "—".
+        codec = ""
+        try:
+            if sc.stream is not None and sc.stream.codec:
+                codec = sc.stream.codec
+                if isinstance(codec, (bytes, bytearray)):
+                    codec = codec.decode('ascii', errors='replace')
+                codec = codec.upper()
+        except Exception:
+            codec = ""
+
+        # Resolution — taken from the actual remote frame so it tracks
+        # mid-call resolution changes (camera rotation, bandwidth-driven
+        # downscale, etc.) without us having to listen for separate
+        # events.
+        resolution = ""
+        try:
+            f = getattr(self.videoView, '_frame', None)
+            if f is not None and f.width and f.height:
+                resolution = "%dx%d" % (int(f.width), int(f.height))
+        except Exception:
+            resolution = ""
+
+        # FPS is whatever VideoWidget computed over its last 1-second
+        # window from handle_frame() calls — the actual receive rate.
+        fps = 0
+        try:
+            fps = int(getattr(self.videoView, 'current_fps', 0) or 0)
+        except Exception:
+            fps = 0
+
+        # RTT — sc.statistics['rtt'] is already halved (one-way) in
+        # VideoController.updateStatisticsTimer_; show round-trip as
+        # double for a more useful "what the user feels" number.
+        rtt_ms = 0
+        try:
+            stats = getattr(sc, 'statistics', None) or {}
+            rtt_one_way = stats.get('rtt', 0) or 0
+            rtt_ms = int(round(float(rtt_one_way) * 2))
+        except Exception:
+            rtt_ms = 0
+
+        parts = []
+        if codec:
+            parts.append(codec)
+        if resolution:
+            parts.append(resolution)
+        if fps > 0:
+            parts.append("%d fps" % fps)
+        if rtt_ms > 0:
+            parts.append("RTT %d ms" % rtt_ms)
+        if not parts:
+            return None
+        return "  ".join(parts)
+
+    def updateStatsOverlayTimer_(self, timer):
+        try:
+            overlay = getattr(self, 'statsOverlay', None)
+            if overlay is None or self.closed or self.will_close:
+                return
+            text = self._formatStatsLine()
+            if not text:
+                overlay.setHidden_(True)
+                return
+            overlay.setStringValue_(text)
+            # Tie the overlay's visibility to the buttons' visibility:
+            # if the user has chosen to keep the chrome hidden (auto-fade
+            # has finished), hide the stats too. Otherwise show it.
+            buttons = getattr(self, 'buttonsView', None)
+            if buttons is not None:
+                overlay.setHidden_(buttons.isHidden() or buttons.alphaValue() <= 0.01)
+            else:
+                overlay.setHidden_(False)
+        except Exception as e:
+            BlinkLogger().log_debug("stats overlay refresh ignored: %s" % e)
 
     @property
     def sessionController(self):
@@ -1904,6 +2072,7 @@ class VideoWindowController(NSWindowController):
 
         self.hideButtons()
         self.stopRecordingTimer()
+        self.stopStatsOverlayTimer()
         self.goToWindowMode()
         self.stopIdleTimer()
         self.stopMouseOutTimer()
@@ -1936,6 +2105,13 @@ class VideoWindowController(NSWindowController):
         if self.recording_timer is not None and self.recording_timer.isValid():
             self.recording_timer.invalidate()
         self.recording_timer = None
+
+    @objc.python_method
+    def stopStatsOverlayTimer(self):
+        timer = getattr(self, 'stats_overlay_timer', None)
+        if timer is not None and timer.isValid():
+            timer.invalidate()
+        self.stats_overlay_timer = None
 
     @objc.python_method
     def stopMouseOutTimer(self):

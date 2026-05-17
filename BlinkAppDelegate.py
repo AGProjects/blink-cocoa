@@ -530,6 +530,16 @@ class BlinkAppDelegate(NSObject):
         # window (not the audio drawer). Pin every one of those
         # settings to its canonical value so pjsip doesn't keep using
         # a value the user can no longer change in preferences.
+        #
+        # 2026-05-17: lowered the cap from 30fps / 2.5 Mbps to
+        # 24fps / 0.8 Mbps to match the Sylk Mobile defaults
+        # (480p / 24fps / 800 kbps). 2.5 Mbps over a lossy mobile
+        # uplink was producing 1080p-sized VP9 streams that the peer
+        # couldn't decode cleanly — heavy pixelation and a perceived
+        # ~5 fps because the only visually-clean frames were the
+        # keyframes between bursts of corrupted P-frames. 0.8 Mbps at
+        # 480p / 24fps keeps the encoder firmly inside what a normal
+        # 4G / weak-WiFi uplink can sustain end-to-end.
         try:
             from sipsimple.configuration.datatypes import VideoResolution
             vga = VideoResolution('640x480')
@@ -537,13 +547,14 @@ class BlinkAppDelegate(NSObject):
             if settings.video.resolution != vga:
                 settings.video.resolution = vga
                 changed = True
-            if settings.video.framerate != 30:
-                settings.video.framerate = 30
+            if settings.video.framerate != 24:
+                settings.video.framerate = 24
                 changed = True
             # max_bitrate is stored as a float in Mbit/s (matches the
             # BandwidthOption popup's representedObject values).
-            if settings.video.max_bitrate != 2.5:
-                settings.video.max_bitrate = 2.5
+            # 0.8 Mbit/s == 800 kbps.
+            if settings.video.max_bitrate != 0.8:
+                settings.video.max_bitrate = 0.8
                 changed = True
             if settings.video.container != 'standalone':
                 settings.video.container = 'standalone'
