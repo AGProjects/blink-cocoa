@@ -298,10 +298,36 @@ class VideoController(MediaStream):
         self.changeStatus(STREAM_PROPOSING if is_update else STREAM_INCOMING)
 
     def dealloc(self):
-        self.sessionController.log_debug("Dealloc %s" % self)
-        self.notification_center.discard_observer(self, sender=self.sessionController)
-        self.notification_center.discard_observer(self, sender=self.stream)
-        self.videoWindowController.release()
+        # Every attribute below can already be None at this point —
+        # end() leaves the controller in a half-cleaned state and the
+        # 5-second deallocTimer can fire mid-shutdown after AppDelegate
+        # has nulled global references. Guard each access so the dealloc
+        # path stays clean even on a re-entrant or late invocation; an
+        # uncaught AttributeError inside an ObjC dealloc bubbles out as
+        # an uncaught NSException and terminates the whole app.
+        sc = self.sessionController
+        nc = self.notification_center
+        if sc is not None:
+            try:
+                sc.log_debug("Dealloc %s" % self)
+            except Exception:
+                pass
+        if nc is not None:
+            if sc is not None:
+                try:
+                    nc.discard_observer(self, sender=sc)
+                except Exception:
+                    pass
+            if self.stream is not None:
+                try:
+                    nc.discard_observer(self, sender=self.stream)
+                except Exception:
+                    pass
+        if self.videoWindowController is not None:
+            try:
+                self.videoWindowController.release()
+            except Exception:
+                pass
         self.videoWindowController = None
         self.videoRecorder = None
         self.stream = None

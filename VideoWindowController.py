@@ -1362,9 +1362,21 @@ class VideoWindowController(NSWindowController):
 
     @property
     def sessionController(self):
-        if self.streamController:
-            return self.streamController.sessionController
-        else:
+        # ``self.streamController`` is a VideoController IBOutlet/ref.
+        # Once the VideoController has been ObjC-deallocated, this
+        # attribute can hold a NIL'd PyObjC proxy that is truthy in
+        # Python but raises AttributeError ("cannot access attribute X
+        # of NIL 'VideoController' object") on any attribute lookup.
+        # Wrap the chain to return None instead of crashing — that
+        # error path was observed at app exit after a video call,
+        # taking the whole app down with a dispatch-main-queue
+        # block_invoke during NSObject_dealloc_block_invoke.
+        sc = self.streamController
+        if sc is None:
+            return None
+        try:
+            return sc.sessionController
+        except AttributeError:
             return None
 
     @objc.python_method
@@ -1565,9 +1577,21 @@ class VideoWindowController(NSWindowController):
 
     @property
     def sessionController(self):
-        if self.streamController:
-            return self.streamController.sessionController
-        else:
+        # ``self.streamController`` is a VideoController IBOutlet/ref.
+        # Once the VideoController has been ObjC-deallocated, this
+        # attribute can hold a NIL'd PyObjC proxy that is truthy in
+        # Python but raises AttributeError ("cannot access attribute X
+        # of NIL 'VideoController' object") on any attribute lookup.
+        # Wrap the chain to return None instead of crashing — that
+        # error path was observed at app exit after a video call,
+        # taking the whole app down with a dispatch-main-queue
+        # block_invoke during NSObject_dealloc_block_invoke.
+        sc = self.streamController
+        if sc is None:
+            return None
+        try:
+            return sc.sessionController
+        except AttributeError:
             return None
 
     def windowDidResignKey_(self, notification):
@@ -1946,8 +1970,10 @@ class VideoWindowController(NSWindowController):
         self.full_screen_in_progress = True
 
     def windowDidEnterFullScreen_(self, notification):
-        self.sessionController.log_debug('windowDidEnterFullScreen_ %s' % self)
-        if self.streamController.ended:
+        sc = self.sessionController
+        if sc is not None:
+            sc.log_debug('windowDidEnterFullScreen_ %s' % self)
+        if self.streamController is None or self.streamController.ended:
             self.window().orderOut_(self)
             return
 
@@ -1964,7 +1990,9 @@ class VideoWindowController(NSWindowController):
             self.window().setLevel_(NSNormalWindowLevel)
 
     def windowDidExitFullScreen_(self, notification):
-        self.sessionController.log_debug('windowDidExitFullScreen %s' % self)
+        sc = self.sessionController
+        if sc is not None:
+            sc.log_debug('windowDidExitFullScreen %s' % self)
         self.fullScreenButton.setImage_(NSImage.imageNamed_("fullscreen"))
 
         self.full_screen_in_progress = False
@@ -1991,7 +2019,17 @@ class VideoWindowController(NSWindowController):
         self.updateAspectRatio()
 
     def windowWillClose_(self, sender):
-        self.sessionController.log_debug('windowWillClose %s' % self)
+        # `self.sessionController` is now a property that legitimately
+        # returns None once the underlying VideoController has been
+        # ObjC-deallocated (e.g. at app exit, after the call ended and
+        # the 5-second deallocTimer has fired). AppKit still delivers
+        # windowWillClose_ during the app's shutdown drain, and the
+        # old `self.sessionController.log_debug(...)` then crashed with
+        # 'NoneType' object has no attribute 'log_debug'. Use a local
+        # binding + None-check so the late-fire path is harmless.
+        sc = self.sessionController
+        if sc is not None:
+            sc.log_debug('windowWillClose %s' % self)
         self.will_close = True
         # Release the camera consumers immediately so the Mac camera
         # LED turns off the moment the window starts closing — without
@@ -2017,7 +2055,10 @@ class VideoWindowController(NSWindowController):
                 NotificationCenter().post_notification("BlinkVideoWindowClosed", sender=self)
 
     def windowShouldClose_(self, sender):
-        self.sessionController.log_debug('windowShouldClose_ %s' % self)
+        # See windowWillClose_ — same late-fire guard.
+        sc = self.sessionController
+        if sc is not None:
+            sc.log_debug('windowShouldClose_ %s' % self)
         return True
 
     @objc.python_method
@@ -2084,7 +2125,11 @@ class VideoWindowController(NSWindowController):
             self.window().close()
 
     def dealloc(self):
-        self.sessionController.log_debug("Dealloc %s" % self)
+        # sessionController property can legitimately be None at app
+        # exit (VideoController dealloced first). Guard the log call.
+        sc = self.sessionController
+        if sc is not None:
+            sc.log_debug("Dealloc %s" % self)
         self.flipWnd = None
 
         self.tracking_area = None

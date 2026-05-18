@@ -44,7 +44,23 @@ class VideoRecorder(object):
 
     @property
     def sessionController(self):
-        return self.videoController.sessionController
+        # Defensive: videoController is held as a Python attribute but
+        # the underlying ObjC instance can be NIL by the time a
+        # late-firing timer / queued main-thread block reaches this
+        # property at app exit. A NIL'd PyObjC proxy is truthy in
+        # Python but raises AttributeError on any attribute lookup
+        # ("cannot access attribute X of NIL 'VideoController' object")
+        # which previously crashed the app inside
+        # NSObject_dealloc_block_invoke. Return None instead so
+        # callers that already guard on `if self.sessionController:`
+        # see a clean exit path.
+        vc = self.videoController
+        if vc is None:
+            return None
+        try:
+            return vc.sessionController
+        except AttributeError:
+            return None
 
     def init_session(self):
         self.captureSession = AVCaptureSession.alloc().init()

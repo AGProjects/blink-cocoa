@@ -144,9 +144,18 @@ class VideoLocalWindowController(NSWindowController):
 
     @property
     def sessionController(self):
-        if self.streamController:
-            return self.streamController.sessionController
-        else:
+        # Defensive: see VideoWindowController.sessionController. A
+        # NIL'd PyObjC proxy is truthy in Python but raises
+        # AttributeError on every attribute lookup, so the bare
+        # ``if self.streamController:`` guard isn't enough on the
+        # late-firing timer / queued-block paths that hit this
+        # property at app exit.
+        sc = self.streamController
+        if sc is None:
+            return None
+        try:
+            return sc.sessionController
+        except AttributeError:
             return None
 
     @objc.python_method
