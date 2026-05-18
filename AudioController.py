@@ -1409,6 +1409,8 @@ class AudioController(MediaStream):
 
     @objc.python_method
     def _NH_MediaStreamDidStart(self, sender, data):
+        # Explicit notification trace for the RTP / SIP info window.
+        self.sessionController.log_info("MediaStreamDidStart")
         codec = beautify_audio_codec(self.stream.codec)
         self.sessionController.log_info("Audio stream established to %s:%s using %s codec" % (self.stream.remote_rtp_address, self.stream.remote_rtp_port, codec))
         # Surface the account's configured RTP encryption preference at
@@ -1508,6 +1510,8 @@ class AudioController(MediaStream):
 
     @objc.python_method
     def _NH_MediaStreamDidEnd(self, sender, data):
+        # Explicit notification trace for the RTP / SIP info window.
+        self.sessionController.log_info("MediaStreamDidEnd")
         self.sessionController.log_info("Audio stream ended")
         if NSApp.delegate().contactsWindowController.window().isKeyWindow():
             NSApp.delegate().contactsWindowController.window().makeFirstResponder_(NSApp.delegate().contactsWindowController.searchBox)
