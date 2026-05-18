@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1A2B3C4D5E6F70020000000A /* VideoMirrorController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F70010000000A /* VideoMirrorController.py */; };
+		1A2B3C4D5E6F70030000000A /* VideoMirrorController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F70010000000A /* VideoMirrorController.py */; };
+		1A2B3C4D5E6F70040000000A /* VideoMirrorController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F70010000000A /* VideoMirrorController.py */; };
 		1F06174212D09C18007A68F4 /* audio_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F06174112D09C18007A68F4 /* audio_16.png */; };
 		1F06174312D09C18007A68F4 /* audio_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F06174112D09C18007A68F4 /* audio_16.png */; };
 		1F065AFD1929175100E22651 /* layers2.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F065AFC1929175100E22651 /* layers2.png */; };
@@ -862,9 +865,6 @@
 		1FF63CD119128A1400A502FB /* MyVideoWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FF63CD019128A1400A502FB /* MyVideoWindowController.py */; };
 		1FF63CD219128A1400A502FB /* MyVideoWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FF63CD019128A1400A502FB /* MyVideoWindowController.py */; };
 		1FF63CD419128A1400A502FB /* MyVideoWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FF63CD019128A1400A502FB /* MyVideoWindowController.py */; };
-		1A2B3C4D5E6F70020000000A /* VideoMirrorController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F70010000000A /* VideoMirrorController.py */; };
-		1A2B3C4D5E6F70030000000A /* VideoMirrorController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F70010000000A /* VideoMirrorController.py */; };
-		1A2B3C4D5E6F70040000000A /* VideoMirrorController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F70010000000A /* VideoMirrorController.py */; };
 		1FF63CD619128C4800A502FB /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FF63CD519128C4800A502FB /* AVFoundation.framework */; };
 		1FF6C3FF1498C06A0019F668 /* ScreensharingPreviewPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FF6C4031498C06A0019F668 /* ScreensharingPreviewPanel.xib */; };
 		1FF6C4001498C06A0019F668 /* ScreensharingPreviewPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FF6C4031498C06A0019F668 /* ScreensharingPreviewPanel.xib */; };
@@ -1345,6 +1345,7 @@
 
 /* Begin PBXFileReference section */
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
+		1A2B3C4D5E6F70010000000A /* VideoMirrorController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoMirrorController.py; sourceTree = "<group>"; };
 		1F06174112D09C18007A68F4 /* audio_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = audio_16.png; path = icons/audio_16.png; sourceTree = "<group>"; };
 		1F065AFC1929175100E22651 /* layers2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = layers2.png; path = icons/layers2.png; sourceTree = SOURCE_ROOT; };
 		1F08DB14193DEDB200187373 /* offline.aif */ = {isa = PBXFileReference; lastKnownFileType = file; name = offline.aif; path = sounds/offline.aif; sourceTree = "<group>"; };
@@ -1761,7 +1762,6 @@
 		1FF5936B110F07C70047E2CD /* unavailable_message.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = unavailable_message.wav; path = sounds/unavailable_message.wav; sourceTree = "<group>"; };
 		1FF622FF140E20C000E81891 /* help.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = help.png; path = icons/help.png; sourceTree = "<group>"; };
 		1FF63CD019128A1400A502FB /* MyVideoWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MyVideoWindowController.py; sourceTree = "<group>"; };
-		1A2B3C4D5E6F70010000000A /* VideoMirrorController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoMirrorController.py; sourceTree = "<group>"; };
 		1FF63CD519128C4800A502FB /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		1FF6C4021498C06A0019F668 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ScreensharingPreviewPanel.xib; sourceTree = "<group>"; };
 		1FF6C40C1498C5560019F668 /* ScreensharingPreviewPanel.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = ScreensharingPreviewPanel.py; sourceTree = "<group>"; };
