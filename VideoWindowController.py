@@ -313,8 +313,7 @@ class VideoWidget(NSView):
                 # We only render to the drawable; we never read it back.
                 layer.setFramebufferOnly_(True)
                 layer.setOpaque_(True)
-                # Tag the drawable as sRGB-encoded so CoreAnimation maps
-                # the bytes correctly to the display's profile.
+                # Tag the drawable as sRGB-encoded.
                 try:
                     from Quartz import CGColorSpaceCreateWithName
                     srgb = CGColorSpaceCreateWithName('kCGColorSpaceSRGB')
@@ -369,22 +368,26 @@ class VideoWidget(NSView):
             except Exception as cs_err:
                 BlinkLogger().log_debug(
                     "CAMetalLayer colorspace re-assert failed: %s" % cs_err)
-            # Opt INTO EDR. On macOS 26 Tahoe with Apple Silicon, the
-            # call window's fullScreenPrimary collection-behaviour puts
-            # it into the EDR compositor whether we like it or not.
-            # When the layer is tagged EDR=False inside an EDR-active
-            # window, the compositor tone-maps our SDR pixels to a
-            # fraction of SDR-reference white — visibly dim against
-            # the surrounding AppKit chrome and against the Preferences
-            # preview (whose host window stays out of EDR mode entirely
-            # because it isn't fullScreenPrimary). EDR=True keeps the
-            # layer at the display's SDR-reference white level, which
-            # is the brightness the user perceives as "normal". Our
-            # pixels are in [0, 1] so we never actually emit values
-            # above SDR-reference — EDR=True only changes the compositor
-            # behaviour, not the visual range we produce.
+            # Explicitly opt OUT of EDR.
+            #
+            # An earlier iteration set this to True on the theory that
+            # the call window's fullScreenPrimary behaviour was forcing
+            # the layer into the EDR compositor and tone-mapping our
+            # SDR pixels down. macOS 26 Tahoe behaves the opposite
+            # way: setting wantsEDR=True makes the compositor RESERVE
+            # display headroom for HDR content we never produce, then
+            # squeeze our [0,1] sRGB pixels into a fraction of SDR-
+            # reference white to make room for that headroom — visibly
+            # dim against the Preferences preview (whose host window
+            # isn't fullScreenPrimary so it isn't EDR-tagged at all).
+            # Setting wantsEDR=False explicitly tells the compositor
+            # "this layer is SDR-only", which keeps our pixels at full
+            # SDR-reference brightness regardless of the surrounding
+            # window's EDR behaviour. Our BGRA8Unorm pixel format
+            # can't carry HDR-range values anyway, so opting OUT loses
+            # nothing and restores brightness parity with Preferences.
             try:
-                layer.setWantsExtendedDynamicRangeContent_(True)
+                layer.setWantsExtendedDynamicRangeContent_(False)
             except Exception:
                 pass
             self._renderer_kind = 'metal'
@@ -400,8 +403,15 @@ class VideoWidget(NSView):
         # apply the mirror now that the layer is finally available.
         self._apply_self_view_mirror()
 
+        # Renderer-kind trace demoted to debug — the info-log version
+        # produced one line per widget mount (Preferences preview,
+        # myVideoWidget, remoteVideoWidget) and cluttered every call
+        # / settings visit. Still useful when investigating "video is
+        # black on this machine" reports (tells you whether we picked
+        # Metal or fell back to the CGImage path), so we keep it as
+        # log_debug rather than removing it outright.
         try:
-            BlinkLogger().log_info(
+            BlinkLogger().log_debug(
                 "VideoWidget %s renderer=%s" % (
                     type(self).__name__, self._renderer_kind))
         except Exception:
@@ -418,26 +428,21 @@ class VideoWidget(NSView):
     
     @objc.python_method
     def setProducer(self, producer):
-        # Camera lifecycle trace.
-        #
-        # The SIPApplication.video_device producer is shared between
-        # every widget that asks for it (Preferences preview, call
-        # window remote/local widgets, video answering machine,
-        # etc). pjsip reference-counts the underlying AVCaptureSession:
-        # the camera LED comes on the moment ANY widget binds the
-        # producer and only turns off once every widget has released
-        # it (setProducer(None)). When a "camera still on after
-        # hangup" report comes in we need to know which widget is
-        # still holding the producer — this log line is the only way
-        # to find out without attaching a debugger.
+        # Camera lifecycle trace. Logged at DEBUG level so it
+        # doesn't clutter the normal log but is available when
+        # tracking down "camera LED still on" reports by enabling
+        # debug logging. Each acquire/release tells you exactly
+        # which widget is holding the shared
+        # SIPApplication.video_device producer; the LED turns off
+        # once every widget has released it.
         try:
             widget_name = type(self).__name__
             if producer is None:
-                BlinkLogger().log_info(
+                BlinkLogger().log_debug(
                     "[camera] release: widget=%s id=0x%x"
                     % (widget_name, id(self)))
             else:
-                BlinkLogger().log_info(
+                BlinkLogger().log_debug(
                     "[camera] acquire: widget=%s id=0x%x producer=0x%x"
                     % (widget_name, id(self), id(producer)))
         except Exception:
@@ -1246,10 +1251,17 @@ class VideoWindowController(NSWindowController):
 
     @objc.python_method
     def _setupStatsOverlay(self):
-        """Create a small translucent overlay in the top-right of the
-        video view showing codec, resolution, fps and RTT. The label is
-        a sibling of videoView in the content view so it composes on top
-        of the GPU drawable without being part of the Metal render pass.
+        """Create a small translucent overlay in the bottom strip of the
+        video window (under the call-control buttons) showing codec,
+        resolution, fps and RTT. The label is a sibling of videoView in
+        the content view so it composes on top of the GPU drawable
+        without being part of the Metal render pass.
+
+        Positioning: centered horizontally, with its bottom edge fixed
+        10 px above the window's bottom margin. This sits cleanly under
+        the buttons row (whose own y starts above this strip) and does
+        NOT overlap with the disconnectLabel that lives in the middle
+        of the window during pre-connect / disconnect states.
 
         The overlay follows the same auto-hide rules as buttonsView:
         visible when the user is interacting with the window, hidden
@@ -1258,19 +1270,28 @@ class VideoWindowController(NSWindowController):
         if content is None:
             return
 
-        # Top-right corner, fixed pixel size. Pinned to the top-right
-        # so it slides with the window's right edge during a resize.
         cb = content.bounds()
-        overlay_w = 230.0
-        overlay_h = 20.0
-        margin = 12.0
+        overlay_w = 260.0
+        # Height shrunk 20 → 15 and bottom_margin 10 → 4 so the
+        # overlay's TOP edge ends at y=19 — strictly below the
+        # buttonsView whose bottom edge sits at y=20 in the xib.
+        # Earlier values placed the overlay's upper half INSIDE the
+        # buttonsView's vertical span, which read as an overlap.
+        overlay_h = 15.0
+        bottom_margin = 4.0   # fixed gap from the window's lower edge
+
         frame = NSMakeRect(
-            cb.size.width - overlay_w - margin,
-            cb.size.height - overlay_h - margin,
+            (cb.size.width - overlay_w) / 2.0,
+            bottom_margin,
             overlay_w,
             overlay_h)
+
         overlay = NSTextField.alloc().initWithFrame_(frame)
-        overlay.setAutoresizingMask_(NSViewMinXMargin | NSViewMinYMargin)
+        # flexibleMinX + flexibleMaxX keeps it centred on horizontal
+        # resize; flexibleMaxY anchors the bottom so it doesn't drift up
+        # when the window grows taller.
+        overlay.setAutoresizingMask_(
+            NSViewMinXMargin | NSViewMaxXMargin | NSViewMaxYMargin)
         overlay.setEditable_(False)
         overlay.setSelectable_(False)
         overlay.setBezeled_(False)
@@ -1284,7 +1305,14 @@ class VideoWindowController(NSWindowController):
         except Exception:
             from AppKit import NSFont
             overlay.setFont_(NSFont.systemFontOfSize_(11.0))
-        overlay.setAlignment_(2)  # NSTextAlignmentRight
+        overlay.setAlignment_(1)  # NSTextAlignmentCenter.
+                                  # On modern macOS (10.12+) the
+                                  # NSTextAlignment* constants match
+                                  # the iOS naming, NOT the old
+                                  # NSLeftTextAlignment / NSRight... /
+                                  # NSCenter... order:
+                                  # 0=Left, 1=Center, 2=Right,
+                                  # 3=Justified, 4=Natural.
         overlay.setStringValue_("")
         overlay.setHidden_(True)
         # Round the corners via the backing layer.
@@ -1349,6 +1377,22 @@ class VideoWindowController(NSWindowController):
         except Exception:
             rtt_ms = 0
 
+        # RX / TX bitrate, taken from VideoController.statistics which
+        # samples the underlying sipsimple stream once per second.
+        # rx_bytes / tx_bytes are bytes-per-second; convert to kbps
+        # (×8/1000) for display. Round to nearest kbps so the number
+        # doesn't twitch on minor jitter.
+        rx_kbps = 0
+        tx_kbps = 0
+        try:
+            stats = getattr(sc, 'statistics', None) or {}
+            rx_bps = (stats.get('rx_bytes', 0) or 0) * 8
+            tx_bps = (stats.get('tx_bytes', 0) or 0) * 8
+            rx_kbps = int(round(rx_bps / 1000.0))
+            tx_kbps = int(round(tx_bps / 1000.0))
+        except Exception:
+            rx_kbps = tx_kbps = 0
+
         parts = []
         if codec:
             parts.append(codec)
@@ -1356,6 +1400,12 @@ class VideoWindowController(NSWindowController):
             parts.append(resolution)
         if fps > 0:
             parts.append("%d fps" % fps)
+        # Format speeds as a single combined "↓X ↑Y kbps" segment
+        # rather than two parts so the overlay stays compact. Show
+        # the segment whenever EITHER direction has data, so the
+        # user sees TX even before the remote sends frames back.
+        if rx_kbps > 0 or tx_kbps > 0:
+            parts.append("↓%d ↑%d kbps" % (rx_kbps, tx_kbps))
         if rtt_ms > 0:
             parts.append("RTT %d ms" % rtt_ms)
         if not parts:
@@ -1446,18 +1496,49 @@ class VideoWindowController(NSWindowController):
         NSApplication.sharedApplication().addWindowsItem_title_filename_(self.window(), title, False)
         self.window().center()
         self.window().setDelegate_(self)
-        # NB: do NOT call self.window().setColorSpace_(sRGB) here.
-        # Pinning the window to sRGB on an Apple Silicon Mac with a
-        # Display P3 screen forces the whole window's compositing to
-        # the smaller sRGB gamut, which visibly dims the Metal-rendered
-        # video. Leaving the window at its default (screen) profile,
-        # while the CAMetalLayer tags itself sRGB, lets CoreAnimation
-        # do a normal sRGB->screen-gamut mapping which renders the
-        # camera bytes at full brightness.
+        # Pin the window's colorspace to sRGB. This OPTS THE WINDOW
+        # OUT of the EDR / auto-tone-mapping pool that macOS 26 Tahoe
+        # applies to any fullScreenPrimary window by default.
+        #
+        # Symptom that drove this: with the window in its default
+        # (screen-inherited) colorspace, the Metal-rendered video
+        # brightness fluctuates 70%↔90% depending on focus and
+        # ambient sensors — the WindowServer is dynamically
+        # reserving/releasing EDR headroom and squeezing our SDR
+        # pixels to whatever fraction of SDR-reference is left.
+        # That auto-headroom kicks in at the WINDOW level (because
+        # the window is EDR-eligible); flipping the layer's
+        # wantsExtendedDynamicRangeContent to False isn't enough.
+        # Setting the window's colorSpace to a fixed sRGB profile
+        # removes it from the EDR pool, so the compositor maps our
+        # bytes 1:1 to SDR-reference with no dynamic adjustment.
+        #
+        # An earlier comment here warned against doing this on the
+        # theory that it shrinks the gamut to sRGB on a Display P3
+        # screen and dims the picture. That observation was from
+        # before the auto-EDR behaviour landed on Tahoe; the current
+        # tradeoff is the opposite — pinned sRGB is FULL brightness
+        # and stable, free-floating is fluctuating-and-dim.
+        try:
+            from AppKit import NSColorSpace
+            srgb_ns = NSColorSpace.sRGBColorSpace()
+            if srgb_ns is not None:
+                self.window().setColorSpace_(srgb_ns)
+        except Exception as cs_err:
+            self.sessionController.log_debug(
+                'window().setColorSpace_(sRGB) failed: %s' % cs_err)
         self.sessionController.log_debug('Init %s in %s' % (self.window(), self))
         self.window().makeFirstResponder_(self.videoView)
         self.window().setAcceptsMouseMovedEvents_(True)
         self.window().setTitle_(title)
+        # Hide the Hold button on the video call bar at setup time.
+        # See the matching exclusion in showButtons(). Audio calls
+        # still get the hold affordance via the audio bar.
+        try:
+            if self.holdButton is not None:
+                self.holdButton.setHidden_(True)
+        except Exception:
+            pass
         self.updateTrackingAreas()
 
         if SIPSimpleSettings().video.keep_window_on_top:
@@ -1536,6 +1617,22 @@ class VideoWindowController(NSWindowController):
         if self.streamController.ended:
             return
         self.initialLocation = event.locationInWindow()
+        # ANY click on the video window resurrects the chrome.
+        # Previously the buttons + PIP fade-out was tied to mouse
+        # idle, and the only way to bring them back was to move the
+        # mouse. Users who left the pointer parked over the window
+        # could end up with a video-only canvas and no way to find
+        # hangup / mute without first wiggling the mouse to trigger
+        # the idle reset. Showing the chrome on mouseDown gives an
+        # always-discoverable way back. Also reset the idle counter
+        # bookkeeping so the auto-hide timer gives the user the full
+        # IDLE_TIME window before fading the chrome out again.
+        try:
+            self.show_time = time.time()
+            self.is_idle = False
+            self.showButtons()
+        except Exception:
+            pass
 
     def mouseUp_(self, event):
         if self.closed:
@@ -1897,7 +1994,24 @@ class VideoWindowController(NSWindowController):
         if self.myVideoView:
             self.myVideoView.snapToCorner()
         
-        if scaledSize.width < 665:
+        # Width threshold below which the buttons row + PIP get
+        # auto-hidden because they no longer fit inside the window
+        # without overlapping each other. The button bar itself is
+        # 279 px wide (see VideoWindow.xib buttonsView frame); pick
+        # a threshold just above that so the bar isn't crammed
+        # edge-to-edge but the user can still shrink the window
+        # quite small before the chrome disappears.
+        #
+        # Previous value 665 was the old fixed-size minimum, and
+        # combined with the auto-hide it produced the "I shrank the
+        # window and now the buttons are gone for good and I can't
+        # bring them back" trap reported in the field. The xib's
+        # minSize is now 200x150; the new 290 threshold means the
+        # chrome stays available across most of the usable resize
+        # range, and even when it does auto-hide the on-mouseDown
+        # showButtons() fallback in mouseDown_ at least gives a
+        # visible toggle.
+        if scaledSize.width < 290:
             self.window_too_small = True
             self.hideButtons()
             self.myVideoView.hide()
@@ -2422,15 +2536,26 @@ class VideoWindowController(NSWindowController):
         # Make sure nothing's set hidden from a previous code path
         # (legacy behavior used setHidden_ extensively); alpha 0 is
         # what we use to hide now.
+        #
+        # NOTE: holdButton is deliberately excluded — putting a video
+        # call on hold doesn't currently work cleanly and the button
+        # has been a source of "why is the picture frozen" tickets,
+        # so the affordance is removed from the call bar entirely
+        # for video. (Audio calls still have hold via the audio bar.)
+        # The xib still defines the button as an IBOutlet so legacy
+        # state-update code in show() can run without crashing; we
+        # just keep it permanently hidden.
         try:
             self.buttonsView.setHidden_(False)
-            for btn in (self.fullScreenButton, self.holdButton,
+            for btn in (self.fullScreenButton,
                         self.hangupButton, self.chatButton,
                         self.infoButton, self.muteButton,
                         self.aspectButton, self.screenshotButton,
                         self.recordButton):
                 if btn is not None:
                     btn.setHidden_(False)
+            if self.holdButton is not None:
+                self.holdButton.setHidden_(True)
         except Exception:
             pass
 

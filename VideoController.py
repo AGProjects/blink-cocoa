@@ -323,11 +323,24 @@ class VideoController(MediaStream):
                     nc.discard_observer(self, sender=self.stream)
                 except Exception:
                     pass
-        if self.videoWindowController is not None:
-            try:
-                self.videoWindowController.release()
-            except Exception:
-                pass
+        # Do NOT call self.videoWindowController.release() here.
+        #
+        # PyObjC's wrapper around an NSObject (the controller is a
+        # subclass of NSWindowController, an NSObject) already retains
+        # the underlying ObjC object when stored as a Python
+        # attribute, and releases it when that attribute is rebound
+        # (the `= None` line below). Calling .release() explicitly
+        # decrements the retain count once more than the wrapper
+        # accounted for. The window controller's retain count then
+        # hits zero one reference too early; the NSObject is freed
+        # while other holders (NSApp.windows, the call session, any
+        # autoreleased reference still sitting in a worker thread's
+        # autorelease pool, etc.) think they still own it. When
+        # those holders later release, it's a use-after-free —
+        # presents as a non-canonical isa being dereferenced at
+        # autoreleasePoolPop on thread exit at app shutdown.
+        # See the trail with thread #59 / #27 / #29 each draining
+        # their TLS pool into an over-released OC_PythonUnicode.
         self.videoWindowController = None
         self.videoRecorder = None
         self.stream = None
@@ -413,10 +426,19 @@ class VideoController(MediaStream):
             elif newstate == STREAM_CONNECTING:
                 self.videoWindowController.showStatusLabel(NSLocalizedString("Connecting...", "Audio status label"))
             elif newstate == STREAM_CONNECTED:
-                if not self.media_received:
-                    self.videoWindowController.showStatusLabel(self.waiting_label)
-                else:
-                    self.videoWindowController.hideStatusLabel()
+                # Always hide the status label on STREAM_CONNECTED.
+                # Previously this branch re-showed the "Waiting For
+                # Media..." pill when self.media_received was still
+                # False (the 200 KB byte threshold hadn't been crossed
+                # yet). That immediately re-shows the pill that
+                # _NH_MediaStreamDidStart just hid — and the pill
+                # then covers the remote video for several seconds
+                # at low bitrates. The SDK firing MediaStreamDidStart
+                # is a reliable enough "stream is up" signal that
+                # waiting for byte-counter threshold here only adds
+                # latency to the label dismissal without giving
+                # better information.
+                self.videoWindowController.hideStatusLabel()
             elif newstate == STREAM_PROPOSING:
                 self.videoWindowController.showStatusLabel(NSLocalizedString("Adding Video...", "Audio status label"))
 
@@ -471,6 +493,22 @@ class VideoController(MediaStream):
     @objc.python_method
     def _NH_MediaStreamDidStart(self, sender, data):
         self.started = True
+        # Explicit notification trace for the RTP / SIP info window
+        # so the user can see the SDK transitions, not just the
+        # derived "stream established" message.
+        self.sessionController.log_info("MediaStreamDidStart")
+        # The "Waiting For Media..." pill was previously only hidden
+        # once 200 KB of RTP had been received (markMediaReceived).
+        # For low-bitrate streams that takes several seconds and the
+        # pill ends up covering the actual remote frames once they
+        # start arriving. Hide it immediately on stream-start — the
+        # SDK has confirmed the stream is up; if frames don't follow,
+        # we can show a different "no video yet" affordance instead.
+        if self.videoWindowController and self.videoWindowController.disconnectLabel:
+            try:
+                self.videoWindowController.hideStatusLabel()
+            except Exception:
+                pass
         sample_rate = self.stream.sample_rate/1000
         codec = beautify_video_codec(self.stream.codec)
         self.sessionController.log_info("Video stream established to %s:%s using %s codec" % (self.stream.remote_rtp_address, self.stream.remote_rtp_port, codec))
@@ -529,6 +567,8 @@ class VideoController(MediaStream):
 
     @objc.python_method
     def _NH_MediaStreamDidEnd(self, sender, data):
+        # Explicit notification trace for the RTP / SIP info window.
+        self.sessionController.log_info("MediaStreamDidEnd")
         if data.error is not None:
             self.sessionController.log_info("Video call failed: %s" % data.error)
             self.changeStatus(STREAM_FAILED, data.reason)
