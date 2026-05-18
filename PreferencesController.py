@@ -286,6 +286,23 @@ class PreferencesController(NSWindowController, object):
     def userClickedToolbarButton_(self, sender):
         section_name = sender.itemIdentifier()
 
+        # Release the in-prefs video preview's camera handle whenever
+        # the user leaves the Video section. Without this the
+        # AVCaptureSession stays alive (camera LED on, GPU busy)
+        # until the entire preferences window is dismissed — even if
+        # the user only briefly visited Video on their way to
+        # somewhere else. The Video branch below re-binds the
+        # producer if the user lands back on Video later.
+        if section_name != 'video':
+            preview = getattr(self, '_video_preview_widget', None)
+            if preview is not None:
+                try:
+                    preview.setProducer(None)
+                except Exception as e:
+                    BlinkLogger().log_debug(
+                        "Preferences preview release on tab change "
+                        "ignored: %s" % e)
+
         if section_name == 'advanced':
             self.generalTabView.setTabViewType_(NSTopTabsBezelBorder)
             self.createGeneralOptionsUI('advanced')
@@ -530,6 +547,30 @@ class PreferencesController(NSWindowController, object):
             try:
                 from VideoMirrorController import (
                     PreviewVideoWidget, CenteredPreviewContainer)
+                # Release the producer held by any PREVIOUSLY-created
+                # PreviewVideoWidget before we overwrite
+                # self._video_preview_widget below. Each call to
+                # createViewForSection allocates a brand-new preview
+                # widget and binds the camera producer to it; if we
+                # don't explicitly release the old one first, it
+                # stays holding the producer (PyObjC keeps the Cocoa
+                # view alive as a subview reference) and the
+                # AVCaptureSession's refcount never drops to zero,
+                # leaving the camera LED on indefinitely. The next
+                # time the user enters the Video section another
+                # leak gets added on top. The on-tab-change release
+                # in userClickedToolbarButton_ only covers the
+                # widget pointer currently in self._video_preview_widget;
+                # this covers the orphaned predecessors during a
+                # full UI rebuild.
+                old_preview = getattr(self, '_video_preview_widget', None)
+                if old_preview is not None:
+                    try:
+                        old_preview.setProducer(None)
+                    except Exception as e:
+                        BlinkLogger().log_debug(
+                            "Old preferences preview release on "
+                            "rebuild ignored: %s" % e)
                 preview_width = 160.0
                 # Initial height assumes 4:3; it'll snap to the real
                 # camera aspect as soon as the first frame arrives.
@@ -546,7 +587,20 @@ class PreferencesController(NSWindowController, object):
                     NSViewMinXMargin | NSViewMaxXMargin)
                 container.setPreview(preview)
                 self._video_preview_widget = preview
-                preview.setProducer(SIPApplication.video_device.producer)
+                # NOTE: do NOT call preview.setProducer() here.
+                #
+                # createViewForSection is invoked indirectly by
+                # createGeneralOptionsUI('basic'), which iterates over
+                # EVERY section (audio, video, chat, …) and rebuilds
+                # the views for ALL of them — not just the one the
+                # user clicked. createGeneralOptionsUI itself is
+                # called from userClickedToolbarButton_ on every
+                # non-help / non-advanced tab click. So binding the
+                # camera producer here would turn the LED ON every
+                # time the user clicked any tab, even tabs that have
+                # nothing to do with video. The producer is bound by
+                # userClickedToolbarButton_ when the user actually
+                # navigates to the Video section.
                 settings_box_view.addSubview_(container)
             except Exception as e:
                 BlinkLogger().log_info(

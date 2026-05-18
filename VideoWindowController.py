@@ -418,7 +418,30 @@ class VideoWidget(NSView):
     
     @objc.python_method
     def setProducer(self, producer):
-        #BlinkLogger().log_debug("%s setProducer %s" % (self, producer))
+        # Camera lifecycle trace.
+        #
+        # The SIPApplication.video_device producer is shared between
+        # every widget that asks for it (Preferences preview, call
+        # window remote/local widgets, video answering machine,
+        # etc). pjsip reference-counts the underlying AVCaptureSession:
+        # the camera LED comes on the moment ANY widget binds the
+        # producer and only turns off once every widget has released
+        # it (setProducer(None)). When a "camera still on after
+        # hangup" report comes in we need to know which widget is
+        # still holding the producer — this log line is the only way
+        # to find out without attaching a debugger.
+        try:
+            widget_name = type(self).__name__
+            if producer is None:
+                BlinkLogger().log_info(
+                    "[camera] release: widget=%s id=0x%x"
+                    % (widget_name, id(self)))
+            else:
+                BlinkLogger().log_info(
+                    "[camera] acquire: widget=%s id=0x%x producer=0x%x"
+                    % (widget_name, id(self), id(producer)))
+        except Exception:
+            pass
         # Detect whether this widget is displaying the local camera so we
         # can mirror it horizontally like FaceTime / Zoom / Meet. This is
         # purely a display transform on our own layer; the remote side
