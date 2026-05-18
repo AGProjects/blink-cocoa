@@ -118,6 +118,91 @@ prune "lxml_html_clean"            "lxml.html.clean not called from Blink or any
 prune "lxml_html_clean-*.dist-info" "lxml_html_clean dist-info"
 
 # ---------------------------------------------------------------------------
+# HTTP stack — only pulled in transitively by the (now-removed) Google libs.
+# Nothing in Blink, sipsimple, xcaplib, msrplib, twisted, or gevent imports
+# requests/urllib3/certifi/charset_normalizer at the top level.
+# ---------------------------------------------------------------------------
+prune "requests"                   "python-requests (only used by google libs, removed)"
+prune "requests-*.dist-info"       "requests dist-info"
+prune "urllib3"                    "only imported by requests (removed)"
+prune "urllib3-*.dist-info"        "urllib3 dist-info"
+prune "certifi"                    "CA bundle, only used by requests (removed)"
+prune "certifi-*.dist-info"        "certifi dist-info"
+prune "charset_normalizer"         "only used by requests (removed); ~500 KB mypyc .so"
+prune "charset_normalizer-*.dist-info" "charset_normalizer dist-info"
+
+# ---------------------------------------------------------------------------
+# lxml: keep etree (~9 MB, used by sipsimple for SDP/SIP/XCAP parsing) but
+# drop the objectify (~5.4 MB) and html.diff (~774 KB) extensions which no
+# code in Blink or shipped libs imports.
+# ---------------------------------------------------------------------------
+prune "lxml/objectify.cpython-*-darwin.so" "lxml.objectify not imported anywhere"
+prune "lxml/objectify.pyi"                 "lxml.objectify stubs"
+prune "lxml/html/diff.cpython-*-darwin.so" "lxml.html.diff not imported anywhere"
+
+# ---------------------------------------------------------------------------
+# pycryptodome (Crypto/): Blink uses only `Crypto.Cipher.AES` (CBC mode) and
+# `Crypto.Protocol.KDF.PBKDF2`. pgpy/otr use the modern `cryptography`
+# library, not pycryptodome. Cipher/__init__.py eagerly loads every mode
+# helper, so we KEEP all _mode_*.py and their backing .so files
+# (_raw_aes/cbc/cfb/ctr/ecb/ofb/ocb, _ghash_portable). We also KEEP
+# _BLAKE2s.so (loaded by _mode_gcm) and the SHA1/256 hashes used by PBKDF2.
+#
+# Safe to drop: SelfTest (the bundled test suite), PublicKey (RSA/DSA/ECC
+# never imported), Signature/IO/Math (only used by PublicKey), Protocol/DH,
+# Protocol/HPKE, Protocol/SecretSharing, and every standalone cipher / hash
+# module Blink doesn't reference.
+# ---------------------------------------------------------------------------
+prune "Crypto/SelfTest"            "pycryptodome test suite (1.5 MB)"
+
+prune "Crypto/PublicKey"           "no Crypto.PublicKey.* import in Blink (2.4 MB incl. _ec_ws.so)"
+prune "Crypto/Signature"           "no Crypto.Signature.* import (only used by Cipher.PKCS1_*)"
+prune "Crypto/IO"                  "only consumed by Crypto/PublicKey (removed)"
+prune "Crypto/Math"                "only consumed by Crypto/PublicKey (removed)"
+prune "Crypto/Protocol/DH.py"      "Diffie-Hellman, not imported"
+prune "Crypto/Protocol/HPKE.py"    "HPKE, not imported"
+prune "Crypto/Protocol/SecretSharing.py" "Shamir, not imported"
+
+# Stand-alone block / stream ciphers not referenced by Blink. Their _raw_*.so
+# files are only loaded when their .py wrapper is imported, so removing the
+# .py is enough — we delete the .so anyway to shave the bundle further.
+#
+# IMPORTANT: do NOT remove _Salsa20.abi3.so. Although nothing imports the
+# Salsa20.py wrapper, Crypto/Protocol/KDF.py (scrypt) calls
+#   load_pycryptodome_raw_lib("Crypto.Cipher._Salsa20", ...)
+# at module load time, so PBKDF2's containing module imports break the
+# moment SMSWindowManager.py runs. Keep _Salsa20.abi3.so; Salsa20.py itself
+# is still safe to drop because load_pycryptodome_raw_lib only stat()s the
+# .so file, not the Python wrapper. Likewise keep _pkcs1_decode.abi3.so
+# only if its sole caller _pkcs1_oaep_decode.py is still present — we drop
+# both together below.
+for cipher in ARC2 ARC4 Blowfish CAST ChaCha20 ChaCha20_Poly1305 \
+              DES DES3 Salsa20 _EKSBlowfish PKCS1_OAEP PKCS1_v1_5; do
+    prune "Crypto/Cipher/${cipher}.py"  "Crypto.Cipher.${cipher} not imported"
+    prune "Crypto/Cipher/${cipher}.pyi" "Crypto.Cipher.${cipher} stubs"
+done
+prune "Crypto/Cipher/_pkcs1_oaep_decode.py"  "orphan helper (sole caller Cipher.PKCS1_OAEP removed)"
+prune "Crypto/Cipher/_pkcs1_oaep_decode.pyi" "orphan helper stubs"
+for so in _ARC4 _chacha20 _pkcs1_decode \
+          _raw_arc2 _raw_blowfish _raw_cast _raw_des _raw_des3 _raw_eksblowfish; do
+    prune "Crypto/Cipher/${so}.abi3.so" "backing extension for removed cipher"
+done
+
+# Hashes Blink and the live ciphers/KDF don't need.
+# KEEP: SHA1, SHA224, SHA256, SHA384, SHA512, MD5, BLAKE2b, BLAKE2s, HMAC,
+# CMAC (PBKDF2 + _mode_gcm + AES-CMAC for SIV/EAX modes).
+for hash in MD2 MD4 RIPEMD RIPEMD160 SHA SHA3_224 SHA3_256 SHA3_384 SHA3_512 \
+            SHAKE128 SHAKE256 cSHAKE128 cSHAKE256 KangarooTwelve \
+            KMAC128 KMAC256 Poly1305 TupleHash128 TupleHash256 \
+            TurboSHAKE128 TurboSHAKE256 keccak; do
+    prune "Crypto/Hash/${hash}.py"  "Crypto.Hash.${hash} not imported"
+    prune "Crypto/Hash/${hash}.pyi" "Crypto.Hash.${hash} stubs"
+done
+for so in _MD2 _MD4 _RIPEMD160 _keccak _poly1305; do
+    prune "Crypto/Hash/${so}.abi3.so" "backing extension for removed hash"
+done
+
+# ---------------------------------------------------------------------------
 # Hygiene: leftover metadata, caches, tests that may have crept back in.
 # 06-copy-python-packages.sh already runs these, but rerun in case this
 # script is invoked standalone or against a hand-staged tree.
