@@ -129,9 +129,20 @@ class BlinkLogger(object, metaclass=Singleton):
         # they actually fire (i.e. once app_delegate.debug is set), so
         # gate the file write on the same flag as the GUI / stdout
         # path. The early log_debug calls that pre-date app_delegate
-        # initialisation are still dropped, matching the historical
-        # behaviour callers rely on.
-        if self.app_delegate.debug:  # todo: log_debug is called 13-14 times before this flag is initialized from the configuration, meaning they can never be displayed
+        # initialisation are dropped (the previous code would have
+        # thrown AttributeError on the None app_delegate and taken
+        # the entire awakeFromNib path down with it; ContactWindowController
+        # crashed on startup exactly because of that). Guarding both
+        # the None case and the missing-attribute case keeps the
+        # logger silent until the delegate is ready.
+        delegate = self.app_delegate
+        if delegate is None:
+            return
+        try:
+            debug = delegate.debug
+        except AttributeError:
+            return
+        if debug:
             print(message)
             self._write_activity('DEBUG', message)
             self.gui_logger(message)
