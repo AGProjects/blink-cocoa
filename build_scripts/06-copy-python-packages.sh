@@ -50,6 +50,17 @@ rm -rf Resources/lib/PyQt6
 rm -rf Resources/lib/PyQt6_sip*
 rm -rf Resources/lib/PyQt6_*
 
+# PyInstaller is a build-time tool; Blink is an Xcode-built Cocoa app and
+# never imports it at runtime. Its Darwin bootloader stubs (run, run_d,
+# runw, runw_d) are unsandboxed Mach-O executables that fail Mac App Store
+# review with rejection code 90296. Strip the package, its hooks, and any
+# associated dist-info / egg-info metadata.
+rm -rf Resources/lib/PyInstaller Resources/lib/pyinstaller
+rm -rf Resources/lib/_pyinstaller_hooks_contrib
+rm -rf Resources/lib/pyinstaller*.dist-info
+rm -rf Resources/lib/pyinstaller*.egg-info
+rm -rf Resources/lib/pyinstaller_hooks_contrib*
+
 # Tk / IDLE / pip tooling: not used at runtime, just bloat.
 rm -rf Resources/lib/tkinter
 rm -rf Resources/lib/idlelib
