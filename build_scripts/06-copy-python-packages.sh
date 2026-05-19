@@ -75,5 +75,35 @@ find Resources/lib -name __pycache__ -prune -exec rm -rf {} + 2>/dev/null
 find Resources/lib -name '*.pyc' -delete 2>/dev/null
 find Resources/lib -name '*.pyo' -delete 2>/dev/null
 
+# ---------------------------------------------------------------------------
+# Overlay local Python patches.
+#
+# build_scripts/python-patches/ mirrors the layout of the shipped
+# Resources/lib/ tree. Every file under it overwrites the corresponding
+# file inside Resources/lib/, so we can ship in-place fixes for upstream
+# packages we cannot get a release of in time (e.g. python3-gnutls's
+# library loader, which does not look inside Contents/Frameworks/libs by
+# default — see python-patches/gnutls/library/__init__.py).
+#
+# Adding a new patch: drop the corrected file at
+# build_scripts/python-patches/<same/relative/path/as/in/site-packages>.
+# No edits to this script are needed.
+# ---------------------------------------------------------------------------
+patches_dir="../build_scripts/python-patches"
+if [ -d "$patches_dir" ]; then
+    echo "Applying Python patches from $patches_dir ..."
+    # Use a pipeline that survives spaces in paths.
+    find "$patches_dir" -type f -name '*.py' -print0 | while IFS= read -r -d '' src; do
+        rel="${src#$patches_dir/}"
+        dst="Resources/lib/$rel"
+        if [ ! -e "$dst" ]; then
+            echo "  WARN: $dst does not exist in shipped tree — patch is stale or path is wrong"
+            continue
+        fi
+        echo "  patch: $rel"
+        cp "$src" "$dst"
+    done
+fi
+
 sos=`find ./Resources/lib -name \*.so`; for s in $sos; do ls $s; ../build_scripts/change_lib_paths.sh $s; codesign -f -o runtime --timestamp  -s "Developer ID Application" $s; done
 sos=`find ./Resources/lib -name \*.dylib`; for s in $sos; do ls $s; ../build_scripts/change_lib_paths.sh $s; codesign -f -o runtime --timestamp  -s "Developer ID Application" $s; done
