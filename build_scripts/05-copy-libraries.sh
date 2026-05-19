@@ -69,6 +69,68 @@ for l in $extra_libs $gnutls_libs; do
 #    fi
 done
 
+# ---------------------------------------------------------------------------
+# Symbol-availability guard.
+#
+# Apple adds libc symbols over time. If a bundled dylib was built on a host
+# newer than our minimum supported macOS, the package's configure step may
+# detect the symbol as available, skip its gnulib fallback, and bake a hard
+# external reference into the dylib. The dylib then refuses to load on
+# older macOS with:
+#   dlopen(<lib>): Symbol not found: _<symbol>
+#
+# Known offenders:
+#   _strchrnul   added macOS 15.4 (Apr 2024)   — libidn2, p11-kit, gnutls
+#
+# Fix: set macosx_deployment_target in /opt/local/etc/macports/macports.conf
+# (or pass ac_cv_func_<symbol>=no to the offending port's configure), then
+# `sudo port -f uninstall <port>; sudo port clean <port>; sudo port install <port>`
+# and re-run this script.
+#
+# Add new symbols to forbidden_symbols below as Apple ships them.
+# ---------------------------------------------------------------------------
+forbidden_symbols="_strchrnul"
+
+echo "Checking bundled dylibs for libc symbols that fail on older macOS ..."
+guard_failed=0
+for dylib in Frameworks/libs/*.dylib; do
+    [ -f "$dylib" ] || continue
+    undefined=$(nm -u "$dylib" 2>/dev/null)
+    for sym in $forbidden_symbols; do
+        if printf '%s\n' "$undefined" | grep -q "${sym}\$"; then
+            echo "  FORBIDDEN SYMBOL: $sym  in  $dylib"
+            guard_failed=1
+        fi
+    done
+done
+
+if [ "$guard_failed" -ne 0 ]; then
+    cat <<'EOF'
+
+ERROR: one or more bundled dylibs hard-require libc symbols that are not
+available on older macOS. The resulting .app will crash at startup on any
+customer whose macOS predates the symbol's introduction.
+
+Fix (recommended — global):
+  Edit /opt/local/etc/macports/macports.conf and set, e.g.:
+    macosx_deployment_target  14.0
+  Then for each offending port:
+    sudo port -f uninstall <port>
+    sudo port clean <port>
+    sudo port install <port>
+
+Fix (targeted — single port):
+  sudo port edit <port>
+  Add:  configure.env-append    ac_cv_func_<symbol_without_underscore>=no
+  Save, then rebuild as above.
+
+Re-run 05-copy-libraries.sh; this guard will pass once the offending
+external references are gone.
+EOF
+    exit 1
+fi
+echo "OK — no forbidden symbols in bundled dylibs."
+
 if [ ! -d Frameworks/Python.framework/Versions ]; then
     exit 0
 fi
