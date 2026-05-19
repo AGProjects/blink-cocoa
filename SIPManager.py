@@ -33,6 +33,10 @@ from sipsimple.configuration import DefaultValue
 from sipsimple.configuration import ConfigurationManager, ObjectNotFoundError
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import FrozenSIPURI, SIPURI, SIPCoreError, CORE_REVISION, PJ_VERSION, PJ_SVN_REVISION
+try:
+    from sipsimple.core import CORE_BUILD
+except ImportError:
+    CORE_BUILD = 0
 from sipsimple.session import SessionManager
 from sipsimple.storage import FileStorage
 from sipsimple.threading import run_in_twisted_thread
@@ -51,7 +55,7 @@ from util import beautify_audio_codec, beautify_video_codec, format_identity_to_
 class SIPManager(object, metaclass=Singleton):
 
     def __init__(self):
-        BlinkLogger().log_info("Using SIP SIMPLE SDK version %s, core version %s, PJSIP version %s (rev %s)\n" % (version, CORE_REVISION, PJ_VERSION.decode(), PJ_SVN_REVISION))
+        BlinkLogger().log_info("Using SIP SIMPLE SDK version %s, core version %s.%s, PJSIP version %s (rev %s)\n" % (version, CORE_REVISION, CORE_BUILD, PJ_VERSION.decode(), PJ_SVN_REVISION))
 
         self._app = SIPApplication()
         self._delegate = None
