@@ -209,6 +209,7 @@ class DebugWindow(NSObject):
         if settings.logs.trace_notifications_in_gui:
             notification_center.add_observer(self)
 
+        self.sipRadio.selectCellWithTag_(settings.logs.trace_sip_in_gui or Disabled)
         self.msrpRadio.selectCellWithTag_(settings.logs.trace_msrp_in_gui or Disabled)
         self.xcapRadio.selectCellWithTag_(settings.logs.trace_xcap_in_gui or Disabled)
         self.pjsipCheckBox.setState_(NSOnState if settings.logs.trace_pjsip_in_gui  else NSOffState)
