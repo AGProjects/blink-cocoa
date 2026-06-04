@@ -346,13 +346,17 @@ class SessionControllersManager(object, metaclass=Singleton):
         try:
             duration = session.end_time - session.start_time
         except TypeError:
-            duration = 0
+            seconds = 0
+            session.end_time = ISOTimestamp.now()
+            session.start_time = ISOTimestamp.now()
+        else:
+            seconds = duration.seconds
 
         call_id = data.call_id if data.call_id is not None else str(uuid.uuid1())
         from_tag = data.from_tag if data.from_tag is not None else ''
         to_tag = data.to_tag if data.to_tag is not None else ''
 
-        self.add_to_session_history(controller.history_id, media_type, 'incoming', 'completed', failure_reason, local_to_utc(session.start_time), local_to_utc(session.end_time), duration.seconds, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, json.dumps(controller.encryption), controller.display_name or '', controller.device_id or '', str(controller.target_uri))
+        self.add_to_session_history(controller.history_id, media_type, 'incoming', 'completed', failure_reason, local_to_utc(session.start_time), local_to_utc(session.end_time), seconds, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, json.dumps(controller.encryption), controller.display_name or '', controller.device_id or '', str(controller.target_uri))
 
         if 'audio' in data.streams:
             duration = self.get_printed_duration(session.start_time, session.end_time)
