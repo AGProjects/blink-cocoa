@@ -903,6 +903,42 @@ class PreferencesController(NSWindowController, object):
     _NH_BonjourAccountRegistrationDidFail = _NH_SIPAccountRegistrationDidFail
     _NH_BonjourAccountRegistrationDidEnd = _NH_SIPAccountRegistrationDidEnd
 
+    # Resolution -> H.264 level mapping.  Drives the auto-update applied
+    # in _NH_CFGSettingsObjectDidChange when the user changes the video
+    # resolution from the Preferences UI.  Each entry is the minimum
+    # H.264 level required to negotiate the resolution at 30 fps; the
+    # peer-side decoder ignores SDP level (it's advisory) but advertising
+    # too low a level can make some WebRTC stacks (libwebrtc, Safari)
+    # cap the decoded picture or refuse the offer altogether.  Patch 48
+    # in deps/patches/2.17 makes pjsip's default backend offer
+    # profile-level-id=42e01f (Constrained Baseline Level 3.1); this
+    # map keeps that consistent for the non-HD cases too.
+    _H264_LEVEL_BY_RESOLUTION = {
+        (320, 240):   "2.0",  # QVGA
+        (640, 360):   "3.0",  # nHD
+        (640, 480):   "3.0",  # VGA
+        (960, 540):   "3.1",  # qHD
+        (1280, 720):  "3.1",  # 720p HD
+        (1920, 1080): "4.0",  # 1080p Full HD
+    }
+
+    # Optional resolution -> default framerate.  Only applied when the
+    # user changes resolution; doesn't override a value the user picked
+    # explicitly from the framerate dropdown.  30 fps matches what every
+    # WebRTC stack advertises and what pjsip's libvpx (patch 44/45) and
+    # VideoToolbox encoders are tuned for.  1080p stays at 25 fps so
+    # the encoder budget fits inside H.264 Level 4.0's 14 Mbps cap on
+    # typical broadband uplinks; users with fibre can bump it from the
+    # dropdown.
+    _FRAMERATE_BY_RESOLUTION = {
+        (320, 240):   30,
+        (640, 360):   30,
+        (640, 480):   30,
+        (960, 540):   30,
+        (1280, 720):  30,
+        (1920, 1080): 25,
+    }
+
     @objc.python_method
     def _NH_CFGSettingsObjectDidChange(self, notification):
         sender = notification.sender
@@ -910,12 +946,40 @@ class PreferencesController(NSWindowController, object):
         settings = SIPSimpleSettings()
         if sender is settings:
             if 'video.resolution' in notification.data.modified:
-                if settings.video.resolution == (640, 480):
-                    settings.video.h264.level = "3.0"
-                elif settings.video.resolution == (1280, 720):
-                    settings.video.h264.level = "3.1"
+                resolution_key = tuple(settings.video.resolution)
+                level = self._H264_LEVEL_BY_RESOLUTION.get(resolution_key)
+                if level is not None and settings.video.h264.level != level:
+                    settings.video.h264.level = level
+                framerate = self._FRAMERATE_BY_RESOLUTION.get(resolution_key)
+                if framerate is not None and 'video.framerate' not in notification.data.modified:
+                    # Only auto-set framerate when the user changed
+                    # resolution alone; if they're updating both at the
+                    # same time, respect their explicit framerate choice.
+                    if settings.video.framerate != framerate:
+                        settings.video.framerate = framerate
 
                 settings.save()
+
+            # H.264 profile guard: pjsip 2.17 + patch 48 advertises
+            # Constrained Baseline (42e0xx) by default — that's what
+            # WebRTC peers (Sylk Mobile, browsers, libwebrtc generally)
+            # actually accept.  Letting a user pick Main or High in the
+            # Preferences > H.264 dropdown causes the offered SDP to
+            # carry profile_idc=4d / 64, which libwebrtc on the peer
+            # side may bind to its baseline decoder anyway (Sylk Mobile)
+            # or refuse outright (some browser builds), making the
+            # video stream silently fail.  Reset to baseline.  Users
+            # who genuinely need Main / High for a non-WebRTC peer can
+            # edit settings.cfg directly; the UI option is removed to
+            # prevent accidental misconfiguration.
+            if 'video.h264.profile' in notification.data.modified:
+                if settings.video.h264.profile != 'baseline':
+                    BlinkLogger().log_info(
+                        "Forcing H.264 profile back to 'baseline' "
+                        "(Main/High break WebRTC peer interop, see "
+                        "deps/patches/2.17/48_h264_sylk_mobile_interop.patch)")
+                    settings.video.h264.profile = 'baseline'
+                    settings.save()
 
             # Camera-affecting setting changes: detach the preview from
             # the about-to-be-torn-down camera so the renderer doesn't
@@ -1239,6 +1303,22 @@ class PreferencesController(NSWindowController, object):
             self.openLogsFolderButton.setHidden_(False)
         elif item.identifier() == 'sip':
             self.sectionHelpPlaceholder.setStringValue_(NSLocalizedString("Set port to 0 for automatic allocation", "Label"))
+        elif item.identifier() == 'video':
+            # Video section help: surfaces what "Auto" (unset) means for
+            # max bitrate and that the H.264 level is auto-derived from
+            # the chosen resolution (see _NH_CFGSettingsObjectDidChange).
+            # With pjsip 2.17 + patch 44/45, the libvpx encoder targets
+            # 1.5 Mbps VBR for VP8 / VP9; libx264 / VideoToolbox H.264
+            # encode at the resolution's natural bitrate budget.  Setting
+            # a manual max bitrate overrides those defaults and clamps
+            # the encoder regardless of available uplink.
+            self.sectionHelpPlaceholder.setStringValue_(NSLocalizedString(
+                "Resolution sets the H.264 level automatically. "
+                "Leave \"Max bitrate\" unset for the codec's auto target "
+                "(1.5 Mbps for VP8/VP9, VideoToolbox-managed for H.264). "
+                "Codec order: drag to reorder; first matching codec in the "
+                "peer's offer wins SDP negotiation.",
+                "Label"))
         elif item.identifier() == 'tls':
             label = ''
             settings = SIPSimpleSettings()
@@ -1272,7 +1352,21 @@ class PreferencesController(NSWindowController, object):
 
             self.sectionHelpPlaceholder.setStringValue_(label)
         elif item.identifier() == 'h264':
-            self.sectionHelpPlaceholder.setStringValue_(NSLocalizedString("Any profile will be accepted but this will be proposed", "Label"))
+            # H.264 fmtp behaviour as of pjsip 2.17 + patch 48:
+            # Constrained Baseline Level 3.1 (profile-level-id=42e01f) is
+            # always proposed.  This matches Sylk Mobile / WebRTC /
+            # libwebrtc, which only register Constrained Baseline as a
+            # receive capability.  The Profile dropdown is locked to
+            # "baseline" via _NH_CFGSettingsObjectDidChange — Main and
+            # High silently break interop with WebRTC peers because
+            # their libwebrtc decoder binds PT 96 to baseline and may
+            # drop High-profile NALs.
+            self.sectionHelpPlaceholder.setStringValue_(NSLocalizedString(
+                "Constrained Baseline Level 3.1 is proposed - matches WebRTC, "
+                "Sylk Mobile and browsers. Level is set automatically from the "
+                "video resolution. Main and High profiles work only with "
+                "traditional SIP peers and may break video with WebRTC endpoints.",
+                "Label"))
         else:
             self.sectionHelpPlaceholder.setStringValue_('')
 
