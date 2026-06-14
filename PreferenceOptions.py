@@ -1008,16 +1008,28 @@ class H264ProfileOption(PopUpMenuOption):
 class VideoResolutionOption(PopUpMenuOption):
     def __init__(self, object, name, option, description=None):
         PopUpMenuOption.__init__(self, object, name, option, useRepresented=True, description=description)
-        # We deliberately only offer VGA. HD 720p is removed here and
-        # forced to VGA at startup in BlinkAppDelegate (see
-        # _NH_SIPApplicationDidStart), so we don't want the popup to
-        # silently re-add it for users still on the legacy default.
-        self.addMissingOptions = False
+        # Three standard capture sizes the H.264 level map covers
+        # cleanly:
+        #   VGA   640x480   -> Level 3.0 (4:3)
+        #   720p  1280x720  -> Level 3.1 (16:9)
+        #   1080p 1920x1080 -> Level 4.0 (16:9)
+        # QVGA / nHD / qHD were trimmed because they crowd the dropdown
+        # without offering visibly different bitrate / quality trade-
+        # offs from VGA / 720p on modern Mac uplinks - users who really
+        # want them can still set the value in settings.cfg directly
+        # and addMissingOptions=True will show the non-standard entry
+        # in the dropdown so they can switch back.
+        self.addMissingOptions = True
         self.popup.sizeToFit()
-        self.popup.addItemWithTitle_(NSLocalizedString("VGA", "Menu item"))
-        self.popup.lastItem().setRepresentedObject_(VideoResolution("640x480"))
+        for title, w, h in (
+            ("VGA (640x480)",              640,  480),
+            ("HD 720p (1280x720)",        1280,  720),
+            ("Full HD 1080p (1920x1080)", 1920, 1080),
+        ):
+            self.popup.addItemWithTitle_(NSLocalizedString(title, "Menu item"))
+            self.popup.lastItem().setRepresentedObject_(VideoResolution("%dx%d" % (w, h)))
         frame = self.popup.frame()
-        frame.size.width = 150
+        frame.size.width = 220
         self.popup.setFrame_(frame)
 
 
@@ -2052,13 +2064,24 @@ PreferenceOptionTypes = {
 # Resolution / framerate / max_bitrate / container are all pinned to
 # canonical values at startup (see BlinkAppDelegate._NH_SIPApplication
 # DidStart). Hide their UI controls so the user doesn't see options
-# they can't meaningfully change.
+# they can't meaningfully change.  Resolution was briefly user-visible
+# but non-VGA captures don't survive pjsip's avf_dev -> encoder ->
+# packetizer pipeline cleanly on macOS - both local preview and the
+# remote receiver see a broken aspect ratio at 720p and 1080p - so
+# we're back to VGA-only until the pjsip-side issue is fixed.
 "video.resolution" : HiddenOption,
 "video.max_bitrate": HiddenOption,
 "video.framerate" : HiddenOption,
 "video.paused" : HiddenOption,
 "video.container": HiddenOption,
-"h264.profile": H264ProfileOption,
+# h264.profile is hidden: Blink pins it to "baseline" at startup
+# (see BlinkAppDelegate._NH_SIPApplicationDidStart) to match what every
+# WebRTC stack (libwebrtc, Sylk Mobile, browsers) actually accepts.
+# Main / High profiles silently break video with WebRTC peers because
+# their decoders are wired to Constrained Baseline only.  Hiding the
+# tab keeps users from accidentally setting Main / High and then
+# wondering why video stops the moment Sylk answers.
+"h264.profile": HiddenOption,
 "h264.level": HiddenOption,
 "xcap.discovered": HiddenOption,
 "UserIcon": HiddenOption

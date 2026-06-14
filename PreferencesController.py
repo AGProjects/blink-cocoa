@@ -225,6 +225,19 @@ class PreferencesController(NSWindowController, object):
             except StopIteration:
                 pass
 
+        # Always drop the H.264 Codec toolbar tab.  Its only control was
+        # the profile picker (baseline / main / high); profile is now
+        # pinned to "baseline" at startup
+        # (BlinkAppDelegate._NH_SIPApplicationDidStart) to keep WebRTC
+        # peers (Sylk Mobile, browsers) decoding our H.264 cleanly, and
+        # level is auto-derived from the pinned resolution.  Nothing on
+        # that tab is user-editable any more, so it's pure UI clutter.
+        try:
+            item = next((item for item in self.toolbar.visibleItems() if item.itemIdentifier() == 'h264'))
+            self.toolbar.removeItemAtIndex_(self.toolbar.visibleItems().index(item))
+        except StopIteration:
+            pass
+
         if not NSApp.delegate().advanced_options_enabled:
             for identifier in ('answering_machine', 'advanced'):
                 try:
@@ -571,10 +584,19 @@ class PreferencesController(NSWindowController, object):
                         BlinkLogger().log_debug(
                             "Old preferences preview release on "
                             "rebuild ignored: %s" % e)
-                preview_width = 160.0
-                # Initial height assumes 4:3; it'll snap to the real
-                # camera aspect as soon as the first frame arrives.
-                preview_height = 120.0
+                # Truly fixed-size preview box, 320x240, regardless of
+                # the configured capture resolution.  The widget never
+                # resizes; only the IMAGE inside scales to fill the box
+                # (via kCAGravityResizeAspectFill on the layer; see
+                # PreviewVideoWidget._setup_video_layer).  This keeps
+                # the surrounding layout absolutely stable - no shift,
+                # no re-flow, no jitter - when the user changes
+                # resolution.  16:9 sources are cropped left/right by
+                # the compositor to fit the 4:3 box (the standard
+                # FaceTime / Photo Booth approach); 4:3 sources fill
+                # exactly.
+                preview_width = 320.0
+                preview_height = 240.0
                 container = CenteredPreviewContainer.alloc().\
                     initWithFrame_(NSMakeRect(0, 0, preview_width,
                                               preview_height))
@@ -903,16 +925,15 @@ class PreferencesController(NSWindowController, object):
     _NH_BonjourAccountRegistrationDidFail = _NH_SIPAccountRegistrationDidFail
     _NH_BonjourAccountRegistrationDidEnd = _NH_SIPAccountRegistrationDidEnd
 
-    # Resolution -> H.264 level mapping.  Drives the auto-update applied
-    # in _NH_CFGSettingsObjectDidChange when the user changes the video
-    # resolution from the Preferences UI.  Each entry is the minimum
-    # H.264 level required to negotiate the resolution at 30 fps; the
-    # peer-side decoder ignores SDP level (it's advisory) but advertising
-    # too low a level can make some WebRTC stacks (libwebrtc, Safari)
-    # cap the decoded picture or refuse the offer altogether.  Patch 48
-    # in deps/patches/2.17 makes pjsip's default backend offer
-    # profile-level-id=42e01f (Constrained Baseline Level 3.1); this
-    # map keeps that consistent for the non-HD cases too.
+    # Resolution -> H.264 level mapping.  The H.264 level the peer
+    # decoder uses to size its frame buffers comes from the SDP fmtp;
+    # if we offer a lower level than the resolution we send, some
+    # WebRTC peers cap the decoded picture.  This map gets the level
+    # right automatically when the user picks a resolution from the
+    # Preferences dropdown.  Patch 48 in deps/patches/2.17 makes
+    # pjsip's backend default to profile-level-id=42e01f (Level 3.1);
+    # this override keeps the level in step with whatever resolution
+    # the user actually picked.
     _H264_LEVEL_BY_RESOLUTION = {
         (320, 240):   "2.0",  # QVGA
         (640, 360):   "3.0",  # nHD
@@ -922,22 +943,6 @@ class PreferencesController(NSWindowController, object):
         (1920, 1080): "4.0",  # 1080p Full HD
     }
 
-    # Optional resolution -> default framerate.  Only applied when the
-    # user changes resolution; doesn't override a value the user picked
-    # explicitly from the framerate dropdown.  30 fps matches what every
-    # WebRTC stack advertises and what pjsip's libvpx (patch 44/45) and
-    # VideoToolbox encoders are tuned for.  1080p stays at 25 fps so
-    # the encoder budget fits inside H.264 Level 4.0's 14 Mbps cap on
-    # typical broadband uplinks; users with fibre can bump it from the
-    # dropdown.
-    _FRAMERATE_BY_RESOLUTION = {
-        (320, 240):   30,
-        (640, 360):   30,
-        (640, 480):   30,
-        (960, 540):   30,
-        (1280, 720):  30,
-        (1920, 1080): 25,
-    }
 
     @objc.python_method
     def _NH_CFGSettingsObjectDidChange(self, notification):
@@ -946,38 +951,41 @@ class PreferencesController(NSWindowController, object):
         settings = SIPSimpleSettings()
         if sender is settings:
             if 'video.resolution' in notification.data.modified:
+                # The preview thumbnail is deliberately NOT resized
+                # when the user picks a different resolution - the
+                # widget stays at a fixed 320x240 box and the layer's
+                # kCAGravityResizeAspectFill (see PreviewVideoWidget._setup_video_layer)
+                # scales the incoming bitmap to fill the box,
+                # cropping any aspect mismatch.  This keeps the
+                # surrounding Preferences layout from shifting when
+                # the dropdown changes value.
+                # Auto-derive the H.264 level from the chosen resolution
+                # so the user doesn't have to think about it (the level
+                # picker is hidden).  Falls back to whatever the user
+                # had previously if they pick an exotic resolution we
+                # don't have a mapping for.
                 resolution_key = tuple(settings.video.resolution)
                 level = self._H264_LEVEL_BY_RESOLUTION.get(resolution_key)
                 if level is not None and settings.video.h264.level != level:
                     settings.video.h264.level = level
-                framerate = self._FRAMERATE_BY_RESOLUTION.get(resolution_key)
-                if framerate is not None and 'video.framerate' not in notification.data.modified:
-                    # Only auto-set framerate when the user changed
-                    # resolution alone; if they're updating both at the
-                    # same time, respect their explicit framerate choice.
-                    if settings.video.framerate != framerate:
-                        settings.video.framerate = framerate
+                    settings.save()
 
-                settings.save()
-
-            # H.264 profile guard: pjsip 2.17 + patch 48 advertises
-            # Constrained Baseline (42e0xx) by default — that's what
-            # WebRTC peers (Sylk Mobile, browsers, libwebrtc generally)
-            # actually accept.  Letting a user pick Main or High in the
-            # Preferences > H.264 dropdown causes the offered SDP to
-            # carry profile_idc=4d / 64, which libwebrtc on the peer
-            # side may bind to its baseline decoder anyway (Sylk Mobile)
-            # or refuse outright (some browser builds), making the
-            # video stream silently fail.  Reset to baseline.  Users
-            # who genuinely need Main / High for a non-WebRTC peer can
-            # edit settings.cfg directly; the UI option is removed to
-            # prevent accidental misconfiguration.
+            # Last-line-of-defence H.264 profile guard.  The Profile
+            # picker in the H.264 toolbar tab is hidden / pinned at
+            # startup to "baseline" (see PreferenceOptions.py and
+            # BlinkAppDelegate._NH_SIPApplicationDidStart), so in normal
+            # use this branch never fires.  Kept here as a belt-and-
+            # braces defence in case a future code path, a settings.cfg
+            # import, or an external config-edit drift sets the profile
+            # to Main or High - both silently break WebRTC peer interop
+            # (libwebrtc / Sylk Mobile / browsers register Constrained
+            # Baseline only).  See
+            # deps/patches/2.17/48_h264_sylk_mobile_interop.patch.
             if 'video.h264.profile' in notification.data.modified:
                 if settings.video.h264.profile != 'baseline':
                     BlinkLogger().log_info(
                         "Forcing H.264 profile back to 'baseline' "
-                        "(Main/High break WebRTC peer interop, see "
-                        "deps/patches/2.17/48_h264_sylk_mobile_interop.patch)")
+                        "(Main/High break WebRTC peer interop)")
                     settings.video.h264.profile = 'baseline'
                     settings.save()
 

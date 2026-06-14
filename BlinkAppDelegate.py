@@ -544,6 +544,13 @@ class BlinkAppDelegate(NSObject):
             from sipsimple.configuration.datatypes import VideoResolution
             vga = VideoResolution('640x480')
             changed = False
+            # Pin resolution to VGA every startup.  Non-VGA captures
+            # (720p / 1080p) don't survive pjsip's avf_dev -> encoder
+            # -> packetizer pipeline cleanly on macOS - both the local
+            # preview and the remote Sylk receiver see broken aspect
+            # ratio at higher resolutions.  Until that's fixed at the
+            # pjsip layer, VGA is the only resolution that gives a
+            # working end-to-end video call.
             if settings.video.resolution != vga:
                 settings.video.resolution = vga
                 changed = True
@@ -558,6 +565,23 @@ class BlinkAppDelegate(NSObject):
                 changed = True
             if settings.video.container != 'standalone':
                 settings.video.container = 'standalone'
+                changed = True
+            # Pin H.264 profile to "baseline" and level to "3.0".  The
+            # H.264 toolbar tab is removed from Preferences (see
+            # PreferencesController.awakeFromNib_), and video.resolution
+            # is pinned to VGA above - Level 3.0 is the correct H.264
+            # level for 640x480, and Constrained Baseline is what every
+            # WebRTC peer (libwebrtc, Sylk Mobile, browsers) actually
+            # decodes.  Patch 48
+            # (deps/patches/2.17/48_h264_sylk_mobile_interop.patch)
+            # makes pjsip's default fmtp advertise profile-level-id
+            # 42e01f (Level 3.1); we override to 3.0 here so the offered
+            # SDP matches the resolution we'll actually send.
+            if settings.video.h264.profile != 'baseline':
+                settings.video.h264.profile = 'baseline'
+                changed = True
+            if settings.video.h264.level != '3.0':
+                settings.video.h264.level = '3.0'
                 changed = True
             if changed:
                 settings.save()
