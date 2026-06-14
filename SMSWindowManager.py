@@ -1778,30 +1778,42 @@ class SMSWindowManagerClass(NSObject):
             return
 
         note_new_message = content_type in ('text/plain', 'text/html', 'application/sylk-message-metadata') and direction == 'incoming'
+        # Only genuine incoming chat text (text/* — text/plain, text/html)
+        # may raise the window to the front. Message-metadata (the wire
+        # format, including live-location ticks) and every control/sync
+        # message must update silently: they must never pop the window or
+        # steal focus.
+        raise_window = content_type.startswith('text/') and direction == 'incoming'
         # Live-location shares emit one origin tick followed by many
-        # map-update ticks. The origin tick should raise the viewer like
-        # any other incoming message; the update ticks must refresh the
-        # existing bubble silently — popping the window on every GPS
-        # sample would steal focus continuously while the sender moves.
+        # map-update ticks; none of them should bump the unread counter.
         if (note_new_message
                 and content_type == 'application/sylk-message-metadata'
                 and self._is_location_update_tick(str(account.id), content)):
             note_new_message = False
-        viewer = self.getWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, note_new_message=note_new_message, instance_id=instance_id)
+        # Control/sync messages (read receipts, remote removals) must never
+        # spawn a viewer — they should only act on an already-open
+        # conversation, never bring a window into existence.
+        create_if_needed = content_type not in ('application/sylk-conversation-read', 'application/sylk-message-remove')
+        viewer = self.getWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, note_new_message=raise_window, create_if_needed=create_if_needed, instance_id=instance_id)
 
         if content_type == 'application/sylk-conversation-read':
-            viewer.messages_read()
-            self.windowForViewer(viewer).noteNoMessageForSession_(viewer)
+            if viewer:
+                viewer.messages_read()
+                self.windowForViewer(viewer).noteNoMessageForSession_(viewer)
             return
 
         if content_type == 'application/sylk-message-remove':
             try:
                 json_data = json.loads(content.decode())
                 msg_id = json_data['message_id']
-            except (json.decoder.JSONDecodeError, TypeError, KeyError):
+            except (json.decoder.JSONDecodeError, TypeError, KeyError) as e:
                 BlinkLogger().log_debug('Error parsing message remove %s: %s' % (content.decode(), str(e)))
             else:
-                viewer.delete_message(msg_id, local=True);
+                if viewer:
+                    viewer.delete_message(msg_id, local=True)
+                else:
+                    # No open conversation to update — delete from history directly.
+                    self.history.delete_message(msg_id)
 
             return
 
