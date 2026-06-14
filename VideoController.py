@@ -512,21 +512,53 @@ class VideoController(MediaStream):
         sample_rate = self.stream.sample_rate/1000
         codec = beautify_video_codec(self.stream.codec)
         self.sessionController.log_info("Video stream established to %s:%s using %s codec" % (self.stream.remote_rtp_address, self.stream.remote_rtp_port, codec))
-        # Same encryption-configuration log line as AudioController, so
-        # the Windows Logs panel shows the RTP encryption preference for
-        # each stream at the moment its media starts. Audio and video may
-        # legitimately have different encryption outcomes (e.g. SDES wins
-        # one and times out on the other), so logging per-stream rather
-        # than once per session keeps support diagnostics clean.
+
+        # Surface the negotiated SDP fmtp options for the selected
+        # video codec so the RTP / SIP info window shows exactly what
+        # we agreed on with the peer (profile-level-id and
+        # packetization-mode for H.264; profile-id for VP9; etc.).
+        # Pulls the line from session.local_sdp because that's the
+        # post-negotiation view of what we'll actually transmit;
+        # remote_sdp would show the peer's offered fmtp which after
+        # answer is identical for the selected PT but the local view
+        # is what matters for outbound encoding decisions.  Wrapped in
+        # try/except so a missing SDP attribute never breaks call setup.
+        try:
+            self._log_negotiated_video_fmtp()
+        except Exception as e:
+            self.sessionController.log_info(
+                "Could not parse video fmtp options for logging: %s" % e)
+        # Same RTP encryption verbose log as AudioController.  Logs
+        # account.rtp.encryption.{enabled,key_negotiation} (the stored
+        # policy) alongside stream.encryption.{type,active,cipher} (the
+        # actual negotiated result).  Per-stream rather than per-session
+        # because audio and video can legitimately end up with different
+        # encryption types (one keyed via SDES, the other via ZRTP).
+        # BonjourAccount has no rtp.encryption attribute, so guard.
         account = self.sessionController.account
         rtp_enc = getattr(getattr(account, 'rtp', None), 'encryption', None)
+        try:
+            negotiated_type = self.stream.encryption.type
+            negotiated_active = self.stream.encryption.active
+            negotiated_cipher = getattr(self.stream.encryption, 'cipher', None)
+        except Exception:
+            negotiated_type = '?'
+            negotiated_active = '?'
+            negotiated_cipher = None
         if rtp_enc is None:
-            enc_setting = 'n/a'
-        elif not getattr(rtp_enc, 'enabled', False):
-            enc_setting = 'disabled'
+            self.sessionController.log_info(
+                "RTP encryption: account=n/a (BonjourAccount?), "
+                "stream negotiated=%s active=%s cipher=%s"
+                % (negotiated_type, negotiated_active,
+                   negotiated_cipher or '(n/a)'))
         else:
-            enc_setting = rtp_enc.key_negotiation
-        self.sessionController.log_info("RTP encryption configuration: %s" % enc_setting)
+            enabled = getattr(rtp_enc, 'enabled', False)
+            key_neg = getattr(rtp_enc, 'key_negotiation', None) or '(unset)'
+            self.sessionController.log_info(
+                "RTP encryption: account enabled=%s key_negotiation=%s, "
+                "stream negotiated=%s active=%s cipher=%s"
+                % (enabled, key_neg, negotiated_type, negotiated_active,
+                   negotiated_cipher or '(n/a)'))
 
         self.changeStatus(STREAM_CONNECTED)
         self.sessionController.setVideoConsumer(self.sessionController.video_consumer)
@@ -534,6 +566,112 @@ class VideoController(MediaStream):
         self.statistics_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(STATISTICS_INTERVAL, self, "updateStatisticsTimer:", None, True)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.statistics_timer, NSRunLoopCommonModes)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.statistics_timer, NSEventTrackingRunLoopMode)
+
+    @objc.python_method
+    def _log_negotiated_video_fmtp(self):
+        # Find the m=video line in our local (post-negotiation) SDP and
+        # extract the active codec's rtpmap + fmtp.  Logs to the session
+        # info window:
+        #
+        #   Video codec negotiated: <name>/<clock_rate> (PT <n>)
+        #   Video codec fmtp: <k=v>; <k=v>; ...   (or "(none)")
+        #
+        # so a triage user can grep the log for "Video codec" and see
+        # exactly which H.264 profile-level-id / packetization-mode /
+        # VP9 profile-id we agreed to.  Useful for understanding why
+        # an interop case fails (peer wanted Constrained Baseline 3.1,
+        # we offered Main 4.0, etc.).  Tries several access paths to
+        # find the SDP because the structure differs between outgoing
+        # offers, incoming answers, and the stream's own cached SDP -
+        # logs which path was used so a missing-fmtp report can be
+        # diagnosed without a code edit.
+        sdp = None
+        sdp_source = None
+        session = getattr(self.sessionController, 'session', None)
+        # Path 1: the canonical post-negotiation SDP lives on
+        # session._invitation.sdp.active_local / .active_remote (set by
+        # pjsip once both sides have exchanged offer + answer).  This
+        # is the one the sipsimple Session class itself uses every time
+        # it needs to look at the negotiated media (see e.g.
+        # _do_reinvite in session.py).  The Session class does NOT
+        # expose a top-level local_sdp attribute, so an earlier
+        # version of this helper that only looked at
+        # session.local_sdp / session._local_sdp always missed it and
+        # logged "SDP unavailable" mid-call.
+        invitation = getattr(session, '_invitation', None) if session is not None else None
+        invitation_sdp = getattr(invitation, 'sdp', None) if invitation is not None else None
+        if invitation_sdp is not None:
+            for attr_name in ('active_local', 'proposed_local'):
+                candidate = getattr(invitation_sdp, attr_name, None)
+                if candidate is not None and getattr(candidate, 'media', None):
+                    sdp = candidate
+                    sdp_source = 'invitation.sdp.' + attr_name
+                    break
+        # Path 2: defensive fall-back for any code path that does
+        # expose a top-level local_sdp on Session (custom subclass,
+        # future sipsimple change, etc).
+        if sdp is None and session is not None:
+            for attr_name in ('local_sdp', '_local_sdp'):
+                candidate = getattr(session, attr_name, None)
+                if candidate is not None and getattr(candidate, 'media', None):
+                    sdp = candidate
+                    sdp_source = 'session.' + attr_name
+                    break
+        # Path 3: the stream's own cached SDP - used by VideoStream
+        # during update() and reachable on early-media paths.
+        if sdp is None and hasattr(self, 'stream') and self.stream is not None:
+            for attr_name in ('_local_sdp', 'local_sdp'):
+                candidate = getattr(self.stream, attr_name, None)
+                if candidate is not None and getattr(candidate, 'media', None):
+                    sdp = candidate
+                    sdp_source = 'stream.' + attr_name
+                    break
+        if sdp is None:
+            self.sessionController.log_info(
+                "Video codec fmtp: SDP unavailable "
+                "(no active_local on invitation, no local_sdp on session or stream)")
+            return
+        # Locate the m=video media line.  Defensive on byte-vs-str so
+        # we handle both pjsip's bytes-typed SDP fields and any
+        # higher-level wrapper that exposes them as strings.
+        video_media = None
+        for media in sdp.media:
+            media_type = media.media
+            if isinstance(media_type, bytes):
+                media_type = media_type.decode()
+            if media_type == 'video':
+                video_media = media
+                break
+        if video_media is None:
+            self.sessionController.log_info(
+                "Video codec fmtp: no m=video found in %s" % sdp_source)
+            return
+        formats = getattr(video_media, 'formats', None) or []
+        if not formats:
+            self.sessionController.log_info(
+                "Video codec fmtp: m=video had no formats in %s" % sdp_source)
+            return
+        selected_pt = formats[0]
+        if isinstance(selected_pt, bytes):
+            selected_pt = selected_pt.decode()
+        selected_pt = str(selected_pt)
+        rtpmap_value = None
+        fmtp_value = None
+        for attr in video_media.attributes:
+            name = attr.name.decode() if isinstance(attr.name, bytes) else attr.name
+            value = attr.value.decode() if isinstance(attr.value, bytes) else (attr.value or '')
+            if name == 'rtpmap' and value.startswith(selected_pt + ' '):
+                rtpmap_value = value.partition(' ')[2]
+            elif name == 'fmtp' and value.startswith(selected_pt + ' '):
+                fmtp_value = value.partition(' ')[2]
+        if rtpmap_value:
+            self.sessionController.log_info(
+                "Video codec negotiated: %s (PT %s, from %s)" % (rtpmap_value, selected_pt, sdp_source))
+        else:
+            self.sessionController.log_info(
+                "Video codec negotiated: PT %s (no rtpmap, from %s)" % (selected_pt, sdp_source))
+        self.sessionController.log_info(
+            "Video codec fmtp: %s" % (fmtp_value if fmtp_value else "(none)"))
 
     @objc.python_method
     def _NH_MediaStreamDidNotInitialize(self, sender, data):

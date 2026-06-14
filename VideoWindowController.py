@@ -1231,6 +1231,17 @@ class VideoWindowController(NSWindowController):
         self.disconnectLabel.superview().hide()
         self.recordButton.setEnabled_(False)
 
+        # TEMPORARILY HIDDEN: the Full Screen / Chat / Info / Record
+        # buttons on the video call bar are hidden, not removed.  The
+        # IBOutlets and all driving logic (recording timer, fullscreen
+        # toggle, chat opener, session-info panel) are intact - this
+        # only flips setHidden_(True) so the buttons stay out of the
+        # layout/alpha-fade animation.  Restore by deleting this block.
+        for _btn in (self.fullScreenButton, self.chatButton,
+                     self.infoButton, self.recordButton):
+            if _btn is not None:
+                _btn.setHidden_(True)
+
         self.updateMuteButton()
         self.updateHoldButton()
         self._setupStatsOverlay()
@@ -1417,6 +1428,12 @@ class VideoWindowController(NSWindowController):
             overlay = getattr(self, 'statsOverlay', None)
             if overlay is None or self.closed or self.will_close:
                 return
+            # TEMPORARILY DISABLED: the codec/speed band that sits under
+            # the call-control buttons is force-hidden for now.  To
+            # re-enable, remove this early-return block; the full
+            # formatting / visibility logic below is preserved as-is.
+            overlay.setHidden_(True)
+            return
             text = self._formatStatsLine()
             if not text:
                 overlay.setHidden_(True)
@@ -2618,10 +2635,11 @@ class RoundedCornersView(NSView):
         self.setHidden_(False)
     
     def drawRect_(self, dirtyRect):
-        path = NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(dirtyRect, 7.0, 7.0)
-        path.addClip()
-        NSColor.colorWithCalibratedRed_green_blue_alpha_(0, 0, 0, 0.3).setFill()
-        NSRectFillUsingOperation(dirtyRect, NSCompositeSourceOver)
+        # Deliberately do NOT fill a translucent black background here.
+        # The previous 30%-black SourceOver fill dimmed the Metal video
+        # underneath this view to ~70% brightness whenever the bar was
+        # visible. Keep the chrome transparent so the video stays crisp;
+        # the button images already carry enough contrast on their own.
         objc.super(RoundedCornersView, self).drawRect_(dirtyRect)
 
 

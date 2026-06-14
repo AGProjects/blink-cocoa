@@ -39,37 +39,124 @@ from util import run_in_gui_thread
 # Module-level import: PreviewVideoWidget below subclasses VideoWidget, so
 # we need it resolvable at class-definition time. VideoWindowController
 # does not import this module back, so there is no circular dependency.
+from Quartz import kCAGravityResizeAspectFill
+
 from VideoWindowController import VideoWidget
 
 
 class PreviewVideoWidget(VideoWidget):
-    """A VideoWidget that resizes its own frame height to match the
-    detected camera aspect ratio. Used for the in-preferences preview
-    so the picture fills the view exactly — no letterbox or pillarbox
-    bars inside a fixed-shape box."""
+    """A VideoWidget that stays at a FIXED frame size and ALWAYS uses
+    the CGImage + CALayer.contentsGravity rendering path (i.e. the
+    "CG fallback" the base VideoWidget falls back to when Metal isn't
+    available).  Metal is intentionally bypassed here even when it's
+    initialised process-wide.
+
+    Why bypass Metal for the preview only:
+    --------------------------------------
+    The Metal path renders the texture into a CAMetalLayer's drawable
+    with a per-frame quad scale (qx/qy) that mathematically letterboxes
+    correctly when the drawable and the camera frame have steady
+    dimensions.  But the preview's lifecycle in Preferences is hostile
+    to that steady state:
+       * setProducer(None) / setProducer(new) is called every time the
+         user changes capture resolution.
+       * pjsip's avf_dev emits 1-2 frames at the PREVIOUS resolution
+         while the camera is mid-reconfigure.
+       * The CAMetalLayer's drawableSize is resized each frame to the
+         view bounds * backingScaleFactor; when bounds and frame size
+         disagree by even one update cycle, the next quad scale we
+         compute is wrong for the frame we're about to draw, and the
+         picture briefly looks stretched / compressed before settling.
+    The CGImage fallback dodges all of this: pjsip's BGRA frame is
+    wrapped in a CGImage and assigned to a plain CALayer's contents;
+    Core Animation then composites it into the layer's bounds with
+    kCAGravityResizeAspect, which is computed entirely by the
+    compositor based on the layer's current pixel dimensions vs the
+    contents' pixel dimensions, every frame, atomically.  No transient
+    mismatch is possible.
+
+    The full-screen call window keeps Metal because it gets steady
+    same-resolution frames once the call is established and benefits
+    from Metal's lower per-frame CPU cost; only the preferences
+    preview uses the CG path."""
+
+    def makeBackingLayer(self):
+        # Force a plain CALayer; the base class's makeBackingLayer
+        # returns a CAMetalLayer when Metal is available, but we want
+        # the CG fallback path so the layer's contentsGravity handles
+        # scaling atomically per composited frame.
+        # objc.super(VideoWidget, self) reaches NSView, whose default
+        # makeBackingLayer returns a plain CALayer.
+        return objc.super(VideoWidget, self).makeBackingLayer()
+
+    @objc.python_method
+    def _setup_video_layer(self):
+        # Let the base class wire up the CALayer + CGImage rendering
+        # path (it will set kCAGravityResizeAspect because makeBackingLayer
+        # above returned a non-Metal CALayer).  Then override the layer's
+        # contentsGravity to kCAGravityResizeAspectFill: the preview
+        # thumbnail should show the camera feed FILLING the entire 4:3
+        # box with the source's aspect preserved by cropping the
+        # overflow, the same way FaceTime / Photo Booth / macOS Camera
+        # render their own previews.  This eliminates the black bars
+        # that kCAGravityResizeAspect would otherwise letterbox /
+        # pillarbox inside the box whenever the source aspect differs
+        # from 4:3 (i.e. when the user picks 720p or 1080p, both 16:9).
+        objc.super(PreviewVideoWidget, self)._setup_video_layer()
+        try:
+            layer = self.layer()
+            if layer is not None:
+                layer.setContentsGravity_(kCAGravityResizeAspectFill)
+                # Mask any source pixels that overflow the layer bounds
+                # (we're cropping rather than letterboxing).
+                layer.setMasksToBounds_(True)
+        except Exception:
+            pass
+
+    @objc.python_method
+    def setProducer(self, producer):
+        # Reset the aspect_ratio cache so the FIRST frame from the new
+        # producer triggers a redraw.  Without this, switching capture
+        # resolution while the preview is visible can leave a stale
+        # bitmap from the previous producer painted into the widget
+        # until the very next frame whose aspect happens to differ
+        # from the cached value.  Clearing the cache forces
+        # _on_aspect_ratio_detected to fire on the next valid frame
+        # regardless of whether the new producer's aspect ratio
+        # matches the old one.
+        self.aspect_ratio = None
+        # Wipe the previous CGImage off the layer when the producer
+        # detaches.  Without this the previous resolution's bitmap
+        # stays painted into the (correctly-fitted) layer while pjsip
+        # reconfigures the camera, and if avf_dev briefly emits a
+        # frame at the OLD resolution before settling at the NEW one,
+        # CALayer's kCAGravityResizeAspect dutifully composites that
+        # old-aspect content with letterbox bars inside the new-size
+        # box - which the user sees as "black bands inside the video"
+        # that only go away when the entire section is rebuilt on a
+        # tab switch.  Clearing contents to None means the layer
+        # shows its background colour (transparent / parent black)
+        # during the gap rather than a stale image.
+        if producer is None:
+            try:
+                layer = self.layer()
+                if layer is not None:
+                    layer.setContents_(None)
+                    self.setNeedsDisplay_(True)
+            except Exception:
+                pass
+        return objc.super(PreviewVideoWidget, self).setProducer(producer)
 
     @objc.python_method
     def _on_aspect_ratio_detected(self, width, height):
-        if width <= 0 or height <= 0:
-            return
-        aspect = float(width) / float(height)
-        cur = self.frame()
-        if cur.size.width <= 0:
-            return
-        target_h = max(60.0, cur.size.width / aspect)
-        if abs(cur.size.height - target_h) < 0.5:
-            return
-        new_frame = ((cur.origin.x, cur.origin.y),
-                     (cur.size.width, target_h))
-        self.setFrame_(new_frame)
-        # If our enclosing centered container exists, ask it to
-        # re-fit so the VerticalBoxView picks up the new height.
-        sv = self.superview()
-        if sv is not None and hasattr(sv, '_fit_to_preview'):
-            try:
-                sv._fit_to_preview()
-            except Exception:
-                pass
+        # Intentionally do NOT call super (which would propagate to a
+        # delegate.init_aspect_ratio() callback) and do NOT touch
+        # self.frame().  We want a stable widget size; the renderer
+        # fits the video into the existing bounds with letterbox bars.
+        # The redraw nudge ensures any frame that landed during the
+        # cache-stale window (between setProducer(None) and
+        # setProducer(new)) gets repainted at the right scale.
+        self.setNeedsDisplay_(True)
 
 
 class CenteredPreviewContainer(NSView):
@@ -104,11 +191,23 @@ class CenteredPreviewContainer(NSView):
             self.setFrame_(cur)
         self._reposition()
 
+    # Last container width we centered the preview at.  Used to skip
+    # redundant setFrame_ calls when AppKit cascades layout updates
+    # without actually changing our width (typical when a popup
+    # expands, a checkbox toggles, or the section's vertical box
+    # re-flows for an unrelated reason).  Without this, the
+    # centering math (cf.size.width - width)/2 rounds to a slightly
+    # different integer each time and the preview visibly shifts.
+    _last_centered_width = -1.0
+
     @objc.python_method
-    def _reposition(self):
+    def _reposition(self, force=False):
         if self.preview is None:
             return
         cf = self.frame()
+        # No-op when the container width hasn't actually changed.
+        if not force and abs(cf.size.width - self._last_centered_width) < 0.5:
+            return
         pf = self.preview.frame()
         # Re-assert the original fixed width on every reposition. If
         # anything has stretched the preview to the container width
@@ -118,6 +217,21 @@ class CenteredPreviewContainer(NSView):
         height = pf.size.height if pf.size.height > 0 else self.fixed_preview_width
         new_x = max(0, (cf.size.width - width) / 2)
         self.preview.setFrame_(((new_x, 0), (width, height)))
+        self._last_centered_width = cf.size.width
+
+    def viewDidMoveToWindow(self):
+        # The preview's autoresizing mask
+        # (NSViewMinXMargin | NSViewMaxXMargin) is supposed to keep it
+        # horizontally centered, but AppKit applies autoresizing only
+        # when the SUPERVIEW changes size.  Tab toggles inside the
+        # Preferences window often cascade a layout pass that doesn't
+        # change OUR width but does call setFrame_ on the preview
+        # itself with a slightly different origin (typically zero,
+        # which snaps the preview to the left edge).  Force a fresh
+        # _reposition once we're actually in a window so the preview
+        # locks at the centered x BEFORE any of those cascades hit.
+        objc.super(CenteredPreviewContainer, self).viewDidMoveToWindow()
+        self._reposition(force=True)
 
     @objc.python_method
     def _fit_to_preview(self):

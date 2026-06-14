@@ -2331,6 +2331,63 @@ class SessionController(NSObject):
     @objc.python_method
     def _NH_SIPSessionNewOutgoing(self, session, data):
         self.log_info("Proposed media: %s" % ', '.join([s.type for s in data.streams]))
+        # Surface the per-media codec preference lists too, so the RTP /
+        # SIP info window shows what we actually offered (not just the
+        # media types).  The "selected" side gets logged later from
+        # VideoController._log_negotiated_video_fmtp /
+        # AudioController._NH_MediaStreamDidStart once the answer comes
+        # back, so a triage user can compare offer vs. answer in one
+        # log file without cross-referencing settings or the SDP trace.
+        try:
+            from sipsimple.configuration.settings import SIPSimpleSettings
+            settings = SIPSimpleSettings()
+            stream_types = {s.type for s in data.streams}
+            if 'audio' in stream_types:
+                audio_list = list(settings.rtp.audio_codec_list or [])
+                self.log_info("Proposed audio codecs: %s" % (', '.join(audio_list) if audio_list else '(none)'))
+            if 'video' in stream_types:
+                video_list = list(settings.rtp.video_codec_list or [])
+                self.log_info("Proposed video codecs: %s" % (', '.join(video_list) if video_list else '(none)'))
+                # Surface the H.264 profile / level the user (or the
+                # startup pinning code in BlinkAppDelegate) has set, so
+                # the log file shows what we'll advertise in the
+                # m=video fmtp line.
+                profile = getattr(settings.video.h264, 'profile', '?')
+                level = getattr(settings.video.h264, 'level', '?')
+                resolution = settings.video.resolution
+                framerate = settings.video.framerate
+                max_bitrate = settings.video.max_bitrate
+                self.log_info(
+                    "Proposed video options: H.264 profile=%s level=%s, "
+                    "resolution=%sx%s, framerate=%s fps, max_bitrate=%s"
+                    % (profile, level,
+                       resolution[0] if resolution else '?',
+                       resolution[1] if resolution else '?',
+                       framerate,
+                       ('%s Mbps' % max_bitrate) if max_bitrate else 'auto'))
+        except Exception as e:
+            self.log_info("Could not log proposed codec lists: %s" % e)
+        # Log the account-level RTP encryption configuration as it stands
+        # at the moment we send the INVITE.  Janus / Sylk WebRTC only
+        # accept SDES-keyed SRTP; if the user expects "Disabled" but the
+        # account actually stores key_negotiation=sdes_optional (the UI
+        # dropdown label is misleading in some Blink versions), this line
+        # makes the discrepancy visible BEFORE any RTP flows, so a triage
+        # user can correlate "the call worked" / "the call didn't work"
+        # with the actual stored policy and not the UI label.
+        try:
+            account = self.account
+            rtp_enc = getattr(getattr(account, 'rtp', None), 'encryption', None)
+            if rtp_enc is None:
+                self.log_info("Account RTP encryption: n/a (BonjourAccount?)")
+            else:
+                enabled = getattr(rtp_enc, 'enabled', False)
+                key_neg = getattr(rtp_enc, 'key_negotiation', None) or '(unset)'
+                self.log_info(
+                    "Account RTP encryption: enabled=%s, key_negotiation=%s"
+                    % (enabled, key_neg))
+        except Exception as e:
+            self.log_info("Could not log RTP encryption setting: %s" % e)
 
     @objc.python_method
     def _NH_SIPSessionDidEnd(self, sender, data):
