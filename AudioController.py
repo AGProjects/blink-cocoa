@@ -1413,20 +1413,43 @@ class AudioController(MediaStream):
         self.sessionController.log_info("MediaStreamDidStart")
         codec = beautify_audio_codec(self.stream.codec)
         self.sessionController.log_info("Audio stream established to %s:%s using %s codec" % (self.stream.remote_rtp_address, self.stream.remote_rtp_port, codec))
-        # Surface the account's configured RTP encryption preference at
-        # the moment media actually starts. Helps post-mortem the
-        # "why didn't ZRTP kick in" / "is this opportunistic or pure
-        # sdes" question without having to cross-reference settings.
+        # Surface the account's stored RTP encryption fields verbatim AND
+        # the actual stream-level negotiation result.  More verbose than
+        # the previous one-line collapsed form because:
+        #   - the Blink "Encryption" dropdown's "Disabled" label maps to
+        #     key_negotiation rather than to enabled=False, so logging
+        #     only the boolean was misleading.
+        #   - audio and video may end with different encryption.type
+        #     values (SDES wins one, ZRTP the other) - per-stream
+        #     logging makes that diagnosable.
+        #   - the negotiated type is what actually keys the SRTP context;
+        #     "configured = sdes_optional, negotiated = ZRTP" is a real
+        #     case we hit on Sylk Mobile -> Sylk Server topology.
         # BonjourAccount doesn't have rtp.encryption, so guard.
         account = self.sessionController.account
         rtp_enc = getattr(getattr(account, 'rtp', None), 'encryption', None)
+        try:
+            negotiated_type = self.stream.encryption.type
+            negotiated_active = self.stream.encryption.active
+            negotiated_cipher = getattr(self.stream.encryption, 'cipher', None)
+        except Exception:
+            negotiated_type = '?'
+            negotiated_active = '?'
+            negotiated_cipher = None
         if rtp_enc is None:
-            enc_setting = 'n/a'
-        elif not getattr(rtp_enc, 'enabled', False):
-            enc_setting = 'disabled'
+            self.sessionController.log_info(
+                "RTP encryption: account=n/a (BonjourAccount?), "
+                "stream negotiated=%s active=%s cipher=%s"
+                % (negotiated_type, negotiated_active,
+                   negotiated_cipher or '(n/a)'))
         else:
-            enc_setting = rtp_enc.key_negotiation
-        self.sessionController.log_info("RTP encryption configuration: %s" % enc_setting)
+            enabled = getattr(rtp_enc, 'enabled', False)
+            key_neg = getattr(rtp_enc, 'key_negotiation', None) or '(unset)'
+            self.sessionController.log_info(
+                "RTP encryption: account enabled=%s key_negotiation=%s, "
+                "stream negotiated=%s active=%s cipher=%s"
+                % (enabled, key_neg, negotiated_type, negotiated_active,
+                   negotiated_cipher or '(n/a)'))
 
         self.updateTileStatistics()
 
