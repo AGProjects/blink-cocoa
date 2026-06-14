@@ -524,6 +524,47 @@ class DebugWindow(NSObject):
         if self.autoScrollCheckbox.state() == NSOnState:
             textView.scrollRangeToVisible_(NSMakeRange(textView.textStorage().length()-1, 1))
 
+    # Patterns matched against the un-timestamped activity message to
+    # decide whether the line ALSO belongs in the RTP tab.  Anything
+    # matching is appended to both activityTextView (general log) and
+    # rtpTextView (RTP tab) so a user looking at the RTP panel sees the
+    # full negotiation round-trip (offered codecs, encryption setting,
+    # stream-established lines with selected codec, ICE / encryption
+    # status, remote video size and aspect changes) without having to
+    # cross-reference the activity log.  The matcher runs once per
+    # message; literal substrings are cheap and there's no per-call
+    # priority order to maintain.
+    _RTP_LOG_SUBSTRINGS = (
+        # Proposal / configuration (one per outgoing session)
+        "Proposed media:",
+        "Proposed audio codecs:",
+        "Proposed video codecs:",
+        "Proposed video options:",
+        "Account RTP encryption:",
+        # Stream-start lifecycle
+        "MediaStreamDidStart",
+        "MediaStreamDidEnd",
+        "Audio stream established",
+        "Audio stream ended",
+        "Video stream established",
+        "Video stream ended",
+        "Video channel received data",
+        # Codec details
+        "Video codec negotiated:",
+        "Video codec fmtp:",
+        # Encryption outcomes
+        "RTP encryption:",                      # our new verbose form
+        "SRTP/SDES audio encryption active",
+        "SRTP/SDES video encryption active",
+        "ZRTP audio encryption active",
+        "ZRTP video encryption active",
+        # ICE outcomes
+        "ICE negotiation",
+        # Remote-side stream descriptors
+        "Remote video stream at",
+        "Remote aspect ratio is",
+    )
+
     @objc.python_method
     @run_in_gui_thread
     def renderActivity(self, text):
@@ -532,11 +573,33 @@ class DebugWindow(NSObject):
         except (TypeError, AttributeError) as e:
             return
 
+        # Decide whether this line ALSO belongs in the RTP tab BEFORE
+        # prepending the timestamp - the substring check is cheaper
+        # against the raw message and avoids accidentally matching a
+        # message that happens to share characters with the timestamp.
+        rtp_mirror = False
+        try:
+            for needle in self._RTP_LOG_SUBSTRINGS:
+                if needle in text:
+                    rtp_mirror = True
+                    break
+        except (TypeError, AttributeError):
+            rtp_mirror = False
+
         text = "%s   %s"%(datetime.now().replace(microsecond=0), text)
         if iserror:
             self.append_error_line(self.activityTextView, text)
         else:
             self.append_line(self.activityTextView, text)
+
+        if rtp_mirror:
+            # Reuse the same red-for-error / normal-for-info colouring
+            # as the activity log so eye-tracking between the two
+            # panels is straightforward.
+            if iserror:
+                self.append_error_line(self.rtpTextView, text)
+            else:
+                self.append_line(self.rtpTextView, text)
 
     @objc.python_method
     def _sylk_zrtp_capability_info(self, session):
@@ -578,6 +641,90 @@ class DebugWindow(NSObject):
         return account_str, peer_str
 
     @objc.python_method
+    def _video_negotiated_fmtp_summary(self, session):
+        """Pull the rtpmap + fmtp for the selected video PT out of
+        session.local_sdp and return a "Video codec negotiated: ...
+        / fmtp: ..." string for the RTP tab.  Returns None if any
+        expected field is missing - the caller's try/except logs that
+        case verbatim.  Tries a couple of attribute names since
+        sipsimple's SDPSession exposes 'local_sdp' on outgoing-side
+        sessions; falls back to the stream's own cached SDP when the
+        Session hasn't published its post-negotiation copy yet."""
+        sdp = None
+        sdp_source = None
+        # Path 1: the canonical post-negotiation SDP - session._invitation.sdp.active_local.
+        # The sipsimple Session does NOT expose a top-level local_sdp
+        # attribute; an earlier version of this helper looked for
+        # session.local_sdp and always missed, returning None mid-call.
+        invitation = getattr(session, '_invitation', None)
+        invitation_sdp = getattr(invitation, 'sdp', None) if invitation is not None else None
+        if invitation_sdp is not None:
+            for attr_name in ('active_local', 'proposed_local'):
+                candidate = getattr(invitation_sdp, attr_name, None)
+                if candidate is not None and getattr(candidate, 'media', None):
+                    sdp = candidate
+                    sdp_source = 'invitation.sdp.' + attr_name
+                    break
+        # Path 2: defensive fall-back if a future sipsimple Session
+        # subclass / change does expose local_sdp directly.
+        if sdp is None:
+            for attr_name in ('local_sdp', '_local_sdp'):
+                candidate = getattr(session, attr_name, None)
+                if candidate is not None and getattr(candidate, 'media', None):
+                    sdp = candidate
+                    sdp_source = 'session.' + attr_name
+                    break
+        # Path 3: the stream's own cached SDP - reachable on early-media paths.
+        if sdp is None:
+            video_stream = None
+            try:
+                video_stream = next((s for s in session.streams or [] if s.type == 'video'))
+            except StopIteration:
+                video_stream = None
+            if video_stream is not None:
+                for attr_name in ('_local_sdp', 'local_sdp'):
+                    candidate = getattr(video_stream, attr_name, None)
+                    if candidate is not None and getattr(candidate, 'media', None):
+                        sdp = candidate
+                        sdp_source = 'stream.' + attr_name
+                        break
+        if sdp is None:
+            return None
+        # Locate the m=video media line.
+        video_media = None
+        for media in sdp.media:
+            media_type = media.media
+            if isinstance(media_type, bytes):
+                media_type = media_type.decode()
+            if media_type == 'video':
+                video_media = media
+                break
+        if video_media is None:
+            return None
+        formats = getattr(video_media, 'formats', None) or []
+        if not formats:
+            return None
+        selected_pt = formats[0]
+        if isinstance(selected_pt, bytes):
+            selected_pt = selected_pt.decode()
+        selected_pt = str(selected_pt)
+        rtpmap_value = None
+        fmtp_value = None
+        for attr in video_media.attributes:
+            name = attr.name.decode() if isinstance(attr.name, bytes) else attr.name
+            value = attr.value.decode() if isinstance(attr.value, bytes) else (attr.value or '')
+            if name == 'rtpmap' and value.startswith(selected_pt + ' '):
+                rtpmap_value = value.partition(' ')[2]
+            elif name == 'fmtp' and value.startswith(selected_pt + ' '):
+                fmtp_value = value.partition(' ')[2]
+        if rtpmap_value:
+            head = 'Video codec negotiated: %s (PT %s, from %s)' % (rtpmap_value, selected_pt, sdp_source)
+        else:
+            head = 'Video codec negotiated: PT %s (no rtpmap, from %s)' % (selected_pt, sdp_source)
+        tail = 'fmtp: %s' % (fmtp_value if fmtp_value else '(none)')
+        return head + ' / ' + tail
+
+    @objc.python_method
     def renderRTP(self, session):
         self.renderAudio(session)
         self.renderVideo(session)
@@ -609,18 +756,38 @@ class DebugWindow(NSObject):
             text += '%s Audio call established using %s codec at %sHz\n' % (session.start_time, audio_stream.codec, audio_stream.sample_rate)
         if audio_stream.encryption.active:
             text += '%s RTP audio stream is encrypted with %s (%s)\n' % (session.start_time, audio_stream.encryption.type, audio_stream.encryption.cipher.decode() if isinstance(audio_stream.encryption.cipher, bytes) else audio_stream.encryption.cipher)
-        # Log the local account's RTP encryption configuration and the
-        # remote party's X-Sylk-ZRTP capability advertisement (if any)
-        # so the trace explains why the negotiated SRTP / ZRTP / Sylk-ZRTP
-        # mode was chosen for the session.
+        # Log the account's RTP encryption fields VERBATIM (both enabled
+        # and key_negotiation), not the collapsed "disabled" / policy
+        # string the previous version produced.  The Blink Preferences
+        # "Encryption" dropdown's "Disabled" label maps to key_negotiation
+        # rather than to encryption.enabled=False in some Blink versions,
+        # so the previous collapsed line could read "disabled" while
+        # the actual stored policy was "sdes_optional" - exactly the
+        # discrepancy that made Sylk -> Blink call diagnosis hard.
+        # Show both so the policy that's actually applied is visible
+        # in the RTP tab without cross-referencing settings.cfg.
         try:
             account = getattr(session, 'account', None)
             if account is not None:
                 rtp_enc = getattr(account.rtp, 'encryption', None)
-                if rtp_enc is None or not getattr(rtp_enc, 'enabled', False):
-                    text += '%s RTP encryption configuration: disabled\n' % session.start_time
+                if rtp_enc is None:
+                    text += '%s Audio RTP encryption setting: account has no rtp.encryption (BonjourAccount?)\n' % session.start_time
                 else:
-                    text += '%s RTP encryption configuration: %s\n' % (session.start_time, rtp_enc.key_negotiation)
+                    enabled = getattr(rtp_enc, 'enabled', False)
+                    key_neg = getattr(rtp_enc, 'key_negotiation', None) or '(unset)'
+                    text += '%s Audio RTP encryption setting: enabled=%s, key_negotiation=%s\n' % (session.start_time, enabled, key_neg)
+        except Exception:
+            pass
+        # Also surface the audio codec preference list from settings, so
+        # the RTP trace shows what we OFFERED vs. what got negotiated
+        # (the negotiated codec is the "Audio call established using"
+        # line above; comparing them tells you whether the peer honoured
+        # your priority order or imposed their own).
+        try:
+            from sipsimple.configuration.settings import SIPSimpleSettings
+            audio_list = list(SIPSimpleSettings().rtp.audio_codec_list or [])
+            if audio_list:
+                text += '%s Proposed audio codecs: %s\n' % (session.start_time, ', '.join(audio_list))
         except Exception:
             pass
         account_str, peer_str = self._sylk_zrtp_capability_info(session)
@@ -663,19 +830,62 @@ class DebugWindow(NSObject):
             text += '%s Video call established using %s codec at %sHz\n' % (session.start_time, video_stream.codec, video_stream.sample_rate)
         if video_stream.encryption.active:
             text += '%s RTP video stream is encrypted with %s (%s)\n' % (session.start_time, video_stream.encryption.type, video_stream.encryption.cipher.decode() if isinstance(video_stream.encryption.cipher, bytes) else video_stream.encryption.cipher)
-        # Same RTP encryption + X-Sylk-ZRTP capability summary as the
-        # audio renderer above. We re-emit it under the video section so
-        # the trace stays useful for video-only or split renderings.
+        # Same verbose RTP encryption summary as the audio renderer:
+        # log enabled + key_negotiation verbatim so the actual stored
+        # policy is visible in the RTP tab, not a collapsed "disabled"
+        # string that could mask a misleading UI label.
         try:
             account = getattr(session, 'account', None)
             if account is not None:
                 rtp_enc = getattr(account.rtp, 'encryption', None)
-                if rtp_enc is None or not getattr(rtp_enc, 'enabled', False):
-                    text += '%s RTP encryption configuration: disabled\n' % session.start_time
+                if rtp_enc is None:
+                    text += '%s Video RTP encryption setting: account has no rtp.encryption (BonjourAccount?)\n' % session.start_time
                 else:
-                    text += '%s RTP encryption configuration: %s\n' % (session.start_time, rtp_enc.key_negotiation)
+                    enabled = getattr(rtp_enc, 'enabled', False)
+                    key_neg = getattr(rtp_enc, 'key_negotiation', None) or '(unset)'
+                    text += '%s Video RTP encryption setting: enabled=%s, key_negotiation=%s\n' % (session.start_time, enabled, key_neg)
         except Exception:
             pass
+        # Proposed video codec list + the video-specific options (H.264
+        # profile and level, capture resolution / framerate / max
+        # bitrate) so the RTP trace shows what we OFFERED.  The "Video
+        # call established using ..." line above gives the negotiated
+        # result; the codec_fmtp line below gives the negotiated SDP
+        # fmtp parameters (H.264 profile-level-id + packetization-mode,
+        # VP9 profile-id, ...) so a triage user can grep one log file
+        # for the whole codec negotiation round-trip.
+        try:
+            from sipsimple.configuration.settings import SIPSimpleSettings
+            settings = SIPSimpleSettings()
+            video_list = list(settings.rtp.video_codec_list or [])
+            if video_list:
+                text += '%s Proposed video codecs: %s\n' % (session.start_time, ', '.join(video_list))
+            h264 = getattr(settings.video, 'h264', None)
+            if h264 is not None:
+                profile = getattr(h264, 'profile', '?')
+                level = getattr(h264, 'level', '?')
+                resolution = settings.video.resolution
+                framerate = settings.video.framerate
+                max_bitrate = settings.video.max_bitrate
+                text += ('%s Proposed video options: H.264 profile=%s level=%s, '
+                         'resolution=%sx%s, framerate=%s fps, max_bitrate=%s\n'
+                         % (session.start_time, profile, level,
+                            resolution[0] if resolution else '?',
+                            resolution[1] if resolution else '?',
+                            framerate,
+                            ('%s Mbps' % max_bitrate) if max_bitrate else 'auto'))
+        except Exception:
+            pass
+        # Negotiated fmtp parameters for the selected video PT.  Pulled
+        # from session.local_sdp (the post-negotiation copy of what we
+        # transmit).  Falls through quietly on any inconsistency since
+        # this is purely a diagnostic line.
+        try:
+            fmtp_line = self._video_negotiated_fmtp_summary(session)
+            if fmtp_line is not None:
+                text += '%s %s\n' % (session.start_time, fmtp_line)
+        except Exception as e:
+            text += '%s Video codec fmtp: error parsing local SDP (%s)\n' % (session.start_time, e)
         account_str, peer_str = self._sylk_zrtp_capability_info(session)
         if account_str is not None:
             text += '%s Local X-Sylk-ZRTP capability advertised: %s\n' % (session.start_time, account_str)
