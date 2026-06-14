@@ -24,13 +24,47 @@ source activate_venv.sh
 
 cd "$SIPSIMPLE_DIR"
 
-echo "Building SIP SIMPLE SDK from $SIPSIMPLE_DIR ..."
+# PJSIP version selection.
+#   - PJSIP_VERSION env var wins (CI / non-interactive runs)
+#   - $1 (positional) honored as a fallback
+#   - otherwise prompt interactively; default 2.12
+#   - if stdin isn't a tty (piped, redirected), use the default silently
+# Supported: 2.12 (legacy, stable) and 2.17 (in-progress migration target).
+PJSIP_VERSION="${PJSIP_VERSION:-${1:-}}"
+if [ -z "$PJSIP_VERSION" ]; then
+    if [ -t 0 ]; then
+        echo
+        echo "Select PJSIP version to build against:"
+        echo "  1) 2.12  (legacy, stable — fully patched)"
+        echo "  2) 2.17  (in-progress migration target — see PJSIP_217_MIGRATION.md)"
+        echo
+        read -r -p "Choice [1]: " choice
+        case "${choice:-1}" in
+            1|2.12)  PJSIP_VERSION="2.12" ;;
+            2|2.17)  PJSIP_VERSION="2.17" ;;
+            *)       echo "Unrecognized choice '${choice}', defaulting to 2.12."
+                     PJSIP_VERSION="2.12" ;;
+        esac
+    else
+        PJSIP_VERSION="2.12"
+    fi
+fi
+
+case "$PJSIP_VERSION" in
+    2.12|2.17) ;;
+    *) echo "Unsupported PJSIP_VERSION='$PJSIP_VERSION' (allowed: 2.12, 2.17)." >&2
+       exit 1 ;;
+esac
+
+echo "Building SIP SIMPLE SDK from $SIPSIMPLE_DIR against PJSIP $PJSIP_VERSION ..."
 
 # Re-running needs a clean deps tree; get_dependencies.sh fails otherwise.
 rm -rf deps/pjsip deps/ZRTPCPP deps/pjproject-* 2>/dev/null || true
 
 chmod +x ./get_dependencies*
-./get_dependencies.sh 2.12
+# Export so setup_pjsip.py / any sub-script also sees the choice.
+export PJSIP_VERSION
+./get_dependencies.sh --version "$PJSIP_VERSION"
 
 if [ $? -ne 0 ]; then
     echo
@@ -87,16 +121,29 @@ echo "Verifying installed _core extension ..."
 INSTALLED_SO="$(cd / && python3 -c 'import sipsimple.core._core; print(sipsimple.core._core.__file__)' || true)"
 if [ -z "$INSTALLED_SO" ]; then
     echo "  (could not import sipsimple.core._core to verify)"
-elif [ ! -f "/opt/local/lib/libbcg729.dylib" ]; then
-    echo "  G.729: bcg729 not installed, skipping codec verification."
+    echo "  Skipping 04b-copy_sipsimple.sh — fix the import error first."
 else
-    echo "  extension: $INSTALLED_SO"
-    if otool -L "$INSTALLED_SO" 2>/dev/null | grep -qi bcg729; then
-        BCG729_LINE=$(otool -L "$INSTALLED_SO" 2>/dev/null | grep -i bcg729 | head -1 | awk '{print $1}')
-        echo "  G.729 codec: verified — _core.so links $BCG729_LINE"
-        echo "               (05-copy-libraries.sh will discover and bundle this dylib)."
+    if [ -f "/opt/local/lib/libbcg729.dylib" ]; then
+        echo "  extension: $INSTALLED_SO"
+        if otool -L "$INSTALLED_SO" 2>/dev/null | grep -qi bcg729; then
+            BCG729_LINE=$(otool -L "$INSTALLED_SO" 2>/dev/null | grep -i bcg729 | head -1 | awk '{print $1}')
+            echo "  G.729 codec: verified — _core.so links $BCG729_LINE"
+            echo "               (05-copy-libraries.sh will discover and bundle this dylib)."
+        else
+            echo "  WARNING: bcg729 was present at build time but _core.so does not link it."
+            echo "           Check setup_pjsip.py output above for 'Found bcg729 at ...'."
+        fi
     else
-        echo "  WARNING: bcg729 was present at build time but _core.so does not link it."
-        echo "           Check setup_pjsip.py output above for 'Found bcg729 at ...'."
+        echo "  G.729: bcg729 not installed, skipping codec verification."
+    fi
+
+    # _core imported cleanly — propagate the fresh build into Blink's
+    # bundled Resources/lib/sipsimple/ so the next Xcode build picks it up.
+    echo
+    if [ -x "$SCRIPT_DIR/04b-copy_sipsimple.sh" ]; then
+        echo "Running 04b-copy_sipsimple.sh to refresh Blink.app's bundled copy ..."
+        ( cd "$SCRIPT_DIR" && ./04b-copy_sipsimple.sh )
+    else
+        echo "NOTE: $SCRIPT_DIR/04b-copy_sipsimple.sh not executable — skipping bundle refresh."
     fi
 fi
