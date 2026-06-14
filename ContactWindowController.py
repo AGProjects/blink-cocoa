@@ -35,6 +35,7 @@ from AppKit import (NSAccessibilityUnignoredDescendant,
                     NSSplitViewDidResizeSubviewsNotification,
                     NSTableViewSelectionDidChangeNotification,
                     NSTableViewDropAbove,
+                    NSTableViewStylePlain,
                     NSVariableStatusItemLength,
                     NSStatusBar)
 
@@ -413,6 +414,14 @@ class ContactWindowController(NSWindowController):
         self.searchOutlineTopOffset = NSHeight(self.searchOutline.enclosingScrollView().superview().frame()) - NSHeight(self.searchOutline.enclosingScrollView().frame())
 
         self.contactOutline.setRowHeight_(40)
+        # macOS 11+ SDK defaults NSOutlineView to NSTableViewStyleAutomatic, which
+        # renders any view implementing isGroupItem: as a source list and overrides
+        # outlineView:heightOfRowByItem: for group rows (making group tiles full height).
+        # Force the plain style so our 22px group title-bar height is honored again.
+        if self.contactOutline.respondsToSelector_("setStyle:"):
+            self.contactOutline.setStyle_(NSTableViewStylePlain)
+        if self.searchOutline.respondsToSelector_("setStyle:"):
+            self.searchOutline.setStyle_(NSTableViewStylePlain)
         self.contactOutline.setTarget_(self)
         self.contactOutline.setDoubleAction_("actionButtonClicked:")
         self.contactOutline.setDraggingSourceOperationMask_forLocal_(NSDragOperationMove, True)
