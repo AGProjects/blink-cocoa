@@ -223,6 +223,12 @@ CA
                             <menuItem title="Abrir Ubicación de llaves PGP" id="ZDT-Z3-a7a">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                             </menuItem>
+                            <menuItem title="Generar mi clave privada..." id="Gpk-es-001">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="generateKeyButtonClicked:" target="389" id="Gpk-es-002"/>
+                                </connections>
+                            </menuItem>
                             <menuItem title="Exportar mi clave privada..." tag="67" id="cnY-er-V1X">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>

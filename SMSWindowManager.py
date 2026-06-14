@@ -1,7 +1,7 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
-from AppKit import NSApp, NSPortraitOrientation, NSFitPagination, NSOffState, NSOnState, NSControlTextDidChangeNotification, NSEventTrackingRunLoopMode
+from AppKit import NSApp, NSPortraitOrientation, NSFitPagination, NSOffState, NSOnState, NSControlTextDidChangeNotification, NSEventTrackingRunLoopMode, NSAlert, NSAlertFirstButtonReturn
 
 from Foundation import (NSBundle,
                         NSImage,
@@ -19,10 +19,12 @@ from Foundation import (NSBundle,
 
 import datetime
 import objc
+import os
 import re
 import hashlib
 import uuid
 import pgpy
+from pgpy.constants import PubKeyAlgorithm, KeyFlags, HashAlgorithm, SymmetricKeyAlgorithm, CompressionAlgorithm
 import json
 import socket
 import string
@@ -62,6 +64,39 @@ from SMSViewController import SMSViewController
 from util import format_identity_to_string, run_in_gui_thread, call_later
 
 unpad = lambda s: s[:-ord(s[len(s) - 1:])]
+
+
+def generate_pgp_keypair(account):
+    """Generate a fresh 4096-bit RSA PGP key pair for the account and persist
+    it to the keys directory, updating the account settings. Any existing key
+    files for this account are overwritten. This is the single place PGP keys
+    are created; it must only be called after the user has explicitly opted in
+    via the generate-key modal — never automatically."""
+    keys_path = ApplicationData.get('keys')
+    makedirs(keys_path)
+
+    private_key = pgpy.PGPKey.new(PubKeyAlgorithm.RSAEncryptOrSign, 4096)
+    uid = pgpy.PGPUID.new(account.display_name, comment='Blink client', email=account.id)
+    private_key.add_uid(uid, usage={KeyFlags.Sign, KeyFlags.EncryptCommunications, KeyFlags.EncryptStorage},
+                             hashes=[HashAlgorithm.SHA512],
+                             ciphers=[SymmetricKeyAlgorithm.AES256],
+                             compression=[CompressionAlgorithm.Uncompressed])
+
+    private_key_path = "%s/%s.privkey" % (keys_path, account.id)
+    with open(private_key_path, "wb+") as fd:
+        fd.write(str(private_key).encode())
+    BlinkLogger().log_info("My PGP private key saved to %s" % private_key_path)
+
+    public_key_path = "%s/%s.pubkey" % (keys_path, account.id)
+    with open(public_key_path, "wb+") as fd:
+        fd.write(str(private_key.pubkey).encode())
+    BlinkLogger().log_info("My PGP public key saved to %s" % public_key_path)
+
+    account.sms.private_key = private_key_path
+    account.sms.public_key = public_key_path
+    account.sms.public_key_checksum = hashlib.sha1(str(private_key.pubkey).encode()).hexdigest()
+    account.save()
+    return private_key_path
 
 
 @implementer(IObserver)
@@ -1546,6 +1581,46 @@ class SMSWindowManagerClass(NSObject):
     @run_in_gui_thread
     def showExportPrivateKeyPanel(self, account):
         self.export_key_window = ExportPrivateKeyController(account, self.sendMessage);
+
+    @objc.python_method
+    @run_in_gui_thread
+    def showGeneratePrivateKeyPanel(self, account):
+        # Private keys are never generated silently. Show a confirmation
+        # modal first; if a key already exists, warn that it will be
+        # overwritten and old encrypted messages will become unreadable.
+        if account is None or account is BonjourAccount():
+            return False
+
+        keys_path = ApplicationData.get('keys')
+        default_path = "%s/%s.privkey" % (keys_path, account.id)
+        has_key = (bool(account.sms.private_key) and os.path.exists(account.sms.private_key)) or os.path.exists(default_path)
+
+        alert = NSAlert.alloc().init()
+        alert.setMessageText_(NSLocalizedString("Generate PGP Private Key", "Window title"))
+        if has_key:
+            alert.setInformativeText_(NSLocalizedString("A PGP private key already exists for account %s. Generating a new key will permanently overwrite it, and any messages encrypted with the old key will no longer be readable. Do you want to continue?", "label") % account.id)
+        else:
+            alert.setInformativeText_(NSLocalizedString("Account %s has no PGP private key yet. A key is required to send and receive encrypted messages. Do you want to generate one now?", "label") % account.id)
+        alert.addButtonWithTitle_(NSLocalizedString("Generate", "button"))
+        alert.addButtonWithTitle_(NSLocalizedString("Cancel", "button"))
+
+        if alert.runModal() != NSAlertFirstButtonReturn:
+            BlinkLogger().log_info("PGP key generation cancelled for %s" % account.id)
+            return False
+
+        try:
+            generate_pgp_keypair(account)
+        except Exception as e:
+            BlinkLogger().log_error("PGP key generation failed: %s" % str(e))
+            error = NSAlert.alloc().init()
+            error.setMessageText_(NSLocalizedString("Key Generation Failed", "Window title"))
+            error.setInformativeText_(str(e))
+            error.addButtonWithTitle_(NSLocalizedString("OK", "button"))
+            error.runModal()
+            return False
+
+        BlinkLogger().log_info("PGP key generated for %s" % account.id)
+        return True
 
     @objc.python_method
     def _NH_SIPEngineGotMessage(self, sender, data):

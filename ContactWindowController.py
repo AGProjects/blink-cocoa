@@ -1305,6 +1305,10 @@ class ContactWindowController(NSWindowController):
             traceback.print_exc()
 
     @objc.IBAction
+    def generateKeyButtonClicked_(self, sender):
+        SMSWindowManager.SMSWindowManager().showGeneratePrivateKeyPanel(AccountManager().default_account)
+
+    @objc.IBAction
     def exportButtonClicked_(self, sender):
         SMSWindowManager.SMSWindowManager().showExportPrivateKeyPanel(AccountManager().default_account)
 

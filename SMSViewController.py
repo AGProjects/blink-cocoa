@@ -253,9 +253,18 @@ class SMSViewController(NSObject):
 
     @objc.python_method
     def load_private_key(self):
-        if self.account.enabled and not self.account.sms.private_key or not os.path.exists(self.account.sms.private_key):
-            self.generateKeys()
-                
+        if self.account.enabled and (not self.account.sms.private_key or not os.path.exists(self.account.sms.private_key)):
+            # Private keys are never generated automatically. Prompt the user
+            # with a modal; if they choose to generate one (and we are on the
+            # main thread) it is created synchronously and loaded below,
+            # otherwise it becomes available the next time a viewer opens.
+            SMSWindowManager.SMSWindowManager().showGeneratePrivateKeyPanel(self.account)
+
+        if not self.account.sms.private_key or not os.path.exists(self.account.sms.private_key):
+            # No key available (user declined, account disabled, or deferred) —
+            # nothing to load; encrypted messaging stays unavailable for now.
+            return
+
         try:
             self.private_key, _ = pgpy.PGPKey.from_file(self.account.sms.private_key)
         except Exception as e:
@@ -271,33 +280,6 @@ class SMSViewController(NSObject):
             self.log_info('Cannot import my own PGP public key: %s' % str(e))
         else:
             self.log_info('My PGP public key imported from %s' % public_key_path)
-
-    @objc.python_method
-    def generateKeys(self):
-        private_key = pgpy.PGPKey.new(PubKeyAlgorithm.RSAEncryptOrSign, 4096)
-        uid = pgpy.PGPUID.new(self.account.display_name, comment='Blink client',  email=self.account.id)
-        private_key.add_uid(uid, usage={KeyFlags.Sign, KeyFlags.EncryptCommunications, KeyFlags.EncryptStorage},
-                                 hashes=[HashAlgorithm.SHA512],
-                                 ciphers=[SymmetricKeyAlgorithm.AES256],
-                                 compression=[CompressionAlgorithm.Uncompressed])
-    
-        private_key_path = "%s/%s.privkey" % (self.keys_path, self.account.id)
-        fd = open(private_key_path, "wb+")
-        fd.write(str(private_key).encode())
-        fd.close()
-        BlinkLogger().log_info("My PGP private key saved to %s" % private_key_path)
-
-        public_key_path = "%s/%s.pubkey" % (self.keys_path, self.account.id)
-        fd = open(public_key_path, "wb+")
-        fd.write(str(private_key.pubkey).encode())
-        fd.close()
-        BlinkLogger().log_info("My PGP public key saved to %s" % public_key_path)
-
-        public_key_checksum = hashlib.sha1(str(private_key.pubkey).encode()).hexdigest()
-        self.account.sms.private_key = private_key_path
-        self.account.sms.public_key = public_key_path
-        self.account.sms.public_key_checksum = public_key_checksum
-        self.account.save()
 
     @property
     def enableIsComposing(self):

@@ -226,6 +226,12 @@ CA
                                     <action selector="goToPGPKeyFolderClicked:" target="389" id="I4c-n4-nHD"/>
                                 </connections>
                             </menuItem>
+                            <menuItem title="Genereer mijn privésleutel..." id="Gpk-nl-001">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="generateKeyButtonClicked:" target="389" id="Gpk-nl-002"/>
+                                </connections>
+                            </menuItem>
                             <menuItem title="Exporteer mijn privésleutel..." tag="67" id="KaT-OL-50F">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
