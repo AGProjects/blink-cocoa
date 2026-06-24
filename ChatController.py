@@ -1604,7 +1604,12 @@ class ChatController(MediaStream):
 
                         content = '''<img src="data:%s;base64,%s" border=0 width=%s>''' % (message.content_type, message.content, width)
 
-                        sender_identity = self.sessionController.titleLong
+                        # In a conference, attribute the image to the actual
+                        # participant (CPIM From) rather than the focus/room.
+                        if self.sessionController.remote_focus and message.sender:
+                            sender_identity = format_identity_to_string(message.sender, format='compact')
+                        else:
+                            sender_identity = self.sessionController.titleLong
                         icon = NSApp.delegate().contactsWindowController.iconPathForURI(self.sessionController.remoteAOR)
                         
                         self.chatViewController.showMessage(self.sessionController.call_id, str(uuid.uuid1()), 'incoming', sender_identity, icon, content, ISOTimestamp.now(), state="delivered", history_entry=True, is_html=True, media_type='chat')
@@ -1625,7 +1630,15 @@ class ChatController(MediaStream):
         msgid = hash.hexdigest()
 
         if msgid not in self.history_msgid_list:
-            sender_identity = self.remote_identity or message.sender
+            # In a conference each message carries its own sender in the CPIM
+            # From header (message.sender); self.remote_identity is the focus
+            # (the room), so using it would attribute every message to the
+            # conference instead of the actual participant. Prefer message.sender
+            # when joined to a focus; keep remote_identity for 1-to-1 chats.
+            if self.sessionController.remote_focus:
+                sender_identity = message.sender or self.remote_identity
+            else:
+                sender_identity = self.remote_identity or message.sender
             sender = format_identity_to_string(sender_identity, format='compact')
             recipient_identity = message.recipients[0] if message.recipients else self.local_identity
             recipient = format_identity_to_string(recipient_identity, format='compact')

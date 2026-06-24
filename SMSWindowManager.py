@@ -1402,7 +1402,11 @@ class SMSWindowManagerClass(NSObject):
         BlinkLogger().log_debug('Sync %s %s message %s with %s' % (msg['direction'], status, msg['message_id'], msg['contact']))
 
         sender_uri = SIPURI.parse(str('sip:%s' % msg['contact']))
-        viewer = self.getWindow(sender_uri, msg['contact'], account, create_if_needed=create_if_needed, note_new_message=True, is_replication_message=False)
+        # History sync / replication replay must never raise the window — these
+        # are past messages being caught up, not live arrivals. The window is
+        # still created when recent (create_if_needed) and the unread badge is
+        # set below; it just must not steal focus. note_new_message=False.
+        viewer = self.getWindow(sender_uri, msg['contact'], account, create_if_needed=create_if_needed, note_new_message=False, is_replication_message=False)
         if viewer is None:
             return
 
@@ -1544,6 +1548,7 @@ class SMSWindowManagerClass(NSObject):
 
         if window:
             if note_new_message:
+                BlinkLogger().log_info("SMS window opened for %s (focusTab=%s)" % (target, focusTab))
                 if focusTab:
                     window.window().makeKeyAndOrderFront_(None)
                 else:
@@ -1705,7 +1710,8 @@ class SMSWindowManagerClass(NSObject):
         
         if content_type == 'text/pgp-public-key':
             #BlinkLogger().log_info(u"Public key of %s received" % (format_identity_to_string(sender_identity)))
-            viewer = self.getWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, instance_id=instance_id, create_if_needed=False, content=content, content_type=content_type)
+            # Public-key exchange is a control message — never raise a window.
+            viewer = self.getWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, instance_id=instance_id, create_if_needed=False, note_new_message=False, content=content, content_type=content_type)
            
             try:
                 acc = AccountManager().get_account(uri);
@@ -1837,7 +1843,9 @@ class SMSWindowManagerClass(NSObject):
                     viewer.gotIsComposing(self.windowForViewer(viewer), state, refresh, last_active)
             return
         elif content_type == IMDNDocument.content_type:
-            viewer = self.getWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, instance_id=instance_id, create_if_needed=False, content=content, content_type=content_type)
+            # Delivery/display receipts must update message state silently —
+            # they must never create or raise a window.
+            viewer = self.getWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, instance_id=instance_id, create_if_needed=False, note_new_message=False, content=content, content_type=content_type)
             return
 
         elif content_type == 'application/sylk-conversation-read':
