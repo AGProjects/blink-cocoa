@@ -1230,6 +1230,53 @@ class SMSWindowManagerClass(NSObject):
             return plaintext.decode('utf-8', errors='replace')
 
     @objc.python_method
+    def _decode_location_metadata(self, account_id, body):
+        """Decode an application/sylk-message-metadata body to its JSON dict.
+
+        Returns the parsed dict only for a *location* metadata payload
+        carrying a stable ``messageId``; returns None for anything else
+        (non-location metadata, unparseable bodies, or PGP-armoured
+        payloads we can't decrypt). PGP-armoured payloads are decrypted
+        with the account's private key (when available) so we can
+        inspect the inner JSON, mirroring ``_persist_journal_message``.
+
+        Callers distinguish origin vs update ticks via ``metadataId``:
+        None means origin (first tick of a share), a value means a
+        subsequent map-update tick.
+        """
+        if isinstance(body, (bytes, bytearray)):
+            try:
+                text = bytes(body).decode('utf-8')
+            except UnicodeDecodeError:
+                return None
+        else:
+            text = body
+
+        if not isinstance(text, str):
+            return None
+
+        stripped = text.strip()
+        if (stripped.startswith('-----BEGIN PGP MESSAGE-----')
+                and stripped.endswith('-----END PGP MESSAGE-----')):
+            plaintext = self._decrypt_pgp_for_account(account_id, stripped)
+            if plaintext is None:
+                return None
+            stripped = plaintext
+
+        try:
+            data = json.loads(stripped)
+        except (TypeError, ValueError):
+            return None
+
+        if not isinstance(data, dict):
+            return None
+        if data.get('action') != 'location':
+            return None
+        if not data.get('messageId'):
+            return None
+        return data
+
+    @objc.python_method
     def _is_location_update_tick(self, account_id, body):
         """Return True iff body is a Sylk location *update* tick.
 
@@ -1238,46 +1285,33 @@ class SMSWindowManagerClass(NSObject):
         whether to raise the SMS viewer window on an incoming
         application/sylk-message-metadata: only the first/origin tick
         of a share should pop the window — subsequent map updates must
-        refresh the bubble silently.
-
-        Mirrors the decode/decrypt logic used by
-        ``_persist_journal_message``: PGP-armoured payloads are
-        decrypted with the account's private key (when available) so we
-        can inspect the inner JSON. If the body cannot be decrypted or
+        refresh the bubble silently. If the body cannot be decrypted or
         parsed we conservatively return False — failing to suppress the
         raise is preferable to suppressing it for the very first share.
         """
-        if isinstance(body, (bytes, bytearray)):
-            try:
-                text = bytes(body).decode('utf-8')
-            except UnicodeDecodeError:
-                return False
-        else:
-            text = body
+        data = self._decode_location_metadata(account_id, body)
+        return data is not None and data.get('metadataId') is not None
 
-        if not isinstance(text, str):
-            return False
+    @objc.python_method
+    def _journal_message_is_notable(self, account, msg):
+        """Return True iff a journaled incoming message should bump the
+        unread badge on the SMS tab.
 
-        stripped = text.strip()
-        if (stripped.startswith('-----BEGIN PGP MESSAGE-----')
-                and stripped.endswith('-----END PGP MESSAGE-----')):
-            plaintext = self._decrypt_pgp_for_account(account_id, stripped)
-            if plaintext is None:
-                return False
-            stripped = plaintext
-
-        try:
-            data = json.loads(stripped)
-        except (TypeError, ValueError):
+        Mirrors what actually renders in the conversation: plain text
+        always counts; for application/sylk-message-metadata only a
+        location *origin* tick produces a visible bubble. Location
+        update ticks merely refresh an existing bubble, and every other
+        metadata flavour (rotation / consumed / label / meeting_end /
+        location_request / …) and control/sync message is dropped
+        without rendering — none of those should increment the counter.
+        """
+        content_type = msg['content_type']
+        if content_type in ('text/plain', 'text/html'):
+            return True
+        if content_type != 'application/sylk-message-metadata':
             return False
-
-        if not isinstance(data, dict):
-            return False
-        if data.get('action') != 'location':
-            return False
-        if not data.get('messageId'):
-            return False
-        return data.get('metadataId') is not None
+        data = self._decode_location_metadata(str(account.id), msg['content'])
+        return data is not None and data.get('metadataId') is None
 
     @objc.python_method
     def _persist_journal_message(self, account, msg, direction, status, encryption,
@@ -1412,7 +1446,7 @@ class SMSWindowManagerClass(NSObject):
 
         sender_identity = ChatIdentity(sender_uri, viewer.display_name)
 
-        if status != MSG_STATE_DISPLAYED and create_if_needed:
+        if status != MSG_STATE_DISPLAYED and create_if_needed and self._journal_message_is_notable(account, msg):
             self.windowForViewer(viewer).noteNewMessageForSession_(viewer)
 
         window = self.windowForViewer(viewer).window()
