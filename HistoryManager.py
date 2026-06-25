@@ -742,6 +742,13 @@ class ChatHistory(object, metaclass=Singleton):
     @run_in_db_thread
     def add_message(self, msgid, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, cpim_timestamp, body, content_type, private, status, time='', uuid='', journal_id='', skip_replication=False, call_id='', encryption=''):
 
+        # content_type may arrive as a sipsimple ContentType object (e.g. from
+        # incoming SMS/chat messages). SQLObject's StringCol cannot serialize a
+        # non-str value and raises "Unknown SQL builtin type", which silently
+        # drops the message from history. Coerce to a plain string before insert.
+        if content_type is not None and not isinstance(content_type, str):
+            content_type = str(content_type)
+
         if not cpim_timestamp:
             cpim_timestamp = str(ISOTimestamp.now())
 
