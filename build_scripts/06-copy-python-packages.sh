@@ -107,3 +107,25 @@ fi
 
 sos=`find ./Resources/lib -name \*.so`; for s in $sos; do ls $s; ../build_scripts/change_lib_paths.sh $s; codesign -f -o runtime --timestamp  -s "Developer ID Application" $s; done
 sos=`find ./Resources/lib -name \*.dylib`; for s in $sos; do ls $s; ../build_scripts/change_lib_paths.sh $s; codesign -f -o runtime --timestamp  -s "Developer ID Application" $s; done
+
+# ---------------------------------------------------------------------------
+# Make the compiled C extensions universal.
+#
+# The wipe + copy above only stages the NATIVE (arm64) slice straight from the
+# venv, so cffi / gmpy2 / zope.interface land arm64-only. install_python-deps-
+# universal.sh rebuilds the x86_64 slice for each, lipo-merges them in place,
+# and symlinks gmpy2.libs/*.dylib to the universal copies in Frameworks/libs.
+#
+# It MUST run here (after the copy), not earlier: this script rm -rf's
+# Resources/lib on every run, which would otherwise clobber the merged
+# binaries. It also depends on 05-copy-libraries.sh having already made
+# Frameworks/libs universal (for the gmpy2.libs symlink targets).
+#
+# Apple Silicon only; set PYDEPS_UNIVERSAL=0 to skip and keep a single-arch
+# bundle.
+# ---------------------------------------------------------------------------
+if [ "$(uname -m)" = "arm64" ] && [ "${PYDEPS_UNIVERSAL:-1}" != "0" ]; then
+    echo
+    echo "Making cffi/gmpy2/zope.interface universal ..."
+    ( cd ../build_scripts && ./install_python-deps-universal.sh )
+fi
