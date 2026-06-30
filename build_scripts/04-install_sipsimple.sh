@@ -63,9 +63,20 @@ chmod +x ./get_dependencies*
 export PJSIP_VERSION
 
 # Make sure the build can find MacPorts headers/libs in this shell.
+# (The per-pass target arch is injected via SIPSIMPLE_TARGET_ARCH in
+# build_sipsimple(), which setup_pjsip.py turns into -arch.)
 export CFLAGS="-I/opt/local/include"
 export LDFLAGS="-L/opt/local/lib"
 export PKG_CONFIG_PATH="/opt/local/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
+
+# Force PJSIP to link libvpx via --with-vpx=/opt/local instead of relying on
+# auto-detection. Auto-detect succeeds for the native (arm64) build but FAILS
+# in the x86_64 cross build, so -lvpx never lands in PJ_LDLIBS and the x86_64
+# _core.so ends up with undefined _vpx_codec_* symbols (dlopen fails on Intel
+# with "symbol not found in flat namespace '_vpx_codec_vp8_cx'"). Setting this
+# env var makes setup_pjsip.py pass --with-vpx for every arch. /opt/local is
+# the MacPorts prefix (has include/ and lib/).
+export SIPSIMPLE_LIBVPX_PATH="${SIPSIMPLE_LIBVPX_PATH:-/opt/local}"
 
 # Optional codec probe — bcg729 (G.729) is built+installed by
 # 02b-install-bcg729.sh.  It's not in MacPorts/Homebrew, so just warn (don't
@@ -106,12 +117,28 @@ clean_tree() {
 # --no-build-isolation so the build sees the venv's Cython, setuptools, etc.
 build_sipsimple() {
     local arch="$1" runner=""
-    [ "$arch" != "native" ] && runner="arch -$arch"
+    if [ "$arch" != "native" ]; then
+        runner="arch -$arch"
+        # setup_pjsip.py hardcodes arch_flags WITHOUT -arch and then forces
+        # os.environ['ARCHFLAGS'] to it, so neither the `arch -X` wrapper nor a
+        # plain ARCHFLAGS/CFLAGS export can change the produced slice — the
+        # compiler defaults to the host's native arch (arm64). setup_pjsip.py
+        # has been patched to honor SIPSIMPLE_TARGET_ARCH; set it so pjproject
+        # AND the _core/_sha1 extension are built (and link libvpx) for the
+        # slice we're actually producing.
+        export SIPSIMPLE_TARGET_ARCH="$arch"
+    else
+        unset SIPSIMPLE_TARGET_ARCH
+    fi
     echo
     echo ">>> Building sipsimple (${arch}) ..."
     clean_tree
     $runner ./get_dependencies.sh --version "$PJSIP_VERSION"
-    $runner pip3 install --force-reinstall --no-deps --no-build-isolation .
+    # --no-cache-dir is essential: pip caches the built wheel, and on a second
+    # run --force-reinstall happily reinstalls the CACHED wheel instead of
+    # recompiling — so source/flag changes (and the per-arch slice itself)
+    # silently don't take effect. Always build fresh.
+    $runner pip3 install --force-reinstall --no-deps --no-build-isolation --no-cache-dir .
     if [ "$arch" != "native" ]; then
         local core="$SP/sipsimple/core/_core.cpython-$cver-darwin.so"
         local got; got="$(lipo -archs "$core" 2>/dev/null)"
@@ -130,6 +157,14 @@ stage_slice() {
     mkdir -p "$DIST/Resources/lib-$arch"
     cp "$SP/sipsimple/core/_core.cpython-$cver-darwin.so" "$DIST/Resources/lib-$arch/"
     cp "$SP/sipsimple/util/_sha1.cpython-$cver-darwin.so" "$DIST/Resources/lib-$arch/"
+    # Rewrite /opt/local install names to @executable_path/../Frameworks/libs/
+    # BEFORE the slices are lipo'd together. Otherwise make-universal-sipsimple.sh
+    # would merge these raw slices over the path-fixed copy 04b produced, leaving
+    # the final _core/_sha1 pointing back at /opt/local. The merge codesigns the
+    # result afterwards, so the fixed paths end up in a valid signature.
+    "$SCRIPT_DIR/change_lib_paths.sh" \
+        "$DIST/Resources/lib-$arch/_core.cpython-$cver-darwin.so" \
+        "$DIST/Resources/lib-$arch/_sha1.cpython-$cver-darwin.so"
 }
 
 # On Apple Silicon build a universal SDK: compile x86_64 first, stage it, then

@@ -40,7 +40,15 @@ find Resources/lib/ -name tests -exec rm -r {} \; 2>/dev/null
 rm -rf Resources/lib/Cython
 rm -rf Resources/lib/rust
 rm -rf Resources/lib/enum
-rm -rf Resources/lib/*.dist-info
+# Do NOT strip *.dist-info: importlib.metadata reads these at runtime, and some
+# packages query them on import (e.g. python3-otr looks up gmpy2's version via
+# importlib.metadata). Removing them causes:
+#   importlib.metadata.PackageNotFoundError: No package metadata was found for <pkg>
+# They are small text-only directories, so keep them. Only drop the dist-info of
+# build-time tooling we already removed above, to save a little space.
+rm -rf Resources/lib/pip-*.dist-info Resources/lib/setuptools-*.dist-info \
+       Resources/lib/wheel-*.dist-info Resources/lib/Cython-*.dist-info \
+       Resources/lib/pyinstaller*.dist-info Resources/lib/PyInstaller-*.dist-info
 rm -rf Resources/lib/*.virtualenv
 rm -rf Resources/lib/*.pth
 
