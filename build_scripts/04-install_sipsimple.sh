@@ -58,20 +58,9 @@ esac
 
 echo "Building SIP SIMPLE SDK from $SIPSIMPLE_DIR against PJSIP $PJSIP_VERSION ..."
 
-# Re-running needs a clean deps tree; get_dependencies.sh fails otherwise.
-rm -rf deps/pjsip deps/ZRTPCPP deps/pjproject-* 2>/dev/null || true
-
 chmod +x ./get_dependencies*
 # Export so setup_pjsip.py / any sub-script also sees the choice.
 export PJSIP_VERSION
-./get_dependencies.sh --version "$PJSIP_VERSION"
-
-if [ $? -ne 0 ]; then
-    echo
-    echo "Failed to install all SIP SIMPLE SDK dependencies"
-    echo
-    exit 1
-fi
 
 # Make sure the build can find MacPorts headers/libs in this shell.
 export CFLAGS="-I/opt/local/include"
@@ -91,25 +80,74 @@ else
     echo
 fi
 
-# Force a clean rebuild every time this script runs. Without this:
+# Where the freshly built extensions land, and where we stage per-arch slices.
+cver="$(cd "$SCRIPT_DIR" && ./get_python_version.sh | sed -r 's/\.//g')"
+SP="$(cd "$SCRIPT_DIR" && ./get_site_packages_folder.sh)"
+DIST="$SCRIPT_DIR/../Distribution"
+
+# A clean source/deps tree is required for every (re)build. Without this:
 #   - the stale build/ tree (old pjsip + old _core.so) is reused
 #   - pip sees the same version already installed and skips reinstalling
-#   - any in-tree _core.so left over from a previous `build_ext --inplace`
-#     run will shadow the freshly installed wheel when CWD is on sys.path
-# Wipe everything that could shadow or corrupt the new install.
-echo "Cleaning previous build artifacts in $SIPSIMPLE_DIR ..."
-rm -rf build/ build_inplace/ python3_sipsimple.egg-info/
-find sipsimple -name "_core*.so" -print -delete 2>/dev/null || true
-pip3 uninstall -y python3-sipsimple >/dev/null 2>&1 || true
+#   - a leftover in-tree _core.so shadows the freshly installed wheel when
+#     CWD is on sys.path
+# Wiping also guarantees pjsip is recompiled for the architecture we're about
+# to target (objects are not reused across arches).
+clean_tree() {
+    echo "Cleaning previous build artifacts in $SIPSIMPLE_DIR ..."
+    rm -rf deps/pjsip deps/ZRTPCPP deps/pjproject-* 2>/dev/null || true
+    rm -rf build/ build_inplace/ python3_sipsimple.egg-info/
+    find sipsimple -name "_core*.so" -print -delete 2>/dev/null || true
+    pip3 uninstall -y python3-sipsimple >/dev/null 2>&1 || true
+}
 
+# Build pjsip + the _core/_sha1 extensions for one architecture, then verify
+# the produced _core.so really contains that slice. Pass "native" to build
+# without an `arch` wrapper (Intel / single-arch path).
 # --no-build-isolation so the build sees the venv's Cython, setuptools, etc.
-pip3 install --force-reinstall --no-deps --no-build-isolation .
+build_sipsimple() {
+    local arch="$1" runner=""
+    [ "$arch" != "native" ] && runner="arch -$arch"
+    echo
+    echo ">>> Building sipsimple (${arch}) ..."
+    clean_tree
+    $runner ./get_dependencies.sh --version "$PJSIP_VERSION"
+    $runner pip3 install --force-reinstall --no-deps --no-build-isolation .
+    if [ "$arch" != "native" ]; then
+        local core="$SP/sipsimple/core/_core.cpython-$cver-darwin.so"
+        local got; got="$(lipo -archs "$core" 2>/dev/null)"
+        case " $got " in
+            *" $arch "*) echo "    _core.so arch OK ($got)" ;;
+            *) echo "ERROR: built _core.so for $arch but lipo reports '$got'." >&2
+               exit 1 ;;
+        esac
+    fi
+}
 
-if [ $? -ne 0 ]; then
-    echo
-    echo "Failed to build SIP SIMPLE SDK"
-    echo
-    exit 1
+# Stage the just-built _core/_sha1 into Resources/lib-<arch>/ so
+# make-universal-sipsimple.sh can lipo them together at the end.
+stage_slice() {
+    local arch="$1"
+    mkdir -p "$DIST/Resources/lib-$arch"
+    cp "$SP/sipsimple/core/_core.cpython-$cver-darwin.so" "$DIST/Resources/lib-$arch/"
+    cp "$SP/sipsimple/util/_sha1.cpython-$cver-darwin.so" "$DIST/Resources/lib-$arch/"
+}
+
+# On Apple Silicon build a universal SDK: compile x86_64 first, stage it, then
+# compile arm64 LAST so the venv is left with the native (arm64) install. The
+# two staged slices are merged into the bundle by make-universal-sipsimple.sh
+# at the very end. Set SIPSIMPLE_UNIVERSAL=0 to force a single-arch build.
+BUILD_UNIVERSAL=0
+if [ "$(uname -m)" = "arm64" ] && [ "${SIPSIMPLE_UNIVERSAL:-1}" != "0" ]; then
+    BUILD_UNIVERSAL=1
+fi
+
+if [ "$BUILD_UNIVERSAL" = "1" ]; then
+    build_sipsimple x86_64
+    stage_slice    x86_64
+    build_sipsimple arm64
+    stage_slice    arm64
+else
+    build_sipsimple native
 fi
 
 # Confirm the freshly built extension actually picked up bcg729 (if it was
@@ -145,5 +183,13 @@ else
         ( cd "$SCRIPT_DIR" && ./04b-copy_sipsimple.sh )
     else
         echo "NOTE: $SCRIPT_DIR/04b-copy_sipsimple.sh not executable — skipping bundle refresh."
+    fi
+
+    # On Apple Silicon, 04b just copied the single-arch (arm64) _core/_sha1.
+    # Replace them with a universal binary lipo'd from the two staged slices.
+    if [ "$BUILD_UNIVERSAL" = "1" ]; then
+        echo
+        echo "Merging arm64 + x86_64 slices into universal _core/_sha1 ..."
+        ( cd "$SCRIPT_DIR" && ./make-universal-sipsimple.sh )
     fi
 fi
