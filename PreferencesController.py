@@ -254,7 +254,43 @@ class PreferencesController(NSWindowController, object):
                 except StopIteration:
                     pass
 
+        self._fixup_toolbar_overflow_menu()
+
         self.userDefaultsDidChange_(None)
+
+    @objc.python_method
+    def _fixup_toolbar_overflow_menu(self):
+        # When the window is too narrow to show every tab, NSToolbar hides
+        # the extras behind a ">>" overflow button and auto-generates a menu
+        # for them. That auto-generated menu draws each item's image at its
+        # NATIVE size -- and several of our tab icons are large source assets
+        # (answering_machine is 177x150, help is 128x128, audio 240x240,
+        # video 520x520, ...). NSToolbar scales them down for the visible
+        # toolbar but not for the overflow menu, so any tab that overflows
+        # shows a giant icon (the 'advanced' tab looked fine only because it
+        # uses the 32x32 system NSAdvanced image).
+        #
+        # Rather than supply a custom menuFormRepresentation -- which replaces
+        # NSToolbar's built-in overflow-menu routing and breaks the click --
+        # just normalise each icon to 32x32. NSToolbar already scales images
+        # to its icon area, so the visible toolbar is unchanged, while the
+        # auto-generated overflow menu (whose clicks keep working) now draws
+        # every icon at a sane size.
+        icon_size = NSMakeSize(32, 32)
+        for item in self.toolbar.items():
+            identifier = item.itemIdentifier()
+            if not identifier or identifier.startswith('NSToolbar'):
+                # separators, flexible/standard space, etc.
+                continue
+            image = item.image()
+            if image is None:
+                continue
+            size = image.size()
+            if size.width <= 32 and size.height <= 32:
+                continue
+            icon = image.copy()
+            icon.setSize_(icon_size)
+            item.setImage_(icon)
 
     def userDefaultsDidChange_(self, notification):
         icloud_sync_enabled = NSUserDefaults.standardUserDefaults().stringForKey_("iCloudSyncEnabled")
