@@ -142,4 +142,48 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "Added 'Version $MKT' (build $BUILD, $NEWDATE) to $APPCAST"
+
+# --- also prepend a human-readable entry to the classic changelog ----------
+# Mirrors the appcast: <h2>Version MKT</h2> with the release date and a
+# default "Bug fixes" bullet. The marketing version comes from Xcode (MKT);
+# the date is today, formatted like "June 30th, 2026" to match existing entries.
+if [ -f "$CHANGELOG" ]; then
+    CHANGELOG="$CHANGELOG" MKT="$MKT" FORCE="$FORCE" python3 - <<'PY'
+import os, re, sys, datetime
+path = os.environ["CHANGELOG"]; mkt = os.environ["MKT"]; force = os.environ["FORCE"]
+s = open(path, encoding="utf-8").read()
+
+# Skip if the top entry is already this marketing version (unless --force).
+top = re.search(r'<h2>Version\s+([^<]+)</h2>', s)
+if top and top.group(1).strip() == mkt and force != "1":
+    print("Changelog top entry already has Version %s — skipping." % mkt)
+    sys.exit(0)
+
+# Date like "June 30th, 2026".
+today = datetime.date.today()
+d = today.day
+suffix = "th" if 11 <= d <= 13 else {1: "st", 2: "nd", 3: "rd"}.get(d % 10, "th")
+date_str = "%s %d%s, %d" % (today.strftime("%B"), d, suffix, today.year)
+
+entry = (
+    "<h2>Version %s</h2>\n\n"
+    "<p>%s\n\n"
+    "<ul>\n"
+    "<li>Bug fixes\n"
+    "</ul>\n\n\n"
+) % (mkt, date_str)
+
+# Insert immediately before the first existing version entry.
+m = re.search(r'<h2>Version\s', s)
+if not m:
+    sys.exit("No existing <h2>Version ...</h2> entry found in changelog.")
+s = s[:m.start()] + entry + s[m.start():]
+open(path, "w", encoding="utf-8").write(s)
+print("Added 'Version %s' (%s) to %s" % (mkt, date_str, path))
+PY
+    [ $? -eq 0 ] || { echo "Failed to update changelog." >&2; exit 1; }
+else
+    echo "Changelog not found: $CHANGELOG (skipping)" >&2
+fi
+
 echo "Next: ./08-upload.sh"
