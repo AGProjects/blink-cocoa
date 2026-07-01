@@ -32,6 +32,7 @@ cd "$SCRIPT_DIR"
 
 PROJECT="../../Blink.xcodeproj"
 APPCAST="../../ReleaseNotes/BlinkAppcast.xml"
+CHANGELOG="../../ReleaseNotes/changelog-classic.html"
 SCHEME="Blink"
 
 FORCE=0

@@ -6,6 +6,19 @@
       <description>Most recent changes with links to updates</description>
       <language>en</language>
          <item>
+            <title>Version 9.4.5</title>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog-classic.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Wed Jul  1 11:16:59 CEST 2026</pubDate>
+            <enclosure url="https://blink.sipthor.net/download-beta.phtml?os=mac"
+                       sparkle:version="938"
+                       sparkle:shortVersionString="9.4.5"
+                       type="application/octet-stream"
+                       />
+         </item>
+         <item>
             <title>Version 9.4.4</title>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
 		<sparkle:releaseNotesLink>
