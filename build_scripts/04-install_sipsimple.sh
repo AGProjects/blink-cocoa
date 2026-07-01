@@ -26,27 +26,27 @@ cd "$SIPSIMPLE_DIR"
 
 # PJSIP version selection.
 #   - PJSIP_VERSION env var wins (CI / non-interactive runs)
-#   - $1 (positional) honored as a fallback
-#   - otherwise prompt interactively; default 2.12
+#   - $1 (positional) honored as a fallback — e.g. `./04-install_sipsimple.sh 2.12`
+#   - otherwise prompt interactively; default 2.17
 #   - if stdin isn't a tty (piped, redirected), use the default silently
-# Supported: 2.12 (legacy, stable) and 2.17 (in-progress migration target).
+# Supported: 2.17 (current default) and 2.12 (legacy, opt-in via parameter).
 PJSIP_VERSION="${PJSIP_VERSION:-${1:-}}"
 if [ -z "$PJSIP_VERSION" ]; then
     if [ -t 0 ]; then
         echo
         echo "Select PJSIP version to build against:"
-        echo "  1) 2.12  (legacy, stable — fully patched)"
-        echo "  2) 2.17  (in-progress migration target — see PJSIP_217_MIGRATION.md)"
+        echo "  1) 2.17  (current default — see PJSIP_217_MIGRATION.md)"
+        echo "  2) 2.12  (legacy, stable — fully patched)"
         echo
         read -r -p "Choice [1]: " choice
         case "${choice:-1}" in
-            1|2.12)  PJSIP_VERSION="2.12" ;;
-            2|2.17)  PJSIP_VERSION="2.17" ;;
-            *)       echo "Unrecognized choice '${choice}', defaulting to 2.12."
-                     PJSIP_VERSION="2.12" ;;
+            1|2.17)  PJSIP_VERSION="2.17" ;;
+            2|2.12)  PJSIP_VERSION="2.12" ;;
+            *)       echo "Unrecognized choice '${choice}', defaulting to 2.17."
+                     PJSIP_VERSION="2.17" ;;
         esac
     else
-        PJSIP_VERSION="2.12"
+        PJSIP_VERSION="2.17"
     fi
 fi
 
