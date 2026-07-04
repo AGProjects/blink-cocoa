@@ -503,6 +503,14 @@ class BlinkAppDelegate(NSObject):
     @objc.python_method
     def _NH_SIPEngineTransportDidVerifyCertificate(self, notification):
         data = notification.data
+        try:
+            logged_certificates = self._tls_logged_certificates
+        except AttributeError:
+            logged_certificates = self._tls_logged_certificates = set()
+        key = (data.remote_hostname, data.remote_ip or data.remote_address, data.certificate['serial'] if data.certificate else None, data.verified)
+        if key in logged_certificates:
+            return
+        logged_certificates.add(key)
         if data.verified:
             BlinkLogger().log_info("TLS certificate of %s (%s) verified using %s" % (data.remote_hostname, data.remote_ip or data.remote_address, data.tls_cipher))
         else:
