@@ -199,6 +199,8 @@ class BlinkAppDelegate(NSObject):
             NotificationCenter().add_observer(self, name="NetworkConditionsDidChange")
             NotificationCenter().add_observer(self, name="SIPEngineTransportDidDisconnect")
             NotificationCenter().add_observer(self, name="SIPEngineTransportDidConnect")
+            NotificationCenter().add_observer(self, name="SIPEngineTransportGotCertificateError")
+            NotificationCenter().add_observer(self, name="SIPEngineTransportDidVerifyCertificate")
             NotificationCenter().add_observer(self, name="DNSNameserversDidChange")
             NotificationCenter().add_observer(self, name="DNSResolverDidInitialize")
             NotificationCenter().add_observer(self, name="SystemDidWakeUpFromSleep")
@@ -480,6 +482,33 @@ class BlinkAppDelegate(NSObject):
 
         else:
             NotificationCenter().post_notification("BlinkTransportFailed", data=NotificationData(transport=transport))
+
+    @objc.python_method
+    def _format_peer_certificate(self, certificate):
+        return "subject %s, issuer %s, serial %s, valid from %s until %s, altNames: %s" % (
+            certificate['subject_info'] or certificate['subject'],
+            certificate['issuer_info'] or certificate['issuer'],
+            certificate['serial'],
+            certificate['not_before'],
+            certificate['not_after'],
+            ', '.join(certificate['alternative_names']) or 'none')
+
+    @objc.python_method
+    def _NH_SIPEngineTransportGotCertificateError(self, notification):
+        data = notification.data
+        BlinkLogger().log_error("TLS certificate verification failed for %s (%s): %s" % (data.remote_hostname, data.remote_ip or data.remote_address, data.reason))
+        if data.certificate is not None:
+            BlinkLogger().log_error("TLS peer certificate: %s" % self._format_peer_certificate(data.certificate))
+
+    @objc.python_method
+    def _NH_SIPEngineTransportDidVerifyCertificate(self, notification):
+        data = notification.data
+        if data.verified:
+            BlinkLogger().log_info("TLS certificate of %s (%s) verified using %s" % (data.remote_hostname, data.remote_ip or data.remote_address, data.tls_cipher))
+        else:
+            BlinkLogger().log_warning("TLS certificate of %s (%s) failed verification but connection was allowed (verification is disabled)" % (data.remote_hostname, data.remote_ip or data.remote_address))
+        if data.certificate is not None:
+            BlinkLogger().log_info("TLS peer certificate: %s" % self._format_peer_certificate(data.certificate))
 
     @objc.python_method
     def _NH_SIPEngineTransportDidConnect(self, notification):
