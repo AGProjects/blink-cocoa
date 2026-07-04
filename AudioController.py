@@ -1437,11 +1437,13 @@ class AudioController(MediaStream):
             negotiated_active = '?'
             negotiated_cipher = None
         if rtp_enc is None:
+            if isinstance(negotiated_cipher, (bytes, bytearray)):
+                negotiated_cipher = negotiated_cipher.decode('ascii', errors='replace')
+        
             self.sessionController.log_info(
                 "RTP encryption: account=n/a (BonjourAccount?), "
                 "stream negotiated=%s active=%s cipher=%s"
-                % (negotiated_type, negotiated_active,
-                   negotiated_cipher or '(n/a)'))
+                % (negotiated_type, negotiated_active, negotiated_cipher or '(n/a)'))
         else:
             enabled = getattr(rtp_enc, 'enabled', False)
             key_neg = getattr(rtp_enc, 'key_negotiation', None) or '(unset)'
