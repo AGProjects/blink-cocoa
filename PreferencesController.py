@@ -292,6 +292,7 @@ class PreferencesController(NSWindowController, object):
             icon.setSize_(icon_size)
             item.setImage_(icon)
 
+    @run_in_gui_thread
     def userDefaultsDidChange_(self, notification):
         icloud_sync_enabled = NSUserDefaults.standardUserDefaults().stringForKey_("iCloudSyncEnabled")
         self.sync_with_icloud_checkbox.setState_(NSOnState if icloud_sync_enabled == 'Enabled' else NSOffState)

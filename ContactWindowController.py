@@ -3872,6 +3872,7 @@ class ContactWindowController(NSWindowController):
                 settings.video.device = new_device
                 settings.save()
 
+    @run_in_gui_thread
     def userDefaultsDidChange_(self, notification):
         self.setAlwaysOnTop()
 
