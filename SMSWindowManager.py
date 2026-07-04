@@ -1900,9 +1900,10 @@ class SMSWindowManagerClass(NSObject):
         # format, including live-location ticks) and every control/sync
         # message must update silently: they must never pop the window or
         # steal focus.
-        # Messages sent by myself (own account, e.g. from another device)
-        # must not raise the window.
-        is_myself = format_identity_to_string(sender_identity) == str(account.id)
+        # Messages sent by myself (any of my own accounts, e.g. from another
+        # device) must not raise the window.
+        sender_uri = format_identity_to_string(sender_identity)
+        is_myself = sender_uri == str(account.id) or AccountManager().has_account(sender_uri)
         raise_window = content_type.startswith('text/') and direction == 'incoming' and not is_myself
         # Live-location shares emit one origin tick followed by many
         # map-update ticks; none of them should bump the unread counter.
