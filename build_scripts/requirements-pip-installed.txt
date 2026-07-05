@@ -38,7 +38,7 @@ pyobjc-framework-ScriptingBridge==10.0
 pyobjc-framework-WebKit==10.0
 pyOpenSSL==25.0.0
 python-dateutil==2.9.0.post0
-python3-application @ https://github.com/AGProjects/python3-application/archive/refs/tags/release-3.0.7.tar.gz#sha256=26d2ed9cd627f29925d2e5379de3e03945b78ac59552299711e98148462c856b
+python3-application @ https://github.com/AGProjects/python3-application/archive/refs/tags/release-3.0.8.tar.gz#sha256=c0a937b258d20567abce8ea960b883fd57a24029dcf1355c5c8bbaeb5eb56854
 python3-eventlib @ https://github.com/AGProjects/python3-eventlib/archive/refs/tags/0.3.0.tar.gz#sha256=acaf69b700dc389aa22c45cfcba824bbc6b2b1a2b2a795341574b71a85b342bf
 python3-gnutls @ https://github.com/AGProjects/python3-gnutls/archive/refs/tags/release-3.1.10.tar.gz#sha256=f4778dec884113c5335b3081f36dd2ead6ff471663dfb2c296f5745228d274c1
 python3-msrplib @ https://github.com/AGProjects/python3-msrplib/archive/refs/tags/0.21.0.tar.gz#sha256=39b246f14f1a02fabdedc9d2229fe8c82d2abfb59c7cac273b5f46b142e431b5
