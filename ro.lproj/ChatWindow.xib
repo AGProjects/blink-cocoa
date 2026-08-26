@@ -11,11 +11,9 @@
                 <outlet property="audioStatus" destination="241" id="243"/>
                 <outlet property="conferenceFilesTableView" destination="394" id="404"/>
                 <outlet property="conferenceFilesView" destination="391" id="437"/>
-                <outlet property="conferenceScreenSharingMenu" destination="512" id="538"/>
                 <outlet property="drawer" destination="136" id="150"/>
                 <outlet property="drawerScrollView" destination="135" id="292"/>
                 <outlet property="drawerSplitView" destination="348" id="438"/>
-                <outlet property="editorButton" destination="441" id="448"/>
                 <outlet property="encryptionIconMenuItem" destination="663" id="669"/>
                 <outlet property="encryptionMenu" destination="662" id="668"/>
                 <outlet property="muteButton" destination="220" id="222"/>
@@ -23,8 +21,6 @@
                 <outlet property="participantsTableView" destination="383" id="402"/>
                 <outlet property="participantsView" destination="381" id="440"/>
                 <outlet property="recordButton" destination="244" id="246"/>
-                <outlet property="screenShareMenu" destination="123" id="131"/>
-                <outlet property="screenSharingPopUpButton" destination="543" id="550"/>
                 <outlet property="sharedFileMenu" destination="405" id="433"/>
                 <outlet property="tabSwitcher" destination="106" id="108"/>
                 <outlet property="tabView" destination="43" id="52"/>
@@ -90,33 +86,11 @@
                             <action selector="userClickedToolbarButton:" target="-2" id="n7e-tx-St4"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="A6D99212-6BF1-48B7-94D2-46D3AFC16163" explicitItemIdentifier="editor" label="Editor" paletteLabel="Editor" toolTip="Arată Editorul Colaborativ" tag="109" image="editor" id="441">
-                        <connections>
-                            <action selector="userClickedToolbarButton:" target="-2" id="442"/>
-                        </connections>
-                    </toolbarItem>
                     <toolbarItem implicitItemIdentifier="NSToolbarFlexibleSpaceItem" id="78"/>
                     <toolbarItem implicitItemIdentifier="58831C47-CC9F-4CA5-B45A-C67305AECC89" explicitItemIdentifier="sendfile" label="Trimite Fișier" paletteLabel="Trimite Fișier" toolTip="Trimite Fișiere" tag="105" image="upfile" id="92">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="102"/>
                         </connections>
-                    </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="94A6B932-2B35-4C7C-889C-AA8DABBDD596" explicitItemIdentifier="screen" label="Ecran" paletteLabel="Ecran" toolTip="Partajare Ecran" tag="204" image="display" autovalidates="NO" id="549">
-                        <popUpButton key="view" tag="204" id="543">
-                            <rect key="frame" x="0.0" y="14" width="54" height="42"/>
-                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                            <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" image="display" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" autoenablesItems="NO" selectedItem="547" id="544">
-                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                <font key="font" metaFont="menu"/>
-                                <menu key="menu" title="OtherViews" autoenablesItems="NO" id="545">
-                                    <items>
-                                        <menuItem state="on" image="display" hidden="YES" id="546"/>
-                                        <menuItem title="Item 2" id="547"/>
-                                        <menuItem title="Item 3" id="548"/>
-                                    </items>
-                                </menu>
-                            </popUpButtonCell>
-                        </popUpButton>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="A8B34588-AC14-4529-AC47-CEE1FC2F8538" explicitItemIdentifier="screenshot" label="Captureză" paletteLabel="Captureză" toolTip="Trimite Copie Dupa Ecran" image="screenshot" id="573">
                         <popUpButton key="view" id="567">
@@ -227,7 +201,6 @@
                     <toolbarItem reference="MK1-En-CVo"/>
                     <toolbarItem reference="92"/>
                     <toolbarItem reference="573"/>
-                    <toolbarItem reference="549"/>
                     <toolbarItem reference="666"/>
                     <toolbarItem reference="78"/>
                     <toolbarItem reference="443"/>
@@ -517,12 +490,6 @@
                         <action selector="userClickedParticipantMenu:" target="-2" id="276"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Vezi Ecranul Partajat" tag="324" indentationLevel="1" id="483">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedParticipantMenu:" target="-2" id="484"/>
-                    </connections>
-                </menuItem>
                 <menuItem title="Trimite Fișiere..." tag="323" enabled="NO" indentationLevel="1" id="266">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
@@ -590,79 +557,11 @@
                 </menuItem>
             </items>
         </menu>
-        <menu title="Partajare Ecran" autoenablesItems="NO" id="123" userLabel="Menu (Screen Sharing)">
-            <items>
-                <menuItem image="display" hidden="YES" id="551">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                </menuItem>
-                <menuItem title="Cere Partajarea Ecranului" tag="201" id="125">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedScreenSharingMenu:" target="-2" id="558"/>
-                    </connections>
-                </menuItem>
-                <menuItem title="Partajează Ecranul Meu Cu Contactul" tag="202" id="126">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedScreenSharingMenu:" target="-2" id="559"/>
-                    </connections>
-                </menuItem>
-                <menuItem isSeparatorItem="YES" id="553"/>
-                <menuItem title="Renunță La Partajarea Ecranului" tag="203" id="494">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedScreenSharingMenu:" target="-2" id="560"/>
-                    </connections>
-                </menuItem>
-            </items>
-            <connections>
-                <outlet property="delegate" destination="-2" id="492"/>
-            </connections>
-        </menu>
-        <menu title="Ecran Partajat În Conferință" autoenablesItems="NO" id="512" userLabel="Menu (Conference Screen Sharing)">
-            <items>
-                <menuItem image="display" hidden="YES" id="552">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                </menuItem>
-                <menuItem title="Partajează Ecranul Meu cu Participanții Prezenți" tag="202" id="514">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                </menuItem>
-                <menuItem title="Calitate" enabled="NO" id="521">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                </menuItem>
-                <menuItem title="Înaltă - Rezoluția nativă a ecranului" tag="401" indentationLevel="2" id="534">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedConferenceScreenSharingQualityMenu:" target="-2" id="561"/>
-                    </connections>
-                </menuItem>
-                <menuItem title="Medie - Compromis calitate/utilizare rețea" tag="403" indentationLevel="2" id="520">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedConferenceScreenSharingQualityMenu:" target="-2" id="562"/>
-                    </connections>
-                </menuItem>
-                <menuItem title="Joasă - Folosește rețeaua în mod economic" tag="402" indentationLevel="2" id="519">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedConferenceScreenSharingQualityMenu:" target="-2" id="563"/>
-                    </connections>
-                </menuItem>
-                <menuItem title="Suprafața Ecranului Partajat" enabled="NO" id="513">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                </menuItem>
-            </items>
-            <connections>
-                <outlet property="delegate" destination="-2" id="533"/>
-            </connections>
-        </menu>
     </objects>
     <resources>
         <image name="NSActionTemplate" width="15" height="15"/>
         <image name="NSEveryone" width="32" height="32"/>
         <image name="audio" width="240" height="240"/>
-        <image name="display" width="32" height="32"/>
-        <image name="editor" width="153" height="153"/>
         <image name="mute" width="24" height="24"/>
         <image name="muted" width="24" height="24"/>
         <image name="pause" width="48" height="48"/>

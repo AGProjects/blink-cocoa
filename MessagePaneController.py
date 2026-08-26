@@ -952,7 +952,7 @@ class MessagePaneController(NSObject):
             try:
                 viewer.chatViewController.ensureAttachButton()
             except AttributeError:
-                pass                    # the old WebView renderer has none
+                pass                    # nothing to stop
             except Exception as e:
                 BlinkLogger().log_error('Cannot lay out the composer for %s: %s'
                                         % (viewer.remote_uri, e))

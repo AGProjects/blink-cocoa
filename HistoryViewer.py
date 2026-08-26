@@ -82,7 +82,6 @@ class HistoryViewer(NSWindowController):
     contactTable = objc.IBOutlet()
     toolbar = objc.IBOutlet()
 
-    entriesView = objc.IBOutlet()
 
     period = objc.IBOutlet()
     searchText = objc.IBOutlet()
@@ -162,6 +161,12 @@ class HistoryViewer(NSWindowController):
     def __init__(self):
         if self:
             BlinkLogger().log_debug('Starting History Viewer')
+
+            # Registers the classes HistoryViewer.xib names as custom classes
+            # with the ObjC runtime, so the nib can build the transcript.
+            import MessageListView              # noqa: F401 -- customClass in HistoryViewer.xib
+            import NativeChatViewController     # noqa: F401 -- customClass in HistoryViewer.xib
+
             NSBundle.loadNibNamed_owner_("HistoryViewer", self)
 
             self.all_contacts = BlinkHistoryViewerContact('Any Address', name='All Contacts')
@@ -178,9 +183,8 @@ class HistoryViewer(NSWindowController):
             self.searchText.cell().setSendsSearchStringImmediately_(True)
             self.searchText.cell().setPlaceholderString_(NSLocalizedString("Type text and press Enter", "Placeholder text"))
 
-            self.chatViewController.setContentFile_(NSBundle.mainBundle().pathForResource_ofType_("ChatView", "html"))
+            self.chatViewController.startRendering()
             self.chatViewController.setHandleScrolling_(False)
-            self.entriesView.setShouldCloseWithWindow_(False)
             self.cpim_re = re.compile(r'^(?:"?(?P<display_name>[^<]*[^"\s])"?)?\s*<(?P<uri>.+)>$')
 
             for c in ('remote_uri', 'local_uri', 'date', 'type'):
@@ -564,7 +568,6 @@ class HistoryViewer(NSWindowController):
     def renderMessages(self, messages=None):
         self.chatViewController.clear()
         self.chatViewController.resetRenderedMessages()
-        self.chatViewController.last_sender = None
 
         if messages is not None:
             # new message list. cache for pagination and reset pagination to the last page
@@ -676,8 +679,9 @@ class HistoryViewer(NSWindowController):
         printInfo.setVerticalPagination_(NSFitPagination)
         NSPrintInfo.setSharedPrintInfo_(printInfo)
 
-        # print the content of the web view
-        self.entriesView.mainFrame().frameView().documentView().print_(self)
+        # the list view rather than the scroll view: the transcript is taller
+        # than the pane it is shown in, and only the list view holds all of it
+        self.chatViewController.messageListView.print_(self)
 
     @objc.IBAction
     def search_(self, sender):

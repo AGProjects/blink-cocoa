@@ -2,7 +2,6 @@
 <document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="21701" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="21701"/>
-        <plugIn identifier="com.apple.WebKitIBPlugin" version="21701"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -23,30 +22,52 @@
             <rect key="frame" x="0.0" y="0.0" width="501" height="500"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <subviews>
-                <customView appearanceType="aqua" fixedFrame="YES" id="178">
+                <customView fixedFrame="YES" id="178">
                     <rect key="frame" x="0.0" y="0.0" width="501" height="418"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <subviews>
-                        <webView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="38" customClass="ChatWebView">
-                            <rect key="frame" x="0.0" y="0.0" width="501" height="391"/>
+                        <scrollView fixedFrame="YES" autohidesScrollers="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="38">
+                            <rect key="frame" x="0.0" y="0.0" width="501" height="367"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                            <webPreferences key="preferences" defaultFontSize="12" defaultFixedFontSize="12" javaEnabled="NO">
-                                <nil key="identifier"/>
-                            </webPreferences>
                             <accessibility description="Chat Session History"/>
+                            <clipView key="contentView" drawsBackground="NO" id="CHT-cv-001">
+                                <rect key="frame" x="1" y="1" width="484" height="365"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                <subviews>
+                                    <customView fixedFrame="YES" id="CHT-dv-001" customClass="MessageListView">
+                                        <rect key="frame" x="0.0" y="0.0" width="484" height="365"/>
+                                        <autoresizingMask key="autoresizingMask" widthSizable="YES"/>
+                                    </customView>
+                                </subviews>
+                            </clipView>
+                            <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="YES" id="CHT-hs-001">
+                                <rect key="frame" x="-100" y="-100" width="87" height="18"/>
+                                <autoresizingMask key="autoresizingMask"/>
+                            </scroller>
+                            <scroller key="verticalScroller" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="CHT-vs-001">
+                                <rect key="frame" x="485" y="1" width="15" height="365"/>
+                                <autoresizingMask key="autoresizingMask"/>
+                            </scroller>
+                        </scrollView>
+                        <segmentedControl verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="CHT-sg-001">
+                            <rect key="frame" x="8" y="371" width="485" height="20"/>
+                            <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
+                            <segmentedCell key="cell" borderStyle="border" alignment="left" style="rounded" trackingMode="selectOne" id="CHT-sc-001">
+                                <font key="font" metaFont="smallSystem"/>
+                                <segments>
+                                    <segment label="All"/>
+                                </segments>
+                            </segmentedCell>
                             <connections>
-                                <outlet property="UIDelegate" destination="164" id="174"/>
-                                <outlet property="frameLoadDelegate" destination="164" id="171"/>
-                                <outlet property="policyDelegate" destination="164" id="172"/>
-                                <outlet property="resourceLoadDelegate" destination="164" id="173"/>
+                                <action selector="filterMessages:" target="164" id="CHT-ac-001"/>
                             </connections>
-                        </webView>
+                        </segmentedControl>
                         <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="217">
                             <rect key="frame" x="17" y="397" width="275" height="14"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                             <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="left" title="Previous messages" id="218">
                                 <font key="font" metaFont="smallSystem"/>
-                                <color key="textColor" white="0.2063067036" alpha="1" colorSpace="calibratedWhite"/>
+                                <color key="textColor" name="secondaryLabelColor" catalog="System" colorSpace="catalog"/>
                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                             </textFieldCell>
                         </textField>
@@ -88,7 +109,7 @@
                         </textField>
                     </subviews>
                 </customView>
-                <customView appearanceType="aqua" fixedFrame="YES" id="23">
+                <customView fixedFrame="YES" id="23">
                     <rect key="frame" x="0.0" y="427" width="501" height="73"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <subviews>
@@ -157,7 +178,7 @@
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="PRIVATE" id="254">
                                 <font key="font" metaFont="systemBold" size="16"/>
-                                <color key="textColor" white="0.55884576610000003" alpha="1" colorSpace="calibratedWhite"/>
+                                <color key="textColor" name="secondaryLabelColor" catalog="System" colorSpace="catalog"/>
                                 <color key="backgroundColor" white="1" alpha="0.0" colorSpace="calibratedWhite"/>
                             </textFieldCell>
                         </textField>
@@ -177,7 +198,7 @@
                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="left" title="Encryption has been disabled by remote party" id="XJi-kM-Rrw">
                                 <font key="font" metaFont="system"/>
-                                <color key="textColor" red="1" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                                <color key="textColor" name="systemRedColor" catalog="System" colorSpace="catalog"/>
                                 <color key="backgroundColor" white="1" alpha="0.0" colorSpace="calibratedWhite"/>
                             </textFieldCell>
                         </textField>
@@ -190,7 +211,7 @@
             </holdingPriorities>
             <point key="canvasLocation" x="140" y="154"/>
         </splitView>
-        <customObject id="164" customClass="ChatViewController">
+        <customObject id="164" userLabel="NativeChatViewController" customClass="NativeChatViewController">
             <connections>
                 <outlet property="continueWithoutEncryptionCheckbox" destination="LjK-uM-s0s" id="G8Z-vu-6Yk"/>
                 <outlet property="delegate" destination="-2" id="168"/>
@@ -201,6 +222,8 @@
                 <outlet property="loadingProgressIndicator" destination="220" id="221"/>
                 <outlet property="loadingTextIndicator" destination="bS8-LL-yJQ" id="TXB-av-ph4"/>
                 <outlet property="outputView" destination="38" id="165"/>
+                <outlet property="messageListView" destination="CHT-dv-001" id="CHT-ol-001"/>
+                <outlet property="messageFilterControl" destination="CHT-sg-001" id="CHT-ol-002"/>
                 <outlet property="searchMessagesBox" destination="222" id="228"/>
                 <outlet property="showRelatedMessagesButton" destination="230" id="232"/>
                 <outlet property="view" destination="19" id="166"/>

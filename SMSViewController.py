@@ -292,14 +292,13 @@ class SMSViewController(NSObject):
 
     # Name of the nib providing this viewer's content view. The nib is what
     # wires the `chatViewController` outlet, so overriding this alone swaps
-    # the entire rendering stack (WebView today, native transcript later).
-    nib_name = "SMSView"
-    native_nib_name = "MessageView"
+    # the whole rendering stack.
+    nib_name = "MessageView"
 
     # Messages fetched per page, both for the first render and for each
-    # scroll back in time. The native transcript measures and stacks views
-    # itself, so a page costs far less than it did in the WebView, and 25
-    # meant a conversation opened showing barely a screenful.
+    # scroll back in time. The transcript measures and stacks views itself,
+    # so a page is cheap; 25 meant a conversation opened showing barely a
+    # screenful.
     showHistoryEntries = 100
     remoteTypingTimer = None
     handle_scrolling = True
@@ -343,24 +342,13 @@ class SMSViewController(NSObject):
 
     @objc.python_method
     def nibName(self):
-        """Which nib -- and therefore which renderer -- to load.
+        """The nib holding this viewer's content view.
 
-        The nib wires the `chatViewController` outlet, so this is the whole
-        switch between the WebView transcript and the native one. Importing
-        the native modules here registers their classes with the ObjC runtime;
-        without that the nib cannot instantiate them.
-
-        Controlled by MessageHost.USE_NATIVE_MESSAGE_RENDERER.
+        Importing the two modules here registers their classes with the ObjC
+        runtime; without that the nib has nothing to instantiate.
         """
-        from MessageHost import USE_NATIVE_MESSAGE_RENDERER
-        if USE_NATIVE_MESSAGE_RENDERER:
-            try:
-                import MessageListView          # customClass in MessageView.xib
-                import NativeChatViewController # customClass in MessageView.xib
-            except Exception as e:
-                BlinkLogger().log_error("Native message renderer unavailable, using WebView: %s" % e)
-            else:
-                return self.native_nib_name
+        import MessageListView          # noqa: F401 -- customClass in MessageView.xib
+        import NativeChatViewController # noqa: F401 -- customClass in MessageView.xib
         return self.nib_name
 
     @property
@@ -591,7 +579,7 @@ class SMSViewController(NSObject):
 
     def awakeFromNib(self):
         # setup smiley popup
-        self.chatViewController.setContentFile_(NSBundle.mainBundle().pathForResource_ofType_("ChatView", "html"))
+        self.chatViewController.startRendering()
         self.chatViewController.setAccount_(self.account)
         self.chatViewController.resetRenderedMessages()
 
@@ -1291,7 +1279,7 @@ class SMSViewController(NSObject):
             try:
                 self.chatViewController.applyAudioMetadata(transfer_id, recording)
             except AttributeError:
-                pass                    # the old WebView renderer has no player
+                pass                    # no player on this renderer
         return True
 
     @objc.python_method
@@ -1358,7 +1346,7 @@ class SMSViewController(NSObject):
             try:
                 self.chatViewController.applyReplyLink(reply_id, original_id)
             except AttributeError:
-                pass                    # the old WebView renderer has no quotes
+                pass                    # no quotes on this renderer
         return True
 
     @objc.python_method

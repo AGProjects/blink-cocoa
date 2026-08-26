@@ -1,28 +1,34 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
+"""Shared, renderer-independent half of a chat transcript.
+
+Everything a conversation view needs that is *not* drawing: the composer and
+its typing timers, transcript search, the scroll-back-in-time state machine
+and the encryption-ended banner. Drawing itself belongs to a subclass --
+NativeChatViewController, which stacks MessageBubbleViews inside a
+MessageListView.
+
+There used to be a second subclass in all but name: this class rendered into
+a WebKit WebView by evaluating JavaScript against ChatView.html. That is
+gone. The methods it used to implement are listed under "renderer contract"
+below as no-ops, so a subclass that forgets one degrades to a missing bubble
+rather than an AttributeError mid-transcript.
+"""
+
 __all__ = ['ChatInputTextView', 'ChatViewController', 'processHTMLText',
            'MSG_STATE_SENDING', 'MSG_STATE_SENT', 'MSG_STATE_FAILED', 'MSG_STATE_FAILED_LOCAL', 'MSG_STATE_DELIVERED', 'MSG_STATE_DEFERRED', 'MSG_STATE_DISPLAYED']
 
-import calendar
-import html
 import datetime
-import json
 import objc
 import os
 import re
 import time
 import urllib.request, urllib.parse, urllib.error
-import uuid
 
-from AppKit import NSCommandKeyMask, NSDragOperationNone, NSDragOperationCopy, NSFilenamesPboardType, NSShiftKeyMask, NSTextDidChangeNotification, NSOnState
-from Foundation import NSArray, NSDate, NSLocalizedString, NSMakeRange, NSNotificationCenter, NSObject, NSTextView, NSTimer, NSURL, NSURLRequest, NSWorkspace
-from WebKit import WebView, WebViewProgressFinishedNotification, WebActionOriginalURLKey
+from AppKit import NSCommandKeyMask, NSDragOperationNone, NSDragOperationCopy, NSFilenamesPboardType, NSShiftKeyMask, NSTextDidChangeNotification
+from Foundation import NSArray, NSDate, NSLocalizedString, NSMakeRange, NSNotificationCenter, NSObject, NSTextView, NSTimer
 
-from application.notification import NotificationCenter
-from sipsimple.configuration.settings import SIPSimpleSettings
-from sipsimple.util import ISOTimestamp
-from resources import Resources
 from SmileyManager import SmileyManager
 from util import escape_html, run_in_gui_thread
 from BlinkLogger import BlinkLogger
@@ -54,7 +60,6 @@ class ChatMessageObject(object):
         self.is_html = is_html
         self.timestamp = timestamp
         self.media_type = media_type
-
 
 def processHTMLText(content='', usesmileys=True, is_html=False):
     try:
@@ -168,29 +173,6 @@ class ChatInputTextView(NSTextView):
             objc.super(ChatInputTextView, self).keyDown_(event)
 
 
-class ChatWebView(WebView):
-    def dealloc(self):
-        objc.super(ChatWebView, self).dealloc()
-
-    def draggingEntered_(self, sender):
-        pboard = sender.draggingPasteboard()
-        if pboard.types().containsObject_(NSFilenamesPboardType) and hasattr(self.frameLoadDelegate().delegate, "sendFiles"):
-            fnames = pboard.propertyListForType_(NSFilenamesPboardType)
-            for f in fnames:
-                if not os.path.isfile(f) and not os.path.isdir(f):
-                    return NSDragOperationNone
-            return NSDragOperationCopy
-        return NSDragOperationNone
-
-    def performDragOperation_(self, sender):
-        if hasattr(self.frameLoadDelegate().delegate, "sendFiles"):
-            pboard = sender.draggingPasteboard()
-            if pboard.types().containsObject_(NSFilenamesPboardType):
-                filenames = pboard.propertyListForType_(NSFilenamesPboardType)
-                return self.frameLoadDelegate().delegate.sendFiles(filenames)
-        return False
-
-
 class ChatViewController(NSObject):
     view = objc.IBOutlet()
     outputView = objc.IBOutlet()
@@ -204,7 +186,6 @@ class ChatViewController(NSObject):
     encryptionDisabledWarningLabel = objc.IBOutlet()
     continueWithoutEncryptionCheckbox = objc.IBOutlet()
 
-    splitterHeight = None
 
     delegate = objc.IBOutlet() # ChatController
     account = None
@@ -215,7 +196,6 @@ class ChatViewController(NSObject):
     show_related_messages = False
 
     expandSmileys = True
-    editorVisible = False
 
     rendered_messages = set()
     pending_messages = {}
@@ -234,7 +214,6 @@ class ChatViewController(NSObject):
     handle_scrolling = True
     scrolling_zoom_factor = 0
 
-    editorIsComposing = False
     scrolling_back = False
 
     last_sender = None
@@ -254,9 +233,7 @@ class ChatViewController(NSObject):
         self.account = account
 
     def awakeFromNib(self):
-        self.outputView.setShouldCloseWithWindow_(True)
-        self.outputView.registerForDraggedTypes_(NSArray.arrayWithObject_(NSFilenamesPboardType))
-        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, "webviewFinishedLoading:", WebViewProgressFinishedNotification, self.outputView)
+        """Wire the composer. The transcript view is the subclass's business."""
         if self.inputText:
             self.inputText.registerForDraggedTypes_(NSArray.arrayWithObject_(NSFilenamesPboardType))
             self.inputText.setOwner(self)
@@ -349,34 +326,8 @@ class ChatViewController(NSObject):
         if self.related_messages:
             self.showRelatedMessagesButton.setHidden_(False)
 
-    @objc.python_method
-    def htmlBoxVisible(self, msgid):
-        script = """htmlBoxVisible('%s')""" % msgid
-        self.executeJavaScript(script)
-
-    @objc.python_method
-    def htmlBoxHidden(self, msgid):
-        script = """htmlBoxHidden('%s')""" % msgid
-        self.executeJavaScript(script)
-
-    @objc.python_method
-    def markFound(self, msgid):
-        script = """markFound('%s')""" % msgid
-        self.executeJavaScript(script)
-
-    @objc.python_method
-    def unmarkFound(self, msgid):
-        script = """unmarkFound('%s')""" % msgid
-        self.executeJavaScript(script)
-
     def setHandleScrolling_(self, scrolling):
         self.handle_scrolling = scrolling
-
-    def setContentFile_(self, path):
-        self.finishedLoading = False
-        request = NSURLRequest.alloc().initWithURL_(NSURL.alloc().initFileURLWithPath_(path))
-        self.outputView.mainFrame().loadRequest_(request)
-        assert self.outputView.preferences().isJavaScriptEnabled()
 
     def appendAttributedString_(self, content):
         storage = self.inputText.textStorage()
@@ -431,423 +382,8 @@ class ChatViewController(NSObject):
         self.resetTyping()
         self.delegate.chatView_becameIdle_(self, lastTypedTime)
 
-    @objc.python_method
-    def updateEncryptionLock(self, msgid, encryption=None):
-        if encryption is None:
-            return
-
-        if encryption == '':
-            #lock_icon_path = Resources.get('unlocked-darkgray.png')
-            lock_icon_path = ''
-        else:
-            lock_icon_path = Resources.get('locked-green.png' if encryption == 'verified' else 'locked-red.png')
-        script = "updateEncryptionLock('%s','%s')" % (msgid, lock_icon_path)
-        self.executeJavaScript(script)
-
-    @objc.python_method
-    @run_in_gui_thread
-    def markMessage(self, msgid, state, private=False): # delegate
-        if state == MSG_STATE_SENT:
-            is_private = 1 if private else "null"
-            script = "markSent('%s',%s)"%(msgid, is_private)
-            self.executeJavaScript(script)
-        elif state == MSG_STATE_DEFERRED:
-            script = "markDeferred('%s')"%msgid
-            self.executeJavaScript(script)
-        elif state == MSG_STATE_DELIVERED:
-            script = "markDelivered('%s')"%(msgid)
-            self.executeJavaScript(script)
-        elif state == MSG_STATE_DISPLAYED:
-            script = "markDisplayed('%s')"%msgid
-            self.executeJavaScript(script)
-        elif state == MSG_STATE_FAILED:
-            script = "markFailed('%s')"%msgid
-            self.executeJavaScript(script)
-        elif state == MSG_STATE_FAILED_LOCAL:
-            script = "markDeferred('%s')"%msgid
-            self.executeJavaScript(script)
-        elif state == 'deleted':
-            script = "markDeleted('%s')"%msgid
-            self.executeJavaScript(script)
-
-    @objc.python_method
-    @run_in_gui_thread
-    def clear(self):
-        if self.finishedLoading:
-            self.executeJavaScript("clear()")
-        else:
-            self.messageQueue = []
-
-    @objc.python_method
-    @run_in_gui_thread
-    def showSystemMessage(self, content, timestamp=None, is_error=False, call_id='0', before=False):
-        msgid = str(uuid.uuid1())
-        rendered_message = ChatMessageObject(call_id, msgid, content, False, timestamp)
-        self.rendered_messages.append(rendered_message)
-
-        if timestamp is None:
-            timestamp = ISOTimestamp.now()
-
-        if isinstance(timestamp, datetime.datetime):
-            if timestamp.date() != datetime.date.today():
-                timestamp = time.strftime("%F %H:%M", time.localtime(calendar.timegm(timestamp.utctimetuple())))
-            else:
-                timestamp = time.strftime("%H:%M", time.localtime(calendar.timegm(timestamp.utctimetuple())))
-
-        is_error = 1 if is_error else "null"
-        before_arg = 1 if before else "null"
-        script = """renderSystemMessage('%s', "%s", "%s", %s, %s)""" % (msgid, processHTMLText(content), timestamp, is_error, before_arg)
-
-        if self.finishedLoading:
-            self.executeJavaScript(script)
-        else:
-            self.messageQueue.append(script)
-
-    @objc.python_method
-    @run_in_gui_thread
-    def showMessage(self, call_id, msgid, direction, sender, icon_path, content, timestamp, is_html=False, state='', recipient='', is_private=False, history_entry=False, media_type='chat', encryption=None, before=False):
-    
-        #print('showMessage %s %s -> %s (%s)' % (direction, sender, recipient, state))
-        #print('showMessage %s %s -> %s' % (direction, self.delegate.local_uri, self.delegate.remote_uri))
-        lock_icon_path = ''
-        #lock_icon_path = Resources.get('unlocked-darkgray.png')
-        if encryption is not None:
-            if encryption == '':
-                #lock_icon_path = Resources.get('unlocked-darkgray.png')
-                lock_icon_path = ''
-            else:
-                lock_icon_path = Resources.get('locked-green.png' if encryption == 'verified' else 'locked-red.png')
-
-        if self.last_sender == sender:
-            icon_path = "null"
-        else:
-            icon_path = "'%s'" % icon_path
-
-        self.last_sender = sender
-
-        if not history_entry and not self.delegate.isOutputFrameVisible():
-            self.delegate.showChatViewWhileVideoActive()
-
-        # keep track of rendered messages to toggle the smileys or search their content later
-        rendered_message = ChatMessageObject(call_id, msgid, content, is_html, timestamp, media_type)
-        self.rendered_messages.append(rendered_message)
-
-        if timestamp.date() != datetime.date.today():
-            displayed_timestamp = time.strftime("%F %H:%M", time.localtime(calendar.timegm(timestamp.utctimetuple())))
-        else:
-            displayed_timestamp = time.strftime("%H:%M", time.localtime(calendar.timegm(timestamp.utctimetuple())))
-
-        content = processHTMLText(content, self.expandSmileys, is_html)
-        private = 1 if is_private else "null"
-        before = 1 if before else "null"
-
-        if is_private and recipient:
-            label = NSLocalizedString("Private message to %s", "Label") % html.escape(recipient) if direction == 'outgoing' else NSLocalizedString("Private message from %s", "Label") % html.escape(sender)
-        else:
-            if hasattr(self.delegate, "sessionController"):
-                label = html.escape(self.delegate.sessionController.nickname or self.account.display_name or self.account.id) if sender is None else html.escape(sender)
-            else:
-                label = html.escape(self.account.display_name or self.account.id) if sender is None else html.escape(sender)
-
-        try:
-            script = """renderMessage('%s', '%s', '%s', %s, "%s", '%s', '%s', %s, '%s', '%s', %s)""" % (msgid, direction, label, icon_path, content, displayed_timestamp, state, private, lock_icon_path, self.previous_msgid, before)
-        except UnicodeDecodeError:
-            script = """renderMessage('%s', '%s', '%s', %s, "%s", '%s', '%s', %s, '%s', '%s', %s)""" % (msgid, direction, label, icon_path, content.decode('utf-8'), displayed_timestamp, state, private, lock_icon_path, self.previous_msgid, before)
-        except Exception as e:
-            self.delegate.showSystemMessage("Chat message id %s rendering error: %s" % (msgid, e), ISOTimestamp.now(), True)
-            return
-
-        if self.finishedLoading:
-            self.executeJavaScript(script)
-        else:
-            self.messageQueue.append(script)
-
-        if hasattr(self.delegate, "chatViewDidGetNewMessage_"):
-            self.delegate.chatViewDidGetNewMessage_(self)
-
-        self.previous_msgid = msgid
-
-    @objc.python_method
-    @run_in_gui_thread
-    def showLocationMessage(self, call_id, msgid, direction, sender, icon_path, latitude, longitude, accuracy, maps_url, timestamp, state='', is_private=False, history_entry=False, encryption=None, before=False, destination=None, status_text=None, track=None, point_timestamp=None):
-        """Render a Sylk-style location bubble in the chat WebView.
-
-        Mirrors the chrome that showMessage() applies (delivered/displayed
-        ticks, encryption icon, delete button) but the body slot becomes a
-        small OSM tile grid + pin. ``maps_url`` is the URL the bubble's <a>
-        tag points at — typically https://maps.apple.com/?ll=… so a click
-        opens the system Maps app on macOS.
-
-        ``destination`` is the optional meeting point of a meet-me share
-        ({'latitude': …, 'longitude': …}), drawn as a second, green pin.
-        ``status_text`` pre-stamps the lifecycle footer, which is how a
-        share that had already ended by the time history replays it comes
-        back marked "Track ended" instead of looking live.
-        """
-        lock_icon_path = ''
-        if encryption is not None:
-            if encryption == '':
-                lock_icon_path = ''
-            else:
-                lock_icon_path = Resources.get('locked-green.png' if encryption == 'verified' else 'locked-red.png')
-
-        if self.last_sender == sender:
-            icon_path = "null"
-        else:
-            icon_path = "'%s'" % icon_path
-
-        self.last_sender = sender
-
-        if not history_entry and not self.delegate.isOutputFrameVisible():
-            self.delegate.showChatViewWhileVideoActive()
-
-        # Track the bubble in the rendered_messages list so search /
-        # smiley-toggle code paths don't trip over an "unknown" message
-        # id. The displayed `content` for a location is just the maps
-        # URL — there's nothing else useful to search on.
-        rendered_message = ChatMessageObject(call_id, msgid, maps_url, True, timestamp, 'sms')
-        self.rendered_messages.append(rendered_message)
-
-        if timestamp.date() != datetime.date.today():
-            displayed_timestamp = time.strftime("%F %H:%M", time.localtime(calendar.timegm(timestamp.utctimetuple())))
-        else:
-            displayed_timestamp = time.strftime("%H:%M", time.localtime(calendar.timegm(timestamp.utctimetuple())))
-
-        before_arg = 1 if before else "null"
-        # accuracy may be missing — pass "null" so the JS branch hides
-        # the ±metres annotation entirely. lat/lng are emitted as plain
-        # numbers (no quotes) to keep them as JavaScript Numbers in the
-        # arg list; JS toFixed(5) is what we use for the display label.
-        try:
-            lat_arg = '%.7f' % float(latitude)
-            lng_arg = '%.7f' % float(longitude)
-        except (TypeError, ValueError):
-            return
-        if accuracy is None:
-            acc_arg = 'null'
-        else:
-            try:
-                acc_arg = '%.1f' % float(accuracy)
-            except (TypeError, ValueError):
-                acc_arg = 'null'
-
-        # Outer label / sender row
-        if hasattr(self.delegate, "sessionController"):
-            label_source = self.delegate.sessionController.nickname or self.account.display_name or self.account.id
-        else:
-            label_source = self.account.display_name or self.account.id
-        label = html.escape(label_source) if sender is None else html.escape(sender)
-
-        # JSON-encode the maps_url so any embedded quotes / specials are
-        # safely passed through into the JavaScript string literal. Same
-        # for the destination object and the status text.
-        maps_url_js = json.dumps(maps_url)
-        destination_js = self._location_destination_js(destination)
-        status_js = json.dumps(status_text) if status_text else 'null'
-
-        script = (
-            """renderLocationMessage('%s', '%s', '%s', %s, %s, %s, %s, %s, '%s', '%s', '%s', '%s', %s, %s, %s)"""
-            % (msgid, direction, label, icon_path, lat_arg, lng_arg, acc_arg, maps_url_js,
-               displayed_timestamp, state, lock_icon_path, self.previous_msgid, before_arg,
-               destination_js, status_js)
-        )
-
-        if self.finishedLoading:
-            self.executeJavaScript(script)
-        else:
-            self.messageQueue.append(script)
-
-        if hasattr(self.delegate, "chatViewDidGetNewMessage_"):
-            self.delegate.chatViewDidGetNewMessage_(self)
-
-        self.previous_msgid = msgid
-
-    @objc.python_method
-    @run_in_gui_thread
-    def updateLocationMessage(self, msgid, latitude, longitude, accuracy, destination=None, timestamp=None):
-        """Re-render an existing location bubble with new coordinates.
-
-        Mirrors showLocationMessage's argument formatting (numeric literals
-        for lat/lng, ``null`` for missing accuracy) so the JS function
-        receives proper Numbers and not stringly-typed values. The bubble's
-        lifecycle footer is preserved across the re-render by the JS side.
-        """
-        try:
-            lat_arg = '%.7f' % float(latitude)
-            lng_arg = '%.7f' % float(longitude)
-        except (TypeError, ValueError):
-            return
-        if accuracy is None:
-            acc_arg = 'null'
-        else:
-            try:
-                acc_arg = '%.1f' % float(accuracy)
-            except (TypeError, ValueError):
-                acc_arg = 'null'
-
-        script = "updateLocationMessage('%s', %s, %s, %s, %s)" % (
-            msgid, lat_arg, lng_arg, acc_arg, self._location_destination_js(destination))
-        if self.finishedLoading:
-            self.executeJavaScript(script)
-        else:
-            self.messageQueue.append(script)
-
-    @objc.python_method
-    def _location_destination_js(self, destination):
-        """Serialise a meet-me destination for the JS arg list.
-
-        Returns the JavaScript literal ``null`` unless the destination is
-        a usable {latitude, longitude} pair.
-        """
-        if not isinstance(destination, dict):
-            return 'null'
-        try:
-            lat = float(destination['latitude'])
-            lng = float(destination['longitude'])
-        except (KeyError, TypeError, ValueError):
-            return 'null'
-        return json.dumps({'latitude': lat, 'longitude': lng})
-
-    @objc.python_method
-    @run_in_gui_thread
-    def setLocationMessageStatus(self, msgid, text):
-        """Stamp a location bubble's lifecycle footer ("Track ended", …).
-
-        Called when a teardown signal (location_stop / meeting_end /
-        meeting_reject) resolves to a session whose bubble is on screen.
-        Harmless when the bubble isn't rendered — the JS side is a no-op
-        for an unknown id, and the text is remembered for the bubble in
-        case it renders later in the same replay pass.
-        """
-        script = "setLocationMessageStatus('%s', %s)" % (msgid, json.dumps(text) if text else 'null')
-        if self.finishedLoading:
-            self.executeJavaScript(script)
-        else:
-            self.messageQueue.append(script)
-
-    @objc.python_method
-    def toggleSmileys(self, expandSmileys):
-        for entry in self.rendered_messages:
-            self.updateMessage(entry.msgid, entry.content, entry.is_html, expandSmileys)
-
-    @objc.python_method
-    def updateMessage(self, msgid, content, is_html, expandSmileys):
-        content = processHTMLText(content, expandSmileys, is_html)
-        script = """updateMessageBodyContent('%s', "%s")""" % (msgid, content)
-        self.executeJavaScript(script)
-
-    @objc.python_method
-    def toggleCollaborationEditor(self):
-        if self.editorVisible:
-            self.hideCollaborationEditor()
-        else:
-            self.showCollaborationEditor()
-
-    @objc.python_method
-    def showCollaborationEditor(self):
-        self.editorVisible = True
-        self.last_scrolling_label = self.lastMessagesLabel.stringValue()
-        self.lastMessagesLabel.setStringValue_(NSLocalizedString("Click on Editor toolbar button to switch back to the chat session", "Label"))
-        self.searchMessagesBox.setHidden_(True)
-        self.showRelatedMessagesButton.setHidden_(True)
-        settings = SIPSimpleSettings()
-
-        frame=self.inputView.frame()
-        self.splitterHeight = frame.size.height
-        frame.size.height = 0
-        self.inputView.setFrame_(frame)
-
-        script = """showCollaborationEditor("%s", "%s")""" % (self.delegate.sessionController.collaboration_form_id, settings.server.collaboration_url)
-        self.executeJavaScript(script)
-
-    @objc.python_method
-    def hideCollaborationEditor(self):
-        self.editorVisible = False
-        self.lastMessagesLabel.setStringValue_(self.last_scrolling_label)
-        self.searchMessagesBox.setHidden_(False)
-        if self.related_messages:
-            self.showRelatedMessagesButton.setHidden_(False)
-
-        if self.splitterHeight is not None:
-            frame=self.inputView.frame()
-            frame.size.height = self.splitterHeight
-            self.inputView.setFrame_(frame)
-
-        script = "hideCollaborationEditor()"
-        self.executeJavaScript(script)
-
-    @objc.python_method
-    def scrollToBottom(self):
-        script = "scrollToBottom()"
-        self.executeJavaScript(script)
-
-    @objc.python_method
-    def scrollToId(self, id):
-        script = """scrollToId("%s")""" % id
-        self.executeJavaScript(script)
-
-    @objc.python_method
-    def executeJavaScript(self, script):
-        self.outputView.stringByEvaluatingJavaScriptFromString_(script)
-
-    def webviewFinishedLoading_(self, notification):
-        self.document = self.outputView.mainFrameDocument()
-        self.finishedLoading = True
-        if hasattr(self.delegate, "chatViewDidLoad_"):
-            self.delegate.chatViewDidLoad_(self)
-
-        for script in self.messageQueue:
-            self.outputView.stringByEvaluatingJavaScriptFromString_(script)
-        self.messageQueue = []
-
-    def webView_contextMenuItemsForElement_defaultMenuItems_(self, sender, element, defaultItems):
-        for item in defaultItems:
-            if item.title() == 'Reload':
-                del defaultItems[defaultItems.index(item)]
-                break
-        return defaultItems
-
-    def webView_decidePolicyForNavigationAction_request_frame_decisionListener_(self, webView, info, request, frame, listener):
-    
-        # intercept when user clicks on links so that we process them in different ways
-        theURL = info[WebActionOriginalURLKey]
-
-        if hasattr(self.delegate, 'getWindow'):
-            window = self.delegate.getWindow()
-            if window and window.showConferenceSharedScreen(theURL.absoluteString()):
-                return
-
-        #BlinkLogger().log_info('Open %s' % theURL.absoluteString())
-        if theURL.scheme() == "file":
-            if 'delete_message' in theURL.absoluteString():
-                if hasattr(self.delegate, 'delete_message'):
-                    msg_id = theURL.absoluteString().split('=')[1]
-                    self.delegate.delete_message(msg_id)
-                listener.ignore()
-            else:
-                listener.use()
-        else:
-            if hasattr(self.delegate, 'sessionController') and theURL.absoluteString() in list(self.delegate.sessionController.screensharing_urls.values()):
-                self.delegate.chatWindowController.showConferenceSharedScreen(theURL.absoluteString())
-            else:
-                # use system wide web browser
-                listener.ignore()
-                NSWorkspace.sharedWorkspace().openURL_(theURL)
-
-    # capture java-script functions
-    def isSelectorExcludedFromWebScript_(self, sel):
-        if sel == "collaborativeEditorisTyping":
-            return False
-        if sel == "isScrolling:":
-            return False
-
-        return True
-
     def isScrolling_(self, scrollTop):
         if not self.handle_scrolling:
-            return
-
-        if self.editorVisible:
             return
 
         if scrollTop < 0:
@@ -896,25 +432,14 @@ class ChatViewController(NSObject):
             self.delegate.scroll_back_in_time()
 
     @objc.python_method
-    def collaborativeEditorisTyping(self):
-        self.editorIsComposing = True
-        self.delegate.resetIsComposingTimer(5)
-
-        NotificationCenter().post_notification("BlinkCollaborationEditorContentHasChanged", sender=self)
-
-    def webView_didClearWindowObject_forFrame_(self, sender, windowObject, frame):
-        windowObject.setValue_forKey_(self, "blink")
-
-    @objc.python_method
     def close(self):
         # memory clean up
-        self.rendered_messages = set()
+        self.rendered_messages = []
         self.pending_messages = {}
         self.view.removeFromSuperview()
-        self.inputText.setOwner(None)
-        self.inputText.removeFromSuperview()
-        self.outputView.close()
-        self.outputView.removeFromSuperview()
+        if self.inputText:
+            self.inputText.setOwner(None)
+            self.inputText.removeFromSuperview()
         self.release()
 
     def dealloc(self):
@@ -927,6 +452,96 @@ class ChatViewController(NSObject):
         NSNotificationCenter.defaultCenter().removeObserver_(self)
         objc.super(ChatViewController, self).dealloc()
 
+
+    # -- renderer contract -------------------------------------------------
+    #
+    # Implemented by NativeChatViewController. Defined here as no-ops so that
+    # the shared code above -- searchMessages_ in particular -- can call them
+    # without knowing which renderer is underneath, and so a subclass that
+    # misses one loses a bubble instead of raising mid-transcript.
+
+    @objc.python_method
+    def _notRendered(self, what):
+        BlinkLogger().log_debug('%s has no renderer for %s' % (self.__class__.__name__, what))
+
+    @objc.python_method
+    def htmlBoxVisible(self, msgid):
+        self._notRendered('htmlBoxVisible')
+
+    @objc.python_method
+    def htmlBoxHidden(self, msgid):
+        self._notRendered('htmlBoxHidden')
+
+    @objc.python_method
+    def markFound(self, msgid):
+        self._notRendered('markFound')
+
+    @objc.python_method
+    def unmarkFound(self, msgid):
+        self._notRendered('unmarkFound')
+
+    @objc.python_method
+    def updateEncryptionLock(self, msgid, encryption=None):
+        self._notRendered('updateEncryptionLock')
+
+    @objc.python_method
+    def markMessage(self, msgid, state, private=False):
+        self._notRendered('markMessage')
+
+    @objc.python_method
+    def clear(self):
+        self._notRendered('clear')
+
+    @objc.python_method
+    def showSystemMessage(self, content, timestamp=None, is_error=False, call_id='0', before=False):
+        self._notRendered('showSystemMessage')
+
+    @objc.python_method
+    def showMessage(self, call_id, msgid, direction, sender, icon_path, content, timestamp,
+                    is_html=False, state='', recipient='', is_private=False, history_entry=False,
+                    media_type='chat', encryption=None, before=False):
+        self._notRendered('showMessage')
+
+    @objc.python_method
+    def showLocationMessage(self, call_id, msgid, direction, sender, icon_path, latitude,
+                            longitude, accuracy, maps_url, timestamp, state='', is_private=False,
+                            history_entry=False, encryption=None, before=False, destination=None,
+                            status_text=None, track=None, point_timestamp=None):
+        self._notRendered('showLocationMessage')
+
+    @objc.python_method
+    def updateLocationMessage(self, msgid, latitude, longitude, accuracy, destination=None, timestamp=None):
+        self._notRendered('updateLocationMessage')
+
+    @objc.python_method
+    def setLocationMessageStatus(self, msgid, text):
+        self._notRendered('setLocationMessageStatus')
+
+    @objc.python_method
+    def toggleSmileys(self, expandSmileys):
+        self._notRendered('toggleSmileys')
+
+    @objc.python_method
+    def updateMessage(self, msgid, content, is_html, expandSmileys):
+        self._notRendered('updateMessage')
+
+    @objc.python_method
+    def scrollToBottom(self):
+        self._notRendered('scrollToBottom')
+
+    @objc.python_method
+    def scrollToId(self, id):
+        self._notRendered('scrollToId')
+
+    @objc.python_method
+    def startRendering(self):
+        """Tell the delegate the transcript is ready to be filled.
+
+        Replaces setContentFile_(), which used to hand ChatView.html to the
+        WebView; the delegate's chatViewDidLoad_ callback -- what kicks off
+        history replay -- hung off that load finishing.
+        """
+        self._notRendered('startRendering')
 
 class Transform(object):
     """Abstraction for a regular expression transform.

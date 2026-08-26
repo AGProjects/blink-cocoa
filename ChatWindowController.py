@@ -34,7 +34,6 @@ from Foundation import (CFURLCreateStringByAddingPercentEscapes,
                         NSLocalizedString,
                         NSMakeSize,
                         NSMenu,
-                        NSMenuItem,
                         NSNotFound,
                         NSNotificationCenter,
                         NSObject,
@@ -50,15 +49,6 @@ from Foundation import (CFURLCreateStringByAddingPercentEscapes,
                         NSWorkspace,
                         NSZeroPoint)
 
-from Quartz import (CGWindowListCopyWindowInfo,
-                    kCGNullWindowID,
-                    kCGWindowBounds,
-                    kCGWindowIsOnscreen,
-                    kCGWindowListOptionOnScreenOnly,
-                    kCGWindowListExcludeDesktopElements,
-                    kCGWindowName,
-                    kCGWindowNumber,
-                    kCGWindowOwnerName)
 import objc
 
 import os
@@ -73,16 +63,14 @@ from sipsimple.core import SIPURI, SIPCoreError
 from sipsimple.util import ISOTimestamp
 from sipsimple.streams.msrp.chat import ChatIdentity
 from sipsimple.configuration.settings import SIPSimpleSettings
-from urllib.parse import unquote
 from zope.interface import implementer
 
 import FancyTabSwitcher
 import ParticipantsTableView
 from BlinkLogger import BlinkLogger
 from ChatPrivateMessageController import ChatPrivateMessageController
-from MediaStream import STREAM_PROPOSING, STREAM_RINGING, STREAM_CONNECTED, STREAM_WAITING_DNS_LOOKUP
+from MediaStream import STREAM_CONNECTED, STREAM_WAITING_DNS_LOOKUP
 from MediaStream import STATE_CONNECTING, STATE_CONNECTED, STATE_DNS_LOOKUP, STATE_IDLE
-from ConferenceScreenSharing import ConferenceScreenSharing
 from ConferenceFileCell import ConferenceFileCell
 from ContactListModel import BlinkConferenceContact, BlinkPresenceContact, BlinkMyselfConferenceContact
 from FileTransferSession import OutgoingPullFileTransferHandler
@@ -92,6 +80,8 @@ from SIPManager import SIPManager
 from SmileyManager import SmileyManager
 from SubjectController import SubjectController
 from util import format_identity_to_string, format_size_rounded, sip_prefix_pattern, beautify_audio_codec, run_in_gui_thread
+from MessageBubbleView import (FONT_SIZE_STEP, set_transcript_font_size,
+                               transcript_font_size)
 
 
 CONFERENCE_ROOM_MENU_ADD_CONFERENCE_CONTACT = 314
@@ -113,21 +103,16 @@ CONFERENCE_ROOM_MENU_START_VIDEO_SESSION = 322
 CONFERENCE_ROOM_MENU_DETACH_VIDEO_SESSION = 327
 CONFERENCE_ROOM_MENU_SILENCE_NOTIFICATIONS = 328
 CONFERENCE_ROOM_MENU_SEND_FILES = 323
-CONFERENCE_ROOM_MENU_VIEW_SCREEN = 324
 CONFERENCE_ROOM_MENU_SHOW_SESSION_INFO = 400
 CONFERENCE_ROOM_MENU_FONT_SIZE = 500
 CONFERENCE_ROOM_MENU_INCREASE_FONT_SIZE = 501
 CONFERENCE_ROOM_MENU_DECREASE_FONT_SIZE = 502
 
-TOOLBAR_SCREENSHARING_MENU_REQUEST_REMOTE = 201
-TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL = 202
-TOOLBAR_SCREENSHARING_MENU_CANCEL = 203
 
 TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_HIGH = 401
 TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_MEDIUM = 403
 TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_LOW = 402
 
-SKIP_SCREENSHARING_FOR_APPS= ('SystemUIServer', 'Dock', 'Window Server')
 
 
 @implementer(IObserver)
@@ -136,8 +121,6 @@ class ChatWindowController(NSWindowController):
     tabView = objc.IBOutlet()
     toolbar = objc.IBOutlet()
     tabSwitcher = objc.IBOutlet()
-    screenShareMenu = objc.IBOutlet()
-    conferenceScreenSharingMenu = objc.IBOutlet()
     participantMenu = objc.IBOutlet()
     encryptionMenu = objc.IBOutlet()
     sharedFileMenu = objc.IBOutlet()
@@ -146,9 +129,7 @@ class ChatWindowController(NSWindowController):
     conferenceFilesTableView = objc.IBOutlet()
     drawerScrollView = objc.IBOutlet()
     drawerSplitView = objc.IBOutlet()
-    screenSharingPopUpButton = objc.IBOutlet()
     actionsButton = objc.IBOutlet()
-    editorButton = objc.IBOutlet()
     videoButton = objc.IBOutlet()
     muteButton = objc.IBOutlet()
     recordButton = objc.IBOutlet()
@@ -171,11 +152,9 @@ class ChatWindowController(NSWindowController):
             self.closing = False
             self.participants = []
             self.conference_shared_files = []
-            self.remote_screens_closed_by_user = set()
             self.sessions = {}
             self.stream_controllers = {}
             self.unreadMessageCounts = {}
-            self.remoteScreens = {}
             # keep a reference to the controller object  because it may be used later by cocoa
 
             NSBundle.loadNibNamed_owner_("ChatWindow", self)
@@ -186,7 +165,6 @@ class ChatWindowController(NSWindowController):
             self.notification_center.add_observer(self, name="BonjourAccountPresenceStateDidChange")
             self.notification_center.add_observer(self, name="BlinkAudioStreamChangedHoldState")
             self.notification_center.add_observer(self, name="BlinkShouldTerminate")
-            self.notification_center.add_observer(self, name="BlinkCollaborationEditorContentHasChanged")
             self.notification_center.add_observer(self, name="BlinkConferenceGotUpdate")
             self.notification_center.add_observer(self, name="BlinkContactsHaveChanged")
             self.notification_center.add_observer(self, name="BlinkGotProposal")
@@ -256,14 +234,6 @@ class ChatWindowController(NSWindowController):
         if path:
             self.own_icon = NSImage.alloc().initWithContentsOfFile_(path)
 
-    @objc.python_method
-    def setScreenSharingToolbarIconSize(self):
-        frame = self.screenSharingPopUpButton.frame()
-        frame.size.height = 38
-        frame.size.width = 54
-        frame.origin.y = 14
-        self.screenSharingPopUpButton.setFrame_(frame)
-
     def updateContactTimer_(self, timer):
         # remove tile after few seconds to have time to see the reason in the drawer
         session = self.selectedSessionController()
@@ -292,7 +262,6 @@ class ChatWindowController(NSWindowController):
         self.participantsTableView.setDoubleAction_("doubleClickReceived:")
         self.conferenceFilesTableView.setTarget_(self)
         self.conferenceFilesTableView.setDoubleAction_("doubleClickReceived:")
-        self.setScreenSharingToolbarIconSize()
 
     def splitView_shouldHideDividerAtIndex_(self, view, index):
         if self.conference_shared_files:
@@ -449,15 +418,6 @@ class ChatWindowController(NSWindowController):
         item = self.tabSwitcher.itemForTabViewItem_(tabItem)
         if item:
             item.setComposing_(flag)
-
-    def noteSession_isScreenSharing_(self, session, flag):
-        index = self.tabView.indexOfTabViewItemWithIdentifier_(session.identifier)
-        if index == NSNotFound:
-            return
-        tabItem = self.tabView.tabViewItemAtIndex_(index)
-        item = self.tabSwitcher.itemForTabViewItem_(tabItem)
-        if item:
-            item.setScreenSharing_(flag)
 
     def noteNewMessageForSession_(self, session):
         index = self.tabView.indexOfTabViewItemWithIdentifier_(session.identifier)
@@ -658,10 +618,25 @@ class ChatWindowController(NSWindowController):
             self.muteButton.setImage_(NSImage.imageNamed_("mute"))
 
     @objc.python_method
-    def _NH_BlinkCollaborationEditorContentHasChanged(self, sender, data):
-        if not sender.editorVisible:
-            self.noteSession_isComposing_(sender.delegate.sessionController, True)
-        self.revalidateToolbar()
+    def stepTranscriptFontSize(self, delta):
+        """Resize every open chat transcript.
+
+        The size is the reader's, not the conversation's -- the same
+        preference the message pane's small A / big A writes -- so every
+        chat on screen follows it and it survives a restart.
+        """
+        size = set_transcript_font_size(transcript_font_size() + delta)
+        for session in self.sessionControllersManager.sessionControllers:
+            if not session.hasStreamOfType("chat"):
+                continue
+            controller = getattr(session.streamHandlerOfType("chat"), 'chatViewController', None)
+            apply_size = getattr(controller, 'applyTranscriptFontSize', None)
+            if apply_size is None:
+                continue
+            try:
+                apply_size(size)
+            except Exception as e:
+                BlinkLogger().log_error('Cannot resize a transcript: %s' % e)
 
     def validateToolbarItem_(self, item):
         selectedSession = self.selectedSessionController()
@@ -679,48 +654,6 @@ class ChatWindowController(NSWindowController):
             self.participantsTableView.reloadDataForRowIndexes_columnIndexes_(NSIndexSet.indexSetWithIndex_(idx), NSIndexSet.indexSetWithIndex_(0))
         except ValueError:
             pass
-
-    @objc.IBAction
-    def stopConferenceScreenSharing_(self, sender):
-        selectedSession = self.selectedSessionController()
-        if selectedSession:
-            chat_stream = selectedSession.streamHandlerOfType("chat")
-            if chat_stream and chat_stream.screensharing_allowed:
-                if chat_stream.screensharing_handler and chat_stream.screensharing_handler.connected:
-                    chat_stream.toggleScreensharingWithConferenceParticipants()
-                    chat_stream.screensharing_handler.setWindowId(None)
-
-                i = 7
-                while i < self.conferenceScreenSharingMenu.numberOfItems() - 2:
-                    item = self.conferenceScreenSharingMenu.itemAtIndex_(i)
-                    item.setState_(NSOffState)
-                    i += 1
-
-    @objc.IBAction
-    def selectConferenceScreenSharingWindow_(self, sender):
-        selectedSession = self.selectedSessionController()
-        if selectedSession:
-            chat_stream = selectedSession.streamHandlerOfType("chat")
-            if chat_stream and chat_stream.screensharing_allowed:
-                wob = sender.representedObject()
-                id = wob['id']
-                application = wob['application']
-                if chat_stream.screensharing_handler and chat_stream.screensharing_handler.connected:
-                    if id != chat_stream.screensharing_handler.window_id:
-                        selectedSession.log_info('Selecting %s for screen sharing' % application)
-                        chat_stream.screensharing_handler.setWindowId(id)
-                    elif sender.state() == NSOnState:
-                        chat_stream.toggleScreensharingWithConferenceParticipants()
-                        chat_stream.screensharing_handler.setWindowId(None)
-                else:
-                    chat_stream.toggleScreensharingWithConferenceParticipants()
-                    chat_stream.screensharing_handler.setWindowId(id)
-
-                i = 7
-                while i < self.conferenceScreenSharingMenu.numberOfItems() - 2:
-                    item = self.conferenceScreenSharingMenu.itemAtIndex_(i)
-                    item.setState_(NSOnState if item.representedObject()['id'] == id else NSOffState)
-                    i += 1
 
     def keyDown_(self, event):
         if (event.modifierFlags() & NSCommandKeyMask):
@@ -841,7 +774,6 @@ class ChatWindowController(NSWindowController):
             self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_START_CHAT_SESSION).setEnabled_(False)
             self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_START_VIDEO_SESSION).setEnabled_(False)
             self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_SEND_FILES).setEnabled_(False)
-            self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_VIEW_SCREEN).setEnabled_(False)
 
         else:
             own_uri = '%s@%s' % (session.account.id.username, session.account.id.domain)
@@ -853,13 +785,9 @@ class ChatWindowController(NSWindowController):
 
             if remote_uri != contact.uri and own_uri != contact.uri and session.hasStreamOfType("chat") and self.isConferenceParticipant(contact.uri):
                 chat_stream = session.streamHandlerOfType("chat")
-                stream_supports_screen_sharing = chat_stream.screensharing_allowed
                 self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_SEND_PRIVATE_MESSAGE).setEnabled_(True if chat_stream.stream.private_messages_allowed and 'message' in contact.active_media else False)
             else:
-                stream_supports_screen_sharing = False
                 self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_SEND_PRIVATE_MESSAGE).setEnabled_(False)
-
-            self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_VIEW_SCREEN).setEnabled_(True if stream_supports_screen_sharing and contact.uri != own_uri and not isinstance(session.account, BonjourAccount) and (contact.screensharing_url is not None or self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_VIEW_SCREEN).state == NSOnState) else False)
 
             self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_START_AUDIO_SESSION).setEnabled_(True if contact.uri != own_uri and not isinstance(session.account, BonjourAccount) else False)
             self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_START_CHAT_SESSION).setEnabled_(True if contact.uri != own_uri and not isinstance(session.account, BonjourAccount) else False)
@@ -1083,7 +1011,7 @@ class ChatWindowController(NSWindowController):
         session = self.selectedSessionController()
         chat_stream = session.streamHandlerOfType("chat")
         if session:
-            print_view = chat_stream.chatViewController.outputView if chat_stream else session.lastChatOutputView
+            print_view = chat_stream.chatViewController.messageListView if chat_stream else session.chatPrintView
             if print_view:
                 printInfo = NSPrintInfo.sharedPrintInfo()
                 printInfo.setTopMargin_(30)
@@ -1097,8 +1025,7 @@ class ChatWindowController(NSWindowController):
                 printInfo.setVerticalPagination_(NSFitPagination)
                 NSPrintInfo.setSharedPrintInfo_(printInfo)
 
-                # print the content of the web view
-                print_view.mainFrame().frameView().documentView().print_(self)
+                print_view.print_(self)
 
     def rightMouseDown_(self, event):
         return
@@ -1119,24 +1046,6 @@ class ChatWindowController(NSWindowController):
             chatStream = selectedSession.streamHandlerOfType("chat")
             if chatStream:
                 chatStream.userClickedToolbarButton(sender)
-
-    @objc.IBAction
-    def userClickedConferenceScreenSharingQualityMenu_(self, sender):
-        # dispatch the click to the active session
-        selectedSession = self.selectedSessionController()
-        if selectedSession:
-            chatStream = selectedSession.streamHandlerOfType("chat")
-            if chatStream:
-                chatStream.userClickedConferenceScreenSharingQualityMenu_(sender)
-
-    @objc.IBAction
-    def userClickedScreenSharingMenu_(self, sender):
-        # dispatch the click to the active session
-        selectedSession = self.selectedSessionController()
-        if selectedSession:
-            chatStream = selectedSession.streamHandlerOfType("chat")
-            if chatStream:
-                chatStream.userClickedScreenSharingMenu_(sender)
 
     @objc.IBAction
     def userClickedEncryptionMenu_(self, sender):
@@ -1176,15 +1085,6 @@ class ChatWindowController(NSWindowController):
                 return
             uri = object.uri
             self.removeParticipant(uri)
-
-    @objc.python_method
-    def showRemoteScreenIfNecessary(self, participant):
-        uri = participant.uri
-        if uri not in self.remote_screens_closed_by_user:
-            try:
-                self.remoteScreens[uri]
-            except KeyError:
-                self.viewSharedScreen(uri, participant.name, participant.screensharing_url)
 
     def menuWillOpen_(self, menu):
         if menu == self.encryptionMenu:
@@ -1286,164 +1186,8 @@ class ChatWindowController(NSWindowController):
                 self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_SHOW_SESSION_INFO).setEnabled_(False)
                 self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_SHOW_SESSION_INFO).setTitle_(NSLocalizedString("Show Session Information", "Menu item"))
 
-            settings = SIPSimpleSettings()
-            self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_FONT_SIZE).setTitle_(NSLocalizedString("Font Size", "Menu item") + " (%d)" % settings.chat.font_size if settings.chat.font_size != 0 else NSLocalizedString("Font Size", "Menu item"))
-
-
-            item = menu.itemWithTag_(CONFERENCE_ROOM_MENU_VIEW_SCREEN)
-            row = self.participantsTableView.selectedRow()
-            try:
-                object = self.participants[row]
-                uri = object.uri
-                item.setState_(NSOnState if uri in self.remoteScreens else NSOffState)
-                item.setEnabled_(True if 'screen' in object.active_media else False)
-            except IndexError:
-                item.setState_(NSOffState)
-                item.setEnabled_(False)
-
-        elif menu == self.screenShareMenu:
-            selectedSession = self.selectedSessionController()
-            if selectedSession:
-                title = selectedSession.titleShort
-                if selectedSession.hasStreamOfType("screen-sharing"):
-                    menu.itemAtIndex_(0).setImage_(NSImage.imageNamed_("display_red"))
-                    screen_sharing_stream = selectedSession.streamHandlerOfType("screen-sharing")
-                    mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_CANCEL)
-                    mitem.setEnabled_(True)
-
-                    if screen_sharing_stream.status == STREAM_PROPOSING or screen_sharing_stream.status == STREAM_RINGING:
-                        mitem.setTitle_(NSLocalizedString("Cancel Screen Sharing Request", "Menu item"))
-                    elif screen_sharing_stream.status == STREAM_CONNECTED:
-                        mitem.setTitle_(NSLocalizedString("Stop Screen Sharing", "Menu item"))
-
-                    if screen_sharing_stream.direction == 'active':
-                        mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_REQUEST_REMOTE)
-                        if screen_sharing_stream.status == STREAM_PROPOSING or screen_sharing_stream.status == STREAM_RINGING:
-                            mitem.setTitle_(NSLocalizedString("Requesting Screen from %s...", "Menu item") % title)
-                        else:
-                            mitem.setTitle_(NSLocalizedString("%s is Sharing Her Screen", "Menu item") % title)
-
-                        mitem.setEnabled_(False)
-                        mitem.setHidden_(False)
-
-                        mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL)
-                        mitem.setEnabled_(False)
-                        mitem.setHidden_(True)
-                    else:
-                        mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_REQUEST_REMOTE)
-                        mitem.setHidden_(True)
-                        mitem.setEnabled_(False)
-
-                        mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL)
-                        if screen_sharing_stream.status == STREAM_PROPOSING or screen_sharing_stream.status == STREAM_RINGING:
-                            mitem.setTitle_(NSLocalizedString("Sharing My Screen with %s...", "Menu item") % title)
-                        else:
-                            mitem.setTitle_(NSLocalizedString("My Screen is Shared with %s", "Menu item") % title)
-                        mitem.setEnabled_(False)
-                        mitem.setHidden_(False)
-
-                else:
-                    menu.itemAtIndex_(0).setImage_(NSImage.imageNamed_("display"))
-
-                    mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_REQUEST_REMOTE)
-                    mitem.setTitle_(NSLocalizedString("Request Screen from %s", "Menu item") % title)
-                    mitem.setEnabled_(True)
-                    mitem.setHidden_(False)
-
-                    mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL)
-                    mitem.setTitle_(NSLocalizedString("Share My Screen with %s", "Menu item") % title)
-                    mitem.setEnabled_(True)
-                    mitem.setHidden_(False)
-
-                    mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_CANCEL)
-                    mitem.setTitle_(NSLocalizedString("Cancel Screen Sharing Request", "Menu item"))
-                    mitem.setEnabled_(False)
-            else:
-                menu.itemAtIndex_(0).setImage_(NSImage.imageNamed_("display"))
-
-                mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_REQUEST_REMOTE)
-                mitem.setTitle_(NSLocalizedString("Request Screen from %s", "Menu item") % title)
-                mitem.setEnabled_(False)
-
-                mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_OFFER_LOCAL)
-                mitem.setTitle_(NSLocalizedString("Share My Screen with %s", "Menu item") % title)
-                mitem.setEnabled_(False)
-
-                mitem = menu.itemWithTag_(TOOLBAR_SCREENSHARING_MENU_CANCEL)
-                mitem.setTitle_(NSLocalizedString("Cancel Screen Sharing Request", "Menu item"))
-                mitem.setEnabled_(False)
-
-        elif menu == self.conferenceScreenSharingMenu:
-            while self.conferenceScreenSharingMenu.numberOfItems() > 7:
-                self.conferenceScreenSharingMenu.removeItemAtIndex_(7)
-
-            for i in (0,1,2,3,4,5):
-                item = self.conferenceScreenSharingMenu.itemAtIndex_(i)
-                item.setHidden_(True)
-
-            selected_window = None
-            selectedSession = self.selectedSessionController()
-            if selectedSession:
-                chat_stream = selectedSession.streamHandlerOfType("chat")
-                if chat_stream and chat_stream.screensharing_handler:
-                        selected_window = chat_stream.screensharing_handler.window_id
-
-            item = self.conferenceScreenSharingMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Entire Screen", "Menu item"), "selectConferenceScreenSharingWindow:", "")
-            obj = {'application': 'entire screen', 'id': 0, 'name': NSLocalizedString("Entire Screen", "Menu item")}
-            item.setRepresentedObject_(obj)
-            item.setIndentationLevel_(2)
-            item.setState_(NSOnState if selected_window == 0 else NSOffState)
-            listOptions = kCGWindowListOptionOnScreenOnly | kCGWindowListExcludeDesktopElements
-            windowList = CGWindowListCopyWindowInfo(listOptions, kCGNullWindowID)
-
-            i = 0
-            while i < windowList.count():
-                wob = windowList.objectAtIndex_(i)
-                id = wob.objectForKey_(kCGWindowNumber)
-                application = wob.objectForKey_(kCGWindowOwnerName)
-                name = wob.objectForKey_(kCGWindowName)
-                onscreen = wob.objectForKey_(kCGWindowIsOnscreen)
-                bounds = wob.objectForKey_(kCGWindowBounds)
-                width = bounds.objectForKey_('Width')
-                if onscreen and width >= 64 and application not in SKIP_SCREENSHARING_FOR_APPS:
-                    if application != name:
-                        title = "%s (%s)" % (application, name or id)
-                    else:
-                        title = "%s (%d)" % (application, id)
-                    item = self.conferenceScreenSharingMenu.addItemWithTitle_action_keyEquivalent_(title, "selectConferenceScreenSharingWindow:", "")
-                    obj = {'id': id, 'name': name, 'application': application}
-                    item.setRepresentedObject_(obj)
-                    item.setIndentationLevel_(2)
-                    item.setState_(NSOnState if selected_window == id else NSOffState)
-                i += 1
-
-            if i:
-                i += 2
-                self.conferenceScreenSharingMenu.addItem_(NSMenuItem.separatorItem())
-                item = self.conferenceScreenSharingMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Stop Screen Sharing", "Menu item"), "stopConferenceScreenSharing:", "")
-                obj = {'id': None, 'name': None, 'application': None}
-                item.setRepresentedObject_(obj)
-                item.setIndentationLevel_(1)
-                item.setEnabled_(True if chat_stream.screensharing_handler and chat_stream.screensharing_handler.connected else False)
-
-            if selectedSession and chat_stream:
-                item = self.conferenceScreenSharingMenu.itemAtIndex_(0)
-                item.setEnabled_(True if chat_stream.screensharing_allowed else False)
-
-                if chat_stream.screensharing_handler and chat_stream.screensharing_handler.connected:
-                    for i in (2,3,4,5):
-                        item = self.conferenceScreenSharingMenu.itemAtIndex_(i)
-                        item.setHidden_(False)
-
-                    item = self.conferenceScreenSharingMenu.itemWithTag_(TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_HIGH)
-                    item.setState_(NSOnState if chat_stream.screensharing_handler.quality == 'high' else NSOffState)
-                    item.setEnabled_(True)
-                    item = self.conferenceScreenSharingMenu.itemWithTag_(TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_LOW)
-                    item.setState_(NSOnState if chat_stream.screensharing_handler.quality == 'low' else NSOffState)
-                    item.setEnabled_(True)
-                    item = self.conferenceScreenSharingMenu.itemWithTag_(TOOLBAR_SCREENSHOT_MENU_QUALITY_MENU_MEDIUM)
-                    item.setState_(NSOnState if chat_stream.screensharing_handler.quality == 'medium' else NSOffState)
-                    item.setEnabled_(True)
+            self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_FONT_SIZE).setTitle_(
+                NSLocalizedString("Font Size", "Menu item") + " (%d)" % transcript_font_size())
 
     @objc.IBAction
     def userClickedParticipantMenu_(self, sender):
@@ -1460,7 +1204,6 @@ class ChatWindowController(NSWindowController):
 
             uri = object.uri
             display_name = object.name
-            screensharing_url = object.screensharing_url
 
             if tag == CONFERENCE_ROOM_MENU_ADD_CONTACT:
                 NSApp.delegate().contactsWindowController.addContact(uris=[(uri, 'sip')], name=display_name)
@@ -1523,79 +1266,15 @@ class ChatWindowController(NSWindowController):
 
             elif tag == CONFERENCE_ROOM_MENU_START_CHAT_SESSION:
                 NSApp.delegate().contactsWindowController.startSessionWithTarget(uri, media_type="chat", local_uri=session.account.id)
-            elif tag == CONFERENCE_ROOM_MENU_VIEW_SCREEN:
-                try:
-                    remoteScreen = self.remoteScreens[uri]
-                except KeyError:
-                    self.viewSharedScreen(uri, display_name, screensharing_url)
-                else:
-                    remoteScreen.close_(None)
-                sender.setState_(NSOffState if sender.state() == NSOnState else NSOnState)
             elif tag == CONFERENCE_ROOM_MENU_SEND_FILES:
                 openFileTransferSelectionDialog(session.account, uri)
             elif tag == CONFERENCE_ROOM_MENU_SHOW_SESSION_INFO:
                 session.info_panel.toggle()
             elif tag == CONFERENCE_ROOM_MENU_INCREASE_FONT_SIZE:
-                must_save = True
-                for _session in self.sessionControllersManager.sessionControllers:
-                    if _session.hasStreamOfType("chat"):
-                        chat_stream = _session.streamHandlerOfType("chat")
-                        if chat_stream.chatViewController.outputView.canMakeTextLarger():
-                            chat_stream.chatViewController.outputView.makeTextLarger_(None)
-                        else:
-                            must_save = False
-
-                if must_save:
-                    settings = SIPSimpleSettings()
-                    settings.chat.font_size += 1
-                    settings.save()
+                self.stepTranscriptFontSize(FONT_SIZE_STEP)
 
             elif tag == CONFERENCE_ROOM_MENU_DECREASE_FONT_SIZE:
-                must_save = True
-                for _session in self.sessionControllersManager.sessionControllers:
-                    if _session.hasStreamOfType("chat"):
-                        chat_stream = _session.streamHandlerOfType("chat")
-                        if chat_stream.chatViewController.outputView.canMakeTextSmaller():
-                            chat_stream.chatViewController.outputView.makeTextSmaller_(None)
-                        else:
-                            must_save = False
-
-                if must_save:
-                    settings = SIPSimpleSettings()
-                    settings.chat.font_size -= 1
-                    settings.save()
-
-    @objc.python_method
-    def viewSharedScreen(self, uri, display_name, url):
-        session = self.selectedSessionController()
-        if session:
-            session.log_info("Opening Shared Screen of %s from %s" % (uri, unquote(url)))
-            remoteScreen = ConferenceScreenSharing.createWithOwner_(self)
-            remoteScreen.show(display_name, uri, unquote(url))
-            self.remoteScreens[uri] = remoteScreen
-
-    @objc.python_method
-    def showConferenceSharedScreen(self, url):
-        session = self.selectedSessionController()
-        if session and session.conference_info is not None:
-            try:
-                user = next((user for user in session.conference_info.users if user.screen_image_url and user.screen_image_url.value == url))
-            except StopIteration:
-                pass
-            else:
-                uri = sip_prefix_pattern.sub("", user.entity)
-                contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(uri)
-                if contact:
-                    display_name = user.display_text.value if user.display_text is not None and user.display_text.value else contact.name
-                else:
-                    display_name = user.display_text.value if user.display_text is not None and user.display_text.value else uri
-
-                try:
-                    self.remoteScreens[uri]
-                except KeyError:
-                    self.viewSharedScreen(uri, display_name, url)
-                    return True
-        return False
+                self.stepTranscriptFontSize(-FONT_SIZE_STEP)
 
     @objc.IBAction
     def userClickedSharedFileMenu_(self, sender):
@@ -1835,18 +1514,6 @@ class ChatWindowController(NSWindowController):
 
                     if any(media.media_type == 'message' for media in chain(*user)):
                         active_media.append('message')
-
-                    if user.screen_image_url is not None:
-                        active_media.append('screen')
-                        contact.screensharing_url = user.screen_image_url.value
-                        session.screensharing_urls[uri] = user.screen_image_url.value
-                    else:
-                        try:
-                            session.screensharing_urls[uri]
-                        except KeyError:
-                            pass
-                        else:
-                            del session.screensharing_urls[uri]
 
                     audio_endpoints = [endpoint for endpoint in user if any(media.media_type == 'audio' for media in endpoint)]
                     user_on_hold = all(endpoint.status == 'on-hold' for endpoint in audio_endpoints)

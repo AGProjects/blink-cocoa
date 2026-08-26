@@ -543,16 +543,10 @@ class SMSWindowController(NSWindowController):
         printInfo.setVerticalPagination_(NSFitPagination)
         NSPrintInfo.setSharedPrintInfo_(printInfo)
 
-        print_view = self.selectedSessionController().chatViewController.outputView
-        if hasattr(print_view, 'mainFrame'):
-            # WebView transcript
-            print_view.mainFrame().frameView().documentView().print_(self)
-        else:
-            # native transcript: print the message list itself, not the
-            # scroll view, so the whole conversation paginates rather than
-            # just the visible page
-            document_view = print_view.documentView() if hasattr(print_view, 'documentView') else print_view
-            NSPrintOperation.printOperationWithView_(document_view).runOperation()
+        # the message list itself, not the scroll view around it, so the whole
+        # conversation paginates rather than just the visible page
+        NSPrintOperation.printOperationWithView_(
+            self.selectedSessionController().chatViewController.messageListView).runOperation()
 
 SMSWindowManagerInstance = None
 

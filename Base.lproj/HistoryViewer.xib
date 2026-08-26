@@ -3,7 +3,6 @@
     <dependencies>
         <deployment identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="15705"/>
-        <plugIn identifier="com.apple.WebKitIBPlugin" version="15705"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -13,7 +12,6 @@
                 <outlet property="chatViewController" destination="19" id="26"/>
                 <outlet property="contactMenu" destination="148" id="162"/>
                 <outlet property="contactTable" destination="67" id="75"/>
-                <outlet property="entriesView" destination="5" id="177"/>
                 <outlet property="foundMessagesLabel" destination="81" id="90"/>
                 <outlet property="indexTable" destination="10" id="30"/>
                 <outlet property="paginationButton" destination="80" id="85"/>
@@ -186,20 +184,28 @@
                                             <autoresizingMask key="autoresizingMask"/>
                                         </tableHeaderView>
                                     </scrollView>
-                                    <webView focusRingType="none" fixedFrame="YES" id="5">
+                                    <scrollView focusRingType="none" fixedFrame="YES" autohidesScrollers="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="5">
                                         <rect key="frame" x="0.0" y="176" width="567" height="328"/>
                                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                                        <webPreferences key="preferences" defaultFontSize="12" defaultFixedFontSize="12">
-                                            <nil key="identifier"/>
-                                        </webPreferences>
-                                        <connections>
-                                            <outlet property="UIDelegate" destination="19" id="25"/>
-                                            <outlet property="downloadDelegate" destination="19" id="21"/>
-                                            <outlet property="frameLoadDelegate" destination="19" id="22"/>
-                                            <outlet property="policyDelegate" destination="19" id="23"/>
-                                            <outlet property="resourceLoadDelegate" destination="19" id="24"/>
-                                        </connections>
-                                    </webView>
+                                        <clipView key="contentView" drawsBackground="NO" id="HVW-cv-001">
+                                            <rect key="frame" x="1" y="1" width="550" height="326"/>
+                                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                            <subviews>
+                                                <customView fixedFrame="YES" id="HVW-dv-001" customClass="MessageListView">
+                                                    <rect key="frame" x="0.0" y="0.0" width="550" height="326"/>
+                                                    <autoresizingMask key="autoresizingMask" widthSizable="YES"/>
+                                                </customView>
+                                            </subviews>
+                                        </clipView>
+                                        <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="YES" id="HVW-hs-001">
+                                            <rect key="frame" x="-100" y="-100" width="87" height="18"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                        </scroller>
+                                        <scroller key="verticalScroller" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="HVW-vs-001">
+                                            <rect key="frame" x="551" y="1" width="15" height="326"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                        </scroller>
+                                    </scrollView>
                                 </subviews>
                                 <holdingPriorities>
                                     <real value="250"/>
@@ -406,9 +412,10 @@
             </toolbar>
             <point key="canvasLocation" x="140" y="124"/>
         </window>
-        <customObject id="19" customClass="ChatViewController">
+        <customObject id="19" userLabel="NativeChatViewController" customClass="NativeChatViewController">
             <connections>
                 <outlet property="outputView" destination="5" id="20"/>
+                <outlet property="messageListView" destination="HVW-dv-001" id="HVW-ol-001"/>
             </connections>
         </customObject>
         <menu title="Contact" autoenablesItems="NO" id="148">

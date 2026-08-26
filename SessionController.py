@@ -17,7 +17,6 @@ from Foundation import (NSBundle,
 import objc
 import json
 
-import hashlib
 import os
 import re
 import socket
@@ -971,7 +970,6 @@ class SessionController(NSObject):
     waitingForLocalVideo = False
     streamHandlers = None
     chatPrintView = None
-    collaboration_form_id = None
     remote_conference_has_audio = False
     transfer_window = None
     outbound_audio_calls = 0
@@ -986,7 +984,6 @@ class SessionController(NSObject):
     previous_conference_users = None
     notify_when_participants_changed = False
     transport = None
-    screensharing_urls = {}
     cancelled_during_dns_lookup = False
     retries = 0
     display_name = None
@@ -1537,7 +1534,6 @@ class SessionController(NSObject):
         self.to_tag = None
         self.previous_conference_users = None
         self.notify_when_participants_changed = False
-        self.screensharing_urls = {}
         self.waitingForLocalVideo = False
         self.encryption = {}
 
@@ -2097,21 +2093,6 @@ class SessionController(NSObject):
 
         for contact in self.invited_participants:
             self.session.conference.add_participant(contact.uri)
-
-        def numerify(num):
-            try:
-                int(num)
-            except ValueError:
-                return num
-            else:
-                return chr(65+int(num))
-
-        # generate a unique id for the collaboration editor without digits, they don't work for some cloudy reason
-        # The only common identifier for both parties is the SIP call id, though it may still fail if a B2BUA is in the path -adi
-        hash = hashlib.sha1()
-        id = '%s' % (self.remoteAOR) if self.remote_focus else self.session._invitation.call_id
-        hash.update(id.encode())
-        self.collaboration_form_id = ''.join(numerify(c) for c in hash.hexdigest())
 
         if self.hasStreamOfType("audio"):
             audioStream = self.streamHandlerOfType("audio")

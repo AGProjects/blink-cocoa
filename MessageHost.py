@@ -57,7 +57,7 @@ updateEncryptionWidgets(viewer=None)
     Refresh the OTR/PGP lock chrome from the viewer's current state.
 """
 
-__all__ = ['USE_NATIVE_MESSAGE_RENDERER', 'USE_MESSAGE_PANEL',
+__all__ = ['USE_MESSAGE_PANEL',
            'describe_configuration',
            'FILE_TRANSFER_CONTENT_TYPE', 'RCS_FILE_TRANSFER_CONTENT_TYPE',
            'FILE_TRANSFER_CONTENT_TYPES', 'file_transfer_summary',
@@ -72,17 +72,12 @@ __all__ = ['USE_NATIVE_MESSAGE_RENDERER', 'USE_MESSAGE_PANEL',
 
 
 # ---------------------------------------------------------------------------
-# Migration switches
+# Migration switch
 #
-# Deliberately plain module constants rather than NSUserDefaults: a build is
-# then self-describing, the two halves of the migration cannot drift apart
-# per-machine, and there is no invisible state to explain when someone else
-# reproduces a bug. Flip them here and rebuild.
+# Deliberately a plain module constant rather than NSUserDefaults: a build is
+# then self-describing, and there is no invisible state to explain when
+# someone else reproduces a bug. Flip it here and rebuild.
 # ---------------------------------------------------------------------------
-
-# Render transcripts with native Cocoa views instead of the WebView.
-# Phase 1: works inside the existing tabbed SMS window.
-USE_NATIVE_MESSAGE_RENDERER = True
 
 # Host conversations in a pane beside the contact list instead of the
 # tabbed window. The pane lives in a split view inside the main window --
@@ -508,9 +503,7 @@ HOST_PROTOCOL = (
 
 def describe_configuration():
     """One-line summary of the active message UI model, for the startup log."""
-    return 'transcript=%s host=%s' % (
-        'native' if USE_NATIVE_MESSAGE_RENDERER else 'webview',
-        'panel' if USE_MESSAGE_PANEL else 'window')
+    return 'transcript=native host=%s' % ('panel' if USE_MESSAGE_PANEL else 'window')
 
 
 def missing_host_protocol_methods(host):

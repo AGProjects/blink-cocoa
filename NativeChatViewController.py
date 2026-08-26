@@ -1,28 +1,21 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
-"""Native (non-WebView) transcript renderer.
+"""The transcript renderer: a column of native message bubbles.
 
-A drop-in replacement for ChatViewController's rendering surface. It
-subclasses ChatViewController so that everything unrelated to drawing --
+Subclasses ChatViewController, which holds everything unrelated to drawing --
 the typing timers, the scroll-back-in-time state machine, transcript search,
-the encryption-ended banner -- is inherited rather than reimplemented, and
-overrides every method that would otherwise reach for the WebView.
+the encryption-ended banner -- and implements the renderer contract declared
+at the foot of that class.
 
-The seam this plugs into: SMSViewController never imports its renderer, it
-only holds the `chatViewController` outlet wired by its nib. MessageView.xib
-is SMSView.xib with the ChatWebView swapped for an NSScrollView wrapping a
-MessageListView, and this class in place of ChatViewController -- so nothing
-in the messaging stack changes.
+The seam: no viewer imports its renderer, each only holds the
+`chatViewController` outlet wired by its nib. MessageView.xib (SIP messages),
+ChatView.xib (MSRP chat and conferences) and HistoryViewer.xib all wire an
+NSScrollView wrapping a MessageListView plus an instance of this class.
 
-Not implemented here (deliberately):
-  - location bubbles are a static metadata summary, the same treatment file
-    transfers get: coordinates, accuracy and the maps link, no map picture.
-    Drawing one would mean handing the other party's position to a map
-    service on every redraw,
-  - the MobWrite collaboration editor, which is MSRP-chat only and stays
-    with the WebView,
-  - arbitrary is_html payloads, which are stripped to plain text.
+Location bubbles draw a real map, panned and zoomed in place, from tiles
+MapTileCache keeps on disc -- the arithmetic ChatView.html used for its
+fixed 300x200 viewport, generalised to whatever size the bubble gets.
 """
 
 import calendar
@@ -182,9 +175,8 @@ class NativeChatViewController(ChatViewController):
     # -- lifecycle ---------------------------------------------------------
 
     def awakeFromNib(self):
-        # Deliberately does NOT call super: ChatViewController.awakeFromNib
-        # configures a WebView (setShouldCloseWithWindow_, the progress
-        # notification) and outputView is an NSScrollView here.
+        # Deliberately does NOT call super: the base sets up only the
+        # composer, and the transcript side of the wiring is all here.
         self.messageQueue = []
         self.rendered_messages = []
         self._last_sender_key = _UNSET
@@ -428,13 +420,17 @@ class NativeChatViewController(ChatViewController):
             self.outputView.removeFromSuperview()
         self.release()
 
-    # -- the WebView contract, neutralised ---------------------------------
+    # -- renderer start ----------------------------------------------------
 
-    def setContentFile_(self, path):
-        """No document to load. The delegate still expects the
-        chatViewDidLoad_ callback that used to come from the WebView finishing
-        its load -- that is what starts history replay -- so fire it on the
-        next runloop turn to keep the same asynchronous shape."""
+    @objc.python_method
+    def startRendering(self):
+        """Nothing to load -- the bubbles are views, not a document.
+
+        The delegate still expects the chatViewDidLoad_ callback that used to
+        come from the WebView finishing its load -- that is what starts
+        history replay -- so fire it on the next runloop turn to keep the
+        same asynchronous shape.
+        """
         self.finishedLoading = True
         NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
             0.0, self, "notifyDidLoad:", None, False)
@@ -442,20 +438,6 @@ class NativeChatViewController(ChatViewController):
     def notifyDidLoad_(self, timer):
         if hasattr(self.delegate, "chatViewDidLoad_"):
             self.delegate.chatViewDidLoad_(self)
-
-    @objc.python_method
-    def executeJavaScript(self, script):
-        # Safety net: anything inherited that still tries to script the
-        # WebView becomes a no-op rather than an AttributeError.
-        pass
-
-    @objc.python_method
-    def showCollaborationEditor(self):
-        BlinkLogger().log_info('Collaboration editor is not available in the native transcript')
-
-    @objc.python_method
-    def hideCollaborationEditor(self):
-        pass
 
     # -- helpers -----------------------------------------------------------
 
@@ -1584,7 +1566,7 @@ class NativeChatViewController(ChatViewController):
     def removeMessage(self, msgid):
         """Take a message out of the transcript entirely.
 
-        The WebView equivalent was markDeleted(), which set the bubble to
+        The JavaScript equivalent was markDeleted(), which set the bubble to
         display:none. Removing the view outright is the native equivalent and
         also drops it from rendered_messages, so transcript search and the
         smiley toggle cannot resurrect it afterwards.
@@ -2424,8 +2406,11 @@ class NativeChatViewController(ChatViewController):
     def rebuildMessageFilter(self):
         control = self.messageFilterControl
         if control is None:
-            BlinkLogger().log_error('The message filter control is not connected; '
-                                    'no filtering is possible')
+            # Not every transcript has a filter bar -- the history viewer's
+            # nib deliberately leaves it out -- so this is a configuration,
+            # not a fault.
+            BlinkLogger().log_debug('No message filter control is connected; '
+                                    'no filtering is offered')
             return
 
         # Wired here rather than trusting the nib: the connection is
