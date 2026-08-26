@@ -544,7 +544,7 @@ class ScreenSharingController(MediaStream):
 
     @objc.python_method
     def _NH_ScreenSharingHandlerDidFail(self, sender, data):
-        self.sessionController.log_info("%s" % data.reason.title())
+        self.sessionController.log_info("%s" % data.reason)
 
     @objc.python_method
     def resetTrace(self):

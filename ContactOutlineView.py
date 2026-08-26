@@ -26,8 +26,24 @@ class ContactOutlineView(NSOutlineView):
         key = event.characters()
         if key == "\r":
             self.target().performSelector_withObject_(self.doubleAction(), self)
-        else:
-            self.window().makeFirstResponder_(NSApp.delegate().contactsWindowController.searchBox)
+            return
+
+        # Arrows, page up/down, home/end and the function keys all live in
+        # the Unicode private-use block AppKit reserves for them. They are
+        # navigation, not typing: they must move the selection through the
+        # contact list. Only real characters mean "the user started typing a
+        # search", and those are what get handed to the search box.
+        if key and 0xF700 <= ord(key[0]) <= 0xF8FF:
+            NSOutlineView.keyDown_(self, event)
+            return
+
+        searchBox = NSApp.delegate().contactsWindowController.searchBox
+        self.window().makeFirstResponder_(searchBox)
+        # Without this the keystroke that moved focus is swallowed and the
+        # user has to type the first letter of their search twice.
+        editor = searchBox.currentEditor()
+        if editor is not None:
+            editor.keyDown_(event)
 
     def acceptsFirstResponder(self):
         return True

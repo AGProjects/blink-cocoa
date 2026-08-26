@@ -3,13 +3,13 @@
 <plist version="1.0">
 <dict>
 	<key>BlinkVersionDate</key>
-	<string>July 1st, 2026</string>
+	<string>July 5th, 2026</string>
 	<key>BrandingFile</key>
 	<string>branding</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleDisplayName</key>
-	<string>Blink Classic</string>
+	<string>Blink SIP client</string>
 	<key>CFBundleExecutable</key>
 	<string>Blink</string>
 	<key>CFBundleIconFile</key>
@@ -19,7 +19,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>Blink Classic</string>
+	<string>Blink SIP client</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -53,6 +53,8 @@
 	<string>14.0</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Required for VoIP calls</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Required to share your location in a conversation</string>
 	<key>NSContactsUsageDescription</key>
 	<string>Required for calling your contacts</string>
 	<key>NSMainNibFile</key>

@@ -36,7 +36,11 @@ from AppKit import (NSAccessibilityUnignoredDescendant,
                     NSTableViewSelectionDidChangeNotification,
                     NSTableViewDropAbove,
                     NSTableViewStylePlain,
+                    NSFocusRingTypeNone,
                     NSVariableStatusItemLength,
+                    NSView,
+                    NSViewHeightSizable,
+                    NSViewWidthSizable,
                     NSStatusBar)
 
 from Foundation import (NSArray,
@@ -57,6 +61,8 @@ from Foundation import (NSArray,
                         NSMakeSize,
                         NSMenu,
                         NSMenuItem,
+                        NSMaxX,
+                        NSMinX,
                         NSMinY,
                         NSMutableAttributedString,
                         NSMakeRange,
@@ -66,6 +72,7 @@ from Foundation import (NSArray,
                         NSParagraphStyle,
                         NSPasteboard,
                         NSRunLoop,
+                        NSScreen,
                         NSSpeechSynthesizer,
                         NSString,
                         NSLocalizedString,
@@ -266,7 +273,18 @@ class ContactWindowController(NSWindowController):
     participantMenu = objc.IBOutlet()
     sessionsView = objc.IBOutlet()
     audioSessionsListView = objc.IBOutlet()
+    messagesDrawerView = objc.IBOutlet()
+    drawerBottomBar = objc.IBOutlet()
     drawerSplitterPosition = None
+    # The messages pane lives in a split view inside the main window, not in
+    # the drawer. An NSDrawer cannot be wider than the window it hangs off,
+    # so a wide transcript dragged the contact list wide with it; a split
+    # view lets the transcript be any width while the list stays narrow.
+    CONTACT_LIST_MIN_WIDTH = 274.0
+    messagePaneSplitView = None
+    messagePaneListSide = None
+    _message_pane_visible = False
+    messagePaneController = None
 
     searchBox = objc.IBOutlet()
     accountPopUp = objc.IBOutlet()
@@ -374,6 +392,32 @@ class ContactWindowController(NSWindowController):
     
     def awakeFromNib(self):
         BlinkLogger().log_debug('Starting Contact Manager')
+
+        # The drawer is the audio call list and nothing else now. The
+        # messages view left in MainWindow.xib is dead weight -- it stays
+        # in the nib only so the six localised copies need no surgery -- so
+        # make sure it never covers the audio stack.
+        if self.messagesDrawerView is not None:
+            self.messagesDrawerView.setHidden_(True)
+
+        # Before anything is on screen. The frame is autosaved and comes back
+        # at the two-pane width, so narrowing it any later means the user
+        # watches the window appear wide and then jump narrower.
+        self.restoreContactListWidthAtLaunch()
+
+        # Now that the list shares a window with the transcript, focus moves
+        # between them and AppKit draws its blue ring around whichever holds
+        # it. In a two-pane layout that ring is noise, not information.
+        for view in (self.contactOutline, self.searchOutline):
+            if view is None:
+                continue
+            try:
+                view.setFocusRingType_(NSFocusRingTypeNone)
+                scroll = view.enclosingScrollView()
+                if scroll is not None:
+                    scroll.setFocusRingType_(NSFocusRingTypeNone)
+            except Exception as e:
+                BlinkLogger().log_error('Cannot hide the contact list focus ring: %s' % e)
 
         def check_camera_permission():
             # Get camera permission status
@@ -506,6 +550,9 @@ class ContactWindowController(NSWindowController):
 
         ns_nc = NSNotificationCenter.defaultCenter()
         ns_nc.addObserver_selector_name_object_(self, "contactSelectionChanged:", NSOutlineViewSelectionDidChangeNotification, self.contactOutline)
+        # the search results list never had one, so selecting a contact while
+        # searching updated nothing
+        ns_nc.addObserver_selector_name_object_(self, "contactSelectionChanged:", NSOutlineViewSelectionDidChangeNotification, self.searchOutline)
         ns_nc.addObserver_selector_name_object_(self, "participantSelectionChanged:", NSTableViewSelectionDidChangeNotification, self.participantsTableView)
         ns_nc.addObserver_selector_name_object_(self, "drawerSplitViewDidResize:", NSSplitViewDidResizeSubviewsNotification, self.drawerSplitView)
         ns_nc.addObserver_selector_name_object_(self, "userDefaultsDidChange:", "NSUserDefaultsDidChangeNotification", NSUserDefaults.standardUserDefaults())
@@ -2886,6 +2933,470 @@ class ContactWindowController(NSWindowController):
                 self.window().makeFirstResponder_(streamController.view)
                 self.showAudioDrawer()
 
+    def windowDidBecomeKey_(self, notification):
+        self.notifyMessagePaneVisibility()
+
+    def windowDidResignKey_(self, notification):
+        self.notifyMessagePaneVisibility()
+
+    @objc.python_method
+    def notifyMessagePaneVisibility(self):
+        """Tell the messages pane whether its conversation is really on screen.
+
+        Drives outgoing IMDN display receipts and the contact unread badge, so
+        it has to fire on every transition: the pane being shown or hidden,
+        and the main window becoming or resigning key.
+        """
+        if self.messagePaneController is not None:
+            self.messagePaneController.visibilityChanged()
+
+    @objc.python_method
+    def messageTargetForContact(self, contact):
+        """(target, display_name, account, instance_id) for a contact, or None.
+
+        Same resolution sendMessageToURI uses -- Bonjour contacts switch to
+        the Bonjour account and key on their instance id.
+        """
+        account = self.activeAccount()
+        if not account or contact is None:
+            return None
+
+        instance_id = None
+        target = contact.uri
+        display_name = contact.name
+        if contact in self.model.bonjour_group.contacts:
+            account = BonjourAccount()
+            instance_id = contact.id
+
+        target = normalize_sip_uri_for_outgoing_session(target, account)
+        if not target:
+            return None
+        return (target, display_name, account, instance_id)
+
+    @objc.python_method
+    def openMessagesForURI(self, uri):
+        """Reveal the messages pane showing the conversation with one address.
+
+        Unlike switchMessagePaneToSelectedContact this DOES open the pane:
+        it exists for someone clicking a notification about a message, and
+        the whole point of that click is to be shown the message.
+        """
+        uri = str(uri or '').strip()
+        if not uri:
+            return False
+        try:
+            contact = self.getFirstContactMatchingURI(uri)
+            self.showWindow_(None)
+            self.window().makeKeyAndOrderFront_(None)
+            self.showMessagesPane()
+
+            pane = self.messagePane()
+            if pane is None:
+                return False
+
+            if contact is not None:
+                # Select the row too, so the contact list agrees with what
+                # the pane is showing rather than leaving the two apart.
+                try:
+                    row = self.contactOutline.rowForItem_(contact)
+                    if row >= 0:
+                        self.contactOutline.selectRowIndexes_byExtendingSelection_(
+                            NSIndexSet.indexSetWithIndex_(row), False)
+                        self.contactOutline.scrollRowToVisible_(row)
+                except Exception as e:
+                    BlinkLogger().log_debug('Cannot select %s in the list: %s' % (uri, e))
+
+            resolved = None
+            if contact is not None:
+                resolved = self.messageTargetForContact(contact)
+            if resolved is None:
+                # No contact for this address -- open the conversation on the
+                # address itself rather than doing nothing, which is what the
+                # click asked for.
+                resolved = self.messageTargetForURI(uri)
+            if resolved is None:
+                BlinkLogger().log_error('Cannot open a conversation with %s' % uri)
+                return False
+
+            target, display_name, account, instance_id = resolved
+            manager = SMSWindowManager.SMSWindowManager()
+            viewer = manager.viewerForTarget(target, display_name, account,
+                                             instance_id=instance_id,
+                                             selected_contact=contact)
+            if viewer is None:
+                return False
+            manager.presentViewer(viewer, focus=True, note_new_message=False)
+            pane.selectViewer(viewer)
+            BlinkLogger().log_info('Opened the conversation with %s' % uri)
+            return True
+        except Exception as e:
+            BlinkLogger().log_error('Cannot open the conversation with %s: %s' % (uri, e))
+            return False
+
+    @objc.python_method
+    def messageTargetForURI(self, uri):
+        """(target, display name, account, instance id) for a bare address."""
+        try:
+            from sipsimple.core import SIPURI
+            from sipsimple.account import AccountManager
+            account = AccountManager().default_account
+            if account is None:
+                return None
+            target = SIPURI.parse('sip:%s' % uri if '@' in uri and not uri.startswith('sip')
+                                  else str(uri))
+            return target, uri, account, None
+        except Exception as e:
+            BlinkLogger().log_error('Cannot make a conversation target from %s: %s' % (uri, e))
+            return None
+
+    @objc.python_method
+    def switchMessagePaneToSelectedContact(self):
+        """Selecting a contact switches the conversation the pane is showing.
+
+        Only ever SWITCHES -- it never reveals the pane. Otherwise selecting
+        a contact to place a call would pop a transcript open. The
+        conversation is created here because selecting a contact IS the user
+        asking for it; nothing arriving over the wire creates one.
+        """
+        if not self.isMessagesPaneVisible():
+            return
+
+        pane = self.messagePane()
+        if pane is None:
+            return
+        try:
+            contact = self.getSelectedContacts()[0]
+        except IndexError:
+            pane.selectViewer(None)
+            return
+
+        resolved = self.messageTargetForContact(contact)
+        if resolved is None:
+            pane.selectViewer(None)
+            return
+
+        target, display_name, account, instance_id = resolved
+        try:
+            manager = SMSWindowManager.SMSWindowManager()
+            viewer = manager.viewerForTarget(target, display_name, account,
+                                             instance_id=instance_id,
+                                             selected_contact=contact)
+            if viewer is None:
+                pane.selectViewer(None)
+                return
+            # attach without bringing anything to the front
+            manager.presentViewer(viewer, focus=False, note_new_message=False)
+            pane.selectViewer(viewer)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot show conversation for %s: %s' % (contact.uri, e))
+
+    MESSAGE_PANE_DEFAULT_WIDTH = 480.0
+
+    @objc.python_method
+    def messagePaneHost(self):
+        """The split view that hosts the conversation, built on first use.
+
+        The window's existing content is moved wholesale into the left half,
+        keeping every frame and autoresizing mask, so the contact list keeps
+        behaving exactly as it did and no nib has to change -- which matters
+        here, because MainWindow.xib exists in six localisations.
+        """
+        if self.messagePaneSplitView is not None:
+            return self.messagePaneSplitView
+        try:
+            from MessagePaneController import MessagePaneSplitView
+            window = self.window()
+            if window is None:
+                return None
+            content = window.contentView()
+            bounds = content.bounds()
+
+            list_side = NSView.alloc().initWithFrame_(bounds)
+            list_side.setAutoresizingMask_(NSViewWidthSizable | NSViewHeightSizable)
+            for view in list(content.subviews()):
+                view.removeFromSuperview()
+                list_side.addSubview_(view)
+
+            split = MessagePaneSplitView.alloc().initWithFrame_(bounds)
+            split.setAutoresizingMask_(NSViewWidthSizable | NSViewHeightSizable)
+            split.addSubview_(list_side)
+            content.addSubview_(split)
+
+            self.messagePaneListSide = list_side
+            self.messagePaneSplitView = split
+            BlinkLogger().log_info('Messages pane host installed in the main window')
+        except Exception as e:
+            BlinkLogger().log_error('Cannot build the messages pane host: %s' % e)
+            import traceback
+            traceback.print_exc()
+            return None
+        return self.messagePaneSplitView
+
+    @objc.python_method
+    def storedMessagePaneWidth(self):
+        try:
+            stored = NSUserDefaults.standardUserDefaults().floatForKey_('MessagesPaneWidth')
+        except Exception:
+            stored = 0
+        if stored and stored >= 320.0:
+            return stored
+        return self.MESSAGE_PANE_DEFAULT_WIDTH
+
+    @objc.python_method
+    def rememberMessagePaneWidth(self):
+        split = self.messagePaneSplitView
+        if split is None or not self._message_pane_visible:
+            return
+        try:
+            width = split.frame().size.width - split.listWidth() - split.dividerThickness()
+            if width >= 320.0:
+                NSUserDefaults.standardUserDefaults().setFloat_forKey_(width, 'MessagesPaneWidth')
+            list_width = split.listWidth()
+            if list_width >= self.CONTACT_LIST_MIN_WIDTH:
+                NSUserDefaults.standardUserDefaults().setFloat_forKey_(list_width, 'ContactListWidth')
+        except Exception:
+            pass
+
+    @objc.python_method
+    def isMessagesPaneVisible(self):
+        return bool(self._message_pane_visible and self.window() is not None
+                    and self.window().isVisible())
+
+    @objc.python_method
+    def showMessagesPane(self, restoring=False):
+        """Reveal the conversation beside the contact list.
+
+        `restoring` means the window is already sized for two panes, so the
+        transcript is fitted into the existing frame instead of the window
+        being grown to make room for it.
+        """
+        self.showWindow_(None)
+        pane = self.messagePane()
+        if pane is None:
+            BlinkLogger().log_error('Messages pane unavailable')
+            return
+        split = self.messagePaneHost()
+        if split is None:
+            return
+
+        if not self._message_pane_visible:
+            width = self.storedMessagePaneWidth()
+            if restoring:
+                list_width = self.storedContactListWidth()
+            else:
+                list_width = self.messagePaneListSide.frame().size.width
+            if pane.view.superview() is not split:
+                split.addSubview_(pane.view)
+            self._message_pane_visible = True
+
+            if restoring:
+                # Only widen if the restored frame cannot actually hold both
+                # halves -- the window was narrowed while the pane was shut,
+                # or the autosaved frame predates the pane entirely.
+                needed = list_width + split.dividerThickness() + 320.0
+                short = needed - self.window().frame().size.width
+                if short > 0:
+                    self.growWindowForMessagePane(short - split.dividerThickness())
+            else:
+                self.growWindowForMessagePane(width)
+
+            split.setListWidth(list_width)
+            self.releaseContactListWidth()
+            BlinkLogger().log_debug('Messages pane shown at %.0f (list %.0f)%s'
+                                    % (width, list_width,
+                                       ' -- restored' if restoring else ''))
+
+        if pane.selectedSessionController() is None:
+            self.switchMessagePaneToSelectedContact()
+        self.notifyMessagePaneVisibility()
+
+    @objc.python_method
+    def storedContactListWidth(self):
+        try:
+            stored = NSUserDefaults.standardUserDefaults().floatForKey_('ContactListWidth')
+        except Exception:
+            stored = 0
+        if stored and stored >= self.CONTACT_LIST_MIN_WIDTH:
+            return stored
+        return self.CONTACT_LIST_MIN_WIDTH
+
+    @objc.python_method
+    def restoreContactListWidthAtLaunch(self):
+        """Open with the transcript closed, at the width the list had alone.
+
+        The pane is deliberately NOT reopened even when the user left it
+        open: putting a conversation on screen at launch would start marking
+        its messages read before anyone asked to see them. Reading is an act
+        of intent, so it waits for a click.
+
+        The width still has to be undone, though. The window frame is
+        autosaved under ContactWindow, so quitting with the pane open brings
+        the app back with the contact list stretched across a window sized
+        for two panes.
+        """
+        from MessageHost import USE_MESSAGE_PANEL
+        if not USE_MESSAGE_PANEL:
+            return
+        self._message_pane_visible = False
+        try:
+            window = self.window()
+            if window is None:
+                return
+            self.releaseContactListWidth()
+            width = self.storedContactListWidth()
+            frame = window.frame()
+            if frame.size.width - width < 1.0:
+                return
+            BlinkLogger().log_info('Contact list opens at %.0f, was %.0f with the transcript'
+                                   % (width, frame.size.width))
+            frame.size.width = width
+            # display=False: at this point the window has not been shown yet
+            # and asking it to redraw is what makes the resize visible.
+            window.setFrame_display_animate_(frame, window.isVisible(), False)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot restore the contact list width: %s' % e)
+
+    @objc.python_method
+    def hideMessagesPane(self):
+        if not self._message_pane_visible:
+            return
+        self.rememberMessagePaneWidth()
+        pane_width = 0.0
+        split = self.messagePaneSplitView
+        try:
+            if split is not None:
+                pane_width = split.frame().size.width - split.listWidth() - split.dividerThickness()
+                if self.messagePaneController is not None:
+                    self.messagePaneController.view.removeFromSuperview()
+        except Exception as e:
+            BlinkLogger().log_error('Cannot hide the messages pane: %s' % e)
+        self._message_pane_visible = False
+        self.shrinkWindowAfterMessagePane(pane_width)
+        self.notifyMessagePaneVisibility()
+
+    @objc.python_method
+    def growWindowForMessagePane(self, pane_width):
+        """Make the window wide enough to hold the conversation.
+
+        The contact list keeps its own width: the window grows by the width
+        of the transcript rather than stealing it from the list.
+        """
+        try:
+            window = self.window()
+            split = self.messagePaneSplitView
+            if window is None or split is None:
+                return
+            self.releaseContactListWidth()
+            extra = pane_width + split.dividerThickness()
+            frame = window.frame()
+            frame.size.width += extra
+            screen = window.screen() or NSScreen.mainScreen()
+            if screen is not None:
+                visible = screen.visibleFrame()
+                frame.size.width = min(frame.size.width, visible.size.width)
+                if NSMaxX(frame) > NSMaxX(visible):
+                    frame.origin.x = max(NSMinX(visible), NSMaxX(visible) - frame.size.width)
+            window.setFrame_display_animate_(frame, True, False)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot widen the window for the messages pane: %s' % e)
+
+    @objc.python_method
+    def shrinkWindowAfterMessagePane(self, pane_width):
+        try:
+            window = self.window()
+            split = self.messagePaneSplitView
+            if window is None or split is None or pane_width <= 0:
+                return
+            self.releaseContactListWidth()
+            frame = window.frame()
+            frame.size.width = max(self.CONTACT_LIST_MIN_WIDTH,
+                                   frame.size.width - pane_width - split.dividerThickness())
+            window.setFrame_display_animate_(frame, True, False)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot narrow the window after the messages pane: %s' % e)
+
+    @objc.python_method
+    def messagePane(self):
+        """The conversation view, created on first use."""
+        if self.messagePaneController is None:
+            try:
+                from MessagePaneController import MessagePaneController as _Pane
+                self.messagePaneController = _Pane.alloc().initWithOwner_(self)
+            except Exception as e:
+                # Previously this propagated out of the caller and the
+                # pane just came up empty with no explanation.
+                BlinkLogger().log_error('Cannot build the messages pane: %s' % e)
+                import traceback
+                traceback.print_exc()
+                return None
+
+            split = self.messagePaneHost()
+            if split is None:
+                BlinkLogger().log_error('The messages pane has nowhere to live')
+            else:
+                # Sized and attached by showMessagesPane; built detached so
+                # that merely creating a conversation never changes the
+                # window layout.
+                self.messagePaneController.view.setAutoresizingMask_(
+                    NSViewWidthSizable | NSViewHeightSizable)
+                BlinkLogger().log_info('Messages pane built for the main window')
+
+            try:
+                from SMSWindowManager import SMSWindowManager
+                SMSWindowManager().setMessagePanelController(self.messagePaneController)
+            except Exception as e:
+                BlinkLogger().log_error('Cannot register the messages pane: %s' % e)
+        return self.messagePaneController
+
+    @objc.python_method
+    def contactListMinimumWidth(self):
+        """274 for the list alone, twice that with a transcript beside it.
+
+        Narrower than two list minimums and there is no honest way to divide
+        the window: the split view has to starve one side, and it is always
+        the transcript that ends up a sliver.
+        """
+        if self._message_pane_visible:
+            return self.CONTACT_LIST_MIN_WIDTH * 2
+        return self.CONTACT_LIST_MIN_WIDTH
+
+    @objc.python_method
+    def releaseContactListWidth(self):
+        """Hold the window's width bounds to whatever the layout needs now.
+
+        Both directions matter. A minimum left behind at the window's
+        current width strands the contact list wide with no way back; a
+        minimum left at 274 while the transcript is open lets the user drag
+        the window down to where neither pane fits. The dial pad pins
+        min == max at 274 on purpose and is the one state left alone.
+        """
+        try:
+            window = self.window()
+            if window is None:
+                return
+            try:
+                if self.mainTabView.selectedTabViewItem().identifier() == 'dialpad':
+                    return
+            except Exception:
+                pass
+            minimum = window.contentMinSize()
+            maximum = window.contentMaxSize()
+            wanted = self.contactListMinimumWidth()
+            if maximum.width < wanted or maximum.width <= self.CONTACT_LIST_MIN_WIDTH:
+                window.setContentMaxSize_(NSMakeSize(10000.0, max(maximum.height, 2000.0)))
+            if abs(minimum.width - wanted) >= 1.0:
+                BlinkLogger().log_debug('Window minimum width %.0f -> %.0f'
+                                        % (minimum.width, wanted))
+                window.setContentMinSize_(NSMakeSize(wanted, minimum.height))
+        except Exception as e:
+            BlinkLogger().log_error('Cannot set the contact list width bounds: %s' % e)
+
+    @objc.python_method
+    def shouldDrawerStayOpen(self):
+        # The drawer is the audio call list again and nothing else, so the
+        # only reason to keep it open is a call.
+        return bool(self.has_audio)
+
     @objc.python_method
     def showAudioDrawer(self):
         if not self.drawer.isOpen() and self.has_audio:
@@ -3009,7 +3520,7 @@ class ContactWindowController(NSWindowController):
         self.audioSessionsListView.removeItemView_(streamController.view)
         self.updateAudioButtons()
         count = self.audioSessionsListView.numberOfItems()
-        if self.drawer.isOpen() and count == 0:
+        if self.drawer.isOpen() and count == 0 and not self.shouldDrawerStayOpen():
             self.drawer.close()
 
     @objc.python_method
@@ -3963,7 +4474,92 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def showSMSWindow_(self, sender):
+        from MessageHost import USE_MESSAGE_PANEL
+        if USE_MESSAGE_PANEL:
+            if self.isMessagesPaneVisible():
+                self.hideMessagesPane()
+            else:
+                self.showMessagesPane()
+            return
         self.show_last_sms_conversations()
+
+    @objc.python_method
+    def publicKeyLookupTargets(self):
+        """Every address of the selected contact worth asking about.
+
+        A contact can hold several addresses and a key is published per
+        address, so looking up only the primary one leaves the rest stale --
+        and a stale key is exactly what this exists to replace. Our own
+        accounts are skipped (we publish that key, we do not fetch it), as
+        are Bonjour neighbours, who have no server to ask.
+        """
+        selected = self.getSelectedContacts(includeGroups=False)
+        if len(selected) != 1:
+            return []
+        contact = selected[0]
+        try:
+            if contact in self.model.bonjour_group.contacts:
+                return []
+        except Exception:
+            pass
+
+        account_manager = AccountManager()
+        targets = []
+        seen = set()
+        for entry in getattr(contact, 'uris', ()):
+            uri = str(getattr(entry, 'uri', '') or '').strip()
+            if '@' not in uri or uri.lower() in seen:
+                continue
+            try:
+                if account_manager.has_account(uri):
+                    continue
+            except Exception:
+                pass
+            seen.add(uri.lower())
+            targets.append(uri)
+        return targets
+
+    @objc.python_method
+    def canLookupPublicKeyForSelection(self):
+        return bool(self.publicKeyLookupTargets())
+
+    @objc.IBAction
+    def lookupPublicKey_(self, sender):
+        """Ask the server for the selected contact's current PGP keys.
+
+        One lookup per address the contact holds, since keys are published
+        per address. The stale keys on disc are deliberately left alone
+        until replies arrive: if the server has no key for an address,
+        holding the old one still beats holding none, and a reply overwrites
+        it anyway.
+        """
+        targets = self.publicKeyLookupTargets()
+        if not targets:
+            BlinkLogger().log_info('Public key lookup needs one other contact selected')
+            return
+
+        contact = self.getSelectedContacts(includeGroups=False)[0]
+        account = self.activeAccount()
+        if not account:
+            BlinkLogger().log_error('No active account for a public key lookup')
+            return
+
+        from SMSWindowManager import SMSWindowManager
+        manager = SMSWindowManager()
+        for uri in targets:
+            try:
+                normalized = normalize_sip_uri_for_outgoing_session(uri, account)
+                if not normalized:
+                    BlinkLogger().log_info('Cannot normalize %s for a public key lookup' % uri)
+                    continue
+                viewer = manager.viewerForTarget(normalized, contact.name, account)
+                if viewer is None:
+                    BlinkLogger().log_error('No conversation available for %s' % uri)
+                    continue
+                BlinkLogger().log_info('Looking up the public key of %s' % uri)
+                viewer.requestPublicKey()
+            except Exception as e:
+                BlinkLogger().log_error('Public key lookup for %s failed: %s' % (uri, e))
 
     @objc.IBAction
     def showUnsentMessages_(self, sender):
@@ -4019,6 +4615,7 @@ class ContactWindowController(NSWindowController):
 
     def contactSelectionChanged_(self, notification):
         self.updateStartSessionButtons()
+        self.switchMessagePaneToSelectedContact()
         readonly = any((getattr(c, "editable", None) is False) for c in self.getSelectedContacts(True))
 
         self.contactsMenu.itemWithTag_(31).setEnabled_(not readonly and len(self.getSelectedContacts(includeGroups=False)) > 0)
@@ -4026,6 +4623,10 @@ class ContactWindowController(NSWindowController):
         self.contactsMenu.itemWithTag_(33).setEnabled_(not readonly)
         self.contactsMenu.itemWithTag_(34).setEnabled_(not readonly)
         self.contactsMenu.itemWithTag_(36).setEnabled_(len(self.getSelectedContacts(includeGroups=True)) > 0)
+
+        item = self.contactsMenu.itemWithTag_(68)
+        if item is not None:
+            item.setEnabled_(self.canLookupPublicKeyForSelection())
 
     def allowPresenceForContacts_(self, sender):
         blink_contacts = sender.representedObject()
@@ -4067,6 +4668,12 @@ class ContactWindowController(NSWindowController):
         return size
 
     def windowDidResize_(self, notification):
+        # A content minimum left behind at the window's current width is what
+        # strands the contact list wide with no way back, and it can be set
+        # from several places. Relax it on every resize rather than only when
+        # the drawer happens to change.
+        self.releaseContactListWidth()
+        self.rememberMessagePaneWidth()
         if NSHeight(self.window().frame()) > 154:
             self.originalSize = None
             self.setCollapsed(False)
@@ -4085,6 +4692,9 @@ class ContactWindowController(NSWindowController):
                 self.searchOutline.enclosingScrollView().setFrame_(frame)
 
         self.recalculateDrawerSplitter()
+
+    def windowDidMove_(self, notification):
+        self.releaseContactListWidth()
 
     def drawerDidOpen_(self, notification):
         self.windowMenu = NSApp.mainMenu().itemWithTag_(300).submenu()
@@ -4115,7 +4725,12 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def toggleAudioSessionsDrawer_(self, sender):
-        self.drawer.toggle_(sender)
+        if self.drawer.isOpen():
+            self.drawer.close()
+            return
+        if not self.drawer.isOpen():
+            self.showWindow_(None)
+            self.drawer.open()
 
     @objc.IBAction
     def showDebugWindow_(self, sender):
@@ -4658,7 +5273,13 @@ class ContactWindowController(NSWindowController):
                 return
 
             if sender == self.contactOutline or sender == self.searchOutline:
-                if isinstance(contact, BonjourBlinkContact):  #and 'isfocus' in contact.uri:
+                # Double-click / Return. Messaging is now the DEFAULT action;
+                # it used to be a call. Explicit per-contact preferences are
+                # still honoured, except 'audio' -- that is also the stored
+                # default for every contact that was never configured, so it
+                # cannot be told apart from "no preference" and falls through
+                # to messages with everything else.
+                if isinstance(contact, BonjourBlinkContact):
                     media_type = ("chat", "audio")
                 elif contact.preferred_media == "chat":
                     media_type = "chat"
@@ -4666,10 +5287,8 @@ class ContactWindowController(NSWindowController):
                     media_type = ("chat", "audio")
                 elif contact.preferred_media == "video":
                     media_type = ("audio", "video")
-                elif contact.preferred_media == "messages":
-                    media_type = "sms"
                 else:
-                    media_type = "audio"
+                    media_type = "sms"
             elif sender.selectedSegment() == video_segment:
                 media_type = ("audio", "video")
             elif sender.selectedSegment() == chat_segment:
@@ -5177,6 +5796,9 @@ class ContactWindowController(NSWindowController):
             item.setEnabled_(bool(has_presence_info))
             item = self.contactsMenu.itemWithTag_(51)  # Pending Requests
             item.setEnabled_(bool(self.model.pending_watchers_group.contacts))
+            item = self.contactsMenu.itemWithTag_(68)  # Lookup Public Key
+            if item is not None:
+                item.setEnabled_(self.canLookupPublicKeyForSelection())
             item = self.contactsMenu.itemWithTag_(33)  # Add Group
             item.setEnabled_(True)
             item = self.contactsMenu.itemWithTag_(34)  # Edit Group
@@ -6103,6 +6725,24 @@ class ContactWindowController(NSWindowController):
         self.removePresenceContactForOurselves()
         # BlinkLogger().log_info('startup: FileTransferWindowController()')
         self.fileTransfersWindow = FileTransferWindowController()
+
+        # A second pass, in case the autosaved frame was restored after
+        # awakeFromNib ran. It returns immediately when the width is already
+        # right, which is the normal case -- so it costs nothing and is not
+        # what the user sees.
+        self.restoreContactListWidthAtLaunch()
+
+        # Seed the Messages group's order again now that the contact list
+        # actually exists. The manager seeds itself at its own init, which
+        # can land before any group is built -- the reorder notification
+        # then has nothing to reorder, and the group stays alphabetical
+        # until the next message arrives. Seeding twice is harmless: the
+        # map only ever moves timestamps forward.
+        try:
+            from SMSWindowManager import SMSWindowManager
+            SMSWindowManager().loadLastMessageTimes()
+        except Exception as e:
+            BlinkLogger().log_error('Cannot seed the conversation order: %s' % e)
         # BlinkLogger().log_info('startup: SIPApplicationDidStart exit')
 
         # Defensive cleanup: silently merge any duplicate Contacts in

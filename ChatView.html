@@ -311,7 +311,7 @@ body
     -webkit-border-radius: 3px;
 }
 
-/* ---- Sylk location bubble (application/sylk-message-metadata, action=location) ---- */
+/* ---- Sylk location bubble (application/sylk-location-sharing) ---- */
 .location-bubble {
     display: block;
 }
@@ -355,6 +355,30 @@ body
     color: #555;
 }
 .location-bubble .loc-meta .loc-hint {
+    color: #888;
+}
+/* Green meeting-point pin: the fixed destination both parties converge on
+   in a meet-me share. It rides the wire inside the encrypted payload as
+   the wrapped shape { value: <coords>, destination: <point> }. */
+.location-bubble .loc-dest-pin {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    margin-left: -7px;
+    margin-top: -14px;
+    border-radius: 50%;
+    background: #27ae60;
+    border: 2px solid #ffffff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    pointer-events: none;
+}
+/* Lifecycle footer, stamped when a location_stop / meeting_end lands for
+   this bubble's session (live, or replayed from history on reload). */
+.location-bubble .loc-status {
+    margin-top: 2px;
+    font-family: Lucida Grande, Helvetica, Arial;
+    font-size: 11px;
+    font-style: italic;
     color: #888;
 }
 
@@ -547,7 +571,7 @@ function locLatLngToTileFrac(latitude, longitude, zoom)
 // because Python's processHTMLText runs a smiley + URL pass that would
 // mangle the inline style attributes and any maps.apple.com URL with a
 // '?' or ';' character (urlify rewrites those tokens).
-function locBuildMapFrameHTML(lat, lng, zoom, mapWidth, mapHeight)
+function locBuildMapFrameHTML(lat, lng, zoom, mapWidth, mapHeight, destination)
 {
     var tileSize = 256;
     var subdomains = ['a', 'b', 'c'];
@@ -581,7 +605,64 @@ function locBuildMapFrameHTML(lat, lng, zoom, mapWidth, mapHeight)
     // centerY). The pin's CSS uses negative margins to place its tip
     // precisely on that pixel.
     html += '<div class="loc-pin" style="left:' + centerX + 'px;top:' + centerY + 'px;"></div>';
+    // Meeting point, when the share carries one. Positioned against the
+    // same tile grid so it lands at its true offset from the pin (and is
+    // simply clipped by the frame when it falls outside).
+    if (destination != null && destination.latitude != null && destination.longitude != null) {
+        var d = locLatLngToTileFrac(destination.latitude, destination.longitude, zoom);
+        var destLeft = Math.round(centerX + (d.xFrac - f.xFrac) * tileSize);
+        var destTop = Math.round(centerY + (d.yFrac - f.yFrac) * tileSize);
+        html += '<div class="loc-dest-pin" style="left:' + destLeft + 'px;top:' + destTop + 'px;"></div>';
+    }
     return html;
+}
+
+// Per-bubble lifecycle footer text ("Track ended", "You met", ...), keyed
+// by message id. Held here rather than read back out of the DOM so an
+// update tick that re-renders the body can restore it verbatim.
+var locStatusText = {};
+
+// Single builder for the inside of a location bubble, shared by the first
+// render and by every in-place update so the two cannot drift.
+function locBuildLocationBodyHTML(msgid, lat, lng, accuracy, mapsUrl, destination)
+{
+    var mapWidth = 300;
+    var mapHeight = 200;
+    // Default zoom matches Sylk Mobile's DEFAULT_ZOOM (~1 city block).
+    var zoom = 15;
+    var frameHTML = locBuildMapFrameHTML(lat, lng, zoom, mapWidth, mapHeight, destination);
+
+    var coordsLabel = lat.toFixed(5) + ', ' + lng.toFixed(5);
+    var accuracyLabel = (accuracy != null && !isNaN(accuracy))
+        ? ' (\u00B1' + Math.round(accuracy) + ' m)'
+        : '';
+    var status = locStatusText[msgid];
+    var statusStyle = (status == null || status == '') ? ' style="display:none;"' : '';
+
+    // String concatenation only — no template literals, since this file
+    // also has to load on older WebKit builds shipped with macOS 10.13.
+    return '<a class="loc-link" href="' + mapsUrl + '">' +
+               '<div class="map-frame">' + frameHTML + '</div>' +
+               '<div class="loc-meta">' +
+                   '\u{1F4CD} ' + coordsLabel + accuracyLabel +
+                   ' <span class="loc-hint">\u2014 tap to open in Maps</span>' +
+               '</div>' +
+           '</a>' +
+           '<div class="loc-status" id="s' + msgid + '"' + statusStyle + '>' +
+               (status == null ? '' : status) +
+           '</div>';
+}
+
+// Stamp (or clear) a bubble's lifecycle footer. Called when a teardown
+// signal arrives for the session the bubble represents — live, and when
+// history replays the persisted signal row on chat reload.
+function setLocationMessageStatus(msgid, text)
+{
+    locStatusText[msgid] = text;
+    var el = document.getElementById('s' + msgid);
+    if (el == null) return;
+    el.innerHTML = (text == null ? '' : text);
+    el.style.display = (text == null || text == '') ? 'none' : '';
 }
 
 // Re-render an existing location bubble with a new lat/lng/accuracy.
@@ -590,37 +671,23 @@ function locBuildMapFrameHTML(lat, lng, zoom, mapWidth, mapHeight)
 // when a Sylk update tick arrives for a share whose origin bubble we've
 // already drawn — keeps the conversation from filling up with a fresh
 // bubble per minute.
-function updateLocationMessage(msgid, lat, lng, accuracy)
+function updateLocationMessage(msgid, lat, lng, accuracy, destination)
 {
     var bodyEl = document.getElementById('b' + msgid);
     if (!bodyEl) return;
 
-    var mapWidth = 300;
-    var mapHeight = 200;
-    var zoom = 15;
-    var frameHTML = locBuildMapFrameHTML(lat, lng, zoom, mapWidth, mapHeight);
-
-    var coordsLabel = lat.toFixed(5) + ', ' + lng.toFixed(5);
-    var accuracyLabel = (accuracy != null && !isNaN(accuracy))
-        ? ' (±' + Math.round(accuracy) + ' m)'
-        : '';
-    // Apple Maps deep link must be regenerated for the new coords —
+    // The Apple Maps deep link must be regenerated for the new coords —
     // otherwise tapping the bubble would still open the old position.
     var llStr = lat.toFixed(7) + ',' + lng.toFixed(7);
     var mapsUrl = 'https://maps.apple.com/?ll=' + llStr + '&q=' + llStr;
 
-    bodyEl.innerHTML =
-        '<a class="loc-link" href="' + mapsUrl + '">' +
-            '<div class="map-frame">' + frameHTML + '</div>' +
-            '<div class="loc-meta">' +
-                '\u{1F4CD} ' + coordsLabel + accuracyLabel +
-                ' <span class="loc-hint">— tap to open in Maps</span>' +
-            '</div>' +
-        '</a>';
+    bodyEl.innerHTML = locBuildLocationBodyHTML(msgid, lat, lng, accuracy, mapsUrl, destination);
 }
 
-function renderLocationMessage(msgid, direction, sender, iconpath, lat, lng, accuracy, mapsUrl, timestamp, state, lockiconpath, previous_msgid, before)
+function renderLocationMessage(msgid, direction, sender, iconpath, lat, lng, accuracy, mapsUrl, timestamp, state, lockiconpath, previous_msgid, before, destination, status_text)
 {
+    if (status_text != null && status_text != '')
+        locStatusText[msgid] = status_text;
     // Mirror the box/decoration logic from renderMessage so location
     // bubbles use the same chrome (delivered/displayed ticks, encryption
     // icon, delete button, sender row). The body slot is the only thing
@@ -667,26 +734,7 @@ function renderLocationMessage(msgid, direction, sender, iconpath, lat, lng, acc
         icon_class = "photobox";
     }
 
-    var mapWidth = 300;
-    var mapHeight = 200;
-    // Default zoom matches Sylk Mobile's DEFAULT_ZOOM (~1 city block).
-    var zoom = 15;
-    var frameHTML = locBuildMapFrameHTML(lat, lng, zoom, mapWidth, mapHeight);
-
-    var coordsLabel = lat.toFixed(5) + ', ' + lng.toFixed(5);
-    var accuracyLabel = (accuracy != null && !isNaN(accuracy))
-        ? ' (±' + Math.round(accuracy) + ' m)'
-        : '';
-    // String concatenation only — no template literals, since this file
-    // also has to load on older WebKit builds shipped with macOS 10.13.
-    var bodyHTML =
-        '<a class="loc-link" href="' + mapsUrl + '">' +
-            '<div class="map-frame">' + frameHTML + '</div>' +
-            '<div class="loc-meta">' +
-                '\u{1F4CD} ' + coordsLabel + accuracyLabel +
-                ' <span class="loc-hint">— tap to open in Maps</span>' +
-            '</div>' +
-        '</a>';
+    var bodyHTML = locBuildLocationBodyHTML(msgid, lat, lng, accuracy, mapsUrl, destination);
 
     var html =
         "<div clear='both'/>" +
@@ -730,7 +778,7 @@ function renderLocationMessage(msgid, direction, sender, iconpath, lat, lng, acc
     }
 }
 
-function renderSystemMessage(msgid, text, timestamp, is_error)
+function renderSystemMessage(msgid, text, timestamp, is_error, before)
 {
   var chat_session;
   var content;
@@ -750,7 +798,7 @@ function renderSystemMessage(msgid, text, timestamp, is_error)
   if (content != null)
       content.id = "";
 
-  chat_session.innerHTML +=
+  var html =
     "<div clear='both'/>"+
     "<div class='"+container_class+"' id='container_"+msgid+"'>"+
         "<div class="+system_class+">"+
@@ -759,9 +807,16 @@ function renderSystemMessage(msgid, text, timestamp, is_error)
         "</div>"+
     "</div>";
 
-  lastSender = "";
-
-  scrollToBottom();
+  // `before` is the scroll-back-in-time mode renderMessage uses: history
+  // is walked newest-first and each entry is prepended, so the batch ends
+  // up in chronological order above what is already on screen.
+  if (before == null) {
+      chat_session.innerHTML += html;
+      lastSender = "";
+      scrollToBottom();
+  } else {
+      chat_session.innerHTML = html + chat_session.innerHTML;
+  }
 
   return 0;
 }

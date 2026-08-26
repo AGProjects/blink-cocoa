@@ -1,7 +1,7 @@
 # Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
 #
 
-from AppKit import NSApp, NSPortraitOrientation, NSFitPagination, NSOffState, NSOnState, NSControlTextDidChangeNotification, NSEventTrackingRunLoopMode, NSAlert, NSAlertFirstButtonReturn
+from AppKit import NSPrintOperation, NSApp, NSPortraitOrientation, NSFitPagination, NSOffState, NSOnState, NSControlTextDidChangeNotification, NSEventTrackingRunLoopMode, NSAlert, NSAlertFirstButtonReturn
 
 from Foundation import (NSBundle,
                         NSImage,
@@ -27,6 +27,7 @@ import pgpy
 from pgpy.constants import PubKeyAlgorithm, KeyFlags, HashAlgorithm, SymmetricKeyAlgorithm, CompressionAlgorithm
 import json
 import socket
+import time
 import string
 import random
 import urllib
@@ -47,6 +48,7 @@ from sipsimple.account import AccountManager, BonjourAccount, Account
 from sipsimple.core import SIPURI, Message, FromHeader, ToHeader, RouteHeader, Route
 from sipsimple.lookup import DNSLookup, DNSLookupError
 from sipsimple.configuration.settings import SIPSimpleSettings
+from sipsimple.payloads import ParserError
 from sipsimple.payloads.iscomposing import IsComposingMessage, IsComposingDocument
 from sipsimple.payloads.imdn import IMDNDocument, DeliveryNotification, DisplayNotification
 from sipsimple.streams.msrp.chat import CPIMPayload, CPIMParserError, ChatIdentity
@@ -60,7 +62,38 @@ from ChatViewController import MSG_STATE_SENT, MSG_STATE_DELIVERED, MSG_STATE_DI
 
 from BlinkLogger import BlinkLogger
 from HistoryManager import ChatHistory
-from SMSViewController import SMSViewController
+from SMSViewController import SMSViewController, is_otr_wire_text
+from MessageHost import peaks_metadata, reply_metadata
+
+
+def _describe_payload_value(value):
+    """A payload field, shortened only where it would be a wall of numbers.
+
+    Long arrays and base64 blobs are exactly the fields worth confirming
+    the PRESENCE of -- a recording's peaks are hundreds of numbers and its
+    spectrum tens of kilobytes -- so they report their size and a sample
+    instead of their contents.
+    """
+    if isinstance(value, (list, tuple)):
+        if len(value) > 8:
+            return '[%d values: %s ...]' % (len(value),
+                                            ', '.join(str(v) for v in value[:8]))
+        return repr(list(value))
+    if isinstance(value, dict):
+        return '{%s}' % ', '.join('%s: %s' % (k, _describe_payload_value(v))
+                                  for k, v in sorted(value.items()))
+    if isinstance(value, str) and len(value) > 120:
+        return '<%d chars: %s...>' % (len(value), value[:60])
+    return repr(value)
+from MessageHost import (FILE_TRANSFER_CONTENT_TYPE, FILE_TRANSFER_CONTENT_TYPES,
+                         file_transfer_envelope,
+                         pgp_plaintext,
+                         pgp_plaintext_bytes, public_key_short_checksum)
+from SylkLocation import (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE,
+                          is_notable_action,
+                          bubble_id as location_bubble_id, location_payload,
+                          merge_location_bodies, storable_envelope)
+from FileTransferCache import FILE_TRANSFER_PATH, base_url_from_transfer
 from util import format_identity_to_string, run_in_gui_thread, call_later
 
 unpad = lambda s: s[:-ord(s[len(s) - 1:])]
@@ -107,7 +140,6 @@ class SMSWindowController(NSWindowController):
     toolbar = objc.IBOutlet()
     encryptionMenu = objc.IBOutlet()
     encryptionIconMenuItem = objc.IBOutlet()
-    heartbeat_timer = None
 
     def initWithOwner_(self, owner):
         self = objc.super(SMSWindowController, self).init()
@@ -122,16 +154,9 @@ class SMSWindowController(NSWindowController):
             self.notification_center.add_observer(self, name="PGPPublicKeyReceived")
 
             self.unreadMessageCounts = {}
-            self.heartbeat_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(10.0, self, "heartbeatTimer:", None, True)
-            NSRunLoop.currentRunLoop().addTimer_forMode_(self.heartbeat_timer, NSRunLoopCommonModes)
-            NSRunLoop.currentRunLoop().addTimer_forMode_(self.heartbeat_timer, NSEventTrackingRunLoopMode)
 
         return self
 
-    def heartbeatTimer_(self, timer):
-         for viewer in self.viewers:
-             viewer.heartbeat()
- 
     @objc.python_method
     def selectedSessionController(self):
         activeTab = self.tabView.selectedTabViewItem()
@@ -188,6 +213,23 @@ class SMSWindowController(NSWindowController):
     def menuWillOpen_(self, menu):
         pass
 
+    @objc.python_method
+    def conversationBecameVisible(self, session):
+        """The user is now looking at this conversation.
+
+        Clears the contact-row unread badge as well as the tab badge: since
+        an arriving message no longer creates a conversation, the contact
+        badge is the only unread signal the user gets, and it has to go away
+        the moment they actually read the messages.
+        """
+        if session is None:
+            return
+        try:
+            if SMSWindowManager().clearUnreadMessages(session.remote_uri):
+                session.announce_conversation_read()
+        except Exception as e:
+            BlinkLogger().log_error('Cannot clear unread for %s: %s' % (session, e))
+
     def noteNewMessageForSession_(self, session):
         index = self.tabView.indexOfTabViewItemWithIdentifier_(session)
 
@@ -209,6 +251,7 @@ class SMSWindowController(NSWindowController):
                 item.setBadgeLabel_("")
                 del self.unreadMessageCounts[session]
                 session.not_read_queue_start()
+                self.conversationBecameVisible(session)
             else:
                 item.setBadgeLabel_(str(count))
         else:
@@ -233,6 +276,7 @@ class SMSWindowController(NSWindowController):
             del self.unreadMessageCounts[session]
         except KeyError:
             pass
+        self.conversationBecameVisible(session)
 
     def noteView_isComposing_(self, smsview, flag):
         index = self.tabView.indexOfTabViewItemWithIdentifier_(smsview)
@@ -271,8 +315,6 @@ class SMSWindowController(NSWindowController):
         selected = self.selectedSessionController()
         if selected in self.unreadMessageCounts:
             del self.unreadMessageCounts[selected]
-            self.heartbeat_timer.invalidate()
-            self.heartbeat_timer = None
 
         self.tabSwitcher.removeTabViewItem_(self.tabView.selectedTabViewItem())
         if self.tabView.numberOfTabViewItems() == 0:
@@ -296,8 +338,12 @@ class SMSWindowController(NSWindowController):
                 if self.window().isKeyWindow():
                     _item = self.tabSwitcher.itemForTabViewItem_(item)
                     _item.setBadgeLabel_("")
-                    viewer.send_read_messages_notifications()
+                    # The tabbed window announces the read the same way the
+                    # pane does; it used to call a stub that returned
+                    # immediately, so selecting a tab told nobody.
+                    viewer.announce_conversation_read()
                     viewer.not_read_queue_start()
+                    self.conversationBecameVisible(viewer)
 
         try:
             del self.unreadMessageCounts[item.identifier()]
@@ -334,6 +380,7 @@ class SMSWindowController(NSWindowController):
         session = self.selectedSessionController()
         if session:
             session.not_read_queue_start()
+            self.conversationBecameVisible(session)
     
         tabItem = self.tabView.selectedTabViewItem()
 
@@ -496,9 +543,16 @@ class SMSWindowController(NSWindowController):
         printInfo.setVerticalPagination_(NSFitPagination)
         NSPrintInfo.setSharedPrintInfo_(printInfo)
 
-        # print the content of the web view
         print_view = self.selectedSessionController().chatViewController.outputView
-        print_view.mainFrame().frameView().documentView().print_(self)
+        if hasattr(print_view, 'mainFrame'):
+            # WebView transcript
+            print_view.mainFrame().frameView().documentView().print_(self)
+        else:
+            # native transcript: print the message list itself, not the
+            # scroll view, so the whole conversation paginates rather than
+            # just the visible page
+            document_view = print_view.documentView() if hasattr(print_view, 'documentView') else print_view
+            NSPrintOperation.printOperationWithView_(document_view).runOperation()
 
 SMSWindowManagerInstance = None
 
@@ -515,11 +569,45 @@ class SMSWindowManagerClass(NSObject):
     #__metaclass__ = Singleton
 
     windows = []
+    # viewer -> host. A host is anything implementing the protocol in
+    # MessageHost.py: an SMSWindowController today, a MessagePaneController
+    # once the drawer lands. Treated as a cache; windowForViewer falls back
+    # to scanning self.windows and repopulates on a miss.
+    viewer_hosts = {}
+    heartbeat_timer = None
+    # True while a cached journal is being applied in bulk. Journal apply must
+    # not spin up conversation viewers: each one loads a nib, re-imports the
+    # PGP keys from disc, queries history and renders a page of bubbles on the
+    # GUI thread -- 14 of them during one sync is what made the app unusable.
+    # Messages still reach any viewer the user already has open.
+    _journal_bulk = False
+    # canonical remote uri -> unread count. The only place unread lives now
+    # that an arriving message no longer creates a conversation.
+    unread_counts = {}
+    # canonical remote uri -> naive UTC datetime of the newest message we
+    # know about. Seeded once from history, kept current by every path that
+    # stores a message. The Messages group is ordered by this.
+    last_message_times = {}
+    _order_changed_during_bulk = False
+    _unread_changed_during_bulk = set()
+    # Resolved SIP routes, shared by every conversation. Keyed by the actual
+    # inputs of the lookup, so an account using an outbound proxy (or talking
+    # to its own domain) collapses to ONE entry for all its contacts, and
+    # other domains collapse to one entry per domain.
+    #
+    # Deliberately never expires on time: a route stays until a send over it
+    # fails. Settings changes need no invalidation either -- tls_name, the
+    # proxy and the transport list are all part of the key, so changing one
+    # simply produces a different entry.
+    route_cache = {}
     received_call_ids = set()
     import_key_window = None
     export_key_window = None
     syncConversationsInProgress = {}
     pendingSaveMessage = {}
+    # the last figure the progress line printed, so an unchanged gauge
+    # stays quiet instead of reprinting itself on every unrelated save
+    _pending_save_logged = None
     new_contacts = set()
     private_keys = {}
 
@@ -538,7 +626,50 @@ class SMSWindowManagerClass(NSObject):
             self.contacts_queue = EventQueue(self.handle_contacts_queue)
             self.contacts_queue.start()
 
+            # The heartbeat lives on the manager rather than on a window so
+            # that every live conversation keeps retrying failed messages and
+            # re-resolving routes, whether or not a window is hosting it.
+            self.heartbeat_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(10.0, self, "heartbeatTimer:", None, True)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.heartbeat_timer, NSRunLoopCommonModes)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.heartbeat_timer, NSEventTrackingRunLoopMode)
+
+            from MessageHost import describe_configuration
+            BlinkLogger().log_info("Message UI model: %s" % describe_configuration())
+
+            # Order the Messages group by recency from the first draw,
+            # rather than alphabetically until the first message arrives,
+            # and put back the badges for whatever was left unread.
+            self.loadLastMessageTimes()
+            self.loadUnreadCounts()
+
         return self
+
+    def heartbeatTimer_(self, timer):
+        for viewer in self.allViewers():
+            viewer.heartbeat()
+
+    @objc.python_method
+    def allViewers(self):
+        """Every live viewer, whatever is hosting it.
+
+        Also prunes viewer_hosts: a closed window is removed from self.windows
+        (windowShouldClose_) and drops its tab items, so its viewers must not
+        keep receiving heartbeats.
+        """
+        seen = set()
+        for window in list(self.windows):
+            for viewer in window.viewers:
+                if viewer not in seen:
+                    seen.add(viewer)
+                    yield viewer
+        for viewer, host in list(self.viewer_hosts.items()):
+            if viewer in seen:
+                continue
+            if host is None or not self._hostHasViewer(host, viewer):
+                self.viewer_hosts.pop(viewer, None)
+                continue
+            seen.add(viewer)
+            yield viewer
 
     @objc.python_method
     def _NH_CFGSettingsObjectDidChange(self, account, data):
@@ -572,28 +703,53 @@ class SMSWindowManagerClass(NSObject):
        #BlinkLogger().log_info("Account %s activated" % account.id)
 
     @objc.python_method
-    def _NH_MessageSaved(self, sender, data):
-        try:
-            del self.pendingSaveMessage[data.msgid]
-        except KeyError:
-            pass
+    def _resolvePendingSave(self, msgid):
+        """Take a message off the pending gauge when no save will happen.
 
-        remaining_messages = len(self.pendingSaveMessage.keys())
+        Every entry put on the gauge is waiting for a MessageSaved to take
+        it off again. The journal path has two ways out that never reach
+        add_message -- a trail tick that folds into an existing row, and a
+        payload we cannot decode -- and each of those used to leave its
+        entry behind for good.
+        """
+        return self.pendingSaveMessage.pop(msgid, None) is not None
+
+    @objc.python_method
+    def _NH_MessageSaved(self, sender, data):
+        """Report progress when the gauge moves, and only then.
+
+        Every add_message in the application posts this, including the
+        thousands a bulk journal apply writes, and those were never on the
+        gauge. The old code let them all fall through to the modulo test
+        against an unchanged number: with a few stale entries stuck on the
+        gauge at a multiple of ten, every unrelated save reprinted the same
+        line -- forty pending, forty pending, forty pending -- while the
+        journal was busy doing something else entirely.
+        """
+        if not self.pendingSaveMessage.pop(data.msgid, None):
+            return                      # not ours to count; nothing has moved
+
+        remaining_messages = len(self.pendingSaveMessage)
+        if remaining_messages == 0:
+            self._pending_save_logged = None
+            #BlinkLogger().log_info('Sync conversations completed')
+            return
 
         if remaining_messages > 1000:
-            remaining = 1000
+            step = 1000
         elif remaining_messages > 100:
-            remaining = 100
+            step = 100
         else:
-            remaining = 10
+            step = 10
 
-        if remaining_messages % remaining == 0:
-            if remaining_messages == 0:
-                pass
-                #BlinkLogger().log_info('Sync conversations completed')
-            else:
-                BlinkLogger().log_info('%d pending history messages' % remaining_messages)
-            
+        if remaining_messages % step:
+            return
+        if remaining_messages == self._pending_save_logged:
+            return
+
+        self._pending_save_logged = remaining_messages
+        BlinkLogger().log_info('%d pending history messages' % remaining_messages)
+
     @objc.python_method
     def _NH_SIPAccountRegistrationDidSucceed(self, account, data):
         # BlinkLogger().log_info('startup: SMSWindowManager._NH_SIPAccountRegistrationDidSucceed enter (%s)' % account.id)
@@ -613,6 +769,14 @@ class SMSWindowManagerClass(NSObject):
     @objc.python_method
     @run_in_green_thread
     def sendMessage(self, account, content, content_type, recipient=None):
+        # tls_name must be carried into the lookup: without it the route is
+        # verified against the DNS-resolved name rather than the account's
+        # configured TLS name, so an account whose proxy answers under a
+        # different identity fails certificate verification and the request
+        # is never delivered. Every other lookup_sip_proxy call site in the
+        # app passes it; this one did not, which is why token requests over
+        # TLS silently never arrived and history sync stayed stuck on 401.
+        tls_name = account.sip.tls_name or account.id.domain
         if account.sip.outbound_proxy is not None:
             proxy = account.sip.outbound_proxy
             uri = SIPURI(host=proxy.host, port=proxy.port, parameters={'transport': proxy.transport})
@@ -628,8 +792,11 @@ class SMSWindowManagerClass(NSObject):
         settings = SIPSimpleSettings()
         lookup = DNSLookup()
 
+        BlinkLogger().log_info('Token request for %s: uri=%s account.sip.tls_name=%r using tls_name=%r'
+                              % (account.id, uri, account.sip.tls_name, tls_name))
+
         try:
-           routes = lookup.lookup_sip_proxy(uri, settings.sip.transport_list).wait()
+           routes = lookup.lookup_sip_proxy(uri, settings.sip.transport_list, tls_name=tls_name).wait()
         except DNSLookupError as e:
            BlinkLogger().log_info('DNS Lookup error for token request: %s' % str(e))
         else:
@@ -677,7 +844,7 @@ class SMSWindowManagerClass(NSObject):
                     BlinkLogger().log_info('PGP decryption failed for contact update')
                     return
                 else:
-                    content = bytes(decrypted_message.message, 'latin1').decode()
+                    content = pgp_plaintext(decrypted_message) or ''
 
         try:
             contact_data = json.loads(content)
@@ -688,7 +855,7 @@ class SMSWindowManagerClass(NSObject):
                 display_name = uri
             organization = contact_data['organization']
             self.saveContact(uri, {'name': display_name or uri, 'organization': organization})
-        except (TypeError, KeyError, json.decoder.JSONDecodeError):
+        except (TypeError, KeyError, json.decoder.JSONDecodeError) as e:
             BlinkLogger().log_error('Failed to update contact %s: %s' % (content, str(e)))
 
     @objc.python_method
@@ -701,232 +868,521 @@ class SMSWindowManagerClass(NSObject):
            pass
         self.requestSyncToken(account)
                    
+    MAX_JOURNAL_PAGES = 200
+    # how often to report progress while grinding through a cached page
+    JOURNAL_PROGRESS_EVERY = 250
+    # seconds to pause every JOURNAL_PROGRESS_EVERY entries, so the GUI and
+    # the DB queue get air while a large page is applied
+    JOURNAL_THROTTLE = 0.05
+    # fewer senders than this in one offline batch -> a named banner each;
+    # this many or more -> a single "from N contacts" banner
+    NAMED_OFFLINE_NOTIFICATION_LIMIT = 4
+
+    @objc.python_method
+    def journalDirectory(self, account):
+        path = ApplicationData.get('journal/%s' % account.id)
+        makedirs(path)
+        return path
+
+    @objc.python_method
+    def _journalFileName(self, messages):
+        """Sortable file name: the page's last timestamp, then its last id.
+
+        Cached pages are applied in sorted order, so the name has to sort
+        chronologically. ISO timestamps do, once punctuation is flattened.
+        """
+        last = messages[-1]
+        stamp = re.sub(r'[^0-9A-Za-z]', '-', str(last.get('timestamp') or '')) or 'unknown'
+        return '%s-%s.json' % (stamp, last.get('message_id') or 'page')
+
+    @objc.python_method
+    def _fetchJournalPage(self, account, url):
+        """GET one journal page. Returns (messages, status): ok / auth / error."""
+        req = urllib.request.Request(url, method="GET")
+        req.add_header('Authorization', 'Apikey %s' % account.sms.history_token)
+        try:
+            raw_response = urllib.request.urlopen(req, timeout=20)
+        except (urllib.error.URLError, ConnectionRefusedError, TimeoutError,
+                socket.timeout, RemoteDisconnected) as e:
+            BlinkLogger().log_info('SylkServer connection error for %s: %s' % (url, str(e)))
+            if getattr(e, 'code', None) == 401:
+                return None, 'auth'
+            return None, 'error'
+
+        try:
+            raw_data = raw_response.read().decode().replace('\\/', '/')
+            json_data = json.loads(raw_data)
+        except Exception as e:
+            BlinkLogger().log_error('Error reading SylkServer response from %s: %s' % (url, str(e)))
+            return None, 'error'
+
+        messages = json_data.get('messages') or []
+        BlinkLogger().log_debug('Fetched %d journal entries for %s (%d bytes)'
+                                % (len(messages), account.id, len(raw_data)))
+        return messages, 'ok'
+
+    @objc.python_method
+    def _downloadJournal(self, account):
+        """Stage 1: page through the server journal, caching each page on disc.
+
+        Nothing is processed here -- no DB writes, no GUI work, no per-entry
+        logging -- so the download runs at network speed. The stored cursor
+        advances only once a page is safely written, so an interruption costs
+        at most the page in flight rather than the whole journal.
+        """
+        directory = self.journalDirectory(account)
+        base_url = account.sms.history_url.replace("@", "%40")
+        pages = 0
+        entries = 0
+
+        while pages < self.MAX_JOURNAL_PAGES:
+            cursor = account.sms.history_last_id
+            url = "%s/%s" % (base_url, cursor) if cursor else base_url
+            BlinkLogger().log_debug('Sync conversations from %s' % url)
+
+            messages, status = self._fetchJournalPage(account, url)
+
+            if status == 'auth':
+                BlinkLogger().log_info('History token rejected for %s (401), requesting a new one in 30s' % account.id)
+                reactor.callLater(30, self.request_token, account)
+                return pages, entries
+            if status != 'ok':
+                return pages, entries
+            if not messages:
+                break
+
+            name = self._journalFileName(messages)
+            path = os.path.join(directory, name)
+            try:
+                with open(path, 'w') as f:
+                    # Store the cursor as it stood BEFORE this page: the apply
+                    # stage needs it to tell a first-ever backfill (persist
+                    # only) from a catch-up (present in the GUI), and by then
+                    # the account cursor has advanced past every cached page.
+                    json.dump({'cursor': cursor or '', 'messages': messages}, f)
+            except Exception as e:
+                BlinkLogger().log_error('Cannot write journal file %s: %s' % (path, e))
+                return pages, entries
+
+            pages += 1
+            entries += len(messages)
+            BlinkLogger().log_info('Cached journal page %s (%d entries)' % (name, len(messages)))
+
+            last_message_id = messages[-1].get('message_id')
+            if last_message_id:
+                account.sms.history_last_id = last_message_id
+                account.save()
+        else:
+            BlinkLogger().log_error('Journal download for %s hit the %d page cap; more may remain'
+                                    % (account.id, self.MAX_JOURNAL_PAGES))
+
+        if pages:
+            BlinkLogger().log_info('Journal download for %s finished: %d pages, %d entries cached'
+                                   % (account.id, pages, entries))
+        else:
+            BlinkLogger().log_debug('Journal download for %s: nothing new' % account.id)
+        return pages, entries
+
+    @objc.python_method
+    def _applyCachedJournals(self, account):
+        """Stage 2: apply cached pages oldest to newest, one file at a time.
+
+        Each file is deleted once applied, so an interrupted run resumes with
+        whatever is left instead of starting over.
+        """
+        directory = self.journalDirectory(account)
+        try:
+            names = sorted(n for n in os.listdir(directory) if n.endswith('.json'))
+        except OSError as e:
+            BlinkLogger().log_error('Cannot list journal directory %s: %s' % (directory, e))
+            return
+
+        if not names:
+            return
+
+        BlinkLogger().log_info('Applying %d cached journal pages for %s' % (len(names), account.id))
+        all_contacts = set()
+        all_incoming = {}
+
+        # One pause for the whole run: EventQueue.pause/unpause is not a
+        # counter, so pausing per page and unpausing once would be unbalanced.
+        self.contacts_queue.pause()
+        self._journal_bulk = True
+        try:
+            self._applyJournalFiles(account, directory, names, all_contacts, all_incoming)
+        finally:
+            self._journal_bulk = False
+            self.contacts_queue.unpause()
+
+        self._finishJournalApply(account, all_contacts, all_incoming)
+
+    @objc.python_method
+    def _applyJournalFiles(self, account, directory, names, all_contacts, all_incoming):
+        for index, name in enumerate(names, 1):
+            path = os.path.join(directory, name)
+            try:
+                with open(path) as f:
+                    payload = json.load(f)
+                messages = payload.get('messages') or []
+                cursor = payload.get('cursor') or None
+                BlinkLogger().log_info('Applying journal %d/%d: %s (%d entries)'
+                                       % (index, len(names), name, len(messages)))
+                _, contacts, incoming, summary, unhandled = self._applyJournalEntries(account, messages, cursor, label=name)
+                all_contacts |= contacts
+                for contact, count in incoming.items():
+                    all_incoming[contact] = all_incoming.get(contact, 0) + count
+                self._logJournalSummary(account, summary, unhandled=unhandled)
+            except Exception as e:
+                BlinkLogger().log_error('Error applying journal %s: %s' % (name, e))
+                import traceback
+                traceback.print_exc()
+            try:
+                os.unlink(path)
+            except OSError as e:
+                BlinkLogger().log_error('Cannot delete applied journal %s: %s' % (path, e))
+
+    @objc.python_method
+    def _applyJournalEntries(self, account, messages, cursor, label=''):
+        """Dispatch one cached journal page. No network, no file I/O.
+
+        `cursor` is the sync cursor as it stood before this page was
+        downloaded; syncIncoming/OutgoingMessage use it to tell a first-ever
+        backfill from a catch-up.
+        """
+        sync_contacts = set()
+        sync_incoming = {}
+        sync_summary = {}
+        sync_unhandled = {}
+        last_message_id = None
+
+        total = len(messages)
+        started = datetime.datetime.now()
+        # The rate is measured over the LAST chunk and with the throttle
+        # taken out of it. Reporting i/elapsed instead had two faults that
+        # compounded: it was a cumulative average, so the first sample was
+        # a meaningless 75000/s and every later one was dragged towards it
+        # rather than saying how fast the apply was going NOW; and elapsed
+        # included the deliberate sleep between chunks, which at 0.05s per
+        # 250 entries is most of the wall clock on a page this quick -- so
+        # the figure was mostly measuring the pause, not the work.
+        slept = 0.0
+        window_start = started
+        window_from = 0
+        i = 0
+        for msg in messages:
+            #BlinkLogger().log_info('Process journal %d: %s' % (i, msg['timestamp']))
+            i = i + 1
+
+            if total and (i % self.JOURNAL_PROGRESS_EVERY == 0 or i == total):
+                now = datetime.datetime.now()
+                window = (now - window_start).total_seconds()
+                working = max((now - started).total_seconds() - slept, 0.0)
+                rate = ((i - window_from) / window) if window > 0.001 else None
+                overall = (i / working) if working > 0.001 else None
+                if overall and i < total:
+                    left = '  %.0fs left' % ((total - i) / overall)
+                else:
+                    left = ''
+                BlinkLogger().log_info(
+                    'Journal %s: %d/%d (%d%%) %s entries/s, %.1fs working%s'
+                    % (label or 'page', i, total, (100 * i) // total,
+                       ('%.0f' % rate) if rate else '-', working, left))
+                time.sleep(self.JOURNAL_THROTTLE)
+                # Measured after the sleep, so the next window contains
+                # none of it -- and so an overrun by the scheduler is
+                # excluded exactly rather than assumed to be 0.05s.
+                after = datetime.datetime.now()
+                slept += (after - now).total_seconds()
+                window_start = after
+                window_from = i
+            try:
+                content_type = msg['content_type']
+                last_message_id = msg['message_id']
+
+                summary_contact = msg.get('contact') or '(no contact)'
+                per_contact = sync_summary.setdefault(summary_contact, {})
+                per_contact[content_type] = per_contact.get(content_type, 0) + 1
+
+                if content_type == 'application/sylk-conversation-remove':
+                    BlinkLogger().log_debug('Remove conversation with %s' % msg['content'])
+                    self.history.delete_messages(local_uri=str(account.id), remote_uri=msg['content'])
+                    self.history.delete_messages(local_uri=msg['content'], remote_uri=str(account.id))
+                elif content_type == 'application/sylk-message-remove':
+                    BlinkLogger().log_debug('Remove message %s with %s' % (msg['message_id'], msg['contact']))
+                    self.history.delete_message(msg['message_id']);
+                elif content_type == 'message/imdn':
+                    payload = eval(msg['content'])
+                    imdn_status = payload['state']
+                    imdn_message_id = payload['message_id']
+                    status = None
+                    if imdn_status == 'delivered':
+                        status = MSG_STATE_DELIVERED
+                    elif imdn_status == 'displayed':
+                        status = MSG_STATE_DISPLAYED
+                    elif imdn_status == 'failed':
+                        status = MSG_STATE_FAILED
+                        
+                    if status:
+                        #BlinkLogger().log_info('Sync IMDN state %s for message %s' % (status, imdn_message_id))
+                        self.pendingSaveMessage[imdn_message_id] = True
+                        self.history.update_message_status(imdn_message_id, status)
+                elif content_type == 'application/sylk-contact-update':
+                    self.contacts_queue.put({'account': str(account.id), 'data': msg['content']})
+                elif content_type == 'application/sylk-conversation-read':
+                    # Replayed in order with the messages themselves, so a
+                    # conversation read elsewhere after its last message ends
+                    # up with a cleared badge, not a stale count.
+                    self.applyConversationRead(account, msg['content'])
+                elif content_type == 'text/pgp-public-key':
+                    uri = msg['contact']
+                    if msg.get('direction') == 'outgoing':
+                        # Our own key, sent from some device to this contact.
+                        # msg['contact'] is the recipient, so importing would
+                        # overwrite their key with ours -- see the live path.
+                        BlinkLogger().log_debug(
+                            u'Skipping our own public key sent to %s' % uri)
+                        continue
+                    BlinkLogger().log_info(u"Public key from %s received" % (uri))
+                    content = (msg['content'] or '').encode()
+
+                    if AccountManager().has_account(uri):
+                        BlinkLogger().log_debug(u"Public key save skipped for own accounts")
+                        continue
+
+                    public_key = ''
+                    start_public = False
+
+                    for l in content.decode().split("\n"):
+                        if l == "-----BEGIN PGP PUBLIC KEY BLOCK-----":
+                            start_public = True
+
+                        if l == "-----END PGP PUBLIC KEY BLOCK-----":
+                            public_key = public_key + l + '\n'
+                            start_public = False
+                            break
+
+                        if start_public:
+                            public_key = public_key + l + '\n'
+                    
+                    if public_key:
+                        self._warn_if_key_mismatched(public_key, uri)
+                        public_key_checksum = hashlib.sha1(public_key.encode()).hexdigest()
+                        key_file = "%s/%s.pubkey" % (self.keys_path, uri)
+                        fd = open(key_file, "wb+")
+                        fd.write(public_key.encode())
+                        fd.close()
+                        #BlinkLogger().log_info(u"Public key for %s was saved to %s" % (uri, key_file))
+                        # The banner these three were built for is commented
+                        # out below; sender_identity does not exist in this
+                        # scope, so building the subtitle raised NameError on
+                        # every public key that arrived.
+                        self.notification_center.post_notification('PGPPublicKeyReceived', sender=account, data=NotificationData(uri=uri, key=public_key))
+
+                        self.saveContact(uri, {'public_key': key_file, 'public_key_checksum': public_key_checksum})
+                    else:
+                         BlinkLogger().log_info(u"No public key detected in the payload")
+
+                elif (content_type.startswith('text/')
+                        or content_type in (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE)
+                        or content_type in FILE_TRANSFER_CONTENT_TYPES):
+                    # application/sylk-location-sharing carries the
+                    # one-shot / live / meet coordinate ticks and the
+                    # lifecycle signals; application/sylk-message-metadata
+                    # is its legacy predecessor (action='location') and is
+                    # still read. Treat both like a regular text message at
+                    # the persistence layer; the renderer branches on
+                    # content_type to draw a location bubble or post a
+                    # system note.
+                    if msg['direction'] == 'incoming':
+                        sync_contacts.add(msg['contact'])
+                        # Counted for the banner, so it must count what the
+                        # user would call a message. Every entry, as this
+                        # first did, turns one live-location share into
+                        # "26 messages received while you were away".
+                        try:
+                            notable = self._journal_message_is_notable(account, msg)
+                        except Exception:
+                            notable = False     # never lose the sync over a count
+                        if notable:
+                            sync_incoming[msg['contact']] = \
+                                sync_incoming.get(msg['contact'], 0) + 1
+                        self.syncIncomingMessage(account, msg, cursor)
+                    elif msg['direction'] == 'outgoing':
+                        sync_contacts.add(msg['contact'])
+                        self.syncOutgoingMessage(account, msg, cursor)
+                else:
+                    # No branch claims this type -- so it is STORED, not
+                    # dropped. A journal entry is the only copy this
+                    # device will ever be offered: the server hands it
+                    # over once, the cursor moves past it, and it is
+                    # never sent again. Discarding one because this build
+                    # has no renderer for it means the feature that
+                    # understands it later finds nothing to render, and
+                    # the only way back is a full resync -- which is
+                    # exactly how every recording's waveform was lost.
+                    #
+                    # Still counted, so the log says what arrived that
+                    # nothing yet handles.
+                    sync_unhandled[content_type] = sync_unhandled.get(content_type, 0) + 1
+                    self._persist_unhandled_journal_message(account, msg)
+                    
+            except Exception as e:
+                BlinkLogger().log_error('Failed to sync message %s' % msg)
+                import traceback
+                traceback.print_exc()
+
+        elapsed = (datetime.datetime.now() - started).total_seconds()
+        working = max(elapsed - slept, 0.0)
+        BlinkLogger().log_info(
+            'Journal %s applied: %d entries in %.1fs (%.1fs working, %.1fs throttled%s)'
+            % (label or 'page', total, elapsed, working, slept,
+               ', %.0f entries/s' % (total / working) if working > 0.001 else ''))
+        return last_message_id, sync_contacts, sync_incoming, sync_summary, sync_unhandled
+
+    @objc.python_method
+    def _finishJournalApply(self, account, sync_contacts, incoming_counts=None):
+        # A handful of senders is worth naming: the point of the banner is to
+        # tell the user WHO wrote while they were away, and "From 2 contacts"
+        # makes them open the app to find out. Past a few, one banner per
+        # sender stops being information and becomes a stack of banners, so
+        # the consolidated count takes over.
+        # Only what the user would call a message. A catch-up can be
+        # hundreds of entries -- trail ticks, receipts, reply links, key
+        # updates -- and none of them is news. With nothing notable in the
+        # batch there is no banner at all, rather than one announcing
+        # traffic the user cannot see and did not ask about.
+        senders = incoming_counts or {}
+        if not senders:
+            if sync_contacts:
+                BlinkLogger().log_debug('Journal sync carried nothing notable; no banner')
+        elif len(senders) < self.NAMED_OFFLINE_NOTIFICATION_LIMIT:
+            delegate = NSApp.delegate()
+            for uri, count in sorted(senders.items(), key=lambda item: -item[1]):
+                nc_title, nc_icon = self.notificationIdentity(uri)
+                if count == 1:
+                    nc_body = NSLocalizedString("1 message received while you were away", "Label")
+                else:
+                    nc_body = NSLocalizedString("%d messages received while you were away" % count, "Label")
+                delegate.notify_new_message(nc_title, nc_body, None, uri=uri, icon=nc_icon)
+        else:
+            nc_title = NSLocalizedString("Offline messages received", "Label")
+            count = len(senders)
+            if count == 1:
+                nc_body = NSLocalizedString("From 1 contact", "Label")
+            else:
+                nc_body = NSLocalizedString("From %d contacts" % count, "Label")
+            NSApp.delegate().notify_new_message(nc_title, nc_body)
+
+        for uri in sync_contacts:
+            self.ensureMessagesGroupContains(uri)
+
+        # Post-sync history refresh — limit it to the viewer the
+        # user is actually looking at right now. The live path
+        # (_presentJournalIncomingMessage -> gotMessage) already
+        # appends new messages to every open viewer as the burst
+        # is processed, so non-focused tabs aren't going to miss
+        # anything — they just don't get a re-render. When the
+        # user clicks a stale tab next, replay_history runs as
+        # part of the existing chat-view-load flow and the panel
+        # catches up.
+        #
+        # Old behaviour (one scroll_back_in_time per contact in
+        # sync_contacts × per viewer) is what stacked thousands
+        # of run_in_gui_thread render calls onto the main thread
+        # at the tail end of a big sync and pushed the app into
+        # a 1–2 minute beachball.
+        for window in self.windows:
+            if not window.window().isVisible():
+                continue
+            focused = window.selectedSessionController()
+            if focused is None or focused.account != account:
+                continue
+            if focused.remote_uri in sync_contacts:
+                BlinkLogger().log_info('Refresh focused viewer for %s' % focused.remote_uri)
+                focused.scroll_back_in_time()
+
+        self.addContactsToMessagesGroup()
+
+        if self._order_changed_during_bulk:
+            self._order_changed_during_bulk = False
+            self._postConversationOrderChanged(None)
+
+        self._flushUnreadChanged()
+
     @objc.python_method
     @run_in_thread('sms_sync')
     def syncConversations(self, account):
-       if not account.sms.enable_replication:
-           BlinkLogger().log_info('Sync conversations is disabled for account %s' % account.id)
-           return
+        if not account.sms.enable_replication:
+            # debug: this fires on every registration refresh for every
+            # account that has replication off, and drowned the log
+            BlinkLogger().log_debug('Sync conversations is disabled for account %s' % account.id)
+            return
 
-       if not account.sms.history_token:
-           BlinkLogger().log_info('Sync conversations token is missing for account %s' % account.id)
-           self.requestSyncToken(account)
-           return
+        if not account.sms.history_token:
+            BlinkLogger().log_info('Sync conversations token is missing for account %s' % account.id)
+            self.requestSyncToken(account)
+            return
 
-       if not account.sms.history_url:
-           BlinkLogger().log_info('Sync conversations url is missing for account %s' % account.id)
-           return
-           
-       try:
-           self.syncConversationsInProgress[account.id]
-       except KeyError:
-           self.syncConversationsInProgress[account.id] = True
-       else:
-           return
+        if not account.sms.history_url:
+            BlinkLogger().log_info('Sync conversations url is missing for account %s' % account.id)
+            return
 
-       sync_contacts = set()
-       url = account.sms.history_url.replace("@", "%40")
-       last_id = account.sms.history_last_id
+        try:
+            self.syncConversationsInProgress[account.id]
+        except KeyError:
+            self.syncConversationsInProgress[account.id] = True
+        else:
+            return
 
-       if last_id:
-           url = "%s/%s" % (url, last_id)
+        # Released in `finally`, not per exit path: previously a non-401 HTTP
+        # error returned with this flag still set, wedging journal sync for the
+        # account until the app restarted.
+        try:
+            self._downloadJournal(account)
+            self._applyCachedJournals(account)
+        finally:
+            try:
+                del self.syncConversationsInProgress[account.id]
+            except KeyError:
+                pass
 
-       BlinkLogger().log_info('Sync conversations from %s' % url)
 
-       req = urllib.request.Request(url, method="GET")
-       req.add_header('Authorization', 'Apikey %s' % account.sms.history_token)
+    @objc.python_method
+    def _logJournalSummary(self, account, sync_summary, unhandled=None, max_contacts=50):
+        """Log what a journal sync actually delivered, per contact.
 
-       try:
-           raw_response = urllib.request.urlopen(req, timeout=20)
-       except (urllib.error.URLError, ConnectionRefusedError) as e:
-           BlinkLogger().log_info('SylkServer connection error for %s: %s' % (url, str(e)))
-           try:
-               code = getattr(e, "code")
-           except AttributeError:
-               pass
-           else:
-               if code == 401:
-                   # request new token on 401
-                   reactor.callLater(30, self.request_token, account)
-               return
-       except (TimeoutError, socket.timeout, RemoteDisconnected, urllib.error.HTTPError) as e:
-           BlinkLogger().log_info('SylkServer connection error for %s: %s' % (url, str(e)))
-           try:
-               del self.syncConversationsInProgress[account.id]
-           except KeyError:
-               pass
-           return
-       else:
-           try:
-               raw_data = raw_response.read().decode().replace('\\/', '/')
-           except Exception as e:
-               BlinkLogger().log_debug('SylkServer API read error for %s: %s' % (url, str(e)))
-               try:
-                   del self.syncConversationsInProgress[account.id]
-               except KeyError:
-                   pass
-               return
+        Counts every journal entry, control types included (imdn,
+        sylk-contact-update, pgp keys ...), because "why did this sync move
+        last_message_id but show me nothing" is usually answered by seeing
+        that the burst was all IMDN receipts.
+        """
+        if not sync_summary:
+            BlinkLogger().log_info('Journal sync for %s: no entries' % account.id)
+            return
 
-           try:
-               json_data = json.loads(raw_data)
-           except (TypeError, json.decoder.JSONDecodeError):
-               BlinkLogger().log_debug('Error parsing SylkServer response: %s' % str(e))
-               return
+        total = sum(sum(counts.values()) for counts in sync_summary.values())
+        BlinkLogger().log_info('Journal sync for %s: %d entries from %d contacts'
+                               % (account.id, total, len(sync_summary)))
 
-           else:
-               last_message_id = None
-               BlinkLogger().log_debug('Sync %d message journal entries for %s (%d bytes)' % (len(json_data['messages']), account.id, len(raw_data)))
+        ordered = sorted(sync_summary.items(),
+                         key=lambda item: (-sum(item[1].values()), item[0]))
+        for contact, counts in ordered[:max_contacts]:
+            types = ', '.join('%s=%d' % (content_type, number)
+                              for content_type, number
+                              in sorted(counts.items(), key=lambda kv: (-kv[1], kv[0])))
+            BlinkLogger().log_info('  %s: %d (%s)' % (contact, sum(counts.values()), types))
 
-               i = 0
-               self.contacts_queue.pause()
-               for msg in json_data['messages']:
-                   #BlinkLogger().log_info('Process journal %d: %s' % (i, msg['timestamp']))
-                   i = i + 1
-                   try:
-                       content_type = msg['content_type']
-                       last_message_id = msg['message_id']
+        remaining = len(ordered) - max_contacts
+        if remaining > 0:
+            BlinkLogger().log_info('  ... and %d more contacts not listed' % remaining)
 
-                       if content_type == 'application/sylk-conversation-remove':
-                           BlinkLogger().log_info('Remove conversation with %s' % msg['content'])
-                           self.history.delete_messages(local_uri=str(account.id), remote_uri=msg['content'])
-                           self.history.delete_messages(local_uri=msg['content'], remote_uri=str(account.id))
-                       elif content_type == 'application/sylk-message-remove':
-                           BlinkLogger().log_info('Remove message %s with %s' % (msg['message_id'], msg['contact']))
-                           self.history.delete_message(msg['message_id']);
-                       elif content_type == 'message/imdn':
-                           payload = eval(msg['content'])
-                           imdn_status = payload['state']
-                           imdn_message_id = payload['message_id']
-                           status = None
-                           if imdn_status == 'delivered':
-                               status = MSG_STATE_DELIVERED
-                           elif imdn_status == 'displayed':
-                               status = MSG_STATE_DISPLAYED
-                           elif imdn_status == 'failed':
-                               status = MSG_STATE_FAILED
-                               
-                           if status:
-                               #BlinkLogger().log_info('Sync IMDN state %s for message %s' % (status, imdn_message_id))
-                               self.pendingSaveMessage[imdn_message_id] = True
-                               self.history.update_message_status(imdn_message_id, status)
-                       elif content_type == 'application/sylk-contact-update':
-                           self.contacts_queue.put({'account': str(account.id), 'data': msg['content']})
-                       elif content_type == 'text/pgp-public-key':
-                           uri = msg['contact']
-                           BlinkLogger().log_info(u"Public key from %s received" % (uri))
-                           content = msg['content'].encode()
-
-                           if AccountManager().has_account(uri):
-                               BlinkLogger().log_debug(u"Public key save skipped for own accounts")
-                               continue
-
-                           public_key = ''
-                           start_public = False
-
-                           for l in content.decode().split("\n"):
-                               if l == "-----BEGIN PGP PUBLIC KEY BLOCK-----":
-                                   start_public = True
-
-                               if l == "-----END PGP PUBLIC KEY BLOCK-----":
-                                   public_key = public_key + l + '\n'
-                                   start_public = False
-                                   break
-
-                               if start_public:
-                                   public_key = public_key + l + '\n'
-                           
-                           if public_key:
-                               public_key_checksum = hashlib.sha1(public_key.encode()).hexdigest()
-                               key_file = "%s/%s.pubkey" % (self.keys_path, uri)
-                               fd = open(key_file, "wb+")
-                               fd.write(public_key.encode())
-                               fd.close()
-                               #BlinkLogger().log_info(u"Public key for %s was saved to %s" % (uri, key_file))
-                               nc_title = NSLocalizedString("Public key", "System notification title")
-                               nc_subtitle = format_identity_to_string(sender_identity, check_contact=True, format='full')
-                               nc_body = NSLocalizedString("Public key received", "System notification title")
-                               #NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
-                               self.notification_center.post_notification('PGPPublicKeyReceived', sender=account, data=NotificationData(uri=uri, key=public_key))
-
-                               self.saveContact(uri, {'public_key': key_file, 'public_key_checksum': public_key_checksum})
-                           else:
-                                BlinkLogger().log_info(u"No public key detected in the payload")
-
-                       elif content_type.startswith('text/') or content_type == 'application/sylk-message-metadata':
-                           # application/sylk-message-metadata is the wire format
-                           # Sylk Mobile uses for live-location ticks (action='location')
-                           # and other rich metadata. Treat it like a regular text
-                           # message at the persistence layer; the renderer
-                           # branches on content_type to draw a location bubble.
-                           if msg['direction'] == 'incoming':
-                               sync_contacts.add(msg['contact'])
-                               self.syncIncomingMessage(account, msg, account.sms.history_last_id)
-                           elif msg['direction'] == 'outgoing':
-                               sync_contacts.add(msg['contact'])
-                               self.syncOutgoingMessage(account, msg, account.sms.history_last_id)
-                       else:
-                           pass
-                           #BlinkLogger().log_error("Unknown sync message type %s" % content_type)
-                           
-                   except Exception as e:
-                       BlinkLogger().log_error('Failed to sync message %s' % msg)
-                       import traceback
-                       traceback.print_exc()
-
-               try:
-                   del self.syncConversationsInProgress[account.id]
-               except KeyError:
-                   pass
-
-               if last_message_id:
-                   account.sms.history_last_id = last_message_id
-                   BlinkLogger().log_info('Sync done till %s' % last_message_id)
-                   # Only notify when at least one contact actually
-                   # produced a renderable message this round. Bursts
-                   # that only carry key exchanges, contact updates or
-                   # filtered-out metadata advance last_message_id but
-                   # leave sync_contacts empty — surfacing "From 0
-                   # contacts" in that case is noise, not signal.
-                   if sync_contacts:
-                       nc_title = NSLocalizedString("Offline messages received", "Label")
-                       count = len(sync_contacts)
-                       if count == 1:
-                           nc_body = NSLocalizedString("From 1 contact", "Label")
-                       else:
-                           nc_body = NSLocalizedString("From %d contacts" % count, "Label")
-                       NSApp.delegate().gui_notify(nc_title, nc_body)
-                   account.save()
-                
-               for uri in sync_contacts:
-                   self.saveContact(uri)
-
-               # Post-sync history refresh — limit it to the viewer the
-               # user is actually looking at right now. The live path
-               # (_presentJournalIncomingMessage -> gotMessage) already
-               # appends new messages to every open viewer as the burst
-               # is processed, so non-focused tabs aren't going to miss
-               # anything — they just don't get a re-render. When the
-               # user clicks a stale tab next, replay_history runs as
-               # part of the existing chat-view-load flow and the panel
-               # catches up.
-               #
-               # Old behaviour (one scroll_back_in_time per contact in
-               # sync_contacts × per viewer) is what stacked thousands
-               # of run_in_gui_thread render calls onto the main thread
-               # at the tail end of a big sync and pushed the app into
-               # a 1–2 minute beachball.
-               for window in self.windows:
-                   if not window.window().isVisible():
-                       continue
-                   focused = window.selectedSessionController()
-                   if focused is None or focused.account != account:
-                       continue
-                   if focused.remote_uri in sync_contacts:
-                       BlinkLogger().log_info('Refresh focused viewer for %s' % focused.remote_uri)
-                       focused.scroll_back_in_time()
-            
-               self.addContactsToMessagesGroup()
-               self.contacts_queue.unpause()
+        if unhandled:
+            dropped = sum(unhandled.values())
+            types = ', '.join('%s=%d' % (content_type, number)
+                              for content_type, number
+                              in sorted(unhandled.items(), key=lambda kv: (-kv[1], kv[0])))
+            BlinkLogger().log_info('  UNHANDLED: %d of %d entries dropped, no handler for: %s'
+                                   % (dropped, total, types))
 
     @objc.python_method
     def saveContact(self, uri, data={}):
@@ -1032,11 +1488,46 @@ class SMSWindowManagerClass(NSObject):
                 group.position = 0
                 group.expanded = True
 
+        # Only save when membership actually changed. This runs at the end
+        # of every journal sync, and an unconditional save posts a group
+        # change notification that rebuilds the group in the model each time.
+        existing = set(group.contacts)
+        added = 0
         for contact in self.new_contacts:
+            if contact in existing:
+                continue
             group.contacts.add(contact)
+            added += 1
 
-        group.save()
         self.new_contacts = set()
+        if added:
+            BlinkLogger().log_info('Added %d contact(s) to the Messages group' % added)
+            group.save()
+
+    @objc.python_method
+    def ensureMessagesGroupContains(self, uri):
+        """Make sure `uri` has a contact and that it is filed under Messages.
+
+        Nothing else does this any more. A contact used to reach the group
+        as a side effect of opening a conversation, and journalled messages
+        deliberately never open one -- so a conversation that arrived purely
+        through replication had no row to appear in, no matter how many
+        unread messages it carried.
+
+        An already-known contact is filed too: being in some other group is
+        no reason to be missing from the one that lists your chats.
+        """
+        if self.illegal_uri(uri):
+            return None
+        try:
+            contact = self.getContact(uri)          # creates it when absent
+            if contact is None:
+                return None
+            self.new_contacts.add(contact)
+            return contact
+        except Exception as e:
+            BlinkLogger().log_error('Cannot file %s under Messages: %s' % (uri, e))
+            return None
 
     @objc.python_method
     def _canonical_uri(self, raw_uri):
@@ -1065,6 +1556,60 @@ class SMSWindowManagerClass(NSObject):
         if '?' in s:
             s = s.split('?', 1)[0]
         return s.lower().strip()
+
+    @objc.python_method
+    def _describe_public_key(self, public_key):
+        """(names_itself_as, fingerprint) for a key blob, or (None, None).
+
+        The user ids are what make a mismatch warning actionable: without
+        them the log says a key looks wrong but not whose it is, which is
+        the difference between spotting a misfiled key and guessing.
+        """
+        try:
+            key, _ = pgpy.PGPKey.from_blob(public_key)
+        except Exception as e:
+            BlinkLogger().log_debug('Cannot parse a received public key: %s' % e)
+            return None, None
+        try:
+            names = [str(uid).strip() for uid in key.userids]
+            names = [name for name in names if name] or ['(no user id)']
+            fingerprint = str(key.fingerprint).replace(' ', '')[-16:]
+        except Exception:
+            return None, None
+        return names, fingerprint
+
+    @objc.python_method
+    def _warn_if_key_mismatched(self, public_key, uri):
+        """Flag a key about to be filed under an address it does not claim.
+
+        A key legitimately carries an email that differs from the SIP
+        address, so this warns rather than refuses -- but it is the cheapest
+        signal that a key is heading for the wrong contact, and that bug
+        destroys the real key silently.
+        """
+        names, fingerprint = self._describe_public_key(public_key)
+        checksum = public_key_short_checksum(public_key)
+        if names is None:
+            BlinkLogger().log_info('Public key stored for %s, checksum %s (unreadable key)'
+                                   % (uri, checksum))
+            return
+
+        BlinkLogger().log_info(
+            'Public key stored for %s: checksum %s, fingerprint %s, identifies as %s'
+            % (uri, checksum, fingerprint, ', '.join(names)))
+
+        target = self._canonical_uri(uri)
+        if not target or any(target in name.lower() for name in names):
+            return
+        if names == ['(no user id)']:
+            # A key with no user id at all cannot name anybody; that is not
+            # evidence of a misfiled key, so it does not warrant a warning.
+            return
+        BlinkLogger().log_warning(
+            'The public key being saved for %s identifies itself as %s '
+            '(checksum %s). Saving anyway -- a key can legitimately name a '
+            'different address, but if that is not this contact then it is '
+            'the wrong key.' % (uri, ', '.join(names), checksum))
 
     @objc.python_method
     def _isUserRenamedContact(self, contact):
@@ -1217,80 +1762,595 @@ class SMSWindowManagerClass(NSObject):
         except (pgpy.errors.PGPDecryptionError, pgpy.errors.PGPError):
             return None
 
-        try:
-            plaintext = bytes(decrypted_message.message, 'latin1')
-        except (TypeError, UnicodeEncodeError):
-            try:
-                plaintext = bytes(decrypted_message.message, 'utf-8')
-            except (TypeError, UnicodeEncodeError):
-                return None
-        try:
-            return plaintext.decode('utf-8')
-        except UnicodeDecodeError:
-            return plaintext.decode('utf-8', errors='replace')
+        return pgp_plaintext(decrypted_message)
 
     @objc.python_method
-    def _decode_location_metadata(self, account_id, body):
-        """Decode an application/sylk-message-metadata body to its JSON dict.
+    def _decode_location_payload(self, account_id, content, metadata=None,
+                                 content_type=LOCATION_CONTENT_TYPE):
+        """Decode a location message into its normalised payload, or None.
 
-        Returns the parsed dict only for a *location* metadata payload
-        carrying a stable ``messageId``; returns None for anything else
-        (non-location metadata, unparseable bodies, or PGP-armoured
-        payloads we can't decrypt). PGP-armoured payloads are decrypted
-        with the account's private key (when available) so we can
-        inspect the inner JSON, mirroring ``_persist_journal_message``.
+        Handles all three shapes this client can meet on the wire:
 
-        Callers distinguish origin vs update ticks via ``metadataId``:
-        None means origin (first tick of a share), a value means a
-        subsequent map-update tick.
+          * **v2** — the cleartext lifecycle envelope arrives in
+            ``metadata`` (the CPIM ``agp.Metadata`` body header live, the
+            journal's metadata column on catch-up) and ``content`` is the
+            armoured coordinates, or the empty string for a
+            coordinate-free signal;
+          * **v1** — the whole envelope is the JSON body, coordinates
+            nested under ``value``;
+          * the legacy ``application/sylk-message-metadata`` tick with
+            ``action == 'location'``.
+
+        Coordinates are decrypted with the account's private key when
+        available; a coordinate tick we cannot decrypt returns None,
+        while a signal (which has nothing to decrypt) does not.
         """
-        if isinstance(body, (bytes, bytearray)):
-            try:
-                text = bytes(body).decode('utf-8')
-            except UnicodeDecodeError:
-                return None
+        decrypt = lambda blob: self._decrypt_pgp_for_account(account_id, blob)
+        try:
+            return location_payload(content, metadata, decrypt=decrypt,
+                                    content_type=content_type)
+        except Exception as e:
+            BlinkLogger().log_debug('Failed to decode location payload: %s' % str(e))
+            return None
+
+    @objc.python_method
+    def _is_silent_location_tick(self, account_id, content, metadata=None,
+                                 content_type=LOCATION_CONTENT_TYPE):
+        """True iff this location message must not bump the badge / raise.
+
+        Only a coordinate **origin** (one-shot, live start, meet start,
+        meet invite) opens a bubble and counts as a new message. Trail
+        ticks merely move a pin that is already on screen, and the
+        coordinate-free handshake / teardown signals leave a system-note
+        breadcrumb rather than a chat message. If we cannot decode the
+        payload at all we conservatively return False — failing to
+        suppress the raise is preferable to suppressing it for a genuine
+        first share.
+        """
+        payload = self._decode_location_payload(account_id, content, metadata, content_type)
+        if payload is None:
+            return False
+        return not is_notable_action(payload)
+
+    @objc.python_method
+    def cachedRoutes(self, key):
+        return self.route_cache.get(key)
+
+    @objc.python_method
+    def storeRoutes(self, key, routes):
+        if not routes:
+            return
+        if key not in self.route_cache:
+            BlinkLogger().log_debug('Route cached for %s' % (key,))
+        self.route_cache[key] = routes
+
+    @objc.python_method
+    def invalidateRoutes(self, key, reason=''):
+        if self.route_cache.pop(key, None) is not None:
+            BlinkLogger().log_info('Route cache dropped for %s%s'
+                                   % (key[1] if len(key) > 1 else key,
+                                      (' (%s)' % reason) if reason else ''))
+
+    @objc.python_method
+    def _normalized_timestamp(self, value):
+        """Naive UTC datetime for anything a message timestamp can be.
+
+        Values reach us as ISOTimestamp, as datetime and as the string form
+        SQLite hands back, some tz-aware and some not. Comparing those
+        directly raises, so everything is flattened to one shape here.
+        """
+        if value is None:
+            return None
+        if isinstance(value, datetime.datetime):
+            stamp = value
         else:
-            text = body
-
-        if not isinstance(text, str):
-            return None
-
-        stripped = text.strip()
-        if (stripped.startswith('-----BEGIN PGP MESSAGE-----')
-                and stripped.endswith('-----END PGP MESSAGE-----')):
-            plaintext = self._decrypt_pgp_for_account(account_id, stripped)
-            if plaintext is None:
+            text = str(value).strip().replace('T', ' ')
+            if not text:
                 return None
-            stripped = plaintext
-
-        try:
-            data = json.loads(stripped)
-        except (TypeError, ValueError):
-            return None
-
-        if not isinstance(data, dict):
-            return None
-        if data.get('action') != 'location':
-            return None
-        if not data.get('messageId'):
-            return None
-        return data
+            stamp = None
+            for fmt in ('%Y-%m-%d %H:%M:%S.%f%z', '%Y-%m-%d %H:%M:%S%z',
+                        '%Y-%m-%d %H:%M:%S.%f', '%Y-%m-%d %H:%M:%S',
+                        '%Y-%m-%d %H:%M'):
+                try:
+                    stamp = datetime.datetime.strptime(text, fmt)
+                    break
+                except ValueError:
+                    continue
+            if stamp is None:
+                return None
+        if stamp.tzinfo is not None:
+            stamp = stamp.astimezone(datetime.timezone.utc).replace(tzinfo=None)
+        return stamp
 
     @objc.python_method
-    def _is_location_update_tick(self, account_id, body):
-        """Return True iff body is a Sylk location *update* tick.
+    @run_in_green_thread
+    def loadLastMessageTimes(self):
+        """Seed the conversation order from history, off the GUI thread.
 
-        Origin ticks (``metadataId is None``) and non-location metadata
-        flavours return False. Used by the live receive path to decide
-        whether to raise the SMS viewer window on an incoming
-        application/sylk-message-metadata: only the first/origin tick
-        of a share should pop the window — subsequent map updates must
-        refresh the bubble silently. If the body cannot be decrypted or
-        parsed we conservatively return False — failing to suppress the
-        raise is preferable to suppressing it for the very first share.
+        Green, not a plain worker thread: ChatHistory hands its results back
+        through block_on, which is an eventlib primitive and only works from
+        a green thread. Under run_in_thread it raised, the seed came back
+        empty, and the Messages group quietly fell back to alphabetical.
         """
-        data = self._decode_location_metadata(account_id, body)
-        return data is not None and data.get('metadataId') is not None
+        try:
+            stored = self.history.last_message_times()
+        except Exception as e:
+            BlinkLogger().log_error('Cannot read the last message times: %s' % e)
+            return
+        BlinkLogger().log_debug('History knows %d conversation(s) with messages'
+                                % len(stored))
+        loaded = 0
+        for uri, stamp in stored.items():
+            key = self._canonical_uri(uri)
+            when = self._normalized_timestamp(stamp)
+            if not key or when is None:
+                continue
+            if self.last_message_times.get(key) is None or when > self.last_message_times[key]:
+                self.last_message_times[key] = when
+                loaded += 1
+        BlinkLogger().log_info('Conversation order seeded from %d conversation(s)' % loaded)
+        if loaded:
+            self._postConversationOrderChanged(None)
+
+    @objc.python_method
+    @run_in_green_thread
+    def loadUnreadCounts(self):
+        """Restore the unread badges from the table.
+
+        Green, like loadLastMessageTimes and for the same reason: the
+        history answers through block_on, which quietly returns nothing
+        when it is called from anywhere else.
+        """
+        try:
+            stored = self.history.unread_counts()
+        except Exception as e:
+            BlinkLogger().log_error('Cannot read the unread counts: %s' % e)
+            return
+
+        counts = {}
+        for uri, count in stored.items():
+            key = self._canonical_uri(uri)
+            if key and count > 0:
+                counts[key] = counts.get(key, 0) + count
+        if not counts:
+            BlinkLogger().log_debug('No unread messages were waiting')
+            return
+        self._applyRestoredUnreadCounts(counts)
+
+    @objc.python_method
+    @run_in_gui_thread
+    def _applyRestoredUnreadCounts(self, counts):
+        """Put the restored badges on screen, on the GUI thread.
+
+        The counting happens in a green thread because that is the only
+        place the history will answer, but filing contacts into the
+        Messages group is address-book and AppKit work. Doing that from
+        the green thread was corrupting objects the run loop later
+        released, which surfaced as a crash inside a timer with nothing to
+        do with any of this.
+        """
+        restored = 0
+        for key, count in counts.items():
+            self.unread_counts[key] = self.unread_counts.get(key, 0) + count
+            restored += count
+
+        BlinkLogger().log_info('Restored %d unread message(s) in %d conversation(s)'
+                               % (restored, len(counts)))
+        for key in counts:
+            self.ensureMessagesGroupContains(key)
+        self.addContactsToMessagesGroup()
+        for key, count in counts.items():
+            self._postUnreadChanged(key, self.unread_counts.get(key, count))
+
+    @objc.python_method
+    def noteMessageTime(self, remote_uri, timestamp):
+        """Record when a conversation last carried a message."""
+        key = self._canonical_uri(remote_uri)
+        when = self._normalized_timestamp(timestamp)
+        if not key or when is None:
+            return
+        known = self.last_message_times.get(key)
+        if known is not None and when <= known:
+            return
+        self.last_message_times[key] = when
+        self._postConversationOrderChanged(key)
+
+    @objc.python_method
+    def lastMessageTimeForURI(self, remote_uri):
+        return self.last_message_times.get(self._canonical_uri(remote_uri))
+
+    @objc.python_method
+    def _postConversationOrderChanged(self, key):
+        # A journal apply walks thousands of messages; announcing each one
+        # would re-sort and redraw the contact list thousands of times. The
+        # burst collapses into a single notification when the apply ends.
+        if self._journal_bulk:
+            self._order_changed_during_bulk = True
+            return
+        self.notification_center.post_notification(
+            'BlinkConversationOrderChanged', sender=self,
+            data=NotificationData(key=key))
+
+    @objc.python_method
+    def fileTransferBaseURL(self, account):
+        """Where this account uploads files, or None if we cannot tell.
+
+        Three sources, in order of how much they can be trusted: what a
+        received transfer told us (the server's own URL, stored on the
+        account the first time one arrives), what the journal URL implies,
+        and nothing. Deriving from the journal URL is a guess about one
+        path segment, so it is only reached before the first transfer and
+        the result is logged.
+        """
+        try:
+            stored = account.sms.file_transfer_url
+        except AttributeError:
+            stored = None
+        if stored:
+            return str(stored)
+
+        try:
+            history_url = str(account.sms.history_url or '')
+        except AttributeError:
+            history_url = ''
+        if not history_url:
+            return None
+
+        root = history_url.split('/messages')[0].rstrip('/')
+        if root == history_url.rstrip('/'):
+            # No /messages to cut: the journal URL is shaped in a way this
+            # derivation does not know, and inventing a path from it would
+            # be worse than saying so.
+            BlinkLogger().log_info('Cannot derive the file transfer URL from %s; '
+                                   'it will be learned from the first file received'
+                                   % history_url)
+            return None
+        derived = root + FILE_TRANSFER_PATH
+        BlinkLogger().log_info('File transfer URL derived from the journal URL: %s' % derived)
+        return derived
+
+    @objc.python_method
+    def noteFileTransferURL(self, account, body):
+        """Learn the endpoint from a transfer that has just arrived.
+
+        Cheap enough to call on every file-transfer message: it returns at
+        the first sight of a stored value, which is the second message
+        onwards.
+        """
+        try:
+            if account.sms.file_transfer_url:
+                return
+        except AttributeError:
+            return
+
+        meta = file_transfer_envelope(body)
+        if not meta:
+            return
+        base = base_url_from_transfer(meta.get('url'))
+        if not base:
+            return
+        try:
+            account.sms.file_transfer_url = base
+            account.save()
+            BlinkLogger().log_info('File transfer URL for %s learned from an incoming '
+                                   'transfer: %s' % (account.id, base))
+        except Exception as e:
+            BlinkLogger().log_error('Cannot remember the file transfer URL: %s' % e)
+
+    @objc.python_method
+    def purgeConversationsForURIs(self, uris, reason='contact deleted'):
+        """Erase every trace of one or more addresses.
+
+        Called when a contact goes and its addresses are left belonging to
+        nobody. Everything filed under the address goes with it: the open
+        conversation, its stored messages, the files downloaded from it,
+        the public key held for it, and its place in the conversation
+        order. The caller decides which addresses are actually orphaned --
+        an address shared with another contact must survive, because the
+        messages under it belong to that contact too.
+        """
+        targets = []
+        for uri in uris:
+            key = self._canonical_uri(uri)
+            if key and key not in targets:
+                targets.append(key)
+        if not targets:
+            return
+
+        BlinkLogger().log_info('Purging %d conversation(s) (%s): %s'
+                               % (len(targets), reason, ', '.join(targets)))
+
+        for uri in targets:
+            self.closeConversationForURI(uri)
+
+        for uri in targets:
+            self.last_message_times.pop(uri, None)
+            if self.unread_counts.pop(uri, None):
+                self._postUnreadChanged(uri, 0)
+            self._postConversationOrderChanged(uri)
+
+        self._purgeStoredData(targets)
+
+    @objc.python_method
+    def closeConversationForURI(self, uri):
+        """Take a conversation off the screen, wherever it is being shown."""
+        key = self._canonical_uri(uri)
+        if not key:
+            return False
+        closed = False
+        for viewer in list(self.allViewers()):
+            if self._canonical_uri(getattr(viewer, 'remote_uri', '')) != key:
+                continue
+            host = self.windowForViewer(viewer)
+            if host is not None:
+                try:
+                    host.removeViewer_(viewer)
+                except Exception as e:
+                    BlinkLogger().log_error('Cannot close the conversation with %s: %s'
+                                            % (key, e))
+            self.viewer_hosts.pop(viewer, None)
+            closed = True
+        return closed
+
+    @objc.python_method
+    @run_in_green_thread
+    def _purgeStoredData(self, uris):
+        """The part that touches the disc, off the GUI thread.
+
+        Green rather than a plain worker: ChatHistory answers through
+        block_on, which only works from a green thread.
+        """
+        from FileTransferCache import FileTransferCache
+        for uri in uris:
+            try:
+                self.history.delete_messages(remote_uri=uri)
+            except Exception as e:
+                BlinkLogger().log_error('Cannot delete the messages of %s: %s' % (uri, e))
+
+            try:
+                removed = FileTransferCache().purge_peer(uri)
+                if removed:
+                    BlinkLogger().log_info('Deleted %d downloaded file(s) from %s'
+                                           % (removed, uri))
+                FileTransferCache().forget_peer(uri)
+            except Exception as e:
+                BlinkLogger().log_error('Cannot delete the files of %s: %s' % (uri, e))
+
+            key_file = "%s/%s.pubkey" % (self.keys_path, uri)
+            try:
+                if os.path.exists(key_file):
+                    os.remove(key_file)
+                    BlinkLogger().log_info('Deleted the public key held for %s' % uri)
+            except OSError as e:
+                BlinkLogger().log_error('Cannot delete %s: %s' % (key_file, e))
+
+    @objc.python_method
+    def noteUnreadMessage(self, remote_uri, delta=1):
+        """Bump the unread count for a conversation and announce it."""
+        key = self._canonical_uri(remote_uri)
+        if not key:
+            return 0
+        count = self.unread_counts.get(key, 0) + delta
+        self.unread_counts[key] = count
+        self._postUnreadChanged(key, count)
+        return count
+
+    @objc.python_method
+    def clearUnreadMessages(self, remote_uri):
+        """Drop the unread badge for a conversation.
+
+        Returns True when there was actually something to clear, which is
+        the caller's cue to tell the account's other devices. Deliberately
+        does NOT announce by itself: applyConversationRead clears the badge
+        too, and a marker echoed straight back to the device that sent it
+        is a loop.
+        """
+        key = self._canonical_uri(remote_uri)
+        # The rows are marked read whether or not a counter was standing:
+        # the counter is this session's view of what the table already
+        # knows, and the two have to agree or the badge comes back on the
+        # next launch.
+        self.history.mark_conversation_read(remote_uri=str(remote_uri))
+        if self.unread_counts.pop(key, None) is None:
+            return False
+        self._postUnreadChanged(key, 0)
+        return True
+
+    @objc.python_method
+    def unreadCountForURI(self, remote_uri):
+        return self.unread_counts.get(self._canonical_uri(remote_uri), 0)
+
+    @objc.python_method
+    def _postUnreadChanged(self, key, count):
+        # A journal apply can walk thousands of messages; announcing each one
+        # would redraw the contact list thousands of times. The burst
+        # collapses into one notification per affected contact at the end,
+        # which is a handful.
+        if self._journal_bulk:
+            self._unread_changed_during_bulk.add(key)
+            return
+        total = sum(self.unread_counts.values())
+        self.notification_center.post_notification(
+            'BlinkUnreadMessageCountChanged', sender=self,
+            data=NotificationData(key=key, count=count, total=total))
+
+    @objc.python_method
+    def _flushUnreadChanged(self):
+        keys = self._unread_changed_during_bulk
+        self._unread_changed_during_bulk = set()
+        if not keys:
+            return
+        BlinkLogger().log_info('Journal sync left unread messages for %d contact(s)' % len(keys))
+        for key in keys:
+            self._postUnreadChanged(key, self.unread_counts.get(key, 0))
+
+    @objc.python_method
+    def _persistLiveMessage(self, account, remote_uri, msgid, call_id, direction,
+                            content, content_type, timestamp, metadata=None,
+                            unread=False):
+        """Store a live message without creating a conversation.
+
+        Mirrors _persist_journal_message: location payloads fold into their
+        origin row, everything else is a plain insert. A PGP body is stored
+        as ciphertext exactly as the journal path does -- history replay
+        decrypts it when the user actually opens the conversation.
+
+        Returns True when a new row was added (i.e. something the user has
+        not seen), False for updates and dropped payloads.
+        """
+        body = content.decode() if isinstance(content, bytes) else (content or '')
+        # A teardown signal or a trail tick is the same share still
+        # running; only the start of one is a new thing said.
+        stamps_conversation_time = True
+
+        # Control plane, not a message: no row, no unread count, no banner.
+        if is_otr_wire_text(body):
+            BlinkLogger().log_debug('Dropped OTR traffic from %s (no conversation open)'
+                                    % remote_uri)
+            return False
+
+        encryption = ''
+        stripped = body.strip()
+        if stripped.startswith('-----BEGIN PGP MESSAGE-----') and stripped.endswith('-----END PGP MESSAGE-----'):
+            encryption = 'pgp_encrypted'
+
+        if content_type in FILE_TRANSFER_CONTENT_TYPES:
+            self.noteFileTransferURL(account, body)
+
+        if content_type in (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE):
+            # A reply link and a recording's waveform share the legacy
+            # location content type but are neither ticks nor bubbles.
+            # Stored verbatim, because each is the ONLY record of
+            # something a message needs: losing the first turns a reply
+            # back into an unrelated remark, and losing the second leaves
+            # a recording with a bare scrub bar for ever -- the server
+            # relays a fixed field set for a transfer and drops the rest,
+            # so there is nowhere else for the waveform to come from.
+            if reply_metadata(body) is not None or peaks_metadata(body) is not None:
+                self.history.add_message(
+                    msgid, 'sms', str(account.id), remote_uri,
+                    direction,
+                    remote_uri if direction == 'incoming' else str(account.id),
+                    str(account.id) if direction == 'incoming' else remote_uri,
+                    str(timestamp), body, content_type, "0",
+                    MSG_STATE_DELIVERED if direction == 'incoming' else MSG_STATE_SENT,
+                    call_id=call_id or msgid, encryption='', read=1)
+                return False            # nothing was said, so nothing is unread
+            payload = self._decode_location_payload(str(account.id), body, metadata, content_type)
+            if payload is None:
+                # A metadata flavour nothing here understands. Kept for
+                # the same reason the journal keeps one: this is the only
+                # copy, and a build that learns the flavour later finds
+                # nothing if it was thrown away. Inert -- never unread,
+                # never moves the conversation, never drawn.
+                stamps_conversation_time = False
+                encryption = ''
+                unread = False
+            else:
+                body = storable_envelope(payload)
+                if payload['is_coordinate']:
+                    row_id = location_bubble_id(payload, msgid)
+                    if payload['is_update']:
+                        self.history.update_message_body(row_id, body,
+                                                         merge=merge_location_bodies)
+                        return False
+                    msgid = row_id
+                encryption = ''
+                stamps_conversation_time = is_notable_action(payload)
+
+        if direction == 'incoming':
+            cpim_from, cpim_to = remote_uri, str(account.id)
+            status = MSG_STATE_DELIVERED
+        else:
+            cpim_from, cpim_to = str(account.id), remote_uri
+            status = MSG_STATE_SENT
+
+        self.history.add_message(
+            msgid, 'sms', str(account.id), remote_uri,
+            direction, cpim_from, cpim_to, str(timestamp),
+            body, content_type, "0", status,
+            call_id=call_id or msgid, encryption=encryption,
+            read=0 if (unread and direction == 'incoming') else 1,
+        )
+        if stamps_conversation_time:
+            self.noteMessageTime(remote_uri, timestamp)
+        return True
+
+    @objc.python_method
+    def _persistUnsupportedLiveMessage(self, account, remote_uri, msgid, call_id,
+                                       direction, content, content_type, timestamp):
+        """Keep a live message whose type nothing here understands.
+
+        Inert, exactly like its journalled twin: already read, no unread
+        count, no reordering of the contact list, and the renderer will
+        not draw it. What it buys is that the information exists at all
+        when a later build learns what the type means.
+        """
+        body = content.decode('utf-8', 'replace') if isinstance(content, bytes) else (content or '')
+        if direction == 'incoming':
+            cpim_from, cpim_to = remote_uri, str(account.id)
+            status = MSG_STATE_DELIVERED
+        else:
+            cpim_from, cpim_to = str(account.id), remote_uri
+            status = MSG_STATE_SENT
+        self.history.add_message(
+            msgid, 'sms', str(account.id), remote_uri,
+            direction, cpim_from, cpim_to, str(timestamp),
+            body, content_type, "0", status,
+            call_id=call_id or msgid, encryption='', read=1)
+
+    @objc.python_method
+    def notificationIdentity(self, uri, fallback=None):
+        """(name, icon path) to put on a notification about one address.
+
+        The name is the contact's, not the address: a banner saying
+        "enry01@sip2sip.info" is the one piece of information the user
+        already has. The icon is the contact's own picture and nothing
+        else -- the stand-in avatar every unknown address gets would put a
+        grey silhouette on every banner, which says less than no picture
+        at all.
+        """
+        name = str(fallback or uri or '')
+        icon = None
+        try:
+            controller = NSApp.delegate().contactsWindowController
+            contact = controller.getFirstContactFromAllContactsGroupMatchingURI(str(uri))
+        except Exception:
+            contact = None
+        if contact is not None:
+            try:
+                if contact.name:
+                    name = str(contact.name)
+            except Exception:
+                pass
+            try:
+                path = contact.avatar.path
+                if path and os.path.isfile(path):
+                    icon = path
+            except Exception:
+                icon = None
+        return name, icon
+
+    @objc.python_method
+    def _notificationBody(self, content, content_type):
+        """Short preview for the system notification. Never leaks ciphertext."""
+        from MessageHost import file_transfer_summary
+        body = content.decode() if isinstance(content, bytes) else (content or '')
+        if body.strip().startswith('-----BEGIN PGP MESSAGE-----'):
+            return NSLocalizedString("Encrypted message", "Label")
+        if content_type in (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE):
+            return NSLocalizedString("Location", "Label")
+        summary = file_transfer_summary(body)
+        if summary is not None:
+            return summary.split('\n')[0]
+        body = body.strip().replace('\n', ' ')
+        return body[:120] + ('...' if len(body) > 120 else '')
+
+    @objc.python_method
+    def _describe_journal_message(self, msg, direction):
+        return ('journal %s id=%s content_type=%s contact=%s timestamp=%s disposition=%s'
+                % (direction, msg.get('message_id'), msg.get('content_type'),
+                   msg.get('contact'), msg.get('timestamp'), msg.get('disposition')))
 
     @objc.python_method
     def _journal_message_is_notable(self, account, msg):
@@ -1298,132 +2358,290 @@ class SMSWindowManagerClass(NSObject):
         unread badge on the SMS tab.
 
         Mirrors what actually renders in the conversation: plain text
-        always counts; for application/sylk-message-metadata only a
-        location *origin* tick produces a visible bubble. Location
-        update ticks merely refresh an existing bubble, and every other
-        metadata flavour (rotation / consumed / label / meeting_end /
-        location_request / …) and control/sync message is dropped
-        without rendering — none of those should increment the counter.
+        always counts; for a location payload only a coordinate *origin*
+        tick produces a visible bubble. Trail ticks merely refresh an
+        existing bubble, the coordinate-free signals leave a system-note
+        breadcrumb, and every other metadata flavour (rotation /
+        consumed / label / reply / caregiver / …) and control/sync
+        message is dropped without rendering — none of those should
+        increment the counter.
         """
         content_type = msg['content_type']
-        if content_type in ('text/plain', 'text/html'):
+        if content_type in ('text/plain', 'text/html') + FILE_TRANSFER_CONTENT_TYPES:
             return True
-        if content_type != 'application/sylk-message-metadata':
+        if content_type not in (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE):
             return False
-        data = self._decode_location_metadata(str(account.id), msg['content'])
-        return data is not None and data.get('metadataId') is None
+        payload = self._decode_location_payload(
+            str(account.id), msg['content'], msg.get('metadata'), content_type)
+        return is_notable_action(payload)
+
+    @objc.python_method
+    def _persist_unhandled_journal_message(self, account, msg):
+        """Store a journal entry whose content type nothing here handles.
+
+        Verbatim and inert: it becomes a row with its own content type,
+        already read, and it never counts towards unread or moves the
+        conversation up the list. The renderer refuses to draw anything
+        it does not recognise (is_renderable_content_type), so an
+        unknown row costs a little disk and nothing else -- and a later
+        build that learns the type finds the history intact.
+        """
+        direction = msg.get('direction') or 'incoming'
+        contact = msg.get('contact')
+        if not contact:
+            return
+        if direction == 'incoming':
+            cpim_from, cpim_to = contact, str(account.id)
+            status = MSG_STATE_DELIVERED
+        else:
+            cpim_from, cpim_to = str(account.id), contact
+            status = MSG_STATE_SENT
+        try:
+            self.history.add_message(
+                msg['message_id'], 'sms', str(account.id), contact,
+                direction, cpim_from, cpim_to, msg['timestamp'],
+                msg.get('content') or '', msg['content_type'], "0", status,
+                call_id=msg['message_id'], encryption='', read=1)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot store unhandled %s message %s: %s'
+                                    % (msg.get('content_type'), msg.get('message_id'), e))
 
     @objc.python_method
     def _persist_journal_message(self, account, msg, direction, status, encryption,
-                                 cpim_from, cpim_to):
+                                 cpim_from, cpim_to, unread=False):
         """Insert (or fold) a journal message into chat_messages.
 
         Behaves like a pass-through to history.add_message except for
-        application/sylk-message-metadata location ticks, where it folds
-        update ticks into the share's origin row by keying on the JSON
-        body's stable ``messageId`` and routing update ticks through
-        history.update_message_body. Result: one row per share, holding
-        the latest known position, regardless of how many ticks the
-        journal hands us.
+        location payloads, where it folds every trail tick into the
+        share's origin row by keying on the envelope's ``sessionId`` and
+        routing update ticks through history.update_message_body. Result:
+        one row per share holding the latest known position, regardless
+        of how many ticks the journal hands us, plus one row per
+        lifecycle signal so its breadcrumb survives a reload.
 
-        Sylk Mobile encrypts metadata payloads at the PGP layer just
-        like ordinary text messages, so we have to decrypt before we
-        can decide whether the body is a location tick. Encrypted
-        bodies whose key we can't access are dropped on the floor —
-        persisting opaque ciphertext only bloats history and triggers
-        nothing on display.
+        The stored body is always the v1-shaped envelope with the
+        coordinates decrypted in place (see storable_envelope): Blink's
+        chat_messages has no metadata column, and a row that carries its
+        own envelope replays without the private key. Coordinate ticks
+        whose blob we can't decrypt are dropped on the floor —
+        persisting opaque ciphertext only bloats history and renders
+        nothing.
         """
         body = msg['content']
         content_type = msg['content_type']
         msgid = msg['message_id']
+        # Whether this moves the conversation up the contact list. A trail
+        # tick is the same share still running, not a new thing said, and
+        # stamping the time on every one of them kept shoving the contact
+        # back to the top every few seconds for as long as someone walked.
+        stamps_conversation_time = True
 
-        if content_type == 'application/sylk-message-metadata':
-            stripped = body.strip() if isinstance(body, str) else body
-            is_armoured = (
-                isinstance(stripped, str)
-                and stripped.startswith('-----BEGIN PGP MESSAGE-----')
-                and stripped.endswith('-----END PGP MESSAGE-----')
-            )
-            if is_armoured:
-                plaintext = self._decrypt_pgp_for_account(str(account.id), stripped)
-                if plaintext is None:
-                    # Can't decrypt — skip persist entirely so we don't
-                    # bloat chat_messages with rows we'll never render.
-                    return
-                body = plaintext
+        # OTR wire traffic that reached the journal before the no-journal
+        # header existed. The session that could open it is long gone, so
+        # storing it only guarantees a wire dump in some future replay.
+        if is_otr_wire_text(body):
+            BlinkLogger().log_debug('Dropped journalled OTR traffic %s' % msgid)
+            self._resolvePendingSave(msgid)
+            return
 
-            try:
-                data = json.loads(body)
-            except (TypeError, ValueError):
-                data = None
-            if isinstance(data, dict) and data.get('action') == 'location' and data.get('messageId'):
-                bubble_id = data['messageId']
-                if data.get('metadataId') is not None:
-                    # Update tick — refresh the existing row's body so a
-                    # later replay shows the most recent position.
-                    self.history.update_message_body(bubble_id, body)
-                    return
-                # Origin tick — persist under the bubble id so subsequent
-                # update ticks (live or journaled) all rewrite this row.
-                msgid = bubble_id
+        if content_type in FILE_TRANSFER_CONTENT_TYPES:
+            self.noteFileTransferURL(account, body)
+
+        if content_type in (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE) \
+                and reply_metadata(body) is None and peaks_metadata(body) is None:
+            payload = self._decode_location_payload(
+                str(account.id), body, msg.get('metadata'), content_type)
+            if payload is None:
+                # Not a location payload at all -- another metadata
+                # flavour -- or a coordinate tick we cannot read. Nothing
+                # to RENDER, which is not the same as nothing to keep:
+                # the journal offers this entry once, the cursor moves
+                # past it, and it is never sent again. The flavour
+                # nothing understands today is exactly the one a later
+                # build will want, so it is stored inert, with the body
+                # it arrived with, and the renderer declines to draw it.
+                stamps_conversation_time = False
+                encryption = ''
             else:
-                # Non-location metadata (rotation / consumed / label /
-                # meeting_end / location_request / reply / caregiver / …
-                # or anything we can't parse). Sylk Mobile uses these
-                # for internal state changes; Blink doesn't render any
-                # of them, so persisting just bloats chat_messages with
-                # rows render_history_messages will skip anyway.
-                return
+                body = storable_envelope(payload)
+
+                if payload['is_coordinate']:
+                    row_id = location_bubble_id(payload, msgid)
+                    if payload['is_update']:
+                        # Update tick -- refresh the existing row's body so
+                        # a later replay shows the most recent position. No
+                        # row is inserted, so the gauge is cleared here.
+                        self.history.update_message_body(row_id, body,
+                                                         merge=merge_location_bodies)
+                        self._resolvePendingSave(msgid)
+                        return
+                    # Origin tick -- persist under the bubble id so
+                    # subsequent update ticks all rewrite this row.
+                    msgid = row_id
+                # A coordinate-free signal keeps its own message id: it is
+                # a breadcrumb in the timeline, not a map, and must not
+                # collide with the session row it refers to.
+
+                # The row we store is cleartext (the coordinates were
+                # opened above), so it must not claim the ciphertext lock
+                # the live path never sets on these rows either.
+                encryption = ''
+                stamps_conversation_time = is_notable_action(payload)
 
         self.history.add_message(
             msgid, 'sms', str(account.id), msg['contact'],
             direction, cpim_from, cpim_to, msg['timestamp'],
             body, content_type, "0", status,
             call_id=msg['message_id'], encryption=encryption,
+            read=0 if (unread and direction == 'incoming') else 1,
         )
+        if stamps_conversation_time:
+            self.noteMessageTime(msg['contact'], msg['timestamp'])
 
     @objc.python_method
     def syncIncomingMessage(self, account, msg, last_id=None):
         direction = 'incoming'
-        self.pendingSaveMessage[msg['message_id']] = True
+        BlinkLogger().log_debug(self._describe_journal_message(msg, direction))
+        if not self._journal_bulk:
+            # bulk apply has its own progress counter; tracking every save
+            # here only adds dict churn and a log line per message
+            self.pendingSaveMessage[msg['message_id']] = True
 
         if 'display' not in msg['disposition']:
             status = MSG_STATE_DISPLAYED
         else:
             status = MSG_STATE_DELIVERED
 
-        if msg['content'].startswith('-----BEGIN PGP MESSAGE-----') and msg['content'].endswith('-----END PGP MESSAGE-----'):
+        content = msg['content'] or ''
+        if content.startswith('-----BEGIN PGP MESSAGE-----') and content.endswith('-----END PGP MESSAGE-----'):
             encryption = 'pgp_encrypted'
         else:
             encryption = ''
 
         if not last_id:
+            BlinkLogger().log_debug('journal incoming id=%s -> persist only (backfill, no last_id)' % msg['message_id'])
+            unread = self._journalMessageIsUnread(account, msg, status)
             self._persist_journal_message(
                 account, msg, direction, status, encryption,
                 cpim_from=msg['contact'], cpim_to=str(account.id),
+                unread=unread,
             )
+            if unread:
+                self.noteUnreadMessage(msg['contact'])
             return
 
         # Only open windows for messages newer than one week. For older entries
         # without an existing viewer we persist directly to history and skip the
         # GUI hop — scroll_back_in_time at the end of syncConversations will
         # surface them when the user opens the conversation.
-        create_if_needed = ISOTimestamp.now() - ISOTimestamp(msg['timestamp']) < datetime.timedelta(days=7)
-        if not create_if_needed and not self._hasViewerFor(msg['contact'], account):
+        # A journalled message NEVER creates a conversation. Replicated
+        # history is caught up into the database; the user opens a contact to
+        # see it. Messages still reach a conversation that is already open.
+        create_if_needed = False
+        if not self._hasViewerFor(msg['contact'], account):
+            BlinkLogger().log_debug('journal incoming id=%s -> persist only (no open conversation)'
+                                    % msg['message_id'])
+            unread = self._journalMessageIsUnread(account, msg, status)
             self._persist_journal_message(
                 account, msg, direction, status, encryption,
                 cpim_from=msg['contact'], cpim_to=str(account.id),
+                unread=unread,
             )
+            if unread:
+                self.noteUnreadMessage(msg['contact'])
             return
 
+        BlinkLogger().log_debug('journal incoming id=%s -> present in GUI (create_if_needed=%s, notable=%s)'
+                                % (msg['message_id'], create_if_needed, self._journal_message_is_notable(account, msg)))
         self._presentJournalIncomingMessage(account, msg, status, create_if_needed)
 
     @objc.python_method
+    def _conversationReadContact(self, content):
+        """The contact a conversation-read marker refers to.
+
+        Two shapes in the wild: this client sends {"contact": "..."} while
+        the journal replays a bare address, the same convention
+        sylk-conversation-remove uses. Accepting only the JSON one meant
+        every marker arriving through replication was discarded -- which is
+        precisely the path that matters, since it is another device telling
+        us what it read.
+        """
+        text = (content or '').strip()
+        if not text:
+            return None
+        if text.startswith('{'):
+            try:
+                value = json.loads(text).get('contact')
+            except (TypeError, ValueError):
+                return None
+            return str(value).strip() if value else None
+        return text if '@' in text else None
+
+    @objc.python_method
+    def applyConversationRead(self, account, content):
+        """Another of my devices read this conversation, so this one has too.
+
+        The contact is in the PAYLOAD, not in the addressing. This message
+        travels from my account to my account, so the To header names me --
+        going by the addressing would clear the badge on myself and leave
+        the contact's untouched, which is why this never worked.
+        """
+        if isinstance(content, bytes):
+            content = content.decode('utf-8', 'replace')
+        contact = self._conversationReadContact(content)
+        if not contact:
+            BlinkLogger().log_error('Cannot read the conversation-read payload %r' % content)
+            return
+
+        BlinkLogger().log_info('Conversation with %s was read on another device' % contact)
+        self.clearUnreadMessages(contact)
+
+        # If this device has the conversation open, settle it there too: the
+        # receipts are owed by the account, not by the device, and another
+        # device has already sent them.
+        for viewer in self.allViewers():
+            if viewer.account == account and viewer.remote_uri == contact:
+                try:
+                    viewer.messages_read()
+                    host = self.windowForViewer(viewer)
+                    if host is not None:
+                        host.noteNoMessageForSession_(viewer)
+                except Exception as e:
+                    BlinkLogger().log_error('Cannot settle the read conversation %s: %s'
+                                            % (contact, e))
+
+    @objc.python_method
+    def _journalMessageIsUnread(self, account, msg, status):
+        """Whether a journalled message is one the user has still to read.
+
+        Catching up replicated history is still the arrival of messages the
+        user has not read -- they were simply delivered while this device
+        was away. Only the ones that actually render count, which is what
+        _journal_message_is_notable decides; a location trail tick or a
+        control message must not inflate the badge.
+
+        Asked BEFORE the row is written, so the row can be stored unread
+        and the badge can be rebuilt from the table at the next launch
+        instead of living only in this process.
+        """
+        if status == MSG_STATE_DISPLAYED:
+            return False
+        try:
+            return bool(self._journal_message_is_notable(account, msg))
+        except Exception as e:
+            BlinkLogger().log_error('Cannot tell whether journal message %s is unread: %s'
+                                    % (msg.get('message_id'), e))
+            return False
+
+    @objc.python_method
     def _hasViewerFor(self, remote_uri, account):
-        for window in self.windows:
-            for viewer in window.viewers:
-                if viewer.account == account and viewer.remote_uri == remote_uri:
-                    return True
+        # allViewers() rather than a scan of self.windows: once conversations
+        # can be hosted by the drawer instead of a window, a window-only scan
+        # would report "no viewer" and silently divert live messages into
+        # persist-only.
+        for viewer in self.allViewers():
+            if viewer.account == account and viewer.remote_uri == remote_uri:
+                return True
         return False
 
     @objc.python_method
@@ -1446,11 +2664,16 @@ class SMSWindowManagerClass(NSObject):
 
         sender_identity = ChatIdentity(sender_uri, viewer.display_name)
 
-        if status != MSG_STATE_DISPLAYED and create_if_needed and self._journal_message_is_notable(account, msg):
+        # create_if_needed is always False now -- a journalled message never
+        # creates a conversation -- so testing it here meant the badge could
+        # never fire for a journalled message at all. What matters is whether
+        # the message is one the user has not seen; the host decides whether
+        # the conversation is on screen and therefore already read.
+        if status != MSG_STATE_DISPLAYED and self._journal_message_is_notable(account, msg):
             self.windowForViewer(viewer).noteNewMessageForSession_(viewer)
 
         window = self.windowForViewer(viewer).window()
-        viewer.gotMessage(sender_identity, msg['message_id'], msg['message_id'], direction, msg['content'].encode(), msg['content_type'], is_replication_message=False, window=window, cpim_imdn_events=msg['disposition'], imdn_timestamp=msg['timestamp'], account=account, from_journal=True, status=status)
+        viewer.gotMessage(sender_identity, msg['message_id'], msg['message_id'], direction, (msg['content'] or '').encode(), msg['content_type'], is_replication_message=False, window=window, cpim_imdn_events=msg['disposition'], imdn_timestamp=msg['timestamp'], account=account, from_journal=True, status=status, metadata=msg.get('metadata'))
 
         if create_if_needed:
             self.windowForViewer(viewer).noteView_isComposing_(viewer, False)
@@ -1458,8 +2681,10 @@ class SMSWindowManagerClass(NSObject):
     @objc.python_method
     def syncOutgoingMessage(self, account, msg, last_id=None):
         direction = 'outgoing'
+        BlinkLogger().log_debug(self._describe_journal_message(msg, direction))
 
-        self.pendingSaveMessage[msg['message_id']] = True
+        if not self._journal_bulk:
+            self.pendingSaveMessage[msg['message_id']] = True
 
         if msg['state'] == 'delivered':
             state = MSG_STATE_DELIVERED
@@ -1470,12 +2695,14 @@ class SMSWindowManagerClass(NSObject):
         else:
             state = MSG_STATE_SENT
 
-        if msg['content'].startswith('-----BEGIN PGP MESSAGE-----') and msg['content'].endswith('-----END PGP MESSAGE-----'):
+        content = msg['content'] or ''
+        if content.startswith('-----BEGIN PGP MESSAGE-----') and content.endswith('-----END PGP MESSAGE-----'):
             encryption = 'pgp_encrypted'
         else:
             encryption = ''
 
         if not last_id:
+            BlinkLogger().log_debug('journal outgoing id=%s -> persist only (backfill, no last_id)' % msg['message_id'])
             self._persist_journal_message(
                 account, msg, direction, state, encryption,
                 cpim_from=str(account.id), cpim_to=msg['contact'],
@@ -1485,14 +2712,21 @@ class SMSWindowManagerClass(NSObject):
         # Only open windows for messages newer than one week. Older replicated
         # outgoing messages with no open viewer are persisted directly so we
         # don't pay the GUI-thread cost for every entry in the journal.
-        create_if_needed = ISOTimestamp.now() - ISOTimestamp(msg['timestamp']) < datetime.timedelta(days=7)
-        if not create_if_needed and not self._hasViewerFor(msg['contact'], account):
+        # A journalled message NEVER creates a conversation. Replicated
+        # history is caught up into the database; the user opens a contact to
+        # see it. Messages still reach a conversation that is already open.
+        create_if_needed = False
+        if not self._hasViewerFor(msg['contact'], account):
+            BlinkLogger().log_debug('journal outgoing id=%s -> persist only (no open conversation)'
+                                    % msg['message_id'])
             self._persist_journal_message(
                 account, msg, direction, state, encryption,
                 cpim_from=str(account.id), cpim_to=msg['contact'],
             )
             return
 
+        BlinkLogger().log_debug('journal outgoing id=%s -> present in GUI (create_if_needed=%s)'
+                                % (msg['message_id'], create_if_needed))
         self._presentJournalOutgoingMessage(account, msg, state, create_if_needed, last_id)
 
     @objc.python_method
@@ -1510,7 +2744,7 @@ class SMSWindowManagerClass(NSObject):
 
         window = self.windowForViewer(viewer).window()
 
-        viewer.gotMessage(sender_identity, msg['message_id'], msg['message_id'], direction, msg['content'].encode(), msg['content_type'], is_replication_message=True, window=window, cpim_imdn_events=msg['disposition'], imdn_timestamp=msg['timestamp'], account=account, from_journal=True, status=status)
+        viewer.gotMessage(sender_identity, msg['message_id'], msg['message_id'], direction, (msg['content'] or '').encode(), msg['content_type'], is_replication_message=True, window=window, cpim_imdn_events=msg['disposition'], imdn_timestamp=msg['timestamp'], account=account, from_journal=True, status=status, metadata=msg.get('metadata'))
 
         if (last_id and create_if_needed):
             self.windowForViewer(viewer).noteView_isComposing_(viewer, False)
@@ -1529,25 +2763,112 @@ class SMSWindowManagerClass(NSObject):
         return True
 
     @objc.python_method
-    def getWindow(self, target, display_name, account, create_if_needed=True, note_new_message=True, focusTab=False, instance_id=None, content=None, content_type=None, selected_contact=None, is_replication_message=False):
-    
+    def useMessagePanel(self):
+        """Host conversations in the main window drawer instead of the tabbed
+        SMS window. See MessageHost.USE_MESSAGE_PANEL."""
+        from MessageHost import USE_MESSAGE_PANEL
+        return USE_MESSAGE_PANEL
+
+    @objc.python_method
+    def setMessagePanelController(self, controller):
+        self._message_panel_controller = controller
+
+    @objc.python_method
+    def messagePanelController(self):
+        return getattr(self, '_message_panel_controller', None)
+
+    @objc.python_method
+    def _findViewer(self, target, instance_id, account):
+        for window in self.windows:
+            for viewer in window.viewers:
+                if viewer.matchesTargetOrInstanceAndAccount(target, instance_id, account):
+                    return viewer
+        for viewer, host in list(self.viewer_hosts.items()):
+            if host is None or host in self.windows:
+                continue
+            if not self._hostHasViewer(host, viewer):
+                self.viewer_hosts.pop(viewer, None)
+                continue
+            if viewer.matchesTargetOrInstanceAndAccount(target, instance_id, account):
+                return viewer
+        return None
+
+    @objc.python_method
+    def viewerForTarget(self, target, display_name, account, create_if_needed=True, instance_id=None, selected_contact=None, is_replication_message=False):
+        """Find or create the SMSViewController for a conversation.
+
+        Pure model work: never creates, raises or touches a window. Call
+        presentViewer() to put the result on screen.
+        """
         if instance_id and instance_id.startswith('urn:uuid:'):
             instance_id = instance_id[9:]
 
         if display_name and display_name.startswith("sip:"):
             display_name = display_name[4:]
 
-        for window in self.windows:
-            for viewer in window.viewers:
-                if viewer.matchesTargetOrInstanceAndAccount(target, instance_id, account):
-                    break
+        viewer = self._findViewer(target, instance_id, account)
+        if viewer is None and create_if_needed:
+            viewer = SMSViewController.alloc().initWithAccount_target_name_instance_(account, target, display_name, instance_id, selected_contact, is_replication_message=is_replication_message)
+        return viewer
+
+    @objc.python_method
+    def _createHostForViewer(self, viewer):
+        """Pick the host for a viewer that has none. The single branch point
+        between the tabbed window and the drawer."""
+        if self.useMessagePanel():
+            panel = self.messagePanelController()
+            if panel is None:
+                # the pane is built lazily on first use; ask the main window
+                # for it rather than silently falling back to a window
+                owner = getattr(self, '_owner', None)
+                if owner is not None and hasattr(owner, 'messagePane'):
+                    try:
+                        panel = owner.messagePane()
+                    except Exception as e:
+                        BlinkLogger().log_error('Cannot create the messages pane: %s' % e)
+            if panel is not None:
+                return panel
+        if not self.windows:
+            window = SMSWindowController.alloc().initWithOwner_(self)
+            self.windows.append(window)
+            return window
+        return self.windows[0]
+
+    @objc.python_method
+    def presentViewer(self, viewer, focus=False, note_new_message=True):
+        """Attach a viewer to a host if it has none, then bring it to front."""
+        if viewer is None:
+            return None
+
+        host = self.windowForViewer(viewer)
+        if host is None:
+            host = self._createHostForViewer(viewer)
+            viewer.windowController = host
+            self.viewer_hosts[viewer] = host
+            host.addViewer(viewer, focusTab=focus)
+
+        if note_new_message:
+            BlinkLogger().log_info("Conversation with %s presented (focus=%s)" % (viewer.target_uri, focus))
+            if hasattr(host, 'bringToFront'):
+                host.bringToFront(focus)
+            elif focus:
+                host.window().makeKeyAndOrderFront_(None)
             else:
-                continue
-            break
-        else:
-            window, viewer = None, None
+                host.window().orderFront_(None)
+            NSApp.delegate().noteNewMessage(host)
+
+        return host
+
+    @objc.python_method
+    def getWindow(self, target, display_name, account, create_if_needed=True, note_new_message=True, focusTab=False, instance_id=None, content=None, content_type=None, selected_contact=None, is_replication_message=False):
+        """Back-compat wrapper over viewerForTarget + presentViewer.
+
+        Returns the viewer, as it always has, despite the name.
+        """
+        viewer = self.viewerForTarget(target, display_name, account, create_if_needed=False, instance_id=instance_id, selected_contact=selected_contact, is_replication_message=is_replication_message)
 
         if content_type == IMDNDocument.content_type:
+            # IMDN never creates or raises anything; it only moves statuses.
             if not viewer:
                 #BlinkLogger().log_error('No viewer found')
                 return
@@ -1567,28 +2888,11 @@ class SMSWindowManagerClass(NSObject):
                 elif imdn_status == 'failed':
                     viewer.update_message_status(imdn_message_id, MSG_STATE_FAILED)
 
-        if not viewer and create_if_needed:
-            viewer = SMSViewController.alloc().initWithAccount_target_name_instance_(account, target, display_name, instance_id, selected_contact, is_replication_message=is_replication_message)
+        if viewer is None and create_if_needed:
+            viewer = self.viewerForTarget(target, display_name, account, create_if_needed=True, instance_id=instance_id, selected_contact=selected_contact, is_replication_message=is_replication_message)
 
-            if not self.windows:
-                window = SMSWindowController.alloc().initWithOwner_(self)
-                self.windows.append(window)
-            else:
-                window = self.windows[0]
-            viewer.windowController = window
-            window.addViewer(viewer, focusTab=focusTab)
-        elif viewer:
-            window = self.windowForViewer(viewer)
-
-        if window:
-            if note_new_message:
-                BlinkLogger().log_info("SMS window opened for %s (focusTab=%s)" % (target, focusTab))
-                if focusTab:
-                    window.window().makeKeyAndOrderFront_(None)
-                else:
-                    window.window().orderFront_(None)
-                #window.window().orderFront_(None)
-                NSApp.delegate().noteNewMessage(window)
+        if viewer is not None:
+            self.presentViewer(viewer, focus=focusTab, note_new_message=note_new_message)
 
         return viewer
 
@@ -1599,20 +2903,54 @@ class SMSWindowManagerClass(NSObject):
         window = SMSWindowController.alloc().initWithOwner_(self)
         self.windows.append(window)
         window.addViewer(viewer)
+        self.viewer_hosts[viewer] = window
         window.window().makeKeyAndOrderFront_(None)
         return window
 
     @objc.python_method
     def windowForViewer(self, viewer):
+        """The host currently showing this viewer, or None.
+
+        Named for its history; hostForViewer() is the same thing under the
+        name the drawer work uses.
+        """
+        host = self.viewer_hosts.get(viewer)
+        if host is not None and self._hostHasViewer(host, viewer):
+            return host
+
         for window in self.windows:
             if viewer in window.viewers:
+                self.viewer_hosts[viewer] = window
                 return window
-        else:
-            return None
+
+        self.viewer_hosts.pop(viewer, None)
+        return None
+
+    @objc.python_method
+    def hostForViewer(self, viewer):
+        return self.windowForViewer(viewer)
+
+    @objc.python_method
+    def _hostHasViewer(self, host, viewer):
+        try:
+            return viewer in host.viewers
+        except Exception:
+            return False
+
+    @objc.python_method
+    def handle_notification(self, notification):
+        # MessageSaved fires once per history insert -- thousands of them
+        # during a journal sync. It only touches a dict and the log, so
+        # paying a GUI-thread dispatch for each was enough on its own to
+        # freeze the app for the length of the sync.
+        if notification.name == 'MessageSaved':
+            self._NH_MessageSaved(notification.sender, notification.data)
+            return
+        self._handleNotificationOnGUIThread(notification)
 
     @objc.python_method
     @run_in_gui_thread
-    def handle_notification(self, notification):
+    def _handleNotificationOnGUIThread(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)
 
@@ -1662,12 +3000,118 @@ class SMSWindowManagerClass(NSObject):
         return True
 
     @objc.python_method
+    @objc.python_method
+    def _log_incoming_message(self, direction, account, sender_identity, recipient,
+                              content_type, content, imdn_id, is_cpim,
+                              replicated, instance_id):
+        """One line per message off the wire, logged before anything decides
+        what to do with it.
+
+        Everything past this point either dispatches on the content type or
+        drops the message, and a dropped one used to leave no trace at all --
+        which is why an unsupported type, or a payload filed under the wrong
+        contact, could only be found by guessing. This is the raw facts in
+        the order they matter: who, to whom, what, and how much of it.
+        """
+        try:
+            size = len(content) if content is not None else 0
+        except TypeError:
+            size = 0
+
+        head = ''
+        try:
+            if isinstance(content, bytes):
+                head = content[:64].decode('utf-8', 'replace')
+            elif isinstance(content, str):
+                head = content[:64]
+        except Exception:
+            head = ''
+
+        try:
+            origin = format_identity_to_string(sender_identity)
+        except Exception:
+            origin = str(sender_identity)
+
+        parts = ['direction=%s' % direction,
+                 'from=%s' % origin,
+                 'to=%s' % recipient,
+                 'account=%s' % (account.id if account is not None else 'none'),
+                 'type=%s' % (content_type or 'none'),
+                 'size=%d' % size,
+                 'id=%s' % (imdn_id or '-')]
+        if is_cpim:
+            parts.append('cpim')
+        if replicated:
+            parts.append('replicated')
+        if 'BEGIN PGP MESSAGE' in head:
+            parts.append('encrypted')
+        if instance_id:
+            parts.append('instance=%s' % instance_id)
+
+        BlinkLogger().log_info('Message received: %s' % ' '.join(parts))
+
+
+    @objc.python_method
+    def _dump_file_transfer_payload(self, content, metadata=None):
+        """The whole envelope of a file transfer that arrived LIVE.
+
+        Only the live path, deliberately. A journalled copy has already
+        been through the server's store and replay, so it cannot answer
+        the question this exists for: whether a field the sender says it
+        sent -- a recording's peaks, its spectrum, its duration -- was on
+        the wire in the first place, or was lost somewhere after. Dumping
+        the replayed copy too would just produce two versions of the same
+        ambiguity.
+
+        Logged whole rather than summarised: a summary can only report
+        the fields somebody thought to look for, and the point of this is
+        the field nobody expected to be missing.
+        """
+        try:
+            body = content.decode('utf-8', 'replace') if isinstance(content, bytes) else content
+        except Exception as e:
+            BlinkLogger().log_error('Cannot read the file transfer payload: %s' % e)
+            return
+        if not isinstance(body, str):
+            return
+
+        BlinkLogger().log_info('File transfer payload (live, %d bytes):' % len(body))
+        try:
+            envelope = json.loads(body)
+        except (TypeError, ValueError):
+            # Not JSON: an RCS XML transfer, or an encrypted body. Say so
+            # and print it -- unreadable here is itself the answer.
+            BlinkLogger().log_info('  not JSON: %s' % body[:800])
+        else:
+            if isinstance(envelope, dict):
+                BlinkLogger().log_info('  keys: %s' % ','.join(sorted(envelope)))
+                for key in sorted(envelope):
+                    BlinkLogger().log_info('  %s = %s'
+                                           % (key, _describe_payload_value(envelope[key])))
+            else:
+                BlinkLogger().log_info('  %s' % body[:800])
+
+        if metadata:
+            # The CPIM side-band. Location v2 travels here; if a recording
+            # ever ships its peaks this way instead of in the body, this is
+            # where they would show up -- and Blink drops it for file
+            # transfers, which would be the bug.
+            text = metadata if isinstance(metadata, str) else str(metadata)
+            BlinkLogger().log_info('  CPIM Metadata side-band (%d bytes): %s'
+                                   % (len(text), text[:600]))
+
     def _NH_SIPEngineGotMessage(self, sender, data):
         is_cpim = False
         cpim_message = None
         imdn_id = str(uuid.uuid4())
         imdn_timestamp = None
         cpim_imdn_events = None
+        # The generic per-message side-band: a CPIM *body* header named
+        # Metadata in the urn:ag-projects:xml:ns:cpim namespace (prefix
+        # agp). Location sharing is its first user — from payload version
+        # 2 on, the cleartext lifecycle envelope travels here and the
+        # body is nothing but the encrypted coordinates.
+        metadata = None
     
         call_id = data.headers.get('Call-ID', Null).body
         is_replication_message = data.headers.get('X-Replicated-Message', Null).body
@@ -1726,6 +3170,8 @@ class SMSWindowManagerClass(NSObject):
                         imdn_id = h.value
                     if h.name == "Disposition-Notification":
                         cpim_imdn_events = h.value
+                    if h.name == "Metadata":
+                        metadata = h.value
                 
                 sender_identity = cpim_message.sender or data.from_header
                 if direction == 'outgoing':
@@ -1740,9 +3186,29 @@ class SMSWindowManagerClass(NSObject):
             window_tab_identity = data.to_header if direction == 'outgoing' else sender_identity
 
         uri = format_identity_to_string(window_tab_identity)
-        #BlinkLogger().log_info("Got MESSAGE %s for account %s from %s" % (content_type, account.id, uri))
+        self._log_incoming_message(direction, account, sender_identity, uri,
+                                   content_type, content, imdn_id, is_cpim,
+                                   is_replication_message, instance_id)
+
+        # Live only: a replicated copy has already been through the
+        # server's store and replay, so it cannot say what was on the wire.
+        if content_type in FILE_TRANSFER_CONTENT_TYPES and not is_replication_message:
+            self._dump_file_transfer_payload(content, metadata)
         
         if content_type == 'text/pgp-public-key':
+            BlinkLogger().log_info('Public key message received from %s for %s (%s)'
+                                   % (format_identity_to_string(sender_identity),
+                                      uri, 'our own, replicated' if direction == 'outgoing'
+                                      else 'incoming'))
+            # An outgoing key is OUR key, replicated back to us because we
+            # sent it from another device. `uri` here is the recipient, so
+            # importing it would file our own key under their address and
+            # destroy the key we actually hold for them. There is nothing to
+            # import either way: we already have our own key.
+            if direction == 'outgoing':
+                BlinkLogger().log_info('Our own public key was replicated to %s, nothing to import' % uri)
+                return
+
             #BlinkLogger().log_info(u"Public key of %s received" % (format_identity_to_string(sender_identity)))
             # Public-key exchange is a control message — never raise a window.
             viewer = self.getWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, instance_id=instance_id, create_if_needed=False, note_new_message=False, content=content, content_type=content_type)
@@ -1772,6 +3238,7 @@ class SMSWindowManagerClass(NSObject):
                     public_key = public_key + l + '\n'
             
             if public_key:
+                self._warn_if_key_mismatched(public_key, uri)
                 public_key_checksum = hashlib.sha1(public_key.encode()).hexdigest()
                 key_file = "%s/%s.pubkey" % (self.keys_path, uri)
                 fd = open(key_file, "wb+")
@@ -1883,21 +3350,40 @@ class SMSWindowManagerClass(NSObject):
             return
 
         elif content_type == 'application/sylk-conversation-read':
-            BlinkLogger().log_debug('We read the messages on another device')
- 
+            self.applyConversationRead(account, content)
+            return
+
         elif content_type == 'application/sylk-conversation-remove':
            self.history.delete_messages(local_uri=str(account.id), remote_uri=msg['content'])
            self.history.delete_messages(local_uri=msg['content'], remote_uri=str(account.id))
            return
 
-        elif content_type not in ('text/plain', 'text/html', 'application/sylk-message-remove', 'application/sylk-message-metadata'):
-            BlinkLogger().log_warning('Message type %s is not supported' % content_type)
+        elif content_type not in ('text/plain', 'text/html', 'application/sylk-message-remove',
+                                  LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE
+                                  ) + FILE_TRANSFER_CONTENT_TYPES:
+            # Nothing here renders this, so it is stored rather than
+            # dropped. The live copy and the journalled one are the same
+            # message; refusing the live one only means waiting for a
+            # catch-up to bring it back, and if the catch-up has already
+            # passed this point it never will.
+            BlinkLogger().log_warning('Message type %s is not supported; storing it unread'
+                                      % content_type)
+            try:
+                self._persistUnsupportedLiveMessage(
+                    account, format_identity_to_string(window_tab_identity, format='aor'),
+                    imdn_id, call_id, direction, content, content_type,
+                    imdn_timestamp or ISOTimestamp.now())
+            except Exception as e:
+                BlinkLogger().log_error('Cannot store %s message %s: %s'
+                                        % (content_type, imdn_id, e))
             return
 
-        note_new_message = content_type in ('text/plain', 'text/html', 'application/sylk-message-metadata') and direction == 'incoming'
+        note_new_message = content_type in ('text/plain', 'text/html',
+                                            LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE
+                                            ) + FILE_TRANSFER_CONTENT_TYPES and direction == 'incoming'
         # Only genuine incoming chat text (text/* — text/plain, text/html)
-        # may raise the window to the front. Message-metadata (the wire
-        # format, including live-location ticks) and every control/sync
+        # may raise the window to the front. Location payloads (coordinate
+        # ticks and lifecycle signals alike) and every control/sync
         # message must update silently: they must never pop the window or
         # steal focus.
         # Messages sent by myself (any of my own accounts, e.g. from another
@@ -1905,23 +3391,19 @@ class SMSWindowManagerClass(NSObject):
         sender_uri = format_identity_to_string(sender_identity)
         is_myself = sender_uri == str(account.id) or AccountManager().has_account(sender_uri)
         raise_window = content_type.startswith('text/') and direction == 'incoming' and not is_myself
-        # Live-location shares emit one origin tick followed by many
-        # map-update ticks; none of them should bump the unread counter.
+        # A live share emits one origin tick followed by many map-update
+        # ticks and, at the end, a coordinate-free teardown signal. Only
+        # the origin opens a bubble, so only the origin may bump the
+        # unread counter.
         if (note_new_message
-                and content_type == 'application/sylk-message-metadata'
-                and self._is_location_update_tick(str(account.id), content)):
+                and content_type in (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE)
+                and self._is_silent_location_tick(str(account.id), content, metadata, content_type)):
             note_new_message = False
-        # Control/sync messages (read receipts, remote removals) must never
-        # spawn a viewer — they should only act on an already-open
-        # conversation, never bring a window into existence.
-        create_if_needed = content_type not in ('application/sylk-conversation-read', 'application/sylk-message-remove')
-        viewer = self.getWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, note_new_message=raise_window, create_if_needed=create_if_needed, instance_id=instance_id)
-
-        if content_type == 'application/sylk-conversation-read':
-            if viewer:
-                viewer.messages_read()
-                self.windowForViewer(viewer).noteNoMessageForSession_(viewer)
-            return
+        # NOTHING arriving over the wire creates a conversation. An open
+        # conversation still receives the message live; otherwise the message
+        # is written straight to history, the contact's unread count goes up
+        # and a notification is posted. The user opens the contact to read it.
+        viewer = self.getWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, note_new_message=raise_window, create_if_needed=False, instance_id=instance_id)
 
         if content_type == 'application/sylk-message-remove':
             try:
@@ -1938,13 +3420,47 @@ class SMSWindowManagerClass(NSObject):
 
             return
 
+        if viewer is None:
+            # No conversation open for this contact: persist and notify.
+            remote_uri = format_identity_to_string(window_tab_identity, format='aor')
+            try:
+                stored = self._persistLiveMessage(
+                    account, remote_uri, imdn_id, call_id, direction,
+                    content, content_type, imdn_timestamp or ISOTimestamp.now(),
+                    metadata=metadata, unread=note_new_message)
+            except Exception as e:
+                BlinkLogger().log_error('Cannot store live message %s from %s: %s'
+                                        % (imdn_id, remote_uri, e))
+                return
+
+            if stored and note_new_message:
+                # A live message with no conversation open has the same
+                # problem replicated ones did: nothing else files the sender
+                # under Messages, so an unread badge would have no row to sit
+                # on.
+                self.ensureMessagesGroupContains(remote_uri)
+                self.addContactsToMessagesGroup()
+                count = self.noteUnreadMessage(remote_uri)
+                BlinkLogger().log_info('Message %s from %s stored, %d unread'
+                                       % (content_type, remote_uri, count))
+                # The sender is the title, the message is the body: macOS
+                # already puts "Blink" above both, so a title of "New
+                # message" spends the most prominent line saying what the
+                # banner obviously is.
+                name, icon = self.notificationIdentity(
+                    remote_uri, window_tab_identity.display_name)
+                NSApp.delegate().notify_new_message(
+                    name, self._notificationBody(content, content_type),
+                    None, uri=remote_uri, icon=icon)
+            return
+
         if note_new_message:
             self.windowForViewer(viewer).noteNewMessageForSession_(viewer)
 
         status = MSG_STATE_DELIVERED if direction == 'incoming' else MSG_STATE_SENT
 
         window = self.windowForViewer(viewer).window()
-        viewer.gotMessage(sender_identity, imdn_id, call_id, direction, content, content_type, is_replication_message=is_replication_message, window=window, cpim_imdn_events=cpim_imdn_events, imdn_timestamp=imdn_timestamp, account=account, status=status)
+        viewer.gotMessage(sender_identity, imdn_id, call_id, direction, content, content_type, is_replication_message=is_replication_message, window=window, cpim_imdn_events=cpim_imdn_events, imdn_timestamp=imdn_timestamp, account=account, status=status, metadata=metadata)
         
         self.windowForViewer(viewer).noteView_isComposing_(viewer, False)
 

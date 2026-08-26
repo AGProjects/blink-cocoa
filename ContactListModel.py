@@ -723,7 +723,7 @@ class BlinkPresenceContact(BlinkContact):
         self.avatar = PresenceContactAvatar.from_contact(contact)
         # TODO: how to handle xmmp: uris?
         #uri = self.uri.replace(';xmpp', '') if self.uri_type is not None and self.uri_type.lower() == 'xmpp' and ';xmpp' in self.uri else self.uri
-        self.detail = '%s (%s)' % (self.uri, self.uri_type)
+        self.detail = '%s' % self.uri
         self._set_username_and_domain()
         self.presence_note = None
         self.old_presence_status = None
@@ -1380,7 +1380,7 @@ class BlinkPresenceContact(BlinkContact):
             content_type = info.get('content-type')
             etag = info.get('etag')
         except (ConnectionLost, urllib.error.HTTPError, urllib.error.URLError, TimeoutError) as e:
-            if e.status != 304:
+            if e.status not in (304, 404):
                 BlinkLogger().log_error('Failed to get icon for %s: %s' % (self.uri, str(e)))
             contact.updating_remote_icon = False
             return
@@ -1490,13 +1490,13 @@ class BlinkPresenceContact(BlinkContact):
                     except IndexError:
                         self.presence_note = presence_notes[0]
 
-            detail = self.presence_note if self.presence_note else '%s (%s)' % (self.uri, self.uri_type)
+            detail = self.presence_note if self.presence_note else '%s' % self.uri
         elif local_times:
             detail = '%s %s' % (self.uri, ",".join(local_times))
         else:
             # TODO: how to handle xmmp: uris?
             #uri = self.uri.replace(';xmpp', '') if self.uri_type is not None and self.uri_type.lower() == 'xmpp' and ';xmpp' in self.uri else self.uri
-            detail_uri = '%s (%s)' % (self.uri, self.uri_type)
+            detail_uri = '%s' % self.uri
             detail = detail_uri
             detail_pending = NSLocalizedString("Pending authorization", "Contact detail")
             if self.presence_state['pending_authorizations']:
@@ -1776,6 +1776,12 @@ class BlinkGroupAttribute(object):
             setattr(obj.group, self.name, value)
 
 
+MESSAGES_GROUP_ID = '_messages'
+# Anything with no message at all sorts as if it were sent at the epoch, so
+# the whole no-history tail keeps the alphabetical order underneath.
+NO_MESSAGES = datetime.datetime(1970, 1, 1)
+
+
 class BlinkGroup(NSObject):
     """Basic Group representation in Blink UI"""
     deletable = True
@@ -1798,8 +1804,50 @@ class BlinkGroup(NSObject):
         return self
 
     @objc.python_method
+    def isMessagesGroup(self):
+        return getattr(self.group, 'id', None) == MESSAGES_GROUP_ID
+
+    @objc.python_method
     def sortContacts(self):
+        if self.isMessagesGroup():
+            # Two passes, relying on sort being stable: alphabetical first,
+            # then by recency. Contacts that share a timestamp -- and the
+            # whole tail that has none -- stay in A..Z order underneath
+            # instead of shuffling on every redraw.
+            self.contacts.sort(key=lambda item: str(getattr(item, 'name', '')).lower())
+            self.contacts.sort(
+                key=lambda item: self.lastMessageTimeForContact(item) or NO_MESSAGES,
+                reverse=True)
+            return
         self.contacts.sort(key=lambda item: str(getattr(item, 'name')).lower())
+
+    @objc.python_method
+    def lastMessageTimeForContact(self, contact):
+        """When this contact last exchanged a message, or None.
+
+        Asked per contact rather than built as a group-wide dict. The dict
+        was keyed by id(contact), and the model replaces its BlinkContact
+        objects whenever the group changes -- so after any group edit every
+        key was dead and the whole group silently fell back to alphabetical.
+        id() is also reused by CPython once an object is freed, which makes
+        it an actively unsafe key. The manager's own map is keyed by
+        canonical URI and a lookup is O(1), so there is nothing to cache.
+        """
+        try:
+            from SMSWindowManager import SMSWindowManager
+            manager = SMSWindowManager()
+        except Exception:
+            return None
+
+        newest = None
+        try:
+            for uri in getattr(contact, 'uris', ()):
+                stamp = manager.lastMessageTimeForURI(str(uri.uri))
+                if stamp is not None and (newest is None or stamp > newest):
+                    newest = stamp
+        except Exception:
+            return None
+        return newest
 
 
 class VirtualBlinkGroup(BlinkGroup):
@@ -2323,8 +2371,115 @@ class CustomListModel(NSObject):
     def outlineView_isGroupItem_(self, outline, item):
         return isinstance(item, BlinkGroup)
 
+    @objc.python_method
+    def unreadCountForContact(self, contact):
+        """Unread messages for a contact, summed over all of its URIs.
+
+        A contact can hold several addresses and the counter is keyed by
+        canonical URI, so the badge has to fan out the same way history
+        replay does when it loads a conversation.
+        """
+        try:
+            from SMSWindowManager import SMSWindowManager
+            manager = SMSWindowManager()
+        except Exception:
+            return 0
+
+        total = 0
+        try:
+            identifier = getattr(contact, 'id', None)
+            if identifier and '@' not in str(identifier):
+                # Bonjour contacts are keyed by instance id, not URI
+                total += manager.unreadCountForURI(str(identifier))
+            for uri in getattr(contact, 'uris', ()):
+                total += manager.unreadCountForURI(str(uri.uri))
+        except Exception:
+            return 0
+        return total
+
+    @objc.python_method
+    @run_in_gui_thread
+    def _NH_BlinkUnreadMessageCountChanged(self, notification):
+        """Redraw only the rows for the contact whose count changed.
+
+        Never reloadData(): the contact list is long and reloading it
+        collapses the scroll position under the user.
+        """
+        key = getattr(notification.data, 'key', None)
+        outline = getattr(self, 'contactOutline', None)
+        if not key or outline is None:
+            return
+        for group in getattr(self, 'groupsList', ()):
+            for contact in getattr(group, 'contacts', ()):
+                if self._contactMatchesKey(contact, key):
+                    outline.reloadItem_reloadChildren_(contact, False)
+
+    @objc.python_method
+    @run_in_gui_thread
+    def _NH_BlinkConversationOrderChanged(self, notification):
+        """Float the conversation that just moved back to the top.
+
+        Only the Messages group is reordered, and the user's selection is
+        put back afterwards: without that, a message arriving while they
+        read a conversation would slide a different row under the selection
+        and switch the pane out from under them.
+        """
+        outline = getattr(self, 'contactOutline', None)
+        selected = None
+        if outline is not None:
+            row = outline.selectedRow()
+            if row >= 0:
+                selected = outline.itemAtRow_(row)
+
+        for group in getattr(self, 'groupsList', ()):
+            if not isinstance(group, BlinkGroup) or not group.isMessagesGroup():
+                continue
+            before = list(group.contacts)
+            group.sortContacts()
+            if outline is None or before == group.contacts:
+                continue
+            outline.reloadItem_reloadChildren_(group, True)
+            if selected is not None:
+                row = outline.rowForItem_(selected)
+                if row >= 0:
+                    outline.selectRowIndexes_byExtendingSelection_(
+                        NSIndexSet.indexSetWithIndex_(row), False)
+
+    @objc.python_method
+    def lastMessageTimeForRow(self, outline, item):
+        """The conversation time to show against a row, or None."""
+        if not isinstance(item, BlinkContact):
+            return None
+        try:
+            group = outline.parentForItem_(item)
+            if not isinstance(group, BlinkGroup) or not group.isMessagesGroup():
+                return None
+            return group.lastMessageTimeForContact(item)
+        except Exception:
+            return None
+
+    @objc.python_method
+    def _contactMatchesKey(self, contact, key):
+        try:
+            from SMSWindowManager import SMSWindowManager
+            canonical = SMSWindowManager()._canonical_uri
+            for uri in getattr(contact, 'uris', ()):
+                if canonical(str(uri.uri)) == key:
+                    return True
+            identifier = getattr(contact, 'id', None)
+            if identifier and canonical(str(identifier)) == key:
+                return True
+        except Exception:
+            pass
+        return False
+
     def outlineView_willDisplayCell_forTableColumn_item_(self, outline, cell, column, item):
         cell.setMessageIcon_(None)
+        cell.setUnreadCount_(self.unreadCountForContact(item) if isinstance(item, BlinkContact) else 0)
+        # Only in the Messages group: elsewhere a row is a contact, not a
+        # conversation, and stamping every one of them with a chat time
+        # turns the address book into something it is not.
+        cell.setLastMessageTime_(self.lastMessageTimeForRow(outline, item))
 
         if isinstance(item, BlinkContact):
             cell.setContact_(item)
@@ -2703,6 +2858,8 @@ class ContactListModel(CustomListModel):
         return self
 
     def awakeFromNib(self):
+        self.nc.add_observer(self, name="BlinkUnreadMessageCountChanged")
+        self.nc.add_observer(self, name="BlinkConversationOrderChanged")
         self.nc.add_observer(self, name="BlinkOnlineContactMustBeRemoved")
         self.nc.add_observer(self, name="BonjourAccountDidAddNeighbour")
         self.nc.add_observer(self, name="BonjourAccountDidUpdateNeighbour")
@@ -3414,7 +3571,14 @@ class ContactListModel(CustomListModel):
             return
 
         name = blink_contact.name if len(blink_contact.name) else str(blink_contact.uri)
-        message = NSLocalizedString("Delete '%s' from the Contacts list?", "Label") % name
+        # Deleting takes the conversation with it, so the dialog has to say
+        # so: this is the one action in the contact list that destroys
+        # something the user cannot get back.
+        message = '%s\n\n%s' % (
+            NSLocalizedString("Delete '%s' from the Contacts list?", "Label") % name,
+            NSLocalizedString("The messages and downloaded files kept for this contact's "
+                              "addresses will be deleted, unless another contact also "
+                              "lists them.", "Label"))
         message = re.sub("%", "%%", message)
 
         ret = NSRunAlertPanel(NSLocalizedString("Delete Contact", "Window title"), message, NSLocalizedString("Delete", "Button title"), NSLocalizedString("Cancel", "Button title"), None)
@@ -4016,12 +4180,92 @@ class ContactListModel(CustomListModel):
     @objc.python_method
     def _NH_AddressbookContactWasDeleted(self, notification):
         contact = notification.sender
+        uris = []
+        try:
+            uris = [str(uri.uri) for uri in contact.uris]
+        except Exception:
+            uris = []
         blink_contact = next(blink_contact for blink_contact in self.all_contacts_group.contacts if blink_contact.contact == contact)
         blink_contact.avatar.delete()
         self.removeContactFromBlinkGroups(contact, [self.all_contacts_group, self.no_group, self.online_contacts_group])
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
         self.addPendingWatchers()
         NSApp.delegate().contactsWindowController.tellMeWhenContactBecomesAvailableList.discard(contact)
+        self.purgeDataForDeletedContact(contact, uris)
+
+    @objc.python_method
+    def _canonical_contact_uri(self, raw_uri):
+        """user@host, lower-cased, with the scheme and parameters gone.
+
+        The same normalisation SMSWindowManager files conversations under,
+        so that "SIP:Alice@Example.com;transport=tls" and "alice@example.com"
+        are recognised as the one address they are.
+        """
+        if raw_uri is None:
+            return ''
+        text = str(raw_uri).strip()
+        # a display-name form first, or the scheme inside the brackets
+        # survives the strip below and nothing matches
+        if '<' in text and '>' in text and text.index('<') < text.index('>'):
+            text = text[text.index('<') + 1:text.index('>')].strip()
+        lowered = text.lower()
+        for scheme in ('sips:', 'sip:'):
+            if lowered.startswith(scheme):
+                text = text[len(scheme):]
+                break
+        text = text.split(';')[0].split('?')[0]
+        return text.strip().lower()
+
+    @objc.python_method
+    def purgeDataForDeletedContact(self, contact, uris):
+        """Delete the stored data of addresses the contact took with it.
+
+        An address that another contact still lists keeps everything: the
+        messages, files and key under it belong to that contact just as
+        much as to the one that was deleted, and deleting a duplicate
+        entry must not take a live conversation with it. Only an address
+        that nobody claims any more is purged.
+        """
+        if not uris:
+            return
+
+        deleted = []
+        for uri in uris:
+            key = self._canonical_contact_uri(uri)
+            if key and key not in deleted:
+                deleted.append(key)
+        if not deleted:
+            return
+
+        still_claimed = set()
+        try:
+            for other in AddressbookManager().get_contacts():
+                if other.id == contact.id:
+                    continue
+                for uri in other.uris:
+                    key = self._canonical_contact_uri(uri.uri)
+                    if key:
+                        still_claimed.add(key)
+        except Exception as e:
+            # Without a trustworthy picture of who owns what, deleting is
+            # the one thing that cannot be taken back. Keep the data.
+            BlinkLogger().log_error('Cannot check which addresses are still in use, '
+                                    'keeping the data of the deleted contact: %s' % e)
+            return
+
+        orphaned = [uri for uri in deleted if uri not in still_claimed]
+        kept = [uri for uri in deleted if uri in still_claimed]
+        if kept:
+            BlinkLogger().log_info('Keeping the history of %s: still listed by another contact'
+                                   % ', '.join(kept))
+        if not orphaned:
+            return
+
+        try:
+            from SMSWindowManager import SMSWindowManager
+            SMSWindowManager().purgeConversationsForURIs(orphaned)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot purge the data of a deleted contact: %s' % e)
 
     @objc.python_method
     def _NH_AddressbookContactDidChange(self, notification):

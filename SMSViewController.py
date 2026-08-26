@@ -5,6 +5,7 @@ from AppKit import (NSApp,
                     NSEventTrackingRunLoopMode,
                     NSFontAttributeName,
                     NSForegroundColorAttributeName,
+                    NSRectFill,
                     NSWorkspace)
 
 from Foundation import (NSAttributedString,
@@ -16,6 +17,7 @@ from Foundation import (NSAttributedString,
                         NSImage,
                         NSLocalizedString,
                         NSMakePoint,
+                        NSMakeRange,
                         NSMakeSize,
                         NSMaxX,
                         NSMenuItem,
@@ -36,6 +38,7 @@ import datetime
 import hashlib
 import ast
 import re
+import tempfile
 import json
 
 from binascii import unhexlify, hexlify
@@ -66,7 +69,18 @@ from pgpy.constants import PubKeyAlgorithm, KeyFlags, HashAlgorithm, SymmetricKe
 from BlinkLogger import BlinkLogger
 from ChatViewController import MSG_STATE_SENDING, MSG_STATE_SENT, MSG_STATE_DELIVERED, MSG_STATE_FAILED, MSG_STATE_DISPLAYED, MSG_STATE_FAILED_LOCAL, MSG_STATE_DEFERRED
 from HistoryManager import ChatHistory
+from MessageHost import (FILE_TRANSFER_CONTENT_TYPE,
+                         is_renderable_content_type, peaks_metadata,
+                         pgp_plaintext, pgp_plaintext_bytes,
+                         reply_envelope, reply_metadata)
 from SmileyManager import SmileyManager
+from SylkLocation import (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE,
+                          append_track_point,
+                          bubble_id as location_bubble_id, ended_label,
+                          location_payload, location_request_envelope,
+                          merge_location_bodies, one_shot_envelope,
+                          session_bubble_ids, storable_envelope,
+                          system_note)
 from util import format_identity_to_string, html2txt, sipuri_components_from_string, run_in_gui_thread
 from ChatOTR import ChatOtrSmp
 import SMSWindowManager
@@ -80,6 +94,55 @@ pgpOptions = {'cipher': 'aes256',
 }
 
 MAX_MESSAGE_LENGTH = 16000
+# How much of the original fits on the one line above the composer. The
+# bubble's quote gets three lines; this is a reminder of what is being
+# answered, not the message itself.
+REPLY_HINT_CHARS = 80
+
+# Machinery, not conversation: key exchange, receipts, typing notices and the
+# server-side API calls. A failure to deliver one of these is not something
+# the user did or can act on, so it never becomes a red bubble or a system
+# note in the transcript.
+CONTROL_CONTENT_TYPES = frozenset((
+    'application/sylk-api-pgp-key-lookup',
+    'application/sylk-api-token',
+    'application/sylk-api-message-remove',
+    'application/sylk-api-conversation-read',
+    'application/sylk-api-conversation-remove',
+    'application/sylk-conversation-read',
+    'application/sylk-conversation-remove',
+    'application/sylk-message-remove',
+    'text/pgp-public-key',
+    'text/pgp-private-key',
+))
+
+
+# Everything OTR puts on the wire begins with "?OTR": the base64 ciphertext
+# ("?OTR:....."), the version query that opens a session ("?OTRv3?  I would
+# like to start an Off-the-Record private conversation..."), the plain
+# tagged-plaintext notice, protocol errors ("?OTR Error:...") and the
+# fragment envelopes ("?OTR|1234|5678,1,3,....,").
+#
+# None of it is content. The OTR session normally swallows it before it ever
+# reaches the transcript, but two paths bypass the session: a message
+# replicated from another of my own devices is handed straight through, and
+# a message replayed out of history was stored before anyone could decide.
+# Both used to surface the raw handshake as if the other party had typed it.
+OTR_WIRE_PREFIX = '?OTR'
+
+
+def is_otr_wire_text(content):
+    """Whether this body is OTR protocol traffic rather than a message."""
+    if content is None:
+        return False
+    if isinstance(content, bytes):
+        try:
+            content = content.decode('utf-8', 'replace')
+        except Exception:
+            return False
+    if not isinstance(content, str):
+        return False
+    return content.lstrip()[:4].upper() == OTR_WIRE_PREFIX
 
 
 class MessageInfo(object):
@@ -105,24 +168,115 @@ class OTRInternalMessage(MessageInfo):
         super(OTRInternalMessage, self).__init__('OTR', content=content, content_type='text/plain')
 
 
+class OTRVerificationHost(object):
+    """The shape ChatOtrSmp expects, over a messages conversation.
+
+    That window was written against the MSRP chat controller, which owns a
+    session and a stream; a conversation has neither -- it has an address
+    and an OTR context. The half-dozen attributes the window actually
+    reads are provided here rather than by changing a window the chat
+    session still depends on. One object stands in for all three roles it
+    reaches through (controller, sessionController, stream), because they
+    are three names for the same conversation as far as this window is
+    concerned.
+    """
+
+    def __init__(self, viewer):
+        self._viewer = viewer
+        self.sessionController = self
+        self.stream = self
+
+    @property
+    def titleShort(self):
+        return self._viewer.display_name or self._viewer.remote_uri
+
+    @property
+    def remoteAOR(self):
+        return self._viewer.remote_uri
+
+    @property
+    def encryption(self):
+        return self._viewer.encryption
+
+    def log_info(self, text):
+        self._viewer.log_info(text)
+
+    def revalidateToolbar(self):
+        pass
+
+    def updateEncryptionWidgets(self):
+        try:
+            self._viewer.notification_center.post_notification(
+                'ChatStreamOTREncryptionStateChanged', sender=self._viewer)
+        except Exception:
+            pass
+
+
 class SMSSplitView(NSSplitView):
+    """The divider above the composer, which doubles as a status line.
+
+    Two registers: the quiet one that counts characters, and a loud one
+    for a state the user is *in* and has to be able to get out of. Editing
+    a message is the second kind -- the composer looks completely ordinary
+    while it holds someone else's words, and a grey line in the divider was
+    not enough to say so.
+    """
+
     text = None
+    emphasized = False
     attributes = NSDictionary.dictionaryWithObjectsAndKeys_(
                             NSFont.systemFontOfSize_(NSFont.labelFontSize()-1), NSFontAttributeName,
                             NSColor.darkGrayColor(), NSForegroundColorAttributeName)
 
+    @objc.python_method
+    def _noticeColor(self):
+        for name in ('systemOrangeColor', 'orangeColor'):
+            try:
+                return getattr(NSColor, name)()
+            except (AttributeError, TypeError):
+                continue
+        return NSColor.redColor()
+
+    @objc.python_method
+    def noticeAttributes(self):
+        return {NSFontAttributeName: NSFont.boldSystemFontOfSize_(NSFont.labelFontSize() + 2),
+                NSForegroundColorAttributeName: self._noticeColor()}
+
+    @objc.python_method
+    def currentAttributes(self):
+        return self.noticeAttributes() if self.emphasized else self.attributes
+
     def setText_(self, text):
+        self.setText_emphasized_(text, False)
+
+    def setText_emphasized_(self, text, emphasized):
+        changed = bool(emphasized) != bool(self.emphasized)
         self.text = NSString.stringWithString_(text)
+        self.emphasized = bool(emphasized)
+        if changed:
+            # The divider is taller while it is shouting, so the panes
+            # around it have to be given their new sizes.
+            self.adjustSubviews()
         self.setNeedsDisplay_(True)
 
     def dividerThickness(self):
-        return NSFont.labelFontSize()+1
+        return NSFont.labelFontSize() + (8 if self.emphasized else 1)
 
     def drawDividerInRect_(self, rect):
-        NSSplitView.drawDividerInRect_(self, rect)
+        if self.emphasized:
+            # A tinted band, so the notice reads as a state the window is
+            # in rather than as one more line of chrome.
+            colour = self._noticeColor().colorWithAlphaComponent_(0.18)
+            colour.set()
+            NSRectFill(rect)
+        else:
+            NSSplitView.drawDividerInRect_(self, rect)
         if self.text:
-            point = NSMakePoint(NSMaxX(rect) - self.text.sizeWithAttributes_(self.attributes).width - 10, rect.origin.y)
-            self.text.drawAtPoint_withAttributes_(point, self.attributes)
+            attributes = self.currentAttributes()
+            size = self.text.sizeWithAttributes_(attributes)
+            point = NSMakePoint(NSMaxX(rect) - size.width - 10,
+                                rect.origin.y + (rect.size.height - size.height) / 2.0)
+            self.text.drawAtPoint_withAttributes_(point, attributes)
 
 
 @implementer(IObserver)
@@ -136,7 +290,17 @@ class SMSViewController(NSObject):
     addContactLabel = objc.IBOutlet()
     zoom_period_label = ''
 
-    showHistoryEntries = 25
+    # Name of the nib providing this viewer's content view. The nib is what
+    # wires the `chatViewController` outlet, so overriding this alone swaps
+    # the entire rendering stack (WebView today, native transcript later).
+    nib_name = "SMSView"
+    native_nib_name = "MessageView"
+
+    # Messages fetched per page, both for the first render and for each
+    # scroll back in time. The native transcript measures and stacks views
+    # itself, so a page costs far less than it did in the WebView, and 25
+    # meant a conversation opened showing barely a screenful.
+    showHistoryEntries = 100
     remoteTypingTimer = None
     handle_scrolling = True
     scrollingTimer = None
@@ -157,7 +321,10 @@ class SMSViewController(NSObject):
     private_key = None
     public_key = None
     my_public_key = None
+    otr_verification_window = None
     public_key_sent = False
+    # one lookup per conversation, and only once the user has said something
+    public_key_requested = False
 
     windowController = None
     last_route = None
@@ -169,6 +336,47 @@ class SMSViewController(NSObject):
     bonjour_lookup_enabled = True
     account_info = None
     oldest_timestamp = None
+    # Where the transcript was told to start reading backwards from. None
+    # means "the present", which is every conversation until the user picks
+    # a date out of the history navigator.
+    history_before_date = None
+
+    @objc.python_method
+    def nibName(self):
+        """Which nib -- and therefore which renderer -- to load.
+
+        The nib wires the `chatViewController` outlet, so this is the whole
+        switch between the WebView transcript and the native one. Importing
+        the native modules here registers their classes with the ObjC runtime;
+        without that the nib cannot instantiate them.
+
+        Controlled by MessageHost.USE_NATIVE_MESSAGE_RENDERER.
+        """
+        from MessageHost import USE_NATIVE_MESSAGE_RENDERER
+        if USE_NATIVE_MESSAGE_RENDERER:
+            try:
+                import MessageListView          # customClass in MessageView.xib
+                import NativeChatViewController # customClass in MessageView.xib
+            except Exception as e:
+                BlinkLogger().log_error("Native message renderer unavailable, using WebView: %s" % e)
+            else:
+                return self.native_nib_name
+        return self.nib_name
+
+    @property
+    def host(self):
+        """The object hosting this viewer's content view.
+
+        Today always an SMSWindowController; once the drawer lands it may also
+        be a MessagePaneController. Both implement the host protocol described
+        in MessageHost.py. `windowController` remains the storage attribute so
+        that existing assignments and call sites keep working unchanged.
+        """
+        return self.windowController
+
+    @host.setter
+    def host(self, value):
+        self.windowController = value
 
     def initWithAccount_target_name_instance_(self, account, target, display_name, instance_id, selected_contact=None, is_replication_message=False):
         self = objc.super(SMSViewController, self).init()
@@ -192,12 +400,38 @@ class SMSViewController(NSObject):
 
             self.history = ChatHistory()
             self.msg_id_list = set() # prevent display of duplicate messages
-            # Tracks the stable bubble id (the JSON body's `messageId`) for
-            # every Sylk-style location share that has been rendered in this
-            # viewer. The presence of an id here means "we already drew that
-            # bubble" — incoming UPDATE ticks for this id should land via
+            # Tracks the bubble id (the envelope's `sessionId`, plus the
+            # meet `role` when a session carries two coordinate tracks) of
+            # every location share that has been rendered in this viewer.
+            # The presence of an id here means "we already drew that
+            # bubble" — trail ticks for it should land via
             # updateLocationMessage instead of spawning a new one.
             self.location_bubble_ids = set()
+            # reply id -> the id of the message it answers. Built from the
+            # companion metadata messages, which travel on their own and in
+            # no guaranteed order relative to the replies they describe.
+            self.reply_targets = {}
+            # transfer id -> {'peaks': ..., 'spectrum': ...}. A recording's
+            # waveform cannot ride in its own envelope (the server relays a
+            # fixed field set and drops the rest), so it arrives as its own
+            # message, before or after the transfer it belongs to.
+            self.audio_metadata = {}
+            # Lifecycle breadcrumbs already posted, keyed session:kind, so
+            # a signal that arrives twice (live and then again on journal
+            # replay, or from two of our devices) writes one note only.
+            self.location_notes = set()
+            # Sessions whose teardown signal we have already seen, with the
+            # footer text it stamped. A stop can arrive before the bubble
+            # it refers to (a journal batch is not ordered by session), so
+            # the label is kept here and applied when the bubble renders.
+            self.location_ended = {}
+            # The trail behind each live share, keyed by bubble id and kept
+            # oldest-first. A location_update extends it rather than merely
+            # moving the pin, which is what lets the bubble draw the path
+            # and scrub back through it -- and what gets written into the
+            # row, so a reload rebuilds the whole share rather than only
+            # its last known position.
+            self.location_tracks = {}
 
             self.local_uri = '%s@%s' % (account.id.username, account.id.domain)
             self.remote_uri = '%s@%s' % (self.target_uri.user.decode(), self.target_uri.host.decode())
@@ -229,19 +463,31 @@ class SMSViewController(NSObject):
             self.notification_center.add_observer(self, name='SIPAccountRegistrationDidSucceed', sender=self.account)
             self.notification_center.add_observer(self, name='PGPPublicKeyReceived', sender=self.account)
 
-            NSBundle.loadNibNamed_owner_("SMSView", self)
+            NSBundle.loadNibNamed_owner_(self.nibName(), self)
 
-            if not self.is_replication_message and not self.last_route:
-                self.lookup_destination(self.target_uri)
+            # No DNS on open. A conversation that is only read costs
+            # nothing; the route is resolved the moment one is actually
+            # needed -- the user starts typing, or something is sent
+            # (message, IMDN receipt, is-composing, PGP key).
 
         return self
 
     @objc.python_method
-    def load_remote_public_keys(self):
+    def load_remote_public_keys(self, request_if_missing=False):
+        """Load the contact's key from disc; ask the server only if told to.
+
+        Creating a viewer must not put anything on the wire. Selecting a
+        contact creates one, so an automatic lookup here meant merely
+        clicking a name sent a SIP MESSAGE -- and for an address the server
+        does not know, came back 404. The lookup now happens when the user
+        actually sends something, or on demand from Contacts > Lookup
+        Public Key.
+        """
         public_key_path = "%s/%s.pubkey" % (self.keys_path, self.remote_uri)
-        
+
         if not os.path.exists(public_key_path):
-            self.requestPublicKey()
+            if request_if_missing:
+                self.requestPublicKey()
             return
 
         try:
@@ -405,6 +651,132 @@ class SMSViewController(NSObject):
         frame.size = self.outputContainer.frame().size
         self.chatViewController.outputView.setFrame_(frame)
 
+    # msgid currently being edited, or None. Editing is delete-and-resend,
+    # the model Sylk Mobile uses (ChatBox.sendEditedMessage): nothing on the
+    # wire supports changing a message in place, so the original is removed
+    # for both parties and the new text goes out under a fresh id -- carrying
+    # the ORIGINAL timestamp, which is what keeps the edited message where it
+    # was in the conversation instead of jumping to the end. No metadata is
+    # involved: for text this is purely a delete followed by a send.
+    editing_message_id = None
+    editing_message_timestamp = None
+
+    @objc.python_method
+    def begin_editing_message(self, msgid, text, timestamp=None):
+        """Load a sent message back into the composer for editing."""
+        input_text = self.chatViewController.inputText
+        if input_text is None:
+            return
+        self.editing_message_id = msgid
+        self.editing_message_timestamp = timestamp
+        input_text.setString_(text or '')
+        input_text.didChangeText()
+        window = input_text.window()
+        if window is not None:
+            window.makeFirstResponder_(input_text)
+        # caret at the end, so the user can extend rather than retype
+        input_text.setSelectedRange_(NSMakeRange(len(str(input_text.string())), 0))
+        self.showEditingHint(True)
+        self.log_info('Editing message %s' % msgid)
+
+    # The message the composer is currently answering, and what to show
+    # above it while it does. Reply and edit are mutually exclusive states:
+    # an edit replaces a message that was already sent, and a reply makes a
+    # new one, so entering either leaves the other.
+    replying_to_id = None
+    replying_to_sender = None
+    replying_to_text = None
+
+    @objc.python_method
+    def begin_reply_to_message(self, msgid, sender=None, text=None, from_self=False):
+        """Aim the composer at a message and show what is being answered."""
+        input_text = self.chatViewController.inputText
+        if input_text is None or not msgid:
+            return
+        self.cancel_editing_message()
+        self.replying_to_id = str(msgid)
+        self.replying_to_sender = sender or ''
+        self.replying_to_text = text or ''
+        window = input_text.window()
+        if window is not None:
+            window.makeFirstResponder_(input_text)
+        self.showReplyHint(True)
+        self.log_info('Replying to message %s' % msgid)
+
+    @objc.python_method
+    def cancel_reply(self):
+        if self.replying_to_id is None:
+            return False
+        self.log_info('Reply to %s cancelled' % self.replying_to_id)
+        self.replying_to_id = None
+        self.replying_to_sender = None
+        self.replying_to_text = None
+        self.showReplyHint(False)
+        return True
+
+    @objc.python_method
+    def showReplyHint(self, replying):
+        """The original, above the composer, while the answer is typed."""
+        try:
+            if replying:
+                quote = ' '.join((self.replying_to_text or '').split())
+                if len(quote) > REPLY_HINT_CHARS:
+                    quote = quote[:REPLY_HINT_CHARS].rstrip() + u'\u2026'
+                who = self.replying_to_sender or NSLocalizedString("message", "Label")
+                self.splitView.setText_emphasized_(
+                    NSLocalizedString("\u21a9 Replying to %s: %s \u2014 press Escape to cancel",
+                                      "Label") % (who, quote), True)
+            else:
+                chars_left = MAX_MESSAGE_LENGTH - self.chatViewController.inputText.textStorage().length()
+                self.splitView.setText_emphasized_(
+                    NSLocalizedString("%i chars left", "Label") % chars_left, False)
+        except Exception as e:
+            self.log_debug('Cannot show the reply hint: %s' % e)
+
+    @objc.python_method
+    def send_reply_link(self, reply_id, original_id, timestamp):
+        """Tell the other side that one message answers another.
+
+        A separate message, exactly as Sylk Mobile does it: the link is
+        not carried inside the reply, so both ends agree on where to look
+        for it. Sent BEFORE the reply so a peer that renders as it
+        receives has the link in hand when the reply lands, rather than
+        drawing a plain bubble and correcting it a moment later.
+        """
+        body = reply_envelope(reply_id, original_id, str(uuid.uuid4()),
+                              self.remote_uri, timestamp)
+        self.sendMessage(body, LEGACY_LOCATION_CONTENT_TYPE)
+        self.note_reply_link({'reply_id': str(reply_id),
+                              'original_id': str(original_id),
+                              'metadata_id': ''}, render=False)
+
+    @objc.python_method
+    def cancel_editing_message(self):
+        if self.editing_message_id is None:
+            return False
+        self.log_info('Editing of message %s cancelled' % self.editing_message_id)
+        self.editing_message_id = None
+        self.editing_message_timestamp = None
+        input_text = self.chatViewController.inputText
+        if input_text is not None:
+            input_text.setString_('')
+            input_text.didChangeText()
+        self.showEditingHint(False)
+        return True
+
+    @objc.python_method
+    def showEditingHint(self, editing):
+        try:
+            if editing:
+                self.splitView.setText_emphasized_(NSLocalizedString(
+                    "\u270e Editing message \u2014 press Escape to cancel", "Label"), True)
+            else:
+                chars_left = MAX_MESSAGE_LENGTH - self.chatViewController.inputText.textStorage().length()
+                self.splitView.setText_emphasized_(
+                    NSLocalizedString("%i chars left", "Label") % chars_left, False)
+        except Exception as e:
+            self.log_error('Cannot update the editing hint: %s' % e)
+
     @objc.python_method
     def delete_message(self, id, local=False):
         self.log_info('Delete message %s ' % id)
@@ -437,7 +809,7 @@ class SMSViewController(NSObject):
         return m
 
     @objc.python_method
-    def gotMessage(self, sender_identity, id, call_id, direction, content, content_type, is_replication_message=False, window=None,  cpim_imdn_events=None, imdn_timestamp=None, account=None, imdn_message_id=None, from_journal=False, status=None):
+    def gotMessage(self, sender_identity, id, call_id, direction, content, content_type, is_replication_message=False, window=None,  cpim_imdn_events=None, imdn_timestamp=None, account=None, imdn_message_id=None, from_journal=False, status=None, metadata=None):
     
         self.is_replication_message = is_replication_message
 
@@ -449,24 +821,35 @@ class SMSViewController(NSObject):
             self.log_info('Discard message %s that looped back to myself' % id)
             return
 
-        message_tuple = (sender_identity, id, call_id, direction, content, content_type, is_replication_message, window, cpim_imdn_events, imdn_timestamp, account, imdn_message_id, status)
+        message_tuple = (sender_identity, id, call_id, direction, content, content_type, is_replication_message, window, cpim_imdn_events, imdn_timestamp, account, imdn_message_id, status, metadata)
 
         self.incoming_queue.put(message_tuple)
 
     @objc.python_method
     def _receive_message(self, message_tuple):
-        (sender_identity, id, call_id, direction, content, content_type, is_replication_message, window, cpim_imdn_events, imdn_timestamp, account, imdn_message_id, status) = message_tuple
+        (sender_identity, id, call_id, direction, content, content_type, is_replication_message, window, cpim_imdn_events, imdn_timestamp, account, imdn_message_id, status, metadata) = message_tuple
 
         if content_type in ('text/pgp-public-key', 'text/pgp-private-key'):
             return
 
-        # Sylk Mobile location ticks (and other rich metadata messages)
-        # arrive as application/sylk-message-metadata with a JSON body.
-        # Hand them off to a dedicated renderer; they never go through
-        # PGP / OTR processing because they're emitted unencrypted at
-        # this layer (the sender encrypts at the SIP / TLS hop only).
-        if content_type == 'application/sylk-message-metadata':
-            self._receive_metadata_message(message_tuple)
+        # Location payloads — application/sylk-location-sharing (the
+        # coordinate ticks and the lifecycle signals) and its legacy
+        # predecessor application/sylk-message-metadata — carry their own
+        # envelope and their own encryption rules, so they get a dedicated
+        # renderer instead of the text path.
+        if content_type in (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE):
+            # A reply link wears the same content type as a legacy location
+            # tick. It is not a message and never becomes a bubble: it says
+            # that some OTHER message is a reply to a third one.
+            link = reply_metadata(content)
+            if link is not None:
+                self.note_reply_link(link, timestamp=imdn_timestamp)
+                return
+            recording = peaks_metadata(content)
+            if recording is not None:
+                self.note_audio_metadata(recording)
+                return
+            self._receive_location_message(message_tuple)
             return
 
         icon = NSApp.delegate().contactsWindowController.iconPathForURI(format_identity_to_string(sender_identity))
@@ -516,15 +899,10 @@ class SMSViewController(NSObject):
                             self.pgp_encrypted = True
                             self.notification_center.post_notification('PGPEncryptionStateChanged', sender=self)
 
-                        try:
-                            content = bytes(decrypted_message.message, 'latin1')
-                        except (TypeError, UnicodeEncodeError) as e:
-                            try:
-                                content = bytes(decrypted_message.message, 'utf-8')
-                            except (TypeError, UnicodeEncodeError) as e:
-                                self.log_error('Decrypted data encode error: %s' % str(e))
-                                self.log_error('Decrypted data: %s' % decrypted_message)
-                                return
+                        content = pgp_plaintext_bytes(decrypted_message)
+                        if content is None:
+                            self.log_error('Decrypted PGP message %s carried no payload' % id)
+                            return
             else:
                 self.pgp_encrypted = False
             
@@ -560,16 +938,27 @@ class SMSViewController(NSObject):
             except UnicodeDecodeError:
                 return
             
-            if content.startswith('?OTR:'):
-                if not is_replication_message:
-                    self.log_info('Dropped %s OTR message that could not be decoded' % content_type)
-                    self.chatViewController.showSystemMessage("Recipient ended OTR encryption", ISOTimestamp.now(), is_error=True)
+            if is_otr_wire_text(content):
+                if content.lstrip().startswith('?OTR:'):
+                    # Ciphertext that the session did not take. Either it is a
+                    # blob from another of my own devices -- whose session I do
+                    # not hold and never will -- or the peer is talking OTR at a
+                    # session that has gone away on this side.
+                    if not is_replication_message:
+                        self.log_info('Dropped %s OTR message that could not be decoded' % content_type)
+                        self.chatViewController.showSystemMessage("Recipient ended OTR encryption", ISOTimestamp.now(), is_error=True)
 
-                    if self.encryption.active:
-                        self.stopEncryption()
+                        if self.encryption.active:
+                            self.stopEncryption()
+                    else:
+                        self.chatViewController.showSystemMessage("OTR encrypted message from another device of my own", ISOTimestamp.now())
                 else:
-                    self.chatViewController.showSystemMessage("OTR encrypted message from another device of my own", ISOTimestamp.now())
-      
+                    # Handshake traffic: the version query, the tagged-plaintext
+                    # notice, a protocol error, a fragment. It is addressed to
+                    # the OTR implementation, not to a reader -- showing it as a
+                    # bubble is showing the user a wire dump.
+                    self.log_info('Dropped OTR protocol traffic (%s)' % content.lstrip()[:16])
+
                 return None
 
             msg_id = imdn_message_id if imdn_message_id and is_replication_message else id
@@ -586,9 +975,11 @@ class SMSViewController(NSObject):
 
             if not is_replication_message and not window.isKeyWindow() and status != 'displayed':
                 nc_body = html2txt(content) if is_html else content
-                nc_title = NSLocalizedString("Message Received", "Label")
-                nc_subtitle = format_identity_to_string(sender_identity, format='full')
-                NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
+                from SMSWindowManager import SMSWindowManager
+                nc_title, nc_icon = SMSWindowManager().notificationIdentity(
+                    self.remote_uri, self.display_name)
+                NSApp.delegate().notify_new_message(nc_title, nc_body, None,
+                                                    uri=self.remote_uri, icon=nc_icon)
 
             if encrypted:
                 encryption = 'verified' if self.encryption.verified or self.pgp_encrypted else 'unverified'
@@ -624,129 +1015,142 @@ class SMSViewController(NSObject):
             import traceback
             self.log_info(traceback.format_exc())
 
-    @staticmethod
-    def _parse_location_metadata(body):
-        """Decode an application/sylk-message-metadata payload.
+    @objc.python_method
+    def _decrypt_location_blob(self, blob):
+        """Decrypt a PGP-armoured location body with this account's key.
 
-        Returns a dict ``{'lat': float, 'lng': float, 'accuracy': float|None,
-        'maps_url': str, 'meta_id': str|None, 'origin_id': str|None,
-        'one_shot': bool, 'expires': str|None}`` for messages whose JSON
-        body has ``action == 'location'``. Returns ``None`` for any other
-        metadata flavour or malformed payloads — callers should fall back
-        to rendering the raw text in that case.
+        Returns the plaintext, or None when there is no key or the blob
+        was encrypted to a key we don't hold. In v2 the blob is the
+        coordinates alone; in the legacy metadata format it is the whole
+        envelope.
         """
-        if isinstance(body, bytes):
-            try:
-                body = body.decode('utf-8', errors='replace')
-            except Exception:
-                return None
-        if not isinstance(body, str) or not body.strip():
+        if not self.private_key:
+            self.log_debug('Cannot decrypt location payload: no PGP private key available')
             return None
         try:
-            data = json.loads(body)
-        except (TypeError, ValueError):
+            pgpMessage = pgpy.PGPMessage.from_blob(blob)
+            decrypted_message = self.private_key.decrypt(pgpMessage)
+        except (pgpy.errors.PGPDecryptionError, pgpy.errors.PGPError) as e:
+            self.log_debug('Cannot decrypt location payload: %s' % str(e))
             return None
-        if not isinstance(data, dict) or data.get('action') != 'location':
-            return None
-
-        value = data.get('value') or {}
-        try:
-            lat = float(value.get('latitude'))
-            lng = float(value.get('longitude'))
-        except (TypeError, ValueError):
-            return None
-
-        accuracy = value.get('accuracy')
-        if accuracy is not None:
-            try:
-                accuracy = float(accuracy)
-            except (TypeError, ValueError):
-                accuracy = None
-
-        # Apple Maps deep link. macOS resolves https://maps.apple.com/
-        # to the native Maps app when registered, otherwise opens the
-        # web view; both behaviours are acceptable. q= shows a labelled
-        # pin, ll= sets the centre.
-        maps_url = 'https://maps.apple.com/?ll=%.7f,%.7f&q=%.7f,%.7f' % (lat, lng, lat, lng)
-
-        return {
-            'lat': lat,
-            'lng': lng,
-            'accuracy': accuracy,
-            'maps_url': maps_url,
-            'meta_id': data.get('messageId'),
-            'origin_id': data.get('metadataId'),
-            'one_shot': bool(data.get('one_shot')),
-            'expires': data.get('expires'),
-        }
+        plaintext = pgp_plaintext(decrypted_message)
+        if plaintext is None:
+            self.log_debug('Decrypted location payload was empty')
+        return plaintext
 
     @objc.python_method
-    def _receive_metadata_message(self, message_tuple):
-        """Render an incoming application/sylk-message-metadata message.
+    def _location_payload(self, content, metadata=None, content_type=LOCATION_CONTENT_TYPE):
+        """Decode a location message into the payload the renderer needs.
 
-        Sylk Mobile uses ``messageId`` (a UUID stamped by the sender) as the
-        stable id of the chat bubble that represents a sharing session;
-        every subsequent UPDATE tick of that share carries the same
-        ``messageId`` along with ``metadataId`` pointing back at it.
+        One entry point for all three wire shapes — v2 (envelope in the
+        metadata side-band, content = the armoured coordinates or the
+        empty string), v1 (envelope in the JSON body, ciphertext under
+        ``value``) and the legacy metadata tick — so everything below
+        this line sees a single shape and never learns a version exists.
+        """
+        try:
+            return location_payload(content, metadata,
+                                    decrypt=self._decrypt_location_blob,
+                                    content_type=content_type)
+        except Exception as e:
+            self.log_debug('Failed to decode location payload: %s' % str(e))
+            return None
+
+    # -- sending a location ------------------------------------------------
+
+    @objc.python_method
+    def send_location_once(self, coords):
+        """Put "here is where I am" on the wire and draw it. Returns the id.
+
+        The map bubble is drawn from our own copy rather than waiting for
+        the message to come back: SylkServer replicates an outgoing
+        message to this account's OTHER devices, not to the one that sent
+        it, so nothing would ever arrive to draw.
+        """
+        msgid = str(uuid.uuid4())
+        body = one_shot_envelope(coords, msgid, now=datetime.datetime.now())
+        if body is None:
+            self.log_error('Cannot share a location without coordinates: %r' % (coords,))
+            self.chatViewController.showSystemMessage(
+                NSLocalizedString("Could not read this Mac's location", "Label"),
+                ISOTimestamp.now(), is_error=True)
+            return None
+        self.log_info('Sharing current location as %s' % msgid)
+        self.sendMessage(body, LOCATION_CONTENT_TYPE)
+        self._render_own_location(msgid, body)
+        return msgid
+
+    @objc.python_method
+    def send_location_request(self):
+        """Ask the other side to share theirs. Returns the request id.
+
+        `messageId` doubles as the request key: sylk-mobile answers with a
+        one-shot carrying `requestId` pointing back at it, which is how a
+        reply is matched to the ask that prompted it.
+        """
+        msgid = str(uuid.uuid4())
+        body = location_request_envelope(msgid, now=datetime.datetime.now())
+        self.log_info('Requesting the location of %s as %s' % (self.remote_uri, msgid))
+        self.sendMessage(body, LOCATION_CONTENT_TYPE)
+        self._render_own_location(msgid, body)
+        return msgid
+
+    @objc.python_method
+    def _render_own_location(self, msgid, body):
+        """Draw a location message we just sent, as if it had arrived.
+
+        Through gotMessage rather than straight into the renderer, so it
+        goes onto the same queue -- and therefore the same thread -- that
+        every other message is drawn from. `direction` is what makes it
+        read as ours: the breadcrumb becomes "Location requested" rather
+        than "someone asked for your location", and the bubble sits on
+        this side of the transcript.
+        """
+        self.gotMessage(self.account, msgid, msgid, 'outgoing', body,
+                        LOCATION_CONTENT_TYPE, account=self.account,
+                        imdn_timestamp=ISOTimestamp.now(), status=MSG_STATE_SENT)
+
+    @objc.python_method
+    def _receive_location_message(self, message_tuple):
+        """Render an incoming location message.
+
+        A share is one chat bubble — the coordinate origin — that every
+        subsequent trail tick moves in place, keyed by the envelope's
+        ``sessionId`` (plus the meet ``role``, since a meet session
+        carries two coordinate tracks and this bubble draws one pin).
 
         Strategy:
-          * ORIGIN tick (``metadataId is None``) — render a fresh bubble
-            keyed by ``messageId`` and persist a new history row whose
-            ``msgid`` is the same value, so a restart can find it.
-          * UPDATE tick — find the existing bubble by ``messageId`` and
-            re-render it in place via ``updateLocationMessage``; rewrite
-            the persisted row's body to the latest JSON so the last known
-            position survives a restart.
-          * UPDATE tick for an unknown bubble (we missed the origin —
-            possible after a fresh install or a journal-sync race) — treat
-            it as a bootstrap and create the bubble from this tick so that
-            subsequent updates can land on it.
+          * ORIGIN tick — render a fresh bubble keyed by the session and
+            persist a row under that same id, so a restart finds it.
+          * TRAIL tick — move the existing bubble via
+            updateLocationMessage and rewrite the persisted row's body to
+            the latest position, so the last known point survives a
+            restart.
+          * TRAIL tick for a bubble we never drew (we missed the origin —
+            a fresh install, or a journal-sync race) — bootstrap the
+            bubble from this tick so later updates can land on it.
+          * COORDINATE-FREE SIGNAL — no bubble: post the lifecycle
+            breadcrumb, stamp the session's bubble as ended, and persist
+            the signal row so the breadcrumb survives a reload.
 
-        Any non-location metadata flavour is persisted with its raw body
-        intact (forward-compat) but does not produce a bubble.
+        Note a v2 signal legitimately has an **empty content** — the
+        whole message is its metadata. That is not a malformed message,
+        and it must never be treated as one.
         """
         (sender_identity, id, call_id, direction, content, content_type,
          is_replication_message, window, cpim_imdn_events, imdn_timestamp,
-         account, imdn_message_id, status) = message_tuple
+         account, imdn_message_id, status, metadata) = message_tuple
 
-        try:
-            text_content = content.decode('utf-8', errors='replace') if isinstance(content, bytes) else content
-        except Exception:
-            text_content = ''
-
-        # Sylk Mobile PGP-encrypts the metadata body the same way it
-        # encrypts a normal text message — bodies that arrive over the
-        # wire start with -----BEGIN PGP MESSAGE-----. We have to decrypt
-        # before we can tell whether action=='location' (and what its
-        # coordinates are), and before we persist anything: storing the
-        # ciphertext just litters chat_messages with rows render code
-        # can't do anything with. If decryption fails (no key, peer used
-        # a different key) we drop the message — there's nothing
-        # actionable for this client to do with a metadata blob it
-        # cannot read.
-        stripped = text_content.strip()
-        if stripped.startswith('-----BEGIN PGP MESSAGE-----') and stripped.endswith('-----END PGP MESSAGE-----'):
-            if not self.private_key:
-                self.log_debug('Discarding encrypted metadata message %s — no PGP key available' % id)
-                return
-            try:
-                pgpMessage = pgpy.PGPMessage.from_blob(stripped)
-                decrypted_message = self.private_key.decrypt(pgpMessage)
-            except (pgpy.errors.PGPDecryptionError, pgpy.errors.PGPError) as e:
-                self.log_debug('Discarding encrypted metadata message %s — PGP decrypt failed: %s' % (id, str(e)))
-                return
-            try:
-                plaintext = bytes(decrypted_message.message, 'latin1')
-            except (TypeError, UnicodeEncodeError):
-                try:
-                    plaintext = bytes(decrypted_message.message, 'utf-8')
-                except (TypeError, UnicodeEncodeError):
-                    self.log_debug('Discarding metadata message %s — cannot encode decrypted body' % id)
-                    return
-            try:
-                text_content = plaintext.decode('utf-8')
-            except UnicodeDecodeError:
-                text_content = plaintext.decode('utf-8', errors='replace')
+        payload = self._location_payload(content, metadata, content_type)
+        if payload is None:
+            # Either another metadata flavour (rotation / consumed /
+            # label / reply / caregiver / …), which Sylk Mobile uses for
+            # internal state transitions and Blink doesn't act on, or a
+            # coordinate tick we cannot decrypt. Nothing to render and
+            # nothing worth persisting. If a later Blink build wants to
+            # handle one of those actions, this is the place to add it.
+            self.log_debug('Discarding non-renderable %s message %s' % (content_type, id))
+            return
 
         try:
             timestamp = ISOTimestamp(imdn_timestamp)
@@ -757,56 +1161,61 @@ class SMSViewController(NSObject):
         if direction == 'incoming':
             sender_name = self.normalizeSender(sender_name)
         icon = NSApp.delegate().contactsWindowController.iconPathForURI(format_identity_to_string(sender_identity))
-
-        location = self._parse_location_metadata(text_content)
         status_label = status or MSG_STATE_DELIVERED
 
-        if location is None:
-            # Non-location metadata (rotation / consumed / label /
-            # meeting_end / location_request / reply / caregiver / …).
-            # Sylk Mobile uses these for internal state transitions;
-            # Blink doesn't act on any of them today. Discard outright —
-            # don't persist the row (history would just clutter) and
-            # don't render anything. If a later Blink build wants to
-            # handle one of these actions, this is the place to add it.
-            self.log_debug('Discarding non-location metadata message %s (action=%s)' % (id, content_type))
+        # The breadcrumb goes in before the map so a share's "started
+        # sharing" note sorts above its own first bubble.
+        self._post_location_note(payload, id, direction, sender_name, timestamp)
+
+        if payload['is_signal']:
+            self._stamp_location_ended(payload, id)
+            self._persist_location_message(id, call_id, direction, sender_identity,
+                                           timestamp, payload, content_type, status_label)
             return
 
-        bubble_id = location['meta_id'] or id
-        is_update = location['origin_id'] is not None and location['origin_id'] in self.location_bubble_ids
+        bubble_id = location_bubble_id(payload, id)
+        self._log_location_grouping(payload, id, bubble_id)
 
-        if is_update:
-            # In-place update of an already-rendered bubble. Use the
-            # origin_id (which equals the bubble_id we used at render
-            # time) so DOM lookup finds the right node even when this
-            # tick's own messageId is something different (mobile
-            # actually keeps them equal, but be defensive).
-            target_bubble_id = location['origin_id']
-            self.chatViewController.updateLocationMessage(
-                target_bubble_id, location['lat'], location['lng'], location['accuracy'],
-            )
-            # Rewrite the origin row's body so a chat reload sees the
-            # latest position. update_message_body is decorated with
-            # @run_in_db_thread so it returns immediately.
-            self.history.update_message_body(target_bubble_id, text_content)
-            return
-
-        # Origin tick or first-seen update — render a new bubble keyed by
-        # bubble_id. Subsequent updates to the same share will find it
-        # via location_bubble_ids and route through updateLocationMessage
-        # above instead of stacking a second bubble.
         if bubble_id in self.location_bubble_ids:
-            # Origin we've already drawn (retransmit / journal-sync race) —
-            # ignore. Updates to it will continue to land in place.
+            if not payload['is_update']:
+                # An origin we have already drawn (retransmit, or a
+                # journal-sync race with the live path) — ignore. Trail
+                # ticks for it will continue to land in place.
+                return
+            track = self.location_tracks.setdefault(bubble_id, [])
+            append_track_point(track, payload['coords'])
+            self.chatViewController.updateLocationMessage(
+                bubble_id, payload['coords']['latitude'], payload['coords']['longitude'],
+                payload['coords']['accuracy'], payload['coords']['destination'],
+                timestamp=payload['coords'].get('timestamp'),
+            )
+            # Rewrite the origin row's body so a chat reload sees the whole
+            # trail, not just the latest position. The merge is what keeps
+            # it whole: the same tick is also written by the replication
+            # and journal paths, neither of which carries a trail, and a
+            # plain overwrite from either of them flattened this one.
+            # update_message_body is decorated with @run_in_db_thread so it
+            # returns immediately.
+            self.history.update_message_body(bubble_id, storable_envelope(payload, track),
+                                             merge=merge_location_bodies)
             return
 
+        # Origin tick, or a trail tick whose origin we missed: draw the
+        # bubble now so everything after it lands in place.
         self.location_bubble_ids.add(bubble_id)
         self.msg_id_list.add(bubble_id)
 
+        track = self.location_tracks.setdefault(bubble_id, [])
+        append_track_point(track, payload['coords'])
+
         self.chatViewController.showLocationMessage(
             call_id, bubble_id, direction, sender_name, icon,
-            location['lat'], location['lng'], location['accuracy'],
-            location['maps_url'], timestamp, state=status_label,
+            payload['coords']['latitude'], payload['coords']['longitude'],
+            payload['coords']['accuracy'], payload['coords']['maps_url'], timestamp,
+            state=status_label, destination=payload['coords']['destination'],
+            status_text=self.location_ended.get(bubble_id),
+            track=list(track),
+            point_timestamp=payload['coords'].get('timestamp'),
         )
         self.notification_center.post_notification(
             'ChatViewControllerDidDisplayMessage', sender=self,
@@ -818,17 +1227,230 @@ class SMSViewController(NSObject):
                 check_contact=True,
             ),
         )
-        self._persist_metadata_message(bubble_id, call_id, direction, sender_identity, timestamp, text_content, content_type, status_label)
+        self._persist_location_message(bubble_id, call_id, direction, sender_identity,
+                                       timestamp, payload, content_type, status_label,
+                                       track=track)
 
     @objc.python_method
-    def _persist_metadata_message(self, msgid, call_id, direction, sender_identity, timestamp, text_content, content_type, status_label):
-        """Insert a chat_messages row for a metadata message.
+    def _location_note_key(self, payload, msgid):
+        return '%s:%s:%s' % (payload.get('session_id') or msgid,
+                             payload.get('action'), payload.get('reason') or '')
 
-        Centralised here so origin ticks and non-location metadata go
-        through the same path. ``msgid`` is the row's primary key — for
-        location bubbles we deliberately use the bubble's stable id so
-        update ticks can later rewrite the same row via
-        history.update_message_body.
+    @objc.python_method
+    @run_in_green_thread
+    def fetch_quote_source(self, msgid, callback):
+        """Look up one message so a quote can name it, off the GUI thread.
+
+        get_messages goes through block_on, which parks the calling
+        thread until the database thread answers -- fine on a green
+        thread, a stall of the whole interface on the GUI one. The
+        renderer shows a placeholder and this replaces it.
+        """
+        row = None
+        try:
+            rows = self.history.get_messages(msgid=str(msgid), count=1)
+            row = rows[0] if rows else None
+        except Exception as e:
+            self.log_error('Cannot read message %s for a quote: %s' % (msgid, e))
+        digest = None
+        if row is not None:
+            digest = {'direction': row.direction,
+                      'body': row.body,
+                      'content_type': row.content_type,
+                      'cpim_from': row.cpim_from}
+        self._deliver_quote_source(callback, str(msgid), digest)
+
+    @objc.python_method
+    @run_in_gui_thread
+    def _deliver_quote_source(self, callback, msgid, row):
+        try:
+            callback(msgid, row)
+        except Exception as e:
+            self.log_error('Quote lookup callback failed for %s: %s' % (msgid, e))
+
+    @objc.python_method
+    def note_audio_metadata(self, recording, render=True):
+        """Record a recording's waveform, and show it if its bubble is up.
+
+        Arrives on its own message and in no fixed order relative to the
+        transfer: sent just after the upload on a live exchange, replayed
+        in storage order on a catch-up. Both are ordinary.
+        """
+        transfer_id = recording['transfer_id']
+        known = self.audio_metadata.get(transfer_id)
+        if known == recording:
+            return False
+        self.audio_metadata[transfer_id] = recording
+        left = len(recording['peaks'].get('l') or [])
+        right = len(recording['peaks'].get('r') or [])
+        spectrum = recording.get('spectrum')
+        self.log_info('Recording metadata for transfer %s: peaks l=%d r=%d spectrum=%s'
+                      % (transfer_id, left, right,
+                         ('%s frames' % spectrum.get('count')) if spectrum else 'none'))
+        if render:
+            try:
+                self.chatViewController.applyAudioMetadata(transfer_id, recording)
+            except AttributeError:
+                pass                    # the old WebView renderer has no player
+        return True
+
+    @objc.python_method
+    def audio_metadata_for(self, transfer_id):
+        """The waveform recorded for a transfer, or None."""
+        return self.audio_metadata.get(str(transfer_id or ''))
+
+    @objc.python_method
+    @run_in_green_thread
+    def look_for_audio_metadata(self, transfer_id):
+        """Say whether a waveform for this transfer is in the database.
+
+        "The sender has it and the desktop does not" has two very
+        different causes and they need telling apart: the message never
+        arrived, or it arrived and was discarded before it could be
+        stored. Every version of Blink before this one dropped
+        action='peaks' at three separate points -- all of them understood
+        only location payloads -- so for any recording received before
+        then there is genuinely nothing in chat_messages to find, and no
+        amount of looking at the bubble will show it.
+        """
+        transfer_id = str(transfer_id or '')
+        if not transfer_id:
+            return
+        try:
+            rows = self.history.get_messages(search_text=transfer_id, count=20)
+        except Exception as e:
+            self.log_error('Cannot look for the waveform of %s: %s' % (transfer_id, e))
+            return
+        stored = [row for row in rows
+                  if row.content_type == LEGACY_LOCATION_CONTENT_TYPE
+                  and peaks_metadata(row.body) is not None]
+        if stored:
+            self.log_info('A stored waveform for transfer %s exists but was not '
+                          'applied -- %d row(s)' % (transfer_id, len(stored)))
+            for row in stored:
+                recording = peaks_metadata(row.body)
+                if recording is not None:
+                    self.note_audio_metadata(recording)
+        else:
+            self.log_info('No waveform stored for transfer %s. Its metadata message '
+                          'either never arrived or was received by a build that '
+                          'discarded it; the server still has it, so a journal '
+                          'resync would bring it back.' % transfer_id)
+
+    @objc.python_method
+    def note_reply_link(self, link, timestamp=None, render=True):
+        """Record that one message answers another, and show it if we can.
+
+        The link and the reply are two separate messages, so this is
+        called both when the link arrives after its reply (the common
+        case: the bubble is already on screen and gains a quote) and when
+        it arrives first (mobile sends the link first, so on a live
+        exchange this is the usual order -- nothing to update yet, and the
+        bubble picks the quote up as it is built).
+        """
+        reply_id = link['reply_id']
+        original_id = link['original_id']
+        if self.reply_targets.get(reply_id) == original_id:
+            return False
+        self.reply_targets[reply_id] = original_id
+        self.log_debug('Message %s is a reply to %s' % (reply_id, original_id))
+        if render:
+            try:
+                self.chatViewController.applyReplyLink(reply_id, original_id)
+            except AttributeError:
+                pass                    # the old WebView renderer has no quotes
+        return True
+
+    @objc.python_method
+    def reply_target_for(self, msgid):
+        """The id this message answers, or None."""
+        return self.reply_targets.get(msgid)
+
+    @objc.python_method
+    def _log_location_grouping(self, payload, msgid, bubble_id):
+        """Say which session a coordinate tick was filed under, and why.
+
+        Every tick of one share carries the same `sessionId`, and that id
+        is the bubble -- draw two bubbles and one share appears to have
+        happened twice, in two places, which is what a split looks like
+        from the outside. When the envelope carries no session at all we
+        fall back to the tick's own message id, which invents a session
+        per tick; that is correct for a one-shot and a bug for anything
+        else, and it used to happen in complete silence.
+        """
+        source = payload.get('session_source') or 'none'
+        action = payload.get('action')
+        if source in ('sessionId', 'metadataId'):
+            self.log_debug('Location %s filed under session %s (from %s)'
+                           % (action, bubble_id, source))
+            return
+        if payload.get('one_shot'):
+            return                      # no trail to group; the fallback is right
+        if source == 'messageId':
+            self.log_info('Location %s %s grouped by messageId, not sessionId -- '
+                          'an older sender, or a v2 envelope that did not arrive'
+                          % (action, msgid))
+            return
+        try:
+            keys = ','.join(sorted(payload.get('envelope') or {})) or '(empty)'
+        except Exception:
+            keys = '(unreadable)'
+        self.log_error('Location %s %s carries NO session id: filed under its own '
+                       'message id, so it will not group with the rest of its '
+                       'share. Envelope keys: %s' % (action, msgid, keys))
+
+    @objc.python_method
+    def _post_location_note(self, payload, msgid, direction, sender_name, timestamp, before=False):
+        """Post a lifecycle breadcrumb for this tick, once per session event.
+
+        The same signal can reach us twice — live and then again when the
+        journal replays it, or from two of our own devices — so notes are
+        deduped per session:action:reason. Replayed notes are stamped
+        with the journalled message's timestamp, not "now", so a device
+        draining an old journal slots its breadcrumbs into their correct
+        chronological place.
+        """
+        note = system_note(payload, sender_name, direction)
+        if not note:
+            return
+        key = self._location_note_key(payload, msgid)
+        if key in self.location_notes:
+            return
+        self.location_notes.add(key)
+        self.chatViewController.showSystemMessage(note, timestamp, before=before)
+
+    @objc.python_method
+    def _stamp_location_ended(self, payload, msgid):
+        """Mark a session's bubble(s) as finished.
+
+        A teardown carries no role, so it ends both legs of a meet. The
+        label is remembered even when no bubble is on screen yet: a
+        journal batch is not ordered by session, so the stop can arrive
+        before the origin it refers to.
+        """
+        label = ended_label(payload)
+        if not label:
+            return
+        for bubble in session_bubble_ids(payload, msgid):
+            self.location_ended[bubble] = label
+            if bubble in self.location_bubble_ids:
+                self.chatViewController.setLocationMessageStatus(bubble, label)
+
+    @objc.python_method
+    def _persist_location_message(self, msgid, call_id, direction, sender_identity,
+                                  timestamp, payload, content_type, status_label,
+                                  track=None):
+        """Insert a chat_messages row for a location message.
+
+        ``msgid`` is the row's primary key — for a coordinate tick that
+        is the bubble's stable session id, so trail ticks can later
+        rewrite the same row via history.update_message_body; for a
+        lifecycle signal it is the message's own id, since the signal is
+        a breadcrumb in the timeline rather than the map itself.
+
+        The stored body is the v1-shaped envelope with the coordinates
+        decrypted in place, which is what the replay path expects (see
+        storable_envelope).
         """
         recipient = ChatIdentity(self.target_uri, self.display_name) if direction == 'outgoing' else ChatIdentity(self.account.uri, self.account.display_name)
         if direction == 'outgoing' and not sender_identity.display_name:
@@ -838,7 +1460,8 @@ class SMSViewController(NSObject):
                 pass
         mInfo = MessageInfo(
             msgid, call_id=call_id, direction=direction, sender=sender_identity,
-            recipient=recipient, timestamp=timestamp, content=text_content,
+            recipient=recipient, timestamp=timestamp,
+            content=storable_envelope(payload, track),
             content_type=content_type, status=status_label, encryption='',
         )
         self.add_to_history(mInfo)
@@ -939,6 +1562,252 @@ class SMSViewController(NSObject):
         if direction == 'outgoing':
             self.chatViewController.markMessage(id, status)
 
+    # -- outgoing file transfers -------------------------------------------
+    #
+    # HTTP upload, not MSRP. The POST *is* the send: SylkServer takes the
+    # sender, receiver, transfer id and filename out of the URL, stores the
+    # file and emits the application/sylk-file-transfer message itself --
+    # to the peer, and back to us through the journal. Sylk Mobile works
+    # exactly this way and deliberately never puts a file transfer on the
+    # wire as a SIP message; doing both would deliver the file twice.
+
+    @objc.python_method
+    def canSendFiles(self):
+        """True when this account has somewhere to upload to."""
+        try:
+            from SMSWindowManager import SMSWindowManager
+            return bool(SMSWindowManager().fileTransferBaseURL(self.account))
+        except Exception:
+            return False
+
+    @objc.python_method
+    def sendFiles(self, paths):
+        """Send one or more files, in the order they were given."""
+        sent = 0
+        for path in paths:
+            if self.sendFile(path):
+                sent += 1
+        return sent
+
+    @objc.python_method
+    def sendFile(self, path):
+        from SMSWindowManager import SMSWindowManager
+        from FileTransferCache import (FileTransferCache, guess_filetype,
+                                       new_transfer_id, upload_url)
+
+        path = str(path)
+        if not os.path.isfile(path):
+            # A folder can be dragged in as easily as a file, and os.path
+            # .getsize() answers for one without complaining.
+            self.log_info('Not sending %s: not a file' % path)
+            return False
+        try:
+            size = os.path.getsize(path)
+        except OSError as e:
+            self.log_error('Cannot send %s: %s' % (path, e))
+            self.chatViewController.showSystemMessage(
+                NSLocalizedString("Cannot read %s", "Label") % os.path.basename(path),
+                ISOTimestamp.now(), is_error=True)
+            return False
+
+        base = SMSWindowManager().fileTransferBaseURL(self.account)
+        if not base:
+            self.log_error('No file transfer service is configured for %s' % self.account.id)
+            self.chatViewController.showSystemMessage(
+                NSLocalizedString("This account has no file transfer service", "Label"),
+                ISOTimestamp.now(), is_error=True)
+            return False
+
+        # The filename travels in a URL and becomes a path on the other
+        # side, so the same normalisation mobile applies is applied here:
+        # spaces and colons out, no leading dots or slashes.
+        filename = re.sub(r'[\s:]', '_', os.path.basename(path)).lstrip('./') \
+            or ('file-%s' % new_transfer_id())
+
+        transfer_id = new_transfer_id()
+        sender = str(self.account.id)
+        receiver = self.remote_uri
+        meta = {
+            'filename': filename,
+            'filesize': size,
+            'filetype': guess_filetype(path),
+            'transfer_id': transfer_id,
+            'sender': {'uri': sender},
+            'receiver': {'uri': receiver},
+            'direction': 'outgoing',
+            'url': upload_url(base, sender, receiver, transfer_id, filename),
+        }
+
+        timestamp = ISOTimestamp.now()
+        self.log_info('Sending %s (%s bytes) to %s as %s'
+                      % (filename, size, receiver, transfer_id))
+        # Filed before anything else happens: from here on this is a file
+        # the conversation holds, exactly like one that arrived, so the
+        # bubble opens it rather than offering to fetch it back off the
+        # server -- and the upload reads our copy, so moving the original
+        # mid-transfer cannot break it.
+        stored = FileTransferCache().store(meta, self.local_uri, self.remote_uri, path)
+        self._showOutgoingTransfer(meta, timestamp, stored)
+        self._uploadTransfer(meta, stored, timestamp)
+        return True
+
+    @objc.python_method
+    def _showOutgoingTransfer(self, meta, timestamp, path):
+        """Put the bubble up before the upload starts.
+
+        The file is the user's own, already on disc: waiting for a round
+        trip to the server before showing anything would make sending feel
+        broken on a slow link.
+        """
+        icon = NSApp.delegate().contactsWindowController.iconPathForURI(str(self.account.id))
+        body = json.dumps(meta)
+        self.msg_id_list.add(meta['transfer_id'])
+        self.chatViewController.showMessage(
+            meta['transfer_id'], meta['transfer_id'], 'outgoing', None, icon, body,
+            timestamp, state=MSG_STATE_SENDING, media_type='sms')
+        # The bubble renders from the local copy while it goes up: the
+        # remote URL does not exist yet, and a picture the user just chose
+        # should be visible immediately.
+        try:
+            self.chatViewController.attachLocalMedia(meta['transfer_id'], path)
+        except Exception as e:
+            self.log_debug('Cannot preview %s: %s' % (path, e))
+
+    @objc.python_method
+    @run_in_green_thread
+    def _uploadTransfer(self, meta, path, timestamp):
+        """Encrypt if we can, upload, then record what happened.
+
+        Green-threaded because encrypting reads and armours the whole file,
+        which must not happen on the GUI thread.
+        """
+        from FileTransferCache import FileTransferCache, MAX_ENCRYPT_BYTES
+
+        cache = FileTransferCache()
+        upload_path = path
+        try:
+            if self._canEncryptFile(meta):
+                cache.note_upload_phase(meta, 'encrypt')
+                self._noteTransferProgress(meta)
+                encrypted = self._encryptFileForUpload(path, meta)
+                if encrypted is not None:
+                    upload_path = encrypted
+                    # Both the name and the URL gain the suffix: that is
+                    # how every Sylk client recognises an encrypted
+                    # transfer, including this one on the way back in.
+                    meta['filename'] = meta['filename'] + '.asc'
+                    meta['url'] = meta['url'] + '.asc'
+                    meta['encrypted'] = True
+                    try:
+                        meta['filesize'] = os.path.getsize(encrypted)
+                    except OSError:
+                        pass
+        except Exception as e:
+            self.log_error('Cannot encrypt %s: %s' % (meta.get('filename'), e))
+
+        self._persistOutgoingTransfer(meta, timestamp)
+
+        def finished(ok, detail):
+            self._transferFinished(meta, ok, detail, upload_path, path)
+
+        cache.note_upload_phase(meta, 'upload')
+        self._noteTransferProgress(meta)
+        cache.upload(meta, upload_path, finished)
+
+    @objc.python_method
+    def _canEncryptFile(self, meta):
+        from FileTransferCache import MAX_ENCRYPT_BYTES
+        if not self.account.sms.enable_pgp or self.public_key is None:
+            return False
+        try:
+            return int(meta.get('filesize') or 0) <= MAX_ENCRYPT_BYTES
+        except (TypeError, ValueError):
+            return False
+
+    @objc.python_method
+    def _encryptFileForUpload(self, path, meta):
+        """An armoured PGP copy beside the original, or None.
+
+        Encrypted to the recipient and to ourselves, so the file remains
+        readable on this account's other devices -- the same pair of keys
+        a text message goes out under.
+        """
+        with open(path, 'rb') as f:
+            data = f.read()
+
+        # format='b' is not optional. Left to itself pgpy sniffs the bytes
+        # and calls anything ASCII-shaped text, then DECODES it -- the
+        # sender-side twin of the bug that made incoming photographs
+        # undecodable. Saying binary keeps every byte exactly as it was.
+        # Reading the file here rather than passing file=True also keeps
+        # the local path out of the literal packet's filename field.
+        pgp_message = pgpy.PGPMessage.new(data, format='b')
+        cipher = pgpy.constants.SymmetricKeyAlgorithm.AES256
+        sessionkey = cipher.gen_key()
+        try:
+            encrypted = self.public_key.encrypt(pgp_message, cipher=cipher,
+                                                sessionkey=sessionkey)
+            if self.my_public_key:
+                encrypted = self.my_public_key.encrypt(encrypted, cipher=cipher,
+                                                       sessionkey=sessionkey)
+        finally:
+            del sessionkey
+
+        target = os.path.join(tempfile.gettempdir(),
+                              '%s.asc' % meta['transfer_id'])
+        with open(target, 'w') as f:
+            f.write(str(encrypted))
+        self.log_info('Encrypted %s for upload (%s bytes)'
+                      % (meta['filename'], os.path.getsize(target)))
+        return target
+
+    @objc.python_method
+    def _persistOutgoingTransfer(self, meta, timestamp):
+        """Store the row under the transfer id.
+
+        The server replicates the message it emits back to us with that
+        same id, so the journal folds into this row instead of drawing the
+        transfer a second time.
+        """
+        recipient = ChatIdentity(self.target_uri, self.display_name)
+        mInfo = MessageInfo(
+            meta['transfer_id'], call_id=meta['transfer_id'], direction='outgoing',
+            sender=ChatIdentity(self.account.uri, self.account.display_name),
+            recipient=recipient, timestamp=timestamp, content=json.dumps(meta),
+            content_type=FILE_TRANSFER_CONTENT_TYPE, status=MSG_STATE_SENDING,
+            encryption='verified' if meta.get('encrypted') else '',
+        )
+        self.add_to_history(mInfo)
+
+    @objc.python_method
+    @run_in_gui_thread
+    def _transferFinished(self, meta, ok, detail, upload_path, source_path):
+        from FileTransferCache import FileTransferCache
+        if upload_path != source_path:
+            try:
+                os.remove(upload_path)
+            except OSError:
+                pass
+
+        state = MSG_STATE_DELIVERED if ok else MSG_STATE_FAILED
+        if ok:
+            self.log_info('Uploaded %s (%s)' % (meta.get('filename'), detail))
+        else:
+            self.log_error('Upload of %s failed: %s' % (meta.get('filename'), detail))
+        self.history.update_message_status(meta['transfer_id'], state)
+        self.chatViewController.markMessage(meta['transfer_id'], state)
+        self.chatViewController.clearTransferProgress(meta['transfer_id'])
+        if not ok:
+            self.chatViewController.showSystemMessage(
+                NSLocalizedString("Could not send %s: %s", "Label")
+                % (meta.get('filename'), detail),
+                ISOTimestamp.now(), is_error=True)
+
+    @objc.python_method
+    @run_in_gui_thread
+    def _noteTransferProgress(self, meta):
+        self.chatViewController.startTransferProgressTimer()
+
     @objc.python_method
     def add_to_history(self, message):
         #self.log_info('%s %s message %s saved with status %s' % (message.direction.title(), message.content_type, message.id, message.status))
@@ -951,6 +1820,12 @@ class SMSViewController(NSObject):
         self.msg_id_list.add(message.id)
 
         self.history.add_message(message.id, 'sms', self.local_uri, remote_uri, message.direction, cpim_from, cpim_to, cpim_timestamp, message.content.decode(), message.content_type, "0", message.status, call_id=message.call_id, encryption=message.encryption)
+
+        try:
+            from SMSWindowManager import SMSWindowManager
+            SMSWindowManager().noteMessageTime(remote_uri, message.timestamp)
+        except Exception as e:
+            self.log_debug('Cannot record the conversation time for %s: %s' % (remote_uri, e))
 
     @objc.python_method
     def sendIMDNNotification(self, message_id, event):
@@ -986,12 +1861,23 @@ class SMSViewController(NSObject):
 
     @objc.python_method
     @run_in_gui_thread
-    def sendMessage(self, content, content_type="text/plain"):
+    def sendMessage(self, content, content_type="text/plain", timestamp=None,
+                    reply_to=None):
+        """Queue a message. Returns its id, or None if nothing was queued.
+
+        `reply_to` is the id of the message being answered: the companion
+        link goes out just before the reply, so the peer has it in hand
+        when the reply arrives.
+        """
         # entry point for sending messages, they will be added to self.outgoing_queue
         status = MSG_STATE_FAILED_LOCAL if self.paused else 'queued'
-        
+
         if self.last_route:
             self.start_queue()
+        elif not self.dns_lookup_in_progress:
+            # resolve on demand -- covers messages, IMDN receipts, is-composing
+            # and PGP key exchange, none of which happen on open
+            self.lookup_destination(self.target_uri)
 
         if host.default_ip:
             if isinstance(content, OTRInternalMessage):
@@ -1000,9 +1886,22 @@ class SMSViewController(NSObject):
         else:
             status = MSG_STATE_FAILED_LOCAL
 
-        timestamp = ISOTimestamp.now()
+        # An edit resends under the original moment so the message keeps its
+        # place in the conversation; everything else is stamped now.
+        if timestamp is None:
+            timestamp = ISOTimestamp.now()
+        else:
+            try:
+                timestamp = ISOTimestamp(timestamp)
+            except Exception:
+                timestamp = ISOTimestamp.now()
         content = content.decode() if isinstance(content, bytes) else content
         id = str(uuid.uuid4()) # use IMDN compatible id
+
+        if reply_to:
+            # Before the reply itself, and never recursively: the link is
+            # sent with reply_to unset, so it cannot spawn one of its own.
+            self.send_reply_link(id, reply_to, timestamp)
 
         if self.encryption.active:
             encryption = 'verified' if self.encryption.verified else 'unverified'
@@ -1025,7 +1924,8 @@ class SMSViewController(NSObject):
             self.add_to_history(mInfo)
             self.messages[mInfo.id] = mInfo
         
-        if content_type in ('application/sylk-message-remove', 'application/sylk-conversation-read', 'application/sylk-conversation-remove'):
+        if content_type in ('application/sylk-message-remove', 'application/sylk-conversation-read', 'application/sylk-conversation-remove',
+                            LEGACY_LOCATION_CONTENT_TYPE):
             self.add_to_history(mInfo)
             self.messages[mInfo.id] = mInfo
 
@@ -1037,6 +1937,8 @@ class SMSViewController(NSObject):
 
         if host.default_ip and (not self.last_route or self.paused):
              self.lookup_destination(self.target_uri)
+
+        return id
 
     @objc.python_method
     def lookup_destination(self, uri):
@@ -1064,20 +1966,25 @@ class SMSViewController(NSObject):
             else:
                 self.setRoutesFailed('Bonjour neighbour %s not found' % self.instance_id)
             return
-        else:
-            self.log_info("Lookup destination for %s" % uri)
+        key = self.route_cache_key(uri)
+        cached = SMSWindowManager.SMSWindowManager().cachedRoutes(key)
+        if cached:
+            self.dns_lookup_in_progress = False
+            self.log_info('Reusing cached route for %s' % key[1])
+            self.setRoutesResolved(cached)
+            return
 
+        self.log_info("Lookup destination for %s" % uri)
         self.lookup_dns(uri)
 
     @objc.python_method
-    @run_in_green_thread
-    def lookup_dns(self, target_uri):
-        self.log_info("Lookup DNS for %s" % target_uri)
- 
-        settings = SIPSimpleSettings()
-        lookup = DNSLookup()
-        self.notification_center.add_observer(self, sender=lookup)
+    def lookup_inputs(self, target_uri):
+        """The (uri, tls_name) a DNS lookup for this target would use.
 
+        Single source of truth: both the lookup and the route-cache key are
+        derived from this, so the key can never describe something other than
+        what was actually resolved.
+        """
         tls_name = target_uri.host.decode()
         if self.account is not BonjourAccount():
             if self.account.id.domain == target_uri.host.decode():
@@ -1092,15 +1999,32 @@ class SMSViewController(NSObject):
             proxy = self.account.sip.outbound_proxy
             uri = SIPURI(host=proxy.host, port=proxy.port, parameters={'transport': proxy.transport})
             tls_name = self.account.sip.tls_name or proxy.host
-            self.log_info("Starting DNS lookup for %s via proxy %s" % (target_uri.host.decode(), uri))
         elif self.account.sip.always_use_my_proxy:
             uri = SIPURI(host=self.account.id.domain)
             tls_name = self.account.sip.tls_name or self.account.id.domain
-            self.log_info("Starting DNS lookup for %s via proxy of account %s" % (target_uri.host.decode(), self.account.id))
         else:
             uri = target_uri
-            self.log_info("Starting DNS lookup for %s" % target_uri.host.decode())
 
+        return uri, tls_name
+
+    @objc.python_method
+    def route_cache_key(self, target_uri):
+        uri, tls_name = self.lookup_inputs(target_uri)
+        settings = SIPSimpleSettings()
+        return (str(self.account.id), str(uri), str(tls_name),
+                tuple(str(t) for t in settings.sip.transport_list or ()))
+
+    @objc.python_method
+    @run_in_green_thread
+    def lookup_dns(self, target_uri):
+        self.log_info("Lookup DNS for %s" % target_uri)
+
+        settings = SIPSimpleSettings()
+        lookup = DNSLookup()
+        self.notification_center.add_observer(self, sender=lookup)
+
+        uri, tls_name = self.lookup_inputs(target_uri)
+        self.log_info("Starting DNS lookup for %s (tls_name=%s)" % (uri, tls_name))
         lookup.lookup_sip_proxy(uri, settings.sip.transport_list, tls_name=tls_name)
 
     @objc.python_method
@@ -1117,6 +2041,10 @@ class SMSViewController(NSObject):
         self.notification_center.remove_observer(self, sender=lookup)
         result_text = ', '.join(('%s:%s (%s)' % (result.address, result.port, result.transport.upper()) for result in data.result))
         self.log_info("DNS lookup for %s succeeded: %s" % (self.target_uri.host.decode(), result_text))
+        try:
+            SMSWindowManager.SMSWindowManager().storeRoutes(self.route_cache_key(self.target_uri), data.result)
+        except Exception as e:
+            self.log_error('Cannot cache route: %s' % e)
         self.setRoutesResolved(data.result)
 
     @objc.python_method
@@ -1184,13 +2112,91 @@ class SMSViewController(NSObject):
         self.outgoing_queue.put(None)
 
     @objc.python_method
-    def send_read_messages_notifications(self):
-        return
-        #TODO: send message to myself
-        not_read_messages = len(self.not_read_queue.queue.queue)
-        if not_read_messages:
-            payload = json.dumps({'contact': self.remote_uri})
-            self.sendMessage(payload, 'application/sylk-api-conversation-read')
+    def showOTRVerification(self, question=None, remote=False):
+        """Open the identity-verification window for this conversation.
+
+        The menu item used to log "Show OTR window" and do nothing: the
+        window was only ever built by the MSRP chat controller, so there
+        was nothing here to show.
+        """
+        if not self.encryption.active:
+            self.log_info('Not verifying: OTR is not active for this conversation')
+            return
+        try:
+            if self.otr_verification_window is None:
+                self.otr_verification_window = ChatOtrSmp(OTRVerificationHost(self))
+            self.otr_verification_window.show(question=question, remote=remote)
+        except Exception as e:
+            self.log_error('Cannot show the OTR verification window: %s' % e)
+
+    @objc.python_method
+    def _NH_ChatStreamSMPVerificationDidStart(self, stream, data):
+        """The other side asked to verify: answer in the same window."""
+        self.log_info('OTR SMP verification requested by %s' % self.remote_uri)
+        self.showOTRVerification(question=getattr(data, 'question', None), remote=True)
+
+    @objc.python_method
+    def _NH_ChatStreamSMPVerificationDidNotStart(self, stream, data):
+        self.log_info('OTR SMP verification did not start: %s' % data.reason)
+        if self.otr_verification_window is not None:
+            self.otr_verification_window.handle_remote_response()
+
+    @objc.python_method
+    def _NH_ChatStreamSMPVerificationDidEnd(self, stream, data):
+        self.log_info('OTR SMP verification ended')
+        if self.otr_verification_window is None:
+            return
+        try:
+            from sipsimple.streams.msrp.chat import SMPStatus
+            if data.status is SMPStatus.Success:
+                self.otr_verification_window.handle_remote_response(data.same_secrets)
+            else:
+                self.otr_verification_window.handle_remote_response()
+        except Exception as e:
+            self.log_error('Cannot settle the OTR verification: %s' % e)
+
+    @objc.python_method
+    def _isOTRMessage(self, message):
+        """Whether this message is going out under an OTR session.
+
+        The content types that are pure signalling -- receipts, typing
+        notices, key lookups -- are not part of the OTR conversation and
+        are left alone: they carry nothing worth withholding, and the
+        journal is what makes read state work across devices.
+        """
+        try:
+            if not self.encryption.active:
+                return False
+        except Exception:
+            return False
+        return message.content_type not in CONTROL_CONTENT_TYPES
+
+    @objc.python_method
+    def announce_conversation_read(self):
+        """Tell this account's other devices that I have read this chat.
+
+        Sent to the server API, which replicates it back out as
+        application/sylk-conversation-read -- the very marker this client
+        acts on when a phone reads a conversation first. Without it the
+        traffic is one-way: the desktop honours everyone else's reads and
+        announces none of its own.
+
+        The payload is JSON. It was a bare address here for a while, on the
+        assumption that it matched sylk-api-message-remove, which sends a
+        bare message id -- the server answered every one of them with
+        "Can't process conversation read, parsing error Expecting value:
+        line 1 column 1", which is json.loads() being handed an address.
+        Note this is the shape the API takes; what comes BACK through the
+        journal is a bare URI, which is why the reader accepts both.
+        """
+        if self.account is BonjourAccount():
+            return                      # no server, and no other devices
+        if not self.account.sms.enable_replication:
+            return
+        payload = json.dumps({'contact': self.remote_uri})
+        self.log_info('Announcing that the conversation with %s was read: %s'
+                      % (self.remote_uri, payload))
+        self.sendMessage(payload, 'application/sylk-api-conversation-read')
 
     @objc.python_method
     def not_read_queue_start(self):
@@ -1230,6 +2236,28 @@ class SMSViewController(NSObject):
             return False
             
         if message.content_type in (IsComposingDocument.content_type, IMDNDocument.content_type, 'text/pgp-public-key', 'text/pgp-private-key', 'application/sylk-api-pgp-key-lookup', 'application/sylk-api-message-remove', 'application/sylk-api-conversation-read', 'application/sylk-api-conversation-remove', 'application/sylk-conversation-read', 'application/sylk-conversation-remove', 'application/sylk-message-remove'):
+            return False
+
+        if message.content_type == LEGACY_LOCATION_CONTENT_TYPE:
+            # Blink only ever SENDS one flavour of this: the reply link,
+            # which is a note about another message rather than a message.
+            # It must not become a bubble and must not request a receipt.
+            return False
+
+        if message.content_type == LOCATION_CONTENT_TYPE:
+            # A location payload is drawn, but not by the text path -- it
+            # is a map bubble or a lifecycle breadcrumb, and showMessage
+            # would render its envelope as a wall of JSON. send_location
+            # hands it to _receive_location_message instead, which is the
+            # same renderer an incoming one goes through.
+            #
+            # Saying "not renderable" here also switches off three things
+            # that would each break the message on the wire: OTR framing,
+            # whole-body PGP encryption (the envelope has its own rules --
+            # only the coordinates are ever encrypted, and a peer given an
+            # armoured body under this content type cannot parse it at
+            # all), and the IMDN receipt request, which is for things a
+            # person reads.
             return False
 
         return True
@@ -1299,6 +2327,25 @@ class SMSViewController(NSObject):
         can_use_cpim = message.content_type not in ('application/sylk-api-pgp-key-lookup', 'application/sylk-api-token', 'text/pgp-public-key', 'application/sylk-api-message-remove', 'application/sylk-api-conversation-remove', 'application/sylk-api-conversation-read')
         
         additional_sip_headers = []
+
+        # An OTR message must not be journalled. SylkServer stores every
+        # message it relays so that a new device can replay the
+        # conversation -- but an OTR ciphertext is bound to the session
+        # that produced it, and no other device holds that session. A
+        # replayed OTR message is an undecryptable blob for ever, and it
+        # would also mean the server holding ciphertext for a conversation
+        # whose whole point is that it holds nothing.
+        #
+        # X-Sylk-Skip-Journal is what turns storage off, on both sides of
+        # the relay: sip_handlers.py checks for the header's PRESENCE, not
+        # its value, before storing for either the originator or the
+        # recipient. The server sends 'yes' when it sets the header itself,
+        # so this matches it.
+        if self._isOTRMessage(message):
+            additional_sip_headers.append(Header('X-Sylk-Skip-Journal', 'yes'))
+            self.log_info('Sending %s message %s without journalling it (OTR)'
+                          % (message.content_type, message.id))
+
         if self.account.sms.use_cpim and can_use_cpim:
             additional_cpim_headers = []
 
@@ -1412,7 +2459,8 @@ class SMSViewController(NSObject):
                     if message.content_type == IMDNDocument.content_type:
                         self.update_message_status(message.imdn_id, message.imdn_status, direction='incoming')
 
-                    if message.content_type in ('application/sylk-message-remove', 'application/sylk-conversation-read', 'application/sylk-conversation-remove'):
+                    if message.content_type in ('application/sylk-message-remove', 'application/sylk-conversation-read', 'application/sylk-conversation-remove',
+                                                LEGACY_LOCATION_CONTENT_TYPE):
                         self.update_message_status(message.id, MSG_STATE_SENT)
                         self.playOutgoingSound()
 
@@ -1446,16 +2494,43 @@ class SMSViewController(NSObject):
                 client = data.headers.get('Client', Null).body
                 server = data.headers.get('Server', Null).body
                 entity = user_agent or server or client or 'remote'
-                self.log_info("Message with Call Id %s sent to %s failed: %s (%s)" % (call_id, entity, reason, data.code))
             else:
                 entity = 'local'
                 call_id = None
-                self.log_info("Message with no Call Id sent failed locally: %s (%s)" % (reason, data.code))
 
             try:
                 message = next(message for message in self.messages.values() if message.call_id == call_id or message.pjsip_id == str(sender))
             except StopIteration:
-                self.log_info('Message with Call-Id %s not found' % call_id)
+                message = None
+
+            # Machinery failing is a log line, not an event. A key lookup for
+            # an address the server has never heard of answers 404, which is
+            # the correct answer to the question -- not something to report
+            # as a delivery failure.
+            is_control = (message is not None
+                          and message.content_type in CONTROL_CONTENT_TYPES)
+            describe = self.log_debug if is_control else self.log_info
+            if call_id:
+                describe("Message with Call Id %s sent to %s failed: %s (%s)"
+                         % (call_id, entity, reason, data.code))
+            else:
+                describe("Message with no Call Id sent failed locally: %s (%s)"
+                         % (reason, data.code))
+
+            # Only a failure that says something about the *path* retires the
+            # route. 404 says the address is wrong, 486 that they are busy --
+            # the route carried those answers back perfectly well, and
+            # dropping it means the next send pays for a DNS lookup to learn
+            # the same thing.
+            if data.code >= 500 or data.code == 0 or (data.code == 408 and entity == 'local'):
+                try:
+                    SMSWindowManager.SMSWindowManager().invalidateRoutes(
+                        self.route_cache_key(self.target_uri), 'send failed %s' % data.code)
+                except Exception:
+                    pass
+
+            if message is None:
+                self.log_debug('Message with Call-Id %s not found' % call_id)
                 return
 
             if message.content_type == IMDNDocument.content_type:
@@ -1467,7 +2542,7 @@ class SMSViewController(NSObject):
  
             self.otr_negotiation_timer = None
  
-            if message.content_type in (IsComposingDocument.content_type, 'text/pgp-public-key', 'text/pgp-private-key'):
+            if is_control or message.content_type == IsComposingDocument.content_type:
                 return
 
             if message.id == 'OTR':
@@ -1510,7 +2585,15 @@ class SMSViewController(NSObject):
         self.encryption.stop()
     
     def textView_doCommandBySelector_(self, textView, selector):
-        if selector == "insertNewline:" and self.chatViewController.inputText == textView:
+        if self.chatViewController.inputText != textView:
+            return False
+
+        if selector == "cancelOperation:":
+            # Both, in order: only one can be active, and a single Escape
+            # should leave whichever it is.
+            return self.cancel_editing_message() or self.cancel_reply()
+
+        if selector == "insertNewline:":
             content = str(textView.string())
             textView.setString_("")
             textView.didChangeText()
@@ -1518,7 +2601,35 @@ class SMSViewController(NSObject):
             self.sendMyPublicKey()
 
             if content:
-                self.sendMessage(content)
+                # Only now is a key lookup warranted: the user is really
+                # talking to this address, so a 404 would mean something.
+                self.requestPublicKeyIfMissing()
+
+            editing = self.editing_message_id
+            edited_timestamp = self.editing_message_timestamp
+            self.editing_message_id = None
+            self.editing_message_timestamp = None
+            if editing is not None:
+                self.showEditingHint(False)
+                # Delete first: the original has to be gone for both parties
+                # before the replacement lands, or a peer that processes them
+                # out of order keeps both.
+                self.delete_message(editing)
+                if not content:
+                    self.log_info('Edited message %s emptied, deleted instead' % editing)
+
+            replying_to = self.replying_to_id
+            if replying_to is not None:
+                self.replying_to_id = None
+                self.replying_to_sender = None
+                self.replying_to_text = None
+                self.showReplyHint(False)
+
+            if content:
+                reply_id = self.sendMessage(content, timestamp=edited_timestamp,
+                                            reply_to=replying_to)
+                if replying_to is not None and reply_id is None:
+                    self.log_error('Reply to %s went out unlinked' % replying_to)
 
             self.chatViewController.resetTyping()
 
@@ -1531,6 +2642,11 @@ class SMSViewController(NSObject):
         self.notification_center.post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='outgoing', history_entry=False, is_replication_message=False, status=MSG_STATE_SENT,  remote_party=format_identity_to_string(recipient, format='full'), local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour@local', check_contact=True))
 
     def textDidChange_(self, notif):
+        if self.editing_message_id is not None or self.replying_to_id is not None:
+            # keep the hint up while the user works: the banner is the only
+            # thing saying which message this is going to answer, and a
+            # character count would quietly replace it on the first keystroke
+            return
         chars_left = MAX_MESSAGE_LENGTH - self.chatViewController.inputText.textStorage().length()
         self.splitView.setText_(NSLocalizedString("%i chars left", "Label") % chars_left)
 
@@ -1544,6 +2660,11 @@ class SMSViewController(NSObject):
             self.sendMessage(content, IsComposingDocument.content_type)
 
     def chatView_becameActive_(self, chatView, last_active):
+        # First keystroke: warm the route so the first send is instant. A hit
+        # on the shared cache costs nothing.
+        if not self.last_route and not self.dns_lookup_in_progress:
+            self.lookup_destination(self.target_uri)
+
         if self.enableIsComposing and host.default_ip:
             content = IsComposingMessage(state=State("active"), refresh=Refresh(60), last_active=LastActive(last_active or ISOTimestamp.now()), content_type=ContentType('text')).toxml()
             self.sendMessage(content, IsComposingDocument.content_type)
@@ -1558,9 +2679,13 @@ class SMSViewController(NSObject):
          self.replay_history()
 
     @objc.python_method
-    @run_in_green_thread
-    def replay_history(self):
-        #BlinkLogger().log_info("Replay message history for %s" % str(self.target_uri))
+    def history_remote_uris(self):
+        """Every address this conversation's history is filed under.
+
+        A contact with three addresses has one conversation and three sets
+        of rows, so the history queries take the whole list -- which is why
+        this is worth having in one place rather than rebuilt per query.
+        """
         blink_contact = None
         try:
             if self.account is BonjourAccount():
@@ -1569,15 +2694,97 @@ class SMSViewController(NSObject):
                     blink_contact = NSApp.delegate().contactsWindowController.getBonjourContact(self.instance_id, str(self.target_uri))
             else:
                 blink_contact = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(self.target_uri)
+        except Exception:
+            blink_contact = None
 
-            if not blink_contact:
-                remote_uris = [format_identity_to_string(self.target_uri, format='aor')]
-            else:
-                remote_uris = list(str(uri.uri) for uri in blink_contact.uris)
-                
-            if self.instance_id is not None and self.instance_id not in remote_uris:
-                remote_uris.append(self.instance_id)
-                
+        if not blink_contact:
+            remote_uris = [format_identity_to_string(self.target_uri, format='aor')]
+        else:
+            remote_uris = list(str(uri.uri) for uri in blink_contact.uris)
+
+        if self.instance_id is not None and self.instance_id not in remote_uris:
+            remote_uris.append(self.instance_id)
+        return remote_uris
+
+    @objc.python_method
+    @run_in_green_thread
+    def load_history_date_index(self, callback):
+        """Hand the caller every day this conversation has messages on.
+
+        Runs in a green thread because get_daily_entries goes through
+        block_on, which returns an empty list -- silently -- when it is
+        called from anywhere else.
+        """
+        days = []
+        try:
+            rows = self.history.get_daily_entries(remote_uri=self.history_remote_uris(),
+                                                  media_type=('chat', 'sms'))
+            days = sorted({str(row[0]) for row in rows if row and row[0]}, reverse=True)
+        except Exception as e:
+            self.log_error('Cannot read the history date index: %s' % e)
+        self.log_info('History spans %d day(s) with messages' % len(days))
+        self._deliver_history_date_index(callback, days)
+
+    @objc.python_method
+    @run_in_gui_thread
+    def _deliver_history_date_index(self, callback, days):
+        try:
+            callback(days)
+        except Exception as e:
+            self.log_error('Cannot build the history date menu: %s' % e)
+
+    @objc.python_method
+    @run_in_gui_thread
+    def jump_to_history_date(self, date_text):
+        """Reopen the transcript at a chosen day.
+
+        The transcript holds one page at a time and pages backwards, so
+        jumping is a reload with the cursor moved: the page that ENDS at
+        the end of the chosen day. That day is then the newest thing on
+        screen and scrolling up walks back from it, exactly as it does from
+        the present. Passing None goes back to the present.
+        """
+        cursor = None
+        if date_text:
+            try:
+                day = datetime.datetime.strptime(str(date_text)[:10], '%Y-%m-%d')
+                # the day itself is included: read up to the start of the next
+                cursor = (day + datetime.timedelta(days=1)).strftime('%Y-%m-%d')
+            except ValueError:
+                self.log_error('Cannot jump to %s: not a date' % date_text)
+                return
+
+        self.log_info('Jumping to history %s' % (date_text or 'present'))
+        self.history_before_date = cursor
+        self.oldest_timestamp = None
+        self.message_count_from_history = 0
+        self.msg_id_list = set()
+        self.location_bubble_ids = set()
+        self.location_notes = set()
+        self.location_ended = {}
+        self.location_tracks = {}
+        self.reply_targets = {}
+        self.audio_metadata = {}
+        self.chatViewController.clear()
+        self.chatViewController.setHandleScrolling_(True)
+        self.chatViewController.loadingTextIndicator.setStringValue_(
+            NSLocalizedString("Loading previous messages...", "Label"))
+        self.chatViewController.loadingProgressIndicator.startAnimation_(None)
+        self.replay_history()
+
+    @objc.python_method
+    @run_in_green_thread
+    def replay_history(self):
+        #BlinkLogger().log_info("Replay message history for %s" % str(self.target_uri))
+        try:
+            remote_uris = self.history_remote_uris()
+
+            try:
+                self.total_history_messages = self.history.count_messages(remote_uri=remote_uris, media_type=('chat', 'sms'))
+            except Exception as e:
+                self.log_info('Cannot count stored messages: %s' % e)
+                self.total_history_messages = -1
+
             zoom_factor = self.chatViewController.scrolling_zoom_factor
             self.log_info('Replay history with zoom factor %s for %s' % (zoom_factor, ", ".join(remote_uris)))
             after_date = None
@@ -1611,9 +2818,9 @@ class SMSViewController(NSObject):
                     self.zoom_period_label = NSLocalizedString("Displaying all messages", "Label")
                     self.chatViewController.setHandleScrolling_(False)
                 
-                results = self.history.get_messages(remote_uri=remote_uris, media_type=('chat', 'sms'), after_date=after_date, before_date=self.oldest_timestamp, count=self.showHistoryEntries, search_text=self.chatViewController.search_text)
+                results = self.history.get_messages(remote_uri=remote_uris, media_type=('chat', 'sms'), after_date=after_date, before_date=self.oldest_timestamp or self.history_before_date, count=self.showHistoryEntries, search_text=self.chatViewController.search_text)
             else:
-                results = self.history.get_messages(remote_uri=remote_uris, media_type=('chat', 'sms'), count=self.showHistoryEntries, search_text=self.chatViewController.search_text, before_date=self.oldest_timestamp)
+                results = self.history.get_messages(remote_uri=remote_uris, media_type=('chat', 'sms'), count=self.showHistoryEntries, search_text=self.chatViewController.search_text, before_date=self.oldest_timestamp or self.history_before_date)
 
             messages = [row for row in reversed(results)]
         except Exception:
@@ -1658,23 +2865,10 @@ class SMSViewController(NSObject):
                 decrypted_bodies[message.msgid] = ('Encrypted message for which we have no private key', None)
                 continue
 
-            try:
-                content_bytes = bytes(decrypted_message.message, 'latin1')
-            except (TypeError, UnicodeEncodeError):
-                try:
-                    content_bytes = bytes(decrypted_message.message, 'utf-8')
-                except (TypeError, UnicodeEncodeError) as e:
-                    self.log_info('Failed to decrypt message %s: %s' % (message.id, str(e)))
-                    continue
-
-            try:
-                text = content_bytes.decode()
-            except UnicodeDecodeError:
-                try:
-                    text = content_bytes.decode('utf-8', errors='replace')
-                except Exception as e:
-                    self.log_info('Failed to decode message %s: %s' % (message.id, str(e)))
-                    continue
+            text = pgp_plaintext(decrypted_message)
+            if text is None:
+                self.log_info('Decrypted message %s carried no payload' % message.id)
+                continue
 
             decrypted_bodies[message.msgid] = (text, 'verified')
 
@@ -1714,7 +2908,11 @@ class SMSViewController(NSObject):
                 if self.message_count_from_history == len(messages):
                     self.chatViewController.setHandleScrolling_(False)
                     #self.chatViewController.lastMessagesLabel.setStringValue_(NSLocalizedString("%s. There are no previous messages.", "Label") % self.zoom_period_label)
-                    self.chatViewController.lastMessagesLabel.setStringValue_(NSLocalizedString("There are no previous messages.", "Label"))
+                    # Said beside the loaded range, not over it: writing
+                    # into the label directly is what used to leave the
+                    # window showing one of the two facts at random.
+                    self.chatViewController.setHistoryNote(
+                        NSLocalizedString("There are no previous messages.", "Label"))
                     self.chatViewController.setHandleScrolling_(False)
                 else:
                     pass
@@ -1722,7 +2920,7 @@ class SMSViewController(NSObject):
         else:
             self.message_count_from_history = len(messages)
             if len(messages):
-                self.chatViewController.lastMessagesLabel.setStringValue_(NSLocalizedString("Scroll up for going back in time", "Label"))
+                self.chatViewController.lastMessagesLabel.setStringValue_(NSLocalizedString("Hold up-scrolling to load more messages...", "Label"))
             else:
                 self.chatViewController.setHandleScrolling_(False)
                 self.chatViewController.lastMessagesLabel.setStringValue_(NSLocalizedString("There are no previous messages", "Label"))
@@ -1763,13 +2961,50 @@ class SMSViewController(NSObject):
             #print('Render msg %3d %s before = %s' % (i, message.time, before))
             i = i + 1
             try:
+                self.log_debug('Loaded message %d/%d id=%s content_type=%s media_type=%s direction=%s status=%s encryption=%s'
+                               % (i, len(messages), message.msgid, message.content_type,
+                                  message.media_type, message.direction, message.status,
+                                  message.encryption or '-'))
+            except Exception as e:
+                self.log_debug('Loaded message %d/%d (cannot describe: %s)' % (i, len(messages), e))
+            try:
                 if message.content_type in ('text/pgp-public-key', 'text/pgp-private-key', 'application/sylk-message-remove', 'application/sylk-conversation-read', 'application/sylk-conversation-remove'):
                     continue
             
                 if message.body.strip().startswith('-----BEGIN PGP PUBLIC KEY BLOCK-----'):
                     continue
 
-                if message.body.strip().startswith('?OTRv3?'):
+                if is_otr_wire_text(message.body):
+                    # Stored OTR traffic: ciphertext no session can open any
+                    # more, or a handshake line. Neither is conversation.
+                    continue
+
+                # An allow-list, and the whole reason it is safe to store
+                # journal entries this build does not understand: a row of
+                # some type invented later must never reach showMessage
+                # and be drawn to the user as raw JSON.
+                if not is_renderable_content_type(
+                        message.content_type,
+                        (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE)):
+                    self.log_debug('Not rendering %s message %s: no renderer for it'
+                                   % (message.content_type, message.msgid))
+                    continue
+
+                recording = peaks_metadata(message.body)
+                if recording is not None:
+                    # A recording's waveform, stored as its own row. Never
+                    # a bubble: it belongs to the transfer it names.
+                    self.note_audio_metadata(recording)
+                    continue
+
+                link = reply_metadata(message.body)
+                if link is not None:
+                    # The record that some other row is a reply. Never a
+                    # bubble of its own. Applied whichever side of its
+                    # reply it is replayed from: earlier, and the bubble
+                    # is built with the quote; later, and the bubble that
+                    # is already on screen gains one.
+                    self.note_reply_link(link)
                     continue
 
                 if message.direction == 'incoming' and message.status != MSG_STATE_DISPLAYED and message.media_type == '':
@@ -1833,43 +3068,82 @@ class SMSViewController(NSObject):
                     self.msg_id_list.add(message.id)
                     status = MSG_STATE_DEFERRED if (message.status == MSG_STATE_FAILED_LOCAL and message.direction == 'outgoing') else message.status
 
-                    if message.content_type == 'application/sylk-message-metadata':
-                        location = self._parse_location_metadata(content or message.body)
-                        if location is not None:
-                            # Use the body's stable messageId as the DOM /
-                            # bubble id so multiple persisted update ticks
-                            # for the same share fold into a single bubble.
-                            # Falls back to the row's msgid for forward-
-                            # compat (older rows without a parsed metaId).
-                            bubble_id = location['meta_id'] or message.msgid
-                            if bubble_id in self.location_bubble_ids:
-                                # We've already drawn this share's bubble
-                                # earlier in the loop. Iteration order is
-                                # oldest-first, so this row holds a later
-                                # position — fold it in via the in-place
-                                # updater. Last-update-wins.
-                                self.chatViewController.updateLocationMessage(
-                                    bubble_id, location['lat'], location['lng'], location['accuracy'],
-                                )
-                            else:
-                                self.location_bubble_ids.add(bubble_id)
-                                self.chatViewController.showLocationMessage(
-                                    message.sip_callid, bubble_id, message.direction,
-                                    sender, icon,
-                                    location['lat'], location['lng'], location['accuracy'],
-                                    location['maps_url'], timestamp, state=status,
-                                    history_entry=True,
-                                    encryption=encryption or message.encryption,
-                                    before=before,
-                                )
+                    if message.content_type in (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE):
+                        # Location rows are persisted as the v1-shaped
+                        # envelope with the coordinates already decrypted,
+                        # so a reload rebuilds the map without the private
+                        # key and without a second wire format to parse.
+                        payload = self._location_payload(content or message.body,
+                                                         content_type=message.content_type)
+                        if payload is None:
+                            # A row we can no longer make sense of (a
+                            # metadata flavour we don't render, or a
+                            # ciphertext whose key is gone). Showing the
+                            # raw JSON in the chat is worse than nothing.
+                            continue
+
+                        # On the initial load history is walked
+                        # oldest-first, so notes, position updates and the
+                        # "ended" stamp land in the order the events
+                        # actually happened. Scrolling back in time walks
+                        # it newest-first and prepends each entry, which
+                        # `before` carries into the note renderer too.
+                        self._post_location_note(payload, message.msgid, message.direction,
+                                                 sender, timestamp, before=before)
+
+                        if payload['is_signal']:
+                            # A coordinate-free signal has no map: it is a
+                            # breadcrumb plus, for a teardown, the footer
+                            # stamped onto the session's bubble.
+                            self._stamp_location_ended(payload, message.msgid)
                             call_id = message.sip_callid
                             last_media_type = 'sms'
                             continue
-                        # Non-location metadata (rotation / consumed / label /
-                        # meeting_end / etc.). These are state-change events
-                        # Sylk Mobile uses internally; Blink has nothing to
-                        # render for them, and showing the raw JSON in the
-                        # chat is worse than nothing. Skip the row entirely.
+
+                        bubble_id = location_bubble_id(payload, message.msgid)
+                        self._log_location_grouping(payload, message.msgid, bubble_id)
+                        coords = payload['coords']
+                        # A stored row carries the whole trail Blink
+                        # accumulated while the share was running; a row
+                        # written before trails existed carries none, and
+                        # its single position becomes a one-point track.
+                        stored_track = list(payload.get('track') or [])
+                        if not stored_track:
+                            append_track_point(stored_track, coords)
+                        if bubble_id in self.location_bubble_ids:
+                            # We already drew this share's bubble earlier
+                            # in the loop, so one of the two rows holds
+                            # the later position. Walking forwards that is
+                            # this row (fold it in — last-update-wins);
+                            # walking backwards it is the one already on
+                            # screen, so leave that one alone.
+                            if not before:
+                                track = self.location_tracks.setdefault(bubble_id, [])
+                                for point in stored_track:
+                                    append_track_point(track, point)
+                                self.chatViewController.updateLocationMessage(
+                                    bubble_id, coords['latitude'], coords['longitude'],
+                                    coords['accuracy'], coords['destination'],
+                                    timestamp=coords.get('timestamp'),
+                                )
+                        else:
+                            self.location_tracks[bubble_id] = stored_track
+                            self.location_bubble_ids.add(bubble_id)
+                            self.chatViewController.showLocationMessage(
+                                message.sip_callid, bubble_id, message.direction,
+                                sender, icon,
+                                coords['latitude'], coords['longitude'], coords['accuracy'],
+                                coords['maps_url'], timestamp, state=status,
+                                history_entry=True,
+                                encryption=encryption or message.encryption,
+                                before=before,
+                                destination=coords['destination'],
+                                status_text=self.location_ended.get(bubble_id),
+                                track=list(stored_track),
+                                point_timestamp=coords.get('timestamp'),
+                            )
+                        call_id = message.sip_callid
+                        last_media_type = 'sms'
                         continue
 
                     self.chatViewController.showMessage(message.sip_callid, message.msgid, message.direction, sender, icon, content or message.body, timestamp, recipient=recipient, state=status, is_html=is_html, history_entry=True, media_type = message.media_type, encryption=encryption or message.encryption, before=before)
@@ -1896,7 +3170,13 @@ class SMSViewController(NSObject):
             except Exception as e:
                 print('Render message exception: %s' % str(e))
 
-        self.log_info('Render history completed')
+        try:
+            loaded = len(self.chatViewController.rendered_messages)
+        except TypeError:
+            loaded = 0
+        total = getattr(self, 'total_history_messages', -1)
+        self.log_info('Render history completed: %s messages stored, %d loaded in view'
+                      % ('unknown' if total < 0 else total, loaded))
         self.chatViewController.loadingProgressIndicator.stopAnimation_(None)
         self.chatViewController.loadingTextIndicator.setStringValue_("")
 
@@ -1910,6 +3190,17 @@ class SMSViewController(NSObject):
         if sender == self.remote_uri and self.display_name:
             sender = self.display_name
         return sender
+
+    @objc.python_method
+    def requestPublicKeyIfMissing(self):
+        if self.public_key is not None:
+            return
+        if not self.account.sms.enable_pgp:
+            return
+        if self.public_key_requested:
+            return
+        self.public_key_requested = True
+        self.requestPublicKey()
 
     @objc.python_method
     def requestPublicKey(self):
@@ -1947,12 +3238,17 @@ class SMSViewController(NSObject):
             self.encryption.verified = not self.encryption.verified
 
         elif tag == 6: # SMP window
-            if self.encryption.active:
-                self.log_info('Show OTR window')
-                #self.chatOtrSmpWindow.show()
+            self.showOTRVerification()
 
         elif tag == 7:
             NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("https://otr.cypherpunks.ca/Protocol-v3-4.0.0.html"))
+
+        elif tag == 11: # ask the server for the peer's public key
+            self.log_info('Looking up the public key of %s' % self.remote_uri)
+            self.sendMessage('Public key lookup', 'application/sylk-api-pgp-key-lookup')
+
+        elif tag == 12: # push my public key to the peer
+            self.sendMyPublicKey(force=True)
 
         elif tag == 10:
             NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("https://www.openpgp.org/about/standard/"))

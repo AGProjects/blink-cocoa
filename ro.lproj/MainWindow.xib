@@ -238,6 +238,11 @@ CA
                                     <action selector="exportButtonClicked:" target="389" id="Sg4-kj-9OI"/>
                                 </connections>
                             </menuItem>
+                            <menuItem title="Caută cheia publică" tag="68" id="PKL-lo-0001">
+                                <connections>
+                                    <action selector="lookupPublicKey:" target="389" id="PKL-ac-0001"/>
+                                </connections>
+                            </menuItem>
                             <menuItem isSeparatorItem="YES" id="1601"/>
                             <menuItem title="Salvează În Arhivă" tag="60" id="1638">
                                 <modifierMask key="keyEquivalentModifierMask"/>
@@ -471,14 +476,14 @@ CA
                                     <action selector="toggleAudioSessionsDrawer:" target="389" id="1111"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Conversații Text" tag="5" keyEquivalent="3" id="1675">
-                                <connections>
-                                    <action selector="showChatWindow:" target="389" id="1677"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem title="Mesaje Scurte" tag="5" keyEquivalent="4" id="COj-1S-j1V" userLabel="Menu Item - SMS">
+                            <menuItem title="Mesaje Scurte" tag="5" keyEquivalent="3" id="COj-1S-j1V" userLabel="Menu Item - SMS">
                                 <connections>
                                     <action selector="showSMSWindow:" target="389" id="zvH-Hr-KwH"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Conversații Text" tag="5" keyEquivalent="4" id="1675">
+                                <connections>
+                                    <action selector="showChatWindow:" target="389" id="1677"/>
                                 </connections>
                             </menuItem>
                             <menuItem title="Transfer de Fișiere" tag="4" keyEquivalent="5" id="1114">
@@ -1204,6 +1209,10 @@ ABC</string>
                         </button>
                     </subviews>
                 </customView>
+                            <customView hidden="YES" fixedFrame="YES" id="MSG-dr-001" userLabel="Messages Drawer View">
+                    <rect key="frame" x="0.0" y="0.0" width="280" height="395"/>
+                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                </customView>
             </subviews>
             <point key="canvasLocation" x="466" y="-142"/>
         </customView>
@@ -1320,6 +1329,8 @@ ABC</string>
                 <outlet property="devicesMenu" destination="751" id="1127"/>
                 <outlet property="dialPadView" destination="1457" id="1500"/>
                 <outlet property="drawer" destination="475" id="495"/>
+                <outlet property="drawerBottomBar" destination="oxf-v8-47L" id="MSG-ol-002"/>
+                <outlet property="messagesDrawerView" destination="MSG-dr-001" id="MSG-ol-001"/>
                 <outlet property="drawerSplitView" destination="1524" id="1542"/>
                 <outlet property="groupButton" destination="1689" id="1707"/>
                 <outlet property="groupMenu" destination="1693" id="1697"/>

@@ -7,6 +7,7 @@ from AppKit import (NSFontAttributeName,
                     NSOffState)
 
 from Foundation import (NSAttributedString,
+                        NSTimer,
                         NSBundle,
                         NSColor,
                         NSDictionary,
@@ -20,6 +21,7 @@ from Foundation import (NSAttributedString,
 import objc
 
 from datetime import datetime
+import threading
 
 from application.notification import NotificationCenter, IObserver
 from application.python import Null
@@ -565,8 +567,27 @@ class DebugWindow(NSObject):
         "Remote aspect ratio is",
     )
 
+    # Activity lines are buffered and flushed in batches. This used to be
+    # @run_in_gui_thread, i.e. one main-thread dispatch AND one NSTextView
+    # edit (plus a scrollRangeToVisible) per log line. A journal sync emits
+    # thousands of lines in a burst -- "Remove message ..." alone can be
+    # hundreds -- and that is enough to beachball the app all by itself.
+    # Buffering turns N dispatches into one flush per FLUSH_INTERVAL.
+    ACTIVITY_FLUSH_INTERVAL = 0.15
+    ACTIVITY_BUFFER_LIMIT = 4000
+
     @objc.python_method
-    @run_in_gui_thread
+    def _activityBuffer(self):
+        try:
+            return self._activity_lines
+        except AttributeError:
+            self._activity_lines = []
+            self._activity_buffer_lock = threading.Lock()
+            self._activity_flush_scheduled = False
+            self._activity_dropped = 0
+            return self._activity_lines
+
+    @objc.python_method
     def renderActivity(self, text):
         try:
             iserror = text.lower().startswith("error")
@@ -587,6 +608,87 @@ class DebugWindow(NSObject):
             rtp_mirror = False
 
         text = "%s   %s"%(datetime.now().replace(microsecond=0), text)
+
+        self._activityBuffer()
+        with self._activity_buffer_lock:
+            if len(self._activity_lines) >= self.ACTIVITY_BUFFER_LIMIT:
+                # Never grow without bound: a burst that outruns the flush
+                # would otherwise turn a slow panel into a memory problem.
+                self._activity_dropped += 1
+                return
+            self._activity_lines.append((text, iserror, rtp_mirror))
+            already_scheduled = self._activity_flush_scheduled
+            self._activity_flush_scheduled = True
+
+        if not already_scheduled:
+            self.scheduleActivityFlush()
+        return
+
+    @objc.python_method
+    @run_in_gui_thread
+    def scheduleActivityFlush(self):
+        NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
+            self.ACTIVITY_FLUSH_INTERVAL, self, "activityFlushTimer:", None, False)
+
+    def activityFlushTimer_(self, timer):
+        self._activityBuffer()
+        with self._activity_buffer_lock:
+            lines = self._activity_lines
+            dropped = self._activity_dropped
+            self._activity_lines = []
+            self._activity_dropped = 0
+            self._activity_flush_scheduled = False
+
+        if not lines:
+            return
+
+        # Collapse consecutive lines of the same kind into one attributed
+        # string so the text view is mutated a handful of times, not once
+        # per line.
+        self._appendBatch(self.activityTextView, lines, key=lambda row: row[1])
+
+        rtp_lines = [row for row in lines if row[2]]
+        if rtp_lines:
+            self._appendBatch(self.rtpTextView, rtp_lines, key=lambda row: row[1])
+
+        if dropped:
+            self.append_error_line(self.activityTextView,
+                                   "%s   [%d activity lines dropped: logging faster than the panel can render]"
+                                   % (datetime.now().replace(microsecond=0), dropped))
+
+    @objc.python_method
+    def _appendBatch(self, textView, lines, key):
+        storage = textView.textStorage()
+        storage.beginEditing()
+        try:
+            run = []
+            run_kind = None
+            for row in lines:
+                kind = key(row)
+                if run and kind != run_kind:
+                    self._appendRun(storage, run, run_kind)
+                    run = []
+                run_kind = kind
+                run.append(row[0])
+            if run:
+                self._appendRun(storage, run, run_kind)
+        finally:
+            storage.endEditing()
+
+        if self.autoScrollCheckbox.state() == NSOnState:
+            textView.scrollRangeToVisible_(NSMakeRange(storage.length() - 1, 1))
+
+    @objc.python_method
+    def _appendRun(self, storage, lines, iserror):
+        if iserror:
+            attrs = NSDictionary.dictionaryWithObject_forKey_(NSColor.redColor(), NSForegroundColorAttributeName)
+        else:
+            attrs = self.normalText
+        blob = "\n".join(lines) + "\n"
+        storage.appendAttributedString_(NSAttributedString.alloc().initWithString_attributes_(blob, attrs))
+
+    @objc.python_method
+    def _renderActivityUnbatched(self, text, iserror, rtp_mirror):
         if iserror:
             self.append_error_line(self.activityTextView, text)
         else:
@@ -1206,10 +1308,11 @@ class DebugWindow(NSObject):
     @objc.python_method
     def _NH_MSRPLibraryLog(self, notification):
         settings = SIPSimpleSettings()
-        if settings.logs.trace_msrp_in_gui == Disabled:
+        if settings.logs.trace_msrp_in_gui == Disabled and str(notification.data.level) not in ('ERROR', 'CRITICAL'):
+            # errors are always shown, regardless of the tracing setting
             return
 
-        message = '%s %s%s\n\n' % (notification.datetime, notification.data.level, notification.data.message)
+        message = '%s %s %s\n\n' % (notification.datetime, notification.data.level, notification.data.message)
         text = NSAttributedString.alloc().initWithString_attributes_(message, self.normalText)
         self.append_line(self.msrpTextView, text)
 

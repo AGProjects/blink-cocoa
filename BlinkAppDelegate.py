@@ -36,6 +36,7 @@ import os
 import platform
 import shutil
 import struct
+import uuid
 
 from application import log
 from application.notification import NotificationCenter, IObserver, NotificationData
@@ -47,6 +48,7 @@ from sipsimple.application import SIPApplication
 from sipsimple.configuration.backend.file import FileParserError
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.threading import run_in_thread
+from util import run_in_gui_thread
 from zope.interface import implementer
 
 
@@ -61,11 +63,73 @@ import SMSWindowManager
 import ChatWindowController
 
 from resources import ApplicationData
-from util import external_url_pattern, run_in_gui_thread
+from util import call_later, external_url_pattern, run_in_gui_thread
 
 
 def fourcharToInt(fourCharCode):
     return struct.unpack('>l', fourCharCode.encode())[0]
+
+
+def _register_notification_metadata():
+    """Teach PyObjC the block signatures of the UserNotifications methods.
+
+    The app does not bundle pyobjc-framework-UserNotifications -- adding a
+    wheel to the build to post a banner would be a poor trade -- so there
+    is no metadata for these three methods and their blocks would arrive
+    as objects PyObjC cannot call. Registration is by selector name and
+    needs neither the framework nor the classes to be loaded yet, but it
+    does have to happen before BlinkAppDelegate's class body is evaluated,
+    which is why it runs here rather than on first use: a method's
+    signature is fixed when its class is created.
+    """
+    try:
+        objc.registerMetaDataForSelector(
+            b'UNUserNotificationCenter',
+            b'requestAuthorizationWithOptions:completionHandler:',
+            {'arguments': {3: {'callable': {
+                'retval': {'type': b'v'},
+                'arguments': {0: {'type': b'^v'},
+                              1: {'type': objc._C_NSBOOL},
+                              2: {'type': b'@'}}}}}})
+        objc.registerMetaDataForSelector(
+            b'UNUserNotificationCenter',
+            b'addNotificationRequest:withCompletionHandler:',
+            {'arguments': {3: {'callable': {
+                'retval': {'type': b'v'},
+                'arguments': {0: {'type': b'^v'},
+                              1: {'type': b'@'}}}}}})
+        objc.registerMetaDataForSelector(
+            b'NSObject',
+            b'userNotificationCenter:didReceiveNotificationResponse:withCompletionHandler:',
+            {'arguments': {4: {'callable': {
+                'retval': {'type': b'v'},
+                'arguments': {0: {'type': b'^v'}}}}}})
+        objc.registerMetaDataForSelector(
+            b'UNUserNotificationCenter',
+            b'getDeliveredNotificationsWithCompletionHandler:',
+            {'arguments': {2: {'callable': {
+                'retval': {'type': b'v'},
+                'arguments': {0: {'type': b'^v'},
+                              1: {'type': b'@'}}}}}})
+        objc.registerMetaDataForSelector(
+            b'UNUserNotificationCenter',
+            b'getNotificationSettingsWithCompletionHandler:',
+            {'arguments': {2: {'callable': {
+                'retval': {'type': b'v'},
+                'arguments': {0: {'type': b'^v'},
+                              1: {'type': b'@'}}}}}})
+        objc.registerMetaDataForSelector(
+            b'NSObject',
+            b'userNotificationCenter:willPresentNotification:withCompletionHandler:',
+            {'arguments': {4: {'callable': {
+                'retval': {'type': b'v'},
+                'arguments': {0: {'type': b'^v'},
+                              1: {'type': b'Q'}}}}}})
+    except Exception as e:
+        BlinkLogger().log_error('Cannot describe the notification blocks: %s' % e)
+
+
+_register_notification_metadata()
 
 
 @implementer(IObserver)
@@ -92,6 +156,16 @@ class BlinkAppDelegate(NSObject):
     aboutIcon = objc.IBOutlet()
     aboutzRTPIcon = objc.IBOutlet()
     ui_notification_center = None
+    # UNUserNotificationCenter, once we have found out whether this system
+    # has one: False means asked and unavailable, so we stop asking.
+    un_notification_center = None
+    un_authorization_requested = False
+    # None until the system tells us: notifications that arrive before then
+    # wait rather than being dropped, which is what happened to the first
+    # message after a fresh install -- the request was posted while the
+    # permission prompt was still on screen.
+    un_authorized = None
+    un_queued = None
     application_will_end = False
     wake_up_timestamp = None
     ip_change_timestamp = None
@@ -103,6 +177,10 @@ class BlinkAppDelegate(NSObject):
     ready = False
     missedCalls = 0
     missedChats = 0
+    # every unread message across every conversation, as the messages
+    # manager counts them -- the badge is about the mailbox, not about this
+    # session's windows, so it survives a restart along with the counts
+    unreadMessages = 0
     urisToOpen = []
     wait_for_enrollment = False
     updater = None
@@ -193,6 +271,7 @@ class BlinkAppDelegate(NSObject):
             NSDistributedNotificationCenter.defaultCenter().addObserver_selector_name_object_suspensionBehavior_(self, "callFromAddressBook:", "CallSipAddressWithBlinkFromAddressBookNotification", "AddressBook", NSNotificationSuspensionBehaviorDeliverImmediately)
 
             NotificationCenter().add_observer(self, name="CFGSettingsObjectDidChange")
+            NotificationCenter().add_observer(self, name="BlinkUnreadMessageCountChanged")
             NotificationCenter().add_observer(self, name="SIPApplicationDidStart")
             NotificationCenter().add_observer(self, name="SIPApplicationWillEnd")
             NotificationCenter().add_observer(self, name="SIPApplicationDidEnd")
@@ -236,11 +315,76 @@ class BlinkAppDelegate(NSObject):
                     pass
 
     @objc.python_method
-    def gui_notify(self, title, body, subtitle=None):
+    def alerts_silenced(self):
+        """Whether the user has asked for quiet: Call > Silence Alerts.
+
+        The same switch the bell button in the toolbar toggles, and the
+        one that stops ringtones. Someone who has silenced the app has
+        said they do not want to be interrupted, and a banner is an
+        interruption whether or not it makes a sound.
+        """
+        try:
+            return bool(SIPSimpleSettings().audio.silent)
+        except Exception:
+            return False
+
+    @objc.python_method
+    def notify_new_message(self, title, body, subtitle=None, uri=None, icon=None):
+        """A banner about an incoming message, unless alerts are silenced.
+
+        Separate from gui_notify because not everything that posts a
+        banner is an interruption to be silenced: a PGP key arriving is a
+        statement of fact about this account, and suppressing it would
+        leave the user wondering why nothing happened. Messages are the
+        thing Silence Alerts is about.
+
+        The unread badge and the contact list still update -- silencing is
+        about not being interrupted, not about hiding that mail arrived.
+        """
+        if self.alerts_silenced():
+            BlinkLogger().log_debug('Alerts are silenced: no banner for %s'
+                                    % (uri or title))
+            return False
+        self.gui_notify(title, body, subtitle, uri=uri, icon=icon)
+        return True
+
+    @objc.python_method
+    @run_in_gui_thread
+    def gui_notify(self, title, body, subtitle=None, uri=None, icon=None):
+        """Post a banner in Notification Center.
+
+        Two implementations, because the one this app was written against
+        no longer works: NSUserNotification was deprecated in 10.14 and on
+        current macOS it delivers nothing at all -- the calls succeed, the
+        notification is accepted, and no banner ever appears, which is
+        exactly what a message arriving with no conversation open looked
+        like. UNUserNotificationCenter is what posts a banner now, and the
+        old path is kept only for systems that cannot reach it.
+        """
         if self.application_will_end:
             return
-        major, minor = platform.mac_ver()[0].split('.')[0:2]
-        if (int(major) == 10 and int(minor) >= 8) or int(major) > 10:
+
+        if self._postUserNotification(title, body, subtitle, uri, icon):
+            return
+        self._postLegacyNotification(title, body, subtitle, uri, icon)
+
+    @objc.python_method
+    def _postLegacyNotification(self, title, body, subtitle=None, uri=None, icon=None):
+        """The deprecated NSUserNotification path.
+
+        Kept for systems the modern centre cannot reach, and used as a last
+        resort when a request the modern centre accepted turns out never to
+        have been delivered.
+        """
+        try:
+            parts = platform.mac_ver()[0].split('.')
+            major = int(parts[0])
+            minor = int(parts[1]) if len(parts) > 1 else 0
+        except (ValueError, IndexError):
+            return
+        if not ((major == 10 and minor >= 8) or major > 10):
+            return
+        try:
             if self.ui_notification_center is None:
                 self.ui_notification_center = Foundation.NSUserNotificationCenter.defaultUserNotificationCenter()
                 self.ui_notification_center.setDelegate_(self)
@@ -250,13 +394,389 @@ class BlinkAppDelegate(NSObject):
             if subtitle is not None:
                 notification.setSubtitle_(subtitle)
             notification.setInformativeText_(body)
-            self.ui_notification_center.scheduleNotification_(notification)
+            if uri:
+                notification.setUserInfo_({'sip_uri': str(uri)})
+            if icon and os.path.isfile(str(icon)):
+                picture = NSImage.alloc().initWithContentsOfFile_(str(icon))
+                if picture is not None:
+                    notification.setContentImage_(picture)
+            # deliver, not schedule: a scheduled notification with no
+            # delivery date is at the mercy of the scheduler, and this one
+            # is about something that has already happened.
+            self.ui_notification_center.deliverNotification_(notification)
+            BlinkLogger().log_info('Posted notification through the legacy centre')
+        except Exception as e:
+            BlinkLogger().log_error('Legacy notification failed: %s' % e)
+
+    @objc.python_method
+    def _userNotificationCenter(self):
+        """UNUserNotificationCenter, or None if this system has none.
+
+        The framework is loaded by hand rather than through a pyobjc
+        binding, which the app does not bundle; the block signatures its
+        methods need were registered at import time, above. Whatever the
+        answer here turns out to be, it is a permanent fact about the
+        machine, so it is worked out once and remembered.
+        """
+        if self.un_notification_center is False:
+            return None
+        if self.un_notification_center is not None:
+            return self.un_notification_center
+
+        try:
+            bundle = Foundation.NSBundle.bundleWithPath_(
+                '/System/Library/Frameworks/UserNotifications.framework')
+            if bundle is None or not bundle.load():
+                raise RuntimeError('UserNotifications.framework did not load')
+
+            center = objc.lookUpClass('UNUserNotificationCenter').currentNotificationCenter()
+        except Exception as e:
+            BlinkLogger().log_info('Modern notifications are unavailable (%s), '
+                                   'falling back to the legacy centre' % e)
+            self.un_notification_center = False
+            return None
+
+        if center is None:
+            self.un_notification_center = False
+            return None
+
+        self.un_notification_center = center
+        try:
+            center.setDelegate_(self)
+            # Whether we answer willPresent: decides whether a banner is
+            # shown while Blink is the frontmost app. If this says NO, the
+            # system has no one to ask and suppresses it -- which looks
+            # exactly like everything working, since posting still succeeds.
+            responds = self.respondsToSelector_(
+                'userNotificationCenter:willPresentNotification:withCompletionHandler:')
+            BlinkLogger().log_info('Notification delegate set; answers willPresent: %s'
+                                   % ('yes' if responds else 'NO'))
+        except Exception as e:
+            BlinkLogger().log_error('Cannot become the notification delegate: %s' % e)
+
+        if not self.un_authorization_requested:
+            self.un_authorization_requested = True
+
+            def granted(allowed, error):
+                self._notificationAuthorizationSettled(
+                    bool(allowed),
+                    error.localizedDescription() if error is not None else None)
+
+            try:
+                # badge | sound | alert, the values from UNAuthorizationOptions
+                center.requestAuthorizationWithOptions_completionHandler_(1 | 2 | 4, granted)
+            except Exception as e:
+                BlinkLogger().log_error('Cannot ask for notification permission: %s' % e)
+                self._notificationAuthorizationSettled(False, str(e))
+
+            self._logNotificationSettings(center)
+
+        return center
+
+    @objc.python_method
+    def _logNotificationSettings(self, center):
+        """Say what the system will actually do with our notifications.
+
+        "Allowed" only means the app may post them. Whether a banner
+        appears is a separate switch, and one the user may have turned off
+        years ago for the old notification API -- which looks identical
+        from in here to everything working.
+        """
+        @run_in_gui_thread
+        def arrived(settings):
+            try:
+                BlinkLogger().log_debug(
+                    'Notification settings: authorization=%s alert=%s style=%s '
+                    'sound=%s badge=%s notification-centre=%s'
+                    % (settings.authorizationStatus(), settings.alertSetting(),
+                       settings.alertStyle(), settings.soundSetting(),
+                       settings.badgeSetting(), settings.notificationCenterSetting()))
+                # 0 = not determined, 1 = denied, 2 = authorized,
+                # 3 = provisional; alert/sound/badge: 0 = not supported,
+                # 1 = disabled, 2 = enabled. alertStyle: 0 none, 1 banner,
+                # 2 alert.
+                if int(settings.alertSetting()) == 1:
+                    BlinkLogger().log_info(
+                        'Banners are switched off for Blink in System Settings > '
+                        'Notifications; messages will be recorded but nothing will '
+                        'appear on screen')
+            except Exception as e:
+                BlinkLogger().log_error('Cannot read the notification settings: %s' % e)
+
+        try:
+            center.getNotificationSettingsWithCompletionHandler_(arrived)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot ask for the notification settings: %s' % e)
+
+    @objc.python_method
+    @run_in_gui_thread
+    def _notificationAuthorizationSettled(self, allowed, detail):
+        """Record the answer and release whatever was waiting for it."""
+        self.un_authorized = allowed
+        if allowed:
+            BlinkLogger().log_info('Notifications are allowed')
+        else:
+            BlinkLogger().log_info('Notifications are not allowed: %s'
+                                   % (detail or 'declined'))
+
+        queued, self.un_queued = (self.un_queued or []), []
+        if not queued:
+            return
+        BlinkLogger().log_info('Posting %d notification(s) held while permission '
+                               'was being decided' % len(queued))
+        for title, body, subtitle, uri, icon in queued:
+            if allowed:
+                self._deliverUserNotification(title, body, subtitle, uri, icon)
+
+    @objc.python_method
+    def _postUserNotification(self, title, body, subtitle=None, uri=None, icon=None):
+        """True when the banner was handed to Notification Center.
+
+        A notification that arrives before the system has answered the
+        permission prompt is held rather than posted: posting it there and
+        then is posting into a decision that has not been made, and it is
+        simply dropped. That is what swallowed the first message after a
+        fresh install.
+        """
+        center = self._userNotificationCenter()
+        if center is None:
+            return False
+
+        if self.un_authorized is None:
+            if self.un_queued is None:
+                self.un_queued = []
+            self.un_queued.append((title, body, subtitle, uri, icon))
+            BlinkLogger().log_info('Holding a notification until permission is decided')
+            return True
+        if self.un_authorized is False:
+            return False
+
+        return self._deliverUserNotification(title, body, subtitle, uri, icon)
+
+    @objc.python_method
+    def _deliverUserNotification(self, title, body, subtitle=None, uri=None, icon=None):
+        center = self._userNotificationCenter()
+        if center is None:
+            return False
+        try:
+            content = objc.lookUpClass('UNMutableNotificationContent').alloc().init()
+            content.setTitle_(str(title))
+            if subtitle is not None:
+                content.setSubtitle_(str(subtitle))
+            content.setBody_(str(body))
+            if uri:
+                # Carried so a click on the banner can open the conversation
+                # it is about; without it the click can only raise the app.
+                content.setUserInfo_({'sip_uri': str(uri)})
+            self._attachIcon(content, icon)
+            try:
+                content.setSound_(objc.lookUpClass('UNNotificationSound').defaultSound())
+            except Exception:
+                pass
+
+            identifier = str(uuid.uuid4())
+            request = objc.lookUpClass('UNNotificationRequest').\
+                requestWithIdentifier_content_trigger_(identifier, content, None)
+
+            @run_in_gui_thread
+            def delivered(error):
+                if error is not None:
+                    BlinkLogger().log_error('Cannot post a notification: %s'
+                                            % error.localizedDescription())
+
+            center.addNotificationRequest_withCompletionHandler_(request, delivered)
+            try:
+                active = bool(NSApp.isActive())
+            except Exception:
+                active = None
+            BlinkLogger().log_debug('Posted notification: %s (Blink is %s)'
+                                    % (title, 'in front' if active else 'in the background'))
+            self._reportDeliveredNotifications(center, identifier, title, body, subtitle)
+            return True
+        except Exception as e:
+            BlinkLogger().log_error('Cannot build a notification: %s' % e)
+            return False
+
+    @objc.python_method
+    def _reportBundleIdentity(self):
+        """Say which copy of Blink is running, and whether it is the only one.
+
+        Notification Center attributes a banner to a bundle IDENTIFIER, not
+        to the process that posted it. Clicking one asks LaunchServices to
+        open that identifier, and if two builds share it -- a development
+        build and an installed Blink Pro, say -- the click opens whichever
+        copy LaunchServices prefers, which is not the one you are running.
+        Nothing in here can fix that; it is worth naming so it is not
+        mistaken for a bug in the notification.
+        """
+        try:
+            bundle = NSBundle.mainBundle()
+            identifier = str(bundle.bundleIdentifier() or '')
+            BlinkLogger().log_info('Running %s (%s)' % (bundle.bundlePath(), identifier))
+        except Exception as e:
+            BlinkLogger().log_debug('Cannot read the bundle identity: %s' % e)
+            return
+
+        if not identifier:
+            return
+        try:
+            urls, error = LaunchServices.LSCopyApplicationURLsForBundleIdentifier(
+                identifier, None)
+        except Exception as e:
+            BlinkLogger().log_debug('Cannot list the copies of %s: %s' % (identifier, e))
+            return
+
+        paths = []
+        for url in (urls or []):
+            try:
+                paths.append(str(url.path()))
+            except Exception:
+                continue
+        if len(paths) > 1:
+            BlinkLogger().log_warning(
+                'More than one application is registered as %s: %s. Notification '
+                'clicks and URL handling go to whichever of them macOS prefers, '
+                'which may not be this one -- they need different bundle '
+                'identifiers.' % (identifier, ', '.join(paths)))
+
+    @objc.python_method
+    def _attachIcon(self, content, icon):
+        """Put the contact's picture on the banner.
+
+        Notification Center will not read an arbitrary path at display
+        time -- an attachment is copied into its own store when the
+        request is made -- so the file has to exist now, and be one of the
+        image types it accepts. A missing or unreadable icon is not worth
+        failing a notification over: it just goes out without a picture.
+        """
+        if not icon:
+            return
+        try:
+            if not os.path.isfile(icon):
+                return
+            url = Foundation.NSURL.fileURLWithPath_(str(icon))
+            attachment, error = objc.lookUpClass('UNNotificationAttachment').\
+                attachmentWithIdentifier_URL_options_error_(
+                    str(uuid.uuid4()), url, None, None)
+            if attachment is None:
+                BlinkLogger().log_debug(
+                    'Cannot attach %s to a notification: %s'
+                    % (icon, error.localizedDescription() if error else 'unknown'))
+                return
+            content.setAttachments_([attachment])
+        except Exception as e:
+            BlinkLogger().log_debug('Cannot attach a notification picture: %s' % e)
+
+    @objc.python_method
+    def _reportDeliveredNotifications(self, center, identifier, title=None,
+                                      body=None, subtitle=None):
+        """Say, a moment later, whether the notification actually landed.
+
+        This is the difference that matters and the only one the API will
+        admit to: a request that reaches Notification Center but shows no
+        banner is being suppressed by the system -- a Focus mode, or the
+        alert style for Blink -- while a request that never lands at all
+        was rejected on the way in. Everything up to this point reports
+        success in both cases.
+        """
+        @run_in_gui_thread
+        def arrived(delivered):
+            try:
+                total = len(delivered) if delivered is not None else 0
+                mine = any(str(note.request().identifier()) == identifier
+                           for note in (delivered or []))
+                if mine:
+                    # Only that the request landed. A banner that was shown
+                    # and dismissed itself is in this list too, so nothing
+                    # here can tell the two apart -- and claiming it could
+                    # was wrong.
+                    BlinkLogger().log_debug(
+                        'Notification delivered; Notification Center holds %d '
+                        'from Blink' % total)
+                    return
+                BlinkLogger().log_info(
+                    'Notification Center holds %d notification(s) from Blink but not '
+                    'this one: the modern API accepted it and dropped it. Falling back '
+                    'to the deprecated centre for this one to see whether that works '
+                    'on this system.' % total)
+                self._postLegacyNotification(title, body, subtitle)
+            except Exception as e:
+                BlinkLogger().log_error('Cannot list delivered notifications: %s' % e)
+
+        def ask():
+            try:
+                center.getDeliveredNotificationsWithCompletionHandler_(arrived)
+            except Exception as e:
+                BlinkLogger().log_error('Cannot ask what was delivered: %s' % e)
+
+        # A moment later: the request is queued, not delivered synchronously.
+        call_later(1.0, ask)
+
+    def userNotificationCenter_willPresentNotification_withCompletionHandler_(self, center, notification, handler):
+        """Show the banner even while Blink is the frontmost application.
+
+        Without this the system withholds a notification from the app that
+        posted it whenever that app is in front -- and Blink usually is,
+        since the message that triggers one arrives while the user is
+        looking at some other part of it.
+        """
+        try:
+            major = int(platform.mac_ver()[0].split('.')[0])
+        except (ValueError, IndexError):
+            major = 11
+        # UNNotificationPresentationOptions: badge 1, sound 2, alert 4
+        # (through 10.15), list 8 and banner 16 from Big Sur on.
+        options = (2 | 8 | 16) if major >= 11 else (2 | 4)
+        try:
+            handler(options)
+            BlinkLogger().log_debug('Presenting a notification while Blink is in front '
+                                    '(options %d)' % options)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot present a notification: %s' % e)
 
     def userNotificationCenter_didDeliverNotification_(self, center, notification):
         pass
 
     def userNotificationCenter_didActivateNotification_(self, center, notification):
-        pass
+        try:
+            info = notification.userInfo()
+        except Exception:
+            info = None
+        self._openConversationFromNotification(info)
+
+    def userNotificationCenter_didReceiveNotificationResponse_withCompletionHandler_(
+            self, center, response, handler):
+        """A click on the banner opens what the banner was about."""
+        info = None
+        try:
+            info = response.notification().request().content().userInfo()
+        except Exception as e:
+            BlinkLogger().log_debug('Cannot read the notification response: %s' % e)
+        self._openConversationFromNotification(info)
+        try:
+            handler()
+        except Exception as e:
+            BlinkLogger().log_error('Cannot finish the notification response: %s' % e)
+
+    @objc.python_method
+    @run_in_gui_thread
+    def _openConversationFromNotification(self, info):
+        uri = None
+        try:
+            if info is not None:
+                uri = info.get('sip_uri')
+        except Exception:
+            uri = None
+        if not uri:
+            # Nothing to open: still bring the app forward, which is what a
+            # click on any notification is understood to do.
+            NSApp.activateIgnoringOtherApps_(True)
+            return
+        BlinkLogger().log_info('Notification clicked: opening the conversation with %s' % uri)
+        NSApp.activateIgnoringOtherApps_(True)
+        controller = self.contactsWindowController
+        if controller is not None and hasattr(controller, 'openMessagesForURI'):
+            controller.openMessagesForURI(str(uri))
 
     def userNotificationCenter_shouldPresentNotification_(self, center, notification):
         return True
@@ -283,15 +803,31 @@ class BlinkAppDelegate(NSObject):
         enroll.runModal()
 
     @objc.python_method
+    def _NH_BlinkUnreadMessageCountChanged(self, notification):
+        """The dock badge follows the same total the contact list shows."""
+        try:
+            total = int(notification.data.total)
+        except (AttributeError, TypeError, ValueError):
+            return
+        if total == self.unreadMessages:
+            return
+        self.unreadMessages = total
+        self.updateDockTile()
+
+    @objc.python_method
     def updateDockTile(self):
-        if self.missedCalls > 0 or self.missedChats > 0:
+        # Unread messages count as chats: a message waiting to be read and
+        # a chat window that was missed are the same thing to someone
+        # glancing at the Dock.
+        chats = self.missedChats + self.unreadMessages
+        if self.missedCalls > 0 or chats > 0:
             icon = NSImage.imageNamed_("Blink")
             image = NSImageView.alloc().initWithFrame_(NSMakeRect(0, 0, 32, 32))
             image.setImage_(icon)
-            if self.missedCalls > 0 and self.missedChats > 0:
-                NSApp.dockTile().setBadgeLabel_("%i / %i" % (self.missedCalls, self.missedChats))
+            if self.missedCalls > 0 and chats > 0:
+                NSApp.dockTile().setBadgeLabel_("%i / %i" % (self.missedCalls, chats))
             else:
-                NSApp.dockTile().setBadgeLabel_("%i" % (self.missedCalls + self.missedChats))
+                NSApp.dockTile().setBadgeLabel_("%i" % (self.missedCalls + chats))
             NSApp.dockTile().setContentView_(image)
         else:
             NSApp.dockTile().setBadgeLabel_("")
@@ -327,6 +863,7 @@ class BlinkAppDelegate(NSObject):
 
     def applicationDidFinishLaunching_(self, sender):
         BlinkLogger().log_debug("Application launched")
+        self._reportBundleIdentity()
         # BlinkLogger().log_info('startup: applicationDidFinishLaunching enter')
 
         branding_file = NSBundle.mainBundle().infoDictionary().objectForKey_("BrandingFile")

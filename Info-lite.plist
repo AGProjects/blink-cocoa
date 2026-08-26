@@ -55,5 +55,7 @@
 	<string>com.agprojects.BlinkLite</string>
         <key>NSCameraUsageDescription</key>
         <string>Required for VoIP calls</string>
+        <key>NSLocationWhenInUseUsageDescription</key>
+        <string>Required to share your location in a conversation</string>
         </dict>
 </plist>

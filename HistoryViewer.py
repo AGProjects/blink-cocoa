@@ -48,6 +48,7 @@ from zope.interface import implementer
 
 from resources import ApplicationData
 from BlinkLogger import BlinkLogger
+from MessageHost import pgp_plaintext
 from ContactListModel import BlinkHistoryViewerContact, BlinkPresenceContact
 from HistoryManager import ChatHistory, SessionHistory
 from util import is_anonymous, sipuri_components_from_string, run_in_gui_thread
@@ -545,14 +546,10 @@ class HistoryViewer(NSWindowController):
                 decrypted_bodies[message.msgid] = ('Encrypted message for which we have no private key', None)
                 continue
 
-            try:
-                text = bytes(decrypted_message.message, 'latin1').decode()
-            except (TypeError, UnicodeEncodeError, UnicodeDecodeError):
-                try:
-                    text = bytes(decrypted_message.message, 'utf-8').decode('utf-8', errors='replace')
-                except Exception as e:
-                    BlinkLogger().log_error('Failed to decode message %s: %s' % (message.msgid, str(e)))
-                    continue
+            text = pgp_plaintext(decrypted_message)
+            if text is None:
+                BlinkLogger().log_error('Decrypted message %s carried no payload' % message.msgid)
+                continue
 
             decrypted_bodies[message.msgid] = (text, 'verified')
             try:

@@ -752,7 +752,8 @@ class VideoController(MediaStream):
         if host is None or host.default_ip is None:
             reason = NSLocalizedString("No Internet connection", "Label")
         else:
-            reason = "%s (%s)" % (data.failure_reason.title(), data.code)
+            failure_reason = data.failure_reason or ''
+            reason = "%s (%s)" % (failure_reason[:1].upper() + failure_reason[1:], data.code)
             if data.code is not None:
                 if data.code == 486:
                     reason = NSLocalizedString("Busy Here", "Label")

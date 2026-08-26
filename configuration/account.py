@@ -55,6 +55,11 @@ class SMSSettingsExtension(SettingsGroup):
     enable_imdn = Setting(type=bool, default=True)
     enable_composing = Setting(type=bool, default=True)
     history_url = Setting(type=HTTPURL, default=None, nillable=True)
+    # Where files are POSTed and served from. Learned from the first
+    # transfer that arrives, since a received one describes the endpoint
+    # better than anything we could derive; derived from history_url until
+    # then, and settable by hand for a deployment that needs it.
+    file_transfer_url = Setting(type=str, default=None, nillable=True)
     history_token = Setting(type=str, default=None, nillable=True)
     history_last_id = Setting(type=str, default=None, nillable=True)
     public_key = Setting(type=str, default=None, nillable=True)

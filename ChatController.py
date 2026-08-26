@@ -1766,16 +1766,24 @@ class ChatController(MediaStream):
             if self.last_failure_reason != reason:
                 self.last_failure_reason = reason
 
+        message = None
         if not self.mediastream_ended:
             if reason != 'Session Cancelled':
                 if host is None or host.default_ip is None:
                     message = NSLocalizedString("No Internet connection", "Label")
                 else:
-                    message = reason.title()
+                    # do not title-case the reason: it mangles technical details
+                    # like file paths, hostnames and version numbers
+                    message = reason[:1].upper() + reason[1:] if reason else reason
         else:
-            message = '%s (%s)' % (reason, data.code)
+            mediastream_error = getattr(self, 'mediastream_error', None)
+            if not (mediastream_error and mediastream_error in reason):
+                # skip the message if the same error was already shown when
+                # the media stream ended (_NH_MediaStreamDidEnd)
+                message = '%s (%s)' % (reason, data.code)
 
-        self.showSystemMessage(message, ISOTimestamp.now(), True)
+        if message is not None:
+            self.showSystemMessage(message, ISOTimestamp.now(), True)
 
         self.changeStatus(STREAM_IDLE, self.sessionController.endingBy)
 
@@ -1874,6 +1882,7 @@ class ChatController(MediaStream):
         self.mediastream_ended = True
         self.databaseLoggingButton.setHidden_(True)
         if data.error is not None and 'was closed cleanly' not in data.error:
+            self.mediastream_error = data.error
             self.sessionController.log_info("Chat session failed: %s" % data.error)
             reason = NSLocalizedString("Connection failed", "Label")+ " (%s)" % data.error
             self.showSystemMessage(reason, ISOTimestamp.now(), True)

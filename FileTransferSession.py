@@ -290,9 +290,11 @@ class FileTransfer(object):
             if self.account.sip.outbound_proxy is not None:
                 proxy = self.account.sip.outbound_proxy
                 uri = SIPURI(host=proxy.host, port=proxy.port, parameters={'transport': proxy.transport})
+                tls_name = self.account.sip.tls_name or proxy.host
                 self.log_info("Starting DNS lookup for %s via proxy %s" % (target_uri.host.decode(), uri))
             elif self.account.sip.always_use_my_proxy:
                 uri = SIPURI(host=self.account.id.domain)
+                tls_name = self.account.sip.tls_name or self.account.id.domain
                 self.log_info("Starting DNS lookup for %s via proxy of account %s" % (target_uri.host.decode(), self.account.id))
 
         self.log_info("Starting DNS lookup for %s" % target_uri.host.decode())

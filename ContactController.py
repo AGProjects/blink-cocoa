@@ -27,6 +27,9 @@ from Foundation import (NSArray,
                         NSLocalizedString,
                         NSTimer)
 import objc
+import os
+
+from BlinkLogger import BlinkLogger
 
 import urllib.parse
 import sys
@@ -470,6 +473,46 @@ class AddContactController(NSObject):
 
 
 class EditContactController(AddContactController):
+    @objc.python_method
+    def publicKeyLabelForContact(self, blink_contact):
+        """The 8-character checksum Sylk Mobile shows for the same key.
+
+        Derived exactly as generateShortChecksum does there, so the two can
+        be read side by side and compared -- which is the only way to tell a
+        genuine key from one that arrived by the wrong route. A contact can
+        hold several addresses, and a key is stored per address, so all of
+        them are listed rather than just the first.
+        """
+        from MessageHost import public_key_short_checksum
+        from resources import ApplicationData
+
+        keys_path = ApplicationData.get('keys')
+        entries = []
+        seen = set()
+        for item in blink_contact.contact.uris:
+            uri = str(item.uri).strip()
+            if not uri or uri in seen:
+                continue
+            seen.add(uri)
+            path = os.path.join(keys_path, '%s.pubkey' % uri)
+            if not os.path.exists(path):
+                continue
+            try:
+                with open(path, 'rb') as key_file:
+                    checksum = public_key_short_checksum(key_file.read())
+            except Exception as e:
+                BlinkLogger().log_error('Cannot read the public key of %s: %s' % (uri, e))
+                continue
+            if checksum:
+                entries.append((uri, checksum))
+
+        if not entries:
+            return ''
+        if len(entries) == 1:
+            return NSLocalizedString("Public key: %s", "Label") % entries[0][1]
+        return NSLocalizedString("Public keys: %s", "Label") % ', '.join(
+            '%s %s' % (uri, checksum) for uri, checksum in entries)
+
     def __init__(self, blink_contact):
         NSBundle.loadNibNamed_owner_("Contact", self)
         self.window.setTitle_(NSLocalizedString("Edit Contact", "Window title"))
@@ -480,8 +523,9 @@ class EditContactController(AddContactController):
         self.belonging_groups = self.model.getBlinkGroupsForBlinkContact(blink_contact)
         self.all_groups = [g for g in self.groupsList if g.group is not None and not isinstance(g.group, VirtualGroup) and g.add_contact_allowed]
         self.nameText.setStringValue_(blink_contact.name or "")
-        key = NSLocalizedString("Public key: %s", "Label") % blink_contact.contact.public_key_checksum if blink_contact.contact.public_key_checksum else ''
-        self.publicKey.setStringValue_(key)
+        self.publicKey.setStringValue_(self.publicKeyLabelForContact(blink_contact))
+        # so the checksum can be copied out and compared against the phone
+        self.publicKey.setSelectable_(True)
         self.organizationText.setStringValue_(blink_contact.organization or "")
         self.photoImage.setImage_(blink_contact.icon)
         self.preferred_media = blink_contact.preferred_media

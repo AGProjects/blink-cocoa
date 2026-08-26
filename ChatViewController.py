@@ -480,7 +480,7 @@ class ChatViewController(NSObject):
 
     @objc.python_method
     @run_in_gui_thread
-    def showSystemMessage(self, content, timestamp=None, is_error=False, call_id='0'):
+    def showSystemMessage(self, content, timestamp=None, is_error=False, call_id='0', before=False):
         msgid = str(uuid.uuid1())
         rendered_message = ChatMessageObject(call_id, msgid, content, False, timestamp)
         self.rendered_messages.append(rendered_message)
@@ -495,7 +495,8 @@ class ChatViewController(NSObject):
                 timestamp = time.strftime("%H:%M", time.localtime(calendar.timegm(timestamp.utctimetuple())))
 
         is_error = 1 if is_error else "null"
-        script = """renderSystemMessage('%s', "%s", "%s", %s)""" % (msgid, processHTMLText(content), timestamp, is_error)
+        before_arg = 1 if before else "null"
+        script = """renderSystemMessage('%s', "%s", "%s", %s, %s)""" % (msgid, processHTMLText(content), timestamp, is_error, before_arg)
 
         if self.finishedLoading:
             self.executeJavaScript(script)
@@ -568,7 +569,7 @@ class ChatViewController(NSObject):
 
     @objc.python_method
     @run_in_gui_thread
-    def showLocationMessage(self, call_id, msgid, direction, sender, icon_path, latitude, longitude, accuracy, maps_url, timestamp, state='', is_private=False, history_entry=False, encryption=None, before=False):
+    def showLocationMessage(self, call_id, msgid, direction, sender, icon_path, latitude, longitude, accuracy, maps_url, timestamp, state='', is_private=False, history_entry=False, encryption=None, before=False, destination=None, status_text=None, track=None, point_timestamp=None):
         """Render a Sylk-style location bubble in the chat WebView.
 
         Mirrors the chrome that showMessage() applies (delivered/displayed
@@ -576,6 +577,12 @@ class ChatViewController(NSObject):
         small OSM tile grid + pin. ``maps_url`` is the URL the bubble's <a>
         tag points at — typically https://maps.apple.com/?ll=… so a click
         opens the system Maps app on macOS.
+
+        ``destination`` is the optional meeting point of a meet-me share
+        ({'latitude': …, 'longitude': …}), drawn as a second, green pin.
+        ``status_text`` pre-stamps the lifecycle footer, which is how a
+        share that had already ended by the time history replays it comes
+        back marked "Track ended" instead of looking live.
         """
         lock_icon_path = ''
         if encryption is not None:
@@ -632,13 +639,17 @@ class ChatViewController(NSObject):
         label = html.escape(label_source) if sender is None else html.escape(sender)
 
         # JSON-encode the maps_url so any embedded quotes / specials are
-        # safely passed through into the JavaScript string literal.
+        # safely passed through into the JavaScript string literal. Same
+        # for the destination object and the status text.
         maps_url_js = json.dumps(maps_url)
+        destination_js = self._location_destination_js(destination)
+        status_js = json.dumps(status_text) if status_text else 'null'
 
         script = (
-            """renderLocationMessage('%s', '%s', '%s', %s, %s, %s, %s, %s, '%s', '%s', '%s', '%s', %s)"""
+            """renderLocationMessage('%s', '%s', '%s', %s, %s, %s, %s, %s, '%s', '%s', '%s', '%s', %s, %s, %s)"""
             % (msgid, direction, label, icon_path, lat_arg, lng_arg, acc_arg, maps_url_js,
-               displayed_timestamp, state, lock_icon_path, self.previous_msgid, before_arg)
+               displayed_timestamp, state, lock_icon_path, self.previous_msgid, before_arg,
+               destination_js, status_js)
         )
 
         if self.finishedLoading:
@@ -653,12 +664,13 @@ class ChatViewController(NSObject):
 
     @objc.python_method
     @run_in_gui_thread
-    def updateLocationMessage(self, msgid, latitude, longitude, accuracy):
+    def updateLocationMessage(self, msgid, latitude, longitude, accuracy, destination=None, timestamp=None):
         """Re-render an existing location bubble with new coordinates.
 
         Mirrors showLocationMessage's argument formatting (numeric literals
         for lat/lng, ``null`` for missing accuracy) so the JS function
-        receives proper Numbers and not stringly-typed values.
+        receives proper Numbers and not stringly-typed values. The bubble's
+        lifecycle footer is preserved across the re-render by the JS side.
         """
         try:
             lat_arg = '%.7f' % float(latitude)
@@ -673,7 +685,41 @@ class ChatViewController(NSObject):
             except (TypeError, ValueError):
                 acc_arg = 'null'
 
-        script = "updateLocationMessage('%s', %s, %s, %s)" % (msgid, lat_arg, lng_arg, acc_arg)
+        script = "updateLocationMessage('%s', %s, %s, %s, %s)" % (
+            msgid, lat_arg, lng_arg, acc_arg, self._location_destination_js(destination))
+        if self.finishedLoading:
+            self.executeJavaScript(script)
+        else:
+            self.messageQueue.append(script)
+
+    @objc.python_method
+    def _location_destination_js(self, destination):
+        """Serialise a meet-me destination for the JS arg list.
+
+        Returns the JavaScript literal ``null`` unless the destination is
+        a usable {latitude, longitude} pair.
+        """
+        if not isinstance(destination, dict):
+            return 'null'
+        try:
+            lat = float(destination['latitude'])
+            lng = float(destination['longitude'])
+        except (KeyError, TypeError, ValueError):
+            return 'null'
+        return json.dumps({'latitude': lat, 'longitude': lng})
+
+    @objc.python_method
+    @run_in_gui_thread
+    def setLocationMessageStatus(self, msgid, text):
+        """Stamp a location bubble's lifecycle footer ("Track ended", …).
+
+        Called when a teardown signal (location_stop / meeting_end /
+        meeting_reject) resolves to a session whose bubble is on screen.
+        Harmless when the bubble isn't rendered — the JS side is a no-op
+        for an unknown id, and the text is remembered for the bubble in
+        case it renders later in the same replay pass.
+        """
+        script = "setLocationMessageStatus('%s', %s)" % (msgid, json.dumps(text) if text else 'null')
         if self.finishedLoading:
             self.executeJavaScript(script)
         else:

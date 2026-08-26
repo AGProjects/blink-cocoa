@@ -2623,6 +2623,34 @@ class SessionController(NSObject):
         self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
 
     @objc.python_method
+    def isConferenceBridgeUser(self, user):
+        """True for conference-info users that are server-side bridge
+        components (e.g. the sylk-janus-audio-bridge leg) rather than
+        real participants. They must not be shown in the participants
+        lists of the chat and audio views."""
+        try:
+            # the bridge joins the room using the room URI itself as its identity
+            uri = sip_prefix_pattern.sub("", str(user.entity)).lower()
+            if uri == self.remoteAOR.lower():
+                return True
+
+            # the bridge marks itself with ;app=sylk-janus-audio-bridge in its
+            # Contact URI, republished as the endpoint entity in conference-info
+            for endpoint in user:
+                entity = str(getattr(endpoint, 'entity', '') or '').lower()
+                if 'sylk-janus-audio-bridge' in entity:
+                    return True
+
+            # a bridge role may also be advertised on the user element
+            roles = getattr(user, 'roles', None)
+            if roles is not None and any(str(role).lower() == 'bridge' for role in roles):
+                return True
+        except Exception:
+            pass
+
+        return False
+
+    @objc.python_method
     def _NH_SIPSessionGotConferenceInfo(self, sender, data):
         # Skip processing if session has ended
         if self.state == STATE_FINISHED:
@@ -2632,6 +2660,14 @@ class SessionController(NSObject):
         self.pending_removal_participants = set()
         self.failed_to_join_participants = {}
         self.conference_shared_files = []
+
+        # Hide server-side bridge components from the participant list,
+        # they are plumbing, not real participants
+        bridge_users = [user for user in data.conference_info.users if self.isConferenceBridgeUser(user)]
+        for user in bridge_users:
+            self.log_debug("Hiding conference bridge participant %s" % user.entity)
+            data.conference_info.users.remove(user)
+
         self.conference_info = data.conference_info
         if data.conference_info.conference_description.subject is not None:
             self.subject = data.conference_info.conference_description.subject.value

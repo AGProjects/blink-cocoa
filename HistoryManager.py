@@ -520,10 +520,16 @@ class ChatMessage(SQLObject):
     uuid              = StringCol()
     journal_id        = StringCol()
     encryption        = StringCol(default='')
+    # 1 for a message the user has seen, 0 for one still waiting. Only
+    # incoming messages are ever 0: the unread badge is about what has been
+    # said to you, and it has to survive a relaunch, which an in-memory
+    # counter did not.
+    read              = IntCol(default=1)
+    unread_idx        = DatabaseIndex('read')
 
 
 class ChatHistory(object, metaclass=Singleton):
-    __version__ = 8
+    __version__ = 9
 
     def __init__(self):
         path = ApplicationData.get('history')
@@ -681,7 +687,59 @@ class ChatHistory(object, metaclass=Singleton):
             except Exception as e:
                 BlinkLogger().log_error("Error pruning non-location metadata rows: %s" % e)
 
+        if next_upgrade_version < 9:
+            # Unread state, so a badge survives a relaunch. Everything
+            # already stored is marked READ: the column is new, so nothing
+            # in the table was ever counted as unread, and defaulting the
+            # other way would greet the user with a badge for every message
+            # they have ever received.
+            query = "alter table chat_messages add column 'read' INTEGER DEFAULT 1"
+            try:
+                self.db.queryAll(query)
+            except dberrors.OperationalError as e:
+                if not str(e).startswith('duplicate column name'):
+                    BlinkLogger().log_error("Error adding column read to table %s: %s"
+                                            % (ChatMessage.sqlmeta.table, e))
+            for query in ("UPDATE chat_messages SET read = 1 WHERE read IS NULL",
+                          "CREATE INDEX IF NOT EXISTS unread_index ON chat_messages (read)"):
+                try:
+                    self.db.queryAll(query)
+                except Exception as e:
+                    BlinkLogger().log_error("Error preparing the read column: %s" % e)
+
         TableVersions().set_table_version(ChatMessage.sqlmeta.table, self.__version__)
+
+    @run_in_db_thread
+    def _mark_conversation_read(self, local_uri, remote_uri):
+        """Mark every unread message from one address as seen."""
+        where = "read = 0"
+        if remote_uri:
+            where += " and remote_uri = %s" % ChatMessage.sqlrepr(remote_uri)
+        if local_uri:
+            where += " and local_uri = %s" % ChatMessage.sqlrepr(local_uri)
+        try:
+            self.db.queryAll("update chat_messages set read = 1 where %s" % where)
+            return True
+        except Exception as e:
+            BlinkLogger().log_error("Error marking %s read: %s" % (remote_uri, e))
+            return False
+
+    def mark_conversation_read(self, local_uri=None, remote_uri=None):
+        return self._mark_conversation_read(local_uri, remote_uri)
+
+    @run_in_db_thread
+    def _unread_counts(self):
+        """{remote uri: how many messages are waiting}, for every address."""
+        query = ("select remote_uri, count(*) from chat_messages "
+                 "where read = 0 and direction = 'incoming' group by remote_uri")
+        try:
+            return dict((str(row[0]), int(row[1])) for row in self.db.queryAll(query))
+        except Exception as e:
+            BlinkLogger().log_error("Error reading the unread counts: %s" % e)
+            return {}
+
+    def unread_counts(self):
+        return block_on(self._unread_counts())
 
     @run_in_db_thread
     def update_message_status(self, msgid, status, direction='outgoing'):
@@ -719,18 +777,30 @@ class ChatHistory(object, metaclass=Singleton):
             #BlinkLogger().log_error("Error updating decrypted message %s: %s" % (msgid, e))
 
     @run_in_db_thread
-    def update_message_body(self, msgid, body):
+    def update_message_body(self, msgid, body, merge=None):
         """Replace the persisted body of an existing chat_messages row.
 
         Used by the Sylk live-location flow: every UPDATE tick rewrites
         the origin row's body to the latest JSON payload so a Blink
         restart replays the share at its last known position rather than
         the (now stale) origin coordinates.
+
+        ``merge`` turns the write into a read-modify-write: it is handed
+        the body already in the row along with the new one and returns
+        what to store. A share is written by whichever of three paths sees
+        the tick first, and only one of them holds the accumulated trail,
+        so combining old and new here -- inside the database thread, where
+        the two cannot interleave -- is the only place it is safe to do.
         """
         try:
             results = ChatMessage.selectBy(msgid=msgid)
             message = results.getOne()
             if message:
+                if merge is not None:
+                    try:
+                        body = merge(message.body, body)
+                    except Exception as e:
+                        BlinkLogger().log_error("Error merging message body for %s: %s" % (msgid, e))
                 message.body = body
             else:
                 BlinkLogger().log_error("Error updating message body for %s: not found" % msgid)
@@ -740,7 +810,7 @@ class ChatHistory(object, metaclass=Singleton):
 
 
     @run_in_db_thread
-    def add_message(self, msgid, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, cpim_timestamp, body, content_type, private, status, time='', uuid='', journal_id='', skip_replication=False, call_id='', encryption=''):
+    def add_message(self, msgid, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, cpim_timestamp, body, content_type, private, status, time='', uuid='', journal_id='', skip_replication=False, call_id='', encryption='', read=1):
 
         # content_type may arrive as a sipsimple ContentType object (e.g. from
         # incoming SMS/chat messages). ContentType subclasses str, so an
@@ -782,7 +852,8 @@ class ChatHistory(object, metaclass=Singleton):
                           status              = status,
                           uuid                = uuid,
                           journal_id          = journal_id,
-                          encryption          = encryption
+                          encryption          = encryption,
+                          read                = 1 if read else 0
                           )
             NotificationCenter().post_notification('MessageSaved', sender=self, data=NotificationData(msgid=msgid, success=True))
             return True
@@ -989,6 +1060,69 @@ class ChatHistory(object, metaclass=Singleton):
 
     def get_messages(self, msgid=None, call_id=None, local_uri=None, remote_uri=None, media_type=None, date=None, after_date=None, before_date=None, search_text=None, orderBy='time', orderType='desc', count=100):
         return block_on(self._get_messages(msgid, call_id, local_uri, remote_uri, media_type, date, after_date, before_date, search_text, orderBy, orderType, count))
+
+    @run_in_db_thread
+    def _count_messages(self, local_uri, remote_uri, media_type):
+        query = '1=1'
+        if local_uri:
+            query += " and local_uri=%s" % ChatMessage.sqlrepr(local_uri)
+        if remote_uri:
+            if remote_uri is not tuple:
+                remote_uri = (remote_uri,)
+            remote_uri_sql = ""
+            for uri in remote_uri:
+                remote_uri_sql += '%s,' % ChatMessage.sqlrepr(uri)
+            remote_uri_sql = remote_uri_sql.rstrip(",)").lstrip("(")
+            query += " and remote_uri in (%s)" % remote_uri_sql
+        if media_type:
+            if media_type is not tuple:
+                media_type = (media_type,)
+            media_type_sql = ""
+            for media in media_type:
+                media_type_sql += '%s,' % ChatMessage.sqlrepr(media)
+            media_type_sql = media_type_sql.rstrip(",)").lstrip("(")
+            query += " and media_type in (%s)" % media_type_sql
+
+        try:
+            return ChatMessage.select(query).count()
+        except Exception as e:
+            BlinkLogger().log_error("Error counting chat messages in chat history table: %s" % e)
+            return 0
+
+    def count_messages(self, local_uri=None, remote_uri=None, media_type=None):
+        """Total stored messages for a conversation, ignoring paging."""
+        return block_on(self._count_messages(local_uri, remote_uri, media_type))
+
+    @run_in_db_thread
+    def _last_message_times(self, media_type):
+        query = 'select remote_uri, max(time) from %s' % ChatMessage.sqlmeta.table
+        if media_type:
+            query += ' where media_type = %s' % ChatMessage.sqlrepr(media_type)
+        query += ' group by remote_uri'
+        try:
+            rows = self.db.queryAll(query)
+        except Exception as e:
+            BlinkLogger().log_error('Error reading the last message times: %s' % e)
+            return {}
+        result = {}
+        for row in rows:
+            try:
+                uri, stamp = row[0], row[1]
+            except Exception:
+                continue
+            if uri and stamp:
+                result[str(uri)] = str(stamp)
+        return result
+
+    def last_message_times(self, media_type=None):
+        """{remote_uri: 'YYYY-MM-DD HH:MM:SS'} for every conversation.
+
+        One grouped query instead of a per-contact scan: the Messages group
+        needs the newest timestamp for every contact it holds at once, and
+        doing that one contact at a time is what makes a contact list with
+        a few hundred conversations crawl on every reorder.
+        """
+        return block_on(self._last_message_times(media_type))
 
     @run_in_db_thread
     def delete_journaled_messages(self, account, journal_ids, after_date):
