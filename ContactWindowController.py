@@ -1196,6 +1196,19 @@ class ContactWindowController(NSWindowController):
         else:
             item.setEnabled_(False)
 
+        # Chat Conversations opens the MSRP chat window, so it has no business
+        # being there when MSRP chat is switched off. Found by action rather
+        # than by tag: it shares tag 5 with the Messages item above it, and
+        # itemWithTag_ would hand back whichever comes first.
+        index = self.windowMenu.indexOfItemWithTarget_andAction_(None, "showChatWindow:")
+        if index >= 0:
+            enabled = SIPSimpleSettings().chat.enable_msrp_chat
+            item = self.windowMenu.itemAtIndex_(index)
+            item.setHidden_(not enabled)
+            # A hidden item's key equivalent is inert, but Cmd-4 should not
+            # quietly do nothing either way.
+            item.setEnabled_(enabled)
+
     @objc.python_method
     def updateChatMenu(self):
         while self.chatMenu.numberOfItems() > 0:
@@ -4467,6 +4480,8 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def showChatWindow_(self, sender):
+        if not SIPSimpleSettings().chat.enable_msrp_chat:
+            return
         if NSApp.delegate().chatWindowController.tabView.tabViewItems():
             NSApp.delegate().chatWindowController.window().makeKeyAndOrderFront_(None)
         else:

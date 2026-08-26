@@ -68,11 +68,13 @@ class AudioSettingsExtension(AudioSettings):
 class ChatSettingsExtension(ChatSettings):
     auto_accept = Setting(type=bool, default=False)
     disabled = Setting(type=bool, default=False)
-    disable_collaboration_editor = Setting(type=bool, default=False)
     disable_history = Setting(type=bool, default=False)
     enable_encryption = Setting(type=bool, default=True)
     font_size = Setting(type=int, default=0)
-    enable_sms = Setting(type=bool, default=True)
+    # MSRP chat -- the real-time session with its own window and toolbar.
+    # Off by default: SIP MESSAGE conversations in the message pane are the
+    # ordinary way to write to someone, and MSRP chat is the specialist tool.
+    enable_msrp_chat = Setting(type=bool, default=False)
 
 
 class ScreenSharingSettingsExtension(ScreenSharingSettings):
@@ -111,8 +113,6 @@ class LogsSettingsExtension(LogsSettings):
 
 class ServerSettings(SettingsGroup):
     enrollment_url = Setting(type=HTTPURL, default="https://blink.sipthor.net/enrollment.phtml")
-    # Collaboration editor taken from http://code.google.com/p/google-mobwrite/
-    collaboration_url = Setting(type=HTTPURL, default='http://mobwrite3.appspot.com/scripts/q.py', nillable=True)
 
 
 class GUISettings(SettingsGroup):
