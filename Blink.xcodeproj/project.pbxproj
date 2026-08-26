@@ -4591,7 +4591,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
-					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/3.9/lib\"",
+					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/3.11/lib\"",
 					"$(PROJECT_DIR)/Distribution/Frameworks",
 					"$(PROJECT_DIR)/Distribution/Frameworks/libs",
 				);
@@ -4641,7 +4641,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/Distribution/Frameworks\"",
-					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/3.9/lib\"",
+					"\"$(SRCROOT)/Distribution/Frameworks/Python.framework/Versions/3.11/lib\"",
 					"$(PROJECT_DIR)/Distribution/Frameworks",
 					"$(PROJECT_DIR)/Distribution/Frameworks/libs",
 				);
