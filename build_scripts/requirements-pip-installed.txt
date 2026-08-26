@@ -29,6 +29,7 @@ pyobjc-framework-AddressBook==10.0
 pyobjc-framework-AVFoundation==10.0
 pyobjc-framework-Cocoa==10.0
 pyobjc-framework-CoreAudio==10.0
+pyobjc-framework-CoreLocation==10.0
 pyobjc-framework-CoreMedia==10.0
 pyobjc-framework-CoreServices==10.0
 pyobjc-framework-FSEvents==10.0
@@ -40,7 +41,7 @@ pyOpenSSL==25.0.0
 python-dateutil==2.9.0.post0
 python3-application @ https://github.com/AGProjects/python3-application/archive/refs/tags/release-3.0.8.tar.gz#sha256=c0a937b258d20567abce8ea960b883fd57a24029dcf1355c5c8bbaeb5eb56854
 python3-eventlib @ https://github.com/AGProjects/python3-eventlib/archive/refs/tags/0.3.0.tar.gz#sha256=acaf69b700dc389aa22c45cfcba824bbc6b2b1a2b2a795341574b71a85b342bf
-python3-gnutls @ https://github.com/AGProjects/python3-gnutls/archive/refs/tags/release-3.1.10.tar.gz#sha256=f4778dec884113c5335b3081f36dd2ead6ff471663dfb2c296f5745228d274c1
+python3-gnutls @ https://github.com/AGProjects/python3-gnutls/archive/refs/tags/release-3.1.13.tar.gz#sha256=d5558cd419c8d46bdc958064cb97f963d1ea793866414c025906ec15033512ed
 python3-msrplib @ https://github.com/AGProjects/python3-msrplib/archive/refs/tags/0.21.0.tar.gz#sha256=39b246f14f1a02fabdedc9d2229fe8c82d2abfb59c7cac273b5f46b142e431b5
 python3-otr @ https://github.com/AGProjects/python3-otr/archive/refs/tags/2.0.2.tar.gz#sha256=a189c1acff3fa7bf439f98a632ed6ef909984956276e7de2004511ada087f19f
 python3-sipsimple @ file:///Users/adigeo/work/blink/build_scripts/python3-sipsimple-5.3.3.1-mac

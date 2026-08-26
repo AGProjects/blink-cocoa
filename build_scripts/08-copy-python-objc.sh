@@ -19,7 +19,7 @@ fi
 
 # Copy Objc Python modules
 pyobjc_modules="objc AVFoundation AddressBook Contacts AppKit Cocoa \
-CoreFoundation CoreServices Foundation LaunchServices \
+CoreFoundation CoreLocation CoreServices Foundation LaunchServices \
 PyObjCTools Quartz ScriptingBridge WebKit FSEvents CoreMedia CoreAudio"
 
 for m in $pyobjc_modules; do
