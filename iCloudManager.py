@@ -186,8 +186,7 @@ class iCloudManager(NSObject):
                 application_name = NSApp.delegate().applicationName
                 passwords = {'auth': {'label': '{} ({})'.format(application_name, account.id), 'value': account.auth.password},
                              'web':  {'label': '{} WEB ({})'.format(application_name, account.id), 'value': account.server.web_password},
-                             'ldap': {'label': '{} LDAP ({})'.format(application_name, account.id), 'value': account.ldap.password},
-                             'chat': {'label': '{} ChatReplication ({})'.format(application_name, account.id), 'value': account.chat.replication_password}}
+                             'ldap': {'label': '{} LDAP ({})'.format(application_name, account.id), 'value': account.ldap.password}}
                 for p in list(passwords.keys()):
                     label = passwords[p]['label']
                     value = passwords[p]['value']
@@ -287,10 +286,6 @@ class iCloudManager(NSObject):
                         value = str(keychain_item.password()) if keychain_item is not None else ''
                 if name == 'web_password':
                     label = '{} WEB ({})'.format(application_name, account.id)
-                    keychain_item = EMGenericKeychainItem.genericKeychainItemForService_withUsername_(label, account.id)
-                    value = str(keychain_item.password()) if keychain_item is not None else ''
-                if name == 'replication_password':
-                    label = '{} ChatReplication ({})'.format(application_name, account.id)
                     keychain_item = EMGenericKeychainItem.genericKeychainItemForService_withUsername_(label, account.id)
                     value = str(keychain_item.password()) if keychain_item is not None else ''
                 state[name] = value

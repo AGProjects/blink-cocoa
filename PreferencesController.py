@@ -522,9 +522,6 @@ class PreferencesController(NSWindowController, object):
             if section_name in NSApp.delegate().hidden_account_preferences_sections:
                 continue
 
-            if NSApp.delegate().chat_replication_password_hidden:
-                PreferenceOptionTypes['chat.replication_password'] = HiddenOption
-
             if not NSApp.delegate().icloud_enabled:
                 PreferenceOptionTypes['gui.sync_with_icloud'] = HiddenOption
 

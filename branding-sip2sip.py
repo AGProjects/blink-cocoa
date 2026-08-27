@@ -37,7 +37,6 @@ def setup(delegate):
     delegate.recording_enabled = True
     delegate.file_logging_enabled = True
     delegate.advanced_options_enabled = True
-    delegate.chat_replication_password_hidden = False
     delegate.external_alert_enabled = True
     delegate.migrate_passwords_to_keychain = False
     delegate.maximum_accounts = 1

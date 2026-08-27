@@ -1294,7 +1294,7 @@ class BlinkPresenceContact(BlinkContact):
                         timestamp = str(ISOTimestamp.now())
                         id=str(uuid.uuid1())
 
-                        NSApp.delegate().contactsWindowController.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, 'incoming', cpim_from, cpim_to, timestamp, message, 'delivered', skip_replication=True)
+                        NSApp.delegate().contactsWindowController.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, 'incoming', cpim_from, cpim_to, timestamp, message, 'delivered')
 
                     if status in ('available', 'offline') and self.name:
                         notify = True
@@ -2493,6 +2493,219 @@ class CustomListModel(NSObject):
         else:
             return (None, rect)
 
+    @objc.python_method
+    def contactAddresses(self, item):
+        """A contact's addresses, in the order it lists them."""
+        uris = list(getattr(item, 'uris', ()) or ())
+        if uris:
+            return sorted(uris, key=lambda uri: uri.position
+                          if uri.position is not None else sys.maxsize)
+        return []
+
+    @objc.python_method
+    def addressSupportsMSRP(self, item, uri):
+        """Whether a device at this address advertises MSRP file transfer.
+
+        Presence, so it answers for who is online NOW -- which is what an
+        MSRP session needs and what the address menu has always greyed
+        items out on.
+        """
+        try:
+            devices = list(item.presence_state['devices'].values())
+        except Exception:
+            return False
+        return any(device for device in devices
+                   if 'sip:%s' % uri in device['aor'] and 'file-transfer' in device['caps'])
+
+    @objc.python_method
+    def sendDroppedFiles(self, table, account, item, filenames):
+        """Route files dropped on a contact, asking first when it is a choice.
+
+        MSRP is the floor, not one of two candidates: a drop is never
+        refused for want of a road, and anything an upload cannot carry
+        goes out as a file transfer. Only the upload has to earn its turn.
+
+        Three outcomes, in the order they are decided:
+
+          * An upload is possible and the Messages pane is already open --
+            upload, without asking. The drop lands in a conversation on
+            screen, so there is nothing to explain.
+          * No upload possible -- MSRP, keeping the address menu a contact
+            with several addresses has always had.
+          * An upload is possible but the pane is closed -- ask. An upload
+            waits on the server for whenever they next open the app; MSRP
+            needs them online now. That is a real difference and only the
+            user knows which one they meant.
+        """
+        manager = self.sessionControllersManager
+        addresses = self.contactAddresses(item)
+        strings = [str(uri.uri) for uri in addresses] or [str(item.uri)]
+
+        # Which address an upload would go to, decided rather than asked:
+        # the one this contact last exchanged messages with. See
+        # upload_address. None means no address has history, so there is
+        # nothing to suggest an upload would arrive -- and then the answer
+        # is MSRP, whatever the file transfer media type is set to.
+        # send_files_to_contact has its own say about that; refusing the
+        # drop here would only mean deciding it twice, once silently.
+        web_target = manager.upload_address(account, strings)
+
+        if web_target and self.messagesPaneIsOpen():
+            return self._sendDroppedFilesTo(manager, account, web_target,
+                                            filenames, route='web')
+
+        # MSRP alone. Its address menu stays: an MSRP session goes to a
+        # DEVICE, and which of a contact's addresses has one online right
+        # now is a real question with a visible answer in the menu.
+        if not web_target and len(strings) == 1:
+            return self._sendDroppedFilesTo(manager, account, strings[0],
+                                            filenames, route='msrp')
+
+        return self._showFileDropMenu(table, account, item, filenames,
+                                      addresses or None, web_target)
+
+    @objc.python_method
+    def messagesPaneIsOpen(self):
+        try:
+            return bool(NSApp.delegate().contactsWindowController.isMessagesPaneVisible())
+        except Exception:
+            return False
+
+    @objc.python_method
+    def _sendDroppedFilesTo(self, manager, account, uri, filenames, route):
+        try:
+            manager.send_files_to_contact(account, uri, filenames, route=route)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot send the dropped files to %s: %s' % (uri, e))
+            return False
+        return True
+
+    ROUTE_TITLES = {
+        'web': NSLocalizedString("Web Upload", "Menu item"),
+        'msrp': NSLocalizedString("File Transfer", "Menu item"),
+    }
+
+    @objc.python_method
+    def _showFileDropMenu(self, table, account, item, filenames, addresses,
+                          web_target):
+        """Put the remaining choice in a menu.
+
+        Only two shapes are left, because the upload never asks which
+        address:
+
+          * No upload possible, several addresses -- the address menu this
+            drop has always shown.
+          * Upload possible, pane closed -- Web Upload as one item, and
+            File Transfer either as one item or as a submenu of addresses.
+            An upload waits on the server for whenever they next open the
+            app; MSRP needs a device online now. Only the user knows which
+            they meant.
+        """
+        try:
+            point = table.window().convertScreenToBase_(NSEvent.mouseLocation())
+            event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
+                NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(),
+                table.window().windowNumber(), table.window().graphicsContext(), 0, 1, 0)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot place the file drop menu: %s' % e)
+            return False
+
+        menu = NSMenu.alloc().init()
+        menu.setAutoenablesItems_(False)
+
+        def address_item(into, uri, route, indent):
+            """One address, on the MSRP road -- the only one that asks."""
+            entry = into.addItemWithTitle_action_keyEquivalent_(
+                '%s (%s)' % (uri.uri, uri.type), "userDropedFileOnContact:", "")
+            entry.setIndentationLevel_(indent)
+            entry.setTarget_(self)
+            entry.setRepresentedObject_({'account': account, 'uri': str(uri.uri),
+                                         'filenames': filenames, 'route': route})
+            # Greyed unless a device at that address is online and says it
+            # does file transfer: an MSRP session has to reach a device.
+            entry.setEnabled_(self.addressSupportsMSRP(item, uri.uri))
+            return entry
+
+        def plain_item(into, title, uri, route, enabled):
+            entry = into.addItemWithTitle_action_keyEquivalent_(
+                title, "userDropedFileOnContact:", "")
+            entry.setIndentationLevel_(1)
+            entry.setTarget_(self)
+            entry.setRepresentedObject_({'account': account, 'uri': str(uri),
+                                         'filenames': filenames, 'route': route})
+            entry.setEnabled_(enabled)
+            return entry
+
+        if web_target is None:
+            heading = menu.addItemWithTitle_action_keyEquivalent_(
+                NSLocalizedString("Send File To Address", "Menu item"), "", "")
+            heading.setEnabled_(False)
+            for uri in addresses or ():
+                address_item(menu, uri, 'msrp', 1)
+        else:
+            heading = menu.addItemWithTitle_action_keyEquivalent_(
+                NSLocalizedString("Send File Using", "Menu item"), "", "")
+            heading.setEnabled_(False)
+
+            plain_item(menu, self.ROUTE_TITLES['web'], web_target, 'web', True)
+
+            # File Transfer is always offered. It is the road that is
+            # always there, and greying it out on this menu would leave a
+            # drop with one option and a dead entry beside it.
+            title = self.ROUTE_TITLES['msrp']
+            if addresses and len(addresses) > 1:
+                # The address question survives only on this road, so only
+                # this road gets a submenu.
+                entry = menu.addItemWithTitle_action_keyEquivalent_(title, "", "")
+                entry.setIndentationLevel_(1)
+                entry.setEnabled_(True)
+                submenu = NSMenu.alloc().init()
+                submenu.setAutoenablesItems_(False)
+                for uri in addresses:
+                    address_item(submenu, uri, 'msrp', 0)
+                menu.setSubmenu_forItem_(submenu, entry)
+            else:
+                only = addresses[0].uri if addresses else web_target
+                plain_item(menu, title, only, 'msrp',
+                           self.addressSupportsMSRP(item, only))
+
+        NSMenu.popUpContextMenu_withEvent_forView_(menu, event, table)
+        return True
+
+    @objc.python_method
+    def dragCameFromContact(self, source, item):
+        """Whether a drag started in this contact's own conversation.
+
+        Answers the round trip: a file dragged out of a message bubble and
+        dropped back on the contact who sent it. Compared by address
+        rather than by object, since the conversation is keyed by URI and
+        a contact can hold several.
+
+        Any other destination is left alone -- dragging a file from one
+        conversation onto a different contact is forwarding, which is a
+        real thing to want.
+        """
+        if source is None or item is None:
+            return False
+        try:
+            pane = NSApp.delegate().contactsWindowController.messagePaneController
+            if pane is None:
+                return False
+            origin = pane.dragOriginURI(source)
+        except Exception:
+            return False
+        if not origin:
+            return False
+
+        def bare(uri):
+            return sip_prefix_pattern.sub('', str(uri or '')).split(';')[0].strip().lower()
+
+        origin = bare(origin)
+        if not origin:
+            return False
+        addresses = [item.uri] + [uri.uri for uri in getattr(item, 'uris', ())]
+        return any(bare(address) == origin for address in addresses)
+
     # drag and drop
     def outlineView_validateDrop_proposedItem_proposedChildIndex_(self, table, info, proposed_item, index):
         self.drop_on_contact_index = None
@@ -2501,6 +2714,12 @@ class CustomListModel(NSObject):
                 return NSDragOperationNone
             fnames = info.draggingPasteboard().propertyListForType_(NSFilenamesPboardType)
             if not all(os.path.isfile(f) or os.path.isdir(f) for f in fnames):
+                return NSDragOperationNone
+            if self.dragCameFromContact(info.draggingSource(), proposed_item):
+                # Dragged out of this contact's own conversation and let go
+                # on the contact again. Sending someone back the file they
+                # just sent you is never what a hand slipping means, and
+                # without this it goes out as a second transfer.
                 return NSDragOperationNone
             return NSDragOperationCopy
         elif info.draggingPasteboard().availableTypeFromArray_(["x-blink-audio-session"]):
@@ -2607,34 +2826,17 @@ class CustomListModel(NSObject):
         if info.draggingPasteboard().availableTypeFromArray_([NSFilenamesPboardType]):
             if index != NSOutlineViewDropOnItemIndex or not isinstance(item, (BlinkPresenceContact, BonjourBlinkContact)):
                 return False
+            if self.dragCameFromContact(info.draggingSource(), item):
+                return False
             filenames =[unicodedata.normalize('NFC', file) for file in info.draggingPasteboard().propertyListForType_(NSFilenamesPboardType)]
             account = BonjourAccount() if isinstance(item, BonjourBlinkContact) else AccountManager().default_account
-            if not filenames or not account or not self.sessionControllersManager.isMediaTypeSupported('file-transfer'):
+            # MSRP file transfer being switched off is no longer the end of
+            # it: an upload through SylkServer is a different road to the
+            # same place and does not need the MSRP media type at all. Only
+            # refuse when NEITHER route is open.
+            if not filenames or not account:
                 return False
-
-            if len(item.uris) > 1:
-                point = table.window().convertScreenToBase_(NSEvent.mouseLocation())
-                event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
-                                                                                                                                          NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), table.window().windowNumber(),
-                                                                                                                                          table.window().graphicsContext(), 0, 1, 0)
-                send_file_menu = NSMenu.alloc().init()
-                titem = send_file_menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Send File To Address", "Menu item"), "", "")
-                titem.setEnabled_(False)
-
-                for uri in sorted(item.uris, key=lambda uri: uri.position if uri.position is not None else sys.maxsize):
-                    aor_supports_ft = False
-                    aor_supports_ft = any(device for device in list(item.presence_state['devices'].values()) if 'sip:%s' % uri.uri in device['aor'] and 'file-transfer' in device['caps'])
-                    titem = send_file_menu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, uri.type), "userDropedFileOnContact:", "")
-                    titem.setIndentationLevel_(1)
-                    titem.setTarget_(self)
-                    titem.setRepresentedObject_({'account': account, 'uri': str(uri.uri), 'filenames':filenames})
-                    titem.setEnabled_(aor_supports_ft)
-
-                NSMenu.popUpContextMenu_withEvent_forView_(send_file_menu, event, table)
-                return True
-            else:
-                self.sessionControllersManager.send_files_to_contact(account, item.uri, filenames)
-                return True
+            return self.sendDroppedFiles(table, account, item, filenames)
         elif info.draggingPasteboard().availableTypeFromArray_(["x-blink-audio-session"]):
             source = info.draggingSource()
             if index != NSOutlineViewDropOnItemIndex or not isinstance(item, BlinkContact) or not isinstance(source, AudioSession):
@@ -2820,7 +3022,9 @@ class CustomListModel(NSObject):
     @objc.IBAction
     def userDropedFileOnContact_(self, sender):
         object = sender.representedObject()
-        self.sessionControllersManager.send_files_to_contact(object['account'], object['uri'], object['filenames'])
+        self.sessionControllersManager.send_files_to_contact(
+            object['account'], object['uri'], object['filenames'],
+            route=object.get('route'))
 
     def userClickedBlindTransferMenuItem_(self, sender):
         source = sender.representedObject()['source']

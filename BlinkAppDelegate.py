@@ -197,7 +197,6 @@ class BlinkAppDelegate(NSObject):
     file_logging_enabled = True
     advanced_options_enabled = True
     hidden_account_preferences_sections = ()
-    chat_replication_password_hidden = True
     external_alert_enabled = True
     migrate_passwords_to_keychain = True
     service_provider_help_url  = None

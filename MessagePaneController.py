@@ -190,17 +190,42 @@ class MessageDropView(NSView):
         files = [str(name) for name in names or [] if os.path.isfile(str(name))]
         return files or None
 
+    @objc.python_method
+    def _isRoundTrip(self, sender):
+        """Whether this drag started in the conversation it is over.
+
+        A file dragged out of a bubble and let go over the same transcript
+        is somebody changing their mind, not somebody sending the file to
+        the person who just sent it to them. Without this it lands as a
+        second, identical transfer.
+
+        Dropping it on a DIFFERENT conversation is a real thing to want --
+        that is forwarding -- so only the round trip is refused.
+        """
+        if self.controller is None:
+            return False
+        try:
+            return self.controller.dragCameFromSelectedConversation(
+                sender.draggingSource())
+        except Exception:
+            return False
+
     def draggingEntered_(self, sender):
         if self.controller is None or not self.controller.canReceiveDroppedFiles():
+            return NSDragOperationNone
+        if self._isRoundTrip(sender):
+            # Refused at the door, so the pointer shows the no-entry cursor
+            # and the file springs back rather than appearing to be
+            # accepted and then silently doing nothing.
             return NSDragOperationNone
         return NSDragOperationCopy if self._files(sender) else NSDragOperationNone
 
     def prepareForDragOperation_(self, sender):
-        return bool(self._files(sender))
+        return bool(self._files(sender)) and not self._isRoundTrip(sender)
 
     def performDragOperation_(self, sender):
         files = self._files(sender)
-        if not files or self.controller is None:
+        if not files or self.controller is None or self._isRoundTrip(sender):
             return False
         return self.controller.sendFiles(files)
 
@@ -513,6 +538,39 @@ class MessagePaneController(NSObject):
     def canReceiveDroppedFiles(self):
         viewer = self._selected
         return viewer is not None and getattr(viewer, 'canSendFiles', lambda: False)()
+
+    @objc.python_method
+    def viewerForDragSource(self, source):
+        """The conversation a dragged message bubble came from, or None.
+
+        Found by asking which open conversation owns the bubble's renderer
+        rather than by giving every bubble a back-pointer to its viewer:
+        the bubble already knows its renderer, the pane already knows its
+        viewers, and one more reference cycle through a view that is
+        created and destroyed by the thousand is not worth the tidier
+        lookup.
+        """
+        renderer = getattr(source, 'renderer', None)
+        if renderer is None:
+            return None
+        for viewer in self._viewers:
+            if getattr(viewer, 'chatViewController', None) is renderer:
+                return viewer
+        return None
+
+    @objc.python_method
+    def dragCameFromSelectedConversation(self, source):
+        """True when a drag started in the conversation now on screen."""
+        viewer = self.viewerForDragSource(source)
+        return viewer is not None and viewer is self._selected
+
+    @objc.python_method
+    def dragOriginURI(self, source):
+        """The address of the conversation a drag started in, or None."""
+        viewer = self.viewerForDragSource(source)
+        if viewer is None:
+            return None
+        return str(getattr(viewer, 'remote_uri', '') or '') or None
 
     @objc.python_method
     def sendFiles(self, paths):

@@ -53,6 +53,8 @@ from sipsimple.util import ISOTimestamp
 from AudioPlayback import (AudioPlayback, derive_peaks, derived_peaks,
                            envelope_peaks, has_peaks)
 from AudioRecorder import AudioRecorder, request_microphone
+from VideoPlayback import (VideoPlayback, poster_image, movie_duration,
+                           is_playable, forget_movie)
 from AudioRecorderView import (AudioRecorderView, BLINK_SECONDS,
                                RECORDER_BAR_HEIGHT)
 from BlinkLogger import BlinkLogger
@@ -178,7 +180,8 @@ def _haversine(lat1, lon1, lat2, lon2):
 from ChatViewController import ChatViewController, ChatMessageObject
 from MessageBubbleView import MessageBubbleView, _url_re
 from FileTransferCache import (FileTransferCache, envelope as transfer_envelope,
-                               is_encrypted, MAX_AUTO_IMAGE_BYTES)
+                               is_encrypted, AUTO_VIDEO_MAX_AGE_DAYS,
+                               MAX_AUTO_IMAGE_BYTES, MAX_AUTO_VIDEO_BYTES)
 from sipsimple.threading.green import run_in_green_thread
 from util import run_in_gui_thread
 
@@ -207,6 +210,9 @@ class NativeChatViewController(ChatViewController):
     _composer_right_inset = None
     _watching_composer = False
     _laying_out_composer = False
+    # The last thing the composer layout declined to do, so a gate that
+    # closes on every pass says so once instead of on every redraw.
+    _composer_note = None
     # Which conversation currently owns the recorder. There is one
     # microphone and one AudioRecorder behind it, so pressing record in a
     # second conversation has to take the take away from the first
@@ -301,7 +307,11 @@ class NativeChatViewController(ChatViewController):
             frame = scrollview.frame()
             width = ATTACH_BUTTON_SIZE + ATTACH_BUTTON_GAP
             if frame.size.width <= width * 2:
-                return                      # too narrow to steal room from
+                # Too narrow to steal room from -- a view mid-layout, not
+                # a narrow composer. Retried on the next frame change.
+                self._noteComposer('no clip yet, the composer is %.0fx%.0f'
+                                   % (frame.size.width, frame.size.height))
+                return
 
             # _layoutComposerRow settles the real geometry; the frame
             # here only has to be the right size and roughly in place.
@@ -358,11 +368,23 @@ class NativeChatViewController(ChatViewController):
             scrollview = self.inputText.enclosingScrollView() if self.inputText else None
             if scrollview is None:
                 return
-            scrollview.setPostsFrameChangedNotifications_(True)
-            NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(
-                self, "composerFrameDidChange:",
-                NSViewFrameDidChangeNotification, scrollview)
+            centre = NSNotificationCenter.defaultCenter()
+            # Two views, because the resize arrives by two different
+            # routes. The pane re-frames the conversation's whole content
+            # view outright, and the composer inside it follows on its
+            # springs -- but a spring-driven resize is not the only way
+            # the field changes size, and neither notification is
+            # guaranteed to be the one that arrives. Watching both costs
+            # a second observer and removes the guesswork.
+            for view, name in ((scrollview, 'composer'), (self.view, 'content view')):
+                if view is None:
+                    continue
+                view.setPostsFrameChangedNotifications_(True)
+                centre.addObserver_selector_name_object_(
+                    self, "composerFrameDidChange:",
+                    NSViewFrameDidChangeNotification, view)
             self._watching_composer = True
+            BlinkLogger().log_debug('Composer row: following the composer and the content view')
         except Exception as e:
             BlinkLogger().log_error('Cannot follow the composer: %s' % e)
 
@@ -403,10 +425,32 @@ class NativeChatViewController(ChatViewController):
         if self._hasSmileyPicker():
             self._installSmileyButton()
         self._installRecordButton()
+        self._noteComposer(
+            'clip=%s smiley=%s mic=%s picker=%s watching=%s inset=%s'
+            % (self._attach_button is not None,
+               self._smiley_button is not None,
+               self._record_button is not None,
+               self._hasSmileyPicker(), self._watching_composer,
+               self._composer_right_inset))
         # Once more with all of them in hand: each installer lays the row
         # out before it returns its button, so the last one ran against a
         # row that did not have itself in it yet.
         self._layoutComposerRow()
+
+    @objc.python_method
+    def _noteComposer(self, message):
+        """Say why the composer row is as it is, once per reason.
+
+        The buttons not being there has half a dozen possible causes --
+        a view with no size yet, a delegate that cannot send files, an
+        install that declined, a layout that returned early -- and they
+        are indistinguishable from the outside. Each one says so here,
+        and repeats only when the answer changes.
+        """
+        if message == self._composer_note:
+            return
+        self._composer_note = message
+        BlinkLogger().log_info('Composer row: %s' % message)
 
     @objc.python_method
     def _hasSmileyPicker(self):
@@ -483,6 +527,8 @@ class NativeChatViewController(ChatViewController):
 
             frame = scrollview.frame()
             if frame.size.width <= size * 6:
+                self._noteComposer('no %s yet, the composer is %.0fx%.0f'
+                                   % (glyph, frame.size.width, frame.size.height))
                 return None                 # too narrow to steal room from
 
             button = NSButton.alloc().initWithFrame_(NSMakeRect(
@@ -567,6 +613,8 @@ class NativeChatViewController(ChatViewController):
             # narrow composer. Placing against it is what loses the
             # buttons.
             if field.size.height < ATTACH_BUTTON_SIZE or field.size.width <= reserved * 3:
+                self._noteComposer('not placing anything, the composer is %.0fx%.0f'
+                                   % (field.size.width, field.size.height))
                 return
 
             def settle(button, wanted):
@@ -601,6 +649,9 @@ class NativeChatViewController(ChatViewController):
                     (row_frame.origin.x + row_frame.size.width)
                     - (field.origin.x + field.size.width), 0.0)
             if self._composer_right_inset is None:
+                self._noteComposer(
+                    'not placing anything, the row is %.0f wide and the '
+                    'composer %.0f' % (row_frame.size.width, field.size.width))
                 return
 
             left = row_frame.origin.x + 2.0
@@ -757,6 +808,11 @@ class NativeChatViewController(ChatViewController):
         # Whatever was playing stops: a recording made over the top of a
         # message playing out of the same speakers records the message.
         AudioPlayback().stop()
+        VideoPlayback().stop()
+        # Told, not just stopped: the bubble that was holding the picture
+        # has to give it up and go back to its poster, and nothing else
+        # here is going to ask it to.
+        self._refreshAudioBubbles()
         self._showRecorderBar()
         if self._recorder_bar is None:
             # The bar could not be put up, so nothing can stop the take.
@@ -1151,6 +1207,23 @@ class NativeChatViewController(ChatViewController):
         return bubble
 
     @objc.python_method
+    def hasRenderedMessage(self, msgid):
+        """Whether a message with this id is already in the transcript.
+
+        Asked by the history replay before it draws a stored row. The
+        view's own index is the authority rather than rendered_messages:
+        the index is what append/prepend/insert all write to and what
+        deletion removes from, so it cannot disagree with what is on
+        screen.
+        """
+        if not msgid or self.messageListView is None:
+            return False
+        try:
+            return self.messageListView.viewForMessageId_(str(msgid)) is not None
+        except Exception:
+            return False
+
+    @objc.python_method
     def _insert(self, bubble, msgid, before):
         if self.messageListView is None:
             return
@@ -1404,6 +1477,14 @@ class NativeChatViewController(ChatViewController):
 
         if self.lastMessagesLabel is None:
             return
+        # Set here as well as in the nib: this label sits over the linen, and
+        # a fixed grey that reads on one appearance disappears on the other.
+        # secondaryLabelColor resolves at draw time, so it follows a theme
+        # switch with the transcript open.
+        try:
+            self.lastMessagesLabel.setTextColor_(NSColor.secondaryLabelColor())
+        except Exception as e:
+            BlinkLogger().log_debug('Cannot set the history label colour: %s' % e)
         parts = [text for text in (self.loadedRangeLabel(), self.history_note) if text]
         try:
             self.lastMessagesLabel.setStringValue_(u' \u2014 '.join(parts))
@@ -1492,6 +1573,7 @@ class NativeChatViewController(ChatViewController):
         # A recording cannot go on playing out of a message that is being
         # removed -- the file underneath it is about to be gone.
         AudioPlayback().stop_for_key(str(msgid))
+        VideoPlayback().stop_for_key(str(msgid))
         if hasattr(self.delegate, 'delete_message'):
             self.delegate.delete_message(msgid)
 
@@ -1555,6 +1637,195 @@ class NativeChatViewController(ChatViewController):
             self.measureWaveform(path)
         bubble.invalidateLayout()
         if self.messageListView is not None:
+            self.messageListView.layoutMessages()
+
+    @objc.python_method
+    def _noteDecrypted(self, bubble, path):
+        """Record that an armoured transfer has been opened with our key.
+
+        Holding a local file for an encrypted transfer IS the proof: the
+        cache writes one only after pgpy has handed back a plaintext, and
+        it files it under the name with the .asc stripped -- so a file
+        left over from a previous session says the same thing just as
+        reliably as one that arrived a moment ago.
+
+        The lock reads this. Until it is set, a bubble showing a .asc
+        transfer is reporting the sender's claim about the file and
+        nothing more.
+        """
+        meta = getattr(bubble, 'transfer_meta', None)
+        if not path or not isinstance(meta, dict) or not is_encrypted(meta):
+            return
+        if getattr(bubble, 'transfer_decrypted', False):
+            return
+        bubble.transfer_decrypted = True
+        bubble.invalidateLayout()
+
+    @objc.python_method
+    def _fileStamp(self, path):
+        """(size, mtime) for a file, or None.
+
+        What a refusal is remembered against. `local_file` hands out a
+        path the moment there are bytes at it and a download writes
+        straight to its final name, so a movie still arriving looks
+        exactly like one that is all here -- and a truncated container
+        yields no frame and no duration, which is exactly what a
+        container we cannot play yields. Tying the verdict to the bytes
+        it was reached on is what keeps a file that was merely half here
+        from being written off for the rest of the session.
+        """
+        try:
+            info = os.stat(path)
+        except OSError:
+            return None
+        return (info.st_size, int(info.st_mtime))
+
+    @objc.python_method
+    def _attachVideo(self, bubble, path):
+        """Turn a movie that is now on disc into a player with a poster."""
+        meta = getattr(bubble, 'transfer_meta', None) or {}
+        if self.messageCategory(bubble) != 'video' or not path:
+            return
+        if not is_playable(path):
+            # Said out loud for the same reason the recording path says
+            # it: "the video bubble looks the same" has more than one
+            # cause, and a container AVFoundation will not open is a
+            # different problem from a file that never arrived.
+            BlinkLogger().log_info(
+                'No player for %s: %s is not a container AVFoundation opens'
+                % (meta.get('filename'), os.path.splitext(str(path))[1] or '(none)'))
+            return
+        if getattr(bubble, 'video_refused', None) == self._fileStamp(path):
+            # Asked about exactly these bytes, and the answer was no. A
+            # file that has since grown -- a download that was still
+            # running when we looked -- has a different stamp and is
+            # asked again.
+            return
+        if getattr(bubble, 'video_path', None) == path:
+            return
+        bubble.video_path = path
+        # The envelope's own duration, so the bar has a scale before the
+        # file has ever been opened -- a seek is a fraction OF the length,
+        # and without one a drag can only ever land on the beginning.
+        try:
+            bubble.video_duration = float(meta.get('duration') or 0.0)
+        except (TypeError, ValueError):
+            bubble.video_duration = 0.0
+        # The transport reads the recording's field, because it IS the
+        # recording's transport: one row, two kinds of clip.
+        bubble.audio_duration = bubble.video_duration
+        bubble.invalidateLayout()
+        if self.messageListView is not None:
+            self.messageListView.layoutMessages()
+        # The poster is a decode. It happens off the GUI thread and lands
+        # when it lands, exactly as a measured waveform does.
+        self.preparePoster(path)
+
+    @objc.python_method
+    @run_in_green_thread
+    def preparePoster(self, path):
+        """Pull a still and a length out of a movie, off the GUI thread."""
+        # Stamped BEFORE the decode, so a refusal is recorded against the
+        # bytes that were actually read. A download can finish while the
+        # generator is working, and a stamp taken afterwards would pin the
+        # truncated file's verdict onto the complete one.
+        stamp = self._fileStamp(path)
+        image = poster_image(path)
+        duration = movie_duration(path)
+        if image is None and not duration:
+            # Neither a frame nor a length: this is what a file
+            # AVFoundation cannot open looks like from here, whatever its
+            # extension promised -- and equally what one that is only
+            # half downloaded looks like. Hand it back to the ordinary
+            # open-it-outside rule, remembering the verdict against these
+            # bytes so the rest of the file gets its own answer.
+            forget_movie(path)
+            self._disownMovie(path, stamp)
+            return
+        self._applyPoster(path, image, duration or 0.0)
+
+    @objc.python_method
+    @run_in_gui_thread
+    def _disownMovie(self, path, stamp):
+        """Take the player back off a file that turned out unplayable.
+
+        `stamp` is what the file looked like when it was decoded, not
+        what it looks like now: every bubble showing it refuses the same
+        bytes, and the ones that were read are the ones the verdict is
+        about.
+        """
+        if self.messageListView is None:
+            return
+        changed = False
+        for view in self.messageListView.subviews():
+            if getattr(view, 'video_path', None) != path:
+                continue
+            # Whatever was started on the strength of it stops with it.
+            # The play key goes live the moment video_path is set, which
+            # is well before the poster comes back, so a large file can
+            # easily be pressed during the decode -- and a player left
+            # running on a file we have just decided we cannot play holds
+            # it open for the rest of the session, in a bubble whose
+            # transport is about to disappear from under it.
+            VideoPlayback().stop_for_key(str(getattr(view, 'msgid', '') or ''))
+            view.noteVideoState(False, 0.0, 0.0, 0.0, False)
+            view.video_path = None
+            view.video_refused = stamp
+            view.video_duration = 0.0
+            view.audio_duration = 0.0
+            view.invalidateLayout()
+            changed = True
+        if changed:
+            BlinkLogger().log_info(
+                'No player for %s: AVFoundation opened neither a frame nor '
+                'a duration; it opens outside Blink instead'
+                % os.path.basename(str(path)))
+            self.messageListView.layoutMessages()
+
+    @objc.python_method
+    @run_in_gui_thread
+    def _applyPoster(self, path, image, duration):
+        """Hand the still to every bubble showing that movie.
+
+        Into `media_image`, which is what makes this worth doing: from
+        there every rule the transcript already has about sizing a
+        photograph, fitting it to the bubble, cropping it into a grid
+        cell and dragging it to the Finder applies to a movie without
+        being written a second time.
+        """
+        if self.messageListView is None:
+            return
+        changed = False
+        for view in self.messageListView.subviews():
+            if getattr(view, 'video_path', None) != path:
+                continue
+            touched = False
+            if image is not None and view.media_image is None:
+                view.media_image = image
+                view.media_natural_size = image.size()
+                touched = True
+            elif image is None and not view.video_no_poster:
+                # The generator has answered, and the answer was no. The
+                # bubble reserves its own well now -- it could not do so
+                # before without flashing one under every movie that was
+                # about to get a perfectly good poster.
+                view.video_no_poster = True
+                touched = True
+            if duration:
+                # The container's length wins over the envelope's. This
+                # one was measured from the very file that is about to be
+                # played; a bar scaled to a number that came from
+                # somewhere else seeks to the wrong place all the way
+                # along, and is worst at the end.
+                view.video_duration = duration
+                view.audio_duration = duration
+                touched = True
+            if touched:
+                view.invalidateLayout()
+                changed = True
+        if changed:
+            BlinkLogger().log_info('Poster attached to %s'
+                                   % os.path.basename(str(path)))
             self.messageListView.layoutMessages()
 
     @objc.python_method
@@ -1675,6 +1946,22 @@ class NativeChatViewController(ChatViewController):
         bubble = self.messageListView.viewForMessageId_(str(msgid))
         if bubble is None:
             return
+        movie = getattr(bubble, 'video_path', None)
+        if movie:
+            # One player at a time across both kinds. They share the
+            # speakers and they share the transport row, so a movie
+            # starting has to silence a recording for the same reason a
+            # second recording does -- and the key that stopped it has to
+            # be the one the user just pressed.
+            AudioPlayback().stop()
+            playing = VideoPlayback().toggle(movie, str(msgid))
+            BlinkLogger().log_info('Play %s: %s (movie %s)'
+                                   % (msgid, 'playing' if playing else 'paused',
+                                      movie))
+            self._refreshAudioBubbles()
+            if playing:
+                self.startAudioTimer()
+            return
         path = getattr(bubble, 'audio_path', None)
         if not path:
             # Not on disc yet. Fetch it, and play when it lands --
@@ -1686,6 +1973,7 @@ class NativeChatViewController(ChatViewController):
         # bar instead of a waveform, the line from bubble construction has
         # long scrolled away.
         self._logAudioEnvelope(getattr(bubble, 'transfer_meta', None) or {})
+        VideoPlayback().stop()
         playing = AudioPlayback().toggle(path, str(msgid))
         BlinkLogger().log_info('Play %s: %s (file %s)'
                                % (msgid, 'playing' if playing else 'paused', path))
@@ -1700,6 +1988,21 @@ class NativeChatViewController(ChatViewController):
             return
         bubble = self.messageListView.viewForMessageId_(str(msgid))
         if bubble is None:
+            return
+        movie = getattr(bubble, 'video_path', None)
+        if movie:
+            movies = VideoPlayback()
+            key = str(msgid)
+            # Scrubbing a clip that is not loaded is still a request to go
+            # to that point in it, so it is loaded and left paused there
+            # rather than ignored -- the recording's rule, unchanged.
+            if not movies.is_current(key) and not movies.load(movie, key):
+                BlinkLogger().log_info('Seek %s to %.1f%%: the movie would not load'
+                                       % (key, fraction * 100))
+                return
+            movies.seek(fraction, key,
+                        fallback=getattr(bubble, 'video_duration', 0.0) or 0.0)
+            self._refreshAudioBubbles()
             return
         path = getattr(bubble, 'audio_path', None)
         if not path:
@@ -1745,7 +2048,7 @@ class NativeChatViewController(ChatViewController):
 
     def audioTimer_(self, timer):
         self._refreshAudioBubbles()
-        if not AudioPlayback().is_playing():
+        if not AudioPlayback().is_playing() and not VideoPlayback().is_playing():
             # Nothing is playing any more -- it finished, or another
             # conversation took the player. An idle transcript does no work.
             self.stopAudioTimer()
@@ -1772,12 +2075,12 @@ class NativeChatViewController(ChatViewController):
         """Stop the player if the clip belongs to this conversation."""
         if self.messageListView is None:
             return
-        player = AudioPlayback()
-        key = player.current_key()
-        if not key:
-            return
-        if self.messageListView.viewForMessageId_(str(key)) is not None:
-            player.stop()
+        for player in (AudioPlayback(), VideoPlayback()):
+            key = player.current_key()
+            if not key:
+                continue
+            if self.messageListView.viewForMessageId_(str(key)) is not None:
+                player.stop()
 
     @objc.python_method
     def _refreshAudioBubbles(self):
@@ -1785,10 +2088,25 @@ class NativeChatViewController(ChatViewController):
         if self.messageListView is None:
             return
         player = AudioPlayback()
+        movies = VideoPlayback()
         for view in self.messageListView.subviews():
+            key = str(getattr(view, 'msgid', '') or '')
+            if getattr(view, 'video_path', None):
+                # A movie carries the picture as well as the numbers, so
+                # it is told whether it is the current clip rather than
+                # left to ask: the bubble that owns the player holds the
+                # layer, and every other one falls back to its poster.
+                if movies.is_current(key):
+                    position = movies.position(key)
+                    duration = movies.duration(key) or view.audio_duration or 0.0
+                    progress = (position / duration) if duration > 0 else 0.0
+                    view.noteVideoState(movies.is_playing(key), position, duration,
+                                        min(max(progress, 0.0), 1.0), True)
+                else:
+                    view.noteVideoState(False, 0.0, view.audio_duration, 0.0, False)
+                continue
             if not getattr(view, 'audio_path', None):
                 continue
-            key = str(getattr(view, 'msgid', '') or '')
             if player.is_current(key):
                 # One duration for both the clock and the bar. They used to
                 # disagree: the clock fell back to the envelope's duration
@@ -2334,9 +2652,15 @@ class NativeChatViewController(ChatViewController):
         bubble.invalidateLayout()
         if self.messageListView is not None:
             self.messageListView.layoutMessages()
-        BlinkLogger().log_info('File transfer bubble %s: %s (%s, %s bytes)'
+        # The direction and the download state go in the same line as the
+        # transfer itself. "It offered to download a file I had just sent"
+        # is not a thing that can be diagnosed from a line that says only
+        # the filename, and it has now been reported twice.
+        BlinkLogger().log_info('File transfer bubble %s: %s (%s, %s bytes) %s%s'
                                 % (bubble.msgid, meta.get('filename'),
-                                   self.messageCategory(bubble), meta.get('filesize')))
+                                   self.messageCategory(bubble), meta.get('filesize'),
+                                   bubble.direction,
+                                   ', upload in flight' if bubble.upload_pending else ''))
         # Whether the file is already here is asked for EVERY kind, not
         # just pictures. A PDF we sent ourselves is on this disc, and the
         # bubble was offering to download it back off the server because
@@ -2349,7 +2673,9 @@ class NativeChatViewController(ChatViewController):
             self._showMedia(bubble, path)
             return
         bubble.media_path = path
+        self._noteDecrypted(bubble, path)
         self._attachAudio(bubble, path)
+        self._attachVideo(bubble, path)
         bubble.invalidateLayout()
         if self.messageListView is not None:
             self.messageListView.layoutMessages()
@@ -2397,14 +2723,51 @@ class NativeChatViewController(ChatViewController):
             self.messageListView.layoutMessages()
 
     @objc.python_method
+    def _autoFetchLimit(self, bubble):
+        """How big this file may be and still fetch itself, or None.
+
+        None means "not automatically, whatever the size" -- a document, a
+        recording, or a video old enough that nobody is still catching up
+        on it. Returning the LIMIT rather than a yes/no is what lets the
+        log say which cap a file failed, instead of "click to download".
+        """
+        category = self.messageCategory(bubble)
+        if category == 'image':
+            return MAX_AUTO_IMAGE_BYTES
+        if category == 'video':
+            # Recent only. A picture is cheap enough to fetch whenever it
+            # scrolls past, but a scroll back through a year of clips would
+            # quietly pull down gigabytes, so a video earns its automatic
+            # fetch by still being current.
+            age = self._ageInDays(bubble)
+            if age is None or age > AUTO_VIDEO_MAX_AGE_DAYS:
+                return None
+            return MAX_AUTO_VIDEO_BYTES
+        return None
+
+    @objc.python_method
+    def _ageInDays(self, bubble):
+        """How old this message is, in days, or None if it cannot be told.
+
+        None rather than 0 for an unreadable timestamp: not knowing the age
+        must fail the recency test rather than pass it, or a row with a
+        broken stamp becomes the one video that always downloads itself.
+        """
+        stamp = self._epoch(getattr(bubble, 'message_timestamp', None))
+        if stamp is None:
+            return None
+        return max(time.time() - stamp, 0.0) / 86400.0
+
+    @objc.python_method
     def _shouldAutoFetch(self, bubble):
         meta = getattr(bubble, 'transfer_meta', None)
         if meta is None or bubble.media_image is not None or bubble.media_pending:
             return False
-        if self.messageCategory(bubble) != 'image':
-            return False               # only pictures fetch themselves
+        limit = self._autoFetchLimit(bubble)
+        if limit is None:
+            return False               # not a kind that fetches itself
         try:
-            if int(meta.get('filesize') or 0) > MAX_AUTO_IMAGE_BYTES:
+            if int(meta.get('filesize') or 0) > limit:
                 return False           # big enough to be the user's decision
         except (TypeError, ValueError):
             pass
@@ -2502,10 +2865,12 @@ class NativeChatViewController(ChatViewController):
             return
 
         bubble.media_path = path
+        self._noteDecrypted(bubble, path)
         # An earlier verdict this download just disproved -- a restored key,
         # a file the server put back, a bug we fixed.
         self._forgetTransferFailure(bubble)
         self._attachAudio(bubble, path)
+        self._attachVideo(bubble, path)
         if self.messageCategory(bubble) == 'image':
             self._setTransferStatus(bubble, None)
             self._showMedia(bubble, path)
@@ -2517,9 +2882,11 @@ class NativeChatViewController(ChatViewController):
         if save_when_ready:
             self._saveFileAs(bubble, path)
             return
-        if open_when_ready and getattr(bubble, 'audio_path', None):
-            # Download on a recording means "make it playable here", not
-            # "hand it to whatever owns .m4a". The player is the point.
+        if open_when_ready and (getattr(bubble, 'audio_path', None)
+                                or getattr(bubble, 'video_path', None)):
+            # Download on a recording or a movie means "make it playable
+            # here", not "hand it to whatever owns .m4a". The player is
+            # the point.
             self.bubbleDidRequestPlayPause(bubble.msgid)
             return
         if open_when_ready:
@@ -2775,12 +3142,22 @@ class NativeChatViewController(ChatViewController):
                 return '%s: here, at %s' % (detail, path)
             return '%s: on disc at %s but not decoded as an image' % (detail, path)
 
-        if category != 'image':
-            return '%s: not an image, click to download' % detail
+        limit = self._autoFetchLimit(bubble)
+        if limit is None:
+            if category == 'video':
+                # The one automatic fetch that can be refused on age, so
+                # say the age rather than leaving "click to download" to
+                # stand for two different reasons.
+                age = self._ageInDays(bubble)
+                return ('%s: %s, click to download'
+                        % (detail, ('%.0f days old, past the %d day automatic limit'
+                                    % (age, AUTO_VIDEO_MAX_AGE_DAYS)) if age is not None
+                           else 'no readable timestamp'))
+            return '%s: not fetched automatically, click to download' % detail
         try:
-            if int(size or 0) > MAX_AUTO_IMAGE_BYTES:
+            if int(size or 0) > limit:
                 return ('%s: larger than the %d byte automatic limit, click to download'
-                        % (detail, MAX_AUTO_IMAGE_BYTES))
+                        % (detail, limit))
         except (TypeError, ValueError):
             pass
         if is_encrypted(meta) and self._decryptor() is None:
@@ -2817,7 +3194,7 @@ class NativeChatViewController(ChatViewController):
                 # status repeated per frame would bury everything else.
                 if getattr(view, '_media_status_logged', None) != status:
                     view._media_status_logged = status
-                    BlinkLogger().log_info('Media in view -- %s' % status)
+                    BlinkLogger().log_debug('Media in view -- %s' % status)
                 self.fetchMediaForBubble(view)
             if seen:
                 BlinkLogger().log_debug('%d file transfer(s) in the viewport' % seen)
@@ -3012,8 +3389,8 @@ class NativeChatViewController(ChatViewController):
         if has_link:
             present.add('links')
         found = [(key, title) for key, title in MESSAGE_CATEGORIES if key in present]
-        BlinkLogger().log_info('Filter categories present: %s'
-                               % (', '.join(key for key, _ in found) or 'none'))
+        BlinkLogger().log_debug('Filter categories present: %s'
+                                % (', '.join(key for key, _ in found) or 'none'))
         return found
 
     @objc.python_method
@@ -3059,8 +3436,8 @@ class NativeChatViewController(ChatViewController):
             selected = 0
             self.message_filter = None
         control.setSelectedSegment_(selected)
-        BlinkLogger().log_info('Filter bar: %s (selected %s)'
-                               % (' | '.join(titles), titles[selected]))
+        BlinkLogger().log_debug('Filter bar: %s (selected %s)'
+                                % (' | '.join(titles), titles[selected]))
 
     @objc.IBAction
     def filterMessages_(self, sender):

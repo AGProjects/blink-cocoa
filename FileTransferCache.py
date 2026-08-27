@@ -21,8 +21,10 @@ and a failure is remembered so a dead URL is not retried on every scroll.
 import json
 import mimetypes
 import os
+import re
 import shutil
 import uuid
+from urllib.parse import unquote
 
 from AppKit import NSImage
 from Foundation import (NSData,
@@ -41,6 +43,15 @@ from util import run_in_gui_thread
 # to this. Beyond it the user clicks -- a 40MB raw photo is a deliberate act,
 # not something scrolling past should start.
 MAX_AUTO_IMAGE_BYTES = 8 * 1024 * 1024
+
+# A video fetches itself too, but on a tighter leash: bigger allowance,
+# because even a short clip dwarfs a photograph, and only while it is
+# RECENT. A picture is cheap enough to fetch whenever it scrolls past; a
+# conversation with two years of video in it would pull down gigabytes on
+# a slow scroll through the archive, so age is what keeps the automatic
+# fetch to the clips someone is plausibly still catching up on.
+MAX_AUTO_VIDEO_BYTES = 20 * 1024 * 1024
+AUTO_VIDEO_MAX_AGE_DAYS = 7
 
 # Past this a file goes up as it is. Encrypting reads the whole thing into
 # memory and armours it, and Sylk Mobile draws the same line at 20 MB
@@ -65,6 +76,44 @@ def upload_url(base, sender, receiver, transfer_id, filename):
                                transfer_id, filename)
 
 
+# A URL that has been through quote() with its default safe set: the
+# colons are escaped and the slashes are not, so what should have been
+# https://host:9999/... arrives as https%3A//host%3A9999/...
+_OVER_ENCODED = re.compile(r'^([A-Za-z][A-Za-z0-9+.\-]*)%3[Aa]//([^/]*)(.*)$')
+_HAS_SCHEME = re.compile(r'^[A-Za-z][A-Za-z0-9+.\-]*://')
+
+
+def normalized_url(url):
+    """A transfer URL that NSURL will actually accept.
+
+    Some senders percent-encode the whole URL before putting it in the
+    envelope. NSURL.URLWithString_ answers nil for the result, and the
+    download fails with "unsupported URL" -- which reads like a network
+    problem, or like the server being wrong, and is neither.
+
+    Only the scheme and the authority are repaired, and only when the URL
+    does not already parse. A %3A inside the PATH is a character in a
+    filename: decoding it would quietly ask the server for a different
+    file, and the failure would be a 404 nobody could explain.
+    """
+    text = str(url or '').strip()
+    if not text or _HAS_SCHEME.match(text):
+        return text
+    match = _OVER_ENCODED.match(text)
+    if match is None:
+        return text
+    scheme, authority, rest = match.groups()
+    fixed = '%s://%s%s' % (scheme, unquote(authority), rest)
+    # Both forms, because which one arrived is the whole question: the
+    # journalled copy of the same transfer comes back clean, so a URL that
+    # needs repairing here was encoded by the sender on the live wire and
+    # not by anything between here and the socket.
+    BlinkLogger().log_info('Repaired an over-encoded transfer URL\n'
+                           '    as sent:   %s\n'
+                           '    as fetched: %s' % (text, fixed))
+    return fixed
+
+
 def base_url_from_transfer(url):
     """The service root behind a transfer URL, or None.
 
@@ -72,7 +121,7 @@ def base_url_from_transfer(url):
     there is -- it came from the server itself -- so the base is learned
     from one rather than assembled out of guesses about the deployment.
     """
-    text = str(url or '').split('?')[0]
+    text = normalized_url(url).split('?')[0]
     if not text:
         return None
     parts = text.rsplit('/', 4)
@@ -329,7 +378,7 @@ class FileTransferCache(object):
             waiting.append(callback)
             return None
 
-        url = str(meta.get('url') or '')
+        url = normalized_url(meta.get('url'))
         if not url:
             # Nothing to ask, and nothing that will ever make one appear.
             self._failed[key] = 'no url in the envelope'
@@ -392,7 +441,7 @@ class FileTransferCache(object):
         callback(True/False, detail) runs on the GUI thread when it is over.
         """
         key = str(meta.get('transfer_id') or '')
-        url = str(meta.get('url') or '')
+        url = normalized_url(meta.get('url'))
         if not key or not url:
             self._notifyUpload(callback, False, 'no url for the transfer')
             return False

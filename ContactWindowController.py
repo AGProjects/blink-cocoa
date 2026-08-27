@@ -513,8 +513,6 @@ class ContactWindowController(NSWindowController):
         nc.add_observer(self, name="BonjourAccountRegistrationDidFail")
         nc.add_observer(self, name="BonjourAccountRegistrationDidEnd")
         nc.add_observer(self, name="CFGSettingsObjectDidChange")
-        nc.add_observer(self, name="CFGSettingsObjectWasCreated")
-        nc.add_observer(self, name="ChatReplicationJournalEntryReceived")
         nc.add_observer(self, name="DefaultAudioDeviceDidChange")
         nc.add_observer(self, name="LDAPDirectorySearchFoundContact")
         nc.add_observer(self, name="HistoryEntriesVisibilityChanged")
@@ -4625,9 +4623,6 @@ class ContactWindowController(NSWindowController):
     def newAudioDeviceTimeout_(self, timer):
         NSApp.stopModalWithCode_(NSAlertAlternateReturn)
 
-    def newAccountHasBeenAddedNotice_(self, timer):
-        NSApp.stopModalWithCode_(NSAlertAlternateReturn)
-
     def contactSelectionChanged_(self, notification):
         self.updateStartSessionButtons()
         self.switchMessagePaneToSelectedContact()
@@ -6874,40 +6869,6 @@ class ContactWindowController(NSWindowController):
             session.setVideoConsumer(session.video_consumer)
 
     @objc.python_method
-    def _NH_CFGSettingsObjectWasCreated(self, notification):
-        if isinstance(notification.sender, Account):
-            account = notification.sender
-
-            if account is not BonjourAccount() and not account.chat.replication_password:
-                if NSApp.delegate().icloud_enabled:
-                    # Blink Pro is using iCloud for password sync so is safe to create it on any Blink instance
-                    account.chat.replication_password = ''.join(random.sample(string.ascii_letters+string.digits, 16))
-                    account.save()
-                elif NSApp.delegate().applicationName == 'SIP2SIP':
-                    if account.id in self.created_accounts:
-                        # We have created the account so is safe to auto-generate chat replication password
-                        account.chat.replication_password = ''.join(random.sample(string.ascii_letters+string.digits, 16))
-                        account.save()
-                    else:
-                        NSApp.activateIgnoringOtherApps_(True)
-                        panel = NSGetInformationalAlertPanel(NSLocalizedString("New Account Added", "Window title"),
-                                                             NSLocalizedString("To enable replication of Chat messages between multiple clients, you must copy your Chat "
-                                                                               "replication password from another instance where the password has already been set. You "
-                                                                               "can find the Chat replication password in the Advanced section of your account.", "Label"),
-                                                             NSLocalizedString("OK", "Button title"), None, None)
-                        timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(20, self, "newAccountHasBeenAddedNotice:", panel, False)
-                        NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSModalPanelRunLoopMode)
-                        NSRunLoop.currentRunLoop().addTimer_forMode_(timer, NSDefaultRunLoopMode)
-                        session = NSApp.beginModalSessionForWindow_(panel)
-                        while True:
-                            ret = NSApp.runModalSession_(session)
-                            if ret != NSRunContinuesResponse:
-                                break
-                        NSApp.endModalSession_(session)
-                        panel.close()
-                        NSReleaseAlertPanel(panel)
-
-    @objc.python_method
     def _NH_CFGSettingsObjectDidChange(self, notification):
         settings = SIPSimpleSettings()
         if "audio.silent" in notification.data.modified:
@@ -6971,14 +6932,6 @@ class ContactWindowController(NSWindowController):
             if self.ldap_found_contacts:
                 self.searchResultsModel.groupsList = self.local_found_contacts + self.ldap_found_contacts
                 self.searchOutline.reloadData()
-
-    @objc.python_method
-    def _NH_ChatReplicationJournalEntryReceived(self, notification):
-        data = notification.data.chat_message
-        hasChat = any(sess.hasStreamOfType("chat") for sess in self.sessionControllersManager.sessionControllers if sess.account.id == data['local_uri'] and sess.remoteAOR == data['remote_uri'])
-
-        if not hasChat:
-            self.startSessionWithTarget(data['remote_uri'], media_type="chat", local_uri=data['local_uri'])
 
     @objc.python_method
     def _NH_BlinkProposalDidFail(self, notification):

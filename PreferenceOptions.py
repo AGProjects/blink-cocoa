@@ -121,7 +121,7 @@ def formatName(name):
     }
     return " ".join(d.get(s, s.capitalize()) for s in name.split("_"))
 
-SECURE_OPTIONS=('web_password', 'replication_password')
+SECURE_OPTIONS=('web_password',)
 
 class HiddenOption(object):
     """Marker class to hide options in the preferences panel"""
@@ -2120,11 +2120,9 @@ SettingDescription = {
                       'answering_machine.show_in_alert_panel': NSLocalizedString("Show In Alert Panel", "Label"),
                       'chat.auto_accept': NSLocalizedString("Automatically Accept Chat Requests from Known Contacts", "Label"),
                       'chat.enable_encryption': NSLocalizedString("OTR Encryption", "Label"),
-                      'chat.disable_replication': NSLocalizedString("Disable Replication", "Label"),
-                      'chat.replication_password': NSLocalizedString("Replication Password", "Label"),
                       'chat.disabled': NSLocalizedString("Disabled", "Label"),
                       'chat.disable_history': NSLocalizedString("Disable History", "Label"),
-                      'chat.enable_msrp_chat': NSLocalizedString("Enable MSRP Chat", "Label"),
+                      'chat.enable_msrp_chat': NSLocalizedString("Enable MSRP Chat Conversations", "Label"),
                       'contacts.enable_address_book': NSLocalizedString("Show Address Book", "Label"),
                       'contacts.enable_incoming_calls_group': NSLocalizedString("Show Incoming Calls", "Label"),
                       'contacts.enable_missed_calls_group': NSLocalizedString("Show Missed Calls", "Label"),
@@ -2287,7 +2285,7 @@ GeneralSettingsOrder = {
                        'h264': ['profile', 'level']
                        }
 
-AccountSectionOrder = ('auth', 'audio', 'message_summary', 'sounds', 'chat', 'sms', 'conference', 'web_alert', 'pstn', 'tls', 'sip', 'rtp', 'msrp', 'nat_traversal', 'presence', 'xcap', 'server', 'ldap', 'gui')
+AccountSectionOrder = ('auth', 'audio', 'message_summary', 'sounds', 'sms', 'conference', 'web_alert', 'pstn', 'tls', 'sip', 'rtp', 'msrp', 'nat_traversal', 'presence', 'xcap', 'server', 'ldap', 'gui')
 
 AdvancedGeneralSectionOrder = ('sip', 'rtp', 'tls', 'gui', 'logs')
 
@@ -2322,7 +2320,6 @@ ToolTips = {
              'audio.echo_canceller.enabled': NSLocalizedString("If disabled, acoustic echo cancelation and noise reduction are disabled and the sampling rate is raised to 48kHz to achieve best audio quality possible. To increase audio quality, also disable Use ambient noise reduction in System Preferences in the microphone input section. When enabled, the sampling rate of the audio engine is set to 32kHz.", "Label"),
              'auth.username': NSLocalizedString("Enter authentication username if different than the SIP Address username", "Label"),
              'chat.enable_msrp_chat': NSLocalizedString("Offer real time chat sessions over MSRP. When disabled, conversations use SIP messages and the chat window is not reachable", "Label"),
-             'chat.replication_password': NSLocalizedString("Enter a password to encrypt the content of your messages on the replication server", "Label"),
              'gui.account_label': NSLocalizedString("Label displayed in account popup up menu instead of the sip address", "Label"),
              'gui.idle_threshold': NSLocalizedString("Interval after which my availability is set to away", "Label"),
              'gui.rtt_threshold': NSLocalizedString("Value above which the RTT graphic is displayed with red color", "Label"),

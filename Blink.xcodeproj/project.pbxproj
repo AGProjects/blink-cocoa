@@ -164,20 +164,6 @@
 		1F22731112B554F50010A8B2 /* AnsweringMachineSetting.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B24D06F110FD522003A18DE /* AnsweringMachineSetting.xib */; };
 		1F22731212B554F50010A8B2 /* audio_small.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BDAE17211113B8200AC1D7A /* audio_small.png */; };
 		1F22731312B554F50010A8B2 /* SMSViewController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B06A429111CFE74001D41E5 /* SMSViewController.py */; };
-		AD00000000000000004F0001 /* MessagePaneController.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004F0000 /* MessagePaneController.py */; };
-		AD00000000000000006F0001 /* FileTransferCache.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000006F0000 /* FileTransferCache.py */; };
-		AD00000000000000005F0001 /* MapTileCache.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005F0000 /* MapTileCache.py */; };
-		AD00000000000000004C0001 /* MessageListView.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004C0000 /* MessageListView.py */; };
-		AD00000000000000004B0001 /* MessageBubbleView.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004B0000 /* MessageBubbleView.py */; };
-		AD00000000000000005C0001 /* AudioPlayback.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005C0000 /* AudioPlayback.py */; };
-		AD0000000000000000720001 /* SmileyPicker.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000720000 /* SmileyPicker.py */; };
-		AD0000000000000000700001 /* AudioRecorder.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000700000 /* AudioRecorder.py */; };
-		AD0000000000000000710001 /* AudioRecorderView.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000710000 /* AudioRecorderView.py */; };
-		AD00000000000000005D0001 /* MacLocation.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005D0000 /* MacLocation.py */; };
-		AD00000000000000004E0001 /* NativeChatViewController.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004E0000 /* NativeChatViewController.py */; };
-		AD00000000000000005B0001 /* MessageView.xib in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005B0000 /* MessageView.xib */; };
-		AD00000000000000005A0001 /* SylkLocation.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005A0000 /* SylkLocation.py */; };
-		AD00000000000000004D0001 /* MessageHost.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004D0000 /* MessageHost.py */; };
 		1F22731812B554F50010A8B2 /* PresenceOfflineWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B29EF3611382F65009DA9B0 /* PresenceOfflineWindow.xib */; };
 		1F22731A12B554F50010A8B2 /* 200901@login.zipdx.com.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F3218B411639E4300ADBDCD /* 200901@login.zipdx.com.tiff */; };
 		1F22731B12B554F50010A8B2 /* blink-full-72dpi.tif in Resources */ = {isa = PBXBuildFile; fileRef = 1F85BE3C117CC33D0054888F /* blink-full-72dpi.tif */; };
@@ -388,20 +374,6 @@
 		1F35CFEE17894FFF00C6FE38 /* AnsweringMachineSetting.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B24D06F110FD522003A18DE /* AnsweringMachineSetting.xib */; };
 		1F35CFEF17894FFF00C6FE38 /* audio_small.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BDAE17211113B8200AC1D7A /* audio_small.png */; };
 		1F35CFF017894FFF00C6FE38 /* SMSViewController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B06A429111CFE74001D41E5 /* SMSViewController.py */; };
-		AD00000000000000004F0002 /* MessagePaneController.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004F0000 /* MessagePaneController.py */; };
-		AD00000000000000006F0002 /* FileTransferCache.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000006F0000 /* FileTransferCache.py */; };
-		AD00000000000000005F0002 /* MapTileCache.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005F0000 /* MapTileCache.py */; };
-		AD00000000000000004C0002 /* MessageListView.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004C0000 /* MessageListView.py */; };
-		AD00000000000000004B0002 /* MessageBubbleView.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004B0000 /* MessageBubbleView.py */; };
-		AD00000000000000005C0002 /* AudioPlayback.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005C0000 /* AudioPlayback.py */; };
-		AD0000000000000000720002 /* SmileyPicker.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000720000 /* SmileyPicker.py */; };
-		AD0000000000000000700002 /* AudioRecorder.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000700000 /* AudioRecorder.py */; };
-		AD0000000000000000710002 /* AudioRecorderView.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000710000 /* AudioRecorderView.py */; };
-		AD00000000000000005D0002 /* MacLocation.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005D0000 /* MacLocation.py */; };
-		AD00000000000000004E0002 /* NativeChatViewController.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004E0000 /* NativeChatViewController.py */; };
-		AD00000000000000005B0002 /* MessageView.xib in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005B0000 /* MessageView.xib */; };
-		AD00000000000000005A0002 /* SylkLocation.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005A0000 /* SylkLocation.py */; };
-		AD00000000000000004D0002 /* MessageHost.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004D0000 /* MessageHost.py */; };
 		1F35CFF217894FFF00C6FE38 /* PresenceOfflineWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B29EF3611382F65009DA9B0 /* PresenceOfflineWindow.xib */; };
 		1F35CFF417894FFF00C6FE38 /* 200901@login.zipdx.com.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 1F3218B411639E4300ADBDCD /* 200901@login.zipdx.com.tiff */; };
 		1F35CFF517894FFF00C6FE38 /* blink-full-72dpi.tif in Resources */ = {isa = PBXBuildFile; fileRef = 1F85BE3C117CC33D0054888F /* blink-full-72dpi.tif */; };
@@ -620,12 +592,6 @@
 		1F6896A2140CE18E00DA5329 /* screenshot.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F68969F140CE18E00DA5329 /* screenshot.png */; };
 		1F6896A3140CE18E00DA5329 /* screenshot.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F68969F140CE18E00DA5329 /* screenshot.png */; };
 		1F6963F217BF770900985747 /* locked-green.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F6963F117BF770900985747 /* locked-green.png */; };
-		1FAA5E100000000000000202 /* light_linen.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA5E100000000000000201 /* light_linen.png */; };
-		1FAA5E100000000000000203 /* light_linen.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA5E100000000000000201 /* light_linen.png */; };
-		1FAA5E100000000000000204 /* light_linen.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA5E100000000000000201 /* light_linen.png */; };
-		1FAA5E100000000000000102 /* dark_linen.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA5E100000000000000101 /* dark_linen.png */; };
-		1FAA5E100000000000000103 /* dark_linen.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA5E100000000000000101 /* dark_linen.png */; };
-		1FAA5E100000000000000104 /* dark_linen.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA5E100000000000000101 /* dark_linen.png */; };
 		1F6963F317BF770900985747 /* locked-green.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F6963F117BF770900985747 /* locked-green.png */; };
 		1F6963F517BF770900985747 /* locked-green.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F6963F117BF770900985747 /* locked-green.png */; };
 		1F6963F717BF771A00985747 /* unlocked-red.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F6963F617BF771A00985747 /* unlocked-red.png */; };
@@ -725,6 +691,12 @@
 		1FA490911549631A0011EE27 /* AddressBookURL-plugin.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FA490801549631A0011EE27 /* AddressBookURL-plugin.py */; };
 		1FA6252013828E2500DFC8E3 /* editor.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FA6251F13828E2500DFC8E3 /* editor.png */; };
 		1FA6252113828E2500DFC8E3 /* editor.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FA6251F13828E2500DFC8E3 /* editor.png */; };
+		1FAA5E100000000000000102 /* dark_linen.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA5E100000000000000101 /* dark_linen.png */; };
+		1FAA5E100000000000000103 /* dark_linen.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA5E100000000000000101 /* dark_linen.png */; };
+		1FAA5E100000000000000104 /* dark_linen.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA5E100000000000000101 /* dark_linen.png */; };
+		1FAA5E100000000000000202 /* light_linen.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA5E100000000000000201 /* light_linen.png */; };
+		1FAA5E100000000000000203 /* light_linen.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA5E100000000000000201 /* light_linen.png */; };
+		1FAA5E100000000000000204 /* light_linen.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA5E100000000000000201 /* light_linen.png */; };
 		1FAA839E16566D8C00C4C212 /* BlockedContact.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA839D16566D8C00C4C212 /* BlockedContact.py */; };
 		1FAA839F16566D8C00C4C212 /* BlockedContact.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA839D16566D8C00C4C212 /* BlockedContact.py */; };
 		1FAA83A51656745500C4C212 /* BlockedContact.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA83A91656745500C4C212 /* BlockedContact.xib */; };
@@ -898,20 +870,6 @@
 		2B01284E10939236009B2112 /* AccountSettings.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B01284C10939236009B2112 /* AccountSettings.xib */; };
 		2B0132D5109E6256009B2112 /* FancyTabSwitcher.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B0132D4109E6256009B2112 /* FancyTabSwitcher.py */; };
 		2B06A42A111CFE74001D41E5 /* SMSViewController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B06A429111CFE74001D41E5 /* SMSViewController.py */; };
-		AD00000000000000004F0003 /* MessagePaneController.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004F0000 /* MessagePaneController.py */; };
-		AD00000000000000006F0003 /* FileTransferCache.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000006F0000 /* FileTransferCache.py */; };
-		AD00000000000000005F0003 /* MapTileCache.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005F0000 /* MapTileCache.py */; };
-		AD00000000000000004C0003 /* MessageListView.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004C0000 /* MessageListView.py */; };
-		AD00000000000000004B0003 /* MessageBubbleView.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004B0000 /* MessageBubbleView.py */; };
-		AD00000000000000005C0003 /* AudioPlayback.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005C0000 /* AudioPlayback.py */; };
-		AD0000000000000000720003 /* SmileyPicker.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000720000 /* SmileyPicker.py */; };
-		AD0000000000000000700003 /* AudioRecorder.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000700000 /* AudioRecorder.py */; };
-		AD0000000000000000710003 /* AudioRecorderView.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000710000 /* AudioRecorderView.py */; };
-		AD00000000000000005D0003 /* MacLocation.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005D0000 /* MacLocation.py */; };
-		AD00000000000000004E0003 /* NativeChatViewController.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004E0000 /* NativeChatViewController.py */; };
-		AD00000000000000005B0003 /* MessageView.xib in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005B0000 /* MessageView.xib */; };
-		AD00000000000000005A0003 /* SylkLocation.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005A0000 /* SylkLocation.py */; };
-		AD00000000000000004D0003 /* MessageHost.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004D0000 /* MessageHost.py */; };
 		2B0C236B107BB2FA008266C7 /* incoming_file.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B0C2369107BB2FA008266C7 /* incoming_file.png */; };
 		2B0C236C107BB2FB008266C7 /* upfile.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B0C236A107BB2FA008266C7 /* upfile.png */; };
 		2B0CE72B10CD824400325F30 /* SMSSession.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B0CE72910CD824400325F30 /* SMSSession.xib */; };
@@ -1045,6 +1003,51 @@
 		85E8550A10F643350083D346 /* settings.py in Copy Configuration Package */ = {isa = PBXBuildFile; fileRef = 85E8550610F643350083D346 /* settings.py */; };
 		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
+		AD00000000000000004B0001 /* MessageBubbleView.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004B0000 /* MessageBubbleView.py */; };
+		AD00000000000000004B0002 /* MessageBubbleView.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004B0000 /* MessageBubbleView.py */; };
+		AD00000000000000004B0003 /* MessageBubbleView.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004B0000 /* MessageBubbleView.py */; };
+		AD00000000000000004C0001 /* MessageListView.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004C0000 /* MessageListView.py */; };
+		AD00000000000000004C0002 /* MessageListView.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004C0000 /* MessageListView.py */; };
+		AD00000000000000004C0003 /* MessageListView.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004C0000 /* MessageListView.py */; };
+		AD00000000000000004D0001 /* MessageHost.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004D0000 /* MessageHost.py */; };
+		AD00000000000000004D0002 /* MessageHost.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004D0000 /* MessageHost.py */; };
+		AD00000000000000004D0003 /* MessageHost.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004D0000 /* MessageHost.py */; };
+		AD00000000000000004E0001 /* NativeChatViewController.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004E0000 /* NativeChatViewController.py */; };
+		AD00000000000000004E0002 /* NativeChatViewController.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004E0000 /* NativeChatViewController.py */; };
+		AD00000000000000004E0003 /* NativeChatViewController.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004E0000 /* NativeChatViewController.py */; };
+		AD00000000000000004F0001 /* MessagePaneController.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004F0000 /* MessagePaneController.py */; };
+		AD00000000000000004F0002 /* MessagePaneController.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004F0000 /* MessagePaneController.py */; };
+		AD00000000000000004F0003 /* MessagePaneController.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004F0000 /* MessagePaneController.py */; };
+		AD00000000000000005A0001 /* SylkLocation.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005A0000 /* SylkLocation.py */; };
+		AD00000000000000005A0002 /* SylkLocation.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005A0000 /* SylkLocation.py */; };
+		AD00000000000000005A0003 /* SylkLocation.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005A0000 /* SylkLocation.py */; };
+		AD00000000000000005B0001 /* Base in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005B0000 /* Base */; };
+		AD00000000000000005B0002 /* Base in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005B0000 /* Base */; };
+		AD00000000000000005B0003 /* Base in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005B0000 /* Base */; };
+		AD00000000000000005C0001 /* AudioPlayback.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005C0000 /* AudioPlayback.py */; };
+		AD00000000000000005C0002 /* AudioPlayback.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005C0000 /* AudioPlayback.py */; };
+		AD00000000000000005C0003 /* AudioPlayback.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005C0000 /* AudioPlayback.py */; };
+		AD00000000000000005D0001 /* MacLocation.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005D0000 /* MacLocation.py */; };
+		AD00000000000000005D0002 /* MacLocation.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005D0000 /* MacLocation.py */; };
+		AD00000000000000005D0003 /* MacLocation.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005D0000 /* MacLocation.py */; };
+		AD00000000000000005F0001 /* MapTileCache.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005F0000 /* MapTileCache.py */; };
+		AD00000000000000005F0002 /* MapTileCache.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005F0000 /* MapTileCache.py */; };
+		AD00000000000000005F0003 /* MapTileCache.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005F0000 /* MapTileCache.py */; };
+		AD00000000000000006F0001 /* FileTransferCache.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000006F0000 /* FileTransferCache.py */; };
+		AD00000000000000006F0002 /* FileTransferCache.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000006F0000 /* FileTransferCache.py */; };
+		AD00000000000000006F0003 /* FileTransferCache.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000006F0000 /* FileTransferCache.py */; };
+		AD0000000000000000700001 /* AudioRecorder.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000700000 /* AudioRecorder.py */; };
+		AD0000000000000000700002 /* AudioRecorder.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000700000 /* AudioRecorder.py */; };
+		AD0000000000000000700003 /* AudioRecorder.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000700000 /* AudioRecorder.py */; };
+		AD0000000000000000710001 /* AudioRecorderView.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000710000 /* AudioRecorderView.py */; };
+		AD0000000000000000710002 /* AudioRecorderView.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000710000 /* AudioRecorderView.py */; };
+		AD0000000000000000710003 /* AudioRecorderView.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000710000 /* AudioRecorderView.py */; };
+		AD0000000000000000720001 /* SmileyPicker.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000720000 /* SmileyPicker.py */; };
+		AD0000000000000000720002 /* SmileyPicker.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000720000 /* SmileyPicker.py */; };
+		AD0000000000000000720003 /* SmileyPicker.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000720000 /* SmileyPicker.py */; };
+		AD0000000000000000730001 /* VideoPlayback.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000730000 /* VideoPlayback.py */; };
+		AD0000000000000000730002 /* VideoPlayback.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000730000 /* VideoPlayback.py */; };
+		AD0000000000000000730003 /* VideoPlayback.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000730000 /* VideoPlayback.py */; };
 		DE2607221A93A9D6004FAEF8 /* Profiler.py in Resources */ = {isa = PBXBuildFile; fileRef = DE2607211A93A9D6004FAEF8 /* Profiler.py */; };
 		DE2607231A93A9D6004FAEF8 /* Profiler.py in Resources */ = {isa = PBXBuildFile; fileRef = DE2607211A93A9D6004FAEF8 /* Profiler.py */; };
 		DE2607251A93A9D6004FAEF8 /* Profiler.py in Resources */ = {isa = PBXBuildFile; fileRef = DE2607211A93A9D6004FAEF8 /* Profiler.py */; };
@@ -1519,8 +1522,6 @@
 		1F689570140BA93100DA5329 /* panel-info.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "panel-info.png"; path = "icons/panel-info.png"; sourceTree = "<group>"; };
 		1F68969F140CE18E00DA5329 /* screenshot.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = screenshot.png; path = icons/screenshot.png; sourceTree = "<group>"; };
 		1F6963F117BF770900985747 /* locked-green.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "locked-green.png"; path = "icons/locked-green.png"; sourceTree = "<group>"; };
-		1FAA5E100000000000000201 /* light_linen.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = light_linen.png; path = icons/light_linen.png; sourceTree = "<group>"; };
-		1FAA5E100000000000000101 /* dark_linen.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = dark_linen.png; path = icons/dark_linen.png; sourceTree = "<group>"; };
 		1F6963F617BF771A00985747 /* unlocked-red.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "unlocked-red.png"; path = "icons/unlocked-red.png"; sourceTree = "<group>"; };
 		1F6963FB17BF777D00985747 /* locked-orange.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "locked-orange.png"; path = "icons/locked-orange.png"; sourceTree = "<group>"; };
 		1F6963FC17BF777D00985747 /* locked-yellow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "locked-yellow.png"; path = "icons/locked-yellow.png"; sourceTree = "<group>"; };
@@ -1652,6 +1653,8 @@
 		1FA4907F1549631A0011EE27 /* AddressBookURL-plugin-setup.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = "AddressBookURL-plugin-setup.py"; path = "PlugIn/AddressBook/AddressBookURL-plugin-setup.py"; sourceTree = "<group>"; };
 		1FA490801549631A0011EE27 /* AddressBookURL-plugin.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = "AddressBookURL-plugin.py"; path = "PlugIn/AddressBook/AddressBookURL-plugin.py"; sourceTree = "<group>"; };
 		1FA6251F13828E2500DFC8E3 /* editor.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = editor.png; path = icons/editor.png; sourceTree = "<group>"; };
+		1FAA5E100000000000000101 /* dark_linen.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = dark_linen.png; path = icons/dark_linen.png; sourceTree = "<group>"; };
+		1FAA5E100000000000000201 /* light_linen.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = light_linen.png; path = icons/light_linen.png; sourceTree = "<group>"; };
 		1FAA839D16566D8C00C4C212 /* BlockedContact.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = BlockedContact.py; sourceTree = "<group>"; };
 		1FAA83A81656745500C4C212 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/BlockedContact.xib; sourceTree = "<group>"; };
 		1FAD022C18C8010C00FBE7EE /* Grab.aif */ = {isa = PBXFileReference; lastKnownFileType = file; name = Grab.aif; path = sounds/Grab.aif; sourceTree = "<group>"; };
@@ -1790,20 +1793,6 @@
 		2B01284D10939236009B2112 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/AccountSettings.xib; sourceTree = "<group>"; };
 		2B0132D4109E6256009B2112 /* FancyTabSwitcher.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = FancyTabSwitcher.py; sourceTree = "<group>"; };
 		2B06A429111CFE74001D41E5 /* SMSViewController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SMSViewController.py; sourceTree = "<group>"; };
-		AD00000000000000004F0000 /* MessagePaneController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MessagePaneController.py; sourceTree = "<group>"; };
-		AD00000000000000006F0000 /* FileTransferCache.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = FileTransferCache.py; sourceTree = "<group>"; };
-		AD00000000000000005F0000 /* MapTileCache.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MapTileCache.py; sourceTree = "<group>"; };
-		AD00000000000000004C0000 /* MessageListView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MessageListView.py; sourceTree = "<group>"; };
-		AD00000000000000004B0000 /* MessageBubbleView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MessageBubbleView.py; sourceTree = "<group>"; };
-		AD00000000000000005C0000 /* AudioPlayback.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AudioPlayback.py; sourceTree = "<group>"; };
-		AD0000000000000000720000 /* SmileyPicker.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SmileyPicker.py; sourceTree = "<group>"; };
-		AD0000000000000000700000 /* AudioRecorder.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AudioRecorder.py; sourceTree = "<group>"; };
-		AD0000000000000000710000 /* AudioRecorderView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AudioRecorderView.py; sourceTree = "<group>"; };
-		AD00000000000000005D0000 /* MacLocation.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MacLocation.py; sourceTree = "<group>"; };
-		AD00000000000000004E0000 /* NativeChatViewController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = NativeChatViewController.py; sourceTree = "<group>"; };
-		AD00000000000000005B0000 /* MessageView.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MessageView.xib; sourceTree = "<group>"; };
-		AD00000000000000005A0000 /* SylkLocation.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SylkLocation.py; sourceTree = "<group>"; };
-		AD00000000000000004D0000 /* MessageHost.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MessageHost.py; sourceTree = "<group>"; };
 		2B0C2369107BB2FA008266C7 /* incoming_file.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = incoming_file.png; path = icons/incoming_file.png; sourceTree = "<group>"; };
 		2B0C236A107BB2FA008266C7 /* upfile.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = upfile.png; path = icons/upfile.png; sourceTree = "<group>"; };
 		2B0CE72A10CD824400325F30 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/SMSSession.xib; sourceTree = "<group>"; };
@@ -1937,6 +1926,21 @@
 		85E8550610F643350083D346 /* settings.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = settings.py; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* Blink.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Blink.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AD00000000000000004B0000 /* MessageBubbleView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MessageBubbleView.py; sourceTree = "<group>"; };
+		AD00000000000000004C0000 /* MessageListView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MessageListView.py; sourceTree = "<group>"; };
+		AD00000000000000004D0000 /* MessageHost.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MessageHost.py; sourceTree = "<group>"; };
+		AD00000000000000004E0000 /* NativeChatViewController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = NativeChatViewController.py; sourceTree = "<group>"; };
+		AD00000000000000004F0000 /* MessagePaneController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MessagePaneController.py; sourceTree = "<group>"; };
+		AD00000000000000005A0000 /* SylkLocation.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SylkLocation.py; sourceTree = "<group>"; };
+		AD00000000000000005B0000 /* Base */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MessageView.xib; sourceTree = "<group>"; };
+		AD00000000000000005C0000 /* AudioPlayback.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AudioPlayback.py; sourceTree = "<group>"; };
+		AD00000000000000005D0000 /* MacLocation.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MacLocation.py; sourceTree = "<group>"; };
+		AD00000000000000005F0000 /* MapTileCache.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MapTileCache.py; sourceTree = "<group>"; };
+		AD00000000000000006F0000 /* FileTransferCache.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = FileTransferCache.py; sourceTree = "<group>"; };
+		AD0000000000000000700000 /* AudioRecorder.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AudioRecorder.py; sourceTree = "<group>"; };
+		AD0000000000000000710000 /* AudioRecorderView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AudioRecorderView.py; sourceTree = "<group>"; };
+		AD0000000000000000720000 /* SmileyPicker.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SmileyPicker.py; sourceTree = "<group>"; };
+		AD0000000000000000730000 /* VideoPlayback.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoPlayback.py; sourceTree = "<group>"; };
 		DE2607211A93A9D6004FAEF8 /* Profiler.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = Profiler.py; sourceTree = "<group>"; };
 		DE3A672F13A8A987006EEB0F /* default.crt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = default.crt; sourceTree = "<group>"; };
 		DE3AC1CA174F7F57009A6CE3 /* Python.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Python.framework; path = Distribution/Frameworks/Python.framework; sourceTree = "<group>"; };
@@ -2274,12 +2278,13 @@
 				AD00000000000000004C0000 /* MessageListView.py */,
 				AD00000000000000004B0000 /* MessageBubbleView.py */,
 				AD00000000000000005C0000 /* AudioPlayback.py */,
+				AD0000000000000000730000 /* VideoPlayback.py */,
 				AD0000000000000000720000 /* SmileyPicker.py */,
 				AD0000000000000000700000 /* AudioRecorder.py */,
 				AD0000000000000000710000 /* AudioRecorderView.py */,
 				AD00000000000000005D0000 /* MacLocation.py */,
 				AD00000000000000004E0000 /* NativeChatViewController.py */,
-				AD00000000000000005B0000 /* MessageView.xib */,
+				AD00000000000000005B0000 /* Base */,
 				AD00000000000000005A0000 /* SylkLocation.py */,
 				AD00000000000000004D0000 /* MessageHost.py */,
 				2B0CE72910CD824400325F30 /* SMSSession.xib */,
@@ -2995,12 +3000,13 @@
 				AD00000000000000004C0001 /* MessageListView.py in Resources */,
 				AD00000000000000004B0001 /* MessageBubbleView.py in Resources */,
 				AD00000000000000005C0001 /* AudioPlayback.py in Resources */,
+				AD0000000000000000730001 /* VideoPlayback.py in Resources */,
 				AD0000000000000000720001 /* SmileyPicker.py in Resources */,
 				AD0000000000000000700001 /* AudioRecorder.py in Resources */,
 				AD0000000000000000710001 /* AudioRecorderView.py in Resources */,
 				AD00000000000000005D0001 /* MacLocation.py in Resources */,
 				AD00000000000000004E0001 /* NativeChatViewController.py in Resources */,
-				AD00000000000000005B0001 /* MessageView.xib in Resources */,
+				AD00000000000000005B0001 /* Base in Resources */,
 				AD00000000000000005A0001 /* SylkLocation.py in Resources */,
 				AD00000000000000004D0001 /* MessageHost.py in Resources */,
 				1F22731812B554F50010A8B2 /* PresenceOfflineWindow.xib in Resources */,
@@ -3279,12 +3285,13 @@
 				AD00000000000000004C0002 /* MessageListView.py in Resources */,
 				AD00000000000000004B0002 /* MessageBubbleView.py in Resources */,
 				AD00000000000000005C0002 /* AudioPlayback.py in Resources */,
+				AD0000000000000000730002 /* VideoPlayback.py in Resources */,
 				AD0000000000000000720002 /* SmileyPicker.py in Resources */,
 				AD0000000000000000700002 /* AudioRecorder.py in Resources */,
 				AD0000000000000000710002 /* AudioRecorderView.py in Resources */,
 				AD00000000000000005D0002 /* MacLocation.py in Resources */,
 				AD00000000000000004E0002 /* NativeChatViewController.py in Resources */,
-				AD00000000000000005B0002 /* MessageView.xib in Resources */,
+				AD00000000000000005B0002 /* Base in Resources */,
 				AD00000000000000005A0002 /* SylkLocation.py in Resources */,
 				AD00000000000000004D0002 /* MessageHost.py in Resources */,
 				1F35CFF217894FFF00C6FE38 /* PresenceOfflineWindow.xib in Resources */,
@@ -3584,12 +3591,13 @@
 				AD00000000000000004C0003 /* MessageListView.py in Resources */,
 				AD00000000000000004B0003 /* MessageBubbleView.py in Resources */,
 				AD00000000000000005C0003 /* AudioPlayback.py in Resources */,
+				AD0000000000000000730003 /* VideoPlayback.py in Resources */,
 				AD0000000000000000720003 /* SmileyPicker.py in Resources */,
 				AD0000000000000000700003 /* AudioRecorder.py in Resources */,
 				AD0000000000000000710003 /* AudioRecorderView.py in Resources */,
 				AD00000000000000005D0003 /* MacLocation.py in Resources */,
 				AD00000000000000004E0003 /* NativeChatViewController.py in Resources */,
-				AD00000000000000005B0003 /* MessageView.xib in Resources */,
+				AD00000000000000005B0003 /* Base in Resources */,
 				AD00000000000000005A0003 /* SylkLocation.py in Resources */,
 				AD00000000000000004D0003 /* MessageHost.py in Resources */,
 				2B29EF3811382F65009DA9B0 /* PresenceOfflineWindow.xib in Resources */,
@@ -4593,7 +4601,7 @@
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 942;
+				CURRENT_PROJECT_VERSION = 943;
 				DEVELOPMENT_TEAM = 4DFEFUDLKZ;
 				ENABLE_HARDENED_RUNTIME = YES;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
@@ -4619,8 +4627,8 @@
 					"$(PROJECT_DIR)/Distribution/Frameworks",
 					"$(PROJECT_DIR)/Distribution/Frameworks/libs",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 11.5;
-				MARKETING_VERSION = 9.4.9;
+				MACOSX_DEPLOYMENT_TARGET = 15.6;
+				MARKETING_VERSION = 9.5.0;
 				ONLY_ACTIVE_ARCH = NO;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				OTHER_CODE_SIGN_FLAGS = "";
@@ -4644,7 +4652,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 942;
+				CURRENT_PROJECT_VERSION = 943;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 4DFEFUDLKZ;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -4669,8 +4677,8 @@
 					"$(PROJECT_DIR)/Distribution/Frameworks",
 					"$(PROJECT_DIR)/Distribution/Frameworks/libs",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 11.5;
-				MARKETING_VERSION = 9.4.9;
+				MACOSX_DEPLOYMENT_TARGET = 15.6;
+				MARKETING_VERSION = 9.5.0;
 				ONLY_ACTIVE_ARCH = NO;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				OTHER_CODE_SIGN_FLAGS = "";

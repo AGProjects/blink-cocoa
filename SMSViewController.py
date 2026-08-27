@@ -327,6 +327,7 @@ class SMSViewController(NSObject):
     chatOtrSmpWindow = None
     dns_lookup_in_progress = False
     last_failure_reason = None
+    last_route_failure_reason = None
     otr_negotiation_timer = None
     pgp_encrypted = False
     bonjour_lookup_enabled = True
@@ -2152,6 +2153,10 @@ class SMSViewController(NSObject):
     @run_in_gui_thread
     def setRoutesResolved(self, routes):
         self.routes = routes
+        # Cleared so the next stretch without a route logs its reason again
+        # instead of being deduped against a failure we have since recovered
+        # from.
+        self.last_route_failure_reason = None
         
         if self.routes[0] and self.routes[0] != self.last_route:
             self.last_route = self.routes[0]
@@ -2172,9 +2177,20 @@ class SMSViewController(NSObject):
 
         self.stop_queue()
 
-        if self.last_failure_reason != reason:
-            self.chatViewController.showSystemMessage(reason, ISOTimestamp.now(), True)
-            self.last_failure_reason = reason
+        # Not a note in the transcript. Losing the route is our side of the
+        # wire giving up -- a transport timeout, a DNS dead end, the laptop
+        # off the network -- and the far end has said nothing. The messages
+        # below keep their pending clock and the heartbeat resends them, so
+        # a red line here would announce a failure that has not happened
+        # yet and that the user is given no way to act on. The reason goes
+        # to the log, where a raw PJSIP string belongs.
+        # Its own dedupe field, not last_failure_reason: that one guards the
+        # transcript, and borrowing it here would let a silent local failure
+        # swallow the note for a later answer from the far end that happens
+        # to read the same.
+        if self.last_route_failure_reason != reason:
+            self.log_info('Routes failed: %s' % reason)
+            self.last_route_failure_reason = reason
         
         for message in self.messages.values():
             if message.content_type not in (IsComposingDocument.content_type, IMDNDocument.content_type):
@@ -2386,9 +2402,8 @@ class SMSViewController(NSObject):
                 message.pjsip_id = None
                 self.messages[message.id] = message
 
-            if self.last_failure_reason != reason:
-                if host.default_ip:
-                    self.chatViewController.showSystemMessage(reason, ISOTimestamp.now(), True)
+            # Silent for the same reason setRoutesFailed is: the message is
+            # queued, not lost, and the clock on the bubble already says so.
             return
 
         if self.is_renderable(message):
@@ -2598,6 +2613,17 @@ class SMSViewController(NSObject):
             else:
                 entity = 'local'
                 call_id = None
+
+            # A real answer always echoes the Call-Id we sent. Without one
+            # nothing answered: PJSIP invented this failure locally -- the
+            # 503 on a PJ_ETIMEDOUT is its own, not the server's -- so the
+            # header block being present is not evidence of a remote party.
+            # Getting this wrong marks the message failed instead of
+            # failed_local, which both paints the bubble red and takes it
+            # out of the resend loop.
+            if not call_id:
+                call_id = None
+                entity = 'local'
 
             try:
                 message = next(message for message in self.messages.values() if message.call_id == call_id or message.pjsip_id == str(sender))
@@ -3119,6 +3145,27 @@ class SMSViewController(NSObject):
                     else:
                         self.log_info('Skip duplicate message %s' % message.sip_callid)
                         continue
+
+                # Already on screen. The live path and this one meet
+                # whenever something is sent into a conversation that has
+                # not replayed yet -- a file dropped on a contact opens the
+                # conversation, files the transfer, and the replay that
+                # follows reads that very row back out of the database and
+                # draws it a second time. The two copies do not even look
+                # alike: the live one knows the plaintext file it just
+                # wrote, the stored one carries the encrypted name and size
+                # the server was given.
+                #
+                # Checked against the view rather than against a set kept
+                # here, because the view is what would be showing the
+                # duplicate.
+                # getattr, because the old WebView renderer has no such
+                # question to answer and is still reachable.
+                already_shown = getattr(self.chatViewController,
+                                        'hasRenderedMessage', None)
+                if already_shown is not None and already_shown(message.msgid):
+                    self.log_info('Skip %s: already in the conversation' % message.msgid)
+                    continue
 
                 if message.direction == 'outgoing':
                     icon = icon_for_self

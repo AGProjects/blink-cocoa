@@ -72,7 +72,7 @@ from ScreenSharingController import ScreenSharingController, ScreenSharingServer
 from FileTransferController import FileTransferController
 from FileTransferSession import OutgoingPushFileTransferHandler
 from HistoryManager import ChatHistory, SessionHistory
-from HistoryManager import SessionHistoryReplicator, ChatHistoryReplicator
+from HistoryManager import SessionHistoryReplicator
 from MediaStream import STATE_IDLE, STATE_CONNECTED, STATE_CONNECTING, STATE_DNS_LOOKUP, STATE_DNS_FAILED, STATE_FINISHED, STATE_FAILED
 from MediaStream import STREAM_IDLE, STREAM_FAILED, STREAM_CONNECTED, STREAM_CANCELLING
 from SessionRinger import Ringer
@@ -95,6 +95,47 @@ StreamHandlerForType = {
     "screen-sharing-client" : ScreenSharingViewerController,
     "video": VideoController
 }
+
+
+def zip_folder_for_transfer(folder):
+    """Compress a dropped folder into .tmp_file_transfers. Path, or None.
+
+    A folder can be dragged onto a contact as easily as a file, and it has
+    to become one file before it can be sent by any route. Lifted out of
+    the MSRP path so the upload path compresses it identically -- two
+    implementations of "what does a dropped folder become" would sooner or
+    later disagree.
+    """
+    base_name = os.path.basename(folder)
+    dir_name = os.path.dirname(folder)
+    zip_folder = ApplicationData.get('.tmp_file_transfers')
+    if not os.path.exists(zip_folder):
+        os.mkdir(zip_folder, 0o700)
+
+    zip_file = '%s/%s.zip' % (zip_folder, base_name)
+    if os.path.isfile(zip_file):
+        i = 1
+        while True:
+            zip_file = '%s/%s_%d.zip' % (zip_folder, base_name, i)
+            if not os.path.isfile(zip_file):
+                break
+            i += 1
+
+    zf = zipfile.ZipFile(zip_file, mode='w')
+    try:
+        BlinkLogger().log_info("Compressing folder %s to %s" % (folder, zip_file))
+        for root, dirs, files in os.walk(folder):
+            for name in files:
+                _file = os.path.join(root, name)
+                arcname = _file[len(dir_name) + 1:]
+                zf.write(_file, compress_type=zipfile.ZIP_DEFLATED, arcname=arcname)
+    except Exception as exc:
+        BlinkLogger().log_error("Error compressing %s to %s: %s" % (folder, zip_file, exc))
+        return None
+    finally:
+        zf.close()
+    return zip_file
+
 
 @implementer(IObserver)
 class SessionControllersManager(object, metaclass=Singleton):
@@ -301,7 +342,7 @@ class SessionControllersManager(object, metaclass=Singleton):
             cpim_to = local_uri
             timestamp = str(ISOTimestamp.now())
 
-            self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
+            self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='incoming', missed=True, history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour@local', check_contact=True))
         NotificationCenter().post_notification('SIPSessionLoggedToHistory', sender=self)
 
@@ -329,7 +370,7 @@ class SessionControllersManager(object, metaclass=Singleton):
             cpim_to = local_uri
             timestamp = str(ISOTimestamp.now())
 
-            self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
+            self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='incoming', missed=True, history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour@local', check_contact=True))
         NotificationCenter().post_notification('SIPSessionLoggedToHistory', sender=self)
 
@@ -393,7 +434,7 @@ class SessionControllersManager(object, metaclass=Singleton):
         cpim_to = format_identity_to_string(account)
         timestamp = str(ISOTimestamp.now())
 
-        self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
+        self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
         NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='incoming', missed=False, history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour@local', check_contact=True))
 
         NotificationCenter().post_notification('SIPSessionLoggedToHistory', sender=self)
@@ -425,7 +466,7 @@ class SessionControllersManager(object, metaclass=Singleton):
             cpim_to = local_uri
             timestamp = str(ISOTimestamp.now())
 
-            self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
+            self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='incoming', missed=False, history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour@local', check_contact=True))
         NotificationCenter().post_notification('SIPSessionLoggedToHistory', sender=self)
 
@@ -457,7 +498,7 @@ class SessionControllersManager(object, metaclass=Singleton):
             cpim_to = local_uri
             timestamp = str(ISOTimestamp.now())
 
-            self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
+            self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='outgoing', missed=False, history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour@local', check_contact=True))
         NotificationCenter().post_notification('SIPSessionLoggedToHistory', sender=self)
 
@@ -487,7 +528,7 @@ class SessionControllersManager(object, metaclass=Singleton):
             cpim_to = local_uri
             timestamp = str(ISOTimestamp.now())
 
-            self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
+            self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='outgoing', missed=False, history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour@local', check_contact=True))
         NotificationCenter().post_notification('SIPSessionLoggedToHistory', sender=self)
 
@@ -557,7 +598,7 @@ class SessionControllersManager(object, metaclass=Singleton):
             cpim_to = local_uri
             timestamp = str(ISOTimestamp.now())
 
-            self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=True)
+            self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='outgoing', missed=False, history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour@local', check_contact=True))
         NotificationCenter().post_notification('SIPSessionLoggedToHistory', sender=self)
 
@@ -577,8 +618,8 @@ class SessionControllersManager(object, metaclass=Singleton):
     def add_to_session_history(self, id, media_type, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants, call_id, from_tag, to_tag, answering_machine_filename, encryption='', display_name='', device_id='', remote_full_uri=''):
         return SessionHistory().add_entry(id, media_type, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants, call_id, from_tag, to_tag, answering_machine_filename, encryption, display_name, device_id, remote_full_uri)
 
-    def add_to_chat_history(self, id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, skip_replication=False):
-        return ChatHistory().add_message(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, "html", "0", status, skip_replication=skip_replication)
+    def add_to_chat_history(self, id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status):
+        return ChatHistory().add_message(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, "html", "0", status)
 
     @run_in_green_thread
     def get_redial_uri_from_history(self):
@@ -591,7 +632,27 @@ class SessionControllersManager(object, metaclass=Singleton):
             target_uri, display_name, full_uri, fancy_uri = sipuri_components_from_string(session_info.remote_uri)
             self.redial_uri = fancy_uri
 
-    def send_files_to_contact(self, account, contact_uri, filenames):
+    def send_files_to_contact(self, account, contact_uri, filenames, route=None):
+        """Send files by the road the caller names. MSRP unless told otherwise.
+
+        `route` is 'web' only when something has decided an upload is
+        right -- today that is the contact-list drop, which works it out
+        in sendDroppedFiles and asks the user when it is a real choice.
+
+        The default is deliberately MSRP rather than "work it out here".
+        Most callers of this are in-session sends -- a file dropped on a
+        chat, video or audio window -- where an MSRP transfer inside the
+        session the user is already in IS the intent, and quietly turning
+        those into uploads because a pane happened to be open elsewhere
+        would be a change nobody asked for.
+        """
+        if route == 'web' \
+                and self.upload_files_to_contact(account, contact_uri, filenames):
+            # Taken before the File Transfers window is opened below: an
+            # upload is a message in the conversation, and raising a
+            # transfer window over it announces the wrong thing.
+            return
+
         if not self.isMediaTypeSupported('file-transfer'):
             return
 
@@ -600,42 +661,145 @@ class SessionControllersManager(object, metaclass=Singleton):
 
         for file in filenames:
             if os.path.isdir(file):
-                dir = file
-                base_name = os.path.basename(dir)
-                dir_name = os.path.dirname(dir)
-                zip_folder = ApplicationData.get('.tmp_file_transfers')
-                if not os.path.exists(zip_folder):
-                    os.mkdir(zip_folder, 0o700)
-                zip_file = '%s/%s.zip' % (zip_folder, base_name)
-                if os.path.isfile(zip_file):
-                    i = 1
-                    while True:
-                        zip_file = '%s/%s_%d.zip' % (zip_folder, base_name, i)
-                        if not os.path.isfile(zip_file):
-                            break
-                        i += 1
-
-                zf = zipfile.ZipFile(zip_file, mode='w')
-                try:
-                    BlinkLogger().log_error("Compressing folder %s to %s" % (dir, zip_file))
-                    for root, dirs, files in os.walk(file):
-                        for name in files:
-                            _file = os.path.join(root, name)
-                            arcname = _file[len(dir_name)+1:]
-                            zf.write(_file, compress_type=zipfile.ZIP_DEFLATED, arcname=arcname)
-                except Exception as exc:
-                    BlinkLogger().log_error("Error compressing %s to %s: %s" % (dir, zip_file, exc))
+                zipped = zip_folder_for_transfer(file)
+                if zipped is None:
                     continue
-                finally:
-                    zf.close()
-
-                file = zip_file
+                file = zipped
 
             try:
                 xfer = OutgoingPushFileTransferHandler(account, target_uri, file)
                 xfer.start()
             except Exception as exc:
                 BlinkLogger().log_error("Error while attempting to transfer file %s: %s" % (file, exc))
+
+    def account_can_upload(self, account):
+        """Whether this account has anywhere to upload to.
+
+        The file transfer URL SylkServer hands out after registration. A
+        Bonjour neighbour or a plain SIP proxy has none, and for those
+        MSRP is not a fallback but the only road there is.
+        """
+        try:
+            from SMSWindowManager import SMSWindowManager
+            return bool(SMSWindowManager().fileTransferBaseURL(account))
+        except Exception as exc:
+            BlinkLogger().log_debug("Cannot tell whether %s can upload: %s" % (account, exc))
+            return False
+
+    def last_message_time(self, contact_uri):
+        """When we last exchanged a message with this address, or None.
+
+        Read from the conversation index SMSWindowManager keeps in memory
+        -- seeded once from history and kept current as messages arrive --
+        rather than from a query. This is asked while a drag hovers, which
+        is many times a second, and ChatHistory answers through block_on,
+        which parks the calling thread.
+        """
+        try:
+            from SMSWindowManager import SMSWindowManager
+            return SMSWindowManager().lastMessageTimeForURI(str(contact_uri))
+        except Exception as exc:
+            BlinkLogger().log_debug("Cannot read the message history of %s: %s"
+                                    % (contact_uri, exc))
+            return None
+
+    def upload_address(self, account, addresses):
+        """Which of a contact's addresses an upload should go to, or None.
+
+        The one we last exchanged messages with. A contact with several
+        addresses is not a question worth asking here: an upload goes to
+        a conversation, and the conversation this person is having is the
+        one with messages in it. Asking "which address?" when the answer
+        is sitting in the history is a dialog that exists to be dismissed.
+
+        Doubles as the "can we upload to this contact at all" test, and
+        deliberately so -- whether an upload is possible and where it
+        would go are the same question, and two predicates that have to
+        agree with each other is one more than is needed.
+
+        None when the account has nowhere to upload to, or when no address
+        has any history: there is then no evidence this contact is
+        reachable that way, and an upload would sit on the server
+        unfetched, look sent, and never arrive. MSRP at least fails in
+        front of the user.
+        """
+        if not self.account_can_upload(account):
+            return None
+        known = [(self.last_message_time(address), address) for address in addresses]
+        known = [pair for pair in known if pair[0] is not None]
+        if not known:
+            return None
+        known.sort(key=lambda pair: pair[0])
+        chosen = known[-1][1]
+        if len(known) > 1:
+            BlinkLogger().log_info("Uploading to %s: the most recently messaged of "
+                                   "%d addresses" % (chosen, len(known)))
+        return chosen
+
+    def upload_files_to_contact(self, account, contact_uri, filenames):
+        """Send dropped files as messages. True if they were taken.
+
+        Opens the conversation and hands it the files, which is what makes
+        this an upload rather than a session: the transfer becomes a bubble
+        the recipient can fetch whenever they next open the app, instead of
+        an MSRP session that needs them online and answering now.
+
+        Returns False rather than raising for every reason it cannot go
+        this way, so the caller falls back to MSRP and a drop never ends
+        in nothing happening.
+        """
+        # Only "is there anywhere to upload to". Whether this contact
+        # SHOULD be reached that way was settled by the caller -- by the
+        # user picking Web Upload from the menu, or by upload_address.
+        if not filenames or not self.account_can_upload(account):
+            return False
+
+        # Folders are compressed exactly as the MSRP path compresses them
+        # -- same helper, same .tmp_file_transfers folder. A dropped folder
+        # has to become one file either way, and having the two paths
+        # disagree about how would be a difference nobody asked for.
+        paths = []
+        for name in filenames:
+            if os.path.isdir(name):
+                zipped = zip_folder_for_transfer(name)
+                if zipped is not None:
+                    paths.append(zipped)
+            elif os.path.isfile(name):
+                paths.append(name)
+        if not paths:
+            return False
+
+        try:
+            import SMSWindowManager as SMSWindowManagerModule
+            target_uri = normalize_sip_uri_for_outgoing_session(contact_uri, account)
+            if not target_uri:
+                return False
+            # focusTab: the drop opens the conversation it is landing in,
+            # which is where the transfer bubble is about to appear.
+            # note_new_message off: that flag raises an unread marker, and
+            # this is the user's own outgoing file, not mail arriving.
+            viewer = SMSWindowManagerModule.SMSWindowManager().getWindow(
+                target_uri, '', account, focusTab=True, note_new_message=False)
+        except Exception as exc:
+            BlinkLogger().log_error("Cannot open a conversation with %s to upload to: %s"
+                                    % (contact_uri, exc))
+            return False
+
+        if viewer is None or not hasattr(viewer, 'sendFiles'):
+            return False
+
+        try:
+            sent = viewer.sendFiles(paths)
+        except Exception as exc:
+            BlinkLogger().log_error("Cannot upload to %s: %s" % (contact_uri, exc))
+            return False
+
+        BlinkLogger().log_info("Uploaded %d of %d dropped file(s) to %s"
+                               % (sent or 0, len(paths), contact_uri))
+        # Taken either way. A file the conversation refused has already had
+        # its reason shown in the transcript, and falling through to MSRP
+        # would send it a second time by another road.
+        return True
 
     @run_in_gui_thread
     def show_web_alert_page(self, session):
@@ -683,7 +847,6 @@ class SessionControllersManager(object, metaclass=Singleton):
     def _NH_SIPApplicationDidStart(self, sender, data):
         self.ringer = Ringer(self)
         self.get_redial_uri_from_history()
-        ChatHistoryReplicator()
 
     def _NH_BlinkShouldTerminate(self, sender, data):
         self.closeAllSessions()

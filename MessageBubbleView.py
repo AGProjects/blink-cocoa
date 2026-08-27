@@ -88,6 +88,7 @@ except ImportError:
 from AudioPlayback import (AUDIO_CHANNELS, channel_peaks, has_spectrum,
                            level_at, spectrum_frame)
 from MessageHost import file_transfer_summary
+from VideoPlayback import VideoPlayback
 from application.system import makedirs
 
 from MapTileCache import MapTileCache, tile_fraction, DEFAULT_ZOOM, TILE_SIZE
@@ -185,8 +186,14 @@ QUOTE_MIN_BODY_W = 140.0
 # and a 26pt disc holding a 15pt triangle was reading as an icon rather
 # than a control. Still well inside the row it shares with the waveform.
 AUDIO_KEY_SIZE  = 30.0
-AUDIO_KEY_GAP   = 8.0
-AUDIO_ROW_GAP   = 6.0
+AUDIO_KEY_GAP   = 12.0
+# Above the player and below it. The top gap did not exist: the transport
+# row began on the pixel the caption ended, so the key and the waveform
+# were pressed against the line of text naming the recording and the
+# whole bubble read as one crowded block rather than a label with a
+# player under it.
+AUDIO_TOP_GAP   = 9.0
+AUDIO_ROW_GAP   = 8.0
 AUDIO_BARS      = 48
 # A bar narrower than this is a hairline; below it the waveform is drawn
 # as a plain track instead, which reads better than a grey smear.
@@ -194,14 +201,14 @@ AUDIO_BAR_MIN_W = 1.4
 # One channel's strip, and the space between two of them. A call recording
 # carries both sides, stacked remote-over-local the way mobile stacks them.
 AUDIO_STRIP_H   = 17.0
-AUDIO_STRIP_GAP = 3.0
+AUDIO_STRIP_GAP = 4.0
 # The level meter at the playhead: a narrow column per channel, filling
 # from the bottom, sitting between the waveform and the clock.
 # The level meters: horizontal bars on a row of their own beneath the
 # spectrum, remote above local -- the order of the waveform strips, and
 # the shape of mobile's own VuMeter, which is a horizontal bar too.
 AUDIO_METER_H   = 4.0
-AUDIO_METER_GAP = 3.0
+AUDIO_METER_GAP = 5.0
 # The caption beside each meter. Sylk Mobile labels its strips the same
 # way and for the same reason: two coloured bars say nothing about whose
 # side is whose to anyone who did not choose the colours. Only drawn when
@@ -212,8 +219,9 @@ AUDIO_METER_LABEL_GAP = 5.0
 # AUDIO_METER_H and is centred in it. Without this the captions, being
 # taller than a 4pt bar, ran into each other.
 AUDIO_METER_LABEL_ROW = 11.0
-# Between the player's rows.
-AUDIO_STACK_GAP = 4.0
+# Between the player's rows. Three stacked blocks of coloured bars need
+# more than a hairline between them or they read as one texture.
+AUDIO_STACK_GAP = 7.0
 # The spectrum gets a row of its own, the full width of the waveform above
 # it, rather than a column squeezed in beside the scrub track. Sixteen
 # bands across 60pt is a smudge; across the whole bubble it is an analyser.
@@ -231,6 +239,18 @@ AUDIO_SPECTRUM_PAD = 6.0
 # rows of their own beneath it now and cost that row no width at all, so
 # there is no separate, wider floor for a recording that carries one.
 AUDIO_MIN_BODY_W = AUDIO_KEY_SIZE + AUDIO_KEY_GAP * 2 + 110.0
+
+# The play symbol struck over a movie's poster. Proportional to the
+# picture, because the same badge serves a full-width bubble and a grid
+# cell a quarter the size, with a ceiling so it does not dominate a large
+# photograph and a floor so it stays a symbol rather than a speck.
+VIDEO_BADGE_SIZE = 54.0
+VIDEO_BADGE_MIN  = 26.0
+
+# The shape of the well a movie plays in when no poster could be decoded
+# from it. 16:9 because that is what nearly every clip is; the player
+# letterboxes whatever the film turns out to actually be.
+VIDEO_WELL_ASPECT = 9.0 / 16.0
 # How far the pointer has to travel, with the button held on a file, before
 # the press is treated as a drag rather than a click. Three points is the
 # usual AppKit slop: below it every click on a picture would start a drag,
@@ -851,6 +871,14 @@ COLOR_TRACK_DOT    = _rgb(52, 120, 246)
 # seen the waveform on their phone recognise it here.
 COLOR_AUDIO_REMOTE = _rgb(52, 152, 219)
 COLOR_AUDIO_LOCAL  = _rgb(46, 204, 113)
+
+# The badge is deliberately NOT the transport's blue. It sits on a
+# photograph whose colours are not ours to guess, and a dark scrim under
+# a white symbol is the one pairing that stays legible over both a snow
+# field and a night shot.
+COLOR_VIDEO_SCRIM  = NSColor.blackColor().colorWithAlphaComponent_(0.42)
+COLOR_VIDEO_EDGE   = NSColor.whiteColor().colorWithAlphaComponent_(0.55)
+COLOR_VIDEO_GLYPH  = NSColor.whiteColor()
 # The play key and the Download button. A filled disc in one confident
 # colour, not a tint of the bubble text behind a grey hairline: a pale
 # well inside a thin ring is the shape macOS uses for a control that is
@@ -1005,6 +1033,16 @@ def bubble_meta_color(state, is_private, direction=None):
 
 
 def lock_icon_path_for(encryption):
+    """The lock for a MESSAGE's own encryption state.
+
+    Red here means one specific thing and should not be borrowed for
+    anything else: an OTR session whose peer fingerprint has not been
+    verified, so the encryption is real but nobody has checked who is on
+    the other end. That is the only doubt this application can express
+    about a message, and spending the colour on anything else -- a file
+    that simply has not been downloaded yet, say -- makes the one case it
+    is for indistinguishable from routine.
+    """
     if encryption is None or encryption == '':
         return ''
     return Resources.get('locked-green.png' if encryption == 'verified' else 'locked-red.png')
@@ -1520,6 +1558,24 @@ def _substitute_smileys(attr_string, font_size):
 
 # -- the view ---------------------------------------------------------------
 
+class VideoHostView(NSView):
+    """A layer-backed rectangle that holds the player's picture.
+
+    It exists only to give an AVPlayerLayer somewhere to live inside a
+    bubble, and it is deliberately transparent to the mouse: the bubble
+    underneath owns every gesture in the transcript -- click to pause,
+    press and drag to hand the file to the Finder -- and a subview that
+    answered hitTest: would swallow all of them the moment a movie
+    started playing.
+    """
+
+    def hitTest_(self, point):
+        return None
+
+    def isFlipped(self):
+        return True
+
+
 class MessageBubbleView(NSView):
     KIND_TEXT = 'text'
     KIND_SYSTEM = 'system'
@@ -1622,6 +1678,28 @@ class MessageBubbleView(NSView):
             # the renderer once the file is on this disc; until then the
             # bubble offers Download like any other transfer.
             self.audio_path = None
+            # The same, for a movie: set once the transfer is here, and
+            # the reason the bubble draws a transport under the poster.
+            # The poster itself goes into media_image, so a movie is a
+            # picture as far as every layout rule is concerned.
+            self.video_path = None
+            self.video_duration = 0.0
+            # Set once the generator has been asked for a still and come
+            # back with nothing. Until then the bubble reserves no picture
+            # area at all: a well drawn on spec and replaced by the poster
+            # a fifth of a second later is a flash of empty grey under
+            # every movie in the transcript.
+            self.video_no_poster = False
+            # What the file looked like when AVFoundation was given it
+            # and could make nothing of it, as (size, mtime). A verdict
+            # rather than a flag, and tied to the bytes it was reached on:
+            # without any memory the renderer re-decodes on every envelope
+            # render, and with a bare flag a movie that happened to be
+            # half-downloaded at the time is written off for the session.
+            self.video_refused = None
+            # Where the player's layer goes while this bubble owns it.
+            # Built on first play, never for a movie only being looked at.
+            self._video_host = None
             # The waveform, whether the sender shipped it in the envelope
             # or it was measured from the file here. Same shape either
             # way, so nothing below has to know which it is.
@@ -1651,6 +1729,12 @@ class MessageBubbleView(NSView):
             # drawn control feel like a control rather than a picture of one.
             self._audio_key_down = False
             self._download_key_down = False
+            # Whether the armoured file behind this bubble has actually
+            # been opened with our own key. Not the same question as
+            # whether it CLAIMS to be armoured -- the envelope says that
+            # much before anything has been fetched -- and it is the
+            # answer the lock's colour turns on.
+            self.transfer_decrypted = False
             self.transfer_status = None
             # Whether that line is a failure rather than progress: it decides
             # the colour, and a failure the user cannot read is a failure the
@@ -2232,6 +2316,32 @@ class MessageBubbleView(NSView):
                 and self.kind not in (self.KIND_DATE, self.KIND_SYSTEM))
 
     @objc.python_method
+    def _deliveryGlyphs(self):
+        """The tick, ticks or clock this bubble earns, or ''.
+
+        Outgoing only. A tick says the OTHER end has it, and that is a
+        claim only a message we sent can make. An incoming message
+        carries a status of its own -- we mark one displayed when we send
+        the IMDN receipt for it -- so without the direction test the
+        receipt WE sent for THEIR message draws in their bubble as though
+        they had acknowledged ours.
+
+        One rule, asked by both the drawing and the header's width
+        measurement. They were two copies that agreed; two copies that
+        agree today are two that can disagree later, and the symptom
+        would be a timestamp drawn over a tick.
+        """
+        if self.direction != 'outgoing':
+            return ''
+        if self.state == MSG_STATE_DISPLAYED:
+            return GLYPH_TICK + GLYPH_TICK
+        if self.state == MSG_STATE_DELIVERED:
+            return GLYPH_TICK
+        if self.state in (MSG_STATE_DEFERRED, MSG_STATE_FAILED_LOCAL):
+            return GLYPH_DEFERRED
+        return ''
+
+    @objc.python_method
     def lockIconPath(self):
         """The lock for this bubble's header, or '' for none.
 
@@ -2246,7 +2356,17 @@ class MessageBubbleView(NSView):
         if path:
             return path
         if transfer_is_encrypted(self.transfer_meta):
-            return Resources.get('locked-red.png')
+            # Always green. The lock answers "did this travel encrypted",
+            # and for an armoured file that is settled by the envelope --
+            # it is as true of a video still sitting on the server as of
+            # one already open on this disc.
+            #
+            # It used to go red until the file had been fetched and
+            # decrypted here, which was wrong twice over: it made "not
+            # downloaded yet" look like an encryption problem, and it
+            # spent the colour that means an unverified OTR peer on
+            # something that is not a doubt at all.
+            return Resources.get('locked-green.png')
         return ''
 
     @objc.python_method
@@ -2280,11 +2400,14 @@ class MessageBubbleView(NSView):
                 self.reply_to,
                 self.reply_text,
                 self._showsQuote(),
+                # The well a posterless movie plays in: it is a picture
+                # block like any other, so its arrival changes the height.
+                bool(self.video_no_poster),
                 # The lock takes room in the header, and a file bubble
                 # earns one from its envelope rather than from the
                 # message's encryption state.
                 bool(self.lockIconPath()),
-                self._showsAudio(),
+                self._showsTransport(),
                 # A call recording carries both sides and stacks two
                 # strips, and a spectrogram adds a row of its own, so the
                 # player's height depends on what the envelope brought.
@@ -2377,6 +2500,33 @@ class MessageBubbleView(NSView):
                 and self.kind not in (self.KIND_DATE, self.KIND_SYSTEM))
 
     @objc.python_method
+    def _showsVideo(self):
+        """Whether this bubble plays a movie rather than describing one.
+
+        Gated on the file being HERE, exactly as a recording is:
+        video_path is set by the renderer once the transfer has been
+        fetched and decrypted. Before that the bubble is an ordinary file
+        transfer offering Download, because a play key that has to go and
+        get forty megabytes first is a play key that appears to hang.
+        """
+        return (bool(self.video_path)
+                and not self.grid_mode
+                and self.kind not in (self.KIND_DATE, self.KIND_SYSTEM))
+
+    @objc.python_method
+    def _showsTransport(self):
+        """Whether the play key and the scrub bar are drawn at all.
+
+        One row serves both kinds. A movie has no waveform, no meters and
+        no spectrogram, so each of those blocks measures zero and the row
+        collapses to the key and a plain bar -- which is exactly what a
+        voice memo that arrived without peaks already draws. Sharing the
+        transport rather than writing a second one is what keeps the two
+        from drifting apart a point at a time.
+        """
+        return self._showsAudio() or self._showsVideo()
+
+    @objc.python_method
     def _audioChannels(self):
         """Which sides of the call this recording actually carries.
 
@@ -2385,6 +2535,12 @@ class MessageBubbleView(NSView):
         drawing an empty strip for a channel that was never recorded is
         indistinguishable from a channel that was silent.
         """
+        if self.video_path:
+            # A movie's transport is the key and a plain bar. There is no
+            # waveform to draw and nothing to normalise it against, and
+            # answering with channels would stack empty strips beside the
+            # key and make the row twice as tall as it has any use for.
+            return []
         peaks = self.audio_peaks
         return [c for c in AUDIO_CHANNELS if channel_peaks(peaks, c, 1) is not None]
 
@@ -2428,13 +2584,16 @@ class MessageBubbleView(NSView):
     def _audioHeight(self):
         """The whole player: the transport row, then the spectrum, then the
         levels -- each on its own line, one below the other."""
-        if not self._showsAudio():
+        if not self._showsTransport():
             return 0.0
         height = self._audioRowHeight()
         for block in (self._audioSpectrumHeight(), self._audioMetersHeight()):
             if block:
                 height += AUDIO_STACK_GAP + block
-        return height + AUDIO_ROW_GAP
+        # Both gaps are part of the block's height and neither is drawn
+        # into: the layout puts the player AUDIO_TOP_GAP below the caption
+        # and leaves AUDIO_ROW_GAP under it.
+        return height + AUDIO_TOP_GAP + AUDIO_ROW_GAP
 
     @objc.python_method
     def _drawAudio(self, rect):
@@ -2787,7 +2946,7 @@ class MessageBubbleView(NSView):
                     self._beginFileDrag(event)
             return
 
-        if not self._audio_scrubbing or not self._showsAudio():
+        if not self._audio_scrubbing or not self._showsTransport():
             objc.super(MessageBubbleView, self).mouseDragged_(event)
             return
         point = self.convertPoint_fromView_(event.locationInWindow(), None)
@@ -2820,6 +2979,19 @@ class MessageBubbleView(NSView):
                 if kind == 'map' and self.location_maps_url:
                     NSWorkspace.sharedWorkspace().openURL_(
                         NSURL.URLWithString_(str(self.location_maps_url)))
+                elif kind == 'file' and self._showsVideo():
+                    # A movie plays HERE. Handing it to whatever owns .mp4
+                    # was the only thing to do before there was a player in
+                    # the bubble; now it would open a second window over
+                    # the transcript for something already on screen. The
+                    # press-and-drag half of the gesture is untouched, so
+                    # the file still goes to the Finder.
+                    renderer = self.renderer
+                    if renderer is not None \
+                            and hasattr(renderer, 'bubbleDidRequestPlayPause'):
+                        renderer.bubbleDidRequestPlayPause(self.msgid)
+                    elif self.media_path:
+                        NSWorkspace.sharedWorkspace().openFile_(self.media_path)
                 elif kind == 'file' and self.media_path:
                     NSWorkspace.sharedWorkspace().openFile_(self.media_path)
             except Exception as e:
@@ -2988,12 +3160,9 @@ class MessageBubbleView(NSView):
             left += width_of(GLYPH_REPLY, glyph_font) + 6.0
 
         right = width_of(GLYPH_DELETE, glyph_font) + 4.0
-        if self.state == MSG_STATE_DISPLAYED:
-            right += width_of(GLYPH_TICK + GLYPH_TICK, glyph_font) + 4.0
-        elif self.state == MSG_STATE_DELIVERED:
-            right += width_of(GLYPH_TICK, glyph_font) + 4.0
-        elif self.state in (MSG_STATE_DEFERRED, MSG_STATE_FAILED_LOCAL):
-            right += width_of(GLYPH_DEFERRED, glyph_font) + 4.0
+        ticks = self._deliveryGlyphs()
+        if ticks:
+            right += width_of(ticks, glyph_font) + 4.0
         right += width_of(self.timestamp_text, meta_font) + 4.0
         if self.lockIconPath():
             right += LOCK_SIZE + 4.0
@@ -3160,7 +3329,7 @@ class MessageBubbleView(NSView):
                     natural = max(natural, DOWNLOAD_W + 90.0)
                 if self._showsQuote():
                     natural = max(natural, QUOTE_MIN_BODY_W)
-                if self._showsAudio():
+                if self._showsTransport():
                     natural = max(natural, AUDIO_MIN_BODY_W)
                 narrowed = min(max(natural, MIN_TEXT_BODY_W), body_w)
                 if narrowed < body_w:
@@ -3212,6 +3381,15 @@ class MessageBubbleView(NSView):
             map_block = map_h
             if not self.grid_mode:
                 self._ensureMediaResolution(map_w, map_h)
+        elif self._showsVideo() and self.video_no_poster:
+            # A movie whose poster could not be decoded still needs a
+            # picture area, because the player's layer is anchored to this
+            # rect and there is nowhere else to put the film: without one
+            # the sound plays out of a bubble showing a filename, which
+            # looks exactly like the video half being broken.
+            map_w = max(body_w - 2 * inset, 40.0)
+            map_h = min(map_w * VIDEO_WELL_ASPECT, self._mediaHeightLimit(map_w))
+            map_block = map_h
         elif self.grid_mode and self.transfer_meta is not None:
             # A picture that has not arrived yet still holds its cell, so
             # the grid does not reflow under the user as each one lands.
@@ -3284,6 +3462,12 @@ class MessageBubbleView(NSView):
         else:
             self._map_rect = NSZeroRect
 
+        # The picture follows the poster it replaced. Done here rather
+        # than only on the press, so a window resize or a quote arriving
+        # late moves the movie with the bubble instead of leaving a
+        # rectangle of video where the poster used to be.
+        self._syncVideoLayer()
+
         if track_block:
             track_x = bubble_x + pad + MAP_INSET_X
             track_w = max(body_w - 2 * MAP_INSET_X, 60.0)
@@ -3305,11 +3489,13 @@ class MessageBubbleView(NSView):
 
         if audio_block:
             audio_y = (bubble_y + pad + header_h + quote_block + map_block
-                       + track_block + body_h)
+                       + track_block + body_h + AUDIO_TOP_GAP)
             # The block is everything the player draws; the seek row is
-            # only the transport line at the top of it.
+            # only the transport line at the top of it. Neither includes
+            # the gaps above and below, which are space and nothing else.
             self._audio_row_rect = NSMakeRect(
-                bubble_x + pad, audio_y, body_w, audio_block - AUDIO_ROW_GAP)
+                bubble_x + pad, audio_y, body_w,
+                audio_block - AUDIO_TOP_GAP - AUDIO_ROW_GAP)
             self._audio_seek_rect = NSMakeRect(
                 bubble_x + pad, audio_y, body_w, self._audioRowHeight())
         else:
@@ -3402,11 +3588,14 @@ class MessageBubbleView(NSView):
                     self._drawTrackCaption()
             elif self._showsMedia():
                 self._drawMedia()
+            elif self._showsVideo() and self.video_no_poster \
+                    and self._map_rect.size.width > 0:
+                self._drawVideoWell()
 
             # Gated on what the bubble is NOW, not on a rect left over
             # from an earlier measure: a stale rect is how a Download button
             # ended up painted over a picture, or below the bubble entirely.
-            if self._showsAudio() and self._audio_row_rect.size.width > 0:
+            if self._showsTransport() and self._audio_row_rect.size.width > 0:
                 self._drawAudio(self._audio_row_rect)
 
             if self._showsProgress() and self._download_rect.size.width > 0:
@@ -3424,7 +3613,7 @@ class MessageBubbleView(NSView):
         the original and letting it downsample into the cell removes every
         intermediate step between the file and the screen.
         """
-        if not self.media_path:
+        if not self.media_path or self.video_path:
             return self.media_image
         try:
             from FileTransferCache import FileTransferCache
@@ -3461,6 +3650,14 @@ class MessageBubbleView(NSView):
         """
         image = self.media_image
         if image is None or not self.media_path:
+            return
+        if self.video_path:
+            # The picture here is a poster frame, and media_path is the
+            # movie it was taken from. Asking the cache to re-read it at a
+            # larger size hands an mp4 to AppKit's image decoder, which
+            # answers None every time -- work spent per layout to learn
+            # something already known. The generator was asked for a
+            # generous poster once instead.
             return
         try:
             size = image.size()
@@ -3509,6 +3706,18 @@ class MessageBubbleView(NSView):
         COLOR_MAP_BG.set()
         frame.fill()
 
+        # While this bubble owns the player, its layer sits over exactly
+        # this rect: the poster underneath is invisible, and drawing it
+        # ten times a second for the length of a movie is the most
+        # expensive thing in the transcript. The frame is still painted,
+        # so the rounded corner and the border read as they did.
+        if self.video_path and not self.grid_mode \
+                and VideoPlayback().is_current(str(self.msgid or '')):
+            COLOR_MAP_BORDER.set()
+            frame.setLineWidth_(1.0)
+            frame.stroke()
+            return
+
         image = self._tileImage() if self.grid_mode else self.media_image
         if image is None:
             return
@@ -3543,10 +3752,79 @@ class MessageBubbleView(NSView):
         finally:
             context.restoreGraphicsState()
 
+        # Struck over the poster, and only while the poster is what is
+        # showing. Gated on OWNING the player rather than on playing:
+        # while this bubble holds the clip its layer covers the poster,
+        # paused as well as running, so a badge drawn here would be
+        # painted underneath the picture and never seen -- and the
+        # transport's own key is the play control at that point.
+        if self.video_path and not VideoPlayback().is_current(str(self.msgid or '')):
+            self._drawPlayBadge(rect)
+
         if not self.grid_mode:
             COLOR_MAP_BORDER.set()
             frame.setLineWidth_(1.0)
             frame.stroke()
+
+    @objc.python_method
+    def _drawVideoWell(self):
+        """The frame a movie plays in when it has no poster to show.
+
+        Reached only when the generator could give us no still -- a clip
+        that opens on nothing decodable, most often. The film goes here
+        all the same, so the well is drawn rather than left as a hole in
+        the bubble, with the badge on it to say what it is.
+        """
+        rect = self._map_rect
+        if rect.size.width <= 0 or rect.size.height <= 0:
+            return
+        frame = NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(
+            rect, MAP_RADIUS, MAP_RADIUS)
+        COLOR_MAP_BG.set()
+        frame.fill()
+        COLOR_MAP_BORDER.set()
+        frame.setLineWidth_(1.0)
+        frame.stroke()
+        if not VideoPlayback().is_current(str(self.msgid or '')):
+            self._drawPlayBadge(rect)
+
+    @objc.python_method
+    def _drawPlayBadge(self, rect):
+        """A play symbol over a still, so a poster reads as a movie.
+
+        Sized against the picture rather than fixed: the same badge has to
+        sit on a full-width bubble and on a grid cell a quarter the size,
+        and a fixed one is either lost on the first or covers the second.
+        """
+        size = min(VIDEO_BADGE_SIZE,
+                   max(min(rect.size.width, rect.size.height) * 0.28,
+                       VIDEO_BADGE_MIN))
+        centre_x = rect.origin.x + rect.size.width / 2.0
+        centre_y = rect.origin.y + rect.size.height / 2.0
+        disc = NSBezierPath.bezierPathWithOvalInRect_(
+            NSMakeRect(centre_x - size / 2.0, centre_y - size / 2.0, size, size))
+        COLOR_VIDEO_SCRIM.set()
+        disc.fill()
+        # A hairline rim, because a dark disc over a dark frame of video
+        # has no edge at all otherwise.
+        COLOR_VIDEO_EDGE.set()
+        disc.setLineWidth_(1.0)
+        disc.stroke()
+
+        # The same triangle the play key draws, nudged right by the same
+        # fraction: centred on its bounding box it looks left of centre in
+        # a circle, because its visual weight is in the base.
+        span = size * 0.26
+        head = NSBezierPath.bezierPath()
+        head.moveToPoint_((centre_x + span * 0.92, centre_y))
+        head.lineToPoint_((centre_x - span * 0.58, centre_y - span))
+        head.lineToPoint_((centre_x - span * 0.58, centre_y + span))
+        head.closePath()
+        COLOR_VIDEO_GLYPH.set()
+        head.setLineJoinStyle_(1)           # NSRoundLineJoinStyle
+        head.setLineWidth_(1.2)
+        head.fill()
+        head.stroke()
 
     @objc.python_method
     def _drawProgress(self):
@@ -3686,6 +3964,106 @@ class MessageBubbleView(NSView):
             self.setNeedsDisplay_(True)
         return changed
 
+    # -- the movie's picture ----------------------------------------------
+
+    @objc.python_method
+    def _videoHost(self):
+        """The view the player's layer goes into, built on first use.
+
+        A layer-backed SUBVIEW rather than a sublayer of the bubble
+        itself. The bubble is flipped and its own backing layer is not,
+        so a raw sublayer would be positioned in the other geometry --
+        the picture lands at the wrong end of the bubble and travels the
+        wrong way when it reflows. A subview is framed in exactly the
+        coordinates every other rect in the layout is computed in.
+
+        Built lazily, so a transcript of forty movies nobody has pressed
+        play on carries no extra views at all.
+        """
+        if self._video_host is None:
+            host = VideoHostView.alloc().initWithFrame_(NSZeroRect)
+            host.setWantsLayer_(True)
+            # Hidden until something is actually put in it. Born visible,
+            # the very first attach sees a host that is already unhidden
+            # and skips the redraw -- on the one transition that matters
+            # most, from poster to picture.
+            host.setHidden_(True)
+            self._video_host = host
+            self.addSubview_(host)
+        return self._video_host
+
+    @objc.python_method
+    def _syncVideoLayer(self):
+        """Hold the player's picture if this bubble owns the clip.
+
+        Every other bubble falls back to its poster, which is the same
+        rule the play keys already follow: one player, one moving
+        picture, and no way to end up with two.
+        """
+        if not self._showsVideo():
+            self._detachVideoLayer()
+            return
+        playback = VideoPlayback()
+        if not playback.is_current(str(self.msgid or '')):
+            self._detachVideoLayer()
+            return
+        rect = self._map_rect
+        if rect.size.width <= 0 or rect.size.height <= 0:
+            return
+        host = self._videoHost()
+        was_hidden = host.isHidden()
+        host.setFrame_(rect)
+        host.setHidden_(False)
+        playback.attach(host)
+        if was_hidden:
+            # Whether the poster is painted at all is decided in drawRect
+            # from who owns the player, so taking the layer has to ask for
+            # a redraw. The transport's own numbers cannot be relied on to
+            # do it: press play and pause again inside a tenth of a second
+            # and not one of them has moved enough to count as a change.
+            self.setNeedsDisplay_(True)
+
+    @objc.python_method
+    def _detachVideoLayer(self):
+        """Give the picture back, and hide the view that was holding it."""
+        host = self._video_host
+        if host is None:
+            return
+        playback = VideoPlayback()
+        if playback.host() is host:
+            playback.detach()
+        if not host.isHidden():
+            host.setHidden_(True)
+            # The poster and its badge have to come back, for the same
+            # reason taking the layer had to remove them.
+            self.setNeedsDisplay_(True)
+
+    @objc.python_method
+    def noteVideoState(self, playing, position, duration, progress, current):
+        """Refresh the transport, and take or give up the picture.
+
+        `current` is whether the single player belongs to this bubble. It
+        is passed in rather than asked for here because the renderer has
+        already worked it out for the transport figures, and the two
+        answers must not be allowed to disagree -- a bubble drawing a
+        moving bar over a poster, or holding the picture while another
+        clip plays, is exactly what that disagreement looks like.
+        """
+        changed = self.noteAudioState(playing, position, duration, progress)
+        if current:
+            self._syncVideoLayer()
+        else:
+            self._detachVideoLayer()
+        return changed
+
+    def viewDidMoveToSuperview(self):
+        # A bubble taken out of the transcript -- its message deleted, the
+        # conversation cleared -- must not leave a movie playing into a
+        # layer nothing can see any more, holding the file open behind it.
+        if self.superview() is None:
+            VideoPlayback().stop_for_key(str(self.msgid or ''))
+            self._detachVideoLayer()
+
     @objc.python_method
     def _clearAffordances(self):
         """Forget every header target. Used wherever the header is not drawn."""
@@ -3789,13 +4167,7 @@ class MessageBubbleView(NSView):
             self._reply_rect = NSZeroRect
 
         # delivery ticks
-        ticks = ''
-        if self.state == MSG_STATE_DISPLAYED:
-            ticks = GLYPH_TICK + GLYPH_TICK
-        elif self.state == MSG_STATE_DELIVERED:
-            ticks = GLYPH_TICK
-        elif self.state in (MSG_STATE_DEFERRED, MSG_STATE_FAILED_LOCAL):
-            ticks = GLYPH_DEFERRED
+        ticks = self._deliveryGlyphs()
         if ticks:
             tick_attrs = dict(glyph_attrs)
             if self.state in (MSG_STATE_DELIVERED, MSG_STATE_DISPLAYED):
@@ -4522,7 +4894,7 @@ class MessageBubbleView(NSView):
         # The player is checked before the open-the-file rule below it: a
         # recording IS on disc, so without this every press of the play key
         # would hand the file to whatever plays audio outside Blink.
-        if self._showsAudio():
+        if self._showsTransport():
             if self._hits(point, self._audio_key_rect, True):
                 self._audio_key_down = True
                 self.setNeedsDisplay_(True)

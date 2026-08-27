@@ -42,11 +42,6 @@ class AudioSettingsExtension(SettingsGroup):
     reject_unauthorized_contacts = Setting(type=bool, default=False)
 
 
-class ChatSettingsExtension(SettingsGroup):
-    disable_replication = Setting(type=bool, default=True)
-    replication_password = Setting(type=str, default='') if memory_stick_mode() else KeychainPasswordSetting(type=str, default='', label='ChatReplication')
-
-
 class SMSSettingsExtension(SettingsGroup):
     enable_replication = Setting(type=bool, default=True)
     use_cpim = Setting(type=bool, default=True)
@@ -188,7 +183,6 @@ class AccountExtension(SettingsObjectExtension):
     auth = AuthSettingsExtension
     nat_traversal = NATTraversalSettingsExtension
     audio = AudioSettingsExtension
-    chat = ChatSettingsExtension
     sms = SMSSettingsExtension
     ldap = LDAPSettingsExtension
     message_summary = MessageSummarySettingsExtension

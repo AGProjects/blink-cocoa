@@ -238,7 +238,6 @@ class ChatController(MediaStream):
         
         self.notification_center = NotificationCenter()
         self.notification_center.add_observer(self, name='BlinkFileTransferDidEnd')
-        self.notification_center.add_observer(self, name='ChatReplicationJournalEntryReceived')
         self.notification_center.add_observer(self, name='CFGSettingsObjectDidChange')
         self.notification_center.add_observer(self, name='BonjourAccountDidAddNeighbour')
         self.notification_center.add_observer(self, name='BonjourAccountDidUpdateNeighbour')
@@ -1773,19 +1772,6 @@ class ChatController(MediaStream):
             self.revalidateToolbar()
 
     @objc.python_method
-    def _NH_ChatReplicationJournalEntryReceived(self, sender, data):
-        if self.status == STREAM_CONNECTED:
-            return
-
-        data = data.chat_message
-        if self.local_uri != data['local_uri'] or self.remote_uri != data['remote_uri']:
-            return
-
-        icon = NSApp.delegate().contactsWindowController.iconPathForURI(data['cpim_to'])
-        timestamp = ISOTimestamp(data['cpim_timestamp'])
-        self.chatViewController.showMessage(data['call_id'], data['msgid'], data['direction'], data['cpim_from'], icon, data['body'], timestamp, is_private=bool(int(data['private'])), recipient=data['cpim_to'], state=data['status'], is_html=True, history_entry=True, media_type='chat', encryption=data['encryption'])
-
-    @objc.python_method
     def resetIsComposingTimer(self, refresh):
         if self.remoteTypingTimer:
             # if we don't get any indications in the request refresh, then we assume remote to be idle
@@ -1828,7 +1814,6 @@ class ChatController(MediaStream):
         # remove middleware observers
         self.notification_center.discard_observer(self, sender=self.sessionController)
         self.notification_center.discard_observer(self, name='BlinkFileTransferDidEnd')
-        self.notification_center.discard_observer(self, name='ChatReplicationJournalEntryReceived')
         self.notification_center.discard_observer(self, name='CFGSettingsObjectDidChange')
         self.notification_center.discard_observer(self, name='BonjourAccountDidAddNeighbour')
         self.notification_center.discard_observer(self, name='BonjourAccountDidUpdateNeighbour')
