@@ -62,7 +62,8 @@ __all__ = ['USE_MESSAGE_PANEL',
            'FILE_TRANSFER_CONTENT_TYPE', 'RCS_FILE_TRANSFER_CONTENT_TYPE',
            'FILE_TRANSFER_CONTENT_TYPES', 'file_transfer_summary',
            'reply_metadata', 'reply_envelope', 'REPLY_ACTION', 'quote_digest',
-           'recording_title', 'peaks_metadata', 'PEAKS_ACTION',
+           'recording_title', 'peaks_metadata', 'peaks_envelope',
+           'PEAKS_ACTION',
            'is_renderable_content_type',
            'file_transfer_envelope',
            'HOST_PROTOCOL', 'missing_host_protocol_methods', 'assert_conforms',
@@ -404,6 +405,33 @@ def peaks_metadata(body):
     return {'transfer_id': str(transfer_id),
             'peaks': peaks,
             'spectrum': spectrum}
+
+
+def peaks_envelope(transfer_id, metadata_id, peaks, spectrum, peer_uri, timestamp):
+    """The body of the companion message that carries a waveform.
+
+    The sending half of peaks_metadata, and shaped by the same
+    constraint: SylkServer relays a fixed field set for a file transfer
+    and drops anything else stamped on it, so a recording's shape cannot
+    travel with the recording. It goes as its own message keyed on the
+    TRANSFER id -- not on this message's id -- because that is the only
+    identifier the recipient can pair a bubble with.
+
+    Written to match mobile field for field, mobile being the reader on
+    the other end.
+    """
+    import json
+
+    value = {'l': list((peaks or {}).get('l') or []),
+             'r': list((peaks or {}).get('r') or [])}
+    if spectrum:
+        value['spectrum'] = spectrum
+    return json.dumps({'messageId': str(transfer_id),
+                       'metadataId': str(metadata_id),
+                       'action': PEAKS_ACTION,
+                       'value': value,
+                       'timestamp': str(timestamp),
+                       'uri': str(peer_uri)})
 
 
 def reply_envelope(reply_id, original_id, metadata_id, peer_uri, timestamp):

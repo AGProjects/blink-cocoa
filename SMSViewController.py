@@ -8,8 +8,7 @@ from AppKit import (NSApp,
                     NSRectFill,
                     NSWorkspace)
 
-from Foundation import (NSAttributedString,
-                        NSBundle,
+from Foundation import (NSBundle,
                         NSColor,
                         NSDate,
                         NSDictionary,
@@ -20,7 +19,6 @@ from Foundation import (NSAttributedString,
                         NSMakeRange,
                         NSMakeSize,
                         NSMaxX,
-                        NSMenuItem,
                         NSObject,
                         NSRunLoopCommonModes,
                         NSRunLoop,
@@ -72,8 +70,7 @@ from HistoryManager import ChatHistory
 from MessageHost import (FILE_TRANSFER_CONTENT_TYPE,
                          is_renderable_content_type, peaks_metadata,
                          pgp_plaintext, pgp_plaintext_bytes,
-                         reply_envelope, reply_metadata)
-from SmileyManager import SmileyManager
+                         peaks_envelope, reply_envelope, reply_metadata)
 from SylkLocation import (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE,
                           append_track_point,
                           bubble_id as location_bubble_id, ended_label,
@@ -404,6 +401,11 @@ class SMSViewController(NSObject):
             # fixed field set and drops the rest), so it arrives as its own
             # message, before or after the transfer it belongs to.
             self.audio_metadata = {}
+            # What the last file transfer filed here will be uploaded
+            # from: the cache's copy of it, or the original when no copy
+            # could be made. Read by a caller that owns a temporary file
+            # and has to know whether the transfer is still reading it.
+            self.last_transfer_source = None
             # Lifecycle breadcrumbs already posted, keyed session:kind, so
             # a signal that arrives twice (live and then again on journal
             # replay, or from two of our devices) writes one note only.
@@ -523,6 +525,13 @@ class SMSViewController(NSObject):
         if self.remoteTypingTimer:
             self.remoteTypingTimer.invalidate()
 
+        # A popover still on screen when the conversation it belongs to
+        # goes away is a panel anchored to a view that no longer exists.
+        picker = getattr(self, 'smiley_picker', None)
+        if picker is not None:
+            picker.dispose()
+            self.smiley_picker = None
+
         if self.encryption.active:
             self.stopEncryption()
 
@@ -583,30 +592,12 @@ class SMSViewController(NSObject):
         self.chatViewController.setAccount_(self.account)
         self.chatViewController.resetRenderedMessages()
 
-        smileys = SmileyManager().get_smiley_list()
-
-        menu = self.smileyButton.menu()
-
-        while menu.numberOfItems() > 0:
-            menu.removeItemAtIndex_(0)
-
-        bigText = NSAttributedString.alloc().initWithString_attributes_(" ", NSDictionary.dictionaryWithObject_forKey_(NSFont.systemFontOfSize_(16), NSFontAttributeName))
-
-        for text, file in smileys:
-            image = NSImage.alloc().initWithContentsOfFile_(file)
-            if not image:
-                continue
-            image.setScalesWhenResized_(True)
-            image.setSize_(NSMakeSize(16, 16))
-            atext = bigText.mutableCopy()
-            atext.appendAttributedString_(NSAttributedString.alloc().initWithString_(text))
-            item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(text, "insertSmiley:", "")
-            menu.addItem_(item)
-            item.setTarget_(self)
-            item.setAttributedTitle_(atext)
-            item.setRepresentedObject_(NSAttributedString.alloc().initWithString_(text))
-            item.setImage_(None)
-            item.setImage_(image)
+        # The smileys are no longer a menu on the nib's popup: they are a
+        # grid in a popover, opened from a button that floats inside the
+        # composer. The renderer puts that button there and hides the
+        # popup; all that is left here is owning the panel, because it
+        # lasts as long as the conversation does.
+        self.smiley_picker = None
 
     @objc.python_method
     def revalidateToolbar(self):
@@ -783,6 +774,47 @@ class SMSViewController(NSObject):
     def insertSmiley_(self, sender):
         smiley = sender.representedObject()
         self.chatViewController.appendAttributedString_(smiley)
+
+    @objc.python_method
+    def showSmileyPicker(self, button):
+        """Open the grid above the composer's smiley key."""
+        if getattr(self, 'smiley_picker', None) is None:
+            from SmileyPicker import SmileyPicker
+            self.smiley_picker = SmileyPicker(self)
+        self.smiley_picker.showFromButton(button)
+
+    @objc.python_method
+    def insertSmileyText(self, text):
+        """Type a picked smiley into the composer.
+
+        Typed, not appended: insertText_ is the same door the keyboard
+        comes through, so the smiley lands at the caret rather than at
+        the end, takes the composer's own font and colour, joins the undo
+        stack, fires the change notification the character counter
+        listens for, and passes the length limit ChatInputTextView
+        enforces there. Appending a bare attributed string to the text
+        storage skips all six -- and an attributed string carrying no
+        font attribute is how a smiley gets inserted and shows nothing.
+
+        Plain text, because that is what these are: the transcript
+        substitutes the picture when it renders, and an image in the
+        composer would send a message nobody else can read.
+        """
+        input_text = self.chatViewController.inputText
+        if input_text is None:
+            self.log_error('Cannot insert %s: there is no composer' % text)
+            return
+        window = input_text.window()
+        if window is not None:
+            # Focused first: insertText_ goes in at the insertion point,
+            # and the picker had the keyboard until a moment ago.
+            window.makeFirstResponder_(input_text)
+        try:
+            input_text.insertText_(text)
+        except Exception as e:
+            self.log_error('Cannot insert %s: %s' % (text, e))
+            return
+        self.log_debug('Inserted the smiley %s' % text)
 
     @objc.python_method
     def matchesTargetOrInstanceAndAccount(self, target, instance_id, account):
@@ -1578,7 +1610,54 @@ class SMSViewController(NSObject):
         return sent
 
     @objc.python_method
-    def sendFile(self, path):
+    def sendVoiceRecording(self, path, duration, peaks):
+        """Send a voice note made in the composer, waveform and all.
+
+        Two messages, as mobile sends them and as this client already
+        reads them: the transfer, then the shape of it. The second is not
+        an optimisation -- the server relays a fixed field set for a
+        transfer and drops a `peaks` field stamped on the envelope, so
+        without the companion message the recipient draws a bare bar for
+        the one kind of file where the waveform is the content.
+
+        Returns the path the upload will actually read -- the cache's own
+        copy of the take, or the take itself when the copy could not be
+        made -- so the composer knows whether its temporary file is still
+        load-bearing. None if nothing was sent.
+        """
+        transfer_id = self.sendFile(path, duration=duration)
+        if transfer_id is None:
+            return None
+        if peaks and (peaks.get('l') or peaks.get('r')):
+            self.send_audio_peaks(transfer_id, peaks)
+        return self.last_transfer_source
+
+    @objc.python_method
+    def send_audio_peaks(self, transfer_id, peaks, spectrum=None):
+        """Ship a recording's waveform on its own message.
+
+        Noted locally as well as sent. The bubble for our own recording
+        looks the shape up exactly where it looks up one that arrived, so
+        recording it here is what makes our own voice note draw itself
+        the same way on the next launch as it does now.
+        """
+        body = peaks_envelope(transfer_id, str(uuid.uuid4()), peaks, spectrum,
+                              self.remote_uri, ISOTimestamp.now())
+        self.sendMessage(body, LEGACY_LOCATION_CONTENT_TYPE)
+        self.note_audio_metadata({'transfer_id': str(transfer_id),
+                                  'peaks': {'l': list(peaks.get('l') or []),
+                                            'r': list(peaks.get('r') or [])},
+                                  'spectrum': spectrum})
+
+    @objc.python_method
+    def sendFile(self, path, duration=None):
+        """Send one file. Returns its transfer id, or None.
+
+        `duration` is the length of a recording, which nothing can read
+        off the envelope: it is put there so the bubble's clock is right
+        on the first draw instead of a beat later, once the player has
+        opened the file to ask.
+        """
         from SMSWindowManager import SMSWindowManager
         from FileTransferCache import (FileTransferCache, guess_filetype,
                                        new_transfer_id, upload_url)
@@ -1588,7 +1667,7 @@ class SMSViewController(NSObject):
             # A folder can be dragged in as easily as a file, and os.path
             # .getsize() answers for one without complaining.
             self.log_info('Not sending %s: not a file' % path)
-            return False
+            return None
         try:
             size = os.path.getsize(path)
         except OSError as e:
@@ -1596,7 +1675,7 @@ class SMSViewController(NSObject):
             self.chatViewController.showSystemMessage(
                 NSLocalizedString("Cannot read %s", "Label") % os.path.basename(path),
                 ISOTimestamp.now(), is_error=True)
-            return False
+            return None
 
         base = SMSWindowManager().fileTransferBaseURL(self.account)
         if not base:
@@ -1604,7 +1683,7 @@ class SMSViewController(NSObject):
             self.chatViewController.showSystemMessage(
                 NSLocalizedString("This account has no file transfer service", "Label"),
                 ISOTimestamp.now(), is_error=True)
-            return False
+            return None
 
         # The filename travels in a URL and becomes a path on the other
         # side, so the same normalisation mobile applies is applied here:
@@ -1625,6 +1704,8 @@ class SMSViewController(NSObject):
             'direction': 'outgoing',
             'url': upload_url(base, sender, receiver, transfer_id, filename),
         }
+        if duration:
+            meta['duration'] = round(float(duration), 2)
 
         timestamp = ISOTimestamp.now()
         self.log_info('Sending %s (%s bytes) to %s as %s'
@@ -1635,9 +1716,14 @@ class SMSViewController(NSObject):
         # server -- and the upload reads our copy, so moving the original
         # mid-transfer cannot break it.
         stored = FileTransferCache().store(meta, self.local_uri, self.remote_uri, path)
+        # What the upload will read. Normally the cache's copy, but the
+        # cache falls back to the original when it cannot make one, and a
+        # caller holding a temporary file needs to know which of the two
+        # it just handed over before deleting anything.
+        self.last_transfer_source = stored
         self._showOutgoingTransfer(meta, timestamp, stored)
         self._uploadTransfer(meta, stored, timestamp)
-        return True
+        return transfer_id
 
     @objc.python_method
     def _showOutgoingTransfer(self, meta, timestamp, path):
@@ -1700,7 +1786,24 @@ class SMSViewController(NSObject):
 
         cache.note_upload_phase(meta, 'upload')
         self._noteTransferProgress(meta)
-        cache.upload(meta, upload_path, finished)
+        cache.upload(meta, upload_path, finished, token=self._apiToken())
+
+    @objc.python_method
+    def _apiToken(self):
+        """This account's API token, or None.
+
+        The one the server hands out over SIP as
+        application/sylk-api-token and that history sync already presents
+        on every journal page. The upload endpoint takes the same one.
+        """
+        try:
+            token = self.account.sms.history_token
+        except AttributeError:
+            return None
+        # Not str(token) or None: the setting is None until the server
+        # issues one, and str(None) is 'None' -- a perfectly truthy string
+        # that would go out as a credential and come back 401.
+        return str(token) if token else None
 
     @objc.python_method
     def _canEncryptFile(self, meta):
@@ -1782,6 +1885,16 @@ class SMSViewController(NSObject):
             self.log_info('Uploaded %s (%s)' % (meta.get('filename'), detail))
         else:
             self.log_error('Upload of %s failed: %s' % (meta.get('filename'), detail))
+            if detail == 'HTTP 401':
+                # The token this account holds is not the one the server
+                # has. Ask for another, exactly as history sync does on
+                # the same answer -- otherwise every upload from here on
+                # fails the same way and nothing ever asks why.
+                try:
+                    from SMSWindowManager import SMSWindowManager
+                    SMSWindowManager().requestUploadToken(self.account)
+                except Exception as e:
+                    self.log_error('Cannot request a new API token: %s' % e)
         self.history.update_message_status(meta['transfer_id'], state)
         self.chatViewController.markMessage(meta['transfer_id'], state)
         self.chatViewController.clearTransferProgress(meta['transfer_id'])

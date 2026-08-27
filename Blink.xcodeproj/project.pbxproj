@@ -170,6 +170,9 @@
 		AD00000000000000004C0001 /* MessageListView.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004C0000 /* MessageListView.py */; };
 		AD00000000000000004B0001 /* MessageBubbleView.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004B0000 /* MessageBubbleView.py */; };
 		AD00000000000000005C0001 /* AudioPlayback.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005C0000 /* AudioPlayback.py */; };
+		AD0000000000000000720001 /* SmileyPicker.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000720000 /* SmileyPicker.py */; };
+		AD0000000000000000700001 /* AudioRecorder.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000700000 /* AudioRecorder.py */; };
+		AD0000000000000000710001 /* AudioRecorderView.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000710000 /* AudioRecorderView.py */; };
 		AD00000000000000005D0001 /* MacLocation.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005D0000 /* MacLocation.py */; };
 		AD00000000000000004E0001 /* NativeChatViewController.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004E0000 /* NativeChatViewController.py */; };
 		AD00000000000000005B0001 /* MessageView.xib in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005B0000 /* MessageView.xib */; };
@@ -391,6 +394,9 @@
 		AD00000000000000004C0002 /* MessageListView.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004C0000 /* MessageListView.py */; };
 		AD00000000000000004B0002 /* MessageBubbleView.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004B0000 /* MessageBubbleView.py */; };
 		AD00000000000000005C0002 /* AudioPlayback.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005C0000 /* AudioPlayback.py */; };
+		AD0000000000000000720002 /* SmileyPicker.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000720000 /* SmileyPicker.py */; };
+		AD0000000000000000700002 /* AudioRecorder.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000700000 /* AudioRecorder.py */; };
+		AD0000000000000000710002 /* AudioRecorderView.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000710000 /* AudioRecorderView.py */; };
 		AD00000000000000005D0002 /* MacLocation.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005D0000 /* MacLocation.py */; };
 		AD00000000000000004E0002 /* NativeChatViewController.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004E0000 /* NativeChatViewController.py */; };
 		AD00000000000000005B0002 /* MessageView.xib in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005B0000 /* MessageView.xib */; };
@@ -898,6 +904,9 @@
 		AD00000000000000004C0003 /* MessageListView.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004C0000 /* MessageListView.py */; };
 		AD00000000000000004B0003 /* MessageBubbleView.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004B0000 /* MessageBubbleView.py */; };
 		AD00000000000000005C0003 /* AudioPlayback.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005C0000 /* AudioPlayback.py */; };
+		AD0000000000000000720003 /* SmileyPicker.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000720000 /* SmileyPicker.py */; };
+		AD0000000000000000700003 /* AudioRecorder.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000700000 /* AudioRecorder.py */; };
+		AD0000000000000000710003 /* AudioRecorderView.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000710000 /* AudioRecorderView.py */; };
 		AD00000000000000005D0003 /* MacLocation.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005D0000 /* MacLocation.py */; };
 		AD00000000000000004E0003 /* NativeChatViewController.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004E0000 /* NativeChatViewController.py */; };
 		AD00000000000000005B0003 /* MessageView.xib in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005B0000 /* MessageView.xib */; };
@@ -1787,6 +1796,9 @@
 		AD00000000000000004C0000 /* MessageListView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MessageListView.py; sourceTree = "<group>"; };
 		AD00000000000000004B0000 /* MessageBubbleView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MessageBubbleView.py; sourceTree = "<group>"; };
 		AD00000000000000005C0000 /* AudioPlayback.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AudioPlayback.py; sourceTree = "<group>"; };
+		AD0000000000000000720000 /* SmileyPicker.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SmileyPicker.py; sourceTree = "<group>"; };
+		AD0000000000000000700000 /* AudioRecorder.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AudioRecorder.py; sourceTree = "<group>"; };
+		AD0000000000000000710000 /* AudioRecorderView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AudioRecorderView.py; sourceTree = "<group>"; };
 		AD00000000000000005D0000 /* MacLocation.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MacLocation.py; sourceTree = "<group>"; };
 		AD00000000000000004E0000 /* NativeChatViewController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = NativeChatViewController.py; sourceTree = "<group>"; };
 		AD00000000000000005B0000 /* MessageView.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MessageView.xib; sourceTree = "<group>"; };
@@ -2262,6 +2274,9 @@
 				AD00000000000000004C0000 /* MessageListView.py */,
 				AD00000000000000004B0000 /* MessageBubbleView.py */,
 				AD00000000000000005C0000 /* AudioPlayback.py */,
+				AD0000000000000000720000 /* SmileyPicker.py */,
+				AD0000000000000000700000 /* AudioRecorder.py */,
+				AD0000000000000000710000 /* AudioRecorderView.py */,
 				AD00000000000000005D0000 /* MacLocation.py */,
 				AD00000000000000004E0000 /* NativeChatViewController.py */,
 				AD00000000000000005B0000 /* MessageView.xib */,
@@ -2980,6 +2995,9 @@
 				AD00000000000000004C0001 /* MessageListView.py in Resources */,
 				AD00000000000000004B0001 /* MessageBubbleView.py in Resources */,
 				AD00000000000000005C0001 /* AudioPlayback.py in Resources */,
+				AD0000000000000000720001 /* SmileyPicker.py in Resources */,
+				AD0000000000000000700001 /* AudioRecorder.py in Resources */,
+				AD0000000000000000710001 /* AudioRecorderView.py in Resources */,
 				AD00000000000000005D0001 /* MacLocation.py in Resources */,
 				AD00000000000000004E0001 /* NativeChatViewController.py in Resources */,
 				AD00000000000000005B0001 /* MessageView.xib in Resources */,
@@ -3261,6 +3279,9 @@
 				AD00000000000000004C0002 /* MessageListView.py in Resources */,
 				AD00000000000000004B0002 /* MessageBubbleView.py in Resources */,
 				AD00000000000000005C0002 /* AudioPlayback.py in Resources */,
+				AD0000000000000000720002 /* SmileyPicker.py in Resources */,
+				AD0000000000000000700002 /* AudioRecorder.py in Resources */,
+				AD0000000000000000710002 /* AudioRecorderView.py in Resources */,
 				AD00000000000000005D0002 /* MacLocation.py in Resources */,
 				AD00000000000000004E0002 /* NativeChatViewController.py in Resources */,
 				AD00000000000000005B0002 /* MessageView.xib in Resources */,
@@ -3563,6 +3584,9 @@
 				AD00000000000000004C0003 /* MessageListView.py in Resources */,
 				AD00000000000000004B0003 /* MessageBubbleView.py in Resources */,
 				AD00000000000000005C0003 /* AudioPlayback.py in Resources */,
+				AD0000000000000000720003 /* SmileyPicker.py in Resources */,
+				AD0000000000000000700003 /* AudioRecorder.py in Resources */,
+				AD0000000000000000710003 /* AudioRecorderView.py in Resources */,
 				AD00000000000000005D0003 /* MacLocation.py in Resources */,
 				AD00000000000000004E0003 /* NativeChatViewController.py in Resources */,
 				AD00000000000000005B0003 /* MessageView.xib in Resources */,

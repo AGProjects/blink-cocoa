@@ -372,7 +372,7 @@ class FileTransferCache(object):
 
     # -- uploading ---------------------------------------------------------
 
-    def upload(self, meta, path, callback):
+    def upload(self, meta, path, callback, token=None):
         """POST a file to the transfer service.
 
         The POST *is* the send: SylkServer takes the sender, receiver,
@@ -381,6 +381,13 @@ class FileTransferCache(object):
         back to us through the journal. Sylk Mobile works the same way and
         deliberately never puts a file transfer on the wire as a SIP
         message -- doing both would deliver the file twice.
+
+        `token` is the account's API token, and the server will not take
+        the file without it: it authorises an upload either by a WebSocket
+        session it already holds for the sender -- which is how the web and
+        mobile clients get in, and which a SIP-only client never has -- or
+        by this, the same credential and the same header the message
+        history endpoint takes.
 
         callback(True/False, detail) runs on the GUI thread when it is over.
         """
@@ -402,6 +409,16 @@ class FileTransferCache(object):
             request.setHTTPMethod_('POST')
             request.setValue_forHTTPHeaderField_(
                 str(meta.get('filetype') or 'application/octet-stream'), 'Content-Type')
+            if token:
+                request.setValue_forHTTPHeaderField_('Apikey %s' % token, 'Authorization')
+            else:
+                # Said out loud: without it the server answers 403 and the
+                # transfer fails for a reason that has nothing to do with
+                # the file, the network, or the peer.
+                BlinkLogger().log_info(
+                    'Uploading %s without an API token; the server will '
+                    'refuse it unless something else here holds a session '
+                    'for the sender' % display_name(meta))
 
             def handler(body, response, error):
                 # URLSession's own queue. Nothing here touches the file

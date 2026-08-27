@@ -38,10 +38,13 @@ from AppKit import (NSButton,
                     NSViewFrameDidChangeNotification,
                     NSViewMaxXMargin,
                     NSViewMaxYMargin,
-                    NSViewMinYMargin)
+                    NSViewMinXMargin,
+                    NSViewMinYMargin,
+                    NSViewWidthSizable)
 from Foundation import (NSArray, NSAttributedString, NSIntersectsRect,
                         NSLocalizedString, NSMakeRect,
-                        NSNotificationCenter, NSTimer, NSURL, NSWorkspace)
+                        NSNotificationCenter, NSRunLoop, NSRunLoopCommonModes,
+                        NSTimer, NSURL, NSWorkspace)
 
 import objc
 
@@ -49,6 +52,9 @@ from sipsimple.util import ISOTimestamp
 
 from AudioPlayback import (AudioPlayback, derive_peaks, derived_peaks,
                            envelope_peaks, has_peaks)
+from AudioRecorder import AudioRecorder, request_microphone
+from AudioRecorderView import (AudioRecorderView, BLINK_SECONDS,
+                               RECORDER_BAR_HEIGHT)
 from BlinkLogger import BlinkLogger
 from MessageHost import (location_summary, file_transfer_category,
                          file_transfer_summary, merge_transfer_error,
@@ -71,6 +77,29 @@ ATTACH_BUTTON_GAP = 4.0
 # How far below the composer's top edge the paperclip sits, so its glyph is
 # optically level with the first line of text rather than with the frame.
 ATTACH_BUTTON_TOP_INSET = 1.0
+# The microphone at the right of the composer, opposite the paperclip --
+# where Telegram, WhatsApp and Sylk Mobile all put it. Right rather than
+# left because it is the one control that ACTS on press: send lives on
+# that side of an input bar and recording is the first half of sending.
+MIC_GLYPH = chr(127908)
+RECORD_BUTTON_SIZE = 24.0
+RECORD_BUTTON_GAP = 4.0
+RECORD_BUTTON_TOP_INSET = 1.0
+# The smiley, immediately left of the microphone and inside the field
+# with it. It used to be the nib's NSPopUpButton, parked in the strip of
+# row to the RIGHT of the composer -- outside the bar it belongs to, and
+# a different kind of control from the two glyphs at either end of it.
+SMILEY_GLYPH = chr(128578)
+SMILEY_BUTTON_SIZE = 24.0
+SMILEY_BUTTON_GAP = 4.0
+SMILEY_BUTTON_TOP_INSET = 1.0
+# What the composer leaves at its right once the nib's popup is out of
+# the way: a margin, rather than the 45 points that button occupied.
+COMPOSER_RIGHT_INSET = 4.0
+# How often the recording bar is repainted: the level strip is following
+# a voice, and anything slower than this reads as laggy rather than live.
+# The same timer drives the preview's playhead once the take has stopped.
+RECORDER_TICK_SECONDS = 0.05
 # NSFocusRingTypeNone. Imported defensively rather than by name in the
 # AppKit block above: a constant PyObjC does not export would raise on
 # import, and this module failing to import is the whole message pane
@@ -168,6 +197,27 @@ class NativeChatViewController(ChatViewController):
     _filter_rebuild_pending = False
     _media_fetch_pending = False
     _attach_button = None
+    _record_button = None
+    _smiley_button = None
+    # How far the composer's right edge sits from the row's, as the nib
+    # drew it. Captured once, before anything here has moved the field:
+    # the row has another control out at that edge and a composer widened
+    # to the row would slide under it. The field is widthSizable, so this
+    # inset survives every resize and only has to be read once.
+    _composer_right_inset = None
+    _watching_composer = False
+    _laying_out_composer = False
+    # Which conversation currently owns the recorder. There is one
+    # microphone and one AudioRecorder behind it, so pressing record in a
+    # second conversation has to take the take away from the first
+    # explicitly -- left to itself the first one keeps a bar on screen
+    # and a timer running against a recorder that is now somebody
+    # else's, and its stop key ends THEIR sentence.
+    _active_recorder = None
+    _recorder_bar = None
+    _recorder_timer = None
+    _recorder_blink_at = 0.0
+    _recorder_blink = True
     _audio_timer = None
     _audio_logged = None
     _progress_timer = None
@@ -185,7 +235,7 @@ class NativeChatViewController(ChatViewController):
         if self.inputText:
             self.inputText.registerForDraggedTypes_(NSArray.arrayWithObject_(NSFilenamesPboardType))
             self.inputText.setOwner(self)
-            self._installAttachButton()
+            self._installComposerButtons()
             NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(
                 self, "textDidChange:", NSTextDidChangeNotification, self.inputText)
 
@@ -280,23 +330,48 @@ class NativeChatViewController(ChatViewController):
                 button.setAutoresizingMask_(NSViewMinYMargin | NSViewMaxXMargin)
             row.addSubview_(button)
             self._attach_button = button
-
-            # The springs keep it in place while the row resizes itself, but
-            # the composer is also re-framed outright -- by the pane, and as
-            # the text grows -- and that does not go through them.
-            try:
-                scrollview.setPostsFrameChangedNotifications_(True)
-                NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(
-                    self, "composerFrameDidChange:",
-                    NSViewFrameDidChangeNotification, scrollview)
-            except Exception:
-                pass
             self._layoutComposerRow()
         except Exception as e:
             BlinkLogger().log_error('Cannot add the attach button: %s' % e)
 
+    @objc.python_method
+    def _watchComposerFrame(self):
+        """Follow the composer's frame from the moment there is one.
+
+        Registered on its own rather than as a side effect of installing
+        a button, which is how it used to happen and which left a hole
+        the width of the whole feature: the first time a conversation is
+        shown, its container can still have no size, so every install
+        declines -- and nothing was listening when the pane finally gave
+        the composer a width. The buttons then appeared on the NEXT
+        contact, because switching contacts calls ensureAttachButton
+        again against a view that is by then a real size.
+
+        The springs keep the buttons in place while the row resizes
+        itself, but the composer is also re-framed outright -- by the
+        pane, and as the text grows onto another line -- and that does
+        not go through them.
+        """
+        if self._watching_composer:
+            return
+        try:
+            scrollview = self.inputText.enclosingScrollView() if self.inputText else None
+            if scrollview is None:
+                return
+            scrollview.setPostsFrameChangedNotifications_(True)
+            NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(
+                self, "composerFrameDidChange:",
+                NSViewFrameDidChangeNotification, scrollview)
+            self._watching_composer = True
+        except Exception as e:
+            BlinkLogger().log_error('Cannot follow the composer: %s' % e)
+
     def composerFrameDidChange_(self, notification):
-        self._layoutComposerRow()
+        # Installs again as well as laying out: an install that declined
+        # because the composer had no width yet has to be retried the
+        # moment it has one, and every installer returns immediately once
+        # its button exists.
+        self._installComposerButtons()
 
     @objc.python_method
     def ensureAttachButton(self):
@@ -311,71 +386,286 @@ class NativeChatViewController(ChatViewController):
         kept it there. Hence "the attach button vanishes when contacts are
         changed". Re-asserting on show costs nothing and cannot be wrong.
         """
-        self._installAttachButton()
+        self._installComposerButtons()
         self._layoutComposerRow()
 
     @objc.python_method
-    def _layoutComposerRow(self):
-        """Keep the paperclip at the top left of the composer, and the
-        composer out from under it.
+    def _installComposerButtons(self):
+        """Everything that floats inside the composer, in one place.
 
-        Both halves are re-applied together rather than once at install:
-        the row is re-framed by the pane, by the split view when the
-        editing banner appears, and by the text growing, and only the
-        last of those goes through the autoresizing springs.
+        Ordered: the nib's smiley popup is retired first, because that is
+        what decides how much room there is at the right, and every
+        button placed afterwards is placed against it.
         """
-        button = self._attach_button
+        self._watchComposerFrame()
+        self._retireNibSmileyButton()
+        self._installAttachButton()
+        if self._hasSmileyPicker():
+            self._installSmileyButton()
+        self._installRecordButton()
+        # Once more with all of them in hand: each installer lays the row
+        # out before it returns its button, so the last one ran against a
+        # row that did not have itself in it yet.
+        self._layoutComposerRow()
+
+    @objc.python_method
+    def _hasSmileyPicker(self):
+        """Whether this conversation can open the grid.
+
+        This renderer is wired to three nibs. Only the messages pane's
+        viewer has the picker; the MSRP chat controller still keeps its
+        smileys on the nib's popup, and taking that away would leave it
+        with none at all rather than with a nicer one.
+        """
+        return hasattr(self.delegate, 'showSmileyPicker')
+
+    @objc.python_method
+    def _retireNibSmileyButton(self):
+        """Hide the NSPopUpButton the nib puts beside the composer.
+
+        Hidden rather than removed: it is the viewer's outlet, and an
+        outlet pointing at a view that has been torn out is a crash
+        waiting for whichever line of the old code still reaches for it.
+        With it gone from view the composer takes back the strip of row
+        it was sitting in -- which is the other half of this, and why the
+        right inset is fixed here rather than measured: the measurement
+        exists to keep the composer clear of whatever the nib put at that
+        edge, and this is what was there.
+
+        Nothing happens at all for a viewer without the picker: its popup
+        is still the only way it has to offer smileys.
+        """
+        if not self._hasSmileyPicker():
+            return
+        self._composer_right_inset = COMPOSER_RIGHT_INSET
+        button = getattr(self.delegate, 'smileyButton', None)
         if button is None:
             return
+        BlinkLogger().log_debug('The smiley popup is now a picker in the composer')
+        try:
+            button.setHidden_(True)
+        except Exception as e:
+            BlinkLogger().log_debug('Cannot hide the old smiley button: %s' % e)
+
+    @objc.python_method
+    def _installSmileyButton(self):
+        """A smiley inside the composer, immediately left of the mic."""
+        if self._smiley_button is not None:
+            return
+        self._smiley_button = self._floatingComposerButton(
+            SMILEY_GLYPH, SMILEY_BUTTON_SIZE, 'showSmileys:',
+            NSLocalizedString("Insert a smiley", "Tooltip"))
+
+    @objc.python_method
+    def _installRecordButton(self):
+        """A microphone at the right of the composer, opposite the clip."""
+        if self._record_button is not None:
+            return
+        self._record_button = self._floatingComposerButton(
+            MIC_GLYPH, RECORD_BUTTON_SIZE, 'recordAudio:',
+            NSLocalizedString("Record a voice message", "Tooltip"))
+
+    @objc.python_method
+    def _floatingComposerButton(self, glyph, size, action, tooltip):
+        """One of the glyph keys that float inside the composer.
+
+        Built here rather than in the nib for the reason the paperclip
+        is: they take their places from the field they sit in, so the
+        two ends of the composer stay symmetrical however wide the pane
+        is dragged. _layoutComposerRow settles the real geometry; the
+        frame here only has to be the right size and roughly in place.
+        """
+        try:
+            scrollview = self.inputText.enclosingScrollView()
+            row = scrollview.superview() if scrollview is not None else None
+            if row is None:
+                return None
+
+            frame = scrollview.frame()
+            if frame.size.width <= size * 6:
+                return None                 # too narrow to steal room from
+
+            button = NSButton.alloc().initWithFrame_(NSMakeRect(
+                frame.origin.x + frame.size.width - size - 2.0,
+                frame.origin.y, size, size))
+            button.setBordered_(False)
+            button.setAttributedTitle_(
+                NSAttributedString.alloc().initWithString_attributes_(
+                    glyph,
+                    {NSFontAttributeName: NSFont.systemFontOfSize_(15.0),
+                     NSForegroundColorAttributeName: NSColor.secondaryLabelColor()}))
+            button.setToolTip_(tooltip)
+            button.setTarget_(self)
+            button.setAction_(action)
+            # Pinned to the top RIGHT: the row grows downward as the
+            # message wraps, and the right edge moves as the pane is
+            # resized. NSViewMinXMargin is what holds a button against
+            # that edge instead of leaving it behind at a fixed offset.
+            if row.isFlipped():
+                button.setAutoresizingMask_(NSViewMaxYMargin | NSViewMinXMargin)
+            else:
+                button.setAutoresizingMask_(NSViewMinYMargin | NSViewMinXMargin)
+            row.addSubview_(button)
+            self._layoutComposerRow()
+            return button
+        except Exception as e:
+            BlinkLogger().log_error('Cannot add a composer button: %s' % e)
+            return None
+
+    @objc.python_method
+    def _canRecord(self):
+        """Whether this conversation has anywhere to send a recording.
+
+        The same test the paperclip answers to: a voice note is a file
+        transfer, so an account with no transfer service configured has
+        no more use for a microphone than it has for a paperclip.
+        """
+        delegate = self.delegate
+        if delegate is None:
+            return False
+        try:
+            return bool(getattr(delegate, 'canSendFiles', lambda: False)())
+        except Exception:
+            return False
+
+    @objc.python_method
+    def _layoutComposerRow(self):
+        """Keep the paperclip at the top left of the composer and the
+        microphone at its top right, with the composer clear of both.
+
+        All of it re-applied together rather than once at install: the row
+        is re-framed by the pane, by the split view when the editing
+        banner appears, and by the text growing, and only the last of
+        those goes through the autoresizing springs.
+        """
+        if (self._attach_button is None and self._record_button is None
+                and self._smiley_button is None):
+            return
+        if self._laying_out_composer:
+            # Re-framing the field posts a frame change, which comes
+            # straight back here. The second pass has nothing to do -- it
+            # compares frames before touching any of them -- but it is
+            # cheaper not to make it at all.
+            return
+        self._laying_out_composer = True
         try:
             scrollview = self.inputText.enclosingScrollView()
             row = scrollview.superview() if scrollview is not None else None
             if row is None:
                 return
-            if button.superview() is not row:
-                # The view was rebuilt underneath us; adopt it again rather
-                # than leaving an orphan the user cannot click.
-                row.addSubview_(button)
+
+            # First, and before every guard below: a bar has to be
+            # placed even in a composer too narrow or too new to divide
+            # up, or a recording ends up behind the field it replaced.
+            if self._recorder_bar is not None:
+                self._layoutRecorderBar()
 
             field = scrollview.frame()
+            row_frame = row.bounds()
             reserved = ATTACH_BUTTON_SIZE + ATTACH_BUTTON_GAP
-            # A frame with no room in it is a view mid-layout, not a narrow
-            # composer. Placing against it is what loses the button.
-            if field.size.height < ATTACH_BUTTON_SIZE or field.size.width <= reserved * 2:
+            # A frame with no room in it is a view mid-layout, not a
+            # narrow composer. Placing against it is what loses the
+            # buttons.
+            if field.size.height < ATTACH_BUTTON_SIZE or field.size.width <= reserved * 3:
                 return
 
-            row_frame = row.bounds()
+            def settle(button, wanted):
+                if button.superview() is not row:
+                    # The view was rebuilt underneath us; adopt it again
+                    # rather than leaving an orphan the user cannot click.
+                    row.addSubview_(button)
+                current = button.frame()
+                if (abs(current.origin.x - wanted.origin.x) > 0.5
+                        or abs(current.origin.y - wanted.origin.y) > 0.5
+                        or abs(current.size.width - wanted.size.width) > 0.5):
+                    button.setFrame_(wanted)
+
+            def top_for(size, inset):
+                if row.isFlipped():
+                    top = field.origin.y + inset
+                else:
+                    top = field.origin.y + field.size.height - size - inset
+                # Never outside the row: a button drawn past the edge is
+                # clipped, and clipped reads as gone.
+                return min(max(top, row_frame.origin.y),
+                           row_frame.origin.y
+                           + max(row_frame.size.height - size, 0.0))
+
+            if (self._composer_right_inset is None
+                    and row_frame.size.width >= field.size.width):
+                # Only against a row that actually contains the field. A
+                # row still reporting no width is a view mid-layout, and
+                # an inset measured from that one is zero for the life of
+                # the conversation.
+                self._composer_right_inset = max(
+                    (row_frame.origin.x + row_frame.size.width)
+                    - (field.origin.x + field.size.width), 0.0)
+            if self._composer_right_inset is None:
+                return
+
             left = row_frame.origin.x + 2.0
-            if row.isFlipped():
-                top = field.origin.y + ATTACH_BUTTON_TOP_INSET
-            else:
-                top = (field.origin.y + field.size.height
-                       - ATTACH_BUTTON_SIZE - ATTACH_BUTTON_TOP_INSET)
-            # Never outside the row: a button drawn past the edge is
-            # clipped, and clipped reads as gone.
-            top = min(max(top, row_frame.origin.y),
-                      row_frame.origin.y + max(row_frame.size.height - ATTACH_BUTTON_SIZE, 0.0))
+            right_edge = (row_frame.origin.x + row_frame.size.width
+                          - self._composer_right_inset)
+            recording = self._recorder_bar is not None
 
-            wanted = NSMakeRect(left, top, ATTACH_BUTTON_SIZE, ATTACH_BUTTON_SIZE)
-            current = button.frame()
-            if (abs(current.origin.x - wanted.origin.x) > 0.5
-                    or abs(current.origin.y - wanted.origin.y) > 0.5
-                    or abs(current.size.width - wanted.size.width) > 0.5):
-                button.setFrame_(wanted)
-            if button.isHidden():
-                button.setHidden_(False)
+            if self._attach_button is not None:
+                settle(self._attach_button,
+                       NSMakeRect(left, top_for(ATTACH_BUTTON_SIZE, ATTACH_BUTTON_TOP_INSET),
+                                  ATTACH_BUTTON_SIZE, ATTACH_BUTTON_SIZE))
+                self._attach_button.setHidden_(recording)
 
-            # And the composer starts after it. Re-applied because a
-            # re-frame from outside restores the nib's full width, which
-            # slides the field back over the button.
-            if field.origin.x < left + reserved:
-                shift = (left + reserved) - field.origin.x
-                if field.size.width - shift > reserved:
-                    scrollview.setFrame_(NSMakeRect(
-                        field.origin.x + shift, field.origin.y,
-                        field.size.width - shift, field.size.height))
+            # The right-hand keys, laid out from the edge inwards so
+            # each one only has to know how much the ones outside it took.
+            edge = right_edge
+            record_room = 0.0
+            if self._record_button is not None:
+                # Hidden rather than removed when the account cannot send
+                # files: the conversation can gain a transfer service
+                # while its window is open, and a button that has to be
+                # rebuilt to come back is a button that does not.
+                wanted_hidden = recording or not self._canRecord()
+                self._record_button.setHidden_(wanted_hidden)
+                settle(self._record_button,
+                       NSMakeRect(edge - RECORD_BUTTON_SIZE,
+                                  top_for(RECORD_BUTTON_SIZE, RECORD_BUTTON_TOP_INSET),
+                                  RECORD_BUTTON_SIZE, RECORD_BUTTON_SIZE))
+                if not wanted_hidden:
+                    record_room = RECORD_BUTTON_SIZE + RECORD_BUTTON_GAP
+                    edge -= record_room
+
+            smiley_room = 0.0
+            if self._smiley_button is not None:
+                self._smiley_button.setHidden_(recording)
+                settle(self._smiley_button,
+                       NSMakeRect(edge - SMILEY_BUTTON_SIZE,
+                                  top_for(SMILEY_BUTTON_SIZE, SMILEY_BUTTON_TOP_INSET),
+                                  SMILEY_BUTTON_SIZE, SMILEY_BUTTON_SIZE))
+                if not recording:
+                    smiley_room = SMILEY_BUTTON_SIZE + SMILEY_BUTTON_GAP
+
+            # And the composer starts after the clip and stops before the
+            # smiley. Re-applied because a re-frame from outside
+            # restores the nib's full width, which slides the field back
+            # over both.
+            wanted_x = left + reserved
+            wanted_w = (right_edge - record_room - smiley_room) - wanted_x
+            if wanted_w > reserved and (abs(field.origin.x - wanted_x) > 0.5
+                                        or abs(field.size.width - wanted_w) > 0.5):
+                scrollview.setFrame_(NSMakeRect(wanted_x, field.origin.y,
+                                                wanted_w, field.size.height))
+
+            # And again, now that the inset the bar sits against has been
+            # measured. The early call above is what places a bar in a
+            # composer this method is about to give up on; this one is
+            # what places it correctly the first time it can be. It
+            # compares frames before touching anything, so a pass that
+            # got it right up there does nothing down here.
+            if self._recorder_bar is not None:
+                self._layoutRecorderBar()
         except Exception as e:
-            BlinkLogger().log_error('Cannot place the attach button: %s' % e)
+            BlinkLogger().log_error('Cannot place the composer buttons: %s' % e)
+        finally:
+            self._laying_out_composer = False
 
     @objc.IBAction
     def attachFiles_(self, sender):
@@ -400,12 +690,337 @@ class NativeChatViewController(ChatViewController):
         if paths:
             delegate.sendFiles(paths)
 
+    @objc.IBAction
+    def showSmileys_(self, sender):
+        """Hand the picker to the conversation, which owns it.
+
+        The panel outlives a click -- it is transient, but it is also one
+        popover reused rather than a new one each time -- so it belongs
+        to the viewer, which lasts as long as the conversation, and not
+        to a button.
+        """
+        delegate = self.delegate
+        handler = getattr(delegate, 'showSmileyPicker', None) if delegate else None
+        if handler is None:
+            return
+        try:
+            handler(sender)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot show the smiley picker: %s' % e)
+
+    # -- recording ---------------------------------------------------------
+
+    @objc.IBAction
+    def recordAudio_(self, sender):
+        """Start a voice note, or stop one already running.
+
+        Click to start and click again to stop, rather than press and
+        hold: a hold that has to survive a window losing focus, a scroll
+        wheel and a trackpad losing contact is a gesture that drops takes,
+        and a desktop has room for a bar with a stop key in it.
+        """
+        if self._recorder_bar is not None:
+            if self._recorder_bar.recording:
+                self.audioBarStop()
+            return
+        if not self._canRecord():
+            return
+        request_microphone(self._microphoneAnswered)
+
+    @objc.python_method
+    @run_in_gui_thread
+    def _microphoneAnswered(self, granted):
+        """Begin the take, or say why there will not be one.
+
+        The refusal is shown in the transcript rather than in an alert:
+        the user pressed a button in the composer and the answer belongs
+        where they were looking, and an alert for a permission they can
+        only change in System Settings is a dialog with nothing to press.
+        """
+        if not granted:
+            self.showSystemMessage(
+                NSLocalizedString("Blink cannot use the microphone. Allow it in "
+                                  "System Settings, under Privacy & Security.",
+                                  "Label"),
+                ISOTimestamp.now(), is_error=True)
+            return
+        if self._recorder_bar is not None:
+            return
+        other = NativeChatViewController._active_recorder
+        if other is not None and other is not self:
+            other.audioBarCancel()
+        if AudioRecorder().start() is None:
+            self.showSystemMessage(
+                NSLocalizedString("Cannot start recording", "Label"),
+                ISOTimestamp.now(), is_error=True)
+            return
+        # Whatever was playing stops: a recording made over the top of a
+        # message playing out of the same speakers records the message.
+        AudioPlayback().stop()
+        self._showRecorderBar()
+        if self._recorder_bar is None:
+            # The bar could not be put up, so nothing can stop the take.
+            AudioRecorder().cancel()
+            return
+        NativeChatViewController._active_recorder = self
+        self._startRecorderTimer()
+
+    @objc.python_method
+    def _showRecorderBar(self):
+        """Put the bar where the composer is and take the composer away."""
+        try:
+            scrollview = self.inputText.enclosingScrollView()
+            row = scrollview.superview() if scrollview is not None else None
+            if row is None:
+                return                  # the caller cancels the take
+            bar = AudioRecorderView.alloc().initWithFrame_(scrollview.frame())
+            bar.delegate = self
+            bar.startRecording()
+            if row.isFlipped():
+                bar.setAutoresizingMask_(NSViewWidthSizable | NSViewMaxYMargin)
+            else:
+                bar.setAutoresizingMask_(NSViewWidthSizable | NSViewMinYMargin)
+            row.addSubview_(bar)
+            self._recorder_bar = bar
+            # The field is hidden rather than emptied: whatever was half
+            # typed in it is still there when the take is sent or thrown
+            # away, which is the only behaviour that does not punish
+            # somebody for pressing record mid-sentence.
+            scrollview.setHidden_(True)
+            self._layoutComposerRow()
+        except Exception as e:
+            BlinkLogger().log_error('Cannot show the recording bar: %s' % e)
+            AudioRecorder().cancel()
+
+    @objc.python_method
+    def _layoutRecorderBar(self):
+        """Sit the bar on the composer's first line, whatever height it has."""
+        bar = self._recorder_bar
+        if bar is None:
+            return
+        try:
+            scrollview = self.inputText.enclosingScrollView()
+            row = scrollview.superview() if scrollview is not None else None
+            if row is None:
+                return
+            row_frame = row.bounds()
+            field = scrollview.frame()
+            inset = self._composer_right_inset or 0.0
+            height = min(max(field.size.height, RECORDER_BAR_HEIGHT), RECORDER_BAR_HEIGHT)
+            if row.isFlipped():
+                y = field.origin.y
+            else:
+                y = field.origin.y + field.size.height - height
+            # The whole composer, both its buttons included: the bar
+            # carries its own controls and a paperclip peeking out from
+            # under it would be a button that does nothing. Not the whole
+            # ROW -- the composer stops short of that on purpose.
+            left = row_frame.origin.x + 2.0
+            width = (row_frame.origin.x + row_frame.size.width - inset) - left
+            wanted = NSMakeRect(left, y, max(width, 1.0), height)
+            current = bar.frame()
+            if (abs(current.origin.x - wanted.origin.x) > 0.5
+                    or abs(current.origin.y - wanted.origin.y) > 0.5
+                    or abs(current.size.width - wanted.size.width) > 0.5
+                    or abs(current.size.height - wanted.size.height) > 0.5):
+                bar.setFrame_(wanted)
+        except Exception as e:
+            BlinkLogger().log_debug('Cannot place the recording bar: %s' % e)
+
+    @objc.python_method
+    def _hideRecorderBar(self):
+        """Give the composer back."""
+        self._stopRecorderTimer()
+        bar = self._recorder_bar
+        self._recorder_bar = None
+        if NativeChatViewController._active_recorder is self:
+            NativeChatViewController._active_recorder = None
+        if bar is not None:
+            # Whatever the bar was playing goes with it. The preview's
+            # key is the file itself, which the transcript's own
+            # book-keeping knows nothing about, so nothing else will
+            # ever stop it -- and the file is about to be deleted.
+            AudioPlayback().stop_for_key(bar.preview_path)
+            try:
+                bar.delegate = None
+                bar.removeFromSuperview()
+            except Exception:
+                pass
+        try:
+            scrollview = self.inputText.enclosingScrollView()
+            if scrollview is not None:
+                scrollview.setHidden_(False)
+                if scrollview.window() is not None:
+                    scrollview.window().makeFirstResponder_(self.inputText)
+        except Exception as e:
+            BlinkLogger().log_debug('Cannot restore the composer: %s' % e)
+        self._layoutComposerRow()
+
+    @objc.python_method
+    def _startRecorderTimer(self):
+        if self._recorder_timer is not None:
+            return
+        self._recorder_blink_at = time.time()
+        self._recorder_blink = True
+        # Built unscheduled and added in the common modes rather than
+        # scheduled outright: the default mode alone stops ticking while a
+        # menu is down or the divider is being dragged, and a level meter
+        # that freezes mid-sentence looks like a recording that stopped.
+        self._recorder_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(
+            RECORDER_TICK_SECONDS, self, "recorderTick:", None, True)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(
+            self._recorder_timer, NSRunLoopCommonModes)
+
+    @objc.python_method
+    def _stopRecorderTimer(self):
+        timer = self._recorder_timer
+        self._recorder_timer = None
+        if timer is not None:
+            try:
+                timer.invalidate()
+            except Exception:
+                pass
+
+    def recorderTick_(self, timer):
+        bar = self._recorder_bar
+        if bar is None:
+            # No bar means no stop key, so a take still running here can
+            # never be ended by anybody.
+            self._stopRecorderTimer()
+            if NativeChatViewController._active_recorder is self:
+                AudioRecorder().cancel()
+                NativeChatViewController._active_recorder = None
+            return
+        recorder = AudioRecorder()
+        if bar.recording:
+            if not recorder.tick():
+                # The cap, reached. Stopped rather than thrown away: ten
+                # minutes of somebody talking is not something to delete
+                # on their behalf.
+                self.audioBarStop()
+                return
+            now = time.time()
+            if now - self._recorder_blink_at >= BLINK_SECONDS:
+                self._recorder_blink_at = now
+                self._recorder_blink = not self._recorder_blink
+            bar.tick(self._recorder_blink)
+        else:
+            bar.tick(True)
+
+    # -- what the bar asks for ---------------------------------------------
+
+    @objc.python_method
+    def audioBarStop(self):
+        """End the take and offer it for listening to."""
+        recorder = AudioRecorder()
+        peaks = recorder.peaks()
+        duration = recorder.elapsed()
+        path = recorder.stop()
+        if path is None:
+            self._hideRecorderBar()
+            self.showSystemMessage(
+                NSLocalizedString("The recording came out empty", "Label"),
+                ISOTimestamp.now(), is_error=True)
+            return
+        if self._recorder_bar is not None:
+            self._recorder_bar.showPreview(path, peaks, duration)
+
+    @objc.python_method
+    def audioBarCancel(self):
+        """Throw away a take that is still being made."""
+        AudioRecorder().cancel()
+        self._hideRecorderBar()
+
+    @objc.python_method
+    def audioBarDiscard(self):
+        """Throw away a take that has been listened to."""
+        bar = self._recorder_bar
+        path = bar.preview_path if bar is not None else None
+        AudioPlayback().stop_for_key(path)
+        AudioRecorder().discard(path)
+        self._hideRecorderBar()
+
+    @objc.python_method
+    def audioBarToggle(self):
+        """Play or pause the preview."""
+        bar = self._recorder_bar
+        if bar is None or not bar.preview_path:
+            return
+        AudioPlayback().toggle(bar.preview_path, bar.preview_path)
+        bar.setNeedsDisplay_(True)
+
+    @objc.python_method
+    def audioBarSeek(self, fraction):
+        bar = self._recorder_bar
+        if bar is None or not bar.preview_path:
+            return
+        # Loaded first: the player refuses to seek in a clip it is not
+        # holding, and dragging the strip before ever pressing play is
+        # the ordinary way to find the bit you want to check.
+        playback = AudioPlayback()
+        if not playback.is_current(bar.preview_path) \
+                and not playback.load(bar.preview_path, bar.preview_path):
+            return
+        playback.seek(fraction, bar.preview_path, bar.preview_duration)
+
+    @objc.python_method
+    def audioBarSend(self):
+        """Send the take, and let the recorder go.
+
+        The peaks measured off the microphone travel with it: the server
+        relays a fixed field set for a transfer and drops everything else,
+        so the waveform goes as its own message exactly as mobile sends
+        it -- which is also how this client receives one.
+        """
+        bar = self._recorder_bar
+        if bar is None or not bar.preview_path:
+            return
+        path = bar.preview_path
+        peaks = bar.preview_peaks
+        duration = bar.preview_duration
+        AudioPlayback().stop_for_key(path)
+        self._hideRecorderBar()
+
+        delegate = self.delegate
+        sender = getattr(delegate, 'sendVoiceRecording', None) if delegate else None
+        if sender is None:
+            BlinkLogger().log_error('This conversation cannot send a recording')
+            AudioRecorder().discard(path)
+            return
+        source = None
+        try:
+            source = sender(path, duration, peaks)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot send the recording: %s' % e)
+            # The throw can have come from either half: the transfer may
+            # already be filed and uploading, or nothing may have
+            # happened at all. Ask which, rather than assuming -- the
+            # take is deleted below, and the answer is what decides
+            # whether that deletes an upload along with it.
+            source = getattr(delegate, 'last_transfer_source', None)
+        # The transfer cache normally takes its own copy as the message
+        # is filed, and the take in the temporary folder has then done
+        # its job -- left there it would outlive the conversation. When
+        # the copy could not be made the cache reads the original
+        # instead, and deleting it here would delete the upload.
+        if source != path:
+            AudioRecorder().discard(path)
+
     @objc.python_method
     def close(self):
         self.rendered_messages = []
         self.pending_messages = {}
         self.stopTransferProgressTimer()
         self.stopAudioTimer()
+        # A take in progress dies with the conversation it was being made
+        # in. Cancelled rather than sent: nobody pressed send, and a
+        # window closing is not an instruction to publish what was said
+        # into it.
+        if self._recorder_bar is not None:
+            if NativeChatViewController._active_recorder is self:
+                AudioRecorder().cancel()
+            self._hideRecorderBar()
+        self._stopRecorderTimer()
         # Only if it was OURS: closing this conversation must not silence a
         # recording playing in another one.
         self._stopOwnPlayback()

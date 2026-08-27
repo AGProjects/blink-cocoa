@@ -757,8 +757,36 @@ class SMSWindowManagerClass(NSObject):
         if not account.sms.enable_replication:
             BlinkLogger().log_info('Sync conversations is disabled for account %s' % account.id)
             return
-            
+
+        self.requestApiToken(account, 'history sync')
+
+    @objc.python_method
+    def requestApiToken(self, account, reason=''):
+        """Ask the server for this account's API token.
+
+        Deliberately not gated on enable_replication, and deliberately
+        not the same thing as requestSyncToken: the token is no longer
+        only the journal's credential. File uploads present it too, and
+        an account that has replication switched off still has to be able
+        to send a file.
+
+        At most one request per account per TOKEN_REQUEST_INTERVAL. Two
+        different failures now ask for a refresh -- a rejected journal
+        page and a rejected upload -- and several uploads can be refused
+        in the same second; without this each one would send its own
+        request and each answer would restart a journal sync.
+        """
+        last = self._token_requested_at.get(account.id, 0)
+        now = time.time()
+        if now - last < self.TOKEN_REQUEST_INTERVAL:
+            BlinkLogger().log_debug('An API token for %s was requested %.0fs ago; not asking again'
+                                    % (account.id, now - last))
+            return False
+        self._token_requested_at[account.id] = now
+        BlinkLogger().log_info('Requesting an API token for %s%s'
+                               % (account.id, (' (%s)' % reason) if reason else ''))
         self.sendMessage(account, 'I need a token', 'application/sylk-api-token')
+        return True
 
     @objc.python_method
     @run_in_green_thread
@@ -855,13 +883,34 @@ class SMSWindowManagerClass(NSObject):
     @objc.python_method
     @run_in_thread('sms_sync')
     def request_token(self, account):
+        """A journal page was refused. Drop the sync guard and ask again.
+
+        The guard is released here because the sync that held it has just
+        given up half way; nothing else will release it, and until it is
+        gone the retry cannot start.
+        """
         BlinkLogger().log_info('Request another token...')
         try:
            del self.syncConversationsInProgress[account.id]
         except KeyError:
            pass
         self.requestSyncToken(account)
+
+    @objc.python_method
+    def requestUploadToken(self, account):
+        """An upload was refused with 401. Ask for a token, and only that.
+
+        Nothing to do with journal sync: this must not touch its guard,
+        because a sync may well be running normally at the time, and
+        deleting the guard under it lets a second one start alongside.
+        """
+        self.requestApiToken(account, 'a rejected upload')
                    
+    # Per account, when an API token was last asked for. Class level like
+    # everything else here -- there is one window manager.
+    _token_requested_at = {}
+    TOKEN_REQUEST_INTERVAL = 30.0
+
     MAX_JOURNAL_PAGES = 200
     # how often to report progress while grinding through a cached page
     JOURNAL_PROGRESS_EVERY = 250

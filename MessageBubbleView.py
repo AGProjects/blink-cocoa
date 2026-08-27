@@ -729,6 +729,80 @@ def _darker(colour, amount):
         r * scale, g * scale, b * scale, a)
 
 
+def fill_key(path, base, pressed=False):
+    """Paint a key: a lit disc or pill in `base`, lifted off its background.
+
+    Module level so the composer's recording bar paints its stop and send
+    keys with exactly this, rather than a second copy of it that drifts:
+    the two sit a few points apart on screen and any difference between
+    them reads as one of them being broken.
+
+    Three passes rather than one flat fill, and each earns its place.
+    The shadow is what separates a button from a coloured shape
+    printed on the bubble -- without it the play key looked like part
+    of the artwork. The gradient is a sixth of a stop from top to
+    bottom, enough to read as curved under a light and not enough to
+    look like a 2007 web button. The rim is the same colour darkened,
+    so it reads as the edge of the disc rather than a border someone
+    drew around it, which is what the old grey hairline was.
+
+    Pressed loses the shadow and darkens: a key that keeps its lift
+    while being pushed does not look pushed.
+    """
+    if pressed:
+        base = _darker(base, 0.16)
+
+    context = None
+    try:
+        context = NSGraphicsContext.currentContext()
+    except Exception:
+        context = None
+
+    # Pass one: a flat fill purely to cast the shadow. Done inside a
+    # saved state so neither the gradient nor the rim inherits it --
+    # a shadowed 1pt stroke is a smudge.
+    shadowed = False
+    if not pressed and context is not None:
+        try:
+            context.saveGraphicsState()
+            shadowed = True
+            shadow = NSShadow.alloc().init()
+            shadow.setShadowColor_(
+                NSColor.blackColor().colorWithAlphaComponent_(0.22))
+            # Positive dy in a flipped view is downwards, which is
+            # where a shadow belongs.
+            shadow.setShadowOffset_(NSMakeSize(0.0, 1.0))
+            shadow.setShadowBlurRadius_(2.5)
+            shadow.set()
+        except Exception:
+            pass
+    base.set()
+    path.fill()
+    if shadowed:
+        try:
+            context.restoreGraphicsState()
+        except Exception:
+            pass
+
+    # Pass two: the light. Angle 90 in a flipped view runs top to
+    # bottom on screen, so the lighter colour is where a light would
+    # be rather than underneath.
+    try:
+        NSGradient.alloc().initWithStartingColor_endingColor_(
+            _lighter(base, 0.20), _darker(base, 0.06)
+        ).drawInBezierPath_angle_(path, 90.0)
+    except Exception:
+        pass
+
+    # Pass three: the edge.
+    try:
+        _darker(base, 0.22).set()
+        path.setLineWidth_(1.0)
+        path.stroke()
+    except Exception:
+        pass
+
+
 COLOR_BORDER       = _rgb(169, 169, 169)
 COLOR_SENDING      = _rgb(238, 238, 238)
 COLOR_FAILED       = _rgb(239, 212, 218)
@@ -2419,72 +2493,8 @@ class MessageBubbleView(NSView):
 
     @objc.python_method
     def _fillKey(self, path, base, pressed=False):
-        """Paint a key: a lit disc or pill in `base`, lifted off the bubble.
-
-        Three passes rather than one flat fill, and each earns its place.
-        The shadow is what separates a button from a coloured shape
-        printed on the bubble -- without it the play key looked like part
-        of the artwork. The gradient is a sixth of a stop from top to
-        bottom, enough to read as curved under a light and not enough to
-        look like a 2007 web button. The rim is the same colour darkened,
-        so it reads as the edge of the disc rather than a border someone
-        drew around it, which is what the old grey hairline was.
-
-        Pressed loses the shadow and darkens: a key that keeps its lift
-        while being pushed does not look pushed.
-        """
-        if pressed:
-            base = _darker(base, 0.16)
-
-        context = None
-        try:
-            context = NSGraphicsContext.currentContext()
-        except Exception:
-            context = None
-
-        # Pass one: a flat fill purely to cast the shadow. Done inside a
-        # saved state so neither the gradient nor the rim inherits it --
-        # a shadowed 1pt stroke is a smudge.
-        shadowed = False
-        if not pressed and context is not None:
-            try:
-                context.saveGraphicsState()
-                shadowed = True
-                shadow = NSShadow.alloc().init()
-                shadow.setShadowColor_(
-                    NSColor.blackColor().colorWithAlphaComponent_(0.22))
-                # Positive dy in a flipped view is downwards, which is
-                # where a shadow belongs.
-                shadow.setShadowOffset_(NSMakeSize(0.0, 1.0))
-                shadow.setShadowBlurRadius_(2.5)
-                shadow.set()
-            except Exception:
-                pass
-        base.set()
-        path.fill()
-        if shadowed:
-            try:
-                context.restoreGraphicsState()
-            except Exception:
-                pass
-
-        # Pass two: the light. Angle 90 in a flipped view runs top to
-        # bottom on screen, so the lighter colour is where a light would
-        # be rather than underneath.
-        try:
-            NSGradient.alloc().initWithStartingColor_endingColor_(
-                _lighter(base, 0.20), _darker(base, 0.06)
-            ).drawInBezierPath_angle_(path, 90.0)
-        except Exception:
-            pass
-
-        # Pass three: the edge.
-        try:
-            _darker(base, 0.22).set()
-            path.setLineWidth_(1.0)
-            path.stroke()
-        except Exception:
-            pass
+        """Paint a key: a lit disc or pill in `base`, lifted off the bubble."""
+        fill_key(path, base, pressed)
 
     @objc.python_method
     def _drawAudioKey(self, rect):

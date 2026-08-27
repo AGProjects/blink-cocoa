@@ -260,12 +260,16 @@ class SessionControllersManager(object, metaclass=Singleton):
             BlinkLogger().log_info("File Transfers are disabled")
             return False
 
-        if settings.chat.disabled and type == 'chat':
-            BlinkLogger().log_info("Chat sessions are disabled")
-            return False
+        if type == 'chat':
+            if settings.chat.disabled:
+                BlinkLogger().log_info("Chat sessions are disabled")
+                return False
+            if not settings.chat.enable_msrp_chat:
+                BlinkLogger().log_info("MSRP chat is not enabled")
+                return False
 
-        if type == 'sms':
-            return settings.chat.enable_sms
+        # Short messages are always available: they are how a conversation is
+        # written now, not an opt-in feature.
 
         if type == 'video':
             return True
