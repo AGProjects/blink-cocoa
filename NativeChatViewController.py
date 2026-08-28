@@ -59,6 +59,7 @@ from VideoPlayback import (VideoPlayback, poster_image, movie_duration,
 from AudioRecorderView import (AudioRecorderView, BLINK_SECONDS,
                                RECORDER_BAR_HEIGHT)
 from BlinkLogger import BlinkLogger
+from resources import ApplicationData
 from MessageHost import (location_summary, file_transfer_category,
                          file_transfer_summary, merge_transfer_error,
                          quote_digest, transfer_error_note, MESSAGE_CATEGORIES)
@@ -66,6 +67,13 @@ from MessageHost import (location_summary, file_transfer_category,
 # distinct from any real sender, including None (outgoing messages pass
 # sender=None, so a None initial value made the first one look grouped)
 _UNSET = object()
+
+# Which grab the menu item is asking for. Carried on the item as a tag
+# rather than split into two actions, the way the chat window's Grab menu
+# has always done it -- there is one screencapture here, and only its
+# first argument differs.
+GRAB_WINDOW = 1
+GRAB_AREA = 2
 
 # Filters whose result is a set of pictures rather than a conversation. A
 # column of bubbles wastes most of the window for those, so they are laid
@@ -215,6 +223,13 @@ class NativeChatViewController(ChatViewController):
     # The last thing the composer layout declined to do, so a gate that
     # closes on every pass says so once instead of on every redraw.
     _composer_note = None
+
+    # The grab in flight: the task, where it is writing, and the window
+    # that was pushed out of its way.
+    _grab_task = None
+    _grab_path = None
+    _grab_window = None
+
     # Which conversation currently owns the recorder. There is one
     # microphone and one AudioRecorder behind it, so pressing record in a
     # second conversation has to take the take away from the first
@@ -722,14 +737,18 @@ class NativeChatViewController(ChatViewController):
 
     @objc.IBAction
     def showAttachMenu_(self, sender):
-        """The paperclip's menu: camera, files, clipboard.
+        """The paperclip's menu: camera, screen, files, clipboard.
 
-        Three ways in, one way out -- each of them produces paths and
-        hands them to confirmAndSendFiles, which is what puts the preview
-        in front of the transfer. An item that cannot work right now is
-        left visible and disabled with the reason in its tooltip: "greyed
-        out and no explanation" is the version of this people report as
-        broken.
+        Split in two by a separator, because the halves answer different
+        questions. Above it, the two ways to make something that does not
+        exist yet -- the camera and the screen. Below it, the two ways to
+        send something that already does.
+
+        Every one of them produces paths and hands them to
+        confirmAndSendFiles, which is what puts the preview in front of
+        the transfer. An item that cannot work right now is left visible
+        and disabled with the reason in its tooltip: "greyed out and no
+        explanation" is the version of this people report as broken.
         """
         delegate = self.delegate
         if delegate is None or not hasattr(delegate, 'sendFiles'):
@@ -750,6 +769,31 @@ class NativeChatViewController(ChatViewController):
             # item is not somewhere anybody thinks to look, and "the
             # camera item is greyed out" is otherwise unanswerable.
             BlinkLogger().log_info('Camera item disabled: %s' % reason)
+
+        # The chat window's toolbar has had these two since long before
+        # there was a paperclip. Same two grabs, same screencapture, but
+        # arriving in the preview instead of straight in the transfer --
+        # which is also what puts a screenshot within reach of the crop.
+        grabs = []
+        for title, tag in ((NSLocalizedString("Grab a Window\u2026", "Menu item"),
+                            GRAB_WINDOW),
+                           (NSLocalizedString("Grab an Area\u2026", "Menu item"),
+                            GRAB_AREA)):
+            item = menu.addItemWithTitle_action_keyEquivalent_(
+                title, 'attachFromScreen:', '')
+            item.setTarget_(self)
+            item.setTag_(tag)
+            grabs.append(item)
+        if self._grab_task is not None:
+            # One at a time. A second screencapture launched over the
+            # first is two cross-hairs on one screen, and the user only
+            # gets to answer one of them.
+            for item in grabs:
+                item.setEnabled_(False)
+                item.setToolTip_(NSLocalizedString(
+                    "A grab is already waiting to be taken", "Tooltip"))
+
+        menu.addItem_(NSMenuItem.separatorItem())
 
         choose = menu.addItemWithTitle_action_keyEquivalent_(
             NSLocalizedString("Choose Files\u2026", "Menu item"),
@@ -810,6 +854,125 @@ class NativeChatViewController(ChatViewController):
             return
         if path:
             self.confirmAndSendFiles([path])
+
+    # -- the screen ------------------------------------------------------
+    #
+    # Ported from the chat window's Grab toolbar item, which launched
+    # /usr/sbin/screencapture and sent whatever came back. Two things
+    # changed on the way over: the result goes through the preview like
+    # every other attachment, and the grab is one at a time.
+    #
+    # Still asynchronous, still through the termination notification.
+    # screencapture takes over the screen and waits for the user, and a
+    # synchronous wait for it would be the application beachballing
+    # underneath the very cross-hair it is waiting for.
+
+    @objc.python_method
+    def _grabDestination(self):
+        """A file for the grab to land in, in the folder swept at launch."""
+        folder = ApplicationData.get('.tmp_screenshots')
+        if not os.path.exists(folder):
+            os.mkdir(folder, 0o700)
+        # Named for the recipient's benefit rather than ours: this is what
+        # arrives at the other end, and "Screen 2026-08-28 at 14.05.11" is
+        # a good deal kinder than a timestamp glued to an account id.
+        stem = 'Screen %s' % time.strftime('%Y-%m-%d at %H.%M.%S')
+        path = os.path.join(folder, '%s.png' % stem)
+        index = 1
+        while os.path.exists(path):
+            path = os.path.join(folder, '%s (%d).png' % (stem, index))
+            index += 1
+        return path
+
+    @objc.IBAction
+    def attachFromScreen_(self, sender):
+        """Grab a window or an area, and offer what comes back."""
+        delegate = self.delegate
+        if delegate is None or not hasattr(delegate, 'sendFiles'):
+            return
+        if self._grab_task is not None:
+            return
+        tag = sender.tag() if sender is not None else GRAB_AREA
+        if tag == GRAB_WINDOW:
+            argument = '-W'
+        elif tag == GRAB_AREA:
+            argument = '-s'
+        else:
+            return
+
+        try:
+            path = self._grabDestination()
+        except Exception as e:
+            BlinkLogger().log_error('Cannot make a place for the grab: %s' % e)
+            return
+
+        task = NSTask.alloc().init()
+        task.setLaunchPath_('/usr/sbin/screencapture')
+        task.setArguments_([argument, '-tpng', path])
+
+        # Out of the way, and remembered so it can be brought back. The
+        # conversation is usually the thing sitting on top of whatever the
+        # user wants to grab.
+        window = self.attachmentPreviewParent()
+        self._grab_task = task
+        self._grab_path = path
+        self._grab_window = window
+        NSNotificationCenter.defaultCenter().\
+            addObserver_selector_name_object_(
+                self, 'grabFinished:', NSTaskDidTerminateNotification, task)
+        if window is not None:
+            window.orderBack_(None)
+        try:
+            task.launch()
+        except Exception as e:
+            BlinkLogger().log_error('Cannot start the screen grab: %s' % e)
+            NSNotificationCenter.defaultCenter().\
+                removeObserver_name_object_(
+                    self, NSTaskDidTerminateNotification, task)
+            self._grab_task = None
+            self._grab_path = None
+            self._grab_window = None
+            if window is not None:
+                window.orderFront_(None)
+
+    def grabFinished_(self, notification):
+        """The grab is over. Says so, and gets off this thread."""
+        task = notification.object()
+        NSNotificationCenter.defaultCenter().removeObserver_name_object_(
+            self, NSTaskDidTerminateNotification, task)
+        try:
+            status = task.terminationStatus()
+        except Exception:
+            status = 1
+        # NSTask posts this from a thread of its own choosing, and what
+        # happens next is a modal window. The rest runs where windows are
+        # allowed to run.
+        self._grabTaken(status)
+
+    @objc.python_method
+    @run_in_gui_thread
+    def _grabTaken(self, status):
+        """Bring the conversation back, and offer what was grabbed."""
+        path = self._grab_path
+        window = self._grab_window
+        self._grab_task = None
+        self._grab_path = None
+        self._grab_window = None
+        if window is not None:
+            window.orderFront_(None)
+
+        # Escape during a grab is a cancel, and a cancel is silent: it
+        # leaves either no file or an empty one, and neither is something
+        # to put a preview in front of.
+        if status != 0 or not path or not os.path.exists(path):
+            return
+        try:
+            if os.path.getsize(path) <= 0:
+                os.unlink(path)
+                return
+        except OSError:
+            return
+        self.confirmAndSendFiles([path])
 
     @objc.IBAction
     def attachFromClipboard_(self, sender):
