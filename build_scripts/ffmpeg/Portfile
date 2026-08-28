@@ -1,4 +1,16 @@
 # -*- coding: utf-8; mode: tcl; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- vim:fenc=utf-8:ft=tcl:et:sw=4:ts=4:sts=4
+#
+# SYNC NOTE — this file exists in two repositories and they are kept
+# independent on purpose. The copies must stay IDENTICAL:
+#
+#     blink/build_scripts/ffmpeg/Portfile
+#     python3-sipsimple/mac/ffmpeg/Portfile
+#
+# Edit one, copy it to the other, and record both. To check:
+#
+#     diff ~/work/blink/build_scripts/ffmpeg/Portfile \
+#          ~/work/python3-sipsimple/mac/ffmpeg/Portfile
+#
 
 PortSystem          1.0
 PortGroup           xcodeversion 1.0

@@ -1,3 +1,16 @@
+==========================================================================
+SYNC NOTE — this file exists in two repositories and they are kept
+independent on purpose. The copies must stay IDENTICAL:
+
+    blink/build_scripts/ffmpeg/readme.txt
+    python3-sipsimple/mac/ffmpeg/readme.txt
+
+Edit one, copy it to the other, and record both. To check:
+
+    diff ~/work/blink/build_scripts/ffmpeg/readme.txt \
+         ~/work/python3-sipsimple/mac/ffmpeg/readme.txt
+==========================================================================
+
 PJMEDIA can make use of the following FFMPEG development components:
 
 libavutil
