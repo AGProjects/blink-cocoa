@@ -260,7 +260,7 @@ class SessionControllersManager(object, metaclass=Singleton):
         finally:
             s.close()
 
-    def isProposedMediaTypeSupported(self, streams):
+    def isProposedMediaTypeSupported(self, streams, session=None):
         settings = SIPSimpleSettings()
 
         stream_type_list = list(set(stream.type for stream in streams))
@@ -282,6 +282,15 @@ class SessionControllersManager(object, metaclass=Singleton):
         if settings.chat.disabled and 'chat' in stream_type_list:
             BlinkLogger().log_info("Chat sessions are disabled")
             return False
+
+        if 'chat' in stream_type_list and not settings.chat.enable_msrp_chat:
+            # One-to-one MSRP chat is switched off, so an ordinary peer's chat
+            # offer is refused. A conference server marks itself isfocus and
+            # its chat is part of the room, not a one-to-one conversation, so
+            # it goes through untouched.
+            if session is None or not session.remote_focus:
+                BlinkLogger().log_info("MSRP chat is not enabled")
+                return False
 
         if 'video' in stream_type_list:
             return self.isMediaTypeSupported('video')
@@ -305,9 +314,11 @@ class SessionControllersManager(object, metaclass=Singleton):
             if settings.chat.disabled:
                 #BlinkLogger().log_info("Chat sessions are disabled")
                 return False
-            if not settings.chat.enable_msrp_chat:
-                #BlinkLogger().log_info("MSRP chat is not enabled")
-                return False
+            # chat.enable_msrp_chat is deliberately NOT consulted here. This
+            # answers "can this build carry an MSRP chat stream at all", and
+            # conference rooms need that answer to stay yes. The one-to-one
+            # preference is applied by isPeerToPeerChatEnabled() below and by
+            # SessionController.allowsStreamOfType().
 
         # Short messages are always available: they are how a conversation is
         # written now, not an opt-in feature.
@@ -316,6 +327,17 @@ class SessionControllersManager(object, metaclass=Singleton):
             return True
         
         return True
+
+    def isPeerToPeerChatEnabled(self):
+        """Whether an MSRP chat session may be offered to a single peer.
+
+        chat.enable_msrp_chat governs one-to-one chat only: the chat window,
+        the Invite to Chat entries and the IM button. A conference room runs
+        its chat over the same MSRP plane but is not covered by the
+        preference -- Join Conference keeps working with it switched off.
+        """
+        settings = SIPSimpleSettings()
+        return self.isMediaTypeSupported('chat') and settings.chat.enable_msrp_chat
 
     def log_incoming_session_missed(self, controller, data):
         account = controller.account
@@ -917,7 +939,7 @@ class SessionControllersManager(object, metaclass=Singleton):
 
     def _NH_SIPSessionNewIncoming(self, session, data):
         match_contact = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(session.remote_identity.uri, exact_match=True)
-        streams = [stream for stream in data.streams if self.isProposedMediaTypeSupported([stream])]
+        streams = [stream for stream in data.streams if self.isProposedMediaTypeSupported([stream], session)]
         stream_type_list = list(set(stream.type for stream in streams))
         caller_name = match_contact.name if match_contact else format_identity_to_string(session.remote_identity)
 
@@ -1157,6 +1179,11 @@ class SessionController(NSObject):
     encryption = {}
     device_id = None
     finished = False
+    # Set by ContactWindowController.joinConference() before the streams are
+    # started: at that point nothing has been sent yet, so remote_focus (which
+    # only arrives with the remote Contact header) cannot be consulted.
+    is_conference = False
+    remote_focus = False
     
     @property
     def sessionControllersManager(self):
@@ -1328,7 +1355,7 @@ class SessionController(NSObject):
         self.notification_center.add_observer(self, sender=self.session)
 
         for stream in session.proposed_streams:
-            if self.sessionControllersManager.isMediaTypeSupported(stream.type) and not self.hasStreamOfType(stream.type):
+            if self.allowsStreamOfType(stream.type) and not self.hasStreamOfType(stream.type):
                 handlerClass = StreamHandlerForType[stream.type]
                 stream_controller = handlerClass(self, stream)
                 self.streamHandlers.append(stream_controller)
@@ -1381,6 +1408,29 @@ class SessionController(NSObject):
         BlinkLogger().log_error("[Session %d with %s] %s" % (self.identifier, self.remoteAOR, text))
 
     @objc.python_method
+    def allowsStreamOfType(self, stype):
+        """Whether this session may carry a stream of the given type.
+
+        The manager's capability check, plus one extra rule for chat: a
+        one-to-one chat stream also needs chat.enable_msrp_chat, while a
+        conference is exempt. Without that exemption switching the preference
+        off would break Join Conference, which rides the same MSRP plane.
+        """
+        if not self.sessionControllersManager.isMediaTypeSupported(stype):
+            return False
+
+        if stype != 'chat':
+            return True
+
+        if self.is_conference or self.remote_focus:
+            return True
+
+        if self.session is not None and self.session.remote_focus:
+            return True
+
+        return SIPSimpleSettings().chat.enable_msrp_chat
+
+    @objc.python_method
     def isActive(self):
         return self.state in (STATE_CONNECTED, STATE_CONNECTING, STATE_DNS_LOOKUP)
 
@@ -1416,7 +1466,7 @@ class SessionController(NSObject):
             has_video = any(s for s in streams if s.type=='video')
             handled_types = set()
             for stream in sorted_streams:
-                if self.sessionControllersManager.isMediaTypeSupported(stream.type):
+                if self.allowsStreamOfType(stream.type):
                     if stream.type in handled_types:
                         self.log_info("Stream type %s has already been handled" % stream.type)
                         continue
@@ -1822,7 +1872,7 @@ class SessionController(NSObject):
 
                 stream = None
 
-                if self.sessionControllersManager.isMediaTypeSupported(stype):
+                if self.allowsStreamOfType(stype):
                     try:
                         handlerClass = StreamHandlerForType[stype]
                     except KeyError:
@@ -2589,7 +2639,7 @@ class SessionController(NSObject):
             settings = SIPSimpleSettings()
             stream_type_list = list(set(stream.type for stream in streams))
 
-            if not self.sessionControllersManager.isProposedMediaTypeSupported(streams):
+            if not self.sessionControllersManager.isProposedMediaTypeSupported(streams, session):
                 self.log_info("Unsupported media type, proposal rejected")
                 session.reject_proposal()
                 return

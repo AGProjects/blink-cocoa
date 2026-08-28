@@ -30,6 +30,7 @@ from AppKit import (NSButton,
                     NSColor,
                     NSFilenamesPboardType,
                     NSMenu,
+                    NSMenuItem,
                     NSFont,
                     NSFontAttributeName,
                     NSForegroundColorAttributeName,
@@ -45,6 +46,7 @@ from AppKit import (NSButton,
 from Foundation import (NSArray, NSAttributedString, NSIntersectsRect,
                         NSLocalizedString, NSMakeRect, NSPoint,
                         NSNotificationCenter, NSRunLoop, NSRunLoopCommonModes,
+                        NSTask, NSTaskDidTerminateNotification,
                         NSTimer, NSURL, NSWorkspace)
 
 import objc

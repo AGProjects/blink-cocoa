@@ -1072,6 +1072,8 @@ class ContactWindowController(NSWindowController):
             return
 
         item = menu.itemWithTag_(44)  # Join Conference
+        # Capability check, not isPeerToPeerChatEnabled(): a conference room is
+        # not a one-to-one chat, so it stays reachable with MSRP chat off.
         item.setEnabled_(self.sessionControllersManager.isMediaTypeSupported('chat'))
 
         # outbound proxy
@@ -1200,7 +1202,9 @@ class ContactWindowController(NSWindowController):
         # itemWithTag_ would hand back whichever comes first.
         index = self.windowMenu.indexOfItemWithTarget_andAction_(None, "showChatWindow:")
         if index >= 0:
-            enabled = SIPSimpleSettings().chat.enable_msrp_chat
+            # The same window shows conference chat, so it must remain
+            # reachable while one is open even with MSRP chat switched off.
+            enabled = SIPSimpleSettings().chat.enable_msrp_chat or self.hasOpenChatTabs()
             item = self.windowMenu.itemAtIndex_(index)
             item.setHidden_(not enabled)
             # A hidden item's key equivalent is inert, but Cmd-4 should not
@@ -1224,7 +1228,9 @@ class ContactWindowController(NSWindowController):
             item.setEnabled_(self.sessionControllersManager.isMediaTypeSupported('sms') and self.contactSupportsMedia("sms", contact))
 
             item = self.chatMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Invite to Chat...", "Menu item"), "startChatToSelected:", "")
-            if isinstance(contact, BonjourBlinkContact):
+            if not self.sessionControllersManager.isPeerToPeerChatEnabled():
+                item.setEnabled_(False)
+            elif isinstance(contact, BonjourBlinkContact):
                 item.setEnabled_(True)
             elif isinstance(contact, BlinkPresenceContact):
                 item.setEnabled_(self.contactSupportsMedia("chat", item, contact.uri))  # don't require presence to initiate chat
@@ -1773,7 +1779,7 @@ class ContactWindowController(NSWindowController):
                     mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Send Short Message...", "Menu item"), "", "")
                     self.contactContextMenu.setSubmenu_forItem_(sms_submenu, mitem)
 
-                if self.sessionControllersManager.isMediaTypeSupported('chat'):
+                if self.sessionControllersManager.isPeerToPeerChatEnabled():
                     chat_submenu = NSMenu.alloc().init()
                     chat_submenu.setAutoenablesItems_(False)
 
@@ -2014,7 +2020,7 @@ class ContactWindowController(NSWindowController):
                             sms_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Send Short Message...", "Menu item"), "sendMessageToSelected:", "")
                             sms_item.setEnabled_(self.contactSupportsMedia("sms", item, item.uri))
 
-                    if self.sessionControllersManager.isMediaTypeSupported('chat'):
+                    if self.sessionControllersManager.isPeerToPeerChatEnabled():
                         if has_fully_qualified_sip_uri:
                             chat_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Invite to Chat...", "Menu item"), "startChatToSelected:", "")
                             chat_item.setEnabled_(self.contactSupportsMedia("chat", item, item.uri))
@@ -3963,6 +3969,11 @@ class ContactWindowController(NSWindowController):
 
         session_controller = self.sessionControllersManager.addControllerWithAccount_target_displayName_contact_(account, target, str(target), None)
         session_controller.nickname = nickname
+        # A room's chat rides the MSRP plane just like a one-to-one chat, but
+        # it is not one -- chat.enable_msrp_chat must not be able to break
+        # joining a conference. remote_focus is not known yet (it arrives with
+        # the remote Contact header), so say so up front.
+        session_controller.is_conference = True
 
         if participants:
             # Add invited participants to the drawer
@@ -4476,9 +4487,16 @@ class ContactWindowController(NSWindowController):
                 self.presenceInfoPanel = PresenceInfoController()
             self.presenceInfoPanel.show(sender.representedObject())
 
+    @objc.python_method
+    def hasOpenChatTabs(self):
+        try:
+            return bool(NSApp.delegate().chatWindowController.tabView.tabViewItems())
+        except AttributeError:
+            return False
+
     @objc.IBAction
     def showChatWindow_(self, sender):
-        if not SIPSimpleSettings().chat.enable_msrp_chat:
+        if not SIPSimpleSettings().chat.enable_msrp_chat and not self.hasOpenChatTabs():
             return
         if NSApp.delegate().chatWindowController.tabView.tabViewItems():
             NSApp.delegate().chatWindowController.window().makeKeyAndOrderFront_(None)
@@ -5289,12 +5307,16 @@ class ContactWindowController(NSWindowController):
                 # default for every contact that was never configured, so it
                 # cannot be told apart from "no preference" and falls through
                 # to messages with everything else.
+                msrp_chat = self.sessionControllersManager.isPeerToPeerChatEnabled()
                 if isinstance(contact, BonjourBlinkContact):
-                    media_type = ("chat", "audio")
+                    media_type = ("chat", "audio") if msrp_chat else ("audio",)
                 elif contact.preferred_media == "chat":
-                    media_type = "chat"
+                    # A contact configured for MSRP chat before the preference
+                    # was switched off falls back to messages rather than to a
+                    # session that would be refused further down.
+                    media_type = "chat" if msrp_chat else "sms"
                 elif contact.preferred_media in ("chat+audio", "audio+chat"):
-                    media_type = ("chat", "audio")
+                    media_type = ("chat", "audio") if msrp_chat else ("audio",)
                 elif contact.preferred_media == "video":
                     media_type = ("audio", "video")
                 else:
@@ -5303,14 +5325,14 @@ class ContactWindowController(NSWindowController):
                 media_type = ("audio", "video")
             elif sender.selectedSegment() == chat_segment:
                 # IM button
-                if self.sessionControllersManager.isMediaTypeSupported('chat') and self.sessionControllersManager.isMediaTypeSupported('sms'):
+                if self.sessionControllersManager.isPeerToPeerChatEnabled() and self.sessionControllersManager.isMediaTypeSupported('sms'):
                     point = self.window().convertScreenToBase_(NSEvent.mouseLocation())
                     event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
                                     NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), sender.window().windowNumber(),
                                     sender.window().graphicsContext(), 0, 1, 0)
                     NSMenu.popUpContextMenu_withEvent_forView_(self.chatMenu, event, sender)
                     return
-                elif self.sessionControllersManager.isMediaTypeSupported('chat'):
+                elif self.sessionControllersManager.isPeerToPeerChatEnabled():
                     self.startSessionToSelectedContact("chat")
                 elif self.sessionControllersManager.isMediaTypeSupported('sms'):
                     no_contact_selected = self.contactOutline.selectedRow() == -1 and self.searchOutline.selectedRow() == -1

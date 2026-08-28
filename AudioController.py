@@ -1042,11 +1042,16 @@ class AudioController(MediaStream):
             can_propose = self.status == STREAM_CONNECTED and self.sessionController.canProposeMediaStreamChanges()
             can_propose_screensharing = can_propose and not self.sessionController.remote_focus
 
+            # allowsStreamOfType applies chat.enable_msrp_chat to a one-to-one
+            # call while leaving a conference call alone -- adding chat to a
+            # room is part of the conference, not a private chat session.
+            can_add_chat = self.sessionController.allowsStreamOfType('chat')
+
             item = menu.itemWithTag_(10) # add Chat
-            item.setEnabled_(can_propose and self.sessionControllersManager.isMediaTypeSupported('chat') and aor_supports_chat)
+            item.setEnabled_(can_propose and can_add_chat and aor_supports_chat)
             if not self.sessionController.hasStreamOfType("chat"):
                 item.setTitle_(NSLocalizedString("Add Chat", "Menu item"))
-                item.setEnabled_(self.sessionController.canProposeMediaStreamChanges())
+                item.setEnabled_(can_add_chat and self.sessionController.canProposeMediaStreamChanges())
             else:
                 chatStream = self.sessionController.streamHandlerOfType("chat")
                 if chatStream:

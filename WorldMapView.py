@@ -704,7 +704,7 @@ class MapView(NSView):
         else:
             item.setEnabled_(False)
 
-        if NSApp.delegate().contactsWindowController.sessionControllersManager.isMediaTypeSupported('chat'):
+        if NSApp.delegate().contactsWindowController.sessionControllersManager.isPeerToPeerChatEnabled():
             item = menu.addItemWithTitle_action_keyEquivalent_("Chat Session...", "startChatSessionWithSIPURI:", "")
             item.setTarget_(NSApp.delegate().contactsWindowController)
             if device is not None:

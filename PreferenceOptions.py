@@ -2319,7 +2319,7 @@ ToolTips = {
              'audio.call_waiting' : NSLocalizedString("If disabled, new incoming calls are rejected with busy signal (486) if an audio call is already in progress", "Label"),
              'audio.echo_canceller.enabled': NSLocalizedString("If disabled, acoustic echo cancelation and noise reduction are disabled and the sampling rate is raised to 48kHz to achieve best audio quality possible. To increase audio quality, also disable Use ambient noise reduction in System Preferences in the microphone input section. When enabled, the sampling rate of the audio engine is set to 32kHz.", "Label"),
              'auth.username': NSLocalizedString("Enter authentication username if different than the SIP Address username", "Label"),
-             'chat.enable_msrp_chat': NSLocalizedString("Offer real time chat sessions over MSRP. When disabled, conversations use SIP messages and the chat window is not reachable", "Label"),
+             'chat.enable_msrp_chat': NSLocalizedString("Offer real time one-to-one chat sessions over MSRP. When disabled, conversations use SIP messages and the chat window is not reachable. Conferences are not affected: joining a conference room keeps its MSRP chat", "Label"),
              'gui.account_label': NSLocalizedString("Label displayed in account popup up menu instead of the sip address", "Label"),
              'gui.idle_threshold': NSLocalizedString("Interval after which my availability is set to away", "Label"),
              'gui.rtt_threshold': NSLocalizedString("Value above which the RTT graphic is displayed with red color", "Label"),
