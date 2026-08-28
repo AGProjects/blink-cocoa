@@ -932,10 +932,22 @@ class ChatHistory(object, metaclass=Singleton):
             timestamp = dateutil.parser.isoparse(cpim_timestamp)
             offset = timestamp.utcoffset()
             timestamp = timestamp.replace(tzinfo=timezone2.utc)
-            timestamp = timestamp - offset
+            # A naive timestamp has no offset, and `timestamp - None` raises
+            # TypeError -- which was NOT in the caught tuple, so it escaped
+            # add_message entirely instead of falling back. Naive means it is
+            # already the wall clock we want, so there is nothing to subtract.
+            if offset is not None:
+                timestamp = timestamp - offset
             # save the date as UTC date 0 offset
-        except (ValueError, AttributeError) as e:
-            self.log_error('Failed to parse timestamp %s for message id %s: %s' % (cpim_timestamp, msgid, str(e)))
+        except (ValueError, TypeError, AttributeError, OverflowError) as e:
+            # BlinkLogger, not self.log_error: ChatHistory has no such method,
+            # so the handler raised AttributeError from inside the except and
+            # the real parse failure was never reported. Every message whose
+            # timestamp could not be read then took datetime.utcnow(), which
+            # is why a whole history could end up stamped with the moment of
+            # the sync that imported it.
+            BlinkLogger().log_error('Failed to parse timestamp %r for message id %s: %s'
+                                    % (cpim_timestamp, msgid, e))
             timestamp = datetime.utcnow()
 
         try:
@@ -1611,7 +1623,14 @@ class SessionHistoryReplicator(object):
                             status = 'delivered'
                             cpim_from = remote_uri
                             cpim_to = local_uri
-                            timestamp = str(ISOTimestamp.now())
+                            # The call's own start time, not now(). These rows
+                            # land in chat_messages, and the contact list takes
+                            # max(time) per conversation as "last activity" --
+                            # so stamping an imported call with the moment of
+                            # the import gave every contact who has ever had a
+                            # call the same timestamp: the second the history
+                            # sync ran. start_time is already UTC here.
+                            timestamp = str(ISOTimestamp(start_time))
                             if success == 'missed':
                                 message = '<h3>Missed Incoming Audio Call</h3>'
                                 #message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
@@ -1703,7 +1722,9 @@ class SessionHistoryReplicator(object):
                             status = 'delivered'
                             cpim_from = remote_uri
                             cpim_to = local_uri
-                            timestamp = str(ISOTimestamp.now())
+                            # See the received-call branch above: the call's
+                            # own start time, not the moment of the import.
+                            timestamp = str(ISOTimestamp(start_time))
                             media_type = 'audio'
                             if success == 'failed':
                                 message = '<h3>Failed Outgoing Audio Call</h3>'

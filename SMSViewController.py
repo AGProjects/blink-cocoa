@@ -282,6 +282,11 @@ class SMSSplitView(NSSplitView):
             self.text.drawAtPoint_withAttributes_(point, attributes)
 
 
+# Distinct reasons a message timestamp could not be read, so the
+# report below is made once each rather than once per message.
+_timestamp_fallbacks = set()
+
+
 @implementer(IObserver)
 class SMSViewController(NSObject):
 
@@ -912,10 +917,24 @@ class SMSViewController(NSObject):
             sender_name = self.normalizeSender(sender_name)
 
         try:
-            timestamp=ISOTimestamp(imdn_timestamp)
-        except (DateParserError, TypeError) as e:
-            #self.log_error('Failed to parse timestamp %s for message id %s: %s' % (imdn_timestamp, id, str(e)))
+            timestamp = ISOTimestamp(imdn_timestamp)
+        except (DateParserError, TypeError, ValueError) as e:
+            # Falling back to now() silently is how a whole replayed
+            # conversation ends up stamped with the moment of the sync --
+            # and, through add_to_history -> noteMessageTime, how every
+            # row in the contact list ends up showing the same time.
+            # Reported once per distinct reason so it stays out of the
+            # way on a big journal but can never be silent again.
+            reason = '%s:%r' % (type(e).__name__, imdn_timestamp)
+            if reason not in _timestamp_fallbacks:
+                _timestamp_fallbacks.add(reason)
+                self.log_error('Cannot read the timestamp %r on message %s (%s); '
+                               'falling back to the current time'
+                               % (imdn_timestamp, id, e))
             timestamp = ISOTimestamp.now()
+            timestamp_is_fabricated = True
+        else:
+            timestamp_is_fabricated = False
 
         try:
             require_delivered_notification = imdn_timestamp and cpim_imdn_events and 'positive-delivery' in cpim_imdn_events and direction == 'incoming' and content_type != IMDNDocument.content_type
@@ -1057,7 +1076,12 @@ class SMSViewController(NSObject):
 
             mInfo = MessageInfo(msg_id, call_id=call_id, direction=direction, sender=sender_identity, recipient=recipient, timestamp=timestamp, content=content, content_type=content_type, status=status, encryption=encryption, require_displayed_notification=require_displayed_notification, require_delivered_notification=require_delivered_notification)
             
-            self.add_to_history(mInfo)
+            # A message whose own timestamp could not be read must not
+            # move the conversation to the top of the list: the stamp it
+            # would carry there is the time of THIS run, not of the
+            # message, and doing that for a whole replayed journal is
+            # what makes every row show one identical time.
+            self.add_to_history(mInfo, stamps_conversation_time=not timestamp_is_fabricated)
 
             if require_displayed_notification:
                 self.not_read_queue.put(msg_id)
