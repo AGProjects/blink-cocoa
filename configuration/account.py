@@ -60,6 +60,9 @@ class SMSSettingsExtension(SettingsGroup):
     public_key = Setting(type=str, default=None, nillable=True)
     private_key = Setting(type=str, default=None, nillable=True)
     public_key_checksum = Setting(type=str, default=None, nillable=True)
+    # Set once the "Account activated on ..." note has been sent, so it
+    # announces a device joining the account rather than every launch.
+    activation_announced = Setting(type=bool, default=False)
 
 
 class BonjourSMSSettingsExtension(SettingsGroup):
