@@ -44,7 +44,7 @@ class AudioSettingsExtension(SettingsGroup):
 
 class SMSSettingsExtension(SettingsGroup):
     enable_replication = Setting(type=bool, default=True)
-    use_cpim = Setting(type=bool, default=True)
+    enable_cpim = Setting(type=bool, default=True)
     enable_otr = Setting(type=bool, default=False)
     enable_pgp = Setting(type=bool, default=True)
     enable_imdn = Setting(type=bool, default=True)
@@ -66,7 +66,7 @@ class SMSSettingsExtension(SettingsGroup):
 
 
 class BonjourSMSSettingsExtension(SettingsGroup):
-    use_cpim = Setting(type=bool, default=True)
+    enable_cpim = Setting(type=bool, default=True)
     enable_otr = Setting(type=bool, default=False)
     enable_pgp = Setting(type=bool, default=True)
     enable_imdn = Setting(type=bool, default=True)

@@ -1987,6 +1987,14 @@ PreferenceOptionTypes = {
 "sms.public_key": HiddenOption,
 "sms.private_key": HiddenOption,
 "sms.public_key_checksum": HiddenOption,
+# Bookkeeping, not a preference: it records whether this device has already
+# told the account's other devices that it joined. Showing it invites the
+# user to re-announce, or to silence an announcement that has not happened.
+"sms.activation_announced": HiddenOption,
+# Learned from the first transfer that arrives, and derived from history_url
+# until then. Offering it as a field invites a hand-typed value that the next
+# received transfer overwrites anyway.
+"sms.file_transfer_url": HiddenOption,
 "ImageDepth" : ImageDepthOption,
 "DomainList" : StringTupleOption,
 "MSRPRelayAddress" : MSRPRelayAddresOption,
@@ -2199,6 +2207,7 @@ SettingDescription = {
                       'sip.tls_port': NSLocalizedString("TLS port", "Label"),
                       'sip.udp_port': NSLocalizedString("UDP port", "Label"),
                       'sms.disable_replication': NSLocalizedString("Disable Replication", "Label"),
+                      'sms.enable_replication': NSLocalizedString("Enable History Server", "Label"),
                       'sms.public_key_checksum': NSLocalizedString("Key Id", "Label"),
                       'sounds.audio_inbound': NSLocalizedString("Inbound Ringtone", "Label"),
                       'sounds.audio_outbound': NSLocalizedString("Outbound Ringtone", "Label"),

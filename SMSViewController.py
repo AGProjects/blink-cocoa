@@ -2591,7 +2591,7 @@ class SMSViewController(NSObject):
             self.log_info('Sending %s message %s without journalling it (OTR)'
                           % (message.content_type, message.id))
 
-        if self.account.sms.use_cpim and can_use_cpim:
+        if self.account.sms.enable_cpim and can_use_cpim:
             additional_cpim_headers = []
 
             if self.account.sms.enable_imdn:
