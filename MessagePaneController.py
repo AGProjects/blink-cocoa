@@ -20,6 +20,7 @@ the viewer, and it lands here.
 """
 
 from AppKit import (NSRoundedBezelStyle,
+                    NSApp,
                     NSAttributedString,
                     NSBox,
                     NSDragOperationCopy,
@@ -58,6 +59,7 @@ import objc
 
 from application.notification import NotificationCenter, IObserver
 from application.python import Null
+from sipsimple.account import BonjourAccount
 from zope.interface import implementer
 
 from BlinkLogger import BlinkLogger
@@ -85,6 +87,19 @@ HISTORY_GLYPH = chr(128197)
 # the same feature.
 LOCATION_BUTTON_W = 22.0
 LOCATION_GLYPH = chr(128205)
+# Calling, immediately left of the pin: the same handset the rest of the
+# application uses for an audio session, so the button says what it starts
+# without a label.
+#
+# Drawn a couple of points smaller than its neighbours so it does not LOOK
+# bigger than them. Emoji share an em box but not how much of it they ink:
+# the pin and the calendar leave air around themselves, the handset fills
+# its box corner to corner. Matched by point size they come out visibly
+# uneven, so what is matched here is the drawn glyph instead. One constant,
+# because it is a thing to nudge by eye.
+CALL_BUTTON_W = 22.0
+CALL_GLYPH = chr(128222)
+CALL_GLYPH_SIZE = FONT_BUTTON_LARGE - 4.0
 MONTH_NAMES = ('January', 'February', 'March', 'April', 'May', 'June', 'July',
                'August', 'September', 'October', 'November', 'December')
 
@@ -329,6 +344,7 @@ class MessagePaneController(NSObject):
         small_x = large_x - FONT_BUTTON_W
         history_x = small_x - 8.0 - HISTORY_BUTTON_W
         location_x = history_x - 8.0 - LOCATION_BUTTON_W
+        call_x = location_x - 8.0 - CALL_BUTTON_W
         self.fontSmallerButton = self._fontButton(
             NSMakeRect(small_x, button_y, FONT_BUTTON_W, FONT_BUTTON_H),
             FONT_BUTTON_SMALL, 'decreaseFontSize:',
@@ -358,6 +374,16 @@ class MessagePaneController(NSObject):
         # flickering in and out on the first click of a contact.
         self.locationButton.setHidden_(True)
         header.addSubview_(self.locationButton)
+
+        self.callButton = self._fontButton(
+            NSMakeRect(call_x, button_y, CALL_BUTTON_W, FONT_BUTTON_H),
+            CALL_GLYPH_SIZE, 'startAudioCall:',
+            NSLocalizedString("Start an audio call", "Tooltip"),
+            title=CALL_GLYPH)
+        # Hidden until there is somebody to call, for the same reason the
+        # pin is: a button that does nothing is worse than no button.
+        self.callButton.setHidden_(True)
+        header.addSubview_(self.callButton)
 
         separator = NSBox.alloc().initWithFrame_(NSMakeRect(0, 395 - HEADER_HEIGHT - 1, 480, 1))
         separator.setBoxType_(2)           # NSBoxSeparator
@@ -622,6 +648,46 @@ class MessagePaneController(NSObject):
                 'Location pin %s for %s' % ('shown' if show else 'hidden',
                                             getattr(viewer, 'remote_uri', None)))
         button.setHidden_(not show)
+
+    @objc.python_method
+    def updateCallButton(self, viewer):
+        """Show the handset only while a conversation is on screen."""
+        button = getattr(self, 'callButton', None)
+        if button is None:
+            return
+        button.setHidden_(viewer is None)
+
+    @objc.IBAction
+    def startAudioCall_(self, sender):
+        """Call whoever is on screen, from the account they were reached on.
+
+        The conversation's own account rather than the active one: this
+        address is the one the contact has been talking to, and calling
+        from another shows them somebody they may not recognise.
+        """
+        viewer = self._selected
+        if viewer is None:
+            return
+
+        account = getattr(viewer, 'account', None)
+        target = getattr(viewer, 'remote_uri', None)
+        if account is BonjourAccount():
+            # A neighbour is addressed by the whole URI: their user@host is
+            # a link-local address carrying a port, and the bare pair would
+            # be handed to a proxy that has never heard of them.
+            target = str(getattr(viewer, 'target_uri', '') or target)
+        if not target:
+            BlinkLogger().log_error('Cannot call: the conversation has no address')
+            return
+
+        try:
+            NSApp.delegate().contactsWindowController.startSessionWithTarget(
+                target, media_type='audio',
+                local_uri=str(account.id) if account is not None else None,
+                selected_contact=getattr(viewer, 'contact', None),
+                display_name=getattr(viewer, 'display_name', '') or '')
+        except Exception as e:
+            BlinkLogger().log_error('Cannot start an audio call to %s: %s' % (target, e))
 
     @objc.IBAction
     def showLocationMenu_(self, sender):
@@ -998,6 +1064,7 @@ class MessagePaneController(NSObject):
             self.avatarView.setImage_(None)
             self.updateEncryptionWidgets(None)
             self.updateLocationButton(None)
+            self.updateCallButton(None)
             return
 
         content = self._content_views.get(viewer)
@@ -1020,6 +1087,7 @@ class MessagePaneController(NSObject):
         self._loadAvatarFor(viewer)
         self.updateEncryptionWidgets(viewer)
         self.updateLocationButton(viewer)
+        self.updateCallButton(viewer)
 
         if self.isConversationVisible(viewer):
             self.conversationBecameVisible(viewer)
