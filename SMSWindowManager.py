@@ -1639,6 +1639,15 @@ class SMSWindowManagerClass(NSObject):
                 group.name = 'Messages'
                 group.position = 0
                 group.expanded = True
+                # Position 0 is not enough on its own -- every group with an
+                # unset position is also given 0, so the new group would be
+                # filed among them rather than above them. Ask the model to
+                # promote it when it activates; it is a one-off, so reordering
+                # the list afterwards sticks.
+                try:
+                    NSApp.delegate().contactsWindowController.model.promoteGroupOnActivation(group_id)
+                except Exception as e:
+                    BlinkLogger().log_error('Cannot promote the Messages group: %s' % e)
 
         # Only save when membership actually changed. This runs at the end
         # of every journal sync, and an unconditional save posts a group

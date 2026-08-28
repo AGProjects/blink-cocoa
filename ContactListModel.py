@@ -3044,6 +3044,9 @@ class ContactListModel(CustomListModel):
     nc = NotificationCenter()
     pending_watchers_map = {}
     active_watchers_map = {}
+    # Group ids to place at the top the next time they are activated, asked
+    # for by whoever creates them. Consumed on use.
+    groups_to_promote = set()
 
     def init(self):
         self.all_contacts_group = AllContactsBlinkGroup()
@@ -4533,6 +4536,16 @@ class ContactListModel(CustomListModel):
         positions.sort()
         index = bisect.bisect_left(positions, group.position or 0)
 
+        # A group whose creator asked for it goes to the top, once. Position 0
+        # alone does not achieve that: several groups carry position 0 (every
+        # group with an unset position is given it here), so bisect lands the
+        # newcomer among them rather than above them. Promotion is consumed on
+        # use, so the user's own ordering survives from then on.
+        promoted = group.id in self.groups_to_promote
+        if promoted:
+            self.groups_to_promote.discard(group.id)
+            index = 0
+
         if not group.position:
             position = 0
             group.position = position
@@ -4546,8 +4559,23 @@ class ContactListModel(CustomListModel):
             self.removeContactFromBlinkGroups(contact, [self.no_group])
         blink_group.sortContacts()
 
+        if promoted:
+            # Renumber every group from its place in the list, so the new
+            # order is what the next launch reads back.
+            self.saveGroupPosition()
+
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
         self.nc.post_notification("BlinkGroupsHaveChanged", sender=self)
+
+    @objc.python_method
+    def promoteGroupOnActivation(self, group_id):
+        """Put this group at the top of the list when it next activates.
+
+        For a group being created now: it does not reach the model until the
+        save round-trips through the file-io thread, so the caller cannot move
+        it itself, and asking for it by position does not work either.
+        """
+        self.groups_to_promote.add(group_id)
 
     @objc.python_method
     def _NH_AddressbookGroupWasDeleted(self, notification):
