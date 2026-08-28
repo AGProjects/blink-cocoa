@@ -110,7 +110,7 @@ from MergeContactController import MergeContactController
 from VirtualGroups import VirtualGroupsManager, VirtualGroup
 from PresencePublisher import on_the_phone_activity
 from resources import ApplicationData, Resources
-from util import allocate_autorelease_pool, format_date, format_uri_type, is_anonymous, sipuri_components_from_string, sip_prefix_pattern, strip_addressbook_special_characters, run_in_gui_thread, utc_to_local
+from util import allocate_autorelease_pool, format_date, format_uri_type, is_anonymous, sipuri_components_from_string, sip_prefix_pattern, strip_addressbook_special_characters, run_in_gui_thread, utc_to_local, call_later
 
 status_localized = {
     'busy':      NSLocalizedString("busy", "Label"),
@@ -332,6 +332,22 @@ class PresenceContactAvatar(Avatar):
 
     def delete(self):
         unlink(self.path)
+
+
+def presence_note_text(note):
+    """A PIDF note's text, or None when it has nothing to say.
+
+    A note element with no content still parses to a Note object, so it
+    cannot be tested for truth or handed to str() -- both say it is there
+    and the second gives back the word "None".
+    """
+    if note is None:
+        return None
+    value = getattr(note, 'value', note)
+    if value is None:
+        return None
+    text = str(value).strip()
+    return text or None
 
 
 class BlinkContact(NSObject):
@@ -584,9 +600,9 @@ class BlinkConferenceContact(BlinkContact):
                         self.presence_note = presence_notes[index+1]
                     except IndexError:
                         self.presence_note = presence_notes[0]
-            detail = self.presence_note if self.presence_note else '%s' % self.uri
+            detail = self.presence_note if self.presence_note else '%s' % (self.uri or '')
         else:
-            detail = '%s' % self.uri
+            detail = '%s' % (self.uri or '')
 
         if detail != self.detail:
             self.detail = detail
@@ -723,9 +739,13 @@ class BlinkPresenceContact(BlinkContact):
         self.avatar = PresenceContactAvatar.from_contact(contact)
         # TODO: how to handle xmmp: uris?
         #uri = self.uri.replace(';xmpp', '') if self.uri_type is not None and self.uri_type.lower() == 'xmpp' and ';xmpp' in self.uri else self.uri
-        self.detail = '%s' % self.uri
+        self.detail = '%s' % (self.uri or '')
         self._set_username_and_domain()
         self.presence_note = None
+        # When the newest device last reported, from the PIDF's own service
+        # timestamp -- not the remote device's wall clock, which is what
+        # local_time carries and is a different fact entirely.
+        self.presence_timestamp = None
         self.old_presence_status = None
         self.old_presence_note = None
         self.old_resource_state = None
@@ -745,14 +765,18 @@ class BlinkPresenceContact(BlinkContact):
 
     @property
     def uri(self):
-        if self.default_uri is not None:
+        # `and self.default_uri.uri`, not just `is not None`: a default that
+        # points at a URI entry carrying no address is worse than no default,
+        # because it shadows the real ones -- and the row's second line is
+        # this value, so it rendered the word "None" under the contact's name.
+        if self.default_uri is not None and self.default_uri.uri:
             return self.default_uri.uri
         try:
             uri = next(iter(self.contact.uris))
         except (StopIteration, AttributeError):
             return ''
         else:
-            return uri.uri
+            return uri.uri or ''
 
     @property
     def uri_type(self):
@@ -1116,8 +1140,20 @@ class BlinkPresenceContact(BlinkContact):
                 else:
                     device_wining_status = 'offline'
 
-                _presence_open_notes = sorted([str(note) for service in pidf.services if service in most_recent_services and service.status.basic == 'open' for note in service.notes if note])
-                _presence_closed_notes = sorted([str(note) for service in pidf.services if service in most_recent_services and service.status.basic == 'closed' for note in service.notes if note])
+                # `if note` tested the Note OBJECT, which is truthy even when
+                # it carries no value -- str() on one of those is the literal
+                # string 'None', and since a contact's detail line prefers its
+                # presence note over its URI, the row rendered the word "None"
+                # under the name. Only ever seen on the user's own contact,
+                # because only their own devices publish presence to them.
+                _presence_open_notes = sorted(text for text in
+                                              (presence_note_text(note) for service in pidf.services
+                                               if service in most_recent_services and service.status.basic == 'open'
+                                               for note in service.notes) if text)
+                _presence_closed_notes = sorted(text for text in
+                                                (presence_note_text(note) for service in pidf.services
+                                                 if service in most_recent_services and service.status.basic == 'closed'
+                                                 for note in service.notes) if text)
 
                 _presence_notes =  _presence_closed_notes if device_wining_status == 'offline' else _presence_open_notes
 
@@ -1339,10 +1375,62 @@ class BlinkPresenceContact(BlinkContact):
                     if status == 'available':
                         NotificationCenter().post_notification("BlinkContactBecameAvailable", sender=self.contact)
 
+        # The newest time any device reported, as a real timestamp rather
+        # than text baked into a note.
+        stamps = [device['timestamp'] for device in devices.values() if device.get('timestamp')]
+        self.presence_timestamp = max(stamps) if stamps else None
+
+        self.logPresenceUpdate(status, devices)
+
+        # Captured before the old values are overwritten: the notification is
+        # about a TRANSITION, and a receiver that has to read old_* off the
+        # sender arrives too late to see one.
+        previous_status, previous_note = self.old_presence_status, self.old_presence_note
         self.old_presence_status = status
         self.old_presence_note = self.presence_note
 
-        NotificationCenter().post_notification("BlinkContactPresenceHasChanged", sender=self)
+        NotificationCenter().post_notification(
+            "BlinkContactPresenceHasChanged", sender=self,
+            data=NotificationData(status=status, previous_status=previous_status,
+                                  note=self.presence_note, previous_note=previous_note,
+                                  uris=[str(uri.uri) for uri in getattr(self.contact, 'uris', ())
+                                        if uri.uri],
+                                  timestamp=self.presence_timestamp))
+
+    @objc.python_method
+    def logPresenceUpdate(self, status, devices):
+        """One line per contact whose presence actually changed.
+
+        handle_pidfs runs on every PIDF from every device of every contact,
+        so logging each call floods the log and hides the transitions. Only a
+        changed status or note is reported, which is also exactly what moves
+        the second line of a contact row: `detail` prefers the presence note
+        over the URI, so a note appearing, changing or emptying is what the
+        user sees change under the name.
+        """
+        if status == self.old_presence_status and self.presence_note == self.old_presence_note:
+            return
+        try:
+            # Counted here rather than taken from handle_pidfs's `has_notes`:
+            # that name starts as a count and is rebound to
+            # `has_notes > 1 or self.presence_state['pending_authorizations']`
+            # before this runs, so by now it is a bool or a dict. Deriving the
+            # number from the devices being reported cannot drift from them.
+            note_count = sum(len(device.get('notes') or []) for device in devices.values())
+            summary = ', '.join(
+                '%s=%s%s' % (device.get('user_agent') or device.get('id') or '?',
+                             device.get('status'),
+                             ' note=%r' % device['notes'][0] if device.get('notes') else '')
+                for device in list(devices.values())[:4])
+            BlinkLogger().log_info(
+                'Presence for %s: %s -> %s, note %r -> %r, reported %s (%d device(s), %d note(s))%s'
+                % (self.uri or self.name or '?', self.old_presence_status, status,
+                   self.old_presence_note, self.presence_note,
+                   self.presence_timestamp or 'never', len(devices), note_count,
+                   ' [%s]' % summary if summary else ''))
+        except Exception as e:
+            BlinkLogger().log_error('Cannot log the presence update for %s: %s'
+                                    % (self.uri or '?', e))
 
     @objc.python_method
     @run_in_green_thread
@@ -1468,7 +1556,13 @@ class BlinkPresenceContact(BlinkContact):
                 if note.lower() == on_the_phone_activity['note'].lower():
                     note = on_the_phone_activity['localized_note']
 
-                presence_notes.append('%s %s' % (note, device['local_time']) if device['local_time'] is not None else note)
+                # The note is the note. The device's local clock used to be
+                # glued onto the end of it, which made the contact's second
+                # line read "Yes 17:09 (UTC+2)" -- two unrelated facts in one
+                # string, neither of which can then be shown, compared or
+                # translated on its own. The time lives on the contact as
+                # presence_timestamp instead.
+                presence_notes.append(note)
 
         local_times = []
         if not presence_notes:
@@ -1490,13 +1584,13 @@ class BlinkPresenceContact(BlinkContact):
                     except IndexError:
                         self.presence_note = presence_notes[0]
 
-            detail = self.presence_note if self.presence_note else '%s' % self.uri
+            detail = self.presence_note if self.presence_note else '%s' % (self.uri or '')
         elif local_times:
             detail = '%s %s' % (self.uri, ",".join(local_times))
         else:
             # TODO: how to handle xmmp: uris?
             #uri = self.uri.replace(';xmpp', '') if self.uri_type is not None and self.uri_type.lower() == 'xmpp' and ';xmpp' in self.uri else self.uri
-            detail_uri = '%s' % self.uri
+            detail_uri = '%s' % (self.uri or '')
             detail = detail_uri
             detail_pending = NSLocalizedString("Pending authorization", "Contact detail")
             if self.presence_state['pending_authorizations']:
@@ -3970,6 +4064,10 @@ class ContactListModel(CustomListModel):
 
     @objc.python_method
     def _NH_SIPApplicationDidStart(self, notification):
+        # Deferred: at this point the accounts may not be loaded and the
+        # addressbook certainly is not, so asking now reports an empty world.
+        call_later(5, self.logContactsForOwnAccounts)
+
         # Load virtual groups
         self.all_contacts_group.load_group()
         self.no_group.load_group()
@@ -4565,6 +4663,78 @@ class ContactListModel(CustomListModel):
             # order is what the next launch reads back.
             self.saveGroupPosition()
 
+        self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
+        self.nc.post_notification("BlinkGroupsHaveChanged", sender=self)
+
+    @objc.python_method
+    def logContactsForOwnAccounts(self):
+        """One line per contact carrying one of this device's own account URIs.
+
+        These are the contacts the user sees as "me", and they are where the
+        PGP key escrow lives, so what they hold is worth stating plainly
+        rather than reconstructing from a dumped XCAP document. It also shows
+        what the contact list is about to draw: the second line of a row is
+        `detail`, and a contact whose detail reads "None" is a bug this line
+        makes obvious.
+        """
+        try:
+            accounts = set(str(account.id).lower() for account in AccountManager().get_accounts()
+                           if isinstance(account, Account))
+            contacts = list(AddressbookManager().get_contacts())
+        except Exception as e:
+            BlinkLogger().log_error('Cannot list the contacts for my own accounts: %s' % e)
+            return
+        if not accounts:
+            # Said out loud rather than returned quietly. The first version of
+            # this returned in silence when there were no accounts yet, which
+            # looks exactly like the code never running -- and that is how it
+            # was read when nothing appeared in the log.
+            BlinkLogger().log_info('Own account contacts: no accounts configured')
+            return
+
+        found = 0
+        for contact in contacts:
+            uris = [str(uri.uri) for uri in contact.uris if uri.uri]
+            mine = [uri for uri in uris if uri.lower() in accounts]
+            if not mine:
+                continue
+            found += 1
+            default = contact.uris.default
+            BlinkLogger().log_info(
+                'Own account contact: id=%s name=%r own_uris=[%s] all_uris=[%s] '
+                'default=%s organization=%r'
+                % (contact.id, contact.name or '', ', '.join(mine), ', '.join(uris),
+                   (str(default.uri) if default is not None and default.uri else 'none'),
+                   getattr(contact, 'organization', None)))
+        BlinkLogger().log_info('Own account contacts: %d of %d contacts carry one of %s'
+                               % (found, len(contacts), ', '.join(sorted(accounts))))
+
+    @objc.python_method
+    @run_in_gui_thread
+    def promoteGroupToTop(self, group_id):
+        """Move a group to the top of the list now.
+
+        promoteGroupOnActivation only fires when a group is activated, which
+        is no use for one already on screen -- the Messages group survives a
+        relaunch, so on every sync but the very first it is already there and
+        an activation never comes. A group that is not loaded yet falls back
+        to the activation route, so a caller does not have to know which
+        case it is in.
+        """
+        try:
+            blink_group = next(group for group in self.groupsList
+                               if getattr(group, 'group', None) is not None
+                               and group.group.id == group_id)
+        except StopIteration:
+            self.promoteGroupOnActivation(group_id)
+            return
+
+        if self.groupsList.index(blink_group) == 0:
+            return
+
+        self.groupsList.remove(blink_group)
+        self.groupsList.insert(0, blink_group)
+        self.saveGroupPosition()
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
         self.nc.post_notification("BlinkGroupsHaveChanged", sender=self)
 

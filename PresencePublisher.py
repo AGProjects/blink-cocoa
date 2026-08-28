@@ -398,7 +398,15 @@ class PresencePublisher(object):
         if account.presence.homepage is not None:
             service.homepage = cipid.Homepage(account.presence.homepage)
 
-        service.notes.add(str(settings.presence_state.note))
+        # Only when there is something to say. str(None) is the string
+        # "None", and a note element carrying that word is published to every
+        # watcher, stored by every client, and shown under the user's name --
+        # a contact's detail line prefers its presence note over its URI, so
+        # this is what put the word "None" beneath their own contact. The
+        # offline paths below already guard the same way.
+        note = settings.presence_state.note
+        if note and str(note).strip():
+            service.notes.add(str(note).strip())
         service.device_info = pidf.DeviceInfo(instance_id, description=str(self.hostname), user_agent=settings.user_agent)
         if not account.presence.disable_timezone:
             service.device_info.time_offset = pidf.TimeOffset()

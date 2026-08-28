@@ -548,10 +548,50 @@ class ChatMessage(SQLObject):
     # counter did not.
     read              = IntCol(default=1)
     unread_idx        = DatabaseIndex('read')
+    # A STORAGE WHITELIST, not the wire envelope -- the two are different
+    # objects that share a name (docs/messages/sylk-location-sharing-v2.md,
+    # "SQL storage"). Only envelope fields that have no column of their own
+    # and cannot be derived: `expires`, `role` (meet), `deviceId`, `perm`,
+    # `requestId` and the privacy fields. `messageId`, `timestamp`, `uri`,
+    # `action`, `one_shot` and `meeting_request` are reconstructed on read.
+    # For a plain live tick this is just {"expires": "..."}.
+    #
+    # It is what lets a row be stored exactly as it arrived and decrypted
+    # only when something is drawn. Without it the sole way to persist a
+    # location tick was to decrypt at write time, which is what made a
+    # journal backfill decrypt thousands of blobs on the GUI's back.
+    metadata          = UnicodeCol(sqlType='LONGTEXT', default=None)
+    # Derived from that envelope at insert time so related rows can be found
+    # without parsing every row's JSON, and named as sylk mobile names them
+    # (messages.related_msg_id / related_action) because they mean the same
+    # thing on both clients: "which thing does this row belong to, and what
+    # did it do to it". A location tick carries its share's session id and
+    # its action; the pair is equally what mobile uses to group meeting
+    # updates and file transfer rows. NULL for anything unrelated.
+    related_msg_id    = StringCol(default=None)
+    related_action    = StringCol(default=None)
+    related_idx       = DatabaseIndex('related_msg_id')
+    # 'location' on browsable rows (origins and one-shots) so a media browser
+    # can find them; NULL on trail update ticks. Derived from related_action,
+    # so no decryption.
+    category          = StringCol(default=None)
+    # Epoch seconds after which the row may be purged. Location trail ticks
+    # are written with now + 30 days on mobile (LOCATION_RETENTION_SEC).
+    # Declared now because mobile shipped three separate migrations that were
+    # nothing but `delete from messages where content_type =
+    # 'application/sylk-message-metadata'` -- one row per tick accumulates,
+    # and a retention column added after the fact cannot date what is already
+    # stored. NOTHING WRITES OR READS THIS YET: it is inert until a purge
+    # exists.
+    #
+    # Named expire_time, not `expire` as mobile has it: SQLObject defines
+    # SQLObject.expire() on every row, and a column of that name is refused
+    # at class-definition time.
+    expire_time       = IntCol(default=0)
 
 
 class ChatHistory(object, metaclass=Singleton):
-    __version__ = 9
+    __version__ = 10
 
     def __init__(self):
         path = ApplicationData.get('history')
@@ -730,6 +770,30 @@ class ChatHistory(object, metaclass=Singleton):
                 except Exception as e:
                     BlinkLogger().log_error("Error preparing the read column: %s" % e)
 
+        if next_upgrade_version < 10:
+            # Nothing already stored has metadata: rows written before this
+            # column existed folded whatever they needed into the body, so
+            # NULL is the honest value and every reader must treat it as
+            # "this row predates the column" rather than "this message had
+            # no metadata".
+            for column, declaration in (('metadata', 'LONGTEXT'),
+                                        ('related_msg_id', 'TEXT'),
+                                        ('related_action', 'TEXT'),
+                                        ('category', 'TEXT'),
+                                        ('expire_time', 'INTEGER DEFAULT 0')):
+                query = "alter table chat_messages add column '%s' %s" % (column, declaration)
+                try:
+                    self.db.queryAll(query)
+                except dberrors.OperationalError as e:
+                    if not str(e).startswith('duplicate column name'):
+                        BlinkLogger().log_error("Error adding column %s to table %s: %s"
+                                                % (column, ChatMessage.sqlmeta.table, e))
+            query = "CREATE INDEX IF NOT EXISTS related_index ON chat_messages (related_msg_id)"
+            try:
+                self.db.queryAll(query)
+            except Exception as e:
+                BlinkLogger().log_error("Error adding index related_index: %s" % e)
+
         TableVersions().set_table_version(ChatMessage.sqlmeta.table, self.__version__)
 
     @run_in_db_thread
@@ -851,7 +915,7 @@ class ChatHistory(object, metaclass=Singleton):
 
 
     @run_in_db_thread
-    def add_message(self, msgid, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, cpim_timestamp, body, content_type, private, status, time='', uuid='', journal_id='', call_id='', encryption='', read=1):
+    def add_message(self, msgid, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, cpim_timestamp, body, content_type, private, status, time='', uuid='', journal_id='', call_id='', encryption='', read=1, metadata=None, related_msg_id=None, related_action=None, category=None):
 
         # content_type may arrive as a sipsimple ContentType object (e.g. from
         # incoming SMS/chat messages). ContentType subclasses str, so an
@@ -894,7 +958,14 @@ class ChatHistory(object, metaclass=Singleton):
                           uuid                = uuid,
                           journal_id          = journal_id,
                           encryption          = encryption,
-                          read                = 1 if read else 0
+                          read                = 1 if read else 0,
+                          # Stored as it arrived. A dict is serialised rather
+                          # than str()'d so it reads back as JSON.
+                          metadata            = (metadata if metadata is None or isinstance(metadata, str)
+                                                 else json.dumps(metadata)),
+                          related_msg_id      = related_msg_id,
+                          related_action      = related_action,
+                          category            = category
                           )
             NotificationCenter().post_notification('MessageSaved', sender=self, data=NotificationData(msgid=msgid, success=True))
             return True

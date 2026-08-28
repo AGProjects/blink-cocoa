@@ -25,6 +25,7 @@ import hashlib
 import uuid
 
 from collections import OrderedDict
+import gzip
 import pgpy
 from pgpy.constants import PubKeyAlgorithm, KeyFlags, HashAlgorithm, SymmetricKeyAlgorithm, CompressionAlgorithm
 import json
@@ -94,7 +95,7 @@ from MessageHost import (FILE_TRANSFER_CONTENT_TYPE, FILE_TRANSFER_CONTENT_TYPES
                          pgp_plaintext,
                          pgp_plaintext_bytes, public_key_short_checksum)
 from SylkLocation import (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE,
-                          is_notable_action,
+                          envelope_summary, is_notable_action,
                           bubble_id as location_bubble_id, location_payload,
                           merge_location_bodies, storable_envelope)
 from FileTransferCache import FILE_TRANSFER_PATH, base_url_from_transfer
@@ -619,6 +620,12 @@ class SMSWindowManagerClass(NSObject):
     _pending_save_logged = None
     new_contacts = set()
     private_keys = {}
+    # Decoded location payloads, keyed by the body they came from. Each
+    # journal entry is decoded by two or three callers; only the first pays
+    # for the decrypt. Small on purpose -- it exists to collapse repeats
+    # within one entry, not to hold a page.
+    LOCATION_CACHE_SIZE = 32
+    _location_payload_cache = OrderedDict()
     # Accounts whose addressbook has answered the escrow question, those
     # that have adopted an escrowed key, and the escrow each one last
     # failed to open -- see restorePrivateKeyFromOwnContact.
@@ -1120,6 +1127,12 @@ class SMSWindowManagerClass(NSObject):
         """GET one journal page. Returns (messages, status): ok / auth / error."""
         req = urllib.request.Request(url, method="GET")
         req.add_header('Authorization', 'Apikey %s' % account.sms.history_token)
+        # Journal pages are JSON with the same handful of keys repeated
+        # thousands of times, so they compress hard. urllib does not ask for
+        # this on its own and does not decompress it either, which is why a
+        # first sync moved 31.8 MB in the clear -- the download became the
+        # whole cost of the sync once the apply stopped being slow.
+        req.add_header('Accept-Encoding', 'gzip')
         try:
             raw_response = urllib.request.urlopen(req, timeout=20)
         except (urllib.error.URLError, ConnectionRefusedError, TimeoutError,
@@ -1130,15 +1143,25 @@ class SMSWindowManagerClass(NSObject):
             return None, 'error'
 
         try:
-            raw_data = raw_response.read().decode().replace('\\/', '/')
+            raw = raw_response.read()
+            transferred = len(raw)
+            # A server that ignores Accept-Encoding sends plain bytes and no
+            # Content-Encoding, so this stays correct either way.
+            if (raw_response.headers.get('Content-Encoding') or '').lower() == 'gzip':
+                raw = gzip.decompress(raw)
+            raw_data = raw.decode().replace('\\/', '/')
             json_data = json.loads(raw_data)
         except Exception as e:
             BlinkLogger().log_error('Error reading SylkServer response from %s: %s' % (url, str(e)))
             return None, 'error'
 
         messages = json_data.get('messages') or []
-        BlinkLogger().log_info('Fetched %d journal entries for %s from %s (%d bytes)'
-                               % (len(messages), account.id, url, len(raw_data)))
+        if transferred < len(raw_data):
+            size = '%d bytes over the wire, %d decompressed' % (transferred, len(raw_data))
+        else:
+            size = '%d bytes, not compressed' % transferred
+        BlinkLogger().log_info('Fetched %d journal entries for %s from %s (%s)'
+                               % (len(messages), account.id, url, size))
         return messages, 'ok'
 
     @objc.python_method
@@ -1204,7 +1227,7 @@ class SMSWindowManagerClass(NSObject):
         return pages, entries
 
     @objc.python_method
-    def _applyCachedJournals(self, account):
+    def _applyCachedJournals(self, account, first_sync=False):
         """Stage 2: apply cached pages oldest to newest, one file at a time.
 
         Each file is deleted once applied, so an interrupted run resumes with
@@ -1229,7 +1252,8 @@ class SMSWindowManagerClass(NSObject):
         self.contacts_queue.pause()
         self._journal_bulk = True
         try:
-            self._applyJournalFiles(account, directory, names, all_contacts, all_incoming)
+            self._applyJournalFiles(account, directory, names, all_contacts, all_incoming,
+                                    first_sync=first_sync)
         finally:
             self._journal_bulk = False
             self.contacts_queue.unpause()
@@ -1237,7 +1261,8 @@ class SMSWindowManagerClass(NSObject):
         self._finishJournalApply(account, all_contacts, all_incoming)
 
     @objc.python_method
-    def _applyJournalFiles(self, account, directory, names, all_contacts, all_incoming):
+    def _applyJournalFiles(self, account, directory, names, all_contacts, all_incoming,
+                           first_sync=False):
         for index, name in enumerate(names, 1):
             path = os.path.join(directory, name)
             try:
@@ -1247,7 +1272,8 @@ class SMSWindowManagerClass(NSObject):
                 cursor = payload.get('cursor') or None
                 BlinkLogger().log_info('Applying journal %d/%d: %s (%d entries)'
                                        % (index, len(names), name, len(messages)))
-                _, contacts, incoming, summary, unhandled = self._applyJournalEntries(account, messages, cursor, label=name)
+                _, contacts, incoming, summary, unhandled = self._applyJournalEntries(
+                    account, messages, cursor, label=name, first_sync=first_sync)
                 all_contacts |= contacts
                 for contact, count in incoming.items():
                     all_incoming[contact] = all_incoming.get(contact, 0) + count
@@ -1262,7 +1288,7 @@ class SMSWindowManagerClass(NSObject):
                 BlinkLogger().log_error('Cannot delete applied journal %s: %s' % (path, e))
 
     @objc.python_method
-    def _applyJournalEntries(self, account, messages, cursor, label=''):
+    def _applyJournalEntries(self, account, messages, cursor, label='', first_sync=False):
         """Dispatch one cached journal page. No network, no file I/O.
 
         `cursor` is the sync cursor as it stood before this page was
@@ -1274,6 +1300,7 @@ class SMSWindowManagerClass(NSObject):
         sync_summary = {}
         sync_unhandled = {}
         last_message_id = None
+        skipped_imdn = 0
 
         total = len(messages)
         started = datetime.datetime.now()
@@ -1331,6 +1358,22 @@ class SMSWindowManagerClass(NSObject):
                     BlinkLogger().log_debug('Remove message %s with %s' % (msg['message_id'], msg['contact']))
                     self.history.delete_message(msg['message_id']);
                 elif content_type == 'message/imdn':
+                    if first_sync:
+                        # Nothing has ever been synced on this device, so every
+                        # message in this journal arrives carrying its own final
+                        # state (syncOutgoingMessage reads msg['state'] and
+                        # inserts the row already delivered/displayed/failed).
+                        # Replaying the receipts on top of that is thousands of
+                        # updates that each set a column to what it already
+                        # holds -- 2098 of them on one page of a 15-minute
+                        # first sync.
+                        #
+                        # Receipts still matter on every LATER sync: then the
+                        # rows are already stored, the client was offline while
+                        # the states changed, and the receipt is the only thing
+                        # carrying the change.
+                        skipped_imdn += 1
+                        continue
                     payload = eval(msg['content'])
                     imdn_status = payload['state']
                     imdn_message_id = payload['message_id']
@@ -1457,6 +1500,10 @@ class SMSWindowManagerClass(NSObject):
             'Journal %s applied: %d entries in %.1fs (%.1fs working, %.1fs throttled%s)'
             % (label or 'page', total, elapsed, working, slept,
                ', %.0f entries/s' % (total / working) if working > 0.001 else ''))
+        if skipped_imdn:
+            BlinkLogger().log_info('Journal %s: skipped %d delivery receipt(s) -- on a first sync '
+                                   'every message arrives with its own state'
+                                   % (label or 'page', skipped_imdn))
         return last_message_id, sync_contacts, sync_incoming, sync_summary, sync_unhandled
 
     @objc.python_method
@@ -1577,7 +1624,18 @@ class SMSWindowManagerClass(NSObject):
         # account until the app restarted.
         try:
             pages, entries = self._downloadJournal(account)
-            self._applyCachedJournals(account)
+            # `cursor` is what the account held BEFORE this run: empty means
+            # nothing has ever been synced on this device, which is what makes
+            # the journal's own message states authoritative.
+            self._applyCachedJournals(account, first_sync=not cursor)
+            if not cursor:
+                # First sync on this device: the Messages group has just been
+                # filled with everyone the journal mentioned, so put it where
+                # the user will look. Done here rather than where the group is
+                # created because the group usually already exists by now --
+                # it is created the first time any message is filed, which on
+                # a fresh profile is during this very apply.
+                self.promoteMessagesGroup()
         finally:
             try:
                 del self.syncConversationsInProgress[account.id]
@@ -1763,6 +1821,14 @@ class SMSWindowManagerClass(NSObject):
             except Exception:
                 continue
         return None
+
+    @objc.python_method
+    def promoteMessagesGroup(self):
+        """Put the Messages group at the top of the contact list."""
+        try:
+            NSApp.delegate().contactsWindowController.model.promoteGroupToTop('_messages')
+        except Exception as e:
+            BlinkLogger().log_error('Cannot promote the Messages group: %s' % e)
 
     @objc.python_method
     def addContactsToMessagesGroup(self):
@@ -2087,14 +2153,42 @@ class SMSWindowManagerClass(NSObject):
         Coordinates are decrypted with the account's private key when
         available; a coordinate tick we cannot decrypt returns None,
         while a signal (which has nothing to decrypt) does not.
+
+        Memoised, because one journal entry is decoded more than once on
+        its way through: _journal_message_is_notable asks whether it bumps
+        the unread counter, the store path asks for the envelope to persist,
+        and gotMessage asks whether it is a silent trail tick. Each of those
+        was a fresh RSA decrypt of the same blob -- pure Python, holding the
+        GIL -- which is why a journal page of location ticks applied at 19
+        entries/s while a page of plain text managed 72000, and why the UI
+        froze for the duration. The cache is small and exact (the full body
+        and metadata are the key, not a hash of them), so it collapses the
+        repeats within one entry without carrying anything across a page.
         """
+        key = (account_id, content_type, content, repr(metadata))
+        try:
+            payload = self._location_payload_cache[key]
+        except KeyError:
+            pass
+        except TypeError:
+            key = None                  # unhashable body; decode without caching
+        else:
+            self._location_payload_cache.move_to_end(key)
+            return payload
+
         decrypt = lambda blob: self._decrypt_pgp_for_account(account_id, blob)
         try:
-            return location_payload(content, metadata, decrypt=decrypt,
-                                    content_type=content_type)
+            payload = location_payload(content, metadata, decrypt=decrypt,
+                                       content_type=content_type)
         except Exception as e:
             BlinkLogger().log_debug('Failed to decode location payload: %s' % str(e))
-            return None
+            payload = None
+
+        if key is not None:
+            self._location_payload_cache[key] = payload
+            while len(self._location_payload_cache) > self.LOCATION_CACHE_SIZE:
+                self._location_payload_cache.popitem(last=False)
+        return payload
 
     @objc.python_method
     def _is_silent_location_tick(self, account_id, content, metadata=None,
@@ -2684,9 +2778,15 @@ class SMSWindowManagerClass(NSObject):
             return True
         if content_type not in (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE):
             return False
-        payload = self._decode_location_payload(
-            str(account.id), msg['content'], msg.get('metadata'), content_type)
-        return is_notable_action(payload)
+        # From the cleartext envelope only: deciding whether a tick bumps
+        # the unread counter must not cost a decrypt, since this is asked
+        # of every location entry a journal replays. An entry that cannot
+        # be classified without a key (a legacy armoured envelope) is not
+        # notable -- a share whose origin is unreadable has no bubble to
+        # count, and guessing otherwise would badge a conversation that
+        # shows nothing.
+        summary = envelope_summary(msg['content'], msg.get('metadata'), content_type)
+        return bool(summary and summary['is_notable'])
 
     @objc.python_method
     def _persist_unhandled_journal_message(self, account, msg):
@@ -2760,46 +2860,44 @@ class SMSWindowManagerClass(NSObject):
         if content_type in FILE_TRANSFER_CONTENT_TYPES:
             self.noteFileTransferURL(account, body)
 
+        metadata = msg.get('metadata')
+        related_msg_id = related_action = category = None
+        store_metadata = None
+
         if content_type in (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE) \
                 and reply_metadata(body) is None and peaks_metadata(body) is None:
-            payload = self._decode_location_payload(
-                str(account.id), body, msg.get('metadata'), content_type)
-            if payload is None:
-                # Not a location payload at all -- another metadata
-                # flavour -- or a coordinate tick we cannot read. Nothing
-                # to RENDER, which is not the same as nothing to keep:
-                # the journal offers this entry once, the cursor moves
-                # past it, and it is never sent again. The flavour
-                # nothing understands today is exactly the one a later
-                # build will want, so it is stored inert, with the body
-                # it arrived with, and the renderer declines to draw it.
+            # NOTHING IS DECRYPTED HERE. The tick is stored exactly as it
+            # arrived and classified from its cleartext envelope, so a
+            # journal of thousands of trail ticks costs no PGP work at all
+            # -- coordinates are opened once, by whatever draws the bubble.
+            # Folding ticks into one row per share used to require the
+            # opposite: decrypt every tick at write time, which is what
+            # made a backfill of 5000 entries take four minutes and hold
+            # the GIL throughout.
+            summary = envelope_summary(body, metadata, content_type)
+            if summary is None:
+                # Either a metadata flavour that is not a location tick,
+                # or a legacy body whose whole envelope is armoured and so
+                # cannot be classified without a key. Stored verbatim
+                # either way: the journal offers this entry once, the
+                # cursor moves past it, and whatever understands it later
+                # -- the renderer, or a future build -- finds it intact.
                 stamps_conversation_time = False
-                encryption = ''
             else:
-                body = storable_envelope(payload)
-
-                if payload['is_coordinate']:
-                    row_id = location_bubble_id(payload, msgid)
-                    if payload['is_update']:
-                        # Update tick -- refresh the existing row's body so
-                        # a later replay shows the most recent position. No
-                        # row is inserted, so the gauge is cleared here.
-                        self.history.update_message_body(row_id, body,
-                                                         merge=merge_location_bodies)
-                        self._resolvePendingSave(msgid)
-                        return
-                    # Origin tick -- persist under the bubble id so
-                    # subsequent update ticks all rewrite this row.
-                    msgid = row_id
-                # A coordinate-free signal keeps its own message id: it is
-                # a breadcrumb in the timeline, not a map, and must not
-                # collide with the session row it refers to.
-
-                # The row we store is cleartext (the coordinates were
-                # opened above), so it must not claim the ciphertext lock
-                # the live path never sets on these rows either.
-                encryption = ''
-                stamps_conversation_time = is_notable_action(payload)
+                related_msg_id = summary['session_id']
+                related_action = summary['action']
+                category = summary['category']
+                store_metadata = summary['store_metadata'] or None
+                stamps_conversation_time = summary['is_notable']
+                # One row per tick, each under its own message id. The
+                # renderer groups them by related_msg_id and accumulates
+                # the trail as it walks, which it already does for ticks
+                # that arrive live after a bubble is on screen.
+                if not summary['is_coordinate']:
+                    # A coordinate-free signal carries no ciphertext, so
+                    # it must not claim the lock that tells a reader to
+                    # decrypt before rendering.
+                    encryption = ''
 
         self.history.add_message(
             msgid, 'sms', str(account.id), msg['contact'],
@@ -2807,6 +2905,8 @@ class SMSWindowManagerClass(NSObject):
             body, content_type, "0", status,
             call_id=msg['message_id'], encryption=encryption,
             read=0 if (unread and direction == 'incoming') else 1,
+            metadata=store_metadata, related_msg_id=related_msg_id,
+            related_action=related_action, category=category,
         )
         if stamps_conversation_time:
             self.noteMessageTime(msg['contact'], msg['timestamp'])

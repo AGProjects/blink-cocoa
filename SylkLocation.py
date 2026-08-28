@@ -30,6 +30,7 @@ can be exercised standalone:
     python3 test_location_envelope.py
 """
 
+import datetime
 import json
 
 __all__ = [
@@ -381,6 +382,105 @@ def _legacy_payload(envelope, decrypt):
     }
 
 
+# Envelope fields that get a column of their own, or are reconstructed on
+# read, and so must NOT be duplicated into the stored metadata. Everything
+# else in the envelope is kept. See docs/messages/sylk-location-sharing-v2.md,
+# "SQL storage": what is stored is a whitelist, not the wire envelope.
+METADATA_DERIVABLE_FIELDS = frozenset((
+    'action', 'value', 'messageId', 'sessionId', 'timestamp', 'uri',
+    'one_shot', 'meeting_request',
+))
+
+
+def row_metadata(stored_metadata, related_action=None, related_msg_id=None):
+    """Rebuild a stored row's envelope metadata for reading.
+
+    What is persisted is a whitelist -- only envelope fields with no column
+    of their own -- so `action` and `sessionId` are NOT in it. They live in
+    the related_action / related_msg_id columns precisely so they can be
+    filtered and grouped in SQL without parsing JSON, and they have to be
+    put back before the envelope means anything: without `action` a decoder
+    sees a version-2 metadata blob describing nothing and returns None.
+
+    A row with no related_action predates these columns (or is not a
+    location tick); its metadata is handed back untouched, which is what
+    makes an old row decode exactly as it always did.
+    """
+    if not related_action:
+        return stored_metadata
+
+    meta = location_metadata(stored_metadata)
+    if meta is None:
+        # No stored metadata means the row is v1-shaped: its BODY is the
+        # envelope, with only `value` armoured, so it needs no side-band and
+        # synthesising one is actively wrong -- a v2-looking metadata blob
+        # makes the decoder read the whole v1 envelope as the coordinates.
+        # A v2 row always stores at least `version`, which is what keeps the
+        # two apart.
+        return None
+
+    meta = dict(meta)
+    meta['action'] = related_action
+    if related_msg_id:
+        meta['sessionId'] = related_msg_id
+    # The whitelist is only ever written for v2-shaped storage; a row
+    # without a version is still one of ours, so say so rather than let it
+    # fall through to the v1 branch and be read as a cleartext body.
+    meta.setdefault('version', 2)
+    return meta
+
+
+def envelope_summary(content, metadata=None, content_type=None):
+    """Classify a location tick WITHOUT opening its coordinates.
+
+    Everything a store path needs -- what the tick is, which share it
+    belongs to, whether it carries coordinates at all -- lives in the
+    cleartext envelope: v2 sends it as metadata beside an armoured body,
+    v1 sends it as a cleartext JSON body with only `value` armoured. So a
+    journal replay can file thousands of ticks correctly without a private
+    key and without a single decrypt, which is the entire point.
+
+    Returns None when the tick cannot be classified without decrypting --
+    the legacy `application/sylk-message-metadata` format armours the whole
+    envelope, so it has no cleartext to read. Such a row is still stored
+    verbatim; it is simply classified when something renders it.
+
+    `store_metadata` is the whitelist to persist: the envelope minus every
+    field that has its own column or is reconstructed on read.
+    """
+    envelope = location_envelope(content, metadata, decrypt=None)
+    if envelope is None:
+        return None
+
+    action = envelope.get('action')
+    if action == LEGACY_ACTION and content_type != LOCATION_CONTENT_TYPE:
+        # A legacy tick that happened to arrive in the clear. Its own
+        # decoder reconstructs the rest; there is no session grouping to
+        # derive here that _legacy_payload would not contradict.
+        return None
+    if action not in LOCATION_ACTIONS:
+        return None
+
+    session, session_source = envelope_session_and_source(envelope)
+    is_coordinate = action in COORDINATE_ACTIONS
+
+    return {
+        'action': action,
+        'session_id': session,
+        'session_source': session_source,
+        'is_coordinate': is_coordinate,
+        'is_update': action in UPDATE_ACTIONS,
+        'is_signal': action in SIGNAL_ACTIONS,
+        'is_notable': action in NOTABLE_ACTIONS,
+        # 'location' on browsable rows -- origins and one-shots -- so a
+        # media browser finds them; None on trail ticks.
+        'category': 'location' if (is_coordinate and action not in UPDATE_ACTIONS) else None,
+        'store_metadata': dict((key, value) for key, value in envelope.items()
+                               if key not in METADATA_DERIVABLE_FIELDS),
+        'envelope': envelope,
+    }
+
+
 def location_payload(content, metadata=None, decrypt=None, content_type=None):
     """Decode a location message into everything the renderer needs.
 
@@ -592,12 +692,46 @@ def track_points(envelope):
     return points[-MAX_TRACK_POINTS:]
 
 
+def _point_time(value):
+    """A sortable value for a trail point's timestamp, or None.
+
+    Tolerant on purpose: points come from the wire, from stored rows and
+    from rows written by builds that formatted this differently, and a
+    timestamp that will not parse must leave the point where it is rather
+    than throw the trail away.
+    """
+    if value is None:
+        return None
+    if isinstance(value, datetime.datetime):
+        return value
+    text = _as_text(value).strip()
+    if not text:
+        return None
+    if text.endswith('Z'):
+        text = text[:-1] + '+00:00'
+    try:
+        parsed = datetime.datetime.fromisoformat(text)
+    except (TypeError, ValueError):
+        return None
+    # Naive and aware values cannot be compared, and both shapes occur.
+    return parsed.replace(tzinfo=None) if parsed.tzinfo is None else parsed.astimezone(
+        datetime.timezone.utc).replace(tzinfo=None)
+
+
 def append_track_point(track, coords):
-    """Add a position to a trail, ignoring one that says nothing new.
+    """Add a position to a trail, keeping it in time order.
 
     A device that has not moved keeps sending its position, and a trail of
     two hundred identical points is a trail of one point drawn two hundred
     times -- it makes the slider useless and the map no more accurate.
+
+    Ordering is by the point's own timestamp rather than by arrival. Two
+    callers feed one trail: ticks arriving live, and rows replayed from
+    history. While a share is running both happen at once, and a trail that
+    trusted arrival order drew a line leaping between the live position and
+    each older point as history caught up -- a zigzag across the map. The
+    ordered insert costs nothing in the normal case, where each point is
+    newer than the last and this appends.
     """
     if not isinstance(track, list) or not isinstance(coords, dict):
         return track or []
@@ -611,14 +745,30 @@ def append_track_point(track, coords):
         'accuracy': _float_or_none(coords.get('accuracy')),
         'timestamp': coords.get('timestamp'),
     }
-    if track:
-        last = track[-1]
-        if (abs(last['latitude'] - lat) < 1e-7
-                and abs(last['longitude'] - lng) < 1e-7):
-            # same spot: keep the newer timestamp and accuracy, one point
-            track[-1] = point
-            return track
-    track.append(point)
+
+    when = _point_time(point['timestamp'])
+    index = len(track)
+    if when is not None:
+        # Walk back over anything stamped later. Untimestamped neighbours
+        # are left alone: nothing can be said about where they belong.
+        while index > 0:
+            previous = _point_time(track[index - 1].get('timestamp'))
+            if previous is None or previous <= when:
+                break
+            index -= 1
+
+    neighbour = track[index - 1] if index > 0 else None
+    if neighbour is not None and (abs(neighbour['latitude'] - lat) < 1e-7
+                                  and abs(neighbour['longitude'] - lng) < 1e-7):
+        # same spot: keep the newer timestamp and accuracy, one point
+        track[index - 1] = point
+        return track
+    following = track[index] if index < len(track) else None
+    if following is not None and (abs(following['latitude'] - lat) < 1e-7
+                                  and abs(following['longitude'] - lng) < 1e-7):
+        return track
+
+    track.insert(index, point)
     if len(track) > MAX_TRACK_POINTS:
         del track[:len(track) - MAX_TRACK_POINTS]
     return track

@@ -76,7 +76,7 @@ from SylkLocation import (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE,
                           bubble_id as location_bubble_id, ended_label,
                           location_payload, location_request_envelope,
                           merge_location_bodies, one_shot_envelope,
-                          session_bubble_ids, storable_envelope,
+                          row_metadata, session_bubble_ids, storable_envelope,
                           system_note)
 from util import format_identity_to_string, html2txt, sipuri_components_from_string, run_in_gui_thread
 from ChatOTR import ChatOtrSmp
@@ -457,6 +457,7 @@ class SMSViewController(NSObject):
 
             self.notification_center.add_observer(self, name='ChatStreamOTREncryptionStateChanged')
             self.notification_center.add_observer(self, name='BlinkContactsHaveChanged')
+            self.notification_center.add_observer(self, name='BlinkContactPresenceHasChanged')
             self.notification_center.add_observer(self, name='SIPAccountRegistrationDidSucceed', sender=self.account)
             self.notification_center.add_observer(self, name='PGPPublicKeyReceived', sender=self.account)
 
@@ -1560,6 +1561,47 @@ class SMSViewController(NSObject):
 
     @objc.python_method
     @run_in_gui_thread
+    @objc.python_method
+    def _NH_BlinkContactPresenceHasChanged(self, sender, data):
+        """Note a status or note change from the person this pane is about.
+
+        A breadcrumb, not a message: it is drawn like the location lifecycle
+        notes and is not persisted, so scrolling back through history does
+        not replay every status this contact has ever had.
+
+        Only for THIS conversation, and only for a change worth reading. The
+        notification fires for every contact on every PIDF, and presence is
+        chatty -- a device going offline and back while a laptop sleeps must
+        not fill a chat with paragraphs about it.
+        """
+        uris = [uri.lower() for uri in getattr(data, 'uris', ()) or ()]
+        if not self.remote_uri or self.remote_uri.lower() not in uris:
+            return
+
+        lines = []
+        status = getattr(data, 'status', None)
+        previous_status = getattr(data, 'previous_status', None)
+        if status != previous_status and previous_status is not None:
+            # previous_status None means this is the first reading of this
+            # contact since launch, not a transition the user watched happen.
+            lines.append(NSLocalizedString("%s is now %s", "System message")
+                         % (self.display_name or self.remote_uri, status))
+
+        note = getattr(data, 'note', None)
+        previous_note = getattr(data, 'previous_note', None)
+        if note != previous_note:
+            if note:
+                lines.append(NSLocalizedString("%s changed their note to: %s", "System message")
+                             % (self.display_name or self.remote_uri, note))
+            elif previous_note:
+                lines.append(NSLocalizedString("%s removed their note", "System message")
+                             % (self.display_name or self.remote_uri))
+
+        for line in lines:
+            self.chatViewController.showSystemMessage(line, getattr(data, 'timestamp', None)
+                                                      or ISOTimestamp.now())
+
+    @objc.python_method
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)
@@ -3295,12 +3337,19 @@ class SMSViewController(NSObject):
                     status = MSG_STATE_DEFERRED if (message.status == MSG_STATE_FAILED_LOCAL and message.direction == 'outgoing') else message.status
 
                     if message.content_type in (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE):
-                        # Location rows are persisted as the v1-shaped
-                        # envelope with the coordinates already decrypted,
-                        # so a reload rebuilds the map without the private
-                        # key and without a second wire format to parse.
-                        payload = self._location_payload(content or message.body,
-                                                         content_type=message.content_type)
+                        # Rows are persisted exactly as they arrived --
+                        # ciphertext coordinates plus the cleartext
+                        # envelope in the metadata column -- so the
+                        # coordinates are opened HERE, once, when a bubble
+                        # is actually drawn. Older rows carry no metadata
+                        # and hold the decrypted v1-shaped envelope in the
+                        # body instead; passing None for their metadata is
+                        # exactly what makes them decode as they always did.
+                        payload = self._location_payload(
+                            content or message.body,
+                            metadata=row_metadata(message.metadata, message.related_action,
+                                                  message.related_msg_id),
+                            content_type=message.content_type)
                         if payload is None:
                             # A row we can no longer make sense of (a
                             # metadata flavour we don't render, or a
