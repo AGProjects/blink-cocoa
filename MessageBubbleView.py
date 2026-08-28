@@ -4700,8 +4700,14 @@ class MessageBubbleView(NSView):
         walked. The per-point dots are only worth drawing while there are
         few enough of them to tell apart, and only where an arrow has not
         already claimed the point.
+
+        Only the walked part is drawn: the trail stops at the point the
+        slider is on, so scrubbing back rewinds the line instead of
+        leaving the future hanging off the pin. At the live end that is
+        the whole trail, which is why nothing changes when nobody has
+        touched the slider.
         """
-        track = self.location_track or []
+        track = (self.location_track or [])[:self.trackIndex() + 1]
         if len(track) < 2:
             return
 
