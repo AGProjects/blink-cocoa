@@ -999,8 +999,8 @@ class SMSWindowManagerClass(NSObject):
             return None, 'error'
 
         messages = json_data.get('messages') or []
-        BlinkLogger().log_debug('Fetched %d journal entries for %s (%d bytes)'
-                                % (len(messages), account.id, len(raw_data)))
+        BlinkLogger().log_info('Fetched %d journal entries for %s from %s (%d bytes)'
+                               % (len(messages), account.id, url, len(raw_data)))
         return messages, 'ok'
 
     @objc.python_method
@@ -1029,6 +1029,8 @@ class SMSWindowManagerClass(NSObject):
                 reactor.callLater(30, self.request_token, account)
                 return pages, entries
             if status != 'ok':
+                BlinkLogger().log_info('Journal download for %s stopped after %d page(s): the last '
+                                       'request to %s failed' % (account.id, pages, url))
                 return pages, entries
             if not messages:
                 break
@@ -1058,11 +1060,6 @@ class SMSWindowManagerClass(NSObject):
             BlinkLogger().log_error('Journal download for %s hit the %d page cap; more may remain'
                                     % (account.id, self.MAX_JOURNAL_PAGES))
 
-        if pages:
-            BlinkLogger().log_info('Journal download for %s finished: %d pages, %d entries cached'
-                                   % (account.id, pages, entries))
-        else:
-            BlinkLogger().log_debug('Journal download for %s: nothing new' % account.id)
         return pages, entries
 
     @objc.python_method
@@ -1394,19 +1391,24 @@ class SMSWindowManagerClass(NSObject):
     @objc.python_method
     @run_in_thread('sms_sync')
     def syncConversations(self, account):
+        """Bring the local history up to date with the server journal.
+
+        Every outcome leaves a line in the log. It used to be possible for a
+        sync to run, find nothing and say nothing -- indistinguishable from
+        never having been called at all -- which made "did it sync?" a
+        question you could only answer by reading this file.
+        """
         if not account.sms.enable_replication:
-            # debug: this fires on every registration refresh for every
-            # account that has replication off, and drowned the log
-            BlinkLogger().log_debug('Sync conversations is disabled for account %s' % account.id)
+            self._logSyncSkipped(account, 'replication is disabled for this account')
             return
 
         if not account.sms.history_token:
-            BlinkLogger().log_info('Sync conversations token is missing for account %s' % account.id)
+            self._logSyncSkipped(account, 'there is no history token yet; requesting one')
             self.requestSyncToken(account)
             return
 
         if not account.sms.history_url:
-            BlinkLogger().log_info('Sync conversations url is missing for account %s' % account.id)
+            self._logSyncSkipped(account, 'there is no history url yet')
             return
 
         try:
@@ -1414,19 +1416,87 @@ class SMSWindowManagerClass(NSObject):
         except KeyError:
             self.syncConversationsInProgress[account.id] = True
         else:
+            # Two callers race on a fresh token: the api-token handler calls
+            # this directly, and the settings change that same handler causes
+            # calls it again. Expected, and not worth an info line.
+            BlinkLogger().log_debug('Journal sync for %s is already running' % account.id)
             return
 
+        self.sync_skip_logged.pop(account.id, None)
+        cursor = account.sms.history_last_id
+        started = time.time()
+        BlinkLogger().log_info('Journal sync starting for %s from %s (%s)'
+                               % (account.id, account.sms.history_url,
+                                  'after %s' % cursor if cursor else 'from the beginning'))
+
+        pages = entries = 0
         # Released in `finally`, not per exit path: previously a non-401 HTTP
         # error returned with this flag still set, wedging journal sync for the
         # account until the app restarted.
         try:
-            self._downloadJournal(account)
+            pages, entries = self._downloadJournal(account)
             self._applyCachedJournals(account)
         finally:
             try:
                 del self.syncConversationsInProgress[account.id]
             except KeyError:
                 pass
+
+        if pages:
+            BlinkLogger().log_info('Journal sync for %s finished in %.1fs: %d page(s), %d entries'
+                                   % (account.id, time.time() - started, pages, entries))
+        else:
+            BlinkLogger().log_info('Journal sync for %s finished in %.1fs: the server had nothing new'
+                                   % (account.id, time.time() - started))
+
+        if not cursor:
+            # There was no cursor when this started, so this was the account's
+            # first sync on this device -- the same condition sylk mobile uses
+            # for afterFirstSync (no last message and no stored sync id).
+            self.announceActivation(account)
+
+    @objc.python_method
+    def announceActivation(self, account):
+        """Tell the account's other devices that this one has joined.
+
+        A plain-text note to ourselves, which the journal replicates to every
+        other device, matching what sylk mobile sends from afterFirstSync:
+        "Account activated on <user agent>".
+
+        Sent once per account, not once per launch. The first sync is the
+        right moment because the note is an addition to a conversation the
+        device has just finished reading -- announcing before the sync would
+        put it above history that had not arrived yet.
+        """
+        if account.sms.activation_announced:
+            return
+
+        # Recorded before sending rather than after. The send is asynchronous
+        # and has no success callback here, so a failure that is retried on
+        # the next launch is the lesser problem: an unrecorded success would
+        # announce this device again on every start.
+        account.sms.activation_announced = True
+        account.save()
+
+        text = 'Account activated on %s' % SIPSimpleSettings().user_agent
+        BlinkLogger().log_info('Announcing activation of %s: %s' % (account.id, text))
+        self.sendMessage(account, text, 'text/plain')
+
+    @objc.python_method
+    def _logSyncSkipped(self, account, reason):
+        """Say why a sync did not run -- once per reason, not once per refresh.
+
+        syncConversations runs on every registration refresh, so logging every
+        skip at info drowned the log. That is why these lines were demoted to
+        debug, and why the log stopped being able to answer whether a sync had
+        happened. Logging only when the reason CHANGES keeps the first
+        occurrence and the recovery, and stays quiet in between.
+        """
+        if self.sync_skip_logged.get(account.id) == reason:
+            BlinkLogger().log_debug('Journal sync skipped for %s: %s' % (account.id, reason))
+            return
+        self.sync_skip_logged[account.id] = reason
+        BlinkLogger().log_info('Journal sync skipped for %s: %s' % (account.id, reason))
 
 
     @objc.python_method
