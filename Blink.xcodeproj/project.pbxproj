@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		05955C32625197317A5F94CA /* KeyEscrow.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B068492C79CC554E4C527B0 /* KeyEscrow.py */; };
 		1A2B3C4D5E6F70020000000A /* VideoMirrorController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F70010000000A /* VideoMirrorController.py */; };
 		1A2B3C4D5E6F70030000000A /* VideoMirrorController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F70010000000A /* VideoMirrorController.py */; };
 		1A2B3C4D5E6F70040000000A /* VideoMirrorController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F70010000000A /* VideoMirrorController.py */; };
@@ -462,7 +463,6 @@
 		1F35D05317894FFF00C6FE38 /* WorldMapView.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F3BF8BD1611D06800F84EB9 /* WorldMapView.py */; };
 		1F35D05417894FFF00C6FE38 /* location.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FE59BB8161621BB00CD7B21 /* location.png */; };
 		1F35D05E17894FFF00C6FE38 /* BlockedContact.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA839D16566D8C00C4C212 /* BlockedContact.py */; };
-		05955C32625197317A5F94CA /* KeyEscrow.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B068492C79CC554E4C527B0 /* KeyEscrow.py */; };
 		1F35D05F17894FFF00C6FE38 /* BlockedContact.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA83A91656745500C4C212 /* BlockedContact.xib */; };
 		1F35D06017894FFF00C6FE38 /* time.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FCE2BDE166BABBC00090A86 /* time.png */; };
 		1F35D06117894FFF00C6FE38 /* lupa.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F9BE2E1167B7AC8006DFF3F /* lupa.png */; };
@@ -699,9 +699,7 @@
 		1FAA5E100000000000000203 /* light_linen.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA5E100000000000000201 /* light_linen.png */; };
 		1FAA5E100000000000000204 /* light_linen.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA5E100000000000000201 /* light_linen.png */; };
 		1FAA839E16566D8C00C4C212 /* BlockedContact.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA839D16566D8C00C4C212 /* BlockedContact.py */; };
-		261D209F613682E8862D6E7A /* KeyEscrow.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B068492C79CC554E4C527B0 /* KeyEscrow.py */; };
 		1FAA839F16566D8C00C4C212 /* BlockedContact.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA839D16566D8C00C4C212 /* BlockedContact.py */; };
-		E99293C0BD4A3709F776A2B4 /* KeyEscrow.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B068492C79CC554E4C527B0 /* KeyEscrow.py */; };
 		1FAA83A51656745500C4C212 /* BlockedContact.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA83A91656745500C4C212 /* BlockedContact.xib */; };
 		1FAA83A61656745500C4C212 /* BlockedContact.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA83A91656745500C4C212 /* BlockedContact.xib */; };
 		1FAD022D18C8010C00FBE7EE /* Grab.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1FAD022C18C8010C00FBE7EE /* Grab.aif */; };
@@ -869,6 +867,7 @@
 		1FFB386C1432026D003B29ED /* display_red.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FFB38691432026D003B29ED /* display_red.png */; };
 		1FFB38D8143209E0003B29ED /* display_red_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FFB38D6143209E0003B29ED /* display_red_16.png */; };
 		1FFB38D9143209E0003B29ED /* display_red_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FFB38D6143209E0003B29ED /* display_red_16.png */; };
+		261D209F613682E8862D6E7A /* KeyEscrow.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B068492C79CC554E4C527B0 /* KeyEscrow.py */; };
 		2B01284A1093922A009B2112 /* AccountSettings.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B0128481093922A009B2112 /* AccountSettings.py */; };
 		2B01284E10939236009B2112 /* AccountSettings.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B01284C10939236009B2112 /* AccountSettings.xib */; };
 		2B0132D5109E6256009B2112 /* FancyTabSwitcher.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B0132D4109E6256009B2112 /* FancyTabSwitcher.py */; };
@@ -1070,6 +1069,7 @@
 		DE9790FA15B41BC7005BBAD7 /* VirtualGroups.py in Resources */ = {isa = PBXBuildFile; fileRef = DE9790F815B41BC7005BBAD7 /* VirtualGroups.py */; };
 		DEFD8C5F135DD6CD00456E86 /* resources.py in Resources */ = {isa = PBXBuildFile; fileRef = DEFD8C5E135DD6CD00456E86 /* resources.py */; };
 		DEFD8CA2135DF34400456E86 /* resources.py in Resources */ = {isa = PBXBuildFile; fileRef = DEFD8C5E135DD6CD00456E86 /* resources.py */; };
+		E99293C0BD4A3709F776A2B4 /* KeyEscrow.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B068492C79CC554E4C527B0 /* KeyEscrow.py */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -1665,7 +1665,6 @@
 		1FAA5E100000000000000101 /* dark_linen.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = dark_linen.png; path = icons/dark_linen.png; sourceTree = "<group>"; };
 		1FAA5E100000000000000201 /* light_linen.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = light_linen.png; path = icons/light_linen.png; sourceTree = "<group>"; };
 		1FAA839D16566D8C00C4C212 /* BlockedContact.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = BlockedContact.py; sourceTree = "<group>"; };
-		2B068492C79CC554E4C527B0 /* KeyEscrow.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = KeyEscrow.py; sourceTree = "<group>"; };
 		1FAA83A81656745500C4C212 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/BlockedContact.xib; sourceTree = "<group>"; };
 		1FAD022C18C8010C00FBE7EE /* Grab.aif */ = {isa = PBXFileReference; lastKnownFileType = file; name = Grab.aif; path = sounds/Grab.aif; sourceTree = "<group>"; };
 		1FAE0B1118FD7A2300038AA4 /* pencil_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = pencil_16.png; path = icons/pencil_16.png; sourceTree = "<group>"; };
@@ -1802,6 +1801,7 @@
 		2B0128481093922A009B2112 /* AccountSettings.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AccountSettings.py; sourceTree = "<group>"; };
 		2B01284D10939236009B2112 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/AccountSettings.xib; sourceTree = "<group>"; };
 		2B0132D4109E6256009B2112 /* FancyTabSwitcher.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = FancyTabSwitcher.py; sourceTree = "<group>"; };
+		2B068492C79CC554E4C527B0 /* KeyEscrow.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = KeyEscrow.py; sourceTree = "<group>"; };
 		2B06A429111CFE74001D41E5 /* SMSViewController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SMSViewController.py; sourceTree = "<group>"; };
 		2B0C2369107BB2FA008266C7 /* incoming_file.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = incoming_file.png; path = icons/incoming_file.png; sourceTree = "<group>"; };
 		2B0C236A107BB2FA008266C7 /* upfile.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = upfile.png; path = icons/upfile.png; sourceTree = "<group>"; };
