@@ -63,6 +63,7 @@ from twisted.internet import reactor
 from ChatViewController import MSG_STATE_SENT, MSG_STATE_DELIVERED, MSG_STATE_DISPLAYED, MSG_STATE_FAILED
 
 from BlinkLogger import BlinkLogger
+from KeyEscrow import log_self_contact
 from HistoryManager import ChatHistory
 from SMSViewController import SMSViewController, is_otr_wire_text
 from MessageHost import peaks_metadata, reply_metadata
@@ -627,6 +628,7 @@ class SMSWindowManagerClass(NSObject):
             self.notification_center.add_observer(self, name="CFGSettingsObjectDidChange")
             self.notification_center.add_observer(self, name="SIPAccountRegistrationDidSucceed")
             self.notification_center.add_observer(self, name="MessageSaved")
+            self.notification_center.add_observer(self, name="XCAPManagerDidReloadData")
             self.keys_path = ApplicationData.get('keys')
             makedirs(self.keys_path)
             self.history = ChatHistory()
@@ -684,6 +686,23 @@ class SMSWindowManagerClass(NSObject):
                 continue
             seen.add(viewer)
             yield viewer
+
+    @objc.python_method
+    def _NH_XCAPManagerDidReloadData(self, sender, data):
+        # Step 1 of the cross-client key escrow work: read-only. Every time
+        # the addressbook comes back from the server, log what our own
+        # contact carries, so the escrow's actual location is settled from
+        # inside a running Blink rather than inferred from a dumped document.
+        # Nothing here writes, and nothing downstream depends on it yet.
+        try:
+            account = sender.account
+        except (AttributeError, ReferenceError):
+            return
+        try:
+            log_self_contact(account)
+        except Exception as e:
+            BlinkLogger().log_error('Key escrow inspection failed for %s: %s'
+                                    % (getattr(account, 'id', '?'), e))
 
     @objc.python_method
     def _NH_CFGSettingsObjectDidChange(self, account, data):
