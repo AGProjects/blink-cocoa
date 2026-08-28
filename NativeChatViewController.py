@@ -1337,6 +1337,10 @@ class NativeChatViewController(ChatViewController):
         self.pending_messages = {}
         self.stopTransferProgressTimer()
         self.stopAudioTimer()
+        # typingTimer / scrollingTimer live on the base class and target
+        # self as well; they must die before the release at the end of
+        # this method, or CFRunLoop drops the last reference.
+        self.invalidateTimers()
         # A take in progress dies with the conversation it was being made
         # in. Cancelled rather than sent: nobody pressed send, and a
         # window closing is not an instruction to publish what was said

@@ -1849,22 +1849,36 @@ class ChatController(MediaStream):
         self.removeFromSession()
         self.otr_account = None
 
-        if not self.dealloc_timer:
-            self.dealloc_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(3.0, self, "deallocTimer:", None, False)
-            NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSRunLoopCommonModes)
-            NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSEventTrackingRunLoopMode)
-
-    def deallocTimer_(self, timer):
-        self.release()
-
-    def dealloc(self):
-        # dealloc timers
+        # A live timer retains its target, so every timer that fires at
+        # self is invalidated here, on the teardown path -- never from
+        # dealloc. By the time dealloc runs, the reference the timer was
+        # holding is not ours to drop any more.
         if self.remoteTypingTimer:
             self.remoteTypingTimer.invalidate()
             self.remoteTypingTimer = None
 
-        self.dealloc_timer.invalidate()
-        self.dealloc_timer = None
+        if not self.dealloc_timer:
+            self.dealloc_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(3.0, self, "deallocTimer:", None, False)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSRunLoopCommonModes)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.dealloc_timer, NSEventTrackingRunLoopMode)
+            # Balances the release in deallocTimer_ below. Without it that
+            # release eats a reference we never took: the refcount then
+            # reaches zero inside CFRunLoop's own timer teardown
+            # (_timerRelease), PyObjC runs the bridged dealloc on an
+            # instance whose Python half is already gone, and the process
+            # dies on CFRetain(NULL). Same shape as BlinkContact.destroy
+            # in ContactListModel, which is the one place that got this
+            # idiom right.
+            self.retain()
+
+    def deallocTimer_(self, timer):
+        if self.dealloc_timer is not None:
+            self.dealloc_timer.invalidate()
+            self.dealloc_timer = None
+        self.release()
+
+    def dealloc(self):
+        # No timer invalidation here -- see startDeallocTimer.
 
         # release OTR check window
         if self.chatOtrSmpWindow is not None:

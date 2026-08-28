@@ -647,10 +647,26 @@ class ChatViewController(NSObject):
             self.delegate.scroll_back_in_time()
 
     @objc.python_method
+    def invalidateTimers(self):
+        # Every timer scheduled with self as target holds a retain on
+        # self. They have to go on the teardown path, before the release
+        # in close() -- if one is still live when the last reference
+        # drops, the final release happens inside CFRunLoop's timer
+        # teardown (_timerRelease) and PyObjC's bridged dealloc then
+        # crashes with CFRetain(NULL) on a half-dead instance.
+        if self.typingTimer:
+            self.typingTimer.invalidate()
+            self.typingTimer = None
+        if self.scrollingTimer:
+            self.scrollingTimer.invalidate()
+            self.scrollingTimer = None
+
+    @objc.python_method
     def close(self):
         # memory clean up
         self.rendered_messages = []
         self.pending_messages = {}
+        self.invalidateTimers()
         self.view.removeFromSuperview()
         if self.inputText:
             self.inputText.setOwner(None)
@@ -658,12 +674,7 @@ class ChatViewController(NSObject):
         self.release()
 
     def dealloc(self):
-        if self.typingTimer:
-            self.typingTimer.invalidate()
-            self.typingTimer = None
-        if self.scrollingTimer:
-            self.scrollingTimer.invalidate()
-            self.scrollingTimer = None
+        # No timer invalidation here -- see invalidateTimers.
         NSNotificationCenter.defaultCenter().removeObserver_(self)
         objc.super(ChatViewController, self).dealloc()
 

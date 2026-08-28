@@ -387,9 +387,18 @@ class VideoController(MediaStream):
 
         self.notification_center.remove_observer(self, sender=self.sessionController, name='VideoRemovedByRemoteParty')
 
+        # Timers targeting self keep self alive; they go here, on the
+        # teardown path, not in dealloc.
+        self.stopTimers()
+        self.stop_wait_for_camera_timer()
+
         dealloc_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(5.0, self, "deallocTimer:", None, False)
         NSRunLoop.currentRunLoop().addTimer_forMode_(dealloc_timer, NSRunLoopCommonModes)
         NSRunLoop.currentRunLoop().addTimer_forMode_(dealloc_timer, NSEventTrackingRunLoopMode)
+        # Balances the release in deallocTimer_. Without it the last
+        # reference is dropped by CFRunLoop when it tears the timer down
+        # after firing, and the bridged dealloc crashes on CFRetain(NULL).
+        self.retain()
 
     @objc.python_method
     def sessionStateChanged(self, state, detail):
