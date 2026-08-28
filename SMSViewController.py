@@ -148,6 +148,12 @@ class MessageInfo(object):
         self.id = id
         self.call_id = call_id
         self.pjsip_id = None
+        # Whether this message is sitting in the sending queue right now.
+        # Not the same question as its status: a message waiting for a
+        # route is failed_local AND queued, and the heartbeat must be able
+        # to tell those apart or it hands the queue a second copy of a
+        # message that is already in it.
+        self.queued = False
         self.direction = direction
         self.sender = sender       # an identity object with uri and display_name
         self.recipient = recipient # an identity object with uri and display_name
@@ -553,19 +559,44 @@ class SMSViewController(NSObject):
 
                     continue
             
+            # Bookkeeping traffic that never got an answer. Nothing draws it
+            # and nothing resends it, so a receipt or an API call that failed
+            # locally used to sit here as MSG_STATE_SENDING for the life of
+            # the conversation -- and every pass over it raised on the log
+            # line below, which ended the tick for this conversation and for
+            # every conversation after it.
+            if (message.content_type in CONTROL_CONTENT_TYPES
+                    or message.content_type == IMDNDocument.content_type):
+                if ISOTimestamp.now() - message.timestamp > datetime.timedelta(seconds=60):
+                    try:
+                        self.messages.pop(message.id)
+                    except KeyError:
+                        pass
+
+                    continue
+
             if message.status != MSG_STATE_SENDING:
                 self.log_debug('Message %s %s: %s' % (message.id, message.content_type, message.status))
             else:
-                self.log_debug('Message % %s is sent by PJSIP: %s' % (message.content_type, message.id, message.pjsip_id))
+                self.log_debug('Message %s %s is sent by PJSIP: %s' % (message.content_type, message.id, message.pjsip_id))
 
-            if message.status == MSG_STATE_FAILED_LOCAL and not message.pjsip_id and ISOTimestamp.now() - message.timestamp > datetime.timedelta(seconds=20):
+            # `not message.queued` is what keeps a resend from becoming
+            # several. While there is no route the queue is paused, so a
+            # message put on it stays on it -- and its status stays
+            # failed_local, which is the very condition tested here. Without
+            # the flag this ticked once every ten seconds and each tick
+            # added another copy of the same message, all of which went out
+            # the moment a route came back.
+            if message.status == MSG_STATE_FAILED_LOCAL and not message.pjsip_id and not message.queued and ISOTimestamp.now() - message.timestamp > datetime.timedelta(seconds=20):
                 if host.default_ip is not None:
                     if self.account is BonjourAccount():
                         if self.bonjour_lookup_enabled:
                             self.log_info('Resending message %s' % message.id)
+                            message.queued = True
                             self.outgoing_queue.put(message)
                     else:
                         self.log_info('Resending message %s' % message.id)
+                        message.queued = True
                         self.outgoing_queue.put(message)
                     
                     if not self.routes:
@@ -2035,6 +2066,7 @@ class SMSViewController(NSObject):
              # we can only send 'application/sylk-conversation-read' to our own account
              if (content_type == 'application/sylk-conversation-read' and self.account.sip.always_use_my_proxy) or content_type != 'application/sylk-conversation-read':
                  #self.log_info('Adding outgoing %s %s message %s to the sending queue' % (id, status, content_type))
+                 mInfo.queued = True
                  self.outgoing_queue.put(mInfo)
 
         if host.default_ip and (not self.last_route or self.paused):
@@ -2166,9 +2198,37 @@ class SMSViewController(NSObject):
             return
 
         self.start_queue()
-        
+        self.resend_pending()
+
         if not self.encryption.active and self.account.sms.enable_otr:
             self.startEncryption()
+
+    @objc.python_method
+    def resend_pending(self):
+        """Put back on the queue whatever a dead route left behind.
+
+        The route coming back is the event that unblocks these messages.
+        Leaving it to the heartbeat costs another ten seconds in the good
+        case, and in the bad case -- a heartbeat that is not running --
+        the message sits with its pending clock until the user notices and
+        sends it again by hand.
+
+        The same `queued` guard the heartbeat uses, for the same reason: a
+        message already on the paused queue must not be handed to it twice.
+        """
+        for message in list(self.messages.values()):
+            if message.status != MSG_STATE_FAILED_LOCAL:
+                continue
+
+            if message.pjsip_id or message.queued:
+                continue
+
+            if message.content_type in (IsComposingDocument.content_type, IMDNDocument.content_type):
+                continue
+
+            self.log_info('Resending message %s' % message.id)
+            message.queued = True
+            self.outgoing_queue.put(message)
 
     @objc.python_method
     def setRoutesFailed(self, reason):
@@ -2384,6 +2444,9 @@ class SMSViewController(NSObject):
         # called by event queue
         if message is None:
             return
+
+        # Out of the queue now, whichever way this attempt ends.
+        message.queued = False
 
         if message.content_type == IsComposingDocument.content_type:
             if ISOTimestamp.now() - message.timestamp > datetime.timedelta(seconds=30):
@@ -2660,8 +2723,11 @@ class SMSViewController(NSObject):
                 self.log_debug('Message with Call-Id %s not found' % call_id)
                 return
 
+            # Dropped, not kept: a receipt is not resent, and one left in
+            # self.messages stays MSG_STATE_SENDING forever.
             if message.content_type == IMDNDocument.content_type:
                 self.log_info('IMDN %s notification for message %s failed to be sent' % (message.imdn_status, message.imdn_id))
+                self.messages.pop(message.id, None)
                 return
 
             if self.otr_negotiation_timer:
@@ -2670,10 +2736,12 @@ class SMSViewController(NSObject):
             self.otr_negotiation_timer = None
  
             if is_control or message.content_type == IsComposingDocument.content_type:
+                self.messages.pop(message.id, None)
                 return
 
             if message.id == 'OTR':
                 self.log_info("OTR message failed")
+                self.messages.pop(message.id, None)
                 return
 
             if (data.code == 408 and entity == 'local') or data.code >= 500:
@@ -3165,6 +3233,10 @@ class SMSViewController(NSObject):
                                         'hasRenderedMessage', None)
                 if already_shown is not None and already_shown(message.msgid):
                     self.log_info('Skip %s: already in the conversation' % message.msgid)
+                    # Recorded even though nothing is drawn: the guard set is
+                    # what a later journal copy of this message is tested
+                    # against, and a row skipped here is still a row on screen.
+                    self.msg_id_list.add(message.msgid)
                     continue
 
                 if message.direction == 'outgoing':
@@ -3210,10 +3282,16 @@ class SMSViewController(NSObject):
                 if match:
                     recipient = match.group('display_name') or match.group('uri')
 
-                if message.id not in self.msg_id_list:
+                # msgid, not id: id is the database row number, and this set
+                # is tested against the message id the network uses -- the
+                # same one this row is drawn under below. Keyed on the row
+                # number, every message replayed from history was invisible
+                # to the guard, so the journal's copy of a message the user
+                # had already sent drew a second bubble minutes later.
+                if message.msgid not in self.msg_id_list:
                     if message.direction == 'incoming':
                         sender = self.normalizeSender(sender)
-                    self.msg_id_list.add(message.id)
+                    self.msg_id_list.add(message.msgid)
                     status = MSG_STATE_DEFERRED if (message.status == MSG_STATE_FAILED_LOCAL and message.direction == 'outgoing') else message.status
 
                     if message.content_type in (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE):
@@ -3296,7 +3374,19 @@ class SMSViewController(NSObject):
 
                     self.chatViewController.showMessage(message.sip_callid, message.msgid, message.direction, sender, icon, content or message.body, timestamp, recipient=recipient, state=status, is_html=is_html, history_entry=True, media_type = message.media_type, encryption=encryption or message.encryption, before=before)
 
-                    if message.direction == 'outgoing' and message.status == MSG_STATE_FAILED_LOCAL and ISOTimestamp.now() - timestamp < datetime.timedelta(days=7):
+                    # A message that never left, picked up again when the
+                    # conversation is opened. Never one this conversation is
+                    # already carrying: history is replayed more than once in
+                    # the life of a window -- scrolling back, jumping to a
+                    # date -- and each replay reads the same undelivered rows.
+                    # Requeueing one that is already in flight also replaced
+                    # the MessageInfo holding its pjsip_id, after which the
+                    # heartbeat saw a message with no send behind it and put
+                    # a third copy on the queue.
+                    if (message.direction == 'outgoing'
+                            and message.status == MSG_STATE_FAILED_LOCAL
+                            and message.msgid not in self.messages
+                            and ISOTimestamp.now() - timestamp < datetime.timedelta(days=7)):
 
                         encryption = 'verified' if self.pgp_encrypted else ''
 
@@ -3304,6 +3394,7 @@ class SMSViewController(NSObject):
                         mInfo = MessageInfo(message.msgid, sender=self.account, recipient=recipient, timestamp=timestamp, content=message.body, status=message.status, encryption=encryption)
                         
                         self.log_info('Resending message %s to %s' % (message.msgid, recipient))
+                        mInfo.queued = True
                         self.messages[mInfo.id] = mInfo
                         self.outgoing_queue.put(mInfo)
                         if not self.routes:
