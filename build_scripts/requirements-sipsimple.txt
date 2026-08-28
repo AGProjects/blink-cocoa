@@ -2,4 +2,18 @@ python3-eventlib @ https://github.com/AGProjects/python3-eventlib/archive/refs/t
 python3-gnutls @ https://github.com/AGProjects/python3-gnutls/archive/refs/tags/release-3.1.13.tar.gz
 python3-otr @ https://github.com/AGProjects/python3-otr/archive/refs/tags/2.1.0.tar.gz
 python3-xcaplib @ https://github.com/AGProjects/python3-xcaplib/archive/refs/tags/2.0.1.tar.gz
-python3-msrplib @ https://github.com/AGProjects/python3-msrplib/archive/refs/tags/0.21.2.tar.gz
+# python3-msrplib 0.21.2.
+#
+# Pinned to a commit, not a tag, because the tag is not on the GitHub mirror:
+# darcs has `tagged release-0.21.2`, but the mirror converted it into an
+# ordinary empty commit ("TAG release-0.21.2") instead of a git tag, so both
+# refs/tags/0.21.2 and refs/tags/release-0.21.2 return 404. The last tag the
+# mirror actually carries is 0.21.0, 19 commits back.
+#
+# 643707f5de0dd78607437d891181288646ea220f is that tag commit, so this tree IS
+# release-0.21.2. Master head is 3 commits further along, touching only
+# debian/changelog, debian/control and makedeb.sh.
+#
+# Restore this line once the mirror has the tag:
+#   python3-msrplib @ https://github.com/AGProjects/python3-msrplib/archive/refs/tags/release-0.21.2.tar.gz
+python3-msrplib @ https://github.com/AGProjects/python3-msrplib/archive/643707f5de0dd78607437d891181288646ea220f.tar.gz
