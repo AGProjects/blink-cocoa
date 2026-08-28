@@ -56,9 +56,43 @@ lib_dir="Frameworks/libs"
 extra_libs="/opt/local/lib/libmpfr.6.dylib /opt/local/lib/libmpc.3.dylib /opt/local/lib/libuuid.1.dylib /opt/local/lib/libgnutls.30.dylib"
 gnutls_libs=`./get_deps_recurrent.py /opt/local/lib/libgnutls.30.dylib`
 
+# ---------------------------------------------------------------------------
+# OpenLDAP + Cyrus SASL.
+#
+# python-ldap's _ldap.cpython-*-darwin.so links libldap/liblber (which in turn
+# pull libsasl2 and openssl). Nothing in the sipsimple _core closure computed
+# above reaches them, so without this block the extension imports fine on the
+# build machine and dies with
+#     dlopen(_ldap…): Library not loaded: /opt/local/lib/libldap.2.dylib
+# on every other Mac — which the LDAP code then swallows into `ldap = Null`
+# and silently disables directory search.
+#
+# Globbed, not hardcoded: MacPorts bumps the soname (libldap.2 for openldap
+# 2.6) whenever openldap goes to a new major. Only versioned dylibs are
+# matched, so the unversioned development symlinks are not copied twice.
+#
+# NOT bundled: /opt/local/lib/sasl2/*.so, the SASL mechanism plugins. Their
+# search path is compiled into libsasl2 and would point at a directory that
+# does not exist on a customer machine. Blink only does anonymous and simple
+# binds, neither of which loads a plugin. Bundling them means also setting
+# SASL_PATH at startup — do that if SASL/GSSAPI binds are ever added.
+# ---------------------------------------------------------------------------
+ldap_libs=""
+for l in /opt/local/lib/libldap.[0-9]*.dylib /opt/local/lib/liblber.[0-9]*.dylib /opt/local/lib/libsasl2.[0-9]*.dylib; do
+    [ -f "$l" ] || continue
+    ldap_libs="$ldap_libs $l `./get_deps_recurrent.py $l`"
+done
 
+if [ -z "$ldap_libs" ]; then
+    echo
+    echo "WARNING: no libldap/liblber found under /opt/local/lib."
+    echo "         LDAP address book search will be dead in this build."
+    echo "         Run: sudo port install openldap cyrus-sasl2   (or"
+    echo "         ./02-install-c-deps.sh, which does it +universal)."
+    echo
+fi
 
-for l in $extra_libs $gnutls_libs; do
+for l in $extra_libs $gnutls_libs $ldap_libs; do
     fn=`basename $l`
     echo $lib_dir/$fn
 #    if [ ! -f $lib_dir/$fn ]; then

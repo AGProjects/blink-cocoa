@@ -19,7 +19,12 @@ fi
 
 source activate_venv.sh
 
-export CFLAGS="-I/opt/local/include"
+# python-ldap has no macOS wheels, so pip compiles _ldap here. It needs
+# ldap.h / lber.h from the MacPorts openldap port and sasl.h from
+# cyrus-sasl2, which MacPorts puts in include/sasl/ while python-ldap
+# includes it as <sasl.h> — hence the second -I. Both ports are installed
+# (+universal) by 02-install-c-deps.sh.
+export CFLAGS="-I/opt/local/include -I/opt/local/include/sasl"
 export LDFLAGS="-L/opt/local/lib"
 
 pip3 install --upgrade pip

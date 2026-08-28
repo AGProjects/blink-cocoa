@@ -85,7 +85,15 @@ MAX_PASSES=4
 
 # Ports Blink / pjsip link directly. ffmpeg LAST — it links x264, opus and
 # vpx, which must be universal before it is built.
-REQUIRED_PORTS="pkgconfig yasm gmp mpfr libmpc libuuid openssl sqlite3 gnutls libopus libvpx x264 bzip2 libiconv lzo2 ffmpeg"
+#
+# openldap + cyrus-sasl2 are here for python-ldap (the LDAP address book
+# search in ContactWindowController). Nothing in _core links them, so they
+# would never enter the closure on their own — but _ldap.cpython-*-darwin.so
+# does, and 05-copy-libraries.sh bundles libldap/liblber/libsasl2 out of
+# /opt/local. They must be universal for the same reason everything else
+# here is: the x86_64 slice of _ldap links with -undefined dynamic_lookup and
+# would silently drop them.
+REQUIRED_PORTS="pkgconfig yasm gmp mpfr libmpc libuuid openssl sqlite3 gnutls cyrus-sasl2 openldap libopus libvpx x264 bzip2 libiconv lzo2 ffmpeg"
 
 DRY=0; ASSUME_YES=0; ONLY=""
 while [ $# -gt 0 ]; do

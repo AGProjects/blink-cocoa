@@ -3,3 +3,7 @@ pycryptodome
 sqlobject
 formencode
 pydispatch
+# LDAP address book search. >=3.4.0 links -lldap (OpenLDAP 2.5+ dropped the
+# separate libldap_r that older python-ldap asks for); 3.4.4 is the first
+# release that builds cleanly against clang 16+.
+python-ldap>=3.4.4

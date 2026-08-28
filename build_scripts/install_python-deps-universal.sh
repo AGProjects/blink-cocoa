@@ -20,7 +20,17 @@ spec() { if [ -n "$2" ]; then echo "$1==$2"; else echo "$1"; fi; }
 CFFI_VER="$(pinned_ver cffi)"
 GMPY2_VER="$(pinned_ver gmpy2)"
 ZOPE_VER="$(pinned_ver zope.interface)"
-echo "Pinning universal rebuilds to venv versions: cffi=${CFFI_VER:-?} gmpy2=${GMPY2_VER:-?} zope.interface=${ZOPE_VER:-?}"
+LDAP_VER="$(pinned_ver python-ldap)"
+echo "Pinning universal rebuilds to venv versions: cffi=${CFFI_VER:-?} gmpy2=${GMPY2_VER:-?} zope.interface=${ZOPE_VER:-?} python-ldap=${LDAP_VER:-?}"
+
+# python-ldap is the one package here that is always compiled from source
+# (PyPI ships no macOS wheel), so each per-arch reinstall needs the MacPorts
+# openldap/cyrus-sasl2 headers and libraries — the same flags 03-install-
+# python-deps.sh uses. Both ports are made universal by 02-install-c-deps.sh;
+# if they are not, the x86_64 slice links with -undefined dynamic_lookup and
+# the Intel build dies at import with "symbol not found in flat namespace".
+export CFLAGS="-I/opt/local/include -I/opt/local/include/sasl"
+export LDFLAGS="-L/opt/local/lib"
 
 cd ../Distribution
 
@@ -62,6 +72,17 @@ for arch in x86_64 arm64; do
     cp $site_packages_folder/zope/interface/_zope_interface_coptimizations.cpython-$cver-darwin.so Resources/lib-$arch/
     #codesign -f -o runtime --timestamp -s "Developer ID Application" Resources/lib-$arch/_zope_interface_coptimizations.cpython-$cver-darwin.so
 
+    # --no-binary: never accept a wheel here even if PyPI starts publishing
+    # one — it would be single-arch for the WRONG arch under `arch -$arch`.
+    if [ -n "$LDAP_VER" ]; then
+        arch -$arch pip3 install --force-reinstall --no-deps --no-binary python-ldap "$(spec python-ldap "$LDAP_VER")" > /dev/null
+        cp $site_packages_folder/_ldap.cpython-$cver-darwin.so Resources/lib-$arch/ 2>/dev/null \
+            || echo "WARNING: _ldap.cpython-$cver-darwin.so not built for $arch"
+    else
+        echo "WARNING: python-ldap is not installed in the venv — skipping."
+        echo "         Run 03-install-python-deps.sh; LDAP search stays disabled."
+    fi
+
 done
 
 lipo -create -output Resources/lib/_cffi_backend.cpython-$cver-darwin.so Resources/lib-arm64/_cffi_backend.cpython-$cver-darwin.so Resources/lib-x86_64/_cffi_backend.cpython-$cver-darwin.so
@@ -77,6 +98,23 @@ codesign -f -o runtime --timestamp -s "Developer ID Application" Resources/lib/g
 lipo -create -output Resources/lib/zope/interface/_zope_interface_coptimizations.cpython-$cver-darwin.so Resources/lib-arm64/_zope_interface_coptimizations.cpython-$cver-darwin.so Resources/lib-x86_64/_zope_interface_coptimizations.cpython-$cver-darwin.so
 lipo -info Resources/lib/zope/interface/_zope_interface_coptimizations.cpython-$cver-darwin.so
 codesign -f -o runtime --timestamp -s "Developer ID Application" Resources/lib/zope/interface/_zope_interface_coptimizations.cpython-$cver-darwin.so
+
+# _ldap keeps its /opt/local install names until change_lib_paths.sh rewrites
+# them to @executable_path/../Frameworks/libs/. 06-copy-python-packages.sh
+# already did that for the arm64-only copy it staged, but the lipo output
+# below replaces that file, so it has to be redone here.
+ldap_arm64="Resources/lib-arm64/_ldap.cpython-$cver-darwin.so"
+ldap_x86="Resources/lib-x86_64/_ldap.cpython-$cver-darwin.so"
+if [ -f "$ldap_arm64" ] && [ -f "$ldap_x86" ]; then
+    lipo -create -output Resources/lib/_ldap.cpython-$cver-darwin.so "$ldap_arm64" "$ldap_x86"
+    ../build_scripts/change_lib_paths.sh Resources/lib/_ldap.cpython-$cver-darwin.so
+    lipo -info Resources/lib/_ldap.cpython-$cver-darwin.so
+    codesign -f -o runtime --timestamp -s "Developer ID Application" Resources/lib/_ldap.cpython-$cver-darwin.so
+else
+    echo "WARNING: _ldap not merged universal (missing arm64 and/or x86_64 slice)."
+    echo "         The Intel build will fail to import ldap and directory search"
+    echo "         will be silently disabled there."
+fi
 
 cd Resources/lib/gmpy2.libs/
 for l in *.dylib ; do
