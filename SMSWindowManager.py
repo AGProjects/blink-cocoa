@@ -63,7 +63,8 @@ from twisted.internet import reactor
 from ChatViewController import MSG_STATE_SENT, MSG_STATE_DELIVERED, MSG_STATE_DISPLAYED, MSG_STATE_FAILED
 
 from BlinkLogger import BlinkLogger
-from KeyEscrow import log_self_contact
+from KeyEscrow import (install_keypair, log_self_contact, restore_from_own_contact,
+                       write_self_keys)
 from HistoryManager import ChatHistory
 from SMSViewController import SMSViewController, is_otr_wire_text
 from MessageHost import peaks_metadata, reply_metadata
@@ -618,6 +619,19 @@ class SMSWindowManagerClass(NSObject):
     _pending_save_logged = None
     new_contacts = set()
     private_keys = {}
+    # Accounts whose addressbook has answered the escrow question, those
+    # that have adopted an escrowed key, and the escrow each one last
+    # failed to open -- see restorePrivateKeyFromOwnContact.
+    key_escrow_checked = set()
+    key_restore_done = set()
+    key_restore_failed = {}
+    # Last reason a journal sync was skipped, per account, so a standing
+    # reason is stated once instead of on every registration refresh.
+    sync_skip_logged = {}
+    # Last file transfer URL derived per account, so the guess is stated
+    # when it changes rather than once per transfer.
+    transfer_url_logged = {}
+    generate_prompt_deferred = {}
 
     def init(self):
         self = objc.super(SMSWindowManagerClass, self).init()
@@ -698,11 +712,63 @@ class SMSWindowManagerClass(NSObject):
             account = sender.account
         except (AttributeError, ReferenceError):
             return
+        # The addressbook has now answered for this account, so a generate
+        # prompt held back waiting for it can go ahead.
+        self.key_escrow_checked.add(account.id)
+
+        # Restore BEFORE reporting. The report describes the state of the
+        # account, and a restore in the same pass changes it: reporting first
+        # printed "no private key configured" and "a write would be REFUSED --
+        # nothing to escrow" three lines above the line saying the key had just
+        # been installed. Restoring first makes one pass tell one story.
+        try:
+            self.restorePrivateKeyFromOwnContact(account)
+        except Exception as e:
+            BlinkLogger().log_error('Key escrow restore failed for %s: %s'
+                                    % (getattr(account, 'id', '?'), e))
+
         try:
             log_self_contact(account)
         except Exception as e:
             BlinkLogger().log_error('Key escrow inspection failed for %s: %s'
                                     % (getattr(account, 'id', '?'), e))
+
+    @objc.python_method
+    def restorePrivateKeyFromOwnContact(self, account):
+        """Adopt an escrowed keypair when this device has none.
+
+        Runs on every addressbook reload, which is several times per sign-in,
+        so both outcomes are latched: success needs no repeat, and a failure
+        keyed on the blob it failed against must not produce an identical
+        complaint per reload. The key includes the password length so that
+        correcting the password retries at once.
+        """
+        if account.id in self.key_restore_done:
+            return
+        if account.sms.private_key and os.path.exists(account.sms.private_key):
+            return
+
+        from KeyEscrow import read_self_keys
+        record = read_self_keys(account)
+        if record is None:
+            return
+
+        password = (account.auth.password or '').strip()
+        signature = '%s#%s#%d#%d' % (account.id, record.get('timestamp', '?'),
+                                     len(record.get('private_key') or ''), len(password))
+        if self.key_restore_failed.get(account.id) == signature:
+            return
+
+        restored, reason = restore_from_own_contact(account)
+        if restored:
+            self.key_restore_done.add(account.id)
+            self.private_keys.pop(account.id, None)   # drop the cached miss
+            nc_title = NSLocalizedString("Private key", "System notification title")
+            nc_body = NSLocalizedString("The private key of this account was restored from the server", "System notification body")
+            NSApp.delegate().gui_notify(nc_title, nc_body, str(account.id))
+        elif reason:
+            self.key_restore_failed[account.id] = signature
+            BlinkLogger().log_info('Key escrow: not restoring for %s -- %s' % (account.id, reason))
 
     @objc.python_method
     def _NH_CFGSettingsObjectDidChange(self, account, data):
@@ -3116,6 +3182,48 @@ class SMSWindowManagerClass(NSObject):
         handler(notification.sender, notification.data)
 
     @objc.python_method
+    def escrowQuestionAnswered(self, account):
+        """Whether we yet know if the server holds a key for this account.
+
+        Generating a keypair is irreversible in the only way that matters --
+        the messages encrypted to the old one stop being readable -- so the
+        offer waits until the addressbook has been seen. The wait is bounded:
+        an account with no XCAP has nothing to wait for, and after 15 seconds
+        an unanswered fetch stops being a reason to withhold the prompt.
+        """
+        if account.id in self.key_escrow_checked:
+            return True
+        if not account.xcap.enabled:
+            return True
+        first_asked = self.generate_prompt_deferred.setdefault(account.id, time.time())
+        return time.time() - first_asked > 15
+
+    @objc.python_method
+    @run_in_gui_thread
+    def escrowPrivateKey(self, account, force=False):
+        """Publish this device's keypair onto our own XCAP contact.
+
+        The escrow lets another of the user's devices adopt this account's
+        existing key instead of generating a fresh one and orphaning every
+        message encrypted to the old one. KeyEscrow refuses on its own when
+        writing would destroy a key rather than back one up; this only reports
+        what it decided.
+        """
+        if account is None or account is BonjourAccount():
+            return
+
+        written, reason = write_self_keys(account, force=force)
+
+        alert = NSAlert.alloc().init()
+        alert.setMessageText_(NSLocalizedString("PGP Key Escrow", "Window title"))
+        if written:
+            alert.setInformativeText_(NSLocalizedString("The private key of account %s has been encrypted with the account password and saved on the server, on %d contact(s). Your other devices can now adopt this key instead of generating their own.", "label") % (account.id, len(written)))
+        else:
+            alert.setInformativeText_(NSLocalizedString("The key of account %s was not saved. %s", "label") % (account.id, reason or ''))
+        alert.addButtonWithTitle_(NSLocalizedString("OK", "button"))
+        alert.runModal()
+
+    @objc.python_method
     @run_in_gui_thread
     def showExportPrivateKeyPanel(self, account):
         self.export_key_window = ExportPrivateKeyController(account, self.sendMessage);
@@ -3127,6 +3235,15 @@ class SMSWindowManagerClass(NSObject):
         # modal first; if a key already exists, warn that it will be
         # overwritten and old encrypted messages will become unreadable.
         if account is None or account is BonjourAccount():
+            return False
+
+        if not self.escrowQuestionAnswered(account):
+            # The addressbook has not come back yet, and it may be carrying
+            # this account's real key. Generating one now would mint a second
+            # keypair and leave every existing message unreadable, so say
+            # nothing; the prompt comes back the next time a viewer opens.
+            BlinkLogger().log_info('Waiting for the addressbook of %s before offering to generate a '
+                                   'PGP key -- it may already carry one' % account.id)
             return False
 
         keys_path = ApplicationData.get('keys')
@@ -3723,23 +3840,10 @@ class ImportPrivateKeyController(NSObject):
             self.importButton.setEnabled_(False)
             BlinkLogger().log_info("Key imported sucessfully")
             
-            private_key_path = "%s/%s.privkey" % (self.keys_path, self.account.id)
-            fd = open(private_key_path, "wb+")
-            fd.write(private_key.encode())
-            fd.close()
-
-            BlinkLogger().log_info("PGP private key saved to %s" % private_key_path)
-
-            public_key_path = "%s/%s.pubkey" % (self.keys_path, self.account.id)
-            fd = open(public_key_path, "wb+")
-            fd.write(self.public_key.encode())
-            fd.close()
-            BlinkLogger().log_info("PGP Public key saved to %s" % public_key_path)
-
-            self.account.sms.private_key = private_key_path
-            self.account.sms.public_key = public_key_path
-            self.account.sms.public_key_checksum = hashlib.sha1(self.public_key.encode()).hexdigest()
-            self.account.save()
+            # Same installer the escrow restore uses, so both write the same
+            # files and set the same settings -- and so a key being replaced
+            # here is archived rather than overwritten.
+            install_keypair(self.account, private_key, self.public_key)
 
             if self.dealloc_timer is None:
                 self.dealloc_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(6.0, self, "deallocTimer:", None, True)

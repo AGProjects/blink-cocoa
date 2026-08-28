@@ -133,6 +133,7 @@ from LaunchServices import LSFindApplicationForInfo, kLSUnknownCreator
 import ContactOutlineView  # this is used from the UI
 import ListView            # this is used from the UI
 import SMSWindowManager
+import KeyEscrow
 
 from AccountSettings import AccountSettings
 from AlertPanel import AlertPanel
@@ -565,6 +566,7 @@ class ContactWindowController(NSWindowController):
         self.window().makeFirstResponder_(self.contactOutline)
 
         self.contactsMenu.itemWithTag_(42).setEnabled_(True)  # Dialpad
+        self.addKeyEscrowMenuItem()
 
         if not NSApp.delegate().answering_machine_enabled:
             # Answering machine
@@ -1375,6 +1377,92 @@ class ContactWindowController(NSWindowController):
     @objc.IBAction
     def exportButtonClicked_(self, sender):
         SMSWindowManager.SMSWindowManager().showExportPrivateKeyPanel(AccountManager().default_account)
+
+    @objc.IBAction
+    def escrowKeyClicked_(self, sender):
+        # Acts on the account selected in the toolbar, which is the one the
+        # menu item's title names -- not the default account, which may be a
+        # different one entirely.
+        SMSWindowManager.SMSWindowManager().escrowPrivateKey(self.activeAccount(),
+                                                             force=sender.tag() == 70)
+
+    @objc.python_method
+    def addKeyEscrowMenuItem(self):
+        """Put "Save PGP private key to server" next to the export item.
+
+        Inserted at runtime rather than added to MainWindow.xib because that
+        nib is localized five times over, and this is one menu item whose
+        position is fully described by "after tag 67".
+        """
+        try:
+            export_item = self.contactsMenu.itemWithTag_(67)   # Export PGP private key...
+            if export_item is None:
+                return
+            menu = export_item.menu()
+            if menu.itemWithTag_(69) is not None:              # already inserted
+                return
+            index = menu.indexOfItem_(export_item) + 1
+            item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(
+                NSLocalizedString("Save PGP private key to server", "Menu item"),
+                "escrowKeyClicked:", "")
+            item.setTag_(69)
+            item.setTarget_(self)
+            menu.insertItem_atIndex_(item, index)
+
+            # Shown only while Option is held. A re-escrow of a key the server
+            # already has is what a password change needs, but it must not sit
+            # in the menu as an ordinary command, where it reads as something
+            # worth clicking when the plain one is greyed out.
+            forced = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(
+                NSLocalizedString("Save PGP private key to server again", "Menu item"),
+                "escrowKeyClicked:", "")
+            forced.setTag_(70)
+            forced.setTarget_(self)
+            forced.setAlternate_(True)
+            forced.setKeyEquivalentModifierMask_(1 << 19)   # NSEventModifierFlagOption
+            menu.insertItem_atIndex_(forced, index + 1)
+        except Exception as e:
+            BlinkLogger().log_error("Could not add the key escrow menu item: %s" % e)
+
+    @objc.python_method
+    def updateKeyEscrowMenuItem(self):
+        """Enable the escrow commands only where they would do something.
+
+        Both items name the selected account, because this acts on whichever
+        account is chosen in the toolbar and there is no way to tell from
+        "Save PGP private key to server" alone which key would leave the
+        machine. When an item is disabled, its tooltip says why.
+        """
+        item = self.contactsMenu.itemWithTag_(69)
+        forced = self.contactsMenu.itemWithTag_(70)
+        if item is None:
+            return
+
+        account = self.activeAccount()
+        if account is None or account is BonjourAccount():
+            for entry in (item, forced):
+                if entry is not None:
+                    entry.setEnabled_(False)
+                    entry.setToolTip_(NSLocalizedString("Bonjour accounts have no server to save a key to", "Tooltip"))
+            return
+
+        item.setTitle_(NSLocalizedString("Save PGP private key of %s to server", "Menu item") % account.id)
+        if forced is not None:
+            forced.setTitle_(NSLocalizedString("Save PGP private key of %s to server again", "Menu item") % account.id)
+
+        try:
+            enabled, reason = KeyEscrow.escrow_write_action(account)
+            item.setEnabled_(bool(enabled))
+            item.setToolTip_(reason or "")
+            if forced is not None:
+                # Forcing skips the "already saved" test but not the blockers:
+                # nothing lets the user overwrite another account's escrow.
+                forced_enabled, forced_reason = KeyEscrow.escrow_write_action(account, force=True)
+                forced.setEnabled_(bool(forced_enabled))
+                forced.setToolTip_(forced_reason or "")
+        except Exception as e:
+            BlinkLogger().log_error("Could not evaluate the key escrow menu item: %s" % e)
+            item.setEnabled_(False)
 
     @objc.python_method
     def addParticipants(self):
@@ -5725,6 +5813,8 @@ class ContactWindowController(NSWindowController):
                 if hasattr(self.backend._app.engine, "video_devices"):
                     setupVideoDeviceMenu(menu, 500, NSApp.delegate().video_devices, "device",  "selectVideoDevice:")
 
+        elif menu == self.contactsMenu:
+            self.updateKeyEscrowMenuItem()
         elif menu == self.blinkMenu:
             self.updateBlinkMenu()
         elif menu == self.historyMenu:
