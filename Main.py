@@ -91,6 +91,16 @@ class NSLogger(object):
 sys.stdout = NSLogger()
 sys.stderr = NSLogger()
 
+# pgpy's constants module emits four CryptographyDeprecationWarnings the moment
+# it is imported -- IDEA, TripleDES, CAST5 and Blowfish being relocated inside
+# the cryptography package. Blink uses none of them; the warnings are about a
+# dependency's internals, cannot be acted on here, and stderr is the activity
+# log, so they land in every user's log four lines at a time. Filtered by
+# message rather than by blanket-ignoring warnings, and set here because this
+# runs before anything imports pgpy.
+import warnings
+warnings.filterwarnings('ignore', message='.*has been moved to cryptography.hazmat.decrepit.*')
+
 # import modules containing classes required to start application and load MainMenu.nib
 import platform
 print("Machine is %s" % platform.machine())
