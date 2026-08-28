@@ -258,7 +258,7 @@ class CameraCaptureController(NSObject):
             BlinkLogger().log_error('Cannot take the photo: %s' % e)
             self._shutter.setEnabled_(True)
 
-    def _photoCaptured(self, output, photo, error):
+    def captureOutput_didFinishProcessingPhoto_error_(self, output, photo, error):
         """The picture, as a file. Ends the modal loop either way."""
         try:
             if error is not None:
@@ -278,14 +278,18 @@ class CameraCaptureController(NSObject):
             BlinkLogger().log_error('Cannot keep the photo: %s' % e)
         NSApp.stopModal()
 
-    # Declared by hand rather than by method name. AVFoundation calls this
-    # through a formal protocol, and a delegate method PyObjC cannot find a
-    # signature for is registered as returning an object -- which is not
-    # what the framework is calling. The signature is 'void, three
-    # objects', spelled out so it is right whatever the bindings know.
+    # The signature is declared by hand. AVFoundation calls this through a
+    # formal protocol, and a delegate method PyObjC cannot find a signature
+    # for is registered as returning an object -- which is not what the
+    # framework is calling. 'void, three objects', spelled out so it is
+    # right whatever the bindings know. The name is left as the selector
+    # spells it: every plain method in an ObjC class body is turned into a
+    # selector named after the attribute, so a helper called something else
+    # and re-exported under this name is a method whose own name promises
+    # no arguments and takes three -- which is refused when the class is
+    # built, and costs the whole module, not one method.
     captureOutput_didFinishProcessingPhoto_error_ = objc.selector(
-        _photoCaptured,
-        selector=b'captureOutput:didFinishProcessingPhoto:error:',
+        captureOutput_didFinishProcessingPhoto_error_,
         signature=b'v@:@@@')
 
     def cancel_(self, sender):

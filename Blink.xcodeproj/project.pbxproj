@@ -1018,12 +1018,6 @@
 		AD00000000000000004F0001 /* MessagePaneController.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004F0000 /* MessagePaneController.py */; };
 		AD00000000000000004F0002 /* MessagePaneController.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004F0000 /* MessagePaneController.py */; };
 		AD00000000000000004F0003 /* MessagePaneController.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004F0000 /* MessagePaneController.py */; };
-		AD00000000000000750001 /* CameraCapture.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000750000 /* CameraCapture.py */; };
-		AD00000000000000750002 /* CameraCapture.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000750000 /* CameraCapture.py */; };
-		AD00000000000000750003 /* CameraCapture.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000750000 /* CameraCapture.py */; };
-		AD00000000000000740001 /* AttachmentPreview.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000740000 /* AttachmentPreview.py */; };
-		AD00000000000000740002 /* AttachmentPreview.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000740000 /* AttachmentPreview.py */; };
-		AD00000000000000740003 /* AttachmentPreview.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000740000 /* AttachmentPreview.py */; };
 		AD00000000000000005A0001 /* SylkLocation.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005A0000 /* SylkLocation.py */; };
 		AD00000000000000005A0002 /* SylkLocation.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005A0000 /* SylkLocation.py */; };
 		AD00000000000000005A0003 /* SylkLocation.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005A0000 /* SylkLocation.py */; };
@@ -1054,6 +1048,12 @@
 		AD0000000000000000730001 /* VideoPlayback.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000730000 /* VideoPlayback.py */; };
 		AD0000000000000000730002 /* VideoPlayback.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000730000 /* VideoPlayback.py */; };
 		AD0000000000000000730003 /* VideoPlayback.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000730000 /* VideoPlayback.py */; };
+		AD00000000000000740001 /* AttachmentPreview.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000740000 /* AttachmentPreview.py */; };
+		AD00000000000000740002 /* AttachmentPreview.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000740000 /* AttachmentPreview.py */; };
+		AD00000000000000740003 /* AttachmentPreview.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000740000 /* AttachmentPreview.py */; };
+		AD00000000000000750001 /* CameraCapture.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000750000 /* CameraCapture.py */; };
+		AD00000000000000750002 /* CameraCapture.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000750000 /* CameraCapture.py */; };
+		AD00000000000000750003 /* CameraCapture.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000750000 /* CameraCapture.py */; };
 		DE2607221A93A9D6004FAEF8 /* Profiler.py in Resources */ = {isa = PBXBuildFile; fileRef = DE2607211A93A9D6004FAEF8 /* Profiler.py */; };
 		DE2607231A93A9D6004FAEF8 /* Profiler.py in Resources */ = {isa = PBXBuildFile; fileRef = DE2607211A93A9D6004FAEF8 /* Profiler.py */; };
 		DE2607251A93A9D6004FAEF8 /* Profiler.py in Resources */ = {isa = PBXBuildFile; fileRef = DE2607211A93A9D6004FAEF8 /* Profiler.py */; };
@@ -1937,8 +1937,6 @@
 		AD00000000000000004D0000 /* MessageHost.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MessageHost.py; sourceTree = "<group>"; };
 		AD00000000000000004E0000 /* NativeChatViewController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = NativeChatViewController.py; sourceTree = "<group>"; };
 		AD00000000000000004F0000 /* MessagePaneController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MessagePaneController.py; sourceTree = "<group>"; };
-		AD00000000000000750000 /* CameraCapture.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = CameraCapture.py; sourceTree = "<group>"; };
-		AD00000000000000740000 /* AttachmentPreview.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AttachmentPreview.py; sourceTree = "<group>"; };
 		AD00000000000000005A0000 /* SylkLocation.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SylkLocation.py; sourceTree = "<group>"; };
 		AD00000000000000005B0000 /* Base */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MessageView.xib; sourceTree = "<group>"; };
 		AD00000000000000005C0000 /* AudioPlayback.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AudioPlayback.py; sourceTree = "<group>"; };
@@ -1949,6 +1947,8 @@
 		AD0000000000000000710000 /* AudioRecorderView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AudioRecorderView.py; sourceTree = "<group>"; };
 		AD0000000000000000720000 /* SmileyPicker.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SmileyPicker.py; sourceTree = "<group>"; };
 		AD0000000000000000730000 /* VideoPlayback.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoPlayback.py; sourceTree = "<group>"; };
+		AD00000000000000740000 /* AttachmentPreview.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AttachmentPreview.py; sourceTree = "<group>"; };
+		AD00000000000000750000 /* CameraCapture.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = CameraCapture.py; sourceTree = "<group>"; };
 		DE2607211A93A9D6004FAEF8 /* Profiler.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = Profiler.py; sourceTree = "<group>"; };
 		DE3A672F13A8A987006EEB0F /* default.crt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = default.crt; sourceTree = "<group>"; };
 		DE3AC1CA174F7F57009A6CE3 /* Python.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Python.framework; path = Distribution/Frameworks/Python.framework; sourceTree = "<group>"; };
