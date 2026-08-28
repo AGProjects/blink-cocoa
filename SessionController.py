@@ -298,15 +298,15 @@ class SessionControllersManager(object, metaclass=Singleton):
                 return False
 
         if settings.file_transfer.disabled and type == 'file-transfer':
-            BlinkLogger().log_info("File Transfers are disabled")
+            #BlinkLogger().log_info("File Transfers are disabled")
             return False
 
         if type == 'chat':
             if settings.chat.disabled:
-                BlinkLogger().log_info("Chat sessions are disabled")
+                #BlinkLogger().log_info("Chat sessions are disabled")
                 return False
             if not settings.chat.enable_msrp_chat:
-                BlinkLogger().log_info("MSRP chat is not enabled")
+                #BlinkLogger().log_info("MSRP chat is not enabled")
                 return False
 
         # Short messages are always available: they are how a conversation is
