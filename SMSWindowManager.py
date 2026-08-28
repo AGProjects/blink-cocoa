@@ -2288,6 +2288,58 @@ class SMSWindowManagerClass(NSObject):
         BlinkLogger().log_info('Conversation order seeded from %d conversation(s)' % loaded)
         if loaded:
             self._postConversationOrderChanged(None)
+        # Deferred: the Messages group is filed by other code paths that are
+        # still running at this point, so asking now reports a short list.
+        call_later(8, self.logMessagesGroupTimes)
+
+    @objc.python_method
+    def logMessagesGroupTimes(self):
+        """One line per Messages-group contact: what the row will draw.
+
+        The whole chain in one place -- the contact's URIs, the canonical
+        key each one reduces to, and the stamp that key resolves to in
+        last_message_times -- because a contact list where every row shows
+        the same time can break at any of those three joints and reading
+        the code cannot tell you which.
+        """
+        log = BlinkLogger().log_info
+        try:
+            from ContactListModel import MESSAGES_GROUP_ID
+            group = next(g for g in AddressbookManager().get_groups()
+                         if g.id == MESSAGES_GROUP_ID)
+        except StopIteration:
+            log('Messages group times: no Messages group exists yet')
+            return
+        except Exception as e:
+            log('Messages group times: cannot read the group: %s' % e)
+            return
+
+        contacts = list(group.contacts)
+        log('Messages group times: %d contact(s), %d stamp(s) in the map'
+            % (len(contacts), len(self.last_message_times)))
+        for contact in contacts:
+            try:
+                uris = [str(u.uri) for u in contact.uris if u.uri]
+            except Exception:
+                uris = []
+            parts = []
+            for uri in uris:
+                key = self._canonical_uri(uri)
+                stamp = self.last_message_times.get(key)
+                parts.append('%s -> %s = %s' % (uri, key, stamp or 'none'))
+            log('Messages group times: name=%r %s'
+                % (contact.name or '', '; '.join(parts) or 'no uris'))
+
+        orphans = set(self.last_message_times)
+        for contact in contacts:
+            try:
+                for u in contact.uris:
+                    orphans.discard(self._canonical_uri(u.uri))
+            except Exception:
+                pass
+        if orphans:
+            log('Messages group times: %d stamp(s) match no contact: %s'
+                % (len(orphans), ', '.join(sorted(orphans)[:20])))
 
     @objc.python_method
     @run_in_green_thread

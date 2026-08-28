@@ -1584,8 +1584,6 @@ class SMSViewController(NSObject):
         window.noteView_isComposing_(self, flag)
 
     @objc.python_method
-    @run_in_gui_thread
-    @objc.python_method
     def _NH_BlinkContactPresenceHasChanged(self, sender, data):
         """Note a status or note change from the person this pane is about.
 
@@ -1626,6 +1624,7 @@ class SMSViewController(NSObject):
                                                       or ISOTimestamp.now())
 
     @objc.python_method
+    @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)
@@ -2008,7 +2007,7 @@ class SMSViewController(NSObject):
         self.chatViewController.startTransferProgressTimer()
 
     @objc.python_method
-    def add_to_history(self, message):
+    def add_to_history(self, message, stamps_conversation_time=True):
         #self.log_info('%s %s message %s saved with status %s' % (message.direction.title(), message.content_type, message.id, message.status))
         # writes the record to the sql database
         cpim_to = format_identity_to_string(message.recipient, format='full') if message.recipient else ''
@@ -2020,11 +2019,12 @@ class SMSViewController(NSObject):
 
         self.history.add_message(message.id, 'sms', self.local_uri, remote_uri, message.direction, cpim_from, cpim_to, cpim_timestamp, message.content.decode(), message.content_type, "0", message.status, call_id=message.call_id, encryption=message.encryption)
 
-        try:
-            from SMSWindowManager import SMSWindowManager
-            SMSWindowManager().noteMessageTime(remote_uri, message.timestamp)
-        except Exception as e:
-            self.log_debug('Cannot record the conversation time for %s: %s' % (remote_uri, e))
+        if stamps_conversation_time:
+            try:
+                from SMSWindowManager import SMSWindowManager
+                SMSWindowManager().noteMessageTime(remote_uri, message.timestamp)
+            except Exception as e:
+                self.log_debug('Cannot record the conversation time for %s: %s' % (remote_uri, e))
 
     @objc.python_method
     def sendIMDNNotification(self, message_id, event):
