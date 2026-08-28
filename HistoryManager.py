@@ -61,6 +61,32 @@ reactor.addSystemEventTrigger('before', 'shutdown', pool.stop)
 
 
 @decorator
+def tune_sqlite_connection(connection):
+    """Make small writes cheap on a freshly opened history connection.
+
+    SQLObject opens SQLite with autoCommit on, so every inserted message and
+    every status update is its own transaction. Under SQLite's default
+    synchronous=FULL that is an fsync per row, which is what held a journal
+    apply to ~21 entries/s: a first sync downloaded three 5000-entry pages in
+    about a second and then spent a quarter of an hour writing them.
+
+    WAL turns a commit into an append instead of a rollback-journal dance, and
+    synchronous=NORMAL lets the fsync happen at checkpoints rather than on
+    every transaction. That pairing is SQLite's documented safe combination --
+    a crash or power loss can cost the most recent transactions but cannot
+    corrupt the database -- and it is what sylk mobile settled on for the same
+    workload after hitting the same wall.
+
+    Both are best-effort: a connection that refuses them still works, only
+    slowly, so a failure is logged rather than raised.
+    """
+    for pragma in ('PRAGMA journal_mode=WAL', 'PRAGMA synchronous=NORMAL'):
+        try:
+            connection.queryAll(pragma)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot apply %s to the history database: %s' % (pragma, e))
+
+
 def run_in_db_thread(func):
     @preserve_signature(func)
     def wrapper(*args, **kw):
@@ -85,6 +111,7 @@ class TableVersions(object, metaclass=Singleton):
     @run_in_db_thread
     def _initialize(self, db_uri):
         self.db = connectionForURI(db_uri)
+        tune_sqlite_connection(self.db)
         TableVersionEntry._connection = self.db
         try:
             TableVersionEntry.createTable(ifNotExists=True)
@@ -161,6 +188,7 @@ class SessionHistory(object, metaclass=Singleton):
     @run_in_db_thread
     def _initialize(self, db_uri):
         self.db = connectionForURI(db_uri)
+        tune_sqlite_connection(self.db)
         SessionHistoryEntry._connection = self.db
 
         try:
@@ -535,6 +563,7 @@ class ChatHistory(object, metaclass=Singleton):
     @run_in_db_thread
     def _initialize(self, db_uri):
         self.db = connectionForURI(db_uri)
+        tune_sqlite_connection(self.db)
         ChatMessage._connection = self.db
 
         try:
@@ -770,6 +799,10 @@ class ChatHistory(object, metaclass=Singleton):
             pass
             #BlinkLogger().log_error("Error updating decrypted message %s: %s" % (msgid, e))
 
+    # Message ids whose row could not be found, so the miss is reported once
+    # instead of once per live-location tick.
+    _missing_message_bodies = set()
+
     @run_in_db_thread
     def update_message_body(self, msgid, body, merge=None):
         """Replace the persisted body of an existing chat_messages row.
@@ -787,20 +820,34 @@ class ChatHistory(object, metaclass=Singleton):
         the two cannot interleave -- is the only place it is safe to do.
         """
         try:
-            results = ChatMessage.selectBy(msgid=msgid)
-            message = results.getOne()
-            if message:
-                if merge is not None:
-                    try:
-                        body = merge(message.body, body)
-                    except Exception as e:
-                        BlinkLogger().log_error("Error merging message body for %s: %s" % (msgid, e))
-                message.body = body
-            else:
-                BlinkLogger().log_error("Error updating message body for %s: not found" % msgid)
+            message = ChatMessage.selectBy(msgid=msgid).getOne()
+        except SQLObjectNotFound:
+            # Not an error, and not worth repeating. A live share rewrites its
+            # origin row on every tick, so one share whose origin this device
+            # never stored logs per tick -- which is how the same id appeared
+            # ten times in a row. The origin is legitimately absent whenever
+            # it falls outside the history this device holds: a fresh profile
+            # replaying a journal, or a share that began before the window the
+            # server returned. The tick is dropped either way.
+            if msgid not in self._missing_message_bodies:
+                self._missing_message_bodies.add(msgid)
+                BlinkLogger().log_debug("No stored message %s to update the body of; "
+                                        "its origin is not in local history" % msgid)
             return True
         except Exception as e:
             BlinkLogger().log_error("Error updating message body for %s: %s" % (msgid, e))
+            return True
+
+        try:
+            if merge is not None:
+                try:
+                    body = merge(message.body, body)
+                except Exception as e:
+                    BlinkLogger().log_error("Error merging message body for %s: %s" % (msgid, e))
+            message.body = body
+        except Exception as e:
+            BlinkLogger().log_error("Error updating message body for %s: %s" % (msgid, e))
+        return True
 
 
     @run_in_db_thread
@@ -1195,6 +1242,7 @@ class FileTransferHistory(object, metaclass=Singleton):
     @run_in_db_thread
     def _initialize(self, db_uri):
         self.db = connectionForURI(db_uri)
+        tune_sqlite_connection(self.db)
         FileTransfer._connection = self.db
 
         try:
