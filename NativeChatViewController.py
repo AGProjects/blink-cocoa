@@ -2407,6 +2407,30 @@ class NativeChatViewController(ChatViewController):
                     is_html=False, state='', recipient='', is_private=False, history_entry=False,
                     media_type='chat', encryption=None, before=False):
 
+        # One bubble per message id, always. A message can reach the
+        # renderer twice for reasons that have nothing to do with each
+        # other -- the server journal replaying, minutes later, a message
+        # this device sent and drew at the time; a resend of one that
+        # failed -- and the second copy is never something to draw: the id
+        # says it is the same message, so what the user would get is the
+        # same sentence twice.
+        #
+        # The bubble already on screen is the one kept. It is the better
+        # informed of the two: it carries whatever has been attached to it
+        # since -- a file, a reply link, a decrypted body -- none of which
+        # the copy arriving now knows about. Only the state is taken from
+        # the new copy, and only when it says something: that is how a
+        # journalled message brings back a receipt this device never saw.
+        #
+        # Before the grouping bookkeeping below, which must not count a
+        # message that is not going to be drawn: it decides whether the
+        # NEXT bubble shows an avatar.
+        if msgid and self.hasRenderedMessage(msgid):
+            BlinkLogger().log_debug('Message %s is already in the transcript, not drawn again' % msgid)
+            if state and state != getattr(self.messageListView.viewForMessageId_(msgid), 'state', ''):
+                self.markMessage(msgid, state, is_private)
+            return
+
         # Group by TURN, not by sender string. These are 1:1 conversations,
         # so a run of same-direction messages is by definition one speaker --
         # the avatar appears once and does not come back until the other party

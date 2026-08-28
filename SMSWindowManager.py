@@ -23,6 +23,8 @@ import os
 import re
 import hashlib
 import uuid
+
+from collections import OrderedDict
 import pgpy
 from pgpy.constants import PubKeyAlgorithm, KeyFlags, HashAlgorithm, SymmetricKeyAlgorithm, CompressionAlgorithm
 import json
@@ -594,7 +596,18 @@ class SMSWindowManagerClass(NSObject):
     # proxy and the transport list are all part of the key, so changing one
     # simply produces a different entry.
     route_cache = {}
-    received_call_ids = set()
+    # Ids of the messages already taken in, oldest first. A message can
+    # arrive twice for two unrelated reasons -- the transport retransmitting
+    # the request when its answer went missing, and the sender giving up on
+    # that and sending the message again under a new transaction -- and the
+    # two look nothing alike on the wire: the first repeats the Call-Id, the
+    # second repeats only the CPIM Message-ID. Both are asked of this ring.
+    #
+    # Bounded, because a client left running for weeks would otherwise
+    # remember every message it has ever been handed. Ordered, so what is
+    # dropped when it is full is the oldest id rather than an arbitrary one.
+    seen_message_ids = OrderedDict()
+    MAX_SEEN_MESSAGE_IDS = 10000
     import_key_window = None
     export_key_window = None
     syncConversationsInProgress = {}
@@ -639,8 +652,15 @@ class SMSWindowManagerClass(NSObject):
         return self
 
     def heartbeatTimer_(self, timer):
-        for viewer in self.allViewers():
-            viewer.heartbeat()
+        # Guarded per viewer. One conversation raising used to end the whole
+        # tick: every viewer after it in the iteration lost its heartbeat,
+        # and with it the only thing that resends a message stranded by a
+        # failed route.
+        for viewer in list(self.allViewers()):
+            try:
+                viewer.heartbeat()
+            except Exception as e:
+                BlinkLogger().log_error('Heartbeat failed for %s: %s' % (viewer.remote_uri, e))
 
     @objc.python_method
     def allViewers(self):
@@ -3143,6 +3163,26 @@ class SMSWindowManagerClass(NSObject):
             BlinkLogger().log_info('  CPIM Metadata side-band (%d bytes): %s'
                                    % (len(text), text[:600]))
 
+    @objc.python_method
+    def _seenMessage(self, key):
+        """Whether this id has been taken in before. Records it if not.
+
+        One ring for both kinds of id: they are drawn from different
+        headers but they answer the same question, and a message whose
+        Call-Id is new while its Message-ID is not is still the message
+        the user has already read.
+        """
+        if not key:
+            return False
+        seen = self.seen_message_ids
+        if key in seen:
+            seen.move_to_end(key)
+            return True
+        seen[key] = True
+        while len(seen) > self.MAX_SEEN_MESSAGE_IDS:
+            seen.popitem(last=False)
+        return False
+
     def _NH_SIPEngineGotMessage(self, sender, data):
         is_cpim = False
         cpim_message = None
@@ -3159,12 +3199,10 @@ class SMSWindowManagerClass(NSObject):
         call_id = data.headers.get('Call-ID', Null).body
         is_replication_message = data.headers.get('X-Replicated-Message', Null).body
         instance_id = data.from_header.uri.parameters.get('instance_id', None)
-        try:
-            self.received_call_ids.remove(call_id)
-        except KeyError:
-            self.received_call_ids.add(call_id)
-        else:
-            # drop duplicate message received
+        # The transport's own repeat: same request, same Call-Id, sent
+        # again because our answer did not get back in time.
+        if self._seenMessage(call_id):
+            BlinkLogger().log_info('Dropped a repeat of the message with Call-Id %s' % call_id)
             return
             
         direction = 'incoming'
@@ -3227,6 +3265,36 @@ class SMSWindowManagerClass(NSObject):
             content_type = data.content_type
             sender_identity = data.from_header
             window_tab_identity = data.to_header if direction == 'outgoing' else sender_identity
+
+        # Every message needs an id that a second copy of it would share.
+        # A CPIM body with no Message-ID header left this as None, and None
+        # is not an identity: two copies of such a message looked like two
+        # different messages to every check downstream, the renderer's
+        # included. The Call-Id is the next best thing -- it is at least
+        # this message's own.
+        if is_cpim and not imdn_id:
+            imdn_id = call_id
+
+        # The sender's own repeat: a new transaction carrying a message we
+        # have already taken in, sent because our receipt never got back.
+        # Only the CPIM Message-ID can tell us that -- it is the one id the
+        # two copies share, the Call-Id having changed with the transaction.
+        #
+        # Is-composing is exempt. It is a state rather than a message, and a
+        # sender that reuses one id for the whole time it is typing would go
+        # quiet after the first indication. IMDN receipts are exempt for the
+        # opposite reason: a client is free to send its receipt under the id
+        # of the message it is reporting on, and dropping one as a repeat of
+        # that message would cost a delivered or read mark for ever. Acting
+        # on the same receipt twice costs nothing -- it sets a status that
+        # is already set.
+        if (is_cpim and imdn_id and imdn_id != call_id
+                and content_type not in (IsComposingDocument.content_type,
+                                         IMDNDocument.content_type)
+                and self._seenMessage(imdn_id)):
+            BlinkLogger().log_info('Dropped a second copy of message %s from %s'
+                                   % (imdn_id, format_identity_to_string(sender_identity)))
+            return
 
         uri = format_identity_to_string(window_tab_identity)
         self._log_incoming_message(direction, account, sender_identity, uri,
