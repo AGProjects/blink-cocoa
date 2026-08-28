@@ -29,6 +29,7 @@ import uuid
 from AppKit import (NSButton,
                     NSColor,
                     NSFilenamesPboardType,
+                    NSMenu,
                     NSFont,
                     NSFontAttributeName,
                     NSForegroundColorAttributeName,
@@ -42,7 +43,7 @@ from AppKit import (NSButton,
                     NSViewMinYMargin,
                     NSViewWidthSizable)
 from Foundation import (NSArray, NSAttributedString, NSIntersectsRect,
-                        NSLocalizedString, NSMakeRect,
+                        NSLocalizedString, NSMakeRect, NSPoint,
                         NSNotificationCenter, NSRunLoop, NSRunLoopCommonModes,
                         NSTimer, NSURL, NSWorkspace)
 
@@ -177,7 +178,8 @@ def _haversine(lat1, lon1, lat2, lon2):
         return 2.0 * radius * math.asin(min(1.0, math.sqrt(a)))
     except (TypeError, ValueError):
         return 0.0
-from ChatViewController import ChatViewController, ChatMessageObject
+from ChatViewController import (ChatViewController, ChatMessageObject,
+                                pasteboard_attachments, pasteboard_can_attach)
 from MessageBubbleView import MessageBubbleView, _url_re
 from FileTransferCache import (FileTransferCache, envelope as transfer_envelope,
                                is_encrypted, AUTO_VIDEO_MAX_AGE_DAYS,
@@ -325,9 +327,9 @@ class NativeChatViewController(ChatViewController):
                     ATTACH_GLYPH,
                     {NSFontAttributeName: NSFont.systemFontOfSize_(15.0),
                      NSForegroundColorAttributeName: NSColor.secondaryLabelColor()}))
-            button.setToolTip_(NSLocalizedString("Send files", "Tooltip"))
+            button.setToolTip_(NSLocalizedString("Attach something", "Tooltip"))
             button.setTarget_(self)
-            button.setAction_('attachFiles:')
+            button.setAction_('showAttachMenu:')
             # Pinned to the TOP of the composer, not to its middle. The row
             # grows downward as the message wraps onto more lines, and a
             # button held at the centre -- or left to the default springs,
@@ -719,6 +721,108 @@ class NativeChatViewController(ChatViewController):
             self._laying_out_composer = False
 
     @objc.IBAction
+    def showAttachMenu_(self, sender):
+        """The paperclip's menu: camera, files, clipboard.
+
+        Three ways in, one way out -- each of them produces paths and
+        hands them to confirmAndSendFiles, which is what puts the preview
+        in front of the transfer. An item that cannot work right now is
+        left visible and disabled with the reason in its tooltip: "greyed
+        out and no explanation" is the version of this people report as
+        broken.
+        """
+        delegate = self.delegate
+        if delegate is None or not hasattr(delegate, 'sendFiles'):
+            return
+
+        menu = NSMenu.alloc().init()
+        menu.setAutoenablesItems_(False)
+
+        camera = menu.addItemWithTitle_action_keyEquivalent_(
+            NSLocalizedString("Take Photo\u2026", "Menu item"),
+            'attachFromCamera:', '')
+        camera.setTarget_(self)
+        reason = self._cameraUnavailableReason()
+        if reason:
+            camera.setEnabled_(False)
+            camera.setToolTip_(reason)
+            # In the log as well as the tooltip: a tooltip on a disabled
+            # item is not somewhere anybody thinks to look, and "the
+            # camera item is greyed out" is otherwise unanswerable.
+            BlinkLogger().log_info('Camera item disabled: %s' % reason)
+
+        choose = menu.addItemWithTitle_action_keyEquivalent_(
+            NSLocalizedString("Choose Files\u2026", "Menu item"),
+            'attachFiles:', '')
+        choose.setTarget_(self)
+
+        paste = menu.addItemWithTitle_action_keyEquivalent_(
+            NSLocalizedString("Paste from Clipboard", "Menu item"),
+            'attachFromClipboard:', '')
+        paste.setTarget_(self)
+        if not pasteboard_can_attach():
+            paste.setEnabled_(False)
+            paste.setToolTip_(NSLocalizedString(
+                "The clipboard holds nothing that can be sent as a file",
+                "Tooltip"))
+
+        try:
+            origin = NSPoint(0, sender.frame().size.height + 2.0)
+            menu.popUpMenuPositioningItem_atLocation_inView_(None, origin, sender)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot show the attach menu: %s' % e)
+
+    @objc.python_method
+    def _cameraUnavailableReason(self):
+        """Why the camera item cannot be used, or None.
+
+        Imported here rather than at module scope so an AVFoundation that
+        will not load costs one disabled menu item instead of a composer
+        that will not build -- the same bargain the location menu makes
+        with CoreLocation.
+        """
+        try:
+            from CameraCapture import camera_unavailable_reason
+        except Exception as e:
+            BlinkLogger().log_info('Camera support is not available: %s' % e)
+            return NSLocalizedString("This build has no camera support", "Label")
+        try:
+            return camera_unavailable_reason()
+        except Exception as e:
+            BlinkLogger().log_error('Cannot tell whether the camera is available: %s' % e)
+            return NSLocalizedString("The camera is not available", "Label")
+
+    @objc.IBAction
+    def attachFromCamera_(self, sender):
+        """Take a photograph, look at it, then send it."""
+        delegate = self.delegate
+        if delegate is None or not hasattr(delegate, 'sendFiles'):
+            return
+        try:
+            from CameraCapture import capture_photo
+        except Exception as e:
+            BlinkLogger().log_error('Cannot load camera support: %s' % e)
+            return
+        try:
+            path = capture_photo(self.attachmentPreviewParent())
+        except Exception as e:
+            BlinkLogger().log_error('Cannot take a photo: %s' % e)
+            return
+        if path:
+            self.confirmAndSendFiles([path])
+
+    @objc.IBAction
+    def attachFromClipboard_(self, sender):
+        """The same thing Cmd-V does, for people who do not know Cmd-V."""
+        try:
+            paths = pasteboard_attachments()
+        except Exception as e:
+            BlinkLogger().log_error('Cannot read the pasteboard: %s' % e)
+            return
+        if paths:
+            self.confirmAndSendFiles(paths)
+
+    @objc.IBAction
     def attachFiles_(self, sender):
         """Pick files and hand them to the conversation."""
         delegate = self.delegate
@@ -726,7 +830,7 @@ class NativeChatViewController(ChatViewController):
             return
         panel = NSOpenPanel.openPanel()
         panel.setTitle_(NSLocalizedString("Send Files", "Window title"))
-        panel.setPrompt_(NSLocalizedString("Send", "Button title"))
+        panel.setPrompt_(NSLocalizedString("Choose", "Button title"))
         panel.setAllowsMultipleSelection_(True)
         panel.setCanChooseDirectories_(False)
         panel.setCanChooseFiles_(True)
@@ -739,7 +843,7 @@ class NativeChatViewController(ChatViewController):
             except Exception:
                 continue
         if paths:
-            delegate.sendFiles(paths)
+            self.confirmAndSendFiles(paths)
 
     @objc.IBAction
     def showSmileys_(self, sender):

@@ -1018,6 +1018,12 @@
 		AD00000000000000004F0001 /* MessagePaneController.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004F0000 /* MessagePaneController.py */; };
 		AD00000000000000004F0002 /* MessagePaneController.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004F0000 /* MessagePaneController.py */; };
 		AD00000000000000004F0003 /* MessagePaneController.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004F0000 /* MessagePaneController.py */; };
+		AD00000000000000750001 /* CameraCapture.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000750000 /* CameraCapture.py */; };
+		AD00000000000000750002 /* CameraCapture.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000750000 /* CameraCapture.py */; };
+		AD00000000000000750003 /* CameraCapture.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000750000 /* CameraCapture.py */; };
+		AD00000000000000740001 /* AttachmentPreview.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000740000 /* AttachmentPreview.py */; };
+		AD00000000000000740002 /* AttachmentPreview.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000740000 /* AttachmentPreview.py */; };
+		AD00000000000000740003 /* AttachmentPreview.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000740000 /* AttachmentPreview.py */; };
 		AD00000000000000005A0001 /* SylkLocation.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005A0000 /* SylkLocation.py */; };
 		AD00000000000000005A0002 /* SylkLocation.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005A0000 /* SylkLocation.py */; };
 		AD00000000000000005A0003 /* SylkLocation.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005A0000 /* SylkLocation.py */; };
@@ -1931,6 +1937,8 @@
 		AD00000000000000004D0000 /* MessageHost.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MessageHost.py; sourceTree = "<group>"; };
 		AD00000000000000004E0000 /* NativeChatViewController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = NativeChatViewController.py; sourceTree = "<group>"; };
 		AD00000000000000004F0000 /* MessagePaneController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MessagePaneController.py; sourceTree = "<group>"; };
+		AD00000000000000750000 /* CameraCapture.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = CameraCapture.py; sourceTree = "<group>"; };
+		AD00000000000000740000 /* AttachmentPreview.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AttachmentPreview.py; sourceTree = "<group>"; };
 		AD00000000000000005A0000 /* SylkLocation.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SylkLocation.py; sourceTree = "<group>"; };
 		AD00000000000000005B0000 /* Base */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MessageView.xib; sourceTree = "<group>"; };
 		AD00000000000000005C0000 /* AudioPlayback.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AudioPlayback.py; sourceTree = "<group>"; };
@@ -2273,6 +2281,8 @@
 				1FDDE5FA10E9851800B03A52 /* SMSWindowManager.py */,
 				2B06A429111CFE74001D41E5 /* SMSViewController.py */,
 				AD00000000000000004F0000 /* MessagePaneController.py */,
+				AD00000000000000750000 /* CameraCapture.py */,
+				AD00000000000000740000 /* AttachmentPreview.py */,
 				AD00000000000000006F0000 /* FileTransferCache.py */,
 				AD00000000000000005F0000 /* MapTileCache.py */,
 				AD00000000000000004C0000 /* MessageListView.py */,
@@ -2995,6 +3005,8 @@
 				1F22731212B554F50010A8B2 /* audio_small.png in Resources */,
 				1F22731312B554F50010A8B2 /* SMSViewController.py in Resources */,
 				AD00000000000000004F0001 /* MessagePaneController.py in Resources */,
+				AD00000000000000750001 /* CameraCapture.py in Resources */,
+				AD00000000000000740001 /* AttachmentPreview.py in Resources */,
 				AD00000000000000006F0001 /* FileTransferCache.py in Resources */,
 				AD00000000000000005F0001 /* MapTileCache.py in Resources */,
 				AD00000000000000004C0001 /* MessageListView.py in Resources */,
@@ -3280,6 +3292,8 @@
 				1F35CFEF17894FFF00C6FE38 /* audio_small.png in Resources */,
 				1F35CFF017894FFF00C6FE38 /* SMSViewController.py in Resources */,
 				AD00000000000000004F0002 /* MessagePaneController.py in Resources */,
+				AD00000000000000750002 /* CameraCapture.py in Resources */,
+				AD00000000000000740002 /* AttachmentPreview.py in Resources */,
 				AD00000000000000006F0002 /* FileTransferCache.py in Resources */,
 				AD00000000000000005F0002 /* MapTileCache.py in Resources */,
 				AD00000000000000004C0002 /* MessageListView.py in Resources */,
@@ -3586,6 +3600,8 @@
 				2BDAE17311113B8200AC1D7A /* audio_small.png in Resources */,
 				2B06A42A111CFE74001D41E5 /* SMSViewController.py in Resources */,
 				AD00000000000000004F0003 /* MessagePaneController.py in Resources */,
+				AD00000000000000750003 /* CameraCapture.py in Resources */,
+				AD00000000000000740003 /* AttachmentPreview.py in Resources */,
 				AD00000000000000006F0003 /* FileTransferCache.py in Resources */,
 				AD00000000000000005F0003 /* MapTileCache.py in Resources */,
 				AD00000000000000004C0003 /* MessageListView.py in Resources */,

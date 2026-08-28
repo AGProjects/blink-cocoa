@@ -23,11 +23,22 @@ import datetime
 import objc
 import os
 import re
+import tempfile
 import time
 import urllib.request, urllib.parse, urllib.error
 
-from AppKit import NSCommandKeyMask, NSDragOperationNone, NSDragOperationCopy, NSFilenamesPboardType, NSShiftKeyMask, NSTextDidChangeNotification
-from Foundation import NSArray, NSDate, NSLocalizedString, NSMakeRange, NSNotificationCenter, NSObject, NSTextView, NSTimer
+from AppKit import (NSBitmapImageRep, NSCommandKeyMask, NSDragOperationNone,
+                    NSDragOperationCopy, NSFilenamesPboardType,
+                    NSPasteboard, NSPasteboardTypePNG, NSPasteboardTypeTIFF,
+                    NSShiftKeyMask, NSTextDidChangeNotification, NSURLPboardType)
+try:
+    from AppKit import NSPNGFileType
+except ImportError:
+    # Renamed NSBitmapImageFileTypePNG in newer SDKs. The value is the
+    # constant itself, and it is only ever handed straight back to AppKit --
+    # not worth a composer that refuses to load.
+    NSPNGFileType = 4
+from Foundation import NSArray, NSDate, NSLocalizedString, NSMakeRange, NSNotificationCenter, NSObject, NSTextView, NSTimer, NSURL
 
 from SmileyManager import SmileyManager
 from util import escape_html, run_in_gui_thread
@@ -90,6 +101,84 @@ def processHTMLText(content='', usesmileys=True, is_html=False):
         content = "".join(result)
 
     return content
+
+
+def pasteboard_files(pboard=None):
+    """Real files on the pasteboard -- what the Finder puts there.
+
+    Preferred over the picture below whenever both are present, which is
+    what copying a PNG in the Finder produces: the file has the name the
+    user knows it by, and the picture would arrive as "Pasted image".
+    """
+    pboard = pboard or NSPasteboard.generalPasteboard()
+    types = pboard.types()
+    names = []
+    if types.containsObject_(NSFilenamesPboardType):
+        names = pboard.propertyListForType_(NSFilenamesPboardType) or []
+    elif types.containsObject_(NSURLPboardType):
+        url = NSURL.URLFromPasteboard_(pboard)
+        if url is not None and url.isFileURL():
+            names = [url.path()]
+    return [str(name) for name in names if os.path.isfile(str(name))]
+
+
+def pasteboard_has_picture(pboard=None):
+    """Whether there is image data on the board. Looks, writes nothing."""
+    pboard = pboard or NSPasteboard.generalPasteboard()
+    types = pboard.types()
+    return bool(types.containsObject_(NSPasteboardTypePNG)
+                or types.containsObject_(NSPasteboardTypeTIFF))
+
+
+def pasteboard_picture(pboard=None):
+    """A screenshot, or anything else copied as an image, written to a file.
+
+    macOS puts a screenshot on the board as image DATA with no file behind
+    it, so there is nothing to attach until one is written. PNG is taken as
+    it stands and TIFF is converted, because TIFF is what the older
+    applications put there and nobody wants a 20 MB transfer for a
+    screenshot.
+
+    The file is left in the temporary directory: the transfer copies what
+    it is given into its own cache, and this copy has no meaning to the
+    user once it has been sent.
+    """
+    pboard = pboard or NSPasteboard.generalPasteboard()
+    types = pboard.types()
+    data = None
+    if types.containsObject_(NSPasteboardTypePNG):
+        data = pboard.dataForType_(NSPasteboardTypePNG)
+    elif types.containsObject_(NSPasteboardTypeTIFF):
+        tiff = pboard.dataForType_(NSPasteboardTypeTIFF)
+        rep = NSBitmapImageRep.imageRepWithData_(tiff) if tiff else None
+        if rep is not None:
+            data = rep.representationUsingType_properties_(NSPNGFileType, {})
+    if not data:
+        return []
+
+    # Named the way macOS names a screenshot, because that is usually what
+    # this is and it is the name the recipient sees.
+    name = 'Pasted image %s.png' % time.strftime('%Y-%m-%d at %H.%M.%S')
+    path = os.path.join(tempfile.gettempdir(), name)
+    if not data.writeToFile_atomically_(path, True):
+        BlinkLogger().log_error('Cannot write the pasted picture to %s' % path)
+        return []
+    return [path]
+
+
+def pasteboard_attachments(pboard=None):
+    """Everything on the pasteboard that could be sent as a file."""
+    pboard = pboard or NSPasteboard.generalPasteboard()
+    return pasteboard_files(pboard) or pasteboard_picture(pboard)
+
+
+def pasteboard_can_attach(pboard=None):
+    """Whether a paste would produce an attachment. Looks, writes nothing."""
+    try:
+        pboard = pboard or NSPasteboard.generalPasteboard()
+        return bool(pasteboard_has_picture(pboard) or pasteboard_files(pboard))
+    except Exception:
+        return False
 
 
 class ChatInputTextView(NSTextView):
@@ -162,6 +251,73 @@ class ChatInputTextView(NSTextView):
             return self.owner.delegate.sendFiles(filenames)
         return False
 
+    def validateUserInterfaceItem_(self, item):
+        """Keep Edit > Paste alive for a picture.
+
+        This is a PLAIN TEXT view (the nib says importsGraphics="NO"), so
+        NSTextView looks at a pasteboard holding nothing but image data,
+        finds no type it can read, and disables the Paste item. The menu
+        item is what owns Cmd-V -- keyDown_ below swallows every Command
+        combination it does not know -- so a disabled item means the
+        keystroke is never dispatched at all and paste_ is never called.
+        That is why the same Cmd-V works in a rich text editor and does
+        nothing here.
+        """
+        try:
+            action = item.action()
+            if action in ('paste:', b'paste:') and self._canPasteAsTransfer():
+                return True
+        except Exception:
+            pass
+        try:
+            return objc.super(ChatInputTextView, self).validateUserInterfaceItem_(item)
+        except Exception:
+            return True
+
+    @objc.python_method
+    def _canPasteAsTransfer(self):
+        """Whether a paste right now would produce a file transfer.
+
+        Asked during menu validation, so it only looks -- nothing is
+        written and nothing is sent until the paste actually happens.
+        """
+        delegate = getattr(self.owner, 'delegate', None) if self.owner else None
+        if getattr(delegate, 'sendFiles', None) is None:
+            return False
+        return pasteboard_can_attach()
+
+    @objc.python_method
+    def _pasteAsTransfer(self):
+        """Send whatever is on the pasteboard as a file. True if we did.
+
+        False for anything that is not a file or a picture -- plain text,
+        an empty board, a conversation that cannot send files -- which is
+        what puts the paste back on the text view.
+
+        "True if we did" means the paste was taken over, not that anything
+        was sent: the preview the owner puts up is allowed to come back
+        with nothing, and a cancelled paste must not then fall through and
+        drop a file path into the composer as text.
+        """
+        owner = self.owner
+        confirm = getattr(owner, 'confirmAndSendFiles', None) if owner else None
+        if confirm is None:
+            return False
+        delegate = getattr(owner, 'delegate', None)
+        if getattr(delegate, 'sendFiles', None) is None:
+            return False
+
+        try:
+            paths = pasteboard_attachments()
+        except Exception as e:
+            BlinkLogger().log_error('Cannot read the pasteboard: %s' % e)
+            return False
+        if not paths:
+            return False
+
+        confirm(paths)
+        return True
+
     def keyDown_(self, event):
         if event.keyCode() == 36 and (event.modifierFlags() & NSShiftKeyMask):
             self.insertText_('\r\n')
@@ -224,6 +380,65 @@ class ChatViewController(NSObject):
     @property
     def sessionController(self):
         return self.delegate.sessionController
+
+    @objc.python_method
+    def confirmAndSendFiles(self, paths, title=None):
+        """Show what is about to be sent, and send it if the user agrees.
+
+        The single gate every source goes through -- the file panel, the
+        camera, the clipboard, Cmd-V. Sending straight from the source is
+        what made a mistyped Cmd-V an irreversible thing done to somebody
+        else's conversation.
+
+        Returns the number of files sent.
+        """
+        delegate = self.delegate
+        send = getattr(delegate, 'sendFiles', None)
+        if send is None or not paths:
+            return 0
+
+        try:
+            from AttachmentPreview import confirm_attachments
+        except Exception as e:
+            # A preview that will not import must not cost the feature it
+            # was added to guard: the file still goes, as it did before.
+            BlinkLogger().log_error('Cannot load the attachment preview: %s' % e)
+            confirm_attachments = None
+
+        if confirm_attachments is not None:
+            paths = confirm_attachments(paths, self.attachmentPreviewParent(),
+                                        title or self.attachmentPreviewTitle())
+            if not paths:
+                BlinkLogger().log_info('Attachment cancelled')
+                return 0
+
+        try:
+            return send(paths) or 0
+        except Exception as e:
+            BlinkLogger().log_error('Cannot send the attachments: %s' % e)
+            return 0
+
+    @objc.python_method
+    def attachmentPreviewParent(self):
+        """The window to centre the preview on, or None for the screen."""
+        for view in (self.inputText, self.outputView, self.view):
+            try:
+                window = view.window() if view is not None else None
+            except Exception:
+                window = None
+            if window is not None:
+                return window
+        return None
+
+    @objc.python_method
+    def attachmentPreviewTitle(self):
+        """Who this is going to, said in the preview's own words."""
+        delegate = self.delegate
+        name = (getattr(delegate, 'display_name', None)
+                or getattr(delegate, 'remote_uri', None))
+        if not name:
+            return None
+        return NSLocalizedString("Send to %s", "Label") % name
 
     @objc.python_method
     def resetRenderedMessages(self):
