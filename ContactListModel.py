@@ -3044,6 +3044,9 @@ class ContactListModel(CustomListModel):
     nc = NotificationCenter()
     pending_watchers_map = {}
     active_watchers_map = {}
+    # Show the "New Contact Request" system notification only once per
+    # application launch, no matter how many winfo updates arrive.
+    pending_watcher_notification_shown = False
     # Group ids to place at the top the next time they are activated, asked
     # for by whoever creates them. Consumed on use.
     groups_to_promote = set()
@@ -3890,7 +3893,6 @@ class ContactListModel(CustomListModel):
             self.active_watchers_map[notification.sender.id] = tmp_active_watchers
             all_pending_watchers = {}
             [all_pending_watchers.update(d) for d in list(self.pending_watchers_map.values())]
-            notification_sent = False
             for watcher in all_pending_watchers.values():
                 uri = sip_prefix_pattern.sub('', watcher.sipuri)
                 try:
@@ -3904,8 +3906,8 @@ class ContactListModel(CustomListModel):
                         gui_watcher = BlinkPendingWatcher(watcher)
                         self.pending_watchers_group.contacts.append(gui_watcher)
 
-                        if not notification_sent:
-                            notification_sent = True
+                        if not ContactListModel.pending_watcher_notification_shown:
+                            ContactListModel.pending_watcher_notification_shown = True
 
                             nc_title = NSLocalizedString("New Contact Request", "System notification title")
                             nc_subtitle = NSLocalizedString("From %s", "System notification subtitle") % gui_watcher.name
@@ -3920,7 +3922,6 @@ class ContactListModel(CustomListModel):
 
         elif notification.data.state == 'partial':
             #BlinkLogger().log_info('Got %s information about subscribers to my availability for account %s' % (notification.data.state, notification.sender.id))
-            notification_sent = False
             for watcher in tmp_pending_watchers.values():
                 uri = sip_prefix_pattern.sub('', watcher.sipuri)
                 try:
@@ -3934,8 +3935,8 @@ class ContactListModel(CustomListModel):
                         gui_watcher = BlinkPendingWatcher(watcher)
                         self.pending_watchers_group.contacts.append(gui_watcher)
 
-                        if not notification_sent:
-                            notification_sent = True
+                        if not ContactListModel.pending_watcher_notification_shown:
+                            ContactListModel.pending_watcher_notification_shown = True
 
                             nc_title = NSLocalizedString("New Contact Request", "System notification title")
                             nc_subtitle = NSLocalizedString("From %s", "System notification subtitle") % gui_watcher.name
