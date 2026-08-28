@@ -3,7 +3,10 @@
 PortSystem          1.0
 PortGroup           xcodeversion 1.0
 PortGroup           muniversal 1.0
-PortGroup           compiler_blacklist_versions 1.0
+# compiler_blacklist_versions was removed from MacPorts (compiler.blacklist
+# is now handled by base). Requesting it aborts with
+#   "PortGroup compiler_blacklist_versions 1.0 could not be located"
+#PortGroup           compiler_blacklist_versions 1.0
 PortGroup           active_variants 1.1
 
 # For 'TARGET_OS_OSX', 'TARGET_CPU_ARM64' macros
@@ -121,7 +124,9 @@ compiler.c_standard 2011
 # clang-139 hits https://trac.macports.org/ticket/38141
 # warning: unknown warning option '-Werror=partial-availability'; did you mean '-Werror=availability'? [-Wunknown-warning-option]
 # warning: unknown warning option '-Wno-bool-operation'; did you mean '-Wno-bool-conversion'? [-Wunknown-warning-option]
-compiler.blacklist-append {clang < 800}
+# Blacklisting clang < 800 (Xcode 8, 2016) is meaningless on any Mac that
+# can build Blink today, and the directive came with the PortGroup above.
+#compiler.blacklist-append {clang < 800}
 
 # The old ffmpeg port was GPL-2+ as base and had a no_gpl variant, so this keeps us consistent
 # Also, -gpl2 causes other ports to fail to build due to the missing libpostproc (#35473)
