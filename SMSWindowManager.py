@@ -63,8 +63,8 @@ from twisted.internet import reactor
 from ChatViewController import MSG_STATE_SENT, MSG_STATE_DELIVERED, MSG_STATE_DISPLAYED, MSG_STATE_FAILED
 
 from BlinkLogger import BlinkLogger
-from KeyEscrow import (install_keypair, log_self_contact, restore_from_own_contact,
-                       write_self_keys)
+from KeyEscrow import (escrow_is_missing, install_keypair, log_self_contact,
+                       restore_from_own_contact, write_self_keys)
 from HistoryManager import ChatHistory
 from SMSViewController import SMSViewController, is_otr_wire_text
 from MessageHost import peaks_metadata, reply_metadata
@@ -631,6 +631,9 @@ class SMSWindowManagerClass(NSObject):
     # Last file transfer URL derived per account, so the guess is stated
     # when it changes rather than once per transfer.
     transfer_url_logged = {}
+    # Accounts whose missing escrow has been repaired this session, so a
+    # write that keeps failing is attempted once rather than per reload.
+    escrow_repaired = set()
     generate_prompt_deferred = {}
 
     def init(self):
@@ -732,6 +735,44 @@ class SMSWindowManagerClass(NSObject):
         except Exception as e:
             BlinkLogger().log_error('Key escrow inspection failed for %s: %s'
                                     % (getattr(account, 'id', '?'), e))
+
+        try:
+            self.repairMissingEscrow(account)
+        except Exception as e:
+            BlinkLogger().log_error('Key escrow repair failed for %s: %s'
+                                    % (getattr(account, 'id', '?'), e))
+
+    @objc.python_method
+    def repairMissingEscrow(self, account):
+        """Put the escrow back when the server has lost it.
+
+        An escrow can be destroyed by something entirely outside this feature:
+        a client that adds a contact the addressbook already holds replaces the
+        element and drops the attributes it does not know about. Observed on
+        2026-08-28, when a fresh profile with two XCAP accounts wiped the key
+        escrow off the second account's contacts; the key came back only
+        because a phone noticed and re-escrowed it.
+
+        So an account holding a key with nothing escrowed anywhere repairs
+        itself. This is deliberately the ONLY automatic write: no escrow means
+        writing one cannot displace anyone's key, while every other mismatch
+        between a local key and an escrow is a decision for the user. The
+        blockers still apply, so a contact shared with another account is
+        refused here as everywhere else.
+        """
+        if not escrow_is_missing(account):
+            self.escrow_repaired.discard(account.id)
+            return
+        if account.id in self.escrow_repaired:
+            return
+
+        self.escrow_repaired.add(account.id)
+        BlinkLogger().log_info('Key escrow: %s holds a key but the server carries no escrow for it '
+                               '-- restoring the backup' % account.id)
+        written, reason = write_self_keys(account)
+        if not written:
+            BlinkLogger().log_info('Key escrow: could not restore the backup for %s -- %s'
+                                   % (account.id, reason))
 
     @objc.python_method
     def restorePrivateKeyFromOwnContact(self, account):

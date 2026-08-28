@@ -48,7 +48,8 @@ honest about the document as the server actually returns it.
 
 __all__ = ['ADDRESSBOOK_NS', 'SIPSIMPLE_ATTRIBUTES_NS', 'BLINK_ATTRIBUTES_NS', 'ESCROW_NAMESPACE',
            'self_contact_element', 'self_contact_elements', 'self_escrow_records',
-           'read_self_keys', 'escrow_write_targets', 'escrow_write_blockers', 'escrow_write_action', 'escrow_record',
+           'read_self_keys', 'escrow_write_targets', 'escrow_write_blockers', 'escrow_write_action',
+           'escrow_is_missing', 'escrow_record',
            'write_self_keys', 'install_keypair', 'restore_from_own_contact',
            'self_contact_report', 'log_self_contact']
 
@@ -375,6 +376,18 @@ def escrow_write_action(account, force=False, accounts=None):
     if all(target in current for target in escrow_write_targets(account)):
         return False, 'the key of this account is already saved on the server.'
     return True, None
+
+
+def escrow_is_missing(account):
+    """True when this account has a key but nothing on the server carries it.
+
+    The one state safe to repair without asking: there is no escrow at all,
+    so writing one cannot displace anybody's key. Every other difference
+    between the local key and an escrow is a decision, not a repair.
+    """
+    if not (account.sms.private_key and os.path.exists(account.sms.private_key)):
+        return False
+    return not self_escrow_records(account)
 
 
 def escrow_record(account):
