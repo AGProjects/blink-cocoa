@@ -514,11 +514,17 @@ class FileTransferCache(object):
             BlinkLogger().log_error('Upload callback failed: %s' % e)
 
     def upload_progress(self, meta):
-        """(fraction, phase) for an upload in flight, or (None, None)."""
+        """(fraction, phase) for an upload, or (None, phase) with no task yet.
+
+        The phase outlives the task on purpose. An outgoing transfer is
+        busy before there is anything on the wire -- being encrypted, or
+        simply queued -- and answering "no phase" for that window left the
+        bubble with nothing to name what it was doing.
+        """
         key = str(meta.get('transfer_id') or '')
         task = self._uploads.get(key)
         if task is None:
-            return None, None
+            return None, self._upload_phase.get(key)
         phase = self._upload_phase.get(key, 'upload')
         try:
             return float(task.progress().fractionCompleted()), phase

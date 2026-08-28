@@ -3837,6 +3837,14 @@ class MessageBubbleView(NSView):
         rect = self._download_rect
         fraction, phase = (self.transfer_progress or (None, None))
 
+        # The phase can be missing -- an upload that has not reached the
+        # wire yet, or has just left it, has no task to report one. What
+        # the bubble is doing is not in doubt though, so it answers for
+        # itself rather than falling through to the download wording and
+        # telling the sender their own file is coming in.
+        if not phase:
+            phase = 'upload' if self.upload_pending else 'download'
+
         if phase == 'decrypt':
             text = NSLocalizedString("Decrypting\u2026", "Label")
         elif phase == 'encrypt':
