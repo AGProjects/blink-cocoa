@@ -1058,6 +1058,26 @@ class SMSWindowManagerClass(NSObject):
     TOKEN_REQUEST_INTERVAL = 30.0
 
     MAX_JOURNAL_PAGES = 200
+
+    # How far back a first sync reaches, in years, when there is no cursor.
+    #
+    # The storage layer applies `now() - 3 days` when a request carries
+    # neither a message id nor a `since` (storage.py, CassandraMessageStorage
+    # .__getitem__). Measured against an account with ~10000 entries: 1006
+    # came back, and the next request -- made from the newest id on that page,
+    # since a path cursor only moves forward -- correctly returned nothing.
+    # The older entries were never unreachable, they were never asked for.
+    #
+    # Five years rather than the epoch, matching what sylk mobile asks for in
+    # requestSyncConversations: wide enough for any real account history, and
+    # a bounded date the server can answer from an index rather than a
+    # sentinel that asks it to consider every row it has ever stored.
+    #
+    # This needs the matching SylkServer fix: /messages/history did not read
+    # `since` from the query string at all, so the storage layer's third key
+    # element was absent and defaulted to None. Against an unpatched server
+    # the parameter is ignored and the three-day window still applies.
+    JOURNAL_SINCE_YEARS = 5
     # how often to report progress while grinding through a cached page
     JOURNAL_PROGRESS_EVERY = 250
     # seconds to pause every JOURNAL_PROGRESS_EVERY entries, so the GUI and
@@ -1072,6 +1092,17 @@ class SMSWindowManagerClass(NSObject):
         path = ApplicationData.get('journal/%s' % account.id)
         makedirs(path)
         return path
+
+    @objc.python_method
+    def journalSinceWindow(self):
+        """The `since` a cursor-less first sync asks from, as an ISO timestamp.
+
+        Shaped like the timestamps the websocket clients send (a JavaScript
+        Date through JSON), because that is the format the storage layer has
+        always been fed.
+        """
+        when = datetime.datetime.utcnow() - datetime.timedelta(days=365 * self.JOURNAL_SINCE_YEARS)
+        return when.isoformat(timespec='milliseconds') + 'Z'
 
     @objc.python_method
     def _journalFileName(self, messages):
@@ -1126,7 +1157,10 @@ class SMSWindowManagerClass(NSObject):
 
         while pages < self.MAX_JOURNAL_PAGES:
             cursor = account.sms.history_last_id
-            url = "%s/%s" % (base_url, cursor) if cursor else base_url
+            if cursor:
+                url = "%s/%s" % (base_url, cursor)
+            else:
+                url = "%s?since=%s" % (base_url, self.journalSinceWindow())
             BlinkLogger().log_debug('Sync conversations from %s' % url)
 
             messages, status = self._fetchJournalPage(account, url)
@@ -1534,7 +1568,8 @@ class SMSWindowManagerClass(NSObject):
         started = time.time()
         BlinkLogger().log_info('Journal sync starting for %s from %s (%s)'
                                % (account.id, account.sms.history_url,
-                                  'after %s' % cursor if cursor else 'from the beginning'))
+                                  'after %s' % cursor if cursor
+                                  else 'since %s' % self.journalSinceWindow()))
 
         pages = entries = 0
         # Released in `finally`, not per exit path: previously a non-401 HTTP
