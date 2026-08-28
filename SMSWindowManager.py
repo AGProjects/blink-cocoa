@@ -2229,13 +2229,22 @@ class SMSWindowManagerClass(NSObject):
             # No /messages to cut: the journal URL is shaped in a way this
             # derivation does not know, and inventing a path from it would
             # be worse than saying so.
-            BlinkLogger().log_info('Cannot derive the file transfer URL from %s; '
-                                   'it will be learned from the first file received'
-                                   % history_url)
+            self._logDerivedTransferURL(account, None,
+                                        'Cannot derive the file transfer URL from %s; it will be '
+                                        'learned from the first file received' % history_url)
             return None
         derived = root + FILE_TRANSFER_PATH
-        BlinkLogger().log_info('File transfer URL derived from the journal URL: %s' % derived)
+        self._logDerivedTransferURL(account, derived,
+                                    'File transfer URL derived from the journal URL: %s' % derived)
         return derived
+
+    @objc.python_method
+    def _logDerivedTransferURL(self, account, derived, message):
+        """Log a derived transfer URL once, not on every derivation."""
+        if self.transfer_url_logged.get(account.id, False) == derived:
+            return
+        self.transfer_url_logged[account.id] = derived
+        BlinkLogger().log_info(message)
 
     @objc.python_method
     def noteFileTransferURL(self, account, body):
