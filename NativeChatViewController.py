@@ -1941,12 +1941,20 @@ class NativeChatViewController(ChatViewController):
         return self.delegate.audio_metadata_for(transfer_id)
 
     @objc.python_method
+    @run_in_gui_thread
     def applyAudioMetadata(self, transfer_id, recording):
         """Attach a waveform that arrived after its bubble was built.
 
         The ordinary case on a live exchange: the transfer lands, the
         bubble is drawn, and the waveform follows a moment later on its
         own message.
+
+        On the GUI thread like every other apply* here, and for the same
+        reason: the waveform arrives on its own SIP message, so this is
+        entered from the notification greenlet, and relaying out the
+        transcript from there resizes views off the main thread -- which
+        AppKit does not report, it aborts the process on
+        ``!view->_hasCachedVisibleRect``.
         """
         if self.messageListView is None:
             return
