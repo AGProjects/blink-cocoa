@@ -2206,8 +2206,9 @@ class SMSWindowManagerClass(NSObject):
         received transfer told us (the server's own URL, stored on the
         account the first time one arrives), what the journal URL implies,
         and nothing. Deriving from the journal URL is a guess about one
-        path segment, so it is only reached before the first transfer and
-        the result is logged.
+        path segment, so the guess is logged -- but only when the answer
+        changes, since this is called per transfer and per composer and was
+        repeating the same line four times in a row.
         """
         try:
             stored = account.sms.file_transfer_url
