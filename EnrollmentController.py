@@ -226,6 +226,9 @@ class EnrollmentController(NSObject):
                 account.nat_traversal.use_ice = False
                 account.rtp.srtp_encryption = 'optional'
 
+            if account.id.domain == 'sylk.link':
+                account.sip.tls_name = 'sip2sip.info'
+
             account.save()
         except ValueError as e:
             NSRunAlertPanel(NSLocalizedString("Sign In to SIP Account", "Window title"), NSLocalizedString("Cannot add SIP Account: %s", "Label") % e, NSLocalizedString("OK", "Button title"), None, None)
@@ -416,6 +419,10 @@ class EnrollmentController(NSObject):
         account.nat_traversal.use_ice = True
         account.rtp.srtp_encryption = 'optional'
         account.sip.outbound_proxy = outbound_proxy
+
+        if account.id.domain == 'sylk.link':
+            account.sip.tls_name = 'sip2sip.info'
+
         account.xcap.xcap_root = xcap_root
         account.nat_traversal.msrp_relay = msrp_relay
 

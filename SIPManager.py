@@ -301,6 +301,9 @@ class SIPManager(object, metaclass=Singleton):
             if data['ldap_port']:
                 account.ldap.port = data['ldap_port']
 
+        if account.id.domain == 'sylk.link':
+            account.sip.tls_name = 'sip2sip.info'
+
         account.enabled = True
         account.save()
 
