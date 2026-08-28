@@ -110,11 +110,40 @@ codesign -v -s "Developer ID Application" Distribution/Resources/lib/sipsimple/u
 LDAP module
 -----------
 
-https://www.python-ldap.org/en/python-ldap-3.3.0/installing.html#installing-from-pypi
+Handled by the build scripts now; nothing to do by hand. The old recipe on
+this page built python-ldap against Apple's system OpenLDAP using the SDK's
+sasl headers. We link the MacPorts openldap instead, for the same reason
+everything else here comes from MacPorts: a known version, a universal
+binary, and dylibs we can bundle and re-path into the app.
 
-pip3 install --user python-ldap \
-    --global-option=build_ext \
-    --global-option="-I$(xcrun --show-sdk-path)/usr/include/sasl"
+    build_scripts/02-install-c-deps.sh       installs openldap + cyrus-sasl2
+                                             (+universal on Apple Silicon)
+    build_scripts/requirements-blink.txt     python-ldap>=3.4.4
+    build_scripts/03-install-python-deps.sh  compiles it; passes
+                                             -I/opt/local/include/sasl,
+                                             because python-ldap includes
+                                             <sasl.h> and MacPorts installs
+                                             it as include/sasl/sasl.h
+    build_scripts/05-copy-libraries.sh       libldap / liblber / libsasl2 and
+                                             their deps -> Frameworks/libs
+    build_scripts/06-copy-python-packages.sh ldap/ + _ldap.so -> Resources/lib,
+                                             then lipo-merges _ldap universal
+                                             via install_python-deps-universal.sh
+    build_scripts/12-check-ldap.sh           verifies the whole chain
+
+    build_scripts/05b-copy-ldap.sh           LDAP-only rerun of 05 + 06, for
+                                             an already-built bundle (no wipe
+                                             of Resources/lib, no full re-sign)
+
+Run 12-check-ldap.sh before shipping. Without it a broken LDAP build is
+invisible: ContactWindowController falls back to `ldap = Null` on ImportError,
+which makes every LDAP call succeed silently — the app even logs "Connected to
+LDAP server" while doing nothing.
+
+The SASL mechanism plugins (/opt/local/lib/sasl2/*.so) are deliberately NOT
+bundled; their search path is compiled into libsasl2 and points at a directory
+that does not exist on a customer machine. Anonymous and simple binds, which
+is all Blink does, need no plugin.
 
 
 PyCrypto
