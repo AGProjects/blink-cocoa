@@ -4672,7 +4672,7 @@
 					"$(PROJECT_DIR)/Distribution/Frameworks/libs",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 9.5.3;
+				MARKETING_VERSION = 9.5.4;
 				ONLY_ACTIVE_ARCH = NO;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				OTHER_CODE_SIGN_FLAGS = "";
@@ -4722,7 +4722,7 @@
 					"$(PROJECT_DIR)/Distribution/Frameworks/libs",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 9.5.3;
+				MARKETING_VERSION = 9.5.4;
 				ONLY_ACTIVE_ARCH = NO;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				OTHER_CODE_SIGN_FLAGS = "";
