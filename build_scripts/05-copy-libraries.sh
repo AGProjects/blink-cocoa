@@ -104,6 +104,73 @@ for l in $extra_libs $gnutls_libs $ldap_libs; do
 done
 
 # ---------------------------------------------------------------------------
+# Minimum-OS guard.
+#
+# MacPorts -- and any ./configure run without an explicit deployment target --
+# stamps LC_BUILD_VERSION with the *build host's* macOS version. A dylib built
+# on macOS 26 and bundled into an app whose deployment target is 13.0 is an
+# unsupported combination: dyld reports "built for macOS 26.0 which is newer
+# than running OS", and, worse, the port's configure step probed the host libc,
+# so references to symbols the deployment target does not have leak into the
+# binary (see the symbol guard below, which only catches the ones we know of).
+#
+# Fix: edit /opt/local/etc/macports/macports.conf and set
+#   macosx_deployment_target  13.0
+# then, for each port reported below:
+#   sudo port -f uninstall <port>
+#   sudo port clean <port>
+#   sudo port install <port>
+# and re-run this script.
+#
+# Override for a one-off build with:  BLINK_MIN_OS=14.0 ./05-copy-libraries.sh
+# ---------------------------------------------------------------------------
+BLINK_MIN_OS="${BLINK_MIN_OS:-13.0}"
+
+ver_num() {
+    echo "$1" | awk -F. '{printf "%d%03d%03d\n", $1, ($2=="" ? 0 : $2), ($3=="" ? 0 : $3)}'
+}
+
+# Prints one minos per architecture slice, from LC_BUILD_VERSION (modern) or
+# LC_VERSION_MIN_MACOSX (pre-10.14 toolchains, e.g. the python.org framework).
+minos_of() {
+    otool -l "$1" 2>/dev/null | awk '
+        $1 == "cmd" && $2 == "LC_BUILD_VERSION"      { want = "minos";   next }
+        $1 == "cmd" && $2 == "LC_VERSION_MIN_MACOSX" { want = "version"; next }
+        want != "" && $1 == want                     { print $2; want = "" }'
+}
+
+echo "Checking bundled binaries target macOS $BLINK_MIN_OS or older ..."
+min_allowed=$(ver_num "$BLINK_MIN_OS")
+minos_failed=0
+while IFS= read -r macho; do
+    case "$(file -b "$macho" 2>/dev/null)" in
+        *Mach-O*) ;;
+        *) continue ;;
+    esac
+    for v in $(minos_of "$macho"); do
+        if [ "$(ver_num "$v")" -gt "$min_allowed" ]; then
+            echo "  BUILT TOO NEW: minos $v  in  $macho"
+            minos_failed=1
+        fi
+    done
+done < <(find Frameworks -type f)
+
+if [ "$minos_failed" -ne 0 ]; then
+    cat <<EOF
+
+ERROR: one or more bundled binaries were built for a macOS newer than
+$BLINK_MIN_OS, the deployment target of the .app. Rebuild them with
+
+  macosx_deployment_target  $BLINK_MIN_OS
+
+in /opt/local/etc/macports/macports.conf (see the comment above this check),
+then re-run 05-copy-libraries.sh.
+EOF
+    exit 1
+fi
+echo "OK -- every bundled binary targets macOS $BLINK_MIN_OS or older."
+
+# ---------------------------------------------------------------------------
 # Symbol-availability guard.
 #
 # Apple adds libc symbols over time. If a bundled dylib was built on a host
@@ -114,7 +181,11 @@ done
 #   dlopen(<lib>): Symbol not found: _<symbol>
 #
 # Known offenders:
-#   _strchrnul   added macOS 15.4 (Apr 2024)   — libidn2, p11-kit, gnutls
+#   _strchrnul                          added macOS 15.4  — libidn2, p11-kit, gnutls
+#   _os_sync_wait_on_address            added macOS 14.4
+#   _os_sync_wake_by_address_any/_all   added macOS 14.4
+#   _pthread_jit_write_with_callback_np added macOS 14.2
+#   _mach_vm_range_create               added macOS 15.0
 #
 # Fix: set macosx_deployment_target in /opt/local/etc/macports/macports.conf
 # (or pass ac_cv_func_<symbol>=no to the offending port's configure), then
@@ -123,7 +194,7 @@ done
 #
 # Add new symbols to forbidden_symbols below as Apple ships them.
 # ---------------------------------------------------------------------------
-forbidden_symbols="_strchrnul"
+forbidden_symbols="_strchrnul _os_sync_wait_on_address _os_sync_wake_by_address_any _os_sync_wake_by_address_all _pthread_jit_write_with_callback_np _mach_vm_range_create"
 
 echo "Checking bundled dylibs for libc symbols that fail on older macOS ..."
 guard_failed=0
@@ -147,7 +218,7 @@ customer whose macOS predates the symbol's introduction.
 
 Fix (recommended — global):
   Edit /opt/local/etc/macports/macports.conf and set, e.g.:
-    macosx_deployment_target  14.0
+    macosx_deployment_target  13.0
   Then for each offending port:
     sudo port -f uninstall <port>
     sudo port clean <port>

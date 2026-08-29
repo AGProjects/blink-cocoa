@@ -204,6 +204,13 @@ if [ "$(uname -s)" = "Darwin" ] && uname -v | grep -q ARM64; then
     echo "Apple Silicon detected — building universal (arm64;x86_64)."
 fi
 
+# bcg729 is not a MacPorts port, so macports.conf's macosx_deployment_target
+# does not reach it: without this, cmake stamps LC_BUILD_VERSION with the
+# build host's macOS and 05-copy-libraries.sh's minOS guard rejects the dylib.
+# Keep in sync with BLINK_MIN_OS there.
+BLINK_MIN_OS="${BLINK_MIN_OS:-13.0}"
+echo "Building bcg729 for macOS $BLINK_MIN_OS or later."
+
 cmake -B build -S . \
     -DCMAKE_INSTALL_PREFIX="$PREFIX" \
     -DCMAKE_BUILD_TYPE=Release \
@@ -211,6 +218,7 @@ cmake -B build -S . \
     -DENABLE_TESTS=NO \
     -DCMAKE_INSTALL_NAME_DIR="$PREFIX/lib" \
     -DCMAKE_MACOSX_RPATH=OFF \
+    -DCMAKE_OSX_DEPLOYMENT_TARGET="$BLINK_MIN_OS" \
     "${CMAKE_ARCH_ARGS[@]}" \
     >/dev/null || skip "cmake configure failed"
 
