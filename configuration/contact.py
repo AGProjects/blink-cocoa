@@ -53,6 +53,17 @@ class BlinkContactExtension(ContactExtension):
     preferred_media = SharedSetting(type=str, default='audio')
     disable_smileys = SharedSetting(type=Boolean, default=False)
     disable_chat_history = Setting(type=Boolean, nillable=True)
+    # Which language this contact's composer spell checks in.
+    #
+    # None means nothing was chosen, and the conversation keeps the
+    # behaviour it has today: checked against the language macOS identifies
+    # by itself. 'off' means no spell checking at all, 'auto' is that same
+    # identification chosen deliberately, and anything else is a code out of
+    # NSSpellChecker's availableLanguages ('nl', 'en_GB', ...). Local, not a
+    # SharedSetting: the mobile client has no such notion, and there is
+    # no reason to push a keyboard preference of this machine into the
+    # XCAP document every other device reads.
+    chat_language = Setting(type=str, default=None, nillable=True)
     silence_notifications = Setting(type=Boolean, default=False)
     public_key = Setting(type=str, default=None, nillable=True)
     public_key_checksum = Setting(type=str, default=None, nillable=True)

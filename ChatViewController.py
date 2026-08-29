@@ -28,9 +28,11 @@ import time
 import urllib.request, urllib.parse, urllib.error
 
 from AppKit import (NSBitmapImageRep, NSCommandKeyMask, NSDragOperationNone,
-                    NSDragOperationCopy, NSFilenamesPboardType,
+                    NSDragOperationCopy, NSFilenamesPboardType, NSMenu,
+                    NSMenuItem, NSOffState, NSOnState,
                     NSPasteboard, NSPasteboardTypePNG, NSPasteboardTypeTIFF,
-                    NSShiftKeyMask, NSTextDidChangeNotification, NSURLPboardType)
+                    NSShiftKeyMask, NSSpellChecker, NSTextDidChangeNotification,
+                    NSURLPboardType)
 try:
     from AppKit import NSPNGFileType
 except ImportError:
@@ -38,7 +40,7 @@ except ImportError:
     # constant itself, and it is only ever handed straight back to AppKit --
     # not worth a composer that refuses to load.
     NSPNGFileType = 4
-from Foundation import NSArray, NSDate, NSLocalizedString, NSMakeRange, NSNotificationCenter, NSObject, NSTextView, NSTimer, NSURL
+from Foundation import NSArray, NSDate, NSLocale, NSLocalizedString, NSMakeRange, NSNotificationCenter, NSObject, NSTextView, NSTimer, NSURL
 
 from SmileyManager import SmileyManager
 from util import escape_html, run_in_gui_thread
@@ -57,6 +59,21 @@ TYPING_IDLE_TIMEOUT = 5
 
 # if user is typing, is-composing notifications will be sent in the following interval
 TYPING_NOTIFY_INTERVAL = 30
+
+# What language the shared spell checker is currently set to, as far as we
+# know.
+#
+# macOS keeps one NSSpellChecker for the whole application -- the language is
+# a property of that checker, not of a text view -- so "a language per chat"
+# can only mean "the language the checker holds while this chat's composer has
+# the keyboard". Every composer re-asserts its own language when it takes
+# focus and while it is typed into; this remembers what was asserted last so
+# the common case costs a string comparison instead of a round trip into
+# AppKit. '' means no chat has claimed it yet.
+_active_spell_language = ''
+
+# Identifies our own item in the composer's contextual menu.
+CHAT_LANGUAGE_MENU_TAG = 8901
 
 
 _url_pattern = re.compile("((?:http://|https://|sip:|sips:)[^ )<>\r\n]+)")
@@ -184,6 +201,9 @@ def pasteboard_can_attach(pboard=None):
 class ChatInputTextView(NSTextView):
     owner = None
     maxLength = None
+    # The language for a conversation with no contact to store it on. Lives
+    # as long as the window does.
+    sessionLanguage = ''
 
     def dealloc(self):
         objc.super(ChatInputTextView, self).dealloc()
@@ -267,6 +287,8 @@ class ChatInputTextView(NSTextView):
             action = item.action()
             if action in ('paste:', b'paste:') and self._canPasteAsTransfer():
                 return True
+            if action in ('selectChatLanguage:', b'selectChatLanguage:'):
+                return True
         except Exception:
             pass
         try:
@@ -319,6 +341,7 @@ class ChatInputTextView(NSTextView):
         return True
 
     def keyDown_(self, event):
+        self._applyChatLanguage()
         if event.keyCode() == 36 and (event.modifierFlags() & NSShiftKeyMask):
             self.insertText_('\r\n')
         elif (event.modifierFlags() & NSCommandKeyMask):
@@ -327,6 +350,210 @@ class ChatInputTextView(NSTextView):
                 self.owner.delegate.sessionController.info_panel.toggle()
         elif self.isEditable():
             objc.super(ChatInputTextView, self).keyDown_(event)
+
+    # -- The language this conversation is written in -------------------------
+    #
+    # Spell checking and autocorrect in a chat client are only useful if they
+    # follow the person being written to: the same machine writes Dutch to one
+    # contact and English to the next, and a checker that guesses from a
+    # half-typed line gets it wrong precisely when the line is short, which in
+    # a chat is always. So the language is stored on the contact and asserted
+    # by whichever composer has the keyboard.
+    #
+    # Chosen from the composer's own contextual menu, and nothing changes for
+    # a conversation nobody has chosen for: those keep macOS guessing, which
+    # is what they do today.
+
+    def becomeFirstResponder(self):
+        became = objc.super(ChatInputTextView, self).becomeFirstResponder()
+        if became:
+            self._applyChatLanguage()
+        return became
+
+    @objc.python_method
+    def _languageContact(self):
+        """The stored contact whose language this composer follows.
+
+        None for a conversation with nothing to store it on -- an unknown URI,
+        a bonjour peer, a conference room -- which then keeps its language for
+        as long as the window is open and no longer.
+        """
+        owner = self.owner
+        delegate = getattr(owner, 'delegate', None) if owner is not None else None
+        if delegate is None:
+            return None
+        blink_contact = getattr(delegate, 'contact', None)
+        if blink_contact is None:
+            session = getattr(delegate, 'sessionController', None)
+            blink_contact = getattr(session, 'contact', None)
+        contact = getattr(blink_contact, 'contact', None)
+        if contact is None or not hasattr(contact, 'chat_language'):
+            return None
+        return contact
+
+    @objc.python_method
+    def chatLanguage(self):
+        """What this conversation is set to.
+
+        '' when nothing was chosen, 'off', 'auto', or a spell checker
+        language code.
+        """
+        contact = self._languageContact()
+        if contact is not None:
+            try:
+                return contact.chat_language or ''
+            except Exception:
+                return ''
+        return self.sessionLanguage or ''
+
+    @objc.python_method
+    def setChatLanguage(self, language):
+        language = str(language) if language else ''
+        self.sessionLanguage = language
+        contact = self._languageContact()
+        if contact is None:
+            return
+        try:
+            contact.chat_language = language or None
+            contact.save()
+        except Exception as e:
+            BlinkLogger().log_error('Cannot save the chat language: %s' % e)
+
+    @objc.python_method
+    def _applyChatLanguage(self):
+        """Put this conversation's language on the shared spell checker.
+
+        Called on every path that can bring text into this view, because the
+        checker is shared: the composer next door may have pointed it at
+        another language since this one last typed.
+
+        A conversation nobody has chosen a language for keeps exactly the
+        behaviour it has today -- whatever the nib turned on, checked against
+        the language macOS identifies -- so this only ever asserts the
+        automatic setting back, never the checking itself. Off and a named
+        language are deliberate choices, and those do switch the composer.
+        """
+        global _active_spell_language
+
+        try:
+            wanted = self.chatLanguage()
+        except Exception:
+            return
+
+        if wanted == 'off':
+            if self.isContinuousSpellCheckingEnabled():
+                self.setContinuousSpellCheckingEnabled_(False)
+            if self.isAutomaticSpellingCorrectionEnabled():
+                self.setAutomaticSpellingCorrectionEnabled_(False)
+            return
+
+        language = wanted or 'auto'
+        if language != _active_spell_language:
+            checker = NSSpellChecker.sharedSpellChecker()
+            try:
+                if language == 'auto':
+                    checker.setAutomaticallyIdentifiesLanguages_(True)
+                else:
+                    checker.setAutomaticallyIdentifiesLanguages_(False)
+                    if not checker.setLanguage_(language):
+                        BlinkLogger().log_warning('No spell checking dictionary for %s' % language)
+                _active_spell_language = language
+            except Exception as e:
+                BlinkLogger().log_error('Cannot set the spell checking language: %s' % e)
+                return
+            # What is already in the composer was marked up against the old
+            # language, and AppKit does not revisit it on its own.
+            if self.isContinuousSpellCheckingEnabled():
+                self.setContinuousSpellCheckingEnabled_(False)
+                self.setContinuousSpellCheckingEnabled_(True)
+
+        if not wanted:
+            return
+
+        if not self.isContinuousSpellCheckingEnabled():
+            self.setContinuousSpellCheckingEnabled_(True)
+        if not self.isAutomaticSpellingCorrectionEnabled():
+            self.setAutomaticSpellingCorrectionEnabled_(True)
+
+    @objc.python_method
+    def _languageDisplayName(self, code, locale):
+        """'nl' -> 'Dutch', 'en_GB' -> 'English (United Kingdom)'.
+
+        Spell checker codes are locale identifiers, so the locale can name
+        them; anything it will not name is shown as the code itself rather
+        than dropped, because a dictionary the user has installed should
+        appear in the menu whatever it is called.
+        """
+        identifier = code.replace('-', '_')
+        for selector in ('localizedStringForLocaleIdentifier_', 'localizedStringForLanguageCode_'):
+            method = getattr(locale, selector, None)
+            if method is None:
+                continue
+            try:
+                name = method(identifier)
+            except Exception:
+                name = None
+            if name:
+                return name
+        return code
+
+    @objc.python_method
+    def _chatLanguageMenu(self):
+        current = self.chatLanguage() or 'auto'
+        menu = NSMenu.alloc().init()
+        menu.setAutoenablesItems_(False)
+
+        def add(title, value):
+            item = menu.addItemWithTitle_action_keyEquivalent_(title, 'selectChatLanguage:', '')
+            item.setTarget_(self)
+            item.setRepresentedObject_(value)
+            item.setEnabled_(True)
+            item.setState_(NSOnState if value == current else NSOffState)
+
+        add(NSLocalizedString("Off", "Menu item"), 'off')
+        add(NSLocalizedString("Automatic", "Menu item"), 'auto')
+        menu.addItem_(NSMenuItem.separatorItem())
+
+        locale = NSLocale.currentLocale()
+        try:
+            languages = list(NSSpellChecker.sharedSpellChecker().availableLanguages() or [])
+        except Exception as e:
+            BlinkLogger().log_error('Cannot list the spell checking languages: %s' % e)
+            languages = []
+        names = dict((code, self._languageDisplayName(code, locale)) for code in languages)
+        for code in sorted(languages, key=lambda c: names[c].lower()):
+            add(names[code], code)
+        return menu
+
+    def menuForEvent_(self, event):
+        try:
+            menu = objc.super(ChatInputTextView, self).menuForEvent_(event)
+        except Exception:
+            menu = None
+        if menu is None:
+            menu = NSMenu.alloc().init()
+        try:
+            # NSTextView hands back a menu it owns, and a second right click
+            # gets the same object: without this the submenu would be appended
+            # once per click.
+            item = menu.itemWithTag_(CHAT_LANGUAGE_MENU_TAG)
+            if item is None:
+                menu.addItem_(NSMenuItem.separatorItem())
+                item = menu.addItemWithTitle_action_keyEquivalent_(
+                    NSLocalizedString("Chat Language", "Menu item"), None, '')
+                item.setTag_(CHAT_LANGUAGE_MENU_TAG)
+            item.setSubmenu_(self._chatLanguageMenu())
+        except Exception as e:
+            BlinkLogger().log_error('Cannot build the chat language menu: %s' % e)
+        return menu
+
+    def selectChatLanguage_(self, sender):
+        try:
+            language = sender.representedObject()
+        except Exception:
+            return
+        self.setChatLanguage(language)
+        self._applyChatLanguage()
 
 
 class ChatViewController(NSObject):
