@@ -428,6 +428,12 @@ class SMSViewController(NSObject):
             # could be made. Read by a caller that owns a temporary file
             # and has to know whether the transfer is still reading it.
             self.last_transfer_source = None
+            # Which road that transfer took: 'web' for an upload to the
+            # account's file transfer service, 'msrp' for one offered
+            # directly to the other party. The two are not interchangeable
+            # to a caller -- only the first leaves a message in the
+            # conversation for a companion message to refer to.
+            self.last_transfer_route = None
             # Lifecycle breadcrumbs already posted, keyed session:kind, so
             # a signal that arrives twice (live and then again on journal
             # replay, or from two of our devices) writes one note only.
@@ -1173,8 +1179,15 @@ class SMSViewController(NSObject):
                 self.sendIMDNNotification(id, 'delivered')
 
             if not is_replication_message and not window.isKeyWindow() and status != 'displayed':
-                nc_body = html2txt(content) if is_html else content
                 from SMSWindowManager import SMSWindowManager
+                # Not the raw body. A file transfer arrives as an envelope
+                # -- Sylk JSON, or GSMA RCS FT-HTTP XML -- and the bubble
+                # renders it into a line about the file; a banner posting
+                # the content verbatim shows the user the XML instead.
+                # _notificationBody is that rendering, shared with the
+                # no-conversation-open path, and it handles HTML, PGP
+                # ciphertext and location envelopes on the same grounds.
+                nc_body = SMSWindowManager()._notificationBody(content, content_type)
                 nc_title, nc_icon = SMSWindowManager().notificationIdentity(
                     self.remote_uri, self.display_name)
                 NSApp.delegate().notify_new_message(nc_title, nc_body, None,
@@ -1850,10 +1863,38 @@ class SMSViewController(NSObject):
 
     @objc.python_method
     def canSendFiles(self):
-        """True when this account has somewhere to upload to."""
+        """True when this conversation has a way to send a file at all.
+
+        Two roads, and only one of them needs a server: an upload to the
+        account's file transfer service, or an MSRP transfer offered
+        straight to the other party. An account with nowhere to upload to
+        -- a Bonjour neighbour, a plain SIP proxy -- still has the second,
+        so answering "no" on a missing upload URL greyed out the paperclip
+        for exactly the conversations where MSRP is the only road there is.
+        """
         try:
             from SMSWindowManager import SMSWindowManager
-            return bool(SMSWindowManager().fileTransferBaseURL(self.account))
+            if SMSWindowManager().fileTransferBaseURL(self.account):
+                return True
+        except Exception:
+            pass
+        return self.canSendFilesOverMSRP()
+
+    @objc.python_method
+    def canSendFilesOverMSRP(self):
+        """Whether a file can be offered to the other party over MSRP.
+
+        Needs somewhere to offer it to and a build that carries file
+        transfer streams; the other end being online is not knowable from
+        here, and an MSRP transfer that nobody answers at least fails in
+        front of the user.
+        """
+        if self.target_uri is None:
+            return False
+        try:
+            return bool(NSApp.delegate().contactsWindowController
+                        .sessionControllersManager
+                        .isMediaTypeSupported('file-transfer'))
         except Exception:
             return False
 
@@ -1885,6 +1926,12 @@ class SMSViewController(NSObject):
         transfer_id = self.sendFile(path, duration=duration)
         if transfer_id is None:
             return None
+        if self.last_transfer_route == 'msrp':
+            # An MSRP transfer carries the file and nothing else: there is
+            # no envelope in the conversation for a companion message to
+            # refer to, and the other end receives a plain audio file. The
+            # take stays where it is -- the transfer is reading it.
+            return self.last_transfer_source
         if peaks and (peaks.get('l') or peaks.get('r')):
             self.send_audio_peaks(transfer_id, peaks)
         return self.last_transfer_source
@@ -1936,11 +1983,12 @@ class SMSViewController(NSObject):
 
         base = SMSWindowManager().fileTransferBaseURL(self.account)
         if not base:
-            self.log_error('No file transfer service is configured for %s' % self.account.id)
-            self.chatViewController.showSystemMessage(
-                NSLocalizedString("This account has no file transfer service", "Label"),
-                ISOTimestamp.now(), is_error=True)
-            return None
+            # No upload service on this account -- a Bonjour neighbour has
+            # none by definition, and neither does a plain SIP proxy. That
+            # is not "this file cannot be sent": it is the case MSRP was
+            # made for, so the file is offered to the other party directly
+            # rather than the conversation refusing it.
+            return self._sendFileOverMSRP(path)
 
         # The filename travels in a URL and becomes a path on the other
         # side, so the same normalisation mobile applies is applied here:
@@ -1978,9 +2026,56 @@ class SMSViewController(NSObject):
         # caller holding a temporary file needs to know which of the two
         # it just handed over before deleting anything.
         self.last_transfer_source = stored
+        self.last_transfer_route = 'web'
         self._showOutgoingTransfer(meta, timestamp, stored)
         self._uploadTransfer(meta, stored, timestamp)
         return transfer_id
+
+    @objc.python_method
+    def _sendFileOverMSRP(self, path):
+        """Offer a file straight to the other party. True, or None.
+
+        The road for an account with no file transfer service. There is
+        no message to file and no bubble to draw -- an MSRP transfer is a
+        session with the other end, not an envelope left on a server for
+        it to fetch -- so the transcript gets a note saying the file went
+        that way and the File Transfers window shows it moving.
+
+        Returns True rather than a transfer id because there is no id in
+        this conversation to return: nothing here refers to an MSRP
+        transfer afterwards.
+        """
+        name = os.path.basename(path)
+
+        if not self.canSendFilesOverMSRP():
+            self.log_error('No file transfer service is configured for %s and '
+                           'file transfers are disabled' % self.account.id)
+            self.chatViewController.showSystemMessage(
+                NSLocalizedString("This account has no file transfer service", "Label"),
+                ISOTimestamp.now(), is_error=True)
+            return None
+
+        self.log_info('%s has no file transfer service; sending %s to %s over MSRP'
+                      % (self.account.id, name, self.remote_uri))
+        try:
+            NSApp.delegate().contactsWindowController.sessionControllersManager \
+                .send_files_to_contact(self.account, self.target_uri, [path])
+        except Exception as e:
+            self.log_error('Cannot send %s over MSRP: %s' % (name, e))
+            self.chatViewController.showSystemMessage(
+                NSLocalizedString("Cannot send %s", "Label") % name,
+                ISOTimestamp.now(), is_error=True)
+            return None
+
+        self.last_transfer_route = 'msrp'
+        # Read where it lies: nothing was copied into the transfer cache,
+        # so a caller holding a temporary file must keep it until the
+        # transfer has finished with it.
+        self.last_transfer_source = path
+        self.chatViewController.showSystemMessage(
+            NSLocalizedString("Sending %s directly to the other party", "Label") % name,
+            ISOTimestamp.now())
+        return True
 
     @objc.python_method
     def _showOutgoingTransfer(self, meta, timestamp, path):

@@ -3113,17 +3113,40 @@ class SMSWindowManagerClass(NSObject):
 
     @objc.python_method
     def _notificationBody(self, content, content_type):
-        """Short preview for the system notification. Never leaks ciphertext."""
+        """Short preview for the system notification. Never leaks ciphertext.
+
+        The single place a message becomes banner text, for every path
+        that posts one -- the no-conversation-open path here and the open
+        but unfocused viewer in SMSViewController. A banner is the one
+        place a message is shown without a bubble to draw it, so anything
+        whose meaning lives in its markup rather than its characters has
+        to be turned into words here or it is shown to the user as wire
+        format: a file transfer as its GSMA XML, an HTML message as its
+        tags, a location as a JSON envelope.
+        """
         from MessageHost import file_transfer_summary
-        body = content.decode() if isinstance(content, bytes) else (content or '')
+        try:
+            body = content.decode() if isinstance(content, bytes) else (content or '')
+        except UnicodeDecodeError:
+            return NSLocalizedString("Message", "Label")
         if body.strip().startswith('-----BEGIN PGP MESSAGE-----'):
             return NSLocalizedString("Encrypted message", "Label")
         if content_type in (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE):
             return NSLocalizedString("Location", "Label")
+        # Both spellings of a transfer -- the Sylk JSON envelope and the
+        # GSMA RCS FT-HTTP XML -- resolve to the same one-line description
+        # of the file. Tried whatever the content type says, because a
+        # transfer also reaches here as text/plain from senders that do
+        # not label it.
         summary = file_transfer_summary(body)
         if summary is not None:
             return summary.split('\n')[0]
-        body = body.strip().replace('\n', ' ')
+        if content_type == 'text/html':
+            from util import html2txt
+            body = html2txt(body)
+        body = ' '.join(body.split())
+        if not body:
+            return NSLocalizedString("Message", "Label")
         return body[:120] + ('...' if len(body) > 120 else '')
 
     @objc.python_method
