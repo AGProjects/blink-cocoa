@@ -89,7 +89,7 @@ except ImportError:
 
 from AudioPlayback import (AUDIO_CHANNELS, channel_peaks, has_spectrum,
                            level_at, spectrum_frame)
-from MessageHost import file_transfer_summary
+from MessageHost import file_transfer_summary, load_trace_tick, load_trace_bucket
 from VideoPlayback import VideoPlayback
 from application.system import makedirs
 
@@ -1968,8 +1968,10 @@ class MessageBubbleView(NSView):
             if self.kind == self.KIND_LOCATION and self.location_status:
                 self._body_field.setAttributedStringValue_(self._locationCaption())
                 return
+            _t = load_trace_tick()
             body = attributed_body(self.content, self.is_html, self.expand_smileys,
                                    self.font_size, self.textColor())
+            load_trace_bucket('-- attributed body', _t)
             body = self._colouredWarningLine(body)
             if self.found:
                 try:
@@ -3202,6 +3204,21 @@ class MessageBubbleView(NSView):
         if abs(width - self._laid_out_width) < 0.5 and signature == self._laid_out_signature:
             return NSMakeSize(width, self.frame().size.height)
 
+        _t = load_trace_tick()
+        try:
+            return self._layoutForWidth(width, signature)
+        finally:
+            load_trace_bucket('measure (miss)', _t)
+
+    @objc.python_method
+    def _layoutForWidth(self, width, signature):
+        """Measure and place everything in the bubble at this width.
+
+        Split out of layoutForWidth_ so the cache hit above stays free and
+        the timing wrapper only ever counts real measurement work: this is
+        the expensive half -- one or two text measurements per bubble -- and
+        the transcript runs it over every message on the first layout pass.
+        """
         avail = max(width - MARGIN_LEFT - MARGIN_RIGHT, MIN_BUBBLE_W)
         if self.grid_mode:
             # A tile owns its whole cell, and the cell can be narrower than

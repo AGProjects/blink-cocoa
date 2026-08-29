@@ -1749,6 +1749,8 @@ class MessagePaneController(NSObject):
             self._setInfoLine(None)
             return
 
+        from MessageHost import load_trace_tick, load_trace_bucket
+        _t = load_trace_tick()
         content = self._content_views.get(viewer)
         if content is not None:
             content.setFrame_(self.conversationContainer.bounds())
@@ -1764,8 +1766,18 @@ class MessagePaneController(NSObject):
                 BlinkLogger().log_error('Cannot lay out the composer for %s: %s'
                                         % (viewer.remote_uri, e))
 
-        self.nameLabel.setStringValue_(self.contactNameFor(viewer))
-        self._loadAvatarFor(viewer)
+        load_trace_bucket('- show content', _t)
+        _t = load_trace_tick()
+        # Resolved once and used twice: the header label and the avatar's
+        # initials are the same name, and working it out walks the address
+        # book.
+        name = self.contactNameFor(viewer)
+        load_trace_bucket('-- contact name', _t)
+        _t = load_trace_tick()
+        self.nameLabel.setStringValue_(name)
+        self._loadAvatarFor(viewer, name)
+        load_trace_bucket('- avatar', _t)
+        _t = load_trace_tick()
         # Opening a conversation with no key for the other party is the one
         # moment worth asking the server for one: the user is about to
         # write to this address, and a key that arrives turns the lock
@@ -1779,12 +1791,17 @@ class MessagePaneController(NSObject):
         except Exception as e:
             BlinkLogger().log_error('Cannot look up the public key of %s: %s'
                                     % (getattr(viewer, 'remote_uri', None), e))
+        load_trace_bucket('- key request', _t)
+        _t = load_trace_tick()
         self.updateEncryptionWidgets(viewer)
         self.updateLocationButton(viewer)
         self.updateCallButton(viewer)
+        load_trace_bucket('- header widgets', _t)
+        _t = load_trace_tick()
         # Last: the pill is placed against the end of the address, and how
         # much room the line has depends on which buttons ended up visible.
         self._setInfoLine(viewer)
+        load_trace_bucket('- info line', _t)
 
         if self.isConversationVisible(viewer):
             self.conversationBecameVisible(viewer)
@@ -1800,7 +1817,10 @@ class MessagePaneController(NSObject):
         uri = str(getattr(viewer, 'remote_uri', '') or '')
         try:
             from SMSWindowManager import SMSWindowManager
-            contact = SMSWindowManager().getContact(uri)
+            # Looking, not filing: this runs every time the header is drawn,
+            # and the fallbacks below already cover an address the address
+            # book has never heard of.
+            contact = SMSWindowManager().getContact(uri, create=False)
         except Exception:
             contact = None
         name = getattr(contact, 'name', None) if contact is not None else None
@@ -1863,16 +1883,23 @@ class MessagePaneController(NSObject):
         return str(viewer.remote_uri)
 
     @objc.python_method
-    def _loadAvatarFor(self, viewer):
+    def _loadAvatarFor(self, viewer, name=None):
         """The same avatar the contact list draws, at the same size.
 
         Name as well as path: with no photograph the header shows the
         contact's initials on their own colour, which is what the row they
         clicked to get here shows and what mobile shows.
         """
+        from MessageHost import load_trace_tick, load_trace_bucket
+        if name is None:
+            name = self.contactNameFor(viewer)
         try:
+            _t = load_trace_tick()
             path = self._owner.iconPathForURI(str(viewer.remote_uri))
-            self.avatarView.setAvatarPath(path, self.contactNameFor(viewer))
+            load_trace_bucket('-- icon path', _t)
+            _t = load_trace_tick()
+            self.avatarView.setAvatarPath(path, name)
+            load_trace_bucket('-- set avatar', _t)
         except Exception as e:
             BlinkLogger().log_error('Cannot load the conversation avatar: %s' % e)
             self.avatarView.setAvatar(None, '')

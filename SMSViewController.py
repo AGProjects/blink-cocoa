@@ -70,7 +70,11 @@ from HistoryManager import ChatHistory
 from MessageHost import (FILE_TRANSFER_CONTENT_TYPE,
                          is_renderable_content_type, peaks_metadata,
                          pgp_plaintext, pgp_plaintext_bytes,
-                         peaks_envelope, reply_envelope, reply_metadata)
+                         peaks_envelope, reply_envelope, reply_metadata,
+                         load_trace_key, load_trace_mark, load_trace_note,
+                         load_trace_label, load_trace_arm, load_trace_finish,
+                         load_trace_buckets_to, load_trace_tick,
+                         load_trace_bucket)
 from SylkLocation import (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE,
                           append_track_point,
                           bubble_id as location_bubble_id, ended_label,
@@ -297,6 +301,11 @@ _timestamp_fallbacks = set()
 _public_key_lookups = set()
 
 
+# Distinct from None, which is the real answer "this address belongs to no
+# contact" and is worth caching just as much as a hit.
+_UNRESOLVED = object()
+
+
 @implementer(IObserver)
 class SMSViewController(NSObject):
 
@@ -313,11 +322,23 @@ class SMSViewController(NSObject):
     # the whole rendering stack.
     nib_name = "MessageView"
 
-    # Messages fetched per page, both for the first render and for each
-    # scroll back in time. The transcript measures and stacks views itself,
-    # so a page is cheap; 25 meant a conversation opened showing barely a
-    # screenful.
-    showHistoryEntries = 100
+    # MESSAGES per page -- not rows: renderable_cutoff() turns this into a
+    # timestamp and the fetch takes whatever rows that span holds, so 50 is
+    # 50 bubbles even in a conversation whose recent traffic is mostly
+    # sidecars. It was 100 while a page was counted in rows, where a third
+    # of them might draw nothing.
+    #
+    # Kept small on purpose. Opening a conversation is the one moment the user
+    # is waiting on this application with nothing to look at, and every message
+    # in the page costs a view, an attributed string and a text measurement
+    # before the first pixel. Scrolling back is a different bargain: the
+    # transcript is already on screen and a short wait for older messages is
+    # one the user has asked for.
+    showHistoryEntries = 50
+    # Unknown until the count comes back, which is deliberately after the
+    # first page is drawn. The label says "unknown" for that moment rather
+    # than the render waiting for a full table scan.
+    total_history_messages = -1
     remoteTypingTimer = None
     handle_scrolling = True
     scrollingTimer = None
@@ -338,6 +359,9 @@ class SMSViewController(NSObject):
     private_key = None
     public_key = None
     my_public_key = None
+    # The conversation load trace this viewer reports its phases under, set
+    # while the viewer is built. None whenever nothing is being timed.
+    trace_key = None
     otr_verification_window = None
     public_key_sent = False
     # one lookup per conversation, and only once the user has said something
@@ -386,6 +410,7 @@ class SMSViewController(NSObject):
         self.windowController = value
 
     def initWithAccount_target_name_instance_(self, account, target, display_name, instance_id, selected_contact=None, is_replication_message=False):
+        _t = load_trace_tick()
         self = objc.super(SMSViewController, self).init()
         if self:
             self.keys_path = ApplicationData.get('keys')
@@ -459,8 +484,14 @@ class SMSViewController(NSObject):
             
             self.is_replication_message = is_replication_message
 
+            self.trace_key = load_trace_key(self.remote_uri)
+            load_trace_bucket('-- viewer init head', _t)
+            load_trace_mark(self.trace_key, 'resolve')
+            _t = load_trace_tick()
+
             self.load_remote_public_keys()
             self.load_private_key()
+            load_trace_mark(self.trace_key, 'pgp keys')
 
             try:
                 position = NSApp.delegate().contactsWindowController.accounts.index(self.account)
@@ -480,7 +511,11 @@ class SMSViewController(NSObject):
             self.notification_center.add_observer(self, name='SIPAccountRegistrationDidSucceed', sender=self.account)
             self.notification_center.add_observer(self, name='PGPPublicKeyReceived', sender=self.account)
 
+            load_trace_bucket('-- viewer init body', _t)
+            _t = load_trace_tick()
             NSBundle.loadNibNamed_owner_(self.nibName(), self)
+            load_trace_mark(self.trace_key, 'nib')
+            load_trace_bucket('-- nib load', _t)
 
             # No DNS on open. A conversation that is only read costs
             # nothing; the route is resolved the moment one is actually
@@ -514,7 +549,22 @@ class SMSViewController(NSObject):
         if active == self.pgp_encrypted:
             return
         self.pgp_encrypted = active
-        self.log_info('PGP encryption is %s' % ('available' if active else 'not available'))
+        if active:
+            self.log_info('PGP encryption is available')
+        else:
+            # Three conditions, and the grey lock used to report only that one
+            # of them was false. Which one is the difference between "this
+            # account has no key", "the peer's key never arrived" and "PGP is
+            # switched off for the account" -- three different things to do.
+            missing = []
+            if not pgp_enabled_for_account(self.account):
+                missing.append('PGP is disabled for account %s' % self.account.id)
+            if not self.private_key:
+                missing.append('no private key loaded for %s' % self.account.id)
+            if not self.public_key:
+                missing.append('no public key on file for %s (%s/%s.pubkey)'
+                               % (self.remote_uri, self.keys_path, self.remote_uri))
+            self.log_info('PGP encryption is not available: %s' % '; '.join(missing))
         self.notification_center.post_notification('PGPEncryptionStateChanged', sender=self)
 
     @objc.python_method
@@ -988,16 +1038,55 @@ class SMSViewController(NSObject):
         return True
 
     @objc.python_method
-    def matchesTargetOrInstanceAndAccount(self, target, instance_id, account):
-        that_contact = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(target)
-        this_contact = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(self.target_uri)
+    def matchesTargetOrInstanceAndAccount(self, target, instance_id, account,
+                                          target_contact=_UNRESOLVED):
+        """Is this the conversation for `target` on `account`?
 
+        Ordered cheapest-first, and that ordering is the point. This is asked
+        of EVERY open viewer every time a conversation is opened, and it used
+        to begin by resolving two addresses through the address book -- two
+        scans of every contact in every group, per viewer, before looking at
+        an instance id or an account that would have answered on its own. The
+        cost was quadratic in (conversations open x contacts) and it showed:
+        411 ms to open a conversation late in a session, against 70 ms early.
+
+        `target_contact` lets the caller resolve the target once for the whole
+        sweep instead of once per viewer; the viewer's own contact is cached
+        and dropped when the address book changes.
+        """
         if instance_id is not None and instance_id == self.instance_id:
             return True
 
-        m = (self.target_uri==target or (this_contact and that_contact and this_contact==that_contact)) and self.account==account
-        #self.log_info('Viewer match with target %s and account %s: %s' % (target, account, m))
-        return m
+        # Required by every remaining branch, and free.
+        if self.account != account:
+            return False
+
+        if self.target_uri == target:
+            return True
+
+        # Only now is the address book worth asking: two conversations with
+        # different addresses can still be the same person.
+        if target_contact is _UNRESOLVED:
+            target_contact = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(target)
+        if not target_contact:
+            return False
+        this_contact = self.matchingContact()
+        return bool(this_contact) and this_contact == target_contact
+
+    @objc.python_method
+    def matchingContact(self):
+        """This conversation's address book contact, resolved once.
+
+        Cached because resolving it walks every contact in every group, and
+        nothing about this viewer's address changes for its lifetime. Dropped
+        when the address book changes, which is what keeps a contact edited
+        into (or out of) this conversation from being missed.
+        """
+        contact = self.__dict__.get('_matching_contact', _UNRESOLVED)
+        if contact is _UNRESOLVED:
+            contact = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(self.target_uri)
+            self._matching_contact = contact
+        return contact
 
     @objc.python_method
     def gotMessage(self, sender_identity, id, call_id, direction, content, content_type, is_replication_message=False, window=None,  cpim_imdn_events=None, imdn_timestamp=None, account=None, imdn_message_id=None, from_journal=False, status=None, metadata=None):
@@ -1818,6 +1907,9 @@ class SMSViewController(NSObject):
     @objc.python_method
     def _NH_BlinkContactsHaveChanged(self, sender, data):
         self.bonjour_lookup_enabled = True
+        # The address book moved under us: whichever contact this
+        # conversation resolves to has to be worked out again.
+        self.__dict__.pop('_matching_contact', None)
 
     @objc.python_method
     def _NH_SIPAccountRegistrationDidSucceed(self, sender, data):
@@ -3186,6 +3278,7 @@ class SMSViewController(NSObject):
             self.sendMessage(content, IsComposingDocument.content_type)
 
     def chatViewDidLoad_(self, chatView):
+         load_trace_mark(self.trace_key, 'view ready')
          self.chatViewController.loadingTextIndicator.setStringValue_(NSLocalizedString("Loading previous messages...", "Label"))
          self.chatViewController.loadingProgressIndicator.startAnimation_(None)
          self.replay_history()
@@ -3295,11 +3388,28 @@ class SMSViewController(NSObject):
         try:
             remote_uris = self.history_remote_uris()
 
-            try:
-                self.total_history_messages = self.history.count_messages(remote_uri=remote_uris, media_type=('chat', 'sms'))
-            except Exception as e:
-                self.log_info('Cannot count stored messages: %s' % e)
-                self.total_history_messages = -1
+            # How far back the newest `showHistoryEntries` BUBBLES reach. The
+            # page is then fetched by time rather than by row count, so the
+            # sidecar rows (waveforms, reply links, location ticks) that share
+            # that span still arrive with the messages they belong to, and a
+            # conversation whose recent traffic is mostly sidecars no longer
+            # opens showing six messages out of a hundred fetched rows.
+            page_start = self.history.renderable_cutoff(
+                remote_uri=remote_uris, media_type=('chat', 'sms'),
+                count=self.showHistoryEntries,
+                search_text=self.chatViewController.search_text,
+                before_date=self.oldest_timestamp or self.history_before_date)
+            load_trace_mark(self.trace_key, 'probe')
+            # With a cutoff the page is bounded by TIME, and the count is only
+            # a safety valve. Without one the conversation holds fewer bubbles
+            # than a page, so the valve is what bounds it -- and it must stay
+            # near a page, because a probe that fails for any reason lands
+            # here, and a fallback that fetches ten times the page is worse
+            # than never having probed at all.
+            page_count = (self.showHistoryEntries * 3 if page_start is None
+                          else self.showHistoryEntries * 10)
+            if page_start is None:
+                load_trace_note(self.trace_key, 'no cutoff')
 
             zoom_factor = self.chatViewController.scrolling_zoom_factor
             self.log_info('Replay history with zoom factor %s for %s' % (zoom_factor, ", ".join(remote_uris)))
@@ -3334,11 +3444,13 @@ class SMSViewController(NSObject):
                     self.zoom_period_label = NSLocalizedString("Displaying all messages", "Label")
                     self.chatViewController.setHandleScrolling_(False)
                 
-                results = self.history.get_messages(remote_uri=remote_uris, media_type=('chat', 'sms'), after_date=after_date, before_date=self.oldest_timestamp or self.history_before_date, count=self.showHistoryEntries, search_text=self.chatViewController.search_text)
+                results = self.history.get_messages(remote_uri=remote_uris, media_type=('chat', 'sms'), after_date=after_date or page_start, before_date=self.oldest_timestamp or self.history_before_date, count=page_count, search_text=self.chatViewController.search_text)
             else:
-                results = self.history.get_messages(remote_uri=remote_uris, media_type=('chat', 'sms'), count=self.showHistoryEntries, search_text=self.chatViewController.search_text, before_date=self.oldest_timestamp or self.history_before_date)
+                results = self.history.get_messages(remote_uri=remote_uris, media_type=('chat', 'sms'), after_date=page_start, count=page_count, search_text=self.chatViewController.search_text, before_date=self.oldest_timestamp or self.history_before_date)
 
             messages = [row for row in reversed(results)]
+            load_trace_mark(self.trace_key, 'query')
+            load_trace_note(self.trace_key, '%d rows' % len(messages))
         except Exception:
             import traceback
             traceback.print_exc()
@@ -3347,7 +3459,60 @@ class SMSViewController(NSObject):
             # while we work through the journal. The render method below only
             # consumes the pre-decrypted text.
             decrypted_bodies = self._decrypt_history_messages(messages)
+            load_trace_mark(self.trace_key, 'decrypt')
+            # From here to the end of the trace the per-message buckets are
+            # collected: the render loop and the layout pass that follows it.
+            load_trace_buckets_to(self.trace_key)
+            load_trace_note(self.trace_key, '%d encrypted' % len(decrypted_bodies))
             self.render_history_messages(messages, decrypted_bodies)
+
+            # AFTER the page is on its way to the screen. How many messages
+            # the conversation holds in total is a label -- "1 to 25 of
+            # 5654" -- and counting them is a scan of every row this
+            # conversation ever had. In front of the render it was a scan
+            # the user waited on before seeing anything; behind it, it runs
+            # on the database thread while the transcript draws.
+            try:
+                total = self.history.count_messages(remote_uri=remote_uris, media_type=('chat', 'sms'))
+            except Exception as e:
+                self.log_info('Cannot count stored messages: %s' % e)
+                total = -1
+            self._noteTotalHistoryMessages(total)
+
+    @objc.python_method
+    @run_in_gui_thread
+    def _noteTotalHistoryMessages(self, total):
+        """The conversation's stored-message total has arrived.
+
+        On the GUI thread because it moves the loaded-range label, and it is
+        reached from the history thread once the page has been handed over.
+        """
+        self.total_history_messages = total
+        self.log_debug('Conversation holds %s stored messages'
+                       % ('an unknown number of' if total < 0 else total))
+        try:
+            self.chatViewController.setNeedsHistoryChrome()
+        except AttributeError:
+            pass                        # no renderer yet; the label will be
+                                        # built from this when there is one
+
+    @objc.python_method
+    def _pgp_key_id(self, key):
+        """The short id of a PGP key, for a log line. Never raises."""
+        from MessageHost import pgp_key_id
+        return pgp_key_id(key)
+
+    @objc.python_method
+    def _pgp_key_ids(self, pgp_message):
+        """The key ids a PGP message was encrypted to, sorted.
+
+        This is the half of the answer the old log line never had: whether a
+        message we cannot open was addressed to a key we simply do not hold.
+        The ids are carried in the message's session-key packets, in the
+        clear -- reading them needs no key at all.
+        """
+        from MessageHost import pgp_message_key_ids
+        return pgp_message_key_ids(pgp_message)
 
     @objc.python_method
     def _decrypt_history_messages(self, messages):
@@ -3360,6 +3525,12 @@ class SMSViewController(NSObject):
         """
         decrypted_bodies = {}
         private_key = self.private_key
+        # Reported once per conversation load, not once per message: a page
+        # of history that we hold no key for is one fact, not a hundred.
+        reported_missing = False
+        reported_mismatch = False
+        opened = 0
+        unopened_keys = {}
 
         for message in messages:
             body = message.body
@@ -3371,14 +3542,39 @@ class SMSViewController(NSObject):
                 continue
 
             if not private_key:
-                decrypted_bodies[message.msgid] = ('Encrypted message for which we have no private key', None)
+                if not reported_missing:
+                    reported_missing = True
+                    self.log_info('No PGP private key loaded for account %s: %s has stored '
+                                  'encrypted messages that cannot be opened'
+                                  % (self.account.id, self.remote_uri))
+                decrypted_bodies[message.msgid] = (
+                    'Encrypted message: no private key is loaded for %s' % self.account.id, None)
                 continue
 
             try:
                 pgpMessage = pgpy.PGPMessage.from_blob(stripped)
                 decrypted_message = private_key.decrypt(pgpMessage)
-            except (pgpy.errors.PGPDecryptionError, pgpy.errors.PGPError):
-                decrypted_bodies[message.msgid] = ('Encrypted message for which we have no private key', None)
+            except (pgpy.errors.PGPDecryptionError, pgpy.errors.PGPError) as e:
+                # A key we HOLD that cannot open the message is a different
+                # fault from having no key at all, and it used to be reported
+                # as the same sentence -- which is why "I have no key for
+                # myself" was the symptom of a conversation carrying an
+                # account whose key was never the one it was encrypted to.
+                # The key ids on both sides say so outright.
+                if not reported_mismatch:
+                    reported_mismatch = True
+                    self.log_error('Cannot decrypt stored message %s from %s: %s. '
+                                   'Encrypted to key(s) %s; this conversation holds private key %s '
+                                   'for account %s'
+                                   % (message.msgid, self.remote_uri, e,
+                                      ', '.join(self._pgp_key_ids(pgpMessage)) or 'unknown',
+                                      self._pgp_key_id(private_key) or 'unknown',
+                                      self.account.id))
+                for keyid in (self._pgp_key_ids(pgpMessage) or ['unknown']):
+                    # one entry per key the message was sealed to
+                    unopened_keys[keyid] = unopened_keys.get(keyid, 0) + 1
+                decrypted_bodies[message.msgid] = (
+                    'Encrypted message: the private key of %s cannot open it' % self.account.id, None)
                 continue
 
             text = pgp_plaintext(decrypted_message)
@@ -3386,12 +3582,24 @@ class SMSViewController(NSObject):
                 self.log_info('Decrypted message %s carried no payload' % message.id)
                 continue
 
+            opened += 1
             decrypted_bodies[message.msgid] = (text, 'verified')
 
             try:
                 self.history.update_decrypted_message(message.msgid, text)
             except Exception as e:
                 self.log_error('Failed to persist decrypted message %s: %s' % (message.msgid, str(e)))
+
+        if unopened_keys:
+            # The whole page in one sentence: how many opened, and which keys
+            # the rest were sealed to. A conversation that is half readable is
+            # not a broken key, it is two keys -- and this says so.
+            self.log_info('Encrypted history for %s: %d opened with our key %s; %s'
+                          % (self.remote_uri, opened,
+                             self._pgp_key_id(private_key) or 'unknown',
+                             ', '.join('%d sealed to %s' % (n, keyid)
+                                       for keyid, n in sorted(unopened_keys.items(),
+                                                              key=lambda kv: -kv[1]))))
 
         return decrypted_bodies
 
@@ -3415,7 +3623,7 @@ class SMSViewController(NSObject):
                 if oldest_timestamp < self.oldest_timestamp:
                     self.oldest_timestamp = oldest_timestamp
 
-        self.log_info('Render history started')
+        self.log_debug('Render history started')
         if self.chatViewController.scrolling_zoom_factor:
             if not self.message_count_from_history:
                 self.message_count_from_history = len(messages)
@@ -3476,6 +3684,12 @@ class SMSViewController(NSObject):
         for message in messages:
             #print('Render msg %3d %s before = %s' % (i, message.time, before))
             i = i + 1
+            # Parent of the identity/alloc/configure/insert buckets: whatever
+            # it holds beyond their sum is this loop's own per-row work --
+            # metadata parsing, timestamps, the cpim regex -- plus the
+            # location and file-transfer render paths, which have no buckets
+            # of their own.
+            _row = load_trace_tick()
             try:
                 self.log_debug('Loaded message %d/%d id=%s content_type=%s media_type=%s direction=%s status=%s encryption=%s'
                                % (i, len(messages), message.msgid, message.content_type,
@@ -3736,16 +3950,32 @@ class SMSViewController(NSObject):
                     last_chat_timestamp = timestamp
             except Exception as e:
                 print('Render message exception: %s' % str(e))
+            load_trace_bucket('row (parent)', _row)
 
         try:
             loaded = len(self.chatViewController.rendered_messages)
         except TypeError:
             loaded = 0
-        total = getattr(self, 'total_history_messages', -1)
-        self.log_info('Render history completed: %s messages stored, %d loaded in view'
-                      % ('unknown' if total < 0 else total, loaded))
+        # The stored total is counted after this point now, so it is reported
+        # when it lands rather than as "unknown" on every single load.
+        self.log_info('Render history completed: %d loaded in view' % loaded)
         self.chatViewController.loadingProgressIndicator.stopAnimation_(None)
         self.chatViewController.loadingTextIndicator.setStringValue_("")
+
+        # Bubbles exist but have not been measured yet: the transcript is only
+        # on screen after the coalesced layout pass, so that is what ends the
+        # trace. With nothing to lay out, this is the end.
+        load_trace_note(self.trace_key, '%d drawn' % loaded)
+        load_trace_mark(self.trace_key, 'render')
+        if loaded:
+            load_trace_arm(self.trace_key)
+            try:
+                self.chatViewController.messageListView._load_trace_key = self.trace_key
+            except AttributeError:
+                load_trace_finish(self.trace_key)
+        else:
+            load_trace_label(self.trace_key, 'empty')
+            load_trace_finish(self.trace_key)
 
         if not self.incoming_queue_started:
             self.incoming_queue.start()

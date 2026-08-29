@@ -72,6 +72,7 @@ from KeyEscrow import (escrow_is_missing, install_keypair, log_self_contact,
 from HistoryManager import ChatHistory
 from SMSViewController import SMSViewController, is_otr_wire_text
 from MessageHost import peaks_metadata, reply_metadata
+from MessageHost import load_trace_tick, load_trace_bucket
 from MessageBubbleView import PlaybackStopButton
 from PlaybackMonitor import PLAYBACK_STATE_CHANGED, playback_monitor
 
@@ -1928,13 +1929,24 @@ class SMSWindowManagerClass(NSObject):
         return False
 
     @objc.python_method
-    def getContact(self, uri, addGroup=False):
+    def getContact(self, uri, addGroup=False, create=True):
+        """The address book contact for an address, creating one if needed.
+
+        `create=False` for callers that only want to LOOK: this method files a
+        new Contact when the address is unknown, which is right for a
+        conversation that is being started and wrong for anything that merely
+        draws a name. A header being redrawn used to add a contact -- and a
+        contact added here is saved, synced to XCAP, and comes back on the
+        next launch as one more thing the address book has to reconcile.
+        """
         if self.illegal_uri(uri):
             return None
 
         blink_contact = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(uri)
         if blink_contact is not None:
             contact = blink_contact.contact
+        elif not create:
+            return self._findContactByCanonicalURI(uri)
         else:
             # The model's groupsList only iterates contacts that are
             # already filed in a group. A contact created earlier in
@@ -3621,9 +3633,14 @@ class SMSWindowManagerClass(NSObject):
 
     @objc.python_method
     def _findViewer(self, target, instance_id, account):
+        # Resolved once for the whole sweep rather than once per viewer: the
+        # target does not change while we look, and resolving it means walking
+        # every contact in every group.
+        target_contact = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(target)
         for window in self.windows:
             for viewer in window.viewers:
-                if viewer.matchesTargetOrInstanceAndAccount(target, instance_id, account):
+                if viewer.matchesTargetOrInstanceAndAccount(target, instance_id, account,
+                                                            target_contact):
                     return viewer
         for viewer, host in list(self.viewer_hosts.items()):
             if host is None or host in self.windows:
@@ -3631,7 +3648,8 @@ class SMSWindowManagerClass(NSObject):
             if not self._hostHasViewer(host, viewer):
                 self.viewer_hosts.pop(viewer, None)
                 continue
-            if viewer.matchesTargetOrInstanceAndAccount(target, instance_id, account):
+            if viewer.matchesTargetOrInstanceAndAccount(target, instance_id, account,
+                                                        target_contact):
                 return viewer
         return None
 
@@ -3648,7 +3666,9 @@ class SMSWindowManagerClass(NSObject):
         if display_name and display_name.startswith("sip:"):
             display_name = display_name[4:]
 
+        _t = load_trace_tick()
         viewer = self._findViewer(target, instance_id, account)
+        load_trace_bucket('-- find viewer', _t)
         if viewer is None and create_if_needed:
             viewer = SMSViewController.alloc().initWithAccount_target_name_instance_(account, target, display_name, instance_id, selected_contact, is_replication_message=is_replication_message)
         return viewer

@@ -539,6 +539,11 @@ class ChatMessage(SQLObject):
     id_idx            = DatabaseIndex('msgid')
     local_idx         = DatabaseIndex('local_uri')
     remote_idx        = DatabaseIndex('remote_uri')
+    # Every conversation opens with "the newest rows for these addresses",
+    # which is remote_uri= plus an ORDER BY time. On remote_uri alone SQLite
+    # finds the rows and then sorts them in a temp B-tree -- the whole
+    # conversation, however far back it goes, to show the last page of it.
+    remote_time_idx   = DatabaseIndex('remote_uri', 'time')
     uuid              = StringCol()
     journal_id        = StringCol()
     encryption        = StringCol(default='')
@@ -591,7 +596,7 @@ class ChatMessage(SQLObject):
 
 
 class ChatHistory(object, metaclass=Singleton):
-    __version__ = 10
+    __version__ = 11
 
     def __init__(self):
         path = ApplicationData.get('history')
@@ -793,6 +798,16 @@ class ChatHistory(object, metaclass=Singleton):
                 self.db.queryAll(query)
             except Exception as e:
                 BlinkLogger().log_error("Error adding index related_index: %s" % e)
+
+        if next_upgrade_version < 11:
+            # See remote_time_idx on ChatMessage: opening a conversation was
+            # sorting every message it ever held to show the newest page.
+            query = ("CREATE INDEX IF NOT EXISTS remote_time_index "
+                     "ON chat_messages (remote_uri, time)")
+            try:
+                self.db.queryAll(query)
+            except Exception as e:
+                BlinkLogger().log_error("Error adding index remote_time_index: %s" % e)
 
         TableVersions().set_table_version(ChatMessage.sqlmeta.table, self.__version__)
 
@@ -1173,6 +1188,73 @@ class ChatHistory(object, metaclass=Singleton):
 
     def get_messages(self, msgid=None, call_id=None, local_uri=None, remote_uri=None, media_type=None, date=None, after_date=None, before_date=None, search_text=None, orderBy='time', orderType='desc', count=100):
         return block_on(self._get_messages(msgid, call_id, local_uri, remote_uri, media_type, date, after_date, before_date, search_text, orderBy, orderType, count))
+
+    # Content types that become a bubble. The renderer's own allow-list is
+    # is_renderable_content_type() in MessageHost; this is its SQL shadow,
+    # and it is deliberately NARROWER in one place: it leaves out
+    # application/sylk-message-metadata, because those rows are almost all
+    # sidecars (an audio waveform, a reply link, a live-location tick) that
+    # attach to some other bubble rather than becoming one. Counting them
+    # as messages is what made a page of "100 messages" show six.
+    #
+    # Only ever used to decide HOW FAR BACK a page reaches. The page itself
+    # is then fetched without any content-type condition, so the sidecars
+    # still arrive with the messages they belong to.
+    RENDERABLE_SQL = ("((content_type = 'text' or content_type like 'text/%')"
+                      " and content_type not in ('text/pgp-public-key', 'text/pgp-private-key')"
+                      " or content_type in ('application/sylk-file-transfer',"
+                      " 'application/vnd.gsma.rcs-ft-http+xml',"
+                      " 'application/sylk-location-sharing'))")
+
+    @run_in_db_thread
+    def _renderable_cutoff(self, local_uri, remote_uri, media_type, after_date, before_date, search_text, count):
+        query = 'select time from %s where 1=1' % ChatMessage.sqlmeta.table
+        if local_uri:
+            query += " and local_uri=%s" % ChatMessage.sqlrepr(local_uri)
+        # A single address or a collection of them -- a conversation is filed
+        # under every URI its contact owns, and that arrives as a list.
+        if remote_uri:
+            if isinstance(remote_uri, str):
+                remote_uri = (remote_uri,)
+            query += " and remote_uri in (%s)" % ','.join(ChatMessage.sqlrepr(uri) for uri in remote_uri)
+        if media_type:
+            if isinstance(media_type, str):
+                media_type = (media_type,)
+            query += " and media_type in (%s)" % ','.join(ChatMessage.sqlrepr(media) for media in media_type)
+        if search_text:
+            query += " and body like %s" % ChatMessage.sqlrepr('%' + search_text + '%')
+        if after_date:
+            query += " and time >= %s" % ChatMessage.sqlrepr(after_date)
+        if before_date:
+            query += " and time < %s" % ChatMessage.sqlrepr(before_date)
+        query += " and %s" % self.RENDERABLE_SQL
+        query += " order by time desc limit 1 offset %d" % max(count - 1, 0)
+
+        try:
+            rows = list(self.db.queryAll(query))
+        except Exception as e:
+            # Loud, because falling back silently means fetching a page sized
+            # in rows again -- which is slower than never having probed.
+            BlinkLogger().log_error("Error probing renderable messages: %s -- query was: %s"
+                                    % (e, query))
+            return None
+        return rows[0][0] if rows else None
+
+    def renderable_cutoff(self, local_uri=None, remote_uri=None, media_type=None,
+                          after_date=None, before_date=None, search_text=None, count=100):
+        """The timestamp of the Nth-newest row that would become a bubble.
+
+        Returns None when the conversation holds fewer than `count` of them,
+        which means "there is no cutoff, take what there is".
+
+        Fetching N rows and drawing whatever survives means a conversation
+        whose recent traffic is mostly sidecars arrives nearly empty, and
+        every discarded row was still queried, decrypted and parsed. Asking
+        first how far back N bubbles reach costs one indexed lookup and lets
+        the page be N messages rather than N rows.
+        """
+        return block_on(self._renderable_cutoff(local_uri, remote_uri, media_type,
+                                                after_date, before_date, search_text, count))
 
     @run_in_db_thread
     def _count_messages(self, local_uri, remote_uri, media_type):

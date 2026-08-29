@@ -68,6 +68,14 @@ __all__ = ['USE_MESSAGE_PANEL',
            'file_transfer_envelope',
            'HOST_PROTOCOL', 'missing_host_protocol_methods', 'assert_conforms',
            'pgp_plaintext', 'pgp_plaintext_bytes',
+           'pgp_key_id', 'pgp_message_key_ids',
+           'install_pgpy_privkey_cache',
+           'TRACE_MESSAGE_LOAD', 'load_trace_now', 'load_trace_key',
+           'load_trace_start', 'load_trace_mark', 'load_trace_note',
+           'load_trace_label', 'load_trace_arm', 'load_trace_layout_done',
+           'load_trace_finish', 'load_trace_cancel',
+           'load_trace_buckets_to', 'load_trace_tick', 'load_trace_bucket',
+           'load_trace_bucket_span',
            'location_summary', 'public_key_short_checksum',
            'file_transfer_category', 'MESSAGE_CATEGORIES']
 
@@ -593,6 +601,35 @@ def pgp_plaintext_bytes(decrypted_message):
         return raw.encode('utf-8')
 
 
+def pgp_key_id(key):
+    """The short id of a PGP key, for a log line. Never raises."""
+    try:
+        return str(key.fingerprint.keyid)
+    except Exception:
+        return None
+
+
+def pgp_message_key_ids(blob):
+    """The key ids a PGP message was encrypted to, sorted.
+
+    Takes armour, bytes or an already-parsed PGPMessage. The ids live in the
+    session-key packets in the clear, so this answers "who was this FOR"
+    without holding any key -- which is the difference between "decryption
+    failed" and "this was sealed to a key this device does not have".
+    """
+    message = blob
+    if not hasattr(message, 'encrypters'):
+        try:
+            import pgpy
+            message = pgpy.PGPMessage.from_blob(blob)
+        except Exception:
+            return []
+    try:
+        return sorted(str(keyid) for keyid in message.encrypters)
+    except Exception:
+        return []
+
+
 def pgp_plaintext(decrypted_message):
     """The same payload as text, with a lossy fallback for odd encodings."""
     data = pgp_plaintext_bytes(decrypted_message)
@@ -602,6 +639,316 @@ def pgp_plaintext(decrypted_message):
         return data.decode('utf-8')
     except UnicodeDecodeError:
         return data.decode('utf-8', errors='replace')
+
+
+def install_pgpy_privkey_cache():
+    """Make PGPy build a private key object once per key, not twice per message.
+
+    PGPy's RSA decryption path asks the key material for a usable key twice
+    for every message it opens -- once for the modulus size, once for the
+    decrypter itself:
+
+        # pgpy/packet/packets.py, PKESessionKeyV3.decrypt_sk()
+        ct = b'\\x00' * ((pk.keymaterial.__privkey__().key_size // 8) - len(ct)) + ct
+        decrypter = pk.keymaterial.__privkey__().decrypt
+
+    and RSAPriv.__privkey__ builds a brand new cryptography RSAPrivateKey on
+    each call: it recomputes the CRT parameters and hands the numbers to
+    OpenSSL, which validates them. For the 4096-bit keys Blink generates that
+    is ~130 ms per call on an M-series Mac -- 260 ms per message, against the
+    ~6 ms the RSA operation itself costs.
+
+    That is what made opening a conversation slow: replaying a page of history
+    decrypts up to 100 stored messages, and a live location share decrypts
+    once per trail point. Measured end to end: 557 ms -> 5.8 ms per message.
+
+    Key material is immutable once parsed, so the built key is cached on the
+    RSAPriv instance. The cache is keyed on the numbers themselves rather than
+    just stored, so material replaced later -- a key generated in place, or one
+    unlocked from a passphrase-protected blob, where d/p/q read zero until then
+    -- rebuilds instead of returning a stale object. Comparing the MPIs costs
+    well under a microsecond against the 130 ms it saves.
+
+    Patching PGPy rather than carrying a fork: the flaw is a two-line property,
+    the extra attribute is invisible to PGPy's own serialisation (which walks
+    __pubfields__/__privfields__, not __dict__), and every decrypt call site in
+    Blink benefits without knowing this happened. Safe to call more than once;
+    returns False only if PGPy is not importable.
+    """
+    try:
+        from pgpy.packet.fields import RSAPriv
+    except ImportError:
+        return False
+
+    if getattr(RSAPriv, '_blink_privkey_cache_installed', False):
+        return True
+
+    build_privkey = RSAPriv.__privkey__
+
+    def __privkey__(self):
+        material = (self.n, self.e, self.d, self.p, self.q)
+        cached = self.__dict__.get('_blink_privkey')
+        if cached is not None and cached[0] == material:
+            return cached[1]
+        privkey = build_privkey(self)
+        self.__dict__['_blink_privkey'] = (material, privkey)
+        return privkey
+
+    RSAPriv.__privkey__ = __privkey__
+    RSAPriv._blink_privkey_cache_installed = True
+    return True
+
+
+# Installed at import time: MessageHost is imported before the first
+# conversation is built, and every PGP decrypt in the app goes through the
+# class this patches.
+install_pgpy_privkey_cache()
+
+
+# ---------------------------------------------------------------------------
+# Conversation load trace
+#
+# One line in activity.txt per conversation the user opens, breaking the wait
+# down into the phases that make it up. It exists because "opening a
+# conversation is slow" is not actionable: the work is spread over four
+# threads and two run loop turns, and which phase dominates depends entirely
+# on what is in the history -- encrypted rows, pictures, location trails.
+#
+# The clock starts where the user's intent does (a contact becomes selected)
+# and stops when the transcript has actually been laid out at its final size,
+# which is the first moment the messages are on screen where they belong.
+# Everything in between is recorded as a delta from the previous mark, so the
+# phases sum to the total and one bad phase is obvious at a glance.
+#
+# Marks are cheap (a monotonic clock read and a list append) and every entry
+# point is a no-op for a key with no open trace, so instrumenting a path that
+# also runs at startup -- where nothing is traced -- costs nothing.
+# ---------------------------------------------------------------------------
+
+# Whether to report the DETAIL -- the phase list and the per-message work
+# breakdown. Off by default: a conversation that opens in 250 ms does not need
+# two dense lines to say so, and the per-message buckets that feed the second
+# one are only collected while this is on. One compact line per conversation
+# opened is reported either way; that one is not a diagnostic, it is the
+# ordinary record of what the pane just did.
+#
+# Set True here, or export BLINK_MESSAGE_LOAD_TRACE=1, to turn the detail on.
+TRACE_MESSAGE_LOAD = False
+
+_load_traces = {}
+# A trace that never reaches its end mark (an exception mid-render, a viewer
+# torn down while loading) would otherwise sit here forever.
+_LOAD_TRACE_STALE = 60.0
+
+
+def _load_trace_enabled():
+    import os
+    if 'BLINK_MESSAGE_LOAD_TRACE' in os.environ:
+        return True
+    return bool(TRACE_MESSAGE_LOAD)
+
+
+_clock = None
+# The trace the fine-grained buckets below are accumulating into, or None when
+# nothing is being traced -- which is the normal state, and the reason a
+# bucketed call site costs one global lookup rather than a clock read.
+_bucket_key = None
+
+
+def load_trace_now():
+    """A monotonic timestamp, for callers that want to start the clock early."""
+    global _clock
+    if _clock is None:
+        import time
+        _clock = time.monotonic
+    return _clock()
+
+
+def load_trace_buckets_to(key):
+    """Send bucket timings to this trace (None to stop collecting)."""
+    global _bucket_key
+    _bucket_key = key if (key and key in _load_traces and _load_trace_enabled()) else None
+
+
+def load_trace_tick():
+    """Start timing a bucket, or None if nothing is being traced.
+
+    The pattern at a call site is two lines and no object:
+
+        _t = load_trace_tick()
+        ... the work ...
+        load_trace_bucket('configure', _t)
+
+    With no trace open this is a global read and a None return, so the
+    instrumentation can sit in the render loop permanently.
+    """
+    if _bucket_key is None:
+        return None
+    return load_trace_now()
+
+
+def load_trace_bucket_span(name, started, ended):
+    """Add a span that was timed before the trace existed.
+
+    Selection resolves the contact and the account before there is a key to
+    file the time under, and that work is part of the wait.
+    """
+    if started is None or ended is None or _bucket_key is None:
+        return
+    trace = _load_traces.get(_bucket_key)
+    if trace is None:
+        return
+    entry = trace['buckets'].get(name)
+    if entry is None:
+        trace['buckets'][name] = [1, ended - started]
+    else:
+        entry[0] += 1
+        entry[1] += ended - started
+
+
+def load_trace_bucket(name, started):
+    """Add one call's worth of time to a named bucket.
+
+    Buckets are for work that happens per message rather than once per open:
+    the phases in the trace line say the render loop took 1.4 s, the buckets
+    say which part of each message that was. A name beginning with '-' is
+    nested inside the bucket above it and is not part of the sum.
+    """
+    if started is None or _bucket_key is None:
+        return
+    trace = _load_traces.get(_bucket_key)
+    if trace is None:
+        return
+    entry = trace['buckets'].get(name)
+    if entry is None:
+        trace['buckets'][name] = [1, load_trace_now() - started]
+    else:
+        entry[0] += 1
+        entry[1] += load_trace_now() - started
+
+
+def load_trace_key(uri):
+    """The key a conversation is traced under: its bare address.
+
+    Selection knows the target as a SIP URI ('sip:alice@example.com'), the
+    viewer knows itself as 'alice@example.com'. Both have to land on the same
+    entry or the phases end up in two half-traces.
+    """
+    text = str(uri or '')
+    for scheme in ('sip:', 'sips:'):
+        if text.startswith(scheme):
+            text = text[len(scheme):]
+            break
+    text = text.split(';')[0].split('?')[0]
+    return text.strip().lower()
+
+
+def load_trace_start(key, label='cold', t0=None):
+    """Begin timing a conversation open. Replaces any trace already under key."""
+    if not key:
+        return
+    now = load_trace_now()
+    for stale, trace in list(_load_traces.items()):
+        if now - trace['t0'] > _LOAD_TRACE_STALE:
+            del _load_traces[stale]
+    global _bucket_key
+    # Buckets are the detailed half, and the only half with a per-message
+    # cost: leave them off unless the detail is wanted.
+    _bucket_key = key if _load_trace_enabled() else None
+    _load_traces[key] = {'t0': t0 if t0 is not None else now,
+                         'last': t0 if t0 is not None else now,
+                         'label': label,
+                         'phases': [],
+                         'notes': [],
+                         'buckets': {},
+                         'armed': False}
+
+
+def load_trace_mark(key, phase):
+    """Close the phase that was running and name it."""
+    trace = _load_traces.get(key)
+    if trace is None:
+        return
+    now = load_trace_now()
+    trace['phases'].append((phase, (now - trace['last']) * 1000.0))
+    trace['last'] = now
+
+
+def load_trace_note(key, text):
+    """Record something about the conversation itself (counts, mostly)."""
+    trace = _load_traces.get(key)
+    if trace is not None:
+        trace['notes'].append(text)
+
+
+def load_trace_label(key, label):
+    """Correct the kind of open this turned out to be (cold / warm / empty)."""
+    trace = _load_traces.get(key)
+    if trace is not None:
+        trace['label'] = label
+
+
+def load_trace_arm(key):
+    """Rendering is done; the next layout pass is the one that ends the trace.
+
+    Needed because layoutMessages() also runs *during* the render loop -- a
+    file transfer bubble forces one every time it attaches -- and those are
+    not the pass that puts the finished transcript on screen.
+    """
+    trace = _load_traces.get(key)
+    if trace is not None:
+        trace['armed'] = True
+
+
+def load_trace_layout_done(key, phase='layout'):
+    """Called by the transcript view when it has finished laying out."""
+    trace = _load_traces.get(key)
+    if trace is None or not trace['armed']:
+        return
+    load_trace_finish(key, phase)
+
+
+def load_trace_finish(key, phase=None):
+    """Stop the clock and write the line."""
+    trace = _load_traces.pop(key, None)
+    if trace is None:
+        return
+    if phase:
+        now = load_trace_now()
+        trace['phases'].append((phase, (now - trace['last']) * 1000.0))
+        trace['last'] = now
+    total = (trace['last'] - trace['t0']) * 1000.0
+    detail = ', '.join('%s %.0f ms' % (name, ms) for name, ms in trace['phases'])
+    notes = (' [%s]' % ', '.join(trace['notes'])) if trace['notes'] else ''
+    global _bucket_key
+    if _bucket_key == key:
+        _bucket_key = None
+    try:
+        from BlinkLogger import BlinkLogger
+        logger = BlinkLogger()
+        # The ordinary record: which conversation, how long it took, and what
+        # it put on screen.
+        logger.log_info('Conversation %s (%s) in %.0f ms%s'
+                        % (key, trace['label'], total, notes))
+        if not _load_trace_enabled():
+            return
+        logger.log_info('Conversation load trace (%s) for %s: %.0f ms total%s -- %s'
+                        % (trace['label'], key, total, notes, detail))
+        if trace['buckets']:
+            # Slowest first: the point of the second line is to name the one
+            # thing worth fixing, not to be read end to end.
+            ranked = sorted(trace['buckets'].items(), key=lambda kv: -kv[1][1])
+            work = ', '.join('%s %.0f ms x%d' % (name, seconds * 1000.0, count)
+                             for name, (count, seconds) in ranked)
+            logger.log_info('Conversation load trace (%s) for %s: work breakdown -- %s'
+                            % (trace['label'], key, work))
+    except Exception:
+        pass
+
+
+def load_trace_cancel(key):
+    """Drop a trace without reporting it (the open was abandoned)."""
+    _load_traces.pop(key, None)
 
 
 def location_summary(latitude, longitude, accuracy=None, maps_url=None,
@@ -783,12 +1130,53 @@ def _rcs_file_transfer_envelope(body):
     return meta
 
 
+_envelope_cache = {}
+_ENVELOPE_CACHE_MAX = 1024
+
+
 def file_transfer_envelope(body):
     """A file transfer's details, whichever wire format described it.
 
     Returns None when `body` is not a file transfer, so callers can fall
     through to their normal text handling.
+
+    Memoised on the body, because this is asked several times about the same
+    message -- the bubble's caption, its category, the filter, the download
+    -- and answering it is a JSON parse, or an XML parse for anything that
+    starts with '<', which every HTML message does. On a replayed page that
+    was the single most expensive thing done per message that was NOT a file
+    transfer at all. The parse is pure: same body, same answer, and the
+    negative answer is worth caching most of all.
     """
+    import json
+
+    try:
+        cached = _envelope_cache.get(body, _UNPARSED)
+    except TypeError:
+        cached = _UNPARSED          # unhashable body (a bytearray, say)
+    if cached is not _UNPARSED:
+        # A dict is handed back to callers that may add keys to it (a stored
+        # error, a local path), so each caller gets its own copy.
+        return dict(cached) if cached is not None else None
+
+    meta = _parse_file_transfer_envelope(body)
+    try:
+        if len(_envelope_cache) >= _ENVELOPE_CACHE_MAX:
+            _envelope_cache.clear()
+        _envelope_cache[body] = meta
+    except TypeError:
+        pass                        # unhashable body: parse it every time
+    return dict(meta) if meta is not None else None
+
+
+class _Unparsed(object):
+    """Distinct from None, which is a real answer here."""
+
+
+_UNPARSED = _Unparsed()
+
+
+def _parse_file_transfer_envelope(body):
     import json
 
     if isinstance(body, bytes):

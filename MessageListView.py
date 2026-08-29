@@ -105,6 +105,21 @@ class MessageListView(ListView):
         self.setupDefaults()
         return self._views_by_id
 
+    def didAddSubview_(self, subview):
+        """Adding a bubble asks for a layout; it does not perform one.
+
+        AppKit calls this on every addSubview_, and VerticalBoxView answers
+        it with a synchronous relayout() -- which this class routes to
+        layoutMessages(), a pass over the entire transcript. That is fine
+        for the audio list it was written for (a handful of rows, added one
+        at a time) and quadratic here: replaying a page of history meant one
+        full-transcript layout per message, and it silently defeated the
+        coalescing setNeedsMessageLayout() exists to provide. Measured on a
+        96-message page: 934 ms of the 1336 ms render, gone by asking for
+        the same single pass every other insertion path asks for.
+        """
+        self.setNeedsMessageLayout()
+
     def isFlipped(self):
         return True
 
@@ -364,6 +379,28 @@ class MessageListView(ListView):
         frame.size.height = max(total, 1.0)
         self.setFrame_(frame)
         self.setNeedsDisplay_(True)
+        self._noteLayoutDone()
+
+    @objc.python_method
+    def _noteLayoutDone(self):
+        """End of a layout pass -- the transcript now has its real geometry.
+
+        This is where a conversation load trace stops: bubbles exist as soon
+        as the renderer inserts them, but they are height-for-width and carry
+        no useful frame until they have been measured here, so the messages
+        are not on screen until this returns. The key is stamped on the view
+        by the renderer once it has finished, which is what keeps the layout
+        passes a file transfer forces mid-render from ending the trace early.
+        """
+        key = self.__dict__.get('_load_trace_key')
+        if not key:
+            return
+        self._load_trace_key = None
+        try:
+            from MessageHost import load_trace_layout_done
+            load_trace_layout_done(key)
+        except Exception:
+            pass
 
     @objc.python_method
     def _layoutGrid(self, width, columns):
@@ -415,6 +452,7 @@ class MessageListView(ListView):
         frame.size.height = max(total, 1.0)
         self.setFrame_(frame)
         self.setNeedsDisplay_(True)
+        self._noteLayoutDone()
 
     @objc.python_method
     def relayoutAll(self):

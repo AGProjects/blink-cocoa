@@ -3112,6 +3112,34 @@ class ContactWindowController(NSWindowController):
             self.messagePaneController.visibilityChanged()
 
     @objc.python_method
+    def accountForOwnURI(self, uri):
+        """The enabled account that owns this address, or None.
+
+        Answers "is this me?" -- the case where a contact's address is one of
+        the accounts configured on this device. Bonjour is never the answer:
+        it has no address of its own and no keys.
+        """
+        text = str(uri or '')
+        for scheme in ('sip:', 'sips:'):
+            if text.startswith(scheme):
+                text = text[len(scheme):]
+                break
+        text = text.split(';')[0].split('?')[0].strip()
+        if not text:
+            return None
+        try:
+            manager = AccountManager()
+            if not manager.has_account(text):
+                return None
+            account = manager.get_account(text)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot tell whether %s is one of our accounts: %s' % (uri, e))
+            return None
+        if account is None or account is BonjourAccount():
+            return None
+        return account if account.enabled else None
+
+    @objc.python_method
     def messageTargetForContact(self, contact):
         """(target, display_name, account, instance_id) for a contact, or None.
 
@@ -3125,7 +3153,17 @@ class ContactWindowController(NSWindowController):
         instance_id = None
         target = contact.uri
         display_name = contact.name
-        if contact in self.model.bonjour_group.contacts:
+        # A conversation with one of YOUR OWN addresses is not a Bonjour
+        # neighbour, even though this machine publishes itself as one and so
+        # appears in that group. Taking the Bonjour branch there opened the
+        # conversation on bonjour@local, an account with no PGP private key --
+        # which is why talking to yourself showed a grey lock, could not
+        # decrypt its own stored messages ("no private key"), and refused
+        # every attachment in it with "encrypted, and no key is available
+        # yet". The keys belong to the account that owns the address, so that
+        # is the account the conversation has to run on.
+        own_account = self.accountForOwnURI(target)
+        if own_account is None and contact in self.model.bonjour_group.contacts:
             account = BonjourAccount()
             instance_id = contact.id
         else:
@@ -3142,6 +3180,8 @@ class ContactWindowController(NSWindowController):
                 remembered = None
             if remembered is not None:
                 account = remembered
+            elif own_account is not None:
+                account = own_account
 
         target = normalize_sip_uri_for_outgoing_session(target, account)
         if not target:
@@ -3237,6 +3277,17 @@ class ContactWindowController(NSWindowController):
         conversation is created here because selecting a contact IS the user
         asking for it; nothing arriving over the wire creates one.
         """
+        from MessageHost import (load_trace_now, load_trace_key, load_trace_start,
+                                 load_trace_mark, load_trace_label,
+                                 load_trace_finish, load_trace_cancel,
+                                 load_trace_tick, load_trace_bucket,
+                                 load_trace_bucket_span)
+        # The clock starts here, not once the viewer exists: resolving the
+        # contact to an account and a target is part of the wait the user
+        # feels, and it is the only phase that runs before anything is traced.
+        trace_t0 = load_trace_now()
+        trace_key = None
+
         if not self.isMessagesPaneVisible():
             return
 
@@ -3248,27 +3299,55 @@ class ContactWindowController(NSWindowController):
         except IndexError:
             pane.selectViewer(None)
             return
+        trace_contact = load_trace_now()
 
         resolved = self.messageTargetForContact(contact)
         if resolved is None:
             pane.selectViewer(None)
             return
+        trace_target = load_trace_now()
 
         target, display_name, account, instance_id = resolved
+        trace_key = load_trace_key(target)
+        load_trace_start(trace_key, t0=trace_t0)
+        load_trace_bucket_span('- selected contact', trace_t0, trace_contact)
+        load_trace_bucket_span('- resolve target', trace_contact, trace_target)
         try:
             manager = SMSWindowManager.SMSWindowManager()
+            _t = load_trace_tick()
             viewer = manager.openViewerForURI(str(target)) if instance_id is None else None
+            load_trace_bucket('- viewer lookup', _t)
+            # A viewer that already exists has its transcript rendered: this
+            # click only unhides it, and the trace ends with the switch.
+            trace_warm = viewer is not None
             if viewer is None:
+                _t = load_trace_tick()
                 viewer = manager.viewerForTarget(target, display_name, account,
                                                  instance_id=instance_id,
                                                  selected_contact=contact)
+                load_trace_bucket('- viewer create', _t)
             if viewer is None:
+                load_trace_cancel(trace_key)
                 pane.selectViewer(None)
                 return
             # attach without bringing anything to the front
             manager.presentViewer(viewer, focus=False, note_new_message=False)
+            load_trace_mark(trace_key, 'present')
             pane.selectViewer(viewer)
+            load_trace_mark(trace_key, 'select')
+            if trace_warm:
+                # Already built and rendered -- say how much was on screen, so
+                # a 'warm' line that is somehow slow can still be read.
+                load_trace_label(trace_key, 'warm')
+                try:
+                    from MessageHost import load_trace_note
+                    load_trace_note(trace_key, '%d in view'
+                                    % len(viewer.chatViewController.rendered_messages))
+                except Exception:
+                    pass
+                load_trace_finish(trace_key)
         except Exception as e:
+            load_trace_cancel(trace_key)
             BlinkLogger().log_error('Cannot show conversation for %s: %s' % (contact.uri, e))
 
     MESSAGE_PANE_DEFAULT_WIDTH = 480.0

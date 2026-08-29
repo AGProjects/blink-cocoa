@@ -44,7 +44,7 @@ from AppKit import (NSButton,
                     NSViewMinYMargin,
                     NSViewWidthSizable)
 from Foundation import (NSArray, NSAttributedString, NSIntersectsRect,
-                        NSLocalizedString, NSMakeRect, NSPoint,
+                        NSLocalizedString, NSMakeRect, NSNotFound, NSPoint,
                         NSNotificationCenter, NSRunLoop, NSRunLoopCommonModes,
                         NSTask, NSTaskDidTerminateNotification,
                         NSTimer, NSURL, NSWorkspace)
@@ -64,7 +64,8 @@ from BlinkLogger import BlinkLogger
 from resources import ApplicationData
 from MessageHost import (location_summary, file_transfer_category,
                          file_transfer_summary, merge_transfer_error,
-                         quote_digest, transfer_error_note, MESSAGE_CATEGORIES)
+                         quote_digest, transfer_error_note, MESSAGE_CATEGORIES,
+                         load_trace_tick, load_trace_bucket)
 
 # distinct from any real sender, including None (outgoing messages pass
 # sender=None, so a None initial value made the first one look grouped)
@@ -211,6 +212,10 @@ class NativeChatViewController(ChatViewController):
     _filter_keys = (None,)
     _filter_rebuild_pending = False
     _media_fetch_pending = False
+    _history_chrome_pending = False
+    # The loaded-range sentence last written above the transcript, so the same
+    # one is not logged twice.
+    _history_chrome_text = ''
     _attach_button = None
     _record_button = None
     _smiley_button = None
@@ -1501,6 +1506,7 @@ class NativeChatViewController(ChatViewController):
     def _insert(self, bubble, msgid, before):
         if self.messageListView is None:
             return
+        _t = load_trace_tick()
         at_bottom = self.messageListView.isScrolledToBottom()
         if before:
             self.messageListView.prependMessageView_(bubble, msgid)
@@ -1510,7 +1516,10 @@ class NativeChatViewController(ChatViewController):
                 self.messageListView.insertMessageView_beforeView_(bubble, msgid, sibling)
             else:
                 self.messageListView.appendMessageView_(bubble, msgid, scroll_to_bottom=at_bottom)
+        load_trace_bucket('- list append', _t)
+        _t = load_trace_tick()
         self._updateDividersAround(bubble)
+        load_trace_bucket('- dividers', _t)
         # A bubble is born as a message. If the transcript is currently a
         # grid, it has to be born as a tile instead -- otherwise it is
         # measured as a full-width message and then squeezed into a cell,
@@ -1521,16 +1530,24 @@ class NativeChatViewController(ChatViewController):
         if bool(getattr(bubble, 'grid_mode', False)) != grid:
             bubble.grid_mode = grid
             bubble.invalidateLayout()
+        _t = load_trace_tick()
         self._attachTransfer(bubble)
+        load_trace_bucket('- transfer', _t)
         # A link that arrived before its reply -- mobile sends it first, so
         # on a live exchange this is the usual order.
+        _t = load_trace_tick()
         if hasattr(self.delegate, 'reply_target_for'):
             self._attachReply(bubble, self.delegate.reply_target_for(msgid))
+        load_trace_bucket('- reply link', _t)
         self.setNeedsMediaFetch()
-        self.updateHistoryChrome()
+        _t = load_trace_tick()
+        self.setNeedsHistoryChrome()
+        load_trace_bucket('- chrome', _t)
+        _t = load_trace_tick()
         if not self.bubbleMatchesFilter(bubble, self.message_filter):
             bubble.setHidden_(True)
         self.setNeedsFilterRebuild()
+        load_trace_bucket('- filter', _t)
 
     @objc.python_method
     def _epoch(self, stamp):
@@ -1584,6 +1601,19 @@ class NativeChatViewController(ChatViewController):
         return getattr(view, 'kind', None) == MessageBubbleView.KIND_DATE
 
     @objc.python_method
+    def _indexOfView(self, views, view):
+        """Where `view` sits in the list, or None.
+
+        list(views).index(view) reads the same, and costs a PyObjC proxy for
+        every subview in the transcript on every call -- three calls per
+        inserted message, so replaying a page bridged tens of thousands of
+        objects for three integers. NSArray finds it by pointer without
+        crossing the bridge at all.
+        """
+        index = views.indexOfObjectIdenticalTo_(view)
+        return None if index == NSNotFound else index
+
+    @objc.python_method
     def _neighbourMessage(self, index, step):
         """The nearest real message from index, walking by step, or None."""
         views = self.messageListView.subviews()
@@ -1617,9 +1647,8 @@ class NativeChatViewController(ChatViewController):
         divider for this day is therefore MOVED rather than duplicated.
         """
         views = self.messageListView.subviews()
-        try:
-            index = list(views).index(view)
-        except ValueError:
+        index = self._indexOfView(views, view)
+        if index is None:
             return
         if index > 0 and self._isDivider(views.objectAtIndex_(index - 1)):
             return
@@ -1637,9 +1666,8 @@ class NativeChatViewController(ChatViewController):
     @objc.python_method
     def _removeDividerAbove(self, view):
         views = self.messageListView.subviews()
-        try:
-            index = list(views).index(view)
-        except ValueError:
+        index = self._indexOfView(views, view)
+        if index is None:
             return
         if index > 0:
             above = views.objectAtIndex_(index - 1)
@@ -1663,7 +1691,9 @@ class NativeChatViewController(ChatViewController):
             return
         try:
             views = self.messageListView.subviews()
-            index = list(views).index(bubble)
+            index = self._indexOfView(views, bubble)
+            if index is None:
+                return
             previous = self._neighbourMessage(index, -1)
             following = self._neighbourMessage(index, +1)
 
@@ -1760,10 +1790,22 @@ class NativeChatViewController(ChatViewController):
         except Exception as e:
             BlinkLogger().log_debug('Cannot set the history label colour: %s' % e)
         parts = [text for text in (self.loadedRangeLabel(), self.history_note) if text]
+        text = u' \u2014 '.join(parts)
         try:
-            self.lastMessagesLabel.setStringValue_(u' \u2014 '.join(parts))
+            self.lastMessagesLabel.setStringValue_(text)
         except Exception:
             pass
+
+        # The same sentence the user is reading above the transcript. Logged
+        # on change rather than on every refresh: this runs again whenever the
+        # stored total lands, a filter narrows the view or the window is
+        # resized, and none of those are news unless the range itself moved.
+        if text and text != self._history_chrome_text:
+            self._history_chrome_text = text
+            try:
+                self.delegate.log_info('Showing %s' % text)
+            except AttributeError:
+                BlinkLogger().log_info('Showing %s' % text)
 
     @objc.python_method
     def setHistoryNote(self, text):
@@ -2631,10 +2673,16 @@ class NativeChatViewController(ChatViewController):
         self.rendered_messages.append(
             ChatMessageObject(call_id, msgid, content, is_html, timestamp, media_type))
 
+        _t = load_trace_tick()
         label, avatar_name, icon = self._senderIdentity(
             direction, sender, recipient, is_private, icon_path)
+        load_trace_bucket('identity', _t)
 
+        _t = load_trace_tick()
         bubble = self._newBubble()
+        load_trace_bucket('bubble alloc', _t)
+
+        _t = load_trace_tick()
         bubble.configure(msgid=msgid,
                          kind=MessageBubbleView.KIND_TEXT,
                          direction=direction,
@@ -2650,13 +2698,16 @@ class NativeChatViewController(ChatViewController):
                          encryption=encryption,
                          grouped=grouped,
                          expand_smileys=self.expandSmileys)
+        load_trace_bucket('configure', _t)
 
         BlinkLogger().log_debug('bubble %s dir=%s grouped=%s avatar=%s'
                                 % (msgid, direction, grouped,
                                    'none' if (grouped or direction == 'outgoing')
                                    else (icon or 'initials')))
 
+        _t = load_trace_tick()
         self._insert(bubble, msgid, before)
+        load_trace_bucket('insert', _t)
 
         if hasattr(self.delegate, "chatViewDidGetNewMessage_"):
             self.delegate.chatViewDidGetNewMessage_(self)
@@ -2881,6 +2932,7 @@ class NativeChatViewController(ChatViewController):
             return None
 
         def decrypt(payload):
+            blob = payload
             try:
                 import pgpy
                 from MessageHost import pgp_plaintext_bytes
@@ -2888,7 +2940,6 @@ class NativeChatViewController(ChatViewController):
                 # directly. Binary OpenPGP has to be handed over as bytes
                 # instead, because pgpy's armour detection decodes as UTF-8
                 # and raises on the first high byte.
-                blob = payload
                 try:
                     text = payload.decode('utf-8')
                 except (UnicodeDecodeError, AttributeError):
@@ -2907,9 +2958,19 @@ class NativeChatViewController(ChatViewController):
                     head = binascii.hexlify(bytes(payload[:12])).decode()
                 except Exception:
                     pass
+                # Which key it was sealed to, and which one we hold. A file
+                # encrypted to a key this device no longer has fails exactly
+                # like a corrupt download, and the two need different answers.
+                try:
+                    from MessageHost import pgp_key_id, pgp_message_key_ids
+                    sealed_to = ', '.join(pgp_message_key_ids(blob)) or 'unknown'
+                    held = pgp_key_id(private_key) or 'unknown'
+                except Exception:
+                    sealed_to = held = 'unknown'
                 BlinkLogger().log_error(
-                    'Cannot decrypt a downloaded file (%d bytes, starts %s): %s'
-                    % (len(payload or b''), head or '?', e))
+                    'Cannot decrypt a downloaded file (%d bytes, starts %s): %s. '
+                    'Encrypted to key(s) %s; this conversation holds private key %s'
+                    % (len(payload or b''), head or '?', e, sealed_to, held))
                 return None
         return decrypt
 
@@ -2936,7 +2997,9 @@ class NativeChatViewController(ChatViewController):
     def _attachTransfer(self, bubble):
         """Record the envelope on a file-transfer bubble, and its image if
         the file already happens to be on disc."""
+        _t = load_trace_tick()
         meta = transfer_envelope(getattr(bubble, 'content', None))
+        load_trace_bucket('-- envelope', _t)
         if meta is None:
             return
         # Not a plain assignment: the envelope decides whether the bubble
@@ -2957,12 +3020,15 @@ class NativeChatViewController(ChatViewController):
             FileTransferCache().note_permanent_failure(meta, str(stored_error))
         bubble.invalidateLayout()
         if self.messageListView is not None:
-            self.messageListView.layoutMessages()
+            # Asked for, not performed: this runs once per file transfer in
+            # the page being replayed, and a synchronous pass here is a
+            # full-transcript layout per transfer.
+            self.messageListView.setNeedsMessageLayout()
         # The direction and the download state go in the same line as the
         # transfer itself. "It offered to download a file I had just sent"
         # is not a thing that can be diagnosed from a line that says only
         # the filename, and it has now been reported twice.
-        BlinkLogger().log_info('File transfer bubble %s: %s (%s, %s bytes) %s%s'
+        BlinkLogger().log_debug('File transfer bubble %s: %s (%s, %s bytes) %s%s'
                                 % (bubble.msgid, meta.get('filename'),
                                    self.messageCategory(bubble), meta.get('filesize'),
                                    bubble.direction,
@@ -2971,20 +3037,29 @@ class NativeChatViewController(ChatViewController):
         # just pictures. A PDF we sent ourselves is on this disc, and the
         # bubble was offering to download it back off the server because
         # nothing had ever looked.
+        _t = load_trace_tick()
         account, peer = self._transferPeers()
         path = FileTransferCache().local_file(meta, account, peer)
+        load_trace_bucket('-- local file', _t)
         if path is None:
             return
-        if self.messageCategory(bubble) == 'image':
+        _t = load_trace_tick()
+        is_image = self.messageCategory(bubble) == 'image'
+        load_trace_bucket('-- category', _t)
+        if is_image:
+            _t = load_trace_tick()
             self._showMedia(bubble, path)
+            load_trace_bucket('-- show media', _t)
             return
         bubble.media_path = path
+        _t = load_trace_tick()
         self._noteDecrypted(bubble, path)
         self._attachAudio(bubble, path)
         self._attachVideo(bubble, path)
+        load_trace_bucket('-- audio/video', _t)
         bubble.invalidateLayout()
         if self.messageListView is not None:
-            self.messageListView.layoutMessages()
+            self.messageListView.setNeedsMessageLayout()
 
     @objc.python_method
     def _showMedia(self, bubble, path):
@@ -3592,6 +3667,25 @@ class NativeChatViewController(ChatViewController):
         self.logVisibleLocationSessions()
 
     # -- content-type filter -----------------------------------------------
+
+    @objc.python_method
+    def setNeedsHistoryChrome(self):
+        """Coalesce the loaded-range label: it reads every bubble.
+
+        loadedMessageRange() walks the whole transcript to say what is on
+        screen, and _insert called it once per message -- O(n^2) over a
+        replayed page for a label that only has to be right once the page is
+        there. The delay is not perceptible; the label is chrome, not content.
+        """
+        if self._history_chrome_pending:
+            return
+        self._history_chrome_pending = True
+        NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
+            0.1, self, "historyChromeTimer:", None, False)
+
+    def historyChromeTimer_(self, timer):
+        self._history_chrome_pending = False
+        self.updateHistoryChrome()
 
     @objc.python_method
     def setNeedsFilterRebuild(self):
