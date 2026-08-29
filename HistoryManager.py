@@ -1144,8 +1144,15 @@ class ChatHistory(object, metaclass=Singleton):
         return block_on(self._get_daily_entries(local_uri, remote_uri, media_type, search_text, order_text, after_date, before_date))
 
     @run_in_db_thread
-    def _get_messages(self, msgid, call_id, local_uri, remote_uri, media_type, date, after_date, before_date, search_text, orderBy, orderType, count):
+    def _get_messages(self, msgid, call_id, local_uri, remote_uri, media_type, date, after_date, before_date, search_text, orderBy, orderType, count, exclude_related_actions=None):
         query='1=1'
+        if exclude_related_actions:
+            # Rows that belong to another row rather than standing on their
+            # own -- a live-location trail tick against the share that
+            # started it. They are not messages and never become bubbles;
+            # fetching them means paying for hundreds of rows to draw fifty.
+            actions = ','.join(ChatMessage.sqlrepr(action) for action in exclude_related_actions)
+            query += " and (related_action is null or related_action not in (%s))" % actions
         if msgid:
             query += " and msgid=%s" % ChatMessage.sqlrepr(msgid)
         if call_id:
@@ -1186,8 +1193,8 @@ class ChatHistory(object, metaclass=Singleton):
             BlinkLogger().log_error("Error getting chat messages from chat history table: %s" % e)
             return []
 
-    def get_messages(self, msgid=None, call_id=None, local_uri=None, remote_uri=None, media_type=None, date=None, after_date=None, before_date=None, search_text=None, orderBy='time', orderType='desc', count=100):
-        return block_on(self._get_messages(msgid, call_id, local_uri, remote_uri, media_type, date, after_date, before_date, search_text, orderBy, orderType, count))
+    def get_messages(self, msgid=None, call_id=None, local_uri=None, remote_uri=None, media_type=None, date=None, after_date=None, before_date=None, search_text=None, orderBy='time', orderType='desc', count=100, exclude_related_actions=None):
+        return block_on(self._get_messages(msgid, call_id, local_uri, remote_uri, media_type, date, after_date, before_date, search_text, orderBy, orderType, count, exclude_related_actions))
 
     # Content types that become a bubble. The renderer's own allow-list is
     # is_renderable_content_type() in MessageHost; this is its SQL shadow,
@@ -1207,8 +1214,11 @@ class ChatHistory(object, metaclass=Singleton):
                       " 'application/sylk-location-sharing'))")
 
     @run_in_db_thread
-    def _renderable_cutoff(self, local_uri, remote_uri, media_type, after_date, before_date, search_text, count):
+    def _renderable_cutoff(self, local_uri, remote_uri, media_type, after_date, before_date, search_text, count, exclude_related_actions=None):
         query = 'select time from %s where 1=1' % ChatMessage.sqlmeta.table
+        if exclude_related_actions:
+            actions = ','.join(ChatMessage.sqlrepr(action) for action in exclude_related_actions)
+            query += " and (related_action is null or related_action not in (%s))" % actions
         if local_uri:
             query += " and local_uri=%s" % ChatMessage.sqlrepr(local_uri)
         # A single address or a collection of them -- a conversation is filed
@@ -1241,7 +1251,8 @@ class ChatHistory(object, metaclass=Singleton):
         return rows[0][0] if rows else None
 
     def renderable_cutoff(self, local_uri=None, remote_uri=None, media_type=None,
-                          after_date=None, before_date=None, search_text=None, count=100):
+                          after_date=None, before_date=None, search_text=None, count=100,
+                          exclude_related_actions=None):
         """The timestamp of the Nth-newest row that would become a bubble.
 
         Returns None when the conversation holds fewer than `count` of them,
@@ -1254,7 +1265,35 @@ class ChatHistory(object, metaclass=Singleton):
         the page be N messages rather than N rows.
         """
         return block_on(self._renderable_cutoff(local_uri, remote_uri, media_type,
-                                                after_date, before_date, search_text, count))
+                                                after_date, before_date, search_text, count,
+                                                exclude_related_actions))
+
+    @run_in_db_thread
+    def _location_ticks(self, origin_msgid, actions, count):
+        query = "related_msg_id=%s" % ChatMessage.sqlrepr(origin_msgid)
+        if actions:
+            query += " and related_action in (%s)" % ','.join(ChatMessage.sqlrepr(a) for a in actions)
+        query += " order by time asc limit %d" % count
+        try:
+            return list(ChatMessage.select(query))
+        except Exception as e:
+            BlinkLogger().log_error("Error getting location ticks for %s: %s" % (origin_msgid, e))
+            return []
+
+    def location_ticks(self, origin_msgid, actions=('location_update',), count=2000):
+        """The trail rows belonging to one live-location share, oldest first.
+
+        Kept out of the page fetch on purpose: a share that ran for an hour
+        leaves hundreds of these against a single bubble, and the bubble does
+        not need them to be drawn -- the share's own row carries the trail
+        Blink accumulated while it was running. They are read only when the
+        map is actually on screen and its stored trail turns out to be
+        missing, which is the case for shares recorded before the trail was
+        persisted on the origin row.
+        """
+        if not origin_msgid:
+            return []
+        return block_on(self._location_ticks(origin_msgid, actions, count))
 
     @run_in_db_thread
     def _count_messages(self, local_uri, remote_uri, media_type):

@@ -92,7 +92,15 @@ class BlinkLogger(object, metaclass=Singleton):
                     log_directory = settings.logs.directory.normalized
                     makedirs(log_directory)
                     self._activity_filename = os.path.join(log_directory, 'activity.txt')
-                    self._activity_file = open(self._activity_filename, 'a')
+                    # UTF-8 explicitly, and never raising on a character it
+                    # cannot represent. open() would otherwise take its
+                    # encoding from a locale the app bundle does not set, and
+                    # one accented name or em dash in a log line raised
+                    # UnicodeEncodeError -- which the writer below answers by
+                    # closing the file, so the on-disk log lost that line and
+                    # every line until something reopened it.
+                    self._activity_file = open(self._activity_filename, 'a',
+                                               encoding='utf-8', errors='replace')
                 except Exception:
                     # Settings not loaded yet, or filesystem unhappy.
                     # Don't latch an error flag — keep retrying on the

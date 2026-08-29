@@ -30,6 +30,33 @@ resource_path = str(Foundation.NSBundle.mainBundle().resourcePath())
 mime_path = os.path.join(resource_path, "mime.types")
 mimetypes.init(files=[mime_path])
 
+def _write_stderr_utf8(data):
+    """Put a log line on the real stderr as UTF-8, whatever the locale is.
+
+    An app bundle inherits no LANG, so Python picks an encoding for the
+    standard streams that need not be UTF-8 -- and stderr is created with
+    errors='backslashreplace', which turns anything it cannot represent into
+    an escape: the transcript's date range reached Xcode's console as
+    "16 Aug 17:43 \\u2013 29 Aug 21:27", and any accented name reads the same
+    way. Writing encoded bytes to the underlying binary buffer skips that
+    text layer entirely; the stderr filter in main.m is byte-oriented and
+    passes them through unchanged.
+    """
+    stream = sys.__stderr__
+    if stream is None:
+        return
+    try:
+        buffer = getattr(stream, 'buffer', None)
+        if buffer is not None:
+            buffer.write(data.encode('utf-8', 'replace'))
+            buffer.flush()
+        else:
+            stream.write(data)
+            stream.flush()
+    except Exception:
+        pass
+
+
 class NSLogger(object):
     closed = False
     encoding = 'UTF-8'
@@ -69,11 +96,7 @@ class NSLogger(object):
         # "Logging Error: Failed to receive N log messages" warnings.
         # logs/activity.txt still mirrors every line via BlinkLogger,
         # so the on-disk log is unaffected.
-        try:
-            sys.__stderr__.write(text + '\n')
-            sys.__stderr__.flush()
-        except Exception:
-            pass
+        _write_stderr_utf8(text + '\n')
     def writelines(self, lines):
         try:
             for line in lines:
@@ -83,10 +106,19 @@ class NSLogger(object):
                     raise TypeError("writelines() argument must be a sequence of strings")
                 if not line:
                     continue
-                sys.__stderr__.write(line + '\n')
-            sys.__stderr__.flush()
+                _write_stderr_utf8(line + '\n')
         except Exception:
             pass
+
+# An app bundle starts with no LANG, so Python picks ASCII for the standard
+# streams and writes anything else as an escape: the transcript's date range
+# came out as "16 Aug 17:43 \u2013 29 Aug 21:27" in Xcode's console, and a
+# contact with an accent in their name reads no better. The stream NSLogger
+# writes to is the one to fix, since that is where every print() ends up.
+try:
+    sys.__stderr__.reconfigure(encoding='utf-8', errors='replace')
+except Exception:
+    pass                                # older stream object; escapes remain
 
 sys.stdout = NSLogger()
 sys.stderr = NSLogger()

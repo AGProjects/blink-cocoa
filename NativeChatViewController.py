@@ -3583,6 +3583,38 @@ class NativeChatViewController(ChatViewController):
             BlinkLogger().log_error('Cannot fetch visible media: %s' % e)
 
     @objc.python_method
+    def fetchVisibleTrails(self):
+        """Load a map's trail when the map is on screen, and not before.
+
+        Trail ticks are excluded from the page fetch: a share that ran for an
+        hour holds hundreds of them, and the share's own row already carries
+        the trail Blink accumulated while it was running. What is left is the
+        older case -- a share recorded before that was persisted, whose bubble
+        arrives with a single point. Those are read here, once, and only for a
+        map the user is actually looking at.
+        """
+        if self.messageListView is None:
+            return
+        loader = getattr(self.delegate, 'loadTrailForBubble', None)
+        if loader is None:
+            return
+        try:
+            visible = self.outputView.documentVisibleRect()
+            for view in self.messageListView.subviews():
+                if getattr(view, 'kind', None) != MessageBubbleView.KIND_LOCATION:
+                    continue
+                if view.isHidden() or view.__dict__.get('_trail_requested'):
+                    continue
+                if len(view.location_track or []) > 1:
+                    continue            # the origin row brought its trail
+                if not NSIntersectsRect(visible, view.frame()):
+                    continue
+                view._trail_requested = True
+                loader(view.msgid)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot load visible trails: %s' % e)
+
+    @objc.python_method
     def logVisibleLocationSessions(self):
         """One line per location share the user is actually looking at.
 
@@ -3664,6 +3696,7 @@ class NativeChatViewController(ChatViewController):
     def mediaFetchTimer_(self, timer):
         self._media_fetch_pending = False
         self.fetchVisibleMedia()
+        self.fetchVisibleTrails()
         self.logVisibleLocationSessions()
 
     # -- content-type filter -----------------------------------------------

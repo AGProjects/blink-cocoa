@@ -305,6 +305,13 @@ _public_key_lookups = set()
 # contact" and is worth caching just as much as a hit.
 _UNRESOLVED = object()
 
+# Rows that belong to another row rather than standing on their own: a live
+# location's trail ticks, and the meeting updates that work the same way. The
+# share's own row carries the accumulated trail (see storable_envelope), so a
+# page does not need these to draw the map -- and a share that ran for an hour
+# puts hundreds of them in front of the fifty messages the user asked for.
+LOCATION_TICK_ACTIONS = ('location_update', 'meeting_update')
+
 
 @implementer(IObserver)
 class SMSViewController(NSObject):
@@ -3398,7 +3405,8 @@ class SMSViewController(NSObject):
                 remote_uri=remote_uris, media_type=('chat', 'sms'),
                 count=self.showHistoryEntries,
                 search_text=self.chatViewController.search_text,
-                before_date=self.oldest_timestamp or self.history_before_date)
+                before_date=self.oldest_timestamp or self.history_before_date,
+                exclude_related_actions=LOCATION_TICK_ACTIONS)
             load_trace_mark(self.trace_key, 'probe')
             # With a cutoff the page is bounded by TIME, and the count is only
             # a safety valve. Without one the conversation holds fewer bubbles
@@ -3444,9 +3452,9 @@ class SMSViewController(NSObject):
                     self.zoom_period_label = NSLocalizedString("Displaying all messages", "Label")
                     self.chatViewController.setHandleScrolling_(False)
                 
-                results = self.history.get_messages(remote_uri=remote_uris, media_type=('chat', 'sms'), after_date=after_date or page_start, before_date=self.oldest_timestamp or self.history_before_date, count=page_count, search_text=self.chatViewController.search_text)
+                results = self.history.get_messages(remote_uri=remote_uris, media_type=('chat', 'sms'), after_date=after_date or page_start, before_date=self.oldest_timestamp or self.history_before_date, count=page_count, search_text=self.chatViewController.search_text, exclude_related_actions=LOCATION_TICK_ACTIONS)
             else:
-                results = self.history.get_messages(remote_uri=remote_uris, media_type=('chat', 'sms'), after_date=page_start, count=page_count, search_text=self.chatViewController.search_text, before_date=self.oldest_timestamp or self.history_before_date)
+                results = self.history.get_messages(remote_uri=remote_uris, media_type=('chat', 'sms'), after_date=page_start, count=page_count, search_text=self.chatViewController.search_text, exclude_related_actions=LOCATION_TICK_ACTIONS)
 
             messages = [row for row in reversed(results)]
             load_trace_mark(self.trace_key, 'query')
@@ -3495,6 +3503,53 @@ class SMSViewController(NSObject):
         except AttributeError:
             pass                        # no renderer yet; the label will be
                                         # built from this when there is one
+
+    @objc.python_method
+    @run_in_green_thread
+    def loadTrailForBubble(self, bubble_id):
+        """Read one share's trail from the database, off the GUI thread.
+
+        Called when a map comes into view whose stored trail is missing --
+        a share recorded before the trail was kept on the origin row. Everything
+        newer already carries its own trail and never gets here.
+        """
+        try:
+            rows = self.history.location_ticks(bubble_id)
+        except Exception as e:
+            self.log_error('Cannot load the trail of %s: %s' % (bubble_id, e))
+            return
+        points = []
+        for row in rows:
+            try:
+                payload = self._location_payload(
+                    row.body,
+                    metadata=row_metadata(row.metadata, row.related_action, row.related_msg_id),
+                    content_type=row.content_type)
+            except Exception:
+                continue
+            if not payload or payload.get('is_signal') or not payload.get('coords'):
+                continue
+            points.append(payload['coords'])
+        self.log_debug('Trail of %s: %d point(s) from %d stored tick(s)'
+                       % (bubble_id, len(points), len(rows)))
+        if points:
+            self._applyTrail(bubble_id, points)
+
+    @objc.python_method
+    @run_in_gui_thread
+    def _applyTrail(self, bubble_id, points):
+        """Put a loaded trail onto its bubble, oldest point first."""
+        track = self.location_tracks.setdefault(bubble_id, [])
+        for coords in points:
+            append_track_point(track, coords)
+            try:
+                self.chatViewController.updateLocationMessage(
+                    bubble_id, coords['latitude'], coords['longitude'],
+                    coords['accuracy'], coords.get('destination'),
+                    timestamp=coords.get('timestamp'))
+            except Exception as e:
+                self.log_error('Cannot extend the trail of %s: %s' % (bubble_id, e))
+                return
 
     @objc.python_method
     def _pgp_key_id(self, key):
@@ -3624,30 +3679,27 @@ class SMSViewController(NSObject):
                     self.oldest_timestamp = oldest_timestamp
 
         self.log_debug('Render history started')
-        if self.chatViewController.scrolling_zoom_factor:
-            if not self.message_count_from_history:
-                self.message_count_from_history = len(messages)
-                #self.chatViewController.lastMessagesLabel.setStringValue_(self.zoom_period_label)
-            else:
-                if self.message_count_from_history == len(messages):
-                    self.chatViewController.setHandleScrolling_(False)
-                    #self.chatViewController.lastMessagesLabel.setStringValue_(NSLocalizedString("%s. There are no previous messages.", "Label") % self.zoom_period_label)
-                    # Said beside the loaded range, not over it: writing
-                    # into the label directly is what used to leave the
-                    # window showing one of the two facts at random.
-                    self.chatViewController.setHistoryNote(
-                        NSLocalizedString("There are no previous messages.", "Label"))
-                    self.chatViewController.setHandleScrolling_(False)
-                else:
-                    pass
-                    #self.chatViewController.lastMessagesLabel.setStringValue_(self.zoom_period_label)
+        self.message_count_from_history = len(messages)
+        if len(messages):
+            # A NOTE, not the label: written straight into the label it
+            # covered the loaded range -- "47 messages, 16 Aug 17:43 - 29
+            # Aug 21:27" -- with a scrolling hint, and nothing put the
+            # range back, so the one fact worth reading was never the one
+            # on screen. updateHistoryChrome shows both.
+            self.chatViewController.setHistoryNote(
+                NSLocalizedString("Hold up-scrolling to load more messages...", "Label"))
         else:
-            self.message_count_from_history = len(messages)
-            if len(messages):
-                self.chatViewController.lastMessagesLabel.setStringValue_(NSLocalizedString("Hold up-scrolling to load more messages...", "Label"))
-            else:
-                self.chatViewController.setHandleScrolling_(False)
-                self.chatViewController.lastMessagesLabel.setStringValue_(NSLocalizedString("There are no previous messages", "Label"))
+            # Nothing came back at all: THE only evidence that history has
+            # run out. It used to be inferred from a page returning as many
+            # rows as the one before it -- which was a fair guess while a
+            # page was a fixed row count, and is simply wrong now that a
+            # page reaches back to whatever timestamp holds N messages: two
+            # consecutive pages landing on the same row count is a
+            # coincidence, not the end of the conversation. A conversation
+            # with 4180 stored messages declared itself finished after 82.
+            self.chatViewController.setHandleScrolling_(False)
+            self.chatViewController.setHistoryNote(
+                NSLocalizedString("There are no previous messages", "Label"))
 
         if len(messages):
             self.log_info('Render %d messages' % len(messages))
@@ -3950,7 +4002,14 @@ class SMSViewController(NSObject):
                     last_chat_timestamp = timestamp
             except Exception as e:
                 print('Render message exception: %s' % str(e))
-            load_trace_bucket('row (parent)', _row)
+            finally:
+                # In a finally so that rows the loop SKIPS are counted too:
+                # every sidecar and every live-location tick leaves the body
+                # through a continue, and with the bucket after the try their
+                # cost was invisible -- the call count never matched the rows
+                # fetched. What this bucket costs beyond the drawn messages is
+                # what the skipped rows are worth removing.
+                load_trace_bucket('row (parent)', _row)
 
         try:
             loaded = len(self.chatViewController.rendered_messages)
@@ -3965,6 +4024,12 @@ class SMSViewController(NSObject):
         # Bubbles exist but have not been measured yet: the transcript is only
         # on screen after the coalesced layout pass, so that is what ends the
         # trace. With nothing to lay out, this is the end.
+        # The range is read off the bubbles, so it can only be right once
+        # they are all in. Asked for here as well as per insert: a replay
+        # that draws nothing new (a second pass, a journal sync) still has
+        # to put the range back over whatever the scroll handler wrote.
+        self.chatViewController.setNeedsHistoryChrome()
+
         load_trace_note(self.trace_key, '%d drawn' % loaded)
         load_trace_mark(self.trace_key, 'render')
         if loaded:
