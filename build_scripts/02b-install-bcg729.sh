@@ -28,6 +28,17 @@
 
 set -u
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=blink_min_os.sh
+source "$SCRIPT_DIR/blink_min_os.sh"
+
+FORCE=0
+case "${1:-}" in
+    --force) FORCE=1 ;;
+    "") ;;
+    *) echo "unknown option: $1" >&2; exit 2 ;;
+esac
+
 PREFIX="${BCG729_PREFIX:-/opt/local}"
 TAG="${BCG729_TAG:-1.1.1}"
 REPO="${BCG729_REPO:-https://github.com/BelledonneCommunications/bcg729.git}"
@@ -126,6 +137,36 @@ verify_arch() {
 # is single-arch (i.e. was built by an older version of this script that
 # predated the universal flag), report it and return 1 so the caller can
 # force a rebuild. Returns 0 if everything is fine (or non-Darwin, or non-AS).
+# True when an installed dylib was built for a macOS newer than BLINK_MIN_OS.
+# bcg729 is not a MacPorts port, so macports.conf's macosx_deployment_target
+# never reaches it: before this check, an existing install built on a newer
+# host was reported "already installed" and silently kept, while every port
+# read as ok.
+needs_minos_rebuild() {
+    [ "$(uname -s)" = "Darwin" ] || return 1
+    command -v otool >/dev/null 2>&1 || return 1
+
+    local dylib arch archs v want
+    want="$(echo "$BLINK_MIN_OS" | awk -F. '{printf "%d%03d%03d\n", $1, ($2=="" ? 0 : $2), ($3=="" ? 0 : $3)}')"
+    for dylib in "$PREFIX"/lib/libbcg729*.dylib; do
+        [ -f "$dylib" ] || continue
+        [ -L "$dylib" ] && continue
+        archs=$(lipo -archs "$dylib" 2>/dev/null || true)
+        for arch in $archs; do
+            v=$(otool -arch "$arch" -l "$dylib" 2>/dev/null | awk '
+                $1 == "cmd" && $2 == "LC_BUILD_VERSION"      { want = "minos";   next }
+                $1 == "cmd" && $2 == "LC_VERSION_MIN_MACOSX" { want = "version"; next }
+                want != "" && $1 == want                     { print $2; exit }')
+            [ -z "$v" ] && continue
+            if [ "$(echo "$v" | awk -F. '{printf "%d%03d%03d\n", $1, ($2=="" ? 0 : $2), ($3=="" ? 0 : $3)}')" -gt "$want" ]; then
+                echo "  $dylib ($arch) was built for macOS $v, want $BLINK_MIN_OS or older"
+                return 0
+            fi
+        done
+    done
+    return 1
+}
+
 needs_universal_rebuild() {
     [ "$(uname -s)" = "Darwin" ] || return 1
     uname -v | grep -q ARM64       || return 1
@@ -163,8 +204,15 @@ if [ -f "$PREFIX/include/bcg729/encoder.h" ] && \
      [ -f "$PREFIX/lib/libbcg729.a" ]    || \
      [ -f "$PREFIX/lib/libbcg729.so" ]; }; then
     echo "bcg729 already installed at $PREFIX."
-    if needs_universal_rebuild; then
+    if [ "$FORCE" -eq 1 ]; then
+        echo "--force given — rebuilding."
+        wipe_existing_install
+    elif needs_universal_rebuild; then
         echo "Existing install is single-arch on Apple Silicon — forcing universal rebuild."
+        wipe_existing_install
+        # fall through to the build path below
+    elif needs_minos_rebuild; then
+        echo "Existing install targets a newer macOS than $BLINK_MIN_OS — rebuilding."
         wipe_existing_install
         # fall through to the build path below
     else
@@ -207,8 +255,7 @@ fi
 # bcg729 is not a MacPorts port, so macports.conf's macosx_deployment_target
 # does not reach it: without this, cmake stamps LC_BUILD_VERSION with the
 # build host's macOS and 05-copy-libraries.sh's minOS guard rejects the dylib.
-# Keep in sync with BLINK_MIN_OS there.
-BLINK_MIN_OS="${BLINK_MIN_OS:-13.0}"
+# The value comes from blink_min_os.sh, sourced at the top of this script.
 echo "Building bcg729 for macOS $BLINK_MIN_OS or later."
 
 cmake -B build -S . \

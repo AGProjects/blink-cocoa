@@ -42,14 +42,17 @@ for l in $libs; do
          
        dst=$lib_dir/
          
-       if [ ! -f $dst/$fn ]; then   
-            echo "cp $l $dst"
-            cp $l $dst
-            ../build_scripts/change_lib_paths.sh $dst/$fn
-            codesign -f --timestamp -s "Developer ID Application" $dst/$fn
-       else
-            lipo -info $dst/$fn
-        fi
+       # Always refresh. An existing copy is not necessarily a correct one:
+       # this used to skip whenever the file was merely present, which is how
+       # libraries built for the old deployment target survived in
+       # Frameworks/libs across rebuilds -- a set of macOS 15.0 ffmpeg libs
+       # and a stale libx264.164 were still being bundled long after
+       # /opt/local had been rebuilt for 13.0. Copying is cheap; shipping the
+       # wrong library is not.
+       echo "cp $l $dst"
+       cp $l $dst
+       ../build_scripts/change_lib_paths.sh $dst/$fn
+       codesign -f --timestamp -s "Developer ID Application" $dst/$fn
 done
 
 lib_dir="Frameworks/libs"

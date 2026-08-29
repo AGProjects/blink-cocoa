@@ -242,10 +242,18 @@ add_clang_workaround() {
     local p="$1" pf cat dest
     [ "$p" = "ffmpeg" ] && return 1          # ffmpeg already has our Portfile
     pf="$(port file "$p" 2>/dev/null)"; [ -f "$pf" ] || return 1
-    cat="$(port info --category --line "$p" 2>/dev/null | awk '{print $1}')"; [ -n "$cat" ] || return 1
+    # --category can return several comma-joined categories ("devel,math"),
+    # which would create a bogus /opt/local/ports/devel,math/ overlay dir.
+    # Keep only the primary category.
+    cat="$(port info --category --line "$p" 2>/dev/null | awk '{print $1}' | cut -d, -f1)"; [ -n "$cat" ] || return 1
     dest="$LOCALPORTS/$cat/$p"
     echo "    applying clang workaround: $dest/Portfile"
-    sudo mkdir -p "$dest" && sudo cp "$pf" "$dest/Portfile" || return 1
+    # Copy the WHOLE port directory, not just the Portfile. Many Portfiles
+    # list local patches in patchfiles, which live in the port's files/
+    # subdirectory. With only the Portfile copied, MacPorts cannot find them
+    # locally and falls back to fetching them as distfiles, which 404s on
+    # every mirror -- e.g. gnutls' CRAU_MAYBE_UNUSED.patch.
+    sudo mkdir -p "$dest" && sudo cp -R "$(dirname "$pf")/." "$dest/" || return 1
     printf '\n# Added by 02-install-c-deps.sh: clang 16+ makes implicit function\n# declarations a hard error, which these sources predate.\nconfigure.cflags-append  %s\n' \
         "$CLANG_WORKAROUND" | sudo tee -a "$dest/Portfile" >/dev/null || return 1
     sudo portindex "$LOCALPORTS" >/dev/null 2>&1 || return 1
