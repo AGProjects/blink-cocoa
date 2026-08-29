@@ -2413,7 +2413,7 @@ class VideoWindowController(NSWindowController):
 
     @objc.IBAction
     def userClickedChatButton_(self, sender):
-        if self.sessionController:
+        if self.sessionController and self.chatButtonAllowed():
             self.sessionController.addChatToSession()
 
     @objc.IBAction
@@ -2539,6 +2539,22 @@ class VideoWindowController(NSWindowController):
         self.visible_buttons = False
 
     @objc.python_method
+    def chatButtonAllowed(self):
+        """Whether the Chat button on the call bar has anything to offer.
+
+        The button proposes an MSRP chat stream on this session, so it follows
+        chat.enable_msrp_chat -- except for a conference, whose chat is part of
+        the room rather than a one-to-one conversation. allowsStreamOfType()
+        applies exactly that rule.
+        """
+        if self.sessionController is None:
+            return False
+        try:
+            return self.sessionController.allowsStreamOfType('chat')
+        except AttributeError:
+            return False
+
+    @objc.python_method
     def showButtons(self):
         if not self.window():
             return
@@ -2573,6 +2589,11 @@ class VideoWindowController(NSWindowController):
                     btn.setHidden_(False)
             if self.holdButton is not None:
                 self.holdButton.setHidden_(True)
+            # With MSRP chat switched off the Chat button would propose a
+            # stream that gets refused, so it stays out of the call bar. A
+            # conference keeps it -- see chatButtonAllowed().
+            if self.chatButton is not None and not self.chatButtonAllowed():
+                self.chatButton.setHidden_(True)
         except Exception:
             pass
 
