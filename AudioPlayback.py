@@ -357,6 +357,19 @@ def derive_peaks(path, bins=DERIVED_BINS):
     return result
 
 
+def _announce_playback():
+    """Tell the shared monitor that the playing state may have moved.
+
+    Imported here rather than at the top of the module: the monitor reads
+    both players, so a module-level import would be a circle.
+    """
+    try:
+        from PlaybackMonitor import notify_playback_change
+        notify_playback_change()
+    except Exception as e:
+        BlinkLogger().log_error('Cannot announce the playback state: %s' % e)
+
+
 class AudioPlayback(object):
     """The one player. `AudioPlayback()` always returns it."""
 
@@ -491,10 +504,15 @@ class AudioPlayback(object):
         if player is None:
             return False
         try:
-            return bool(player.play())
+            started = bool(player.play())
         except Exception as e:
             BlinkLogger().log_error('Cannot start playback: %s' % e)
             return False
+        # Announced here rather than by the bubble that pressed play: a
+        # control that can stop playback from another window has to hear
+        # about a clip started anywhere, including by the recorder preview.
+        _announce_playback()
+        return started
 
     def pause(self):
         player = self._player
@@ -504,6 +522,7 @@ class AudioPlayback(object):
             player.pause()
         except Exception as e:
             BlinkLogger().log_error('Cannot pause playback: %s' % e)
+        _announce_playback()
 
     def stop(self):
         """Give up the player entirely."""
@@ -517,6 +536,7 @@ class AudioPlayback(object):
             player.stop()
         except Exception as e:
             BlinkLogger().log_error('Cannot stop playback: %s' % e)
+        _announce_playback()
 
     def stop_for_key(self, key):
         """Stop only if this bubble is the one playing.

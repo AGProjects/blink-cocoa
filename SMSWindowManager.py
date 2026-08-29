@@ -6,6 +6,8 @@ from AppKit import NSPrintOperation, NSApp, NSPortraitOrientation, NSFitPaginati
 from Foundation import (NSBundle,
                         NSImage,
                         NSLocalizedString,
+                        NSMakeRect,
+                        NSMakeSize,
                         NSNotFound,
                         NSRunLoop,
                         NSRunLoopCommonModes,
@@ -70,6 +72,11 @@ from KeyEscrow import (escrow_is_missing, install_keypair, log_self_contact,
 from HistoryManager import ChatHistory
 from SMSViewController import SMSViewController, is_otr_wire_text
 from MessageHost import peaks_metadata, reply_metadata
+from MessageBubbleView import PlaybackStopButton
+from PlaybackMonitor import PLAYBACK_STATE_CHANGED, playback_monitor
+
+# The toolbar is drawn at the small size, where an icon is 24 points.
+STOP_KEY_SIZE = 24.0
 
 
 def _describe_payload_value(value):
@@ -175,8 +182,14 @@ class SMSWindowController(NSWindowController):
             self.notification_center.add_observer(self, name="OTREncryptionDidStop")
             self.notification_center.add_observer(self, name="PGPEncryptionStateChanged")
             self.notification_center.add_observer(self, name="PGPPublicKeyReceived")
+            # The stop button is the window's, not the conversation's: one
+            # player serves the whole application, so a clip started in
+            # another tab -- or another window -- is what it usually has to
+            # stop, and only this tells it when there is one.
+            self.notification_center.add_observer(self, name=PLAYBACK_STATE_CHANGED)
 
             self.unreadMessageCounts = {}
+            self.updateStopPlaybackButton()
 
         return self
 
@@ -232,6 +245,61 @@ class SMSWindowController(NSWindowController):
     @objc.python_method
     def _NH_OTREncryptionDidStop(self, sender, data):
         self.updateEncryptionWidgets()
+
+    @objc.python_method
+    def _NH_BlinkPlaybackStateChanged(self, sender, data):
+        self.updateStopPlaybackButton()
+
+    @objc.python_method
+    def stopPlaybackToolbarItem(self):
+        toolbar = getattr(self, 'toolbar', None)
+        if toolbar is None:
+            return None
+        for item in toolbar.items():
+            if item.itemIdentifier() == 'stopplayback':
+                return item
+        return None
+
+    @objc.python_method
+    def updateStopPlaybackButton(self):
+        """Live only while something is playing.
+
+        Left in place rather than taken out of the toolbar: an item put
+        there by the nib can be removed but not put back without a toolbar
+        delegate that vends it, and a button that comes and goes moves
+        every other button in the row each time a clip starts.
+        """
+        item = self.stopPlaybackToolbarItem()
+        if item is None:
+            return
+        button = item.view()
+        if button is None:
+            # The nib carries no picture for it: the key is drawn, and it
+            # is the play key's twin -- the same blue disc, with a square
+            # instead of a triangle -- so that the control which stops a
+            # recording is visibly the control that started it.
+            button = PlaybackStopButton.alloc().initWithFrame_(
+                NSMakeRect(0, 0, STOP_KEY_SIZE, STOP_KEY_SIZE))
+            button.setToolTip_(NSLocalizedString("Stop playing", "Tooltip"))
+            button.setTarget_(self)
+            button.setAction_('stopPlaybackClicked:')
+            item.setView_(button)
+            item.setMinSize_(NSMakeSize(STOP_KEY_SIZE, STOP_KEY_SIZE))
+            item.setMaxSize_(NSMakeSize(STOP_KEY_SIZE, STOP_KEY_SIZE))
+        playing = playback_monitor().is_playing()
+        button.setEnabled_(playing)
+        # An item carrying a view does not dim itself the way one carrying
+        # an image does, so the key is faded by hand when there is nothing
+        # for it to stop.
+        button.setAlphaValue_(1.0 if playing else 0.35)
+        item.setEnabled_(playing)
+
+    @objc.IBAction
+    def stopPlaybackClicked_(self, sender):
+        """The drawn key. No session involved: what is playing may belong
+        to a tab in another window entirely, and stopping it is the point.
+        """
+        playback_monitor().stop()
 
     def menuWillOpen_(self, menu):
         pass
@@ -404,6 +472,10 @@ class SMSWindowController(NSWindowController):
         if session:
             session.not_read_queue_start()
             self.conversationBecameVisible(session)
+
+        # Cheap, and it is also what puts the stop symbol on the item: the
+        # toolbar may still have been empty when the window was built.
+        self.updateStopPlaybackButton()
     
         tabItem = self.tabView.selectedTabViewItem()
 
@@ -438,6 +510,10 @@ class SMSWindowController(NSWindowController):
             chatViewController.expandSmileys = not chatViewController.expandSmileys
             sender.setImage_(NSImage.imageNamed_("smiley_on" if chatViewController.expandSmileys else "smiley_off"))
             chatViewController.toggleSmileys(chatViewController.expandSmileys)
+        elif sender.itemIdentifier() == 'stopplayback':
+            # No session involved: what is playing may belong to a tab in
+            # another window entirely, and stopping it is the point.
+            playback_monitor().stop()
         elif sender.itemIdentifier() == 'history' and NSApp.delegate().history_enabled:
             contactWindow.showHistoryViewer_(None)
             contactWindow.historyViewer.filterByURIs((format_identity_to_string(session.target_uri),))

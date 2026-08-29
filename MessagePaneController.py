@@ -76,7 +76,8 @@ from util import (otr_enabled_for_account, pgp_enabled_for_account,
                   run_in_gui_thread)
 from MessageBubbleView import (transcript_font_size, set_transcript_font_size,
                                FONT_SIZE_STEP, MIN_BODY_FONT_SIZE,
-                               MAX_BODY_FONT_SIZE)
+                               MAX_BODY_FONT_SIZE, PlaybackStopButton)
+from PlaybackMonitor import PLAYBACK_STATE_CHANGED, playback_monitor
 
 
 HEADER_HEIGHT = 44.0
@@ -116,6 +117,16 @@ LOCATION_GLYPH = chr(128205)
 CALL_BUTTON_W = 22.0
 CALL_GLYPH = chr(128222)
 CALL_GLYPH_SIZE = FONT_BUTTON_LARGE - 4.0
+# Stop whatever is playing, immediately left of the handset. Only there
+# while something IS playing: one player serves the whole application, and
+# once the user has clicked another contact the bubble that started the
+# clip is no longer on screen to stop it. This is the control that is.
+#
+# Drawn as the play key rather than as a glyph like its neighbours: it is
+# the same transport, and the row it sits in is the only place the user
+# can reach it once the bubble has gone. A disc wants a little more room
+# than a text glyph does.
+STOP_BUTTON_W = 20.0
 # The local account this conversation sends from: a pill on the info line,
 # right after the address. A pill rather than a plain run of text because
 # it is also the control that changes the account -- it is the only part
@@ -358,6 +369,11 @@ class MessagePaneController(NSObject):
                              'PGPPublicKeyReceived',
                              'BlinkConversationAccountChanged'):
                     NotificationCenter().add_observer(self, name=name)
+                # The stop button belongs to the pane rather than to the
+                # conversation that started the clip, so it has to hear
+                # about playback that began -- and ended -- somewhere else.
+                NotificationCenter().add_observer(
+                    self, name=PLAYBACK_STATE_CHANGED)
             except Exception as e:
                 # Worth surviving: without the pane there is no messages UI
                 # at all, and the app quietly falls back to the old tabbed
@@ -431,6 +447,10 @@ class MessagePaneController(NSObject):
         # conversation on screen was waiting for.
         self.updateEncryptionWidgets()
 
+    @objc.python_method
+    def _NH_BlinkPlaybackStateChanged(self, sender, data):
+        self.updateStopPlaybackButton()
+
     # -- view ------------------------------------------------------------
 
     @objc.python_method
@@ -493,6 +513,7 @@ class MessagePaneController(NSObject):
         history_x = small_x - 8.0 - HISTORY_BUTTON_W
         location_x = history_x - 8.0 - LOCATION_BUTTON_W
         call_x = location_x - 8.0 - CALL_BUTTON_W
+        stop_x = call_x - 8.0 - STOP_BUTTON_W
         self.fontSmallerButton = self._fontButton(
             NSMakeRect(small_x, button_y, FONT_BUTTON_W, FONT_BUTTON_H),
             FONT_BUTTON_SMALL, 'decreaseFontSize:',
@@ -533,6 +554,20 @@ class MessagePaneController(NSObject):
         self.callButton.setHidden_(True)
         header.addSubview_(self.callButton)
 
+        self.stopPlaybackButton = PlaybackStopButton.alloc().initWithFrame_(
+            NSMakeRect(stop_x, button_y, STOP_BUTTON_W, FONT_BUTTON_H))
+        self.stopPlaybackButton.setAutoresizingMask_(
+            NSViewMinXMargin | NSViewMinYMargin)
+        self.stopPlaybackButton.setToolTip_(
+            NSLocalizedString("Stop playing", "Tooltip"))
+        self.stopPlaybackButton.setTarget_(self)
+        self.stopPlaybackButton.setAction_('stopPlayback:')
+        # Only while a clip is playing. Leaving it there greyed out would
+        # put a permanent dead button in a row whose other buttons all come
+        # and go with what they act on.
+        self.stopPlaybackButton.setHidden_(True)
+        header.addSubview_(self.stopPlaybackButton)
+
         # Everything above was framed against a 480pt header; the row is
         # packed for real now that every button in it exists.
         self._layoutHeaderButtons()
@@ -568,7 +603,8 @@ class MessagePaneController(NSObject):
                       ('fontSmallerButton', 'FONT_BUTTON_W', 0.0),
                       ('historyButton', 'HISTORY_BUTTON_W', 8.0),
                       ('locationButton', 'LOCATION_BUTTON_W', 8.0),
-                      ('callButton', 'CALL_BUTTON_W', 8.0))
+                      ('callButton', 'CALL_BUTTON_W', 8.0),
+                      ('stopPlaybackButton', 'STOP_BUTTON_W', 8.0))
 
     @objc.python_method
     def _layoutHeaderButtons(self):
@@ -1209,6 +1245,25 @@ class MessagePaneController(NSObject):
             return
         button.setHidden_(viewer is None)
         self._layoutHeaderButtons()
+
+    @objc.python_method
+    def updateStopPlaybackButton(self):
+        """Show the stop square only while something is playing.
+
+        Deliberately not asked whether the clip belongs to the conversation
+        on screen: it is one player for the whole application, and the case
+        this button exists for is the clip that is still playing in a
+        conversation the user has already clicked away from.
+        """
+        button = getattr(self, 'stopPlaybackButton', None)
+        if button is None:
+            return
+        button.setHidden_(not playback_monitor().is_playing())
+        self._layoutHeaderButtons()
+
+    @objc.IBAction
+    def stopPlayback_(self, sender):
+        playback_monitor().stop()
 
     @objc.IBAction
     def startAudioCall_(self, sender):

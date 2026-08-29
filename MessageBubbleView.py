@@ -29,6 +29,8 @@ from html.parser import HTMLParser
 from AppKit import (NSAttributedString,
                     NSBackgroundColorAttributeName,
                     NSBezierPath,
+                    NSButton,
+                    NSMomentaryChangeButton,
                     NSFontManager,
                     NSGradient,
                     NSPasteboard,
@@ -716,6 +718,60 @@ def fill_key(path, base, pressed=False):
         path.stroke()
     except Exception:
         pass
+
+
+class PlaybackStopButton(NSButton):
+    """Stop, drawn as the play key's twin.
+
+    The same blue disc with the same lift, and a white symbol struck from
+    the disc's own centre -- a square, which is what stop has meant on
+    every player since tape. Deliberately the play key's blue rather than
+    a colour of its own: it drives the one player the key in the bubble
+    drives, and a control that stops the audio must not look like a
+    different feature from the one that started it.
+
+    Used where there is no bubble to press: the header of the messages
+    pane and the toolbar of the tabbed window, both of which can be
+    looking at a conversation other than the one that is playing.
+    """
+
+    def initWithFrame_(self, frame):
+        self = objc.super(PlaybackStopButton, self).initWithFrame_(frame)
+        if self:
+            self.setBordered_(False)
+            self.setTitle_('')
+            self.setButtonType_(NSMomentaryChangeButton)
+        return self
+
+    def isFlipped(self):
+        # fill_key places its shadow below and its light above for a
+        # flipped view, which is what every bubble drawing this key is.
+        return True
+
+    def drawRect_(self, rect):
+        bounds = self.bounds()
+        side = min(bounds.size.width, bounds.size.height)
+        x = bounds.origin.x + (bounds.size.width - side) / 2.0
+        y = bounds.origin.y + (bounds.size.height - side) / 2.0
+        # Inset by half a point so the 1pt rim lands on the pixel grid
+        # rather than straddling two rows and going soft.
+        disc = NSBezierPath.bezierPathWithOvalInRect_(
+            NSMakeRect(x + 0.5, y + 0.5, max(side - 1.0, 1.0), max(side - 1.0, 1.0)))
+        pressed = False
+        try:
+            pressed = bool(self.cell().isHighlighted())
+        except Exception:
+            pass
+        fill_key(disc, COLOR_KEY, pressed)
+
+        centre_x = x + side / 2.0
+        centre_y = y + side / 2.0
+        square = side * 0.34
+        COLOR_KEY_GLYPH.set()
+        NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(
+            NSMakeRect(centre_x - square / 2.0, centre_y - square / 2.0,
+                       square, square),
+            1.5, 1.5).fill()
 
 
 COLOR_BORDER       = _rgb(169, 169, 169)

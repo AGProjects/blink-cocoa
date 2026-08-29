@@ -1048,6 +1048,9 @@
 		AD0000000000000000720002 /* SmileyPicker.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000720000 /* SmileyPicker.py */; };
 		AD0000000000000000720003 /* SmileyPicker.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000720000 /* SmileyPicker.py */; };
 		AD0000000000000000730001 /* VideoPlayback.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000730000 /* VideoPlayback.py */; };
+		ADFEED000000000000000001 /* PlaybackMonitor.py in Resources */ = {isa = PBXBuildFile; fileRef = ADFEED000000000000000000 /* PlaybackMonitor.py */; };
+		ADFEED000000000000000002 /* PlaybackMonitor.py in Resources */ = {isa = PBXBuildFile; fileRef = ADFEED000000000000000000 /* PlaybackMonitor.py */; };
+		ADFEED000000000000000003 /* PlaybackMonitor.py in Resources */ = {isa = PBXBuildFile; fileRef = ADFEED000000000000000000 /* PlaybackMonitor.py */; };
 		AD0000000000000000730002 /* VideoPlayback.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000730000 /* VideoPlayback.py */; };
 		AD0000000000000000730003 /* VideoPlayback.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000730000 /* VideoPlayback.py */; };
 		AD00000000000000740001 /* AttachmentPreview.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000740000 /* AttachmentPreview.py */; };
@@ -1954,6 +1957,7 @@
 		AD0000000000000000710000 /* AudioRecorderView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AudioRecorderView.py; sourceTree = "<group>"; };
 		AD0000000000000000720000 /* SmileyPicker.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SmileyPicker.py; sourceTree = "<group>"; };
 		AD0000000000000000730000 /* VideoPlayback.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoPlayback.py; sourceTree = "<group>"; };
+		ADFEED000000000000000000 /* PlaybackMonitor.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = PlaybackMonitor.py; sourceTree = "<group>"; };
 		AD00000000000000740000 /* AttachmentPreview.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AttachmentPreview.py; sourceTree = "<group>"; };
 		AD00000000000000750000 /* CameraCapture.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = CameraCapture.py; sourceTree = "<group>"; };
 		AD00000000000000760000 /* Avatars.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = Avatars.py; sourceTree = "<group>"; };
@@ -2298,6 +2302,7 @@
 				AD00000000000000004B0000 /* MessageBubbleView.py */,
 				AD00000000000000005C0000 /* AudioPlayback.py */,
 				AD0000000000000000730000 /* VideoPlayback.py */,
+				ADFEED000000000000000000 /* PlaybackMonitor.py */,
 				AD0000000000000000720000 /* SmileyPicker.py */,
 				AD0000000000000000700000 /* AudioRecorder.py */,
 				AD0000000000000000710000 /* AudioRecorderView.py */,
@@ -3024,6 +3029,7 @@
 				AD00000000000000004B0001 /* MessageBubbleView.py in Resources */,
 				AD00000000000000005C0001 /* AudioPlayback.py in Resources */,
 				AD0000000000000000730001 /* VideoPlayback.py in Resources */,
+				ADFEED000000000000000001 /* PlaybackMonitor.py in Resources */,
 				AD0000000000000000720001 /* SmileyPicker.py in Resources */,
 				AD0000000000000000700001 /* AudioRecorder.py in Resources */,
 				AD0000000000000000710001 /* AudioRecorderView.py in Resources */,
@@ -3313,6 +3319,7 @@
 				AD00000000000000004B0002 /* MessageBubbleView.py in Resources */,
 				AD00000000000000005C0002 /* AudioPlayback.py in Resources */,
 				AD0000000000000000730002 /* VideoPlayback.py in Resources */,
+				ADFEED000000000000000002 /* PlaybackMonitor.py in Resources */,
 				AD0000000000000000720002 /* SmileyPicker.py in Resources */,
 				AD0000000000000000700002 /* AudioRecorder.py in Resources */,
 				AD0000000000000000710002 /* AudioRecorderView.py in Resources */,
@@ -3623,6 +3630,7 @@
 				AD00000000000000004B0003 /* MessageBubbleView.py in Resources */,
 				AD00000000000000005C0003 /* AudioPlayback.py in Resources */,
 				AD0000000000000000730003 /* VideoPlayback.py in Resources */,
+				ADFEED000000000000000003 /* PlaybackMonitor.py in Resources */,
 				AD0000000000000000720003 /* SmileyPicker.py in Resources */,
 				AD0000000000000000700003 /* AudioRecorder.py in Resources */,
 				AD0000000000000000710003 /* AudioRecorderView.py in Resources */,
