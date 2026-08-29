@@ -79,7 +79,7 @@ from NicknameController import NicknameController
 from SIPManager import SIPManager
 from SmileyManager import SmileyManager
 from SubjectController import SubjectController
-from util import format_identity_to_string, format_size_rounded, sip_prefix_pattern, beautify_audio_codec, run_in_gui_thread
+from util import format_identity_to_string, format_size_rounded, otr_enabled_for_account, sip_prefix_pattern, beautify_audio_codec, run_in_gui_thread
 from MessageBubbleView import (FONT_SIZE_STEP, set_transcript_font_size,
                                transcript_font_size)
 
@@ -1122,20 +1122,35 @@ class ChatWindowController(NSWindowController):
                     if chat_stream.is_encrypted:
                         item.setTitle_(NSLocalizedString("My fingerprint is %s", "Menu item") % str(chat_stream.local_fingerprint))
 
+                    # Two switches can take OTR away: the global one in
+                    # Chat preferences and the account's own. Either off
+                    # means the item says so instead of offering to start
+                    # something that will not start -- but an encrypted
+                    # session always keeps its deactivate item, so that
+                    # turning a setting off cannot trap the user inside an
+                    # OTR session with no way to end it.
+                    account = getattr(selectedSession, 'account', None)
+                    account_allows = otr_enabled_for_account(account)
                     item = menu.itemWithTag_(4)
-                    if settings.chat.enable_encryption:
-                        if chat_stream.status == STREAM_CONNECTED:
-                            item.setHidden_(False)
-                            item.setEnabled_(True)
-                            item.setTitle_(NSLocalizedString("Activate OTR encryption for this session", "Menu item") if not chat_stream.is_encrypted else NSLocalizedString("Deactivate OTR encryption for this session", "Menu item"))
-                        else:
-                            item.setEnabled_(False)
-                            item.setTitle_(NSLocalizedString("OTR encryption is possible after connection is established", "Menu item"))
-                    else:
+                    if chat_stream.is_encrypted:
+                        item.setHidden_(False)
+                        item.setEnabled_(True)
+                        item.setTitle_(NSLocalizedString("Deactivate OTR encryption for this session", "Menu item"))
+                    elif not settings.chat.enable_encryption:
                         item.setEnabled_(False)
                         item.setTitle_(NSLocalizedString("OTR encryption is disabled in Chat preferences", "Menu item"))
+                    elif not account_allows:
+                        item.setEnabled_(False)
+                        item.setTitle_(NSLocalizedString("OTR encryption is disabled for account %s", "Menu item") % getattr(account, 'id', ''))
+                    elif chat_stream.status == STREAM_CONNECTED:
+                        item.setHidden_(False)
+                        item.setEnabled_(True)
+                        item.setTitle_(NSLocalizedString("Activate OTR encryption for this session", "Menu item"))
+                    else:
+                        item.setEnabled_(False)
+                        item.setTitle_(NSLocalizedString("OTR encryption is possible after connection is established", "Menu item"))
 
-                    if settings.chat.enable_encryption:
+                    if settings.chat.enable_encryption and (account_allows or chat_stream.is_encrypted):
                         if chat_stream.remote_fingerprint:
                             item = menu.itemWithTag_(6)
                             item.setHidden_(False)

@@ -4,7 +4,8 @@
 __all__ = ['audio_codecs', 'allocate_autorelease_pool', 'beautify_audio_codec', 'beautify_video_codec', 'call_in_gui_thread', 'call_later', 'run_in_gui_thread',
            'compare_identity_addresses', 'escape_html', 'external_url_pattern', 'format_uri_type', 'format_identity_to_string', 'format_date', 'format_size', 'format_size_rounded', 'is_sip_aor_format', 'is_anonymous', 'image_file_extension_pattern', 'html2txt', 'normalize_sip_uri_for_outgoing_session', 'osx_version',
            'sipuri_components_from_string', 'strip_addressbook_special_characters', 'sip_prefix_pattern', 'video_file_extension_pattern',  'translate_alpha2digit', 'checkValidPhoneNumber',
-           'AccountInfo', 'DictDiffer', 'local_to_utc', 'utc_to_local', 'execute_once', 'trusted_cas']
+           'AccountInfo', 'DictDiffer', 'local_to_utc', 'utc_to_local', 'execute_once', 'trusted_cas', 'otr_enabled_for_account',
+           'pgp_enabled_for_account']
 
 from AppKit import NSApp, NSRunAlertPanel
 from Foundation import NSAutoreleasePool, NSBundle, NSTimer, NSThread, NSLocalizedString
@@ -41,6 +42,37 @@ _pstn_addressbook_chars = "(\(\s?0\s?\)|[-() \/\.])"
 _pstn_addressbook_chars_substract_regexp = re.compile(_pstn_addressbook_chars)
 _pstn_match_regexp = re.compile("^\+?([0-9,\#\*]|%s)+$" % _pstn_addressbook_chars)
 _pstn_plus_regexp = re.compile("^\+")
+
+
+def otr_enabled_for_account(account):
+    """Whether OTR may be used at all for this account.
+
+    Off means off in both directions: nothing offers OTR, nothing starts
+    it on its own, and the menus that drive it say so instead of holding
+    out a control that would fail. Read live rather than cached -- the
+    setting can be changed while a conversation is open.
+
+    A session already encrypted is the one thing this does not decide:
+    turning the setting off must never leave a user inside an OTR session
+    with no way to end it, so callers keep the deactivate control alive
+    whenever encryption is actually running.
+    """
+    return bool(getattr(getattr(account, 'sms', None), 'enable_otr', False))
+
+
+def pgp_enabled_for_account(account):
+    """Whether PGP may be used at all for this account.
+
+    The counterpart of otr_enabled_for_account, and read live for the same
+    reason: the setting can be changed while a conversation is open, and
+    the controls that offer PGP have to follow it rather than the state
+    they were built with.
+
+    A conversation that IS PGP encrypted is not decided here either --
+    callers keep saying so, because hiding the fact would not make the
+    messages any less encrypted.
+    """
+    return bool(getattr(getattr(account, 'sms', None), 'enable_pgp', False))
 
 
 def strip_addressbook_special_characters(contact):

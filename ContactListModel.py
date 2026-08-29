@@ -121,6 +121,25 @@ status_localized = {
 
 ICON_SIZE = 128
 
+# When the Bonjour account is selected in the account popup, show only the
+# Bonjour Neighbours group and hide all other groups (contacts, history,
+# favorites, etc.). Bonjour is a link-local mode: the other groups hold
+# contacts that cannot be reached over it, so they only add noise.
+#
+# Set to False to restore the previous behaviour, where selecting Bonjour
+# merely moved the Bonjour group to the top of the list and left every other
+# group visible (see ContactListModel.moveBonjourGroupFirst and
+# ContactWindowController.accountSelectionChanged_).
+#
+# Notes:
+#  - This is display-only filtering: groupsList itself is left untouched, so
+#    group ordering, drag & drop indexes, search and any other code that walks
+#    groupsList keeps working on the full list.
+#  - The filtering happens in ContactListModel.visibleGroupsList; the outline
+#    view is refreshed on account switch, so toggling accounts is enough for
+#    the change to become visible.
+HIDE_OTHER_GROUPS_FOR_BONJOUR_ACCOUNT = True
+
 presence_status_icons = {'away': NSImage.imageNamed_("away"),
                          'busy': NSImage.imageNamed_("busy"),
                          'available': NSImage.imageNamed_("available"),
@@ -2416,10 +2435,17 @@ class CustomListModel(NSObject):
     def sessionControllersManager(self):
         return NSApp.delegate().contactsWindowController.sessionControllersManager
 
+    @property
+    def visibleGroupsList(self):
+        # The groups the outline view must display. By default everything in
+        # groupsList; ContactListModel narrows it down when the Bonjour account
+        # is selected. Only the display is affected, groupsList stays complete.
+        return self.groupsList
+
     # data source methods
     def outlineView_numberOfChildrenOfItem_(self, outline, item):
         if item is None:
-            return len(self.groupsList)
+            return len(self.visibleGroupsList)
         elif isinstance(item, BlinkGroup):
             return len(item.contacts)
         else:
@@ -2441,7 +2467,7 @@ class CustomListModel(NSObject):
 
     def outlineView_itemForPersistentObject_(self, outline, object):
         try:
-            return next((group for group in self.groupsList if group.name == object))
+            return next((group for group in self.visibleGroupsList if group.name == object))
         except StopIteration:
             return None
 
@@ -2450,7 +2476,10 @@ class CustomListModel(NSObject):
 
     def outlineView_child_ofItem_(self, outline, index, item):
         if item is None:
-            return self.groupsList[index]
+            try:
+                return self.visibleGroupsList[index]
+            except IndexError:
+                return None
         elif isinstance(item, BlinkGroup):
             try:
                 return item.contacts[index]
@@ -2492,6 +2521,71 @@ class CustomListModel(NSObject):
         return total
 
     @objc.python_method
+    def composingForContact(self, contact):
+        """Is anyone typing at this contact right now?
+
+        Fans out over the contact's addresses the same way the unread
+        badge does: the state is keyed by canonical URI and one contact
+        can hold several.
+        """
+        try:
+            from SMSWindowManager import SMSWindowManager
+            manager = SMSWindowManager()
+        except Exception:
+            return False
+
+        try:
+            identifier = getattr(contact, 'id', None)
+            if identifier and '@' not in str(identifier):
+                # Bonjour contacts are keyed by instance id, not URI
+                if manager.isComposingForURI(str(identifier)):
+                    return True
+            for uri in getattr(contact, 'uris', ()):
+                if manager.isComposingForURI(str(uri.uri)):
+                    return True
+        except Exception:
+            return False
+        return False
+
+    @objc.python_method
+    @run_in_gui_thread
+    def _NH_BlinkComposingStateChanged(self, notification):
+        """Redraw the row of whoever started or stopped typing.
+
+        Same reasoning as the unread handler: one row, never reloadData().
+        """
+        key = getattr(notification.data, 'key', None)
+        composing = bool(getattr(notification.data, 'composing', False))
+        names = self._reloadRowsForKey(key)
+        # log_info rather than log_debug: this is the last hop before the
+        # row draws, so it is the line that says whether an indication that
+        # arrived on the wire actually reached a contact. Nought rows is
+        # the failure worth naming -- it means the address on the wire and
+        # the addresses on the contacts do not reduce to the same key, and
+        # the indicator could then only ever be invisible.
+        BlinkLogger().log_info('Is-Composing: typing indicator %s for %s, %d contact row(s) updated%s'
+                               % ('on' if composing else 'off', key, len(names),
+                                  ': %s' % ', '.join(names) if names else ''))
+
+    @objc.python_method
+    def _reloadRowsForKey(self, key):
+        """Redraw every row that stands for this address.
+
+        Returns the names of the rows it redrew -- the caller logs them,
+        and a name is what makes that line readable next to a URI.
+        """
+        outline = getattr(self, 'contactOutline', None)
+        if not key or outline is None:
+            return []
+        names = []
+        for group in getattr(self, 'groupsList', ()):
+            for contact in getattr(group, 'contacts', ()):
+                if self._contactMatchesKey(contact, key):
+                    outline.reloadItem_reloadChildren_(contact, False)
+                    names.append(str(getattr(contact, 'name', '') or getattr(contact, 'uri', '')))
+        return names
+
+    @objc.python_method
     @run_in_gui_thread
     def _NH_BlinkUnreadMessageCountChanged(self, notification):
         """Redraw only the rows for the contact whose count changed.
@@ -2499,14 +2593,7 @@ class CustomListModel(NSObject):
         Never reloadData(): the contact list is long and reloading it
         collapses the scroll position under the user.
         """
-        key = getattr(notification.data, 'key', None)
-        outline = getattr(self, 'contactOutline', None)
-        if not key or outline is None:
-            return
-        for group in getattr(self, 'groupsList', ()):
-            for contact in getattr(group, 'contacts', ()):
-                if self._contactMatchesKey(contact, key):
-                    outline.reloadItem_reloadChildren_(contact, False)
+        self._reloadRowsForKey(getattr(notification.data, 'key', None))
 
     @objc.python_method
     @run_in_gui_thread
@@ -2570,6 +2657,7 @@ class CustomListModel(NSObject):
     def outlineView_willDisplayCell_forTableColumn_item_(self, outline, cell, column, item):
         cell.setMessageIcon_(None)
         cell.setUnreadCount_(self.unreadCountForContact(item) if isinstance(item, BlinkContact) else 0)
+        cell.setComposing_(self.composingForContact(item) if isinstance(item, BlinkContact) else False)
         # Only in the Messages group: elsewhere a row is a contact, not a
         # conversation, and stamping every one of them with a chat time
         # turns the address book into something it is not.
@@ -3163,6 +3251,7 @@ class ContactListModel(CustomListModel):
 
     def awakeFromNib(self):
         self.nc.add_observer(self, name="BlinkUnreadMessageCountChanged")
+        self.nc.add_observer(self, name="BlinkComposingStateChanged")
         self.nc.add_observer(self, name="BlinkConversationOrderChanged")
         self.nc.add_observer(self, name="BlinkOnlineContactMustBeRemoved")
         self.nc.add_observer(self, name="BonjourAccountDidAddNeighbour")
@@ -3670,6 +3759,32 @@ class ContactListModel(CustomListModel):
 
         modified_items = list(group.contacts) + [group]
         self._atomic_update(save=modified_items)
+
+    @property
+    def visibleGroupsList(self):
+        # Display-only filter: when the Bonjour account is the selected
+        # (default) account and HIDE_OTHER_GROUPS_FOR_BONJOUR_ACCOUNT is set,
+        # only the Bonjour Neighbours group is shown. Flip the flag at the top
+        # of this module to get all groups back.
+        if not HIDE_OTHER_GROUPS_FOR_BONJOUR_ACCOUNT:
+            return self.groupsList
+
+        if not self.bonjourAccountIsSelected():
+            return self.groupsList
+
+        if self.bonjour_group not in self.groupsList:
+            # Bonjour account not activated yet, nothing to show for it
+            return self.groupsList
+
+        return [self.bonjour_group]
+
+    @objc.python_method
+    def bonjourAccountIsSelected(self):
+        try:
+            return AccountManager().default_account is BonjourAccount()
+        except Exception:
+            # Account manager not started yet
+            return False
 
     @objc.python_method
     def moveBonjourGroupFirst(self):

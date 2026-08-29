@@ -10,6 +10,7 @@ from AppKit import (NSCompositeSourceAtop,
                     NSParagraphStyleAttributeName)
 
 from Foundation import (NSAttributedString,
+                        NSString,
                         NSBezierPath,
                         NSColor,
                         NSDictionary,
@@ -23,6 +24,7 @@ from Foundation import (NSAttributedString,
                         NSTextFieldCell)
 
 import datetime
+import os
 import objc
 
 
@@ -60,11 +62,31 @@ def format_last_message_time(stamp):
         return ''
 
 from BlinkLogger import BlinkLogger
+from Avatars import GLYPH_AVATARS, NO_PHOTO_AVATAR, draw_avatar
 
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.account import BonjourAccount
 
 from ContactListModel import presence_status_for_contact, presence_status_icons, BonjourBlinkContact, BlinkOnlineContact, BlinkPresenceContact, BlinkMyselfConferenceContact,BlinkConferenceContact, BlinkHistoryViewerContact, HistoryBlinkContact, SystemAddressBookBlinkContact, LdapSearchResultContact, SearchResultContact
+
+
+# The typing line. A pencil and a word, because it has to be recognisable
+# at a glance next to a name.
+#
+# U+270E LOWER RIGHT PENCIL rather than U+270F PENCIL: the same object
+# drawn on the slant, the way a pencil is held, instead of lying flat on
+# the line. It is also the quieter of the two to render -- U+270F carries
+# an emoji presentation that has to be turned off with a variation
+# selector, and is drawn from the colour font at its own scale until it
+# is, while U+270E has no emoji form and simply takes the size and colour
+# of the text around it.
+#
+# An NSString rather than a Python str: these are drawn with
+# drawInRect_withAttributes_, an ObjC method a plain str does not have. A
+# str here raises AttributeError inside drawWithFrame_inView_, whose
+# blanket `except Exception: pass` turns that into a second line that is
+# simply not there.
+COMPOSING_TEXT = NSString.stringWithString_('\u270e is typing\u2026')
 
 
 class ContactCell(NSTextFieldCell):
@@ -76,6 +98,21 @@ class ContactCell(NSTextFieldCell):
     BADGE_HEIGHT = 12.0
     BADGE_FONT_SIZE = 8.0
     lastMessageTime = None
+    # True while the other party of this conversation is typing. Drawn on
+    # the second line in place of the contact's detail: it is transient
+    # text, not a count, so it has no business in the badge corner.
+    composing = False
+    # The avatar: a circle at the left of the row. It used to sit two points
+    # off the window's edge, which was close enough to read as touching it
+    # once the picture became a filled circle rather than a rectangle inside
+    # a photograph's own white border.
+    AVATAR_SIZE = 28.0
+    AVATAR_LEFT = 6.0
+    AVATAR_TOP = 7.0
+    # Where the name and the detail start. Derived, so the margin above can
+    # be changed without the text either colliding with the avatar or
+    # leaving a gap that grows every time it moves.
+    TEXT_LEFT = AVATAR_LEFT + AVATAR_SIZE + 5.0
     # Right-hand gutter owned by the presence status bar, which sits at
     # view width - 6. The time stops short of that; the night icon is moved
     # to the left of the time rather than the time working around it.
@@ -126,6 +163,15 @@ class ContactCell(NSTextFieldCell):
     def setLastMessageTime_(self, stamp):
         self.lastMessageTime = stamp
 
+    def setComposing_(self, flag):
+        self.composing = bool(flag)
+        if self.composing:
+            # Cheap and rare -- rows are only redrawn when something about
+            # them changed -- and it is the one place that proves the state
+            # travelled all the way from the wire to the row that draws it.
+            BlinkLogger().log_debug('Typing indicator on the row for %s'
+                                    % getattr(self.contact, 'uri', self.contact))
+
     def setUnreadCount_(self, count):
         try:
             self.unreadCount = int(count or 0)
@@ -172,10 +218,9 @@ class ContactCell(NSTextFieldCell):
             BlinkLogger().log_error('Cannot draw the last message time: %s' % e)
 
         try:
-            icon = self.contact.avatar.icon
-            self.drawIcon(icon, 2, self.frame.origin.y+7, 28, 28)
-        except Exception:
-            pass
+            self.drawAvatar()
+        except Exception as e:
+            BlinkLogger().log_error('Cannot draw the contact avatar: %s' % e)
 
         # AFTER the avatar. The badge sits on the photo's corner, and
         # drawing it first -- which it was, to get at the frame before
@@ -259,7 +304,7 @@ class ContactCell(NSTextFieldCell):
     @objc.python_method
     def drawFirstLine(self):
         frame = self.frame
-        frame.origin.x = 35
+        frame.origin.x = self.TEXT_LEFT
         frame.origin.y += 6
 
         rect = NSMakeRect(frame.origin.x, frame.origin.y,
@@ -272,12 +317,29 @@ class ContactCell(NSTextFieldCell):
     def drawSecondLine(self):
         frame = self.frame
         frame.origin.y += 16
-        if self.contact.detail:
-            rect = NSMakeRect(frame.origin.x, frame.origin.y,
-                              self.textWidthFrom(frame, frame.origin.x, 25),
-                              frame.size.height)
+        if self.composing:
+            # The detail line's own attributes, not a set of its own: they
+            # are the ones already proven to draw on this row, in this
+            # appearance, at this size. A separate dictionary is one more
+            # thing that can come back empty -- and an empty attributes
+            # dictionary draws in default black, which on a dark row is
+            # indistinguishable from drawing nothing at all.
+            #
+            # Takes the line whether or not the contact has a detail: a
+            # row whose detail happens to be empty is still a row someone
+            # is typing at.
+            text = COMPOSING_TEXT
             attrs = self.secondLineAttributes if not self.isHighlighted() else self.secondLineAttributes_highlighted
-            self.contact.detail.drawInRect_withAttributes_(rect, attrs)
+        elif self.contact.detail:
+            text = self.contact.detail
+            attrs = self.secondLineAttributes if not self.isHighlighted() else self.secondLineAttributes_highlighted
+        else:
+            return
+
+        rect = NSMakeRect(frame.origin.x, frame.origin.y,
+                          self.textWidthFrom(frame, frame.origin.x, 25),
+                          frame.size.height)
+        text.drawInRect_withAttributes_(rect, attrs)
 
     @objc.python_method
     def drawUnreadBadge(self):
@@ -302,12 +364,14 @@ class ContactCell(NSTextFieldCell):
         label = NSAttributedString.alloc().initWithString_attributes_(text, attrs)
         size = label.size()
 
-        # the avatar is drawn at x=2, y=frame.origin.y+7, 28x28 (drawIcon below)
-        avatar_right = 2 + 28
-        avatar_top = self.frame.origin.y + 7
+        avatar_right = self.AVATAR_LEFT + self.AVATAR_SIZE
+        avatar_top = self.frame.origin.y + self.AVATAR_TOP
 
         height = self.BADGE_HEIGHT
         width = max(height, size.width + 6.0)
+        # Right edge just short of where the name starts, whatever the count
+        # widens the badge to, and high enough to read as sitting on top of
+        # the avatar rather than inside it.
         rect = NSMakeRect(avatar_right - width + 4.0, avatar_top - 2.0, width, height)
 
         badge = NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(rect, height / 2.0, height / 2.0)
@@ -490,6 +554,48 @@ class ContactCell(NSTextFieldCell):
             tinted = self.nightIcon
         ContactCell._night_icon_cache[key] = tinted
         return tinted
+
+    @objc.python_method
+    def avatarName(self):
+        """What the initials and the colour are derived from."""
+        contact = self.contact
+        name = getattr(contact, 'name', None)
+        if name:
+            return str(name)
+        return str(getattr(contact, 'uri', '') or '')
+
+    @objc.python_method
+    def drawAvatar(self):
+        """The contact as a circle: their photograph, or their initials.
+
+        The same treatment as the message bubbles and as mobile. A contact
+        with no photograph used to get default_user_icon.tiff -- one grey
+        person glyph shared by everybody, which is no help at all in a list
+        where telling one row from another is the whole point. That file is
+        a real image and loads like any other, so "has a photograph" is a
+        question about its name, which Avatars answers.
+
+        The three stand-ins that mean something -- a room, a watcher waiting
+        to be allowed, somebody refused -- are drawn exactly as they were,
+        whole and unclipped. A room is not a person, and the initials of its
+        name say less than the group glyph does; and these are line drawings
+        that would lose their outer strokes to a circle, with nothing
+        outside the frame to give up in exchange the way a photograph has.
+        """
+        avatar = self.contact.avatar
+        icon = avatar.icon if avatar is not None else None
+        filename = os.path.basename(str(getattr(avatar, 'path', None) or ''))
+        top = self.frame.origin.y + self.AVATAR_TOP
+        if filename in GLYPH_AVATARS:
+            if icon is not None:
+                self.drawIcon(icon, self.AVATAR_LEFT, top,
+                              self.AVATAR_SIZE, self.AVATAR_SIZE)
+            return
+        if filename == NO_PHOTO_AVATAR:
+            icon = None
+        draw_avatar(NSMakeRect(self.AVATAR_LEFT, top,
+                               self.AVATAR_SIZE, self.AVATAR_SIZE),
+                    icon, self.avatarName())
 
     @objc.python_method
     def drawIcon(self, icon, origin_x, origin_y, size_x, size_y):

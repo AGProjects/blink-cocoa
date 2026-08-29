@@ -96,6 +96,8 @@ from SylkLocation import append_track_point
 from resources import ApplicationData, Resources
 from SmileyManager import SmileyManager
 from BlinkLogger import BlinkLogger
+from Avatars import (draw_avatar as _draw_avatar,
+                     is_placeholder_avatar as _is_placeholder_avatar)
 
 from ChatViewController import (MSG_STATE_SENDING,
                                 MSG_STATE_SENT,
@@ -455,17 +457,6 @@ _url_re = re.compile(r'((?:https?://|sip:|sips:)[^\s<>()\[\]"\']+)')
 
 _image_cache = {}
 
-# ContactWindowController.iconPathForURI falls back to DefaultUserAvatar
-# (default_user_icon.tiff) for contacts with no photo. That generic person
-# glyph is why the same contact showed a person icon on one message and
-# initials on another: treat it as "no avatar" so initials always win.
-_PLACEHOLDER_AVATARS = ('default_user_icon.tiff', 'default_multi_user_icon.tiff')
-
-
-def _is_placeholder_avatar(path):
-    return bool(path) and os.path.basename(str(path)) in _PLACEHOLDER_AVATARS
-
-
 def _image(path):
     """Load an image file, cached.
 
@@ -597,105 +588,9 @@ def _draw_tile(image, rect):
         NSCompositeSourceOver, 1.0, True, None)
 
 
-# Palette for initials avatars. Picked by a stable hash of the name so a
-# contact keeps the same colour across launches and across machines.
-AVATAR_PALETTE = (
-    (0x5B, 0x8C, 0xC4), (0x6A, 0xB0, 0x7A), (0xC4, 0x8B, 0x5B),
-    (0xA5, 0x7A, 0xC4), (0xC4, 0x5B, 0x6E), (0x4F, 0xA8, 0xA8),
-    (0xC4, 0xA8, 0x4F), (0x7A, 0x8C, 0xA5),
-)
-
-_initials_re = re.compile(r'[^0-9A-Za-z]+')
-_phone_re = re.compile(r'^\+?[0-9(][0-9\s().-]*$')
-
-
-def avatar_initials(name):
-    """Up to two initials for a display name or SIP address.
-
-    'Alice Smith' -> AS, 'bob@example.com' -> B, 'sip:jan.de.vries@x' -> JD
-    """
-    if not name:
-        return '?'
-    text = str(name).strip()
-    for scheme in ('sips:', 'sip:'):
-        if text.lower().startswith(scheme):
-            text = text[len(scheme):]
-            break
-    # a bare address contributes only its user part
-    if '@' in text and ' ' not in text:
-        text = text.split('@', 1)[0]
-    # a phone number has no meaningful initial -- show its last two digits
-    if _phone_re.match(text):
-        digits = re.sub(r'\D', '', text)
-        if len(digits) >= 2:
-            return digits[-2:]
-        return digits or '?'
-
-    tokens = [t for t in _initials_re.split(text) if t]
-    if not tokens:
-        return '?'
-    if len(tokens) == 1:
-        return tokens[0][0].upper()
-    return (tokens[0][0] + tokens[1][0]).upper()
-
-
-def avatar_color(name):
-    key = (str(name or '')).strip().lower().encode('utf-8')
-    index = zlib.crc32(key) % len(AVATAR_PALETTE)
-    return _rgb(*AVATAR_PALETTE[index])
-
-
-def _draw_avatar(rect, image, name):
-    """Draw an avatar as a circle of a FIXED size.
-
-    Everything is rendered into the same inscribed square and clipped to the
-    same circle, so a photo, a wide image and a set of initials all come out
-    identical in size and shape. Previously photos were aspect-FITTED (so a
-    non-square image drew smaller than the circle) while initials filled it,
-    which is why avatars appeared at different diameters.
-    """
-    if rect.size.width <= 0 or rect.size.height <= 0:
-        return
-
-    side = min(rect.size.width, rect.size.height)
-    square = NSMakeRect(rect.origin.x + (rect.size.width - side) / 2.0,
-                        rect.origin.y + (rect.size.height - side) / 2.0,
-                        side, side)
-    circle = NSBezierPath.bezierPathWithOvalInRect_(square)
-
-    if image is not None:
-        size = image.size()
-        if size and size.width and size.height:
-            context = NSGraphicsContext.currentContext()
-            context.saveGraphicsState()
-            try:
-                circle.addClip()
-                # aspect-FILL: cover the circle, crop the overflow
-                scale = max(side / size.width, side / size.height)
-                width = size.width * scale
-                height = size.height * scale
-                target = NSMakeRect(square.origin.x + (side - width) / 2.0,
-                                    square.origin.y + (side - height) / 2.0,
-                                    width, height)
-                image.drawInRect_fromRect_operation_fraction_respectFlipped_hints_(
-                    target, NSMakeRect(0, 0, size.width, size.height),
-                    NSCompositeSourceOver, 1.0, True, None)
-            finally:
-                context.restoreGraphicsState()
-            return
-
-    avatar_color(name).set()
-    circle.fill()
-
-    initials = avatar_initials(name)
-    attrs = {
-        NSFontAttributeName: NSFont.boldSystemFontOfSize_(max(side * 0.42, 8.0)),
-        NSForegroundColorAttributeName: NSColor.whiteColor(),
-    }
-    text = NSAttributedString.alloc().initWithString_attributes_(initials, attrs)
-    text_size = text.size()
-    text.drawAtPoint_((square.origin.x + (side - text_size.width) / 2.0,
-                       square.origin.y + (side - text_size.height) / 2.0))
+# The avatar itself -- the circle, the initials and the colour they sit
+# on -- lives in Avatars, imported above, so the contact list and the
+# contact editor draw the same avatar as a message bubble does.
 
 
 def _rgb(r, g, b, a=1.0):

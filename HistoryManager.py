@@ -1227,6 +1227,45 @@ class ChatHistory(object, metaclass=Singleton):
                 result[str(uri)] = str(stamp)
         return result
 
+    @run_in_db_thread
+    def _last_message_accounts(self, media_type):
+        table = ChatMessage.sqlmeta.table
+        where = ''
+        if media_type:
+            where = ' where media_type = %s' % ChatMessage.sqlrepr(media_type)
+        # The local_uri of the newest row per conversation. Joined against
+        # the grouped maximum rather than selected with it: a bare
+        # `select remote_uri, local_uri, max(time) ... group by` leaves
+        # which row local_uri comes from up to the engine.
+        query = ('select m.remote_uri, m.local_uri from %(table)s m '
+                 'join (select remote_uri, max(time) as newest from %(table)s%(where)s '
+                 'group by remote_uri) latest '
+                 'on m.remote_uri = latest.remote_uri and m.time = latest.newest '
+                 'group by m.remote_uri' % {'table': table, 'where': where})
+        try:
+            rows = self.db.queryAll(query)
+        except Exception as e:
+            BlinkLogger().log_error('Error reading the last message accounts: %s' % e)
+            return {}
+        result = {}
+        for row in rows:
+            try:
+                remote_uri, local_uri = row[0], row[1]
+            except Exception:
+                continue
+            if remote_uri and local_uri:
+                result[str(remote_uri)] = str(local_uri)
+        return result
+
+    def last_message_accounts(self, media_type=None):
+        """{remote_uri: local_uri} -- which account each conversation last used.
+
+        What restores, across a restart, the account a conversation is
+        being held on: it is a property of the conversation rather than of
+        whichever account happens to be selected in the popup.
+        """
+        return block_on(self._last_message_accounts(media_type))
+
     def last_message_times(self, media_type=None):
         """{remote_uri: 'YYYY-MM-DD HH:MM:SS'} for every conversation.
 

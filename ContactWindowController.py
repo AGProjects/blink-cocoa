@@ -53,7 +53,6 @@ from Foundation import (NSArray,
                         NSDictionary,
                         NSEvent,
                         NSFont,
-                        NSGraphicsContext,
                         NSHeight,
                         NSImage,
                         NSImageView,
@@ -140,6 +139,7 @@ from AlertPanel import AlertPanel
 from AudioSession import AudioSession
 from BlockedContact import BlockedContact
 from BlinkLogger import BlinkLogger
+from Avatars import NO_PHOTO_AVATAR, draw_avatar
 from HistoryManager import SessionHistory
 from HistoryViewer import HistoryViewer
 from ContactCell import ContactCell  # this is used from the UI
@@ -190,8 +190,22 @@ session_status_localized = {
 
 
 class PhotoView(NSImageView):
+    """My own avatar, at the top of the main window.
+
+    A circle, the same one the contact list draws for everybody else -- it
+    used to be a rounded rectangle, and the picture was stretched to fill it
+    rather than cropped, so a photograph that was not square came out
+    squashed. With no picture set it shows my initials on a colour of their
+    own instead of the grey person glyph, again like every other row.
+    """
+
     entered = False
     callback = None
+    # Whether the image is a photograph or the stand-in, and the name the
+    # initials come from while there is no photograph. Both are set by the
+    # window controller, which is the only thing that knows either.
+    hasPhoto = False
+    avatarName = ''
 
     def mouseDown_(self, event):
         self.callback(self)
@@ -210,20 +224,34 @@ class PhotoView(NSImageView):
         self.addTrackingRect_owner_userData_assumeInside_(rect, self, None, False)
 
     def drawRect_(self, rect):
-        NSColor.whiteColor().set()
-        path = NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(rect, 5.0, 5.0)
-        path.fill()
-
-        if self.image():
-            NSGraphicsContext.saveGraphicsState()
-            path.addClip()
-            frect = NSZeroRect
-            frect.size = self.image().size()
-            self.image().drawInRect_fromRect_operation_fraction_(rect, frect, NSCompositeSourceOver, 1.0)
-            NSGraphicsContext.restoreGraphicsState()
-        NSColor.blackColor().colorWithAlphaComponent_(0.5).set()
-        if self.entered:
-            path.fill()
+        try:
+            bounds = self.bounds()
+            side = min(bounds.size.width, bounds.size.height)
+            square = NSMakeRect(bounds.origin.x + (bounds.size.width - side) / 2.0,
+                                bounds.origin.y + (bounds.size.height - side) / 2.0,
+                                side, side)
+            circle = NSBezierPath.bezierPathWithOvalInRect_(square)
+            image = self.image() if self.hasPhoto else None
+            if image is not None:
+                # White behind the photograph, as before: a PNG with
+                # transparency in it should not show the window through.
+                NSColor.whiteColor().set()
+                circle.fill()
+            if image is None and not self.avatarName:
+                # Before the first account has loaded there is neither a
+                # picture nor a name: an empty disc, not a circle with a
+                # question mark in it.
+                NSColor.grayColor().colorWithAlphaComponent_(0.15).set()
+                circle.fill()
+            else:
+                draw_avatar(square, image, self.avatarName)
+            if self.entered:
+                # The same darkening on hover that said "this is a button",
+                # following the new shape.
+                NSColor.blackColor().colorWithAlphaComponent_(0.35).set()
+                circle.fill()
+        except Exception as e:
+            BlinkLogger().log_error('Cannot draw my own avatar: %s' % e)
 
 
 @implementer(IObserver)
@@ -814,6 +842,12 @@ class ContactWindowController(NSWindowController):
     @objc.python_method
     def updateNameLabel(self, name):
         self.nameText.setStringValue_(name)
+        # My initials are my display name: renaming myself has to reach the
+        # avatar beside it.
+        try:
+            self.updateOwnAvatarName()
+        except Exception:
+            pass
 
     @objc.python_method
     def refreshContactsList(self, sender=None):
@@ -1257,7 +1291,7 @@ class ContactWindowController(NSWindowController):
             item = self.contactOutline.itemAtRow_(row)
             selected_group = self.contactOutline.parentForItem_(item) if isinstance(item, BlinkContact) else item
 
-        for group in self.model.groupsList:
+        for group in self.model.visibleGroupsList:
             item = self.groupMenu.addItemWithTitle_action_keyEquivalent_(group.name, "goToGroup:", "")
             item.setIndentationLevel_(1)
             item.setRepresentedObject_(group)
@@ -2357,6 +2391,8 @@ class ContactWindowController(NSWindowController):
         path, image = picker.runModal()
         if image and path:
             self.photoImage.setImage_(image)
+            self.photoImage.hasPhoto = not path.endswith(NO_PHOTO_AVATAR)
+            self.photoImage.setNeedsDisplay_(True)
             if path.endswith("default_user_icon.tiff"):
                 # Skip all icon processing, just set the setting to None
                 settings = SIPSimpleSettings()
@@ -2393,6 +2429,26 @@ class ContactWindowController(NSWindowController):
         else:
             path = DefaultUserAvatar().path
         self.photoImage.setImage_(NSImage.alloc().initWithContentsOfFile_(path))
+        # The stand-in is not a photograph: with no icon of my own the view
+        # draws my initials, exactly as a contact without one does.
+        self.photoImage.hasPhoto = os.path.basename(str(path)) != NO_PHOTO_AVATAR
+        self.updateOwnAvatarName()
+
+    @objc.python_method
+    def updateOwnAvatarName(self):
+        """What my own initials and colour come from: my display name."""
+        try:
+            name = str(self.nameText.stringValue()).strip()
+        except Exception:
+            name = ''
+        if not name:
+            try:
+                account = self.activeAccount()
+                name = str(account.id) if account is not None else ''
+            except Exception:
+                name = ''
+        self.photoImage.avatarName = name
+        self.photoImage.setNeedsDisplay_(True)
 
     @objc.python_method
     @run_in_thread('file-io')
@@ -3072,6 +3128,20 @@ class ContactWindowController(NSWindowController):
         if contact in self.model.bonjour_group.contacts:
             account = BonjourAccount()
             instance_id = contact.id
+        else:
+            # The account popup picks the account for someone this
+            # application has never talked to. For anyone else the
+            # conversation already has one -- whichever account last
+            # carried a message either way -- and starting a new
+            # conversation on a different one would answer from an
+            # address the peer never wrote to.
+            try:
+                remembered = SMSWindowManager.SMSWindowManager().accountForRemoteURI(target)
+            except Exception as e:
+                BlinkLogger().log_error('Cannot tell which account %s uses: %s' % (target, e))
+                remembered = None
+            if remembered is not None:
+                account = remembered
 
         target = normalize_sip_uri_for_outgoing_session(target, account)
         if not target:
@@ -3125,9 +3195,13 @@ class ContactWindowController(NSWindowController):
 
             target, display_name, account, instance_id = resolved
             manager = SMSWindowManager.SMSWindowManager()
-            viewer = manager.viewerForTarget(target, display_name, account,
-                                             instance_id=instance_id,
-                                             selected_contact=contact)
+            # An open conversation with this person wins over the account
+            # popup: the popup picks the account for a NEW one only.
+            viewer = manager.openViewerForURI(str(target)) if instance_id is None else None
+            if viewer is None:
+                viewer = manager.viewerForTarget(target, display_name, account,
+                                                 instance_id=instance_id,
+                                                 selected_contact=contact)
             if viewer is None:
                 return False
             manager.presentViewer(viewer, focus=True, note_new_message=False)
@@ -3183,9 +3257,11 @@ class ContactWindowController(NSWindowController):
         target, display_name, account, instance_id = resolved
         try:
             manager = SMSWindowManager.SMSWindowManager()
-            viewer = manager.viewerForTarget(target, display_name, account,
-                                             instance_id=instance_id,
-                                             selected_contact=contact)
+            viewer = manager.openViewerForURI(str(target)) if instance_id is None else None
+            if viewer is None:
+                viewer = manager.viewerForTarget(target, display_name, account,
+                                                 instance_id=instance_id,
+                                                 selected_contact=contact)
             if viewer is None:
                 pane.selectViewer(None)
                 return
@@ -4876,6 +4952,9 @@ class ContactWindowController(NSWindowController):
         self.activeAccount().display_name = name
         self.activeAccount().save()
         sender.resignFirstResponder()
+        # The name typed here is what my initials are made of, and this
+        # field's action does not go through updateNameLabel.
+        self.updateOwnAvatarName()
 
     @objc.IBAction
     def startAudioSessionWithSIPURI_(self, sender):
@@ -5191,10 +5270,13 @@ class ContactWindowController(NSWindowController):
                 self.contactOutline.reloadData()
                 self.contactOutline.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(0), False)
                 self.contactOutline.scrollRowToVisible_(0)
-            elif self.model.bonjour_group in self.model.groupsList and self.model.groupsList.index(self.model.bonjour_group) == 0:
-                self.model.restoreBonjourGroupPosition()
-                self.contactOutline.reloadData()
-                if not self.model.bonjour_group.group.expanded:
+            else:
+                if self.model.bonjour_group in self.model.groupsList and self.model.groupsList.index(self.model.bonjour_group) == 0:
+                    self.model.restoreBonjourGroupPosition()
+                # Always reload: leaving the Bonjour account brings back the
+                # groups hidden by HIDE_OTHER_GROUPS_FOR_BONJOUR_ACCOUNT
+                self.refreshContactsList()
+                if self.model.bonjour_group.group is not None and not self.model.bonjour_group.group.expanded:
                     self.contactOutline.collapseItem_(self.model.bonjour_group)
         else:
             # select back the account and open the new account wizard

@@ -20,8 +20,11 @@ the viewer, and it lands here.
 """
 
 from AppKit import (NSRoundedBezelStyle,
+                    NSAlert,
+                    NSAlertFirstButtonReturn,
                     NSApp,
                     NSAttributedString,
+                    NSBezierPath,
                     NSBox,
                     NSDragOperationCopy,
                     NSDragOperationNone,
@@ -33,10 +36,15 @@ from AppKit import (NSRoundedBezelStyle,
                     NSFontAttributeName,
                     NSForegroundColorAttributeName,
                     NSImageOnly,
-                    NSImageView,
+                    NSNoImage,
                     NSLineBreakByTruncatingTail,
+                    NSBezelBorder,
                     NSMenu,
                     NSMenuItem,
+                    NSPasteboard,
+                    NSScrollView,
+                    NSStringPboardType,
+                    NSTextView,
                     NSSplitView,
                     NSSplitViewDividerStyleThin,
                     NSTextField,
@@ -63,7 +71,9 @@ from sipsimple.account import BonjourAccount
 from zope.interface import implementer
 
 from BlinkLogger import BlinkLogger
-from util import run_in_gui_thread
+from Avatars import AvatarView, avatar_image
+from util import (otr_enabled_for_account, pgp_enabled_for_account,
+                  run_in_gui_thread)
 from MessageBubbleView import (transcript_font_size, set_transcript_font_size,
                                FONT_SIZE_STEP, MIN_BODY_FONT_SIZE,
                                MAX_BODY_FONT_SIZE)
@@ -71,7 +81,13 @@ from MessageBubbleView import (transcript_font_size, set_transcript_font_size,
 
 HEADER_HEIGHT = 44.0
 AVATAR_SIZE = 28.0
+# The contact's avatar drawn in place of the application icon on the PGP
+# key panel, at the size an alert draws its icon.
+PANEL_AVATAR_SIZE = 64.0
 LOCK_SIZE = 14.0
+# Drawn if the lock artwork cannot be loaded: the control has to keep its
+# place in the header whatever happens to the image files.
+LOCK_GLYPH = chr(128274)
 PAD = 8.0
 # Safari's text-size pair: a small A and a big A, sitting beside the lock.
 FONT_BUTTON_W = 20.0
@@ -100,6 +116,17 @@ LOCATION_GLYPH = chr(128205)
 CALL_BUTTON_W = 22.0
 CALL_GLYPH = chr(128222)
 CALL_GLYPH_SIZE = FONT_BUTTON_LARGE - 4.0
+# The local account this conversation sends from: a pill on the info line,
+# right after the address. A pill rather than a plain run of text because
+# it is also the control that changes the account -- it is the only part
+# of that line that is a choice, and looking like a control is what says
+# so. Shown only where there is more than one account to choose between.
+ACCOUNT_PILL_FONT_SIZE = 10.0
+ACCOUNT_PILL_H = 15.0
+# Left and right air inside the pill, and the gap between the address and
+# the pill that follows it.
+ACCOUNT_PILL_PAD = 7.0
+ACCOUNT_PILL_GAP = 6.0
 MONTH_NAMES = ('January', 'February', 'March', 'April', 'May', 'June', 'July',
                'August', 'September', 'October', 'November', 'December')
 
@@ -109,6 +136,54 @@ MONTH_NAMES = ('January', 'February', 'March', 'April', 'May', 'June', 'July',
 # sensible places instead of letting either side vanish.
 LIST_MIN_WIDTH = 274.0
 PANE_MIN_WIDTH = 320.0
+
+
+class AccountPill(NSButton):
+    """The account name, drawn in a rounded capsule.
+
+    A button with the border turned off and the capsule drawn by hand:
+    a bordered NSButton at this size is a chunky push button that would
+    outweigh the name above it, and a borderless one is indistinguishable
+    from the address beside it. The capsule is the middle: quiet enough
+    for a second line, obviously a thing to click.
+    """
+
+    def drawRect_(self, rect):
+        bounds = self.bounds()
+        radius = bounds.size.height / 2.0
+        capsule = NSMakeRect(0.5, 0.5, bounds.size.width - 1.0, bounds.size.height - 1.0)
+        path = NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(capsule, radius, radius)
+        # Pressed reads as a darker fill rather than a different shape, so
+        # the line does not jump while the menu is coming up.
+        try:
+            pressed = bool(self.cell().isHighlighted())
+        except Exception:
+            pressed = False
+        (NSColor.tertiaryLabelColor() if pressed else NSColor.quaternaryLabelColor()).setFill()
+        path.fill()
+        objc.super(AccountPill, self).drawRect_(rect)
+
+
+class MessageHeaderView(NSView):
+    """The header strip, which re-lays its text when the pane is resized.
+
+    The buttons are pinned to the right edge by their autoresizing masks
+    and need no help. The address and the account pill are placed against
+    each other from the left, so how much room they have is a question
+    only the header can answer, and only once it knows its new width.
+    """
+
+    controller = None
+
+    def resizeSubviewsWithOldSize_(self, oldSize):
+        objc.super(MessageHeaderView, self).resizeSubviewsWithOldSize_(oldSize)
+        controller = self.controller
+        if controller is None or getattr(controller, 'accountPill', None) is None:
+            return                      # still being built
+        try:
+            controller._setInfoLine(controller._selected)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot lay out the header: %s' % e)
 
 
 class MessagePaneSplitView(NSSplitView):
@@ -269,6 +344,20 @@ class MessagePaneController(NSObject):
                 # already clicked a contact. Without this the pin would
                 # stay hidden until they clicked away and back.
                 NotificationCenter().add_observer(self, name='CFGSettingsObjectDidChange')
+                # The lock in the header is read off the conversation, and
+                # the conversation learns what it is worth after it has been
+                # selected: the private key and the peer's public key are
+                # loaded when the viewer is built, PGP keys arrive per
+                # account after registration, and OTR is negotiated later
+                # still. Without these the header kept whatever the lock
+                # happened to be at selection time -- typically grey, and
+                # grey it stayed for the rest of the session.
+                for name in ('ChatStreamOTREncryptionStateChanged',
+                             'OTREncryptionDidStop',
+                             'PGPEncryptionStateChanged',
+                             'PGPPublicKeyReceived',
+                             'BlinkConversationAccountChanged'):
+                    NotificationCenter().add_observer(self, name=name)
             except Exception as e:
                 # Worth surviving: without the pane there is no messages UI
                 # at all, and the app quietly falls back to the old tabbed
@@ -296,6 +385,51 @@ class MessagePaneController(NSObject):
             return
         if 'sms.history_url' in modified:
             self.updateLocationButton(self._selected)
+        # Switching OTR or PGP off for an account takes their items out of
+        # the menu, and switching both off takes the lock away entirely --
+        # while the conversation they belong to is on screen.
+        if ('sms.enable_pgp' in modified or 'sms.enable_otr' in modified
+                or 'chat.enable_encryption' in modified):
+            self.updateEncryptionWidgets()
+
+    # Encryption can change under a conversation at any time -- and it
+    # changes for every conversation, not only the one on screen, so what
+    # matters here is not which viewer the notification came from but that
+    # the selected one is asked again. updateEncryptionWidgets reads the
+    # state off the viewer, so re-reading after somebody else's change
+    # costs a lock image and cannot show the wrong session's state.
+
+    @objc.python_method
+    def _NH_ChatStreamOTREncryptionStateChanged(self, sender, data):
+        self.updateEncryptionWidgets()
+
+    @objc.python_method
+    def _NH_OTREncryptionDidStop(self, sender, data):
+        self.updateEncryptionWidgets()
+
+    @objc.python_method
+    def _NH_PGPEncryptionStateChanged(self, sender, data):
+        self.updateEncryptionWidgets()
+
+    @objc.python_method
+    def _NH_BlinkConversationAccountChanged(self, sender, data):
+        """A conversation moved to another account.
+
+        Not always the user's doing: a message arriving on a different
+        account moves the conversation onto it, and the pill has to say
+        so without anybody clicking anything.
+        """
+        if sender is not self._selected:
+            return
+        self._setInfoLine(sender)
+        self.updateEncryptionWidgets(sender)
+        self.updateLocationButton(sender)
+
+    @objc.python_method
+    def _NH_PGPPublicKeyReceived(self, sender, data):
+        # Posted per account: the key that just arrived may be the one the
+        # conversation on screen was waiting for.
+        self.updateEncryptionWidgets()
 
     # -- view ------------------------------------------------------------
 
@@ -304,11 +438,13 @@ class MessagePaneController(NSObject):
         self.view = NSView.alloc().initWithFrame_(NSMakeRect(0, 0, 480, 395))
         self.view.setAutoresizingMask_(NSViewWidthSizable | NSViewHeightSizable)
 
-        header = NSView.alloc().initWithFrame_(NSMakeRect(0, 395 - HEADER_HEIGHT, 480, HEADER_HEIGHT))
+        header = MessageHeaderView.alloc().initWithFrame_(
+            NSMakeRect(0, 395 - HEADER_HEIGHT, 480, HEADER_HEIGHT))
         header.setAutoresizingMask_(NSViewWidthSizable | NSViewMinYMargin)
+        header.controller = self
         self.headerView = header
 
-        self.avatarView = NSImageView.alloc().initWithFrame_(
+        self.avatarView = AvatarView.alloc().initWithFrame_(
             NSMakeRect(PAD, (HEADER_HEIGHT - AVATAR_SIZE) / 2.0, AVATAR_SIZE, AVATAR_SIZE))
         header.addSubview_(self.avatarView)
 
@@ -320,8 +456,17 @@ class MessagePaneController(NSObject):
 
         self.infoLabel = self._label(NSMakeRect(text_x, HEADER_HEIGHT / 2.0 - 16, 300, 14),
                                      NSFont.systemFontOfSize_(11), NSColor.secondaryLabelColor())
-        self.infoLabel.setAutoresizingMask_(NSViewWidthSizable)
+        # Sized to its text rather than stretched, because the account pill
+        # is placed immediately after it and has to know where it ends.
         header.addSubview_(self.infoLabel)
+
+        self.accountPill = AccountPill.alloc().initWithFrame_(
+            NSMakeRect(text_x, HEADER_HEIGHT / 2.0 - 16, 0, ACCOUNT_PILL_H))
+        self.accountPill.setBordered_(False)
+        self.accountPill.setTarget_(self)
+        self.accountPill.setAction_('showAccountMenu:')
+        self.accountPill.setHidden_(True)
+        header.addSubview_(self.accountPill)
 
         self.encryptionButton = NSButton.alloc().initWithFrame_(
             NSMakeRect(480 - PAD - LOCK_SIZE, (HEADER_HEIGHT - LOCK_SIZE) / 2.0, LOCK_SIZE, LOCK_SIZE))
@@ -335,6 +480,9 @@ class MessagePaneController(NSObject):
         self.encryptionButton.setTarget_(self)
         self.encryptionButton.setAction_('showEncryptionMenu:')
         header.addSubview_(self.encryptionButton)
+        # Draw it grey straight away: the header is built before anything is
+        # selected, and a button with no image at all is an invisible one.
+        self.updateEncryptionWidgets(None)
 
         # Text size, immediately left of the lock. Two buttons rather than a
         # menu: making the transcript readable is a thing people do while
@@ -385,6 +533,10 @@ class MessagePaneController(NSObject):
         self.callButton.setHidden_(True)
         header.addSubview_(self.callButton)
 
+        # Everything above was framed against a 480pt header; the row is
+        # packed for real now that every button in it exists.
+        self._layoutHeaderButtons()
+
         separator = NSBox.alloc().initWithFrame_(NSMakeRect(0, 395 - HEADER_HEIGHT - 1, 480, 1))
         separator.setBoxType_(2)           # NSBoxSeparator
         separator.setAutoresizingMask_(NSViewWidthSizable | NSViewMinYMargin)
@@ -404,6 +556,43 @@ class MessagePaneController(NSObject):
         self.view.addSubview_(container)
         self.view.addSubview_(separator)
         self.view.addSubview_(header)
+
+    # The header buttons, right to left, with the gap each one keeps from
+    # its neighbour on the right. Laid out in code rather than left at
+    # fixed frames because most of them come and go -- the lock with the
+    # account's encryption settings, the pin with the server, the handset
+    # with the conversation -- and a hidden button left holding its slot is
+    # a hole in the row.
+    HEADER_BUTTONS = (('encryptionButton', 'LOCK_SIZE', 0.0),
+                      ('fontLargerButton', 'FONT_BUTTON_W', 10.0),
+                      ('fontSmallerButton', 'FONT_BUTTON_W', 0.0),
+                      ('historyButton', 'HISTORY_BUTTON_W', 8.0),
+                      ('locationButton', 'LOCATION_BUTTON_W', 8.0),
+                      ('callButton', 'CALL_BUTTON_W', 8.0))
+
+    @objc.python_method
+    def _layoutHeaderButtons(self):
+        """Pack the visible header buttons against the right edge."""
+        header = getattr(self, 'headerView', None)
+        if header is None:
+            return
+        sizes = globals()
+        x = header.frame().size.width - PAD
+        placed = False
+        for attribute, width_name, gap in self.HEADER_BUTTONS:
+            button = getattr(self, attribute, None)
+            if button is None:
+                continue                # not built yet
+            if button.isHidden():
+                continue
+            width = sizes[width_name]
+            if attribute == 'encryptionButton':
+                height, y = LOCK_SIZE, (HEADER_HEIGHT - LOCK_SIZE) / 2.0
+            else:
+                height, y = FONT_BUTTON_H, (HEADER_HEIGHT - FONT_BUTTON_H) / 2.0
+            x -= (gap if placed else 0.0) + width
+            button.setFrame_(NSMakeRect(x, y, width, height))
+            placed = True
 
     @objc.python_method
     def _fontButton(self, frame, size, action, tooltip, title='A'):
@@ -457,7 +646,347 @@ class MessagePaneController(NSObject):
         except Exception:
             pass
 
+    # -- account -----------------------------------------------------------
+
+    @objc.python_method
+    def _switchableAccounts(self):
+        """The accounts a conversation could be moved to.
+
+        Enabled SIP accounts only. Bonjour is left out on purpose: a
+        Bonjour conversation is addressed by instance id on the link local
+        account and is not the same conversation over SIP, in either
+        direction.
+        """
+        try:
+            from sipsimple.account import AccountManager
+            return [account for account in AccountManager().get_accounts()
+                    if account is not BonjourAccount() and account.enabled]
+        except Exception as e:
+            BlinkLogger().log_error('Cannot read the account list: %s' % e)
+            return []
+
+    @objc.python_method
+    def _accountPillApplies(self, viewer):
+        """Whether this conversation gets an account pill at all.
+
+        One account is nothing to choose between and a Bonjour
+        conversation cannot be moved, so in both cases the pill would be a
+        control that says something obvious and does nothing.
+        """
+        if viewer is None or getattr(viewer, 'account', None) is BonjourAccount():
+            return False
+        return len(self._switchableAccounts()) > 1
+
+    @objc.python_method
+    def _setInfoLine(self, viewer):
+        """Write the second line of the header: address, dash, account pill.
+
+        One method for both because they share a line and sit against each
+        other: address at the left, then the pill immediately after it.
+
+        The address is given its full width -- sizeToFit rather than a
+        measured string, because an NSTextField insets its text inside its
+        frame and a frame sized to the glyphs alone comes back with an
+        ellipsis on an address that would have fitted.
+        """
+        text = self._infoTextFor(viewer) if viewer is not None else ''
+        # The dash belongs to the pill, not to the address: it is there to
+        # separate the two, and there is nothing to separate without it.
+        if text and self._accountPillApplies(viewer):
+            text = '%s -' % text
+        self.infoLabel.setStringValue_(text)
+
+        frame = self.infoLabel.frame()
+        try:
+            self.infoLabel.sizeToFit()
+            width = self.infoLabel.frame().size.width
+        except Exception:
+            width = frame.size.width
+        self.infoLabel.setFrame_(
+            NSMakeRect(frame.origin.x, frame.origin.y, width, frame.size.height))
+
+        self.updateAccountPill(viewer)
+
+    @objc.python_method
+    def _headerContentRightEdge(self):
+        """Where the header text has to stop: the leftmost visible button."""
+        header = getattr(self, 'headerView', None)
+        if header is None:
+            return 480.0 - PAD
+        edge = header.frame().size.width - PAD
+        for attribute, _width, _gap in self.HEADER_BUTTONS:
+            button = getattr(self, attribute, None)
+            if button is None or button.isHidden():
+                continue
+            edge = min(edge, button.frame().origin.x)
+        return edge - PAD
+
+    @objc.python_method
+    def updateAccountPill(self, viewer=None):
+        """Name the account this conversation sends from, where it matters.
+
+        One account is nothing to choose between and a Bonjour
+        conversation cannot be moved at all, so in both cases the pill
+        would be a control that says something obvious and does nothing.
+        """
+        viewer = viewer or self._selected
+        show = self._accountPillApplies(viewer)
+
+        self.accountPill.setHidden_(not show)
+        if not show:
+            return
+
+        account = str(viewer.account.id)
+        # "From" inside the pill: on its own an address in a header is
+        # read as the person being written to, which is precisely the
+        # address sitting next to it. The word is what separates them.
+        title = NSLocalizedString("From %s", "Label") % account
+        font = NSFont.systemFontOfSize_(ACCOUNT_PILL_FONT_SIZE)
+        self.accountPill.setAttributedTitle_(
+            NSAttributedString.alloc().initWithString_attributes_(
+                title, {NSFontAttributeName: font,
+                        NSForegroundColorAttributeName: NSColor.secondaryLabelColor()}))
+        self.accountPill.setToolTip_(
+            NSLocalizedString("Messages are sent from %s. Click to send from another account.",
+                              "Tooltip") % account)
+
+        try:
+            text_width = NSAttributedString.alloc().initWithString_attributes_(
+                title, {NSFontAttributeName: font}).size().width
+        except Exception:
+            text_width = len(title) * ACCOUNT_PILL_FONT_SIZE * 0.6
+
+        # Immediately after the address, not against the right edge: the
+        # two are one statement about this conversation and belong
+        # together. Only what is left before the buttons caps it, and only
+        # in a pane too narrow to hold both.
+        info = self.infoLabel.frame()
+        x = info.origin.x + info.size.width + (ACCOUNT_PILL_GAP if info.size.width else 0.0)
+        width = text_width + 2 * ACCOUNT_PILL_PAD
+        room = max(0.0, self._headerContentRightEdge() - x)
+        self.accountPill.setFrame_(
+            NSMakeRect(x, info.origin.y - 1.0, min(width, room), ACCOUNT_PILL_H))
+
+    @objc.IBAction
+    def showAccountMenu_(self, sender):
+        viewer = self._selected
+        if viewer is None:
+            return
+
+        menu = NSMenu.alloc().init()
+        menu.setAutoenablesItems_(False)
+
+        title = menu.addItemWithTitle_action_keyEquivalent_(
+            NSLocalizedString("Send messages from:", "Menu item"), None, '')
+        title.setEnabled_(False)
+
+        current = getattr(viewer, 'account', None)
+        for account in self._switchableAccounts():
+            item = menu.addItemWithTitle_action_keyEquivalent_(
+                str(account.id), 'accountMenuAction:', '')
+            item.setTarget_(self)
+            item.setRepresentedObject_(str(account.id))
+            item.setState_(1 if account is current else 0)
+            # The account it already sends from stays in the list, ticked,
+            # because that is what says which one it is -- but it is not
+            # something to click.
+            item.setEnabled_(account is not current)
+
+        try:
+            origin = NSPoint(0, sender.frame().size.height + 2.0)
+            menu.popUpMenuPositioningItem_atLocation_inView_(None, origin, sender)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot show the account menu: %s' % e)
+
+    @objc.IBAction
+    def accountMenuAction_(self, sender):
+        viewer = self._selected
+        if viewer is None:
+            return
+
+        wanted = str(sender.representedObject() or '')
+        account = next((a for a in self._switchableAccounts() if str(a.id) == wanted), None)
+        if account is None:
+            BlinkLogger().log_error('Account %s is no longer available' % wanted)
+            return
+
+        try:
+            changed = viewer.setAccount(account)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot move the conversation to %s: %s' % (wanted, e))
+            return
+
+        if not changed:
+            return
+
+        # The header names the account, and the lock is per account too --
+        # a conversation that can be PGP encrypted from one account may
+        # not be from another.
+        self._setInfoLine(viewer)
+        self.updateEncryptionWidgets(viewer)
+        self.updateLocationButton(viewer)
+
     # -- encryption --------------------------------------------------------
+
+    @objc.python_method
+    def _publicKeyForViewer(self, viewer):
+        """(armoured public key, 8-character key ID) for the peer, or (None, None).
+
+        The key ID is the checksum Sylk Mobile prints and the one the Edit
+        Contact panel shows -- public_key_short_checksum, the single
+        derivation all three read from, because an ID computed a second way
+        would compare equal to nothing.
+        """
+        if viewer is None:
+            return (None, None)
+        uri = str(getattr(viewer, 'remote_uri', '') or '').strip()
+        if not uri:
+            return (None, None)
+        try:
+            from resources import ApplicationData
+            from MessageHost import public_key_short_checksum
+            path = os.path.join(ApplicationData.get('keys'), '%s.pubkey' % uri)
+            if not os.path.exists(path):
+                return (None, None)
+            with open(path, 'rb') as key_file:
+                data = key_file.read()
+        except Exception as e:
+            BlinkLogger().log_error('Cannot read the public key of %s: %s' % (uri, e))
+            return (None, None)
+        if not data:
+            return (None, None)
+        return (data.decode('utf-8', 'replace'), public_key_short_checksum(data))
+
+    @objc.IBAction
+    def showPublicKey_(self, sender):
+        """The peer's public key, to look at and to copy.
+
+        The same panel Sylk Mobile has: the key ID large enough to read out
+        loud, the armoured key underneath, and a Copy button -- comparing
+        the ID against the other device is what makes the key worth
+        anything, and that is done out of band, by a human.
+        """
+        viewer = self._selected
+        key_text, checksum = self._publicKeyForViewer(viewer)
+        if not key_text:
+            return
+        name = viewer.display_name or viewer.remote_uri
+        copied = False
+        while True:
+            alert = NSAlert.alloc().init()
+            alert.setMessageText_(
+                NSLocalizedString("PGP key ID %s", "Window title") % (checksum or '?'))
+            alert.setInformativeText_(
+                NSLocalizedString("Copied to the clipboard.", "Label") if copied else
+                NSLocalizedString("The public key of %s. The key ID above is the one "
+                                  "the other device shows for the same key: if they "
+                                  "match, it is the same key.", "Label") % name)
+
+            frame = NSMakeRect(0, 0, 460, 240)
+            text = NSTextView.alloc().initWithFrame_(frame)
+            text.setEditable_(False)
+            text.setSelectable_(True)
+            text.setVerticallyResizable_(True)
+            text.setHorizontallyResizable_(False)
+            text.setAutoresizingMask_(NSViewWidthSizable)
+            text.setFont_(NSFont.userFixedPitchFontOfSize_(10.0))
+            text.setString_(key_text)
+
+            scroll = NSScrollView.alloc().initWithFrame_(frame)
+            scroll.setHasVerticalScroller_(True)
+            scroll.setBorderType_(NSBezelBorder)
+            scroll.setDocumentView_(text)
+            alert.setAccessoryView_(scroll)
+
+            # The contact in place of the application icon: the panel is
+            # about one person's key, and the Blink logo says nothing about
+            # whose it is. Falls back to the logo if there is no avatar to
+            # draw.
+            try:
+                avatar = avatar_image(self._owner.iconPathForURI(str(viewer.remote_uri)),
+                                      self.contactNameFor(viewer), PANEL_AVATAR_SIZE)
+            except Exception as e:
+                BlinkLogger().log_error('Cannot draw the avatar for the key panel: %s' % e)
+                avatar = None
+            if avatar is not None:
+                alert.setIcon_(avatar)
+
+            alert.addButtonWithTitle_(NSLocalizedString("Copy", "Button title"))
+            alert.addButtonWithTitle_(NSLocalizedString("Close", "Button title"))
+            try:
+                response = alert.runModal()
+            except Exception as e:
+                BlinkLogger().log_error('Cannot show the public key of %s: %s'
+                                        % (getattr(viewer, 'remote_uri', None), e))
+                return
+            if response != NSAlertFirstButtonReturn:
+                return
+            # Copy leaves the panel open -- the key ID is what the user is
+            # here to read, and closing it the moment they copy the key
+            # would take it away mid-comparison.
+            try:
+                board = NSPasteboard.generalPasteboard()
+                board.declareTypes_owner_(
+                    NSArray.arrayWithObject_(NSStringPboardType), self)
+                board.setString_forType_(key_text, NSStringPboardType)
+                copied = True
+            except Exception as e:
+                BlinkLogger().log_error('Cannot copy the public key: %s' % e)
+                return
+
+    @objc.python_method
+    def _pgpActive(self, viewer):
+        """Whether messages in this conversation are PGP encrypted.
+
+        The conversation's own flag first, and then the three things that
+        actually decide it -- PGP on for the account, our private key, the
+        remote party's public key -- because the flag is also written per
+        message: one plaintext message clears it, while the keys that make
+        everything we send encrypted are still sitting there. What the lock
+        reports is the state of the conversation, so a key arriving turns
+        it green and a plaintext message does not turn it grey.
+        """
+        if viewer is None:
+            return False
+        if getattr(viewer, 'pgp_encrypted', False):
+            return True
+        try:
+            account = getattr(viewer, 'account', None)
+            if not pgp_enabled_for_account(account):
+                return False
+            private_key = getattr(viewer, 'private_key', None) \
+                or getattr(getattr(account, 'sms', None), 'private_key', None)
+            return bool(private_key) and bool(getattr(viewer, 'public_key', None))
+        except Exception:
+            return False
+
+    @objc.python_method
+    def _encryptionAvailability(self, viewer):
+        """(OTR usable, PGP usable) for one conversation.
+
+        Both are per account, and an account with a mechanism switched off
+        must not be offered it: a menu item that cannot work is worse than
+        no item, because the user clicks it and nothing happens. The
+        exception in both directions is a conversation that is already
+        encrypted -- what is running stays visible and, for OTR, stays
+        switchable off, so that changing a setting can never trap somebody
+        inside a session they cannot end.
+        """
+        if viewer is None:
+            return (False, False)
+        try:
+            from sipsimple.configuration.settings import SIPSimpleSettings
+            account = getattr(viewer, 'account', None)
+            otr = getattr(viewer, 'encryption', None)
+            otr_active = bool(getattr(otr, 'active', False))
+            otr_available = otr_active or (
+                bool(SIPSimpleSettings().chat.enable_encryption)
+                and otr_enabled_for_account(account))
+            pgp_available = self._pgpActive(viewer) or pgp_enabled_for_account(account)
+            return (bool(otr_available), bool(pgp_available))
+        except Exception as e:
+            BlinkLogger().log_error('Cannot read the encryption settings: %s' % e)
+            return (False, False)
 
     @objc.IBAction
     def showEncryptionMenu_(self, sender):
@@ -473,6 +1002,11 @@ class MessagePaneController(NSObject):
         if viewer is None:
             return
         menu = self._buildEncryptionMenu(viewer)
+        if menu.numberOfItems() == 0:
+            # Both mechanisms off for this account: the button should be
+            # hidden already, and an empty menu popping up would be the
+            # visible half of a bug rather than a feature.
+            return
         try:
             origin = NSPoint(0, sender.frame().size.height + 2.0)
             menu.popUpMenuPositioningItem_atLocation_inView_(None, origin, sender)
@@ -490,61 +1024,78 @@ class MessagePaneController(NSObject):
 
     @objc.python_method
     def _buildEncryptionMenu(self, viewer):
-        from sipsimple.configuration.settings import SIPSimpleSettings
-        settings = SIPSimpleSettings()
+        """The encryption menu for one conversation.
+
+        Only what the account can actually do gets in: with OTR off for the
+        account (or off globally in Chat preferences) no OTR item is built,
+        with PGP off no PGP item, and with both off the menu comes out
+        empty -- which is the same condition that hides the lock, so the
+        empty menu is never reachable.
+        """
         otr = viewer.encryption
         name = viewer.display_name or viewer.remote_uri
+        otr_available, pgp_available = self._encryptionAvailability(viewer)
 
         menu = NSMenu.alloc().init()
         menu.setAutoenablesItems_(False)
 
-        if settings.chat.enable_encryption:
+        if otr_available:
+            # A session that IS encrypted always keeps its deactivate item,
+            # whatever the settings now say, so that turning a setting off
+            # can never trap the user inside an OTR session.
             self._encryptionItem(
                 menu,
                 NSLocalizedString("Deactivate OTR encryption for this session", "Menu item")
                 if otr.active else
                 NSLocalizedString("Activate OTR encryption for this session", "Menu item"),
                 1)
-        else:
-            self._encryptionItem(
-                menu, NSLocalizedString("OTR encryption is disabled in Chat preferences",
-                                        "Menu item"), 2, enabled=False)
 
-        if otr.active:
-            self._encryptionItem(
-                menu, NSLocalizedString("My fingerprint is %s", "Menu item")
-                % str(otr.key_fingerprint), 2, enabled=False)
-            if otr.peer_fingerprint:
+            if otr.active:
                 self._encryptionItem(
-                    menu, NSLocalizedString("%s's fingerprint is %s", "Menu item")
-                    % (name, otr.peer_fingerprint), 4, enabled=False)
+                    menu, NSLocalizedString("My fingerprint is %s", "Menu item")
+                    % str(otr.key_fingerprint), 2, enabled=False)
+                if otr.peer_fingerprint:
+                    self._encryptionItem(
+                        menu, NSLocalizedString("%s's fingerprint is %s", "Menu item")
+                        % (name, otr.peer_fingerprint), 4, enabled=False)
+                    self._encryptionItem(
+                        menu, NSLocalizedString("I trust the remote identity", "Menu item"),
+                        5, state=otr.verified)
+                    self._encryptionItem(
+                        menu, NSLocalizedString("Validate the identity of %s", "Menu item") % name,
+                        6)
+                # OTR is not journalled, and that is a property of the
+                # session worth stating where it is switched on.
+                note = menu.addItemWithTitle_action_keyEquivalent_(
+                    NSLocalizedString("Messages are not stored on the server", "Menu item"),
+                    None, '')
+                note.setEnabled_(False)
+
+            self._encryptionItem(menu, NSLocalizedString("About OTR protocol", "Menu item"), 7)
+
+        if pgp_available:
+            if menu.numberOfItems():
+                menu.addItem_(NSMenuItem.separatorItem())
+            if self._pgpActive(viewer):
                 self._encryptionItem(
-                    menu, NSLocalizedString("I trust the remote identity", "Menu item"),
-                    5, state=otr.verified)
+                    menu, NSLocalizedString("PGP encryption active", "Menu item"), 9, enabled=False)
+            checksum = self._publicKeyForViewer(viewer)[1]
+            if checksum:
+                # Its own action rather than a tag: this one opens a panel
+                # here instead of asking the conversation to do something.
+                item = menu.addItemWithTitle_action_keyEquivalent_(
+                    NSLocalizedString("PGP key ID %s", "Menu item") % checksum,
+                    'showPublicKey:', '')
+                item.setTarget_(self)
+                item.setEnabled_(True)
+
+            if '@' in str(viewer.remote_uri):
                 self._encryptionItem(
-                    menu, NSLocalizedString("Validate the identity of %s", "Menu item") % name,
-                    6)
-            # OTR is not journalled, and that is a property of the session
-            # worth stating where it is switched on.
-            note = menu.addItemWithTitle_action_keyEquivalent_(
-                NSLocalizedString("Messages are not stored on the server", "Menu item"),
-                None, '')
-            note.setEnabled_(False)
+                    menu, NSLocalizedString("Lookup PGP public key", "Menu item"), 11)
+                self._encryptionItem(
+                    menu, NSLocalizedString("Send my PGP public key", "Menu item"), 12)
+            self._encryptionItem(menu, NSLocalizedString("About PGP protocol", "Menu item"), 10)
 
-        menu.addItem_(NSMenuItem.separatorItem())
-        self._encryptionItem(menu, NSLocalizedString("About OTR protocol", "Menu item"), 7)
-
-        if getattr(viewer, 'pgp_encrypted', False):
-            menu.addItem_(NSMenuItem.separatorItem())
-            self._encryptionItem(
-                menu, NSLocalizedString("PGP encryption active", "Menu item"), 9, enabled=False)
-
-        if '@' in str(viewer.remote_uri):
-            self._encryptionItem(
-                menu, NSLocalizedString("Lookup PGP public key", "Menu item"), 11)
-            self._encryptionItem(
-                menu, NSLocalizedString("Send my PGP public key", "Menu item"), 12)
-        self._encryptionItem(menu, NSLocalizedString("About PGP protocol", "Menu item"), 10)
         return menu
 
     @objc.IBAction
@@ -648,6 +1199,7 @@ class MessagePaneController(NSObject):
                 'Location pin %s for %s' % ('shown' if show else 'hidden',
                                             getattr(viewer, 'remote_uri', None)))
         button.setHidden_(not show)
+        self._layoutHeaderButtons()
 
     @objc.python_method
     def updateCallButton(self, viewer):
@@ -656,6 +1208,7 @@ class MessagePaneController(NSObject):
         if button is None:
             return
         button.setHidden_(viewer is None)
+        self._layoutHeaderButtons()
 
     @objc.IBAction
     def startAudioCall_(self, sender):
@@ -1004,45 +1557,119 @@ class MessagePaneController(NSObject):
 
     @objc.python_method
     def noteView_isComposing_(self, viewer, flag):
+        """Remote typing indicator for one conversation.
+
+        Only the selected conversation has a header to draw in; the state
+        itself is held by the manager, keyed by URI, and the contact rows
+        show the rest. Which is also why this reads it back rather than
+        taking `flag`: the header has to be right when the user SELECTS a
+        conversation someone is already typing at, and nothing will repeat
+        that state until the sender's next refresh a minute later.
+        """
         if viewer is not self._selected:
             return
-        self.infoLabel.setStringValue_(
-            NSLocalizedString("is typing...", "Label") if flag else self._infoTextFor(viewer))
+        self._setInfoLine(viewer)
 
     @objc.python_method
     def updateEncryptionWidgets(self, viewer=None):
+        """Set the lock to the state of the conversation.
+
+        Green for OTR verified or PGP encrypted, red for an OTR session
+        whose peer is not verified yet, grey for everything else -- off,
+        not negotiated, or a state that could not be read. Grey rather
+        than gone: the lock used to be cleared to no image, which on a
+        borderless image-only button means it vanishes, so the header lost
+        a control and said nothing about whether the conversation was
+        protected.
+
+        It is hidden in exactly one case, decided by the account rather
+        than by the conversation: both OTR and PGP switched off, where
+        there is no state to report and nothing in the menu to act on.
+        """
         viewer = viewer or self._selected
-        image = None
+        otr_available, pgp_available = self._encryptionAvailability(viewer)
+        if not otr_available and not pgp_available:
+            # Nothing this account can do, or nothing selected: a lock that
+            # opens an empty menu says less than no lock at all. This is the
+            # ONLY case in which it goes away -- an encryption state that is
+            # merely off or unknown keeps the grey lock.
+            self.encryptionButton.setHidden_(True)
+            self._layoutHeaderButtons()
+            return
+
+        name = 'locked-gray.png'
+        tooltip = NSLocalizedString("Encryption", "Tooltip")
         if viewer is not None:
+            tooltip = NSLocalizedString("Not encrypted", "Tooltip")
             try:
-                from resources import Resources
-                from AppKit import NSImage
                 otr = getattr(viewer, 'encryption', None)
                 if getattr(otr, 'active', False):
                     # Red until the remote identity has been verified, green
                     # once it has -- the same distinction the bubbles draw.
                     # Ignoring `verified` here left the header claiming an
                     # unverified session while every bubble said otherwise.
-                    name = 'locked-green.png' if getattr(otr, 'verified', False) \
-                        else 'locked-red.png'
-                    image = NSImage.alloc().initWithContentsOfFile_(Resources.get(name))
-                elif getattr(viewer, 'pgp_encrypted', False):
-                    image = NSImage.alloc().initWithContentsOfFile_(Resources.get('locked-green.png'))
+                    if getattr(otr, 'verified', False):
+                        name = 'locked-green.png'
+                        tooltip = NSLocalizedString("Encrypted and verified", "Tooltip")
+                    else:
+                        name = 'locked-red.png'
+                        tooltip = NSLocalizedString("Encrypted, remote identity not verified", "Tooltip")
+                elif self._pgpActive(viewer):
+                    name = 'locked-green.png'
+                    tooltip = NSLocalizedString("Encrypted with PGP", "Tooltip")
             except Exception:
-                image = None
+                # A state we cannot read is not a state we may claim: keep
+                # the grey lock rather than guess at a coloured one.
+                name = 'locked-gray.png'
+                tooltip = NSLocalizedString("Encryption state is unknown", "Tooltip")
+
+        image = None
+        try:
+            from resources import Resources
+            from AppKit import NSImage
+            image = NSImage.alloc().initWithContentsOfFile_(Resources.get(name))
+        except Exception:
+            image = None
 
         if image is not None:
             # The lock artwork is far larger than the header; a borderless
             # NSButton draws it at natural size, which is why it came out as
             # a huge lock floating over the drawer.
             image.setSize_(NSMakeSize(LOCK_SIZE, LOCK_SIZE))
-        self.encryptionButton.setImage_(image)
+            self.encryptionButton.setImagePosition_(NSImageOnly)
+            self.encryptionButton.setTitle_('')
+            self.encryptionButton.setImage_(image)
+        else:
+            # Missing artwork is not a reason for the control to vanish
+            # either: a text lock keeps the menu reachable.
+            self.encryptionButton.setImage_(None)
+            self.encryptionButton.setImagePosition_(NSNoImage)
+            self.encryptionButton.setAttributedTitle_(
+                NSAttributedString.alloc().initWithString_attributes_(
+                    LOCK_GLYPH,
+                    {NSFontAttributeName: NSFont.systemFontOfSize_(LOCK_SIZE - 2.0),
+                     NSForegroundColorAttributeName: NSColor.secondaryLabelColor()}))
+
+        # Dimmed, not gone, while there is nothing to report. It stays
+        # clickable as long as a conversation is selected, because the menu
+        # behind it is what turns encryption on.
+        self.encryptionButton.setAlphaValue_(1.0 if name != 'locked-gray.png' else 0.45)
+        self.encryptionButton.setEnabled_(viewer is not None)
+        self.encryptionButton.setHidden_(False)
+        self.encryptionButton.setToolTip_(tooltip)
+        self._layoutHeaderButtons()
 
     # -- selection --------------------------------------------------------
 
     @objc.python_method
     def selectViewer(self, viewer):
         if viewer is self._selected:
+            # Not a no-op for the header: the same conversation can be
+            # re-selected after its encryption has moved on (a key that
+            # arrived, an OTR session that came up), and the lock has to
+            # agree with the conversation rather than with when it was
+            # last switched to.
+            self.updateEncryptionWidgets(viewer)
             return
 
         previous = self._selected
@@ -1060,11 +1687,11 @@ class MessagePaneController(NSObject):
 
         if viewer is None:
             self.nameLabel.setStringValue_('')
-            self.infoLabel.setStringValue_('')
-            self.avatarView.setImage_(None)
+            self.avatarView.setAvatar(None, '')
             self.updateEncryptionWidgets(None)
             self.updateLocationButton(None)
             self.updateCallButton(None)
+            self._setInfoLine(None)
             return
 
         content = self._content_views.get(viewer)
@@ -1083,11 +1710,26 @@ class MessagePaneController(NSObject):
                                         % (viewer.remote_uri, e))
 
         self.nameLabel.setStringValue_(self.contactNameFor(viewer))
-        self.infoLabel.setStringValue_(self._infoTextFor(viewer))
         self._loadAvatarFor(viewer)
+        # Opening a conversation with no key for the other party is the one
+        # moment worth asking the server for one: the user is about to
+        # write to this address, and a key that arrives turns the lock
+        # green before the first message rather than after it. Guarded to
+        # one request per address per launch, so clicking down a contact
+        # list does not send a lookup per click.
+        try:
+            viewer.requestPublicKeyIfMissing()
+        except AttributeError:
+            pass                        # a viewer that does not do PGP
+        except Exception as e:
+            BlinkLogger().log_error('Cannot look up the public key of %s: %s'
+                                    % (getattr(viewer, 'remote_uri', None), e))
         self.updateEncryptionWidgets(viewer)
         self.updateLocationButton(viewer)
         self.updateCallButton(viewer)
+        # Last: the pill is placed against the end of the address, and how
+        # much room the line has depends on which buttons ended up visible.
+        self._setInfoLine(viewer)
 
         if self.isConversationVisible(viewer):
             self.conversationBecameVisible(viewer)
@@ -1131,29 +1773,54 @@ class MessagePaneController(NSObject):
         if viewer is None:
             return
         self.nameLabel.setStringValue_(self.contactNameFor(viewer))
-        self.infoLabel.setStringValue_(self._infoTextFor(viewer))
+        self._setInfoLine(viewer)
         self._loadAvatarFor(viewer)
 
     @objc.python_method
     def viewerForURI(self, uri):
-        canonical = str(uri).lower()
+        """A conversation open in this pane with that address, or None.
+
+        Canonical comparison, not a string one: the addresses reaching
+        here come from contacts, notifications and history rows, with and
+        without the sip: scheme and its parameters.
+        """
+        try:
+            from SMSWindowManager import SMSWindowManager
+            canonical = SMSWindowManager()._canonical_uri
+        except Exception:
+            canonical = lambda value: str(value).lower().strip()
+        key = canonical(uri)
         for viewer in self._viewers:
-            if str(viewer.remote_uri).lower() == canonical:
+            if canonical(getattr(viewer, 'remote_uri', '')) == key:
                 return viewer
         return None
 
     @objc.python_method
     def _infoTextFor(self, viewer):
+        try:
+            from SMSWindowManager import SMSWindowManager
+            typing = SMSWindowManager().isComposingForURI(viewer.remote_uri)
+        except Exception:
+            typing = False
+        if typing:
+            return NSLocalizedString("is typing...", "Label")
+        # The account is not in this string: it is the pill that follows it.
         return str(viewer.remote_uri)
 
     @objc.python_method
     def _loadAvatarFor(self, viewer):
+        """The same avatar the contact list draws, at the same size.
+
+        Name as well as path: with no photograph the header shows the
+        contact's initials on their own colour, which is what the row they
+        clicked to get here shows and what mobile shows.
+        """
         try:
-            from AppKit import NSImage
             path = self._owner.iconPathForURI(str(viewer.remote_uri))
-            self.avatarView.setImage_(NSImage.alloc().initWithContentsOfFile_(path) if path else None)
-        except Exception:
-            self.avatarView.setImage_(None)
+            self.avatarView.setAvatarPath(path, self.contactNameFor(viewer))
+        except Exception as e:
+            BlinkLogger().log_error('Cannot load the conversation avatar: %s' % e)
+            self.avatarView.setAvatar(None, '')
 
     # -- visibility (drives read receipts and the contact badge) ----------
 

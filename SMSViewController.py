@@ -78,7 +78,7 @@ from SylkLocation import (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE,
                           merge_location_bodies, one_shot_envelope,
                           row_metadata, session_bubble_ids, storable_envelope,
                           system_note)
-from util import format_identity_to_string, html2txt, sipuri_components_from_string, run_in_gui_thread
+from util import format_identity_to_string, html2txt, otr_enabled_for_account, pgp_enabled_for_account, sipuri_components_from_string, run_in_gui_thread
 from ChatOTR import ChatOtrSmp
 import SMSWindowManager
 
@@ -287,6 +287,16 @@ class SMSSplitView(NSSplitView):
 _timestamp_fallbacks = set()
 
 
+# (account, address) pairs whose public key has already been looked up in
+# this run of the application. A lookup is a SIP MESSAGE to the server, and
+# an address with no key published answers 404 every time it is asked, so
+# asking again on each open would put a request on the wire for every click
+# and get the same nothing back. Once per launch is enough to pick up a key
+# published since the last one; the menu's Lookup Public Key is the way to
+# ask again on purpose, and it does not consult this.
+_public_key_lookups = set()
+
+
 @implementer(IObserver)
 class SMSViewController(NSObject):
 
@@ -456,9 +466,7 @@ class SMSViewController(NSObject):
                     self.last_route = self.account_info.route
 
             self.log_info('Using account %s with target %s' % (self.local_uri, self.target_uri))
-            if self.account.sms.private_key and self.public_key:
-                self.pgp_encrypted = True
-                self.notification_center.post_notification('PGPEncryptionStateChanged', sender=self)
+            self.updatePGPEncryptionState()
 
             self.notification_center.add_observer(self, name='ChatStreamOTREncryptionStateChanged')
             self.notification_center.add_observer(self, name='BlinkContactsHaveChanged')
@@ -474,6 +482,34 @@ class SMSViewController(NSObject):
             # (message, IMDN receipt, is-composing, PGP key).
 
         return self
+
+    @objc.python_method
+    def updatePGPEncryptionState(self):
+        """Work out whether this conversation is PGP encrypted, and say so.
+
+        Encrypted here means what sendMessage means by it: PGP on for the
+        account, our private key loaded, and the remote party's public key
+        in hand. Those three arrive at different times -- the keys are read
+        when the viewer is built, and the peer's key often only lands later,
+        in answer to a lookup -- so the state has to be recomputed whenever
+        one of them changes rather than settled once at startup. Without
+        this a key that arrived after the conversation was opened left the
+        lock grey over messages that were in fact being encrypted.
+
+        The notification is posted only on a real change: it redraws every
+        lock in the application.
+        """
+        try:
+            active = bool(pgp_enabled_for_account(self.account)
+                          and self.private_key and self.public_key)
+        except Exception as e:
+            self.log_info('Cannot determine the PGP state: %s' % str(e))
+            return
+        if active == self.pgp_encrypted:
+            return
+        self.pgp_encrypted = active
+        self.log_info('PGP encryption is %s' % ('available' if active else 'not available'))
+        self.notification_center.post_notification('PGPEncryptionStateChanged', sender=self)
 
     @objc.python_method
     def load_remote_public_keys(self, request_if_missing=False):
@@ -533,6 +569,10 @@ class SMSViewController(NSObject):
     @property
     def enableIsComposing(self):
         return self.account.sms.enable_composing
+
+    @property
+    def otr_enabled(self):
+        return otr_enabled_for_account(self.account)
                 
     def dealloc(self):
         if self.remoteTypingTimer:
@@ -853,6 +893,93 @@ class SMSViewController(NSObject):
             self.log_error('Cannot insert %s: %s' % (text, e))
             return
         self.log_debug('Inserted the smiley %s' % text)
+
+    @objc.python_method
+    def setAccount(self, account):
+        """Send from a different local account from this point on.
+
+        History is keyed by the remote party rather than by the pair, so
+        the transcript stays exactly where it is; what changes is the
+        identity the NEXT message goes out with, and everything that hangs
+        off it -- the route, the keys, the per-account settings. Messages
+        already sent keep the account they were sent from: this is a
+        change to what happens next, not a rewrite of what happened.
+
+        Returns True when the conversation actually moved.
+        """
+        if account is None or account is self.account:
+            return False
+        if self.account is BonjourAccount() or account is BonjourAccount():
+            # A Bonjour conversation is addressed by instance id on a link
+            # local account. Moving it onto a SIP account (or the reverse)
+            # would not be the same conversation with the same person, so
+            # it is refused rather than half-done.
+            self.log_info('Cannot move a Bonjour conversation to another account')
+            return False
+
+        previous = self.account
+
+        # An OTR session was negotiated between two AORs. Carrying it over
+        # would leave the peer decrypting for an identity we no longer send
+        # from, so it ends here, visibly, rather than breaking quietly.
+        if self.encryption.active:
+            self.log_info('Stopping OTR: the conversation with %s is moving to account %s'
+                          % (self.remote_uri, account.id))
+            self.stopEncryption()
+
+        for name in ('SIPAccountRegistrationDidSucceed', 'PGPPublicKeyReceived'):
+            try:
+                self.notification_center.remove_observer(self, name=name, sender=previous)
+            except Exception:
+                pass
+
+        self.account = account
+        self.local_uri = '%s@%s' % (account.id.username, account.id.domain)
+
+        for name in ('SIPAccountRegistrationDidSucceed', 'PGPPublicKeyReceived'):
+            self.notification_center.add_observer(self, name=name, sender=account)
+
+        # The route was resolved for the old account's proxy and registrar,
+        # and a message sent over it would go out with the wrong identity
+        # on it. Dropped rather than re-resolved: the next thing that needs
+        # a route looks one up, and nothing needs one yet.
+        self.routes = None
+        self.last_route = None
+        self.last_route_failure_reason = None
+        self.dns_lookup_in_progress = False
+
+        try:
+            position = NSApp.delegate().contactsWindowController.accounts.index(account)
+        except ValueError:
+            self.account_info = None
+        else:
+            self.account_info = NSApp.delegate().contactsWindowController.accounts[position]
+            if account.sip.always_use_my_proxy:
+                self.last_route = self.account_info.route
+
+        # My PGP key is the new account's, and whether the conversation can
+        # be encrypted is a question about that key, not the old one's.
+        self.private_key = None
+        self.load_private_key()
+        self.pgp_encrypted = bool(account.sms.private_key and self.public_key)
+        self.notification_center.post_notification('PGPEncryptionStateChanged', sender=self)
+
+        try:
+            self.chatViewController.setAccount_(account)
+            self.chatViewController.showSystemMessage(
+                NSLocalizedString("Messages are now sent from %s", "System message") % self.local_uri,
+                ISOTimestamp.now())
+        except Exception as e:
+            self.log_error('Cannot note the account change in the transcript: %s' % e)
+
+        self.log_info('Messages to %s are now sent from %s' % (self.remote_uri, self.local_uri))
+        # The header names the account, and it is not always the user who
+        # changed it: a message arriving on another account moves the
+        # conversation too.
+        self.notification_center.post_notification(
+            'BlinkConversationAccountChanged', sender=self,
+            data=NotificationData(account=account))
+        return True
 
     @objc.python_method
     def matchesTargetOrInstanceAndAccount(self, target, instance_id, account):
@@ -1552,9 +1679,7 @@ class SMSViewController(NSObject):
         self.sendIMDNNotification(id, 'displayed')
 
     def remoteBecameIdle_(self, timer):
-        window = timer.userInfo()
-        if window:
-            window.noteView_isComposing_(self, False)
+        self.publishComposing(False, timer.userInfo())
 
         if self.remoteTypingTimer:
             self.remoteTypingTimer.invalidate()
@@ -1581,7 +1706,39 @@ class SMSViewController(NSObject):
                 self.remoteTypingTimer.invalidate()
                 self.remoteTypingTimer = None
 
-        window.noteView_isComposing_(self, flag)
+        self.publishComposing(flag, window)
+
+    @objc.python_method
+    def publishComposing(self, flag, window):
+        """Publish the remote's typing state to everything that draws it.
+
+        The manager first and unconditionally: it keys the state by URI and
+        the contact row reads it from there, so a conversation the user has
+        not opened -- which has no host at all -- still shows that someone
+        is typing at it. The host, when there is one, draws it in the
+        conversation header on top of that.
+        """
+        try:
+            from SMSWindowManager import SMSWindowManager
+            SMSWindowManager().noteComposing(self.remote_uri, flag)
+        except Exception as e:
+            self.log_error('Cannot note the typing state of %s: %s' % (self.remote_uri, e))
+
+        if window is None:
+            # A host may have arrived since the caller captured one -- the
+            # idle timer holds whatever was there when the typing started,
+            # which is None for a conversation opened part way through.
+            try:
+                from SMSWindowManager import SMSWindowManager
+                window = SMSWindowManager().windowForViewer(self)
+            except Exception:
+                window = None
+        if window is None:
+            return
+        try:
+            window.noteView_isComposing_(self, flag)
+        except Exception as e:
+            self.log_error('Cannot show the typing state of %s: %s' % (self.remote_uri, e))
 
     @objc.python_method
     def _NH_BlinkContactPresenceHasChanged(self, sender, data):
@@ -1641,6 +1798,9 @@ class SMSViewController(NSObject):
 
         self.log_info("Public PGP key for %s was updated" % self.remote_uri)
         self.load_remote_public_keys()
+        # The key that just landed may be the one that makes this
+        # conversation encrypted; the lock has to hear about it.
+        self.updatePGPEncryptionState()
 
     @objc.python_method
     def _NH_BlinkContactsHaveChanged(self, sender, data):
@@ -2266,7 +2426,7 @@ class SMSViewController(NSObject):
         self.start_queue()
         self.resend_pending()
 
-        if not self.encryption.active and self.account.sms.enable_otr:
+        if not self.encryption.active and self.otr_enabled:
             self.startEncryption()
 
     @objc.python_method
@@ -3505,13 +3665,23 @@ class SMSViewController(NSObject):
 
     @objc.python_method
     def requestPublicKeyIfMissing(self):
+        """Ask the server for the peer's key, at most once per launch.
+
+        Called when a conversation is opened and again when the user sends
+        something. Nothing happens if the key is already on disc, if PGP is
+        off for the account, or if this address has been asked once already
+        -- including by an earlier viewer for the same address, which is
+        what closing and reopening a conversation produces.
+        """
         if self.public_key is not None:
             return
-        if not self.account.sms.enable_pgp:
+        if not pgp_enabled_for_account(self.account):
             return
-        if self.public_key_requested:
+        key = (str(getattr(self.account, 'id', '')), str(self.remote_uri))
+        if self.public_key_requested or key in _public_key_lookups:
             return
         self.public_key_requested = True
+        _public_key_lookups.add(key)
         self.requestPublicKey()
 
     @objc.python_method
@@ -3526,6 +3696,13 @@ class SMSViewController(NSObject):
 
     @objc.python_method
     def startEncryption(self):
+        if not self.otr_enabled:
+            # The only way here with OTR off is a menu built before the
+            # setting changed. Refusing is the honest answer: negotiation
+            # would start an OTR session the account has said it does not
+            # want, and the menu the click came from no longer exists.
+            self.log_info('Not starting OTR: it is disabled for account %s' % self.account.id)
+            return
         self.encryption.start()
         self.otr_negotiation_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(30, self, "otrNegotiationTimeout:", None, False)
  

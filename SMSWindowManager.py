@@ -31,6 +31,7 @@ from pgpy.constants import PubKeyAlgorithm, KeyFlags, HashAlgorithm, SymmetricKe
 import json
 import socket
 import time
+from time import monotonic
 import string
 import random
 import urllib
@@ -100,6 +101,23 @@ from SylkLocation import (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE,
                           merge_location_bodies, storable_envelope)
 from FileTransferCache import FILE_TRANSFER_PATH, base_url_from_transfer
 from util import format_identity_to_string, run_in_gui_thread, call_later
+
+# Requests addressed to SylkServer, not to a person. The server answers each
+# of them on its own content type -- a key lookup comes back as
+# text/pgp-public-key, a conversation-read as application/sylk-conversation-read
+# -- and those replies are handled further down. The requests themselves reach
+# us only because the proxy delivers a copy to every registered contact of the
+# account they are addressed to while SylkServer absorbs its own copy. There
+# is nothing here for a client to do with one, and nothing for a user to see.
+#
+# application/sylk-api-token is deliberately absent: the server sends its
+# reply under that same content type, and that reply carries our history token.
+SERVER_API_REQUEST_CONTENT_TYPES = frozenset((
+    'application/sylk-api-pgp-key-lookup',
+    'application/sylk-api-message-remove',
+    'application/sylk-api-conversation-read',
+    'application/sylk-api-conversation-remove',
+))
 
 unpad = lambda s: s[:-ord(s[len(s) - 1:])]
 
@@ -583,6 +601,21 @@ class SMSWindowManagerClass(NSObject):
     # canonical remote uri -> unread count. The only place unread lives now
     # that an arriving message no longer creates a conversation.
     unread_counts = {}
+    # canonical remote uri -> the id of the account that last carried a
+    # message to or from that person. Which account a conversation uses is
+    # not a preference set once and kept: it is whichever one the two of
+    # them are actually talking over, and the last message is what says so.
+    message_accounts = {}
+    # canonical remote uri -> when a typing state stops being believable,
+    # as a monotonic deadline. Only used for conversations nobody has
+    # opened: an open one is timed out by its own viewer.
+    composing_deadlines = {}
+    # canonical remote uri -> True while the remote party is typing. Lives
+    # here rather than on the viewer because the contact row has to show it
+    # for conversations nobody has opened yet, and those have no viewer and
+    # no host. Nothing is ever stored: is-composing is a state with an
+    # expiry, not a message.
+    composing_states = {}
     # canonical remote uri -> naive UTC datetime of the newest message we
     # know about. Seeded once from history, kept current by every path that
     # stores a message. The Messages group is ordered by this.
@@ -1272,11 +1305,15 @@ class SMSWindowManagerClass(NSObject):
                 cursor = payload.get('cursor') or None
                 BlinkLogger().log_info('Applying journal %d/%d: %s (%d entries)'
                                        % (index, len(names), name, len(messages)))
-                _, contacts, incoming, summary, unhandled = self._applyJournalEntries(
-                    account, messages, cursor, label=name, first_sync=first_sync)
+                # The banner counter is handed in rather than merged
+                # afterwards: a conversation-read marker cancels the count
+                # for its contact as it is applied, and a read that lands
+                # in a later page than the messages it covers has to be
+                # able to cancel what an earlier page raised.
+                _, contacts, _, summary, unhandled = self._applyJournalEntries(
+                    account, messages, cursor, label=name, first_sync=first_sync,
+                    incoming=all_incoming)
                 all_contacts |= contacts
-                for contact, count in incoming.items():
-                    all_incoming[contact] = all_incoming.get(contact, 0) + count
                 self._logJournalSummary(account, summary, unhandled=unhandled)
             except Exception as e:
                 BlinkLogger().log_error('Error applying journal %s: %s' % (name, e))
@@ -1288,15 +1325,21 @@ class SMSWindowManagerClass(NSObject):
                 BlinkLogger().log_error('Cannot delete applied journal %s: %s' % (path, e))
 
     @objc.python_method
-    def _applyJournalEntries(self, account, messages, cursor, label='', first_sync=False):
+    def _applyJournalEntries(self, account, messages, cursor, label='', first_sync=False,
+                             incoming=None):
         """Dispatch one cached journal page. No network, no file I/O.
 
         `cursor` is the sync cursor as it stood before this page was
         downloaded; syncIncoming/OutgoingMessage use it to tell a first-ever
         backfill from a catch-up.
+
+        `incoming` is the run's banner counter. Shared across the pages of
+        one run so that entries and the conversation-read markers that
+        cancel them keep their journal order regardless of which page each
+        of them landed in.
         """
         sync_contacts = set()
-        sync_incoming = {}
+        sync_incoming = incoming if incoming is not None else {}
         sync_summary = {}
         sync_unhandled = {}
         last_message_id = None
@@ -1396,6 +1439,25 @@ class SMSWindowManagerClass(NSObject):
                     # conversation read elsewhere after its last message ends
                     # up with a cleared badge, not a stale count.
                     self.applyConversationRead(account, msg['content'])
+                    # And with no banner either. The badge was cleared by
+                    # applyConversationRead, but the count this page has
+                    # been building for the banner is a separate tally --
+                    # left alone, the sync ends by announcing messages the
+                    # marker has just said were read. This is the ordinary
+                    # case, not a corner one: reading a conversation
+                    # publishes a marker, so the next sync replays the
+                    # messages AND the marker that settled them.
+                    read_contact = self._conversationReadContact(msg['content'])
+                    # Matched canonically: the marker carries whatever the
+                    # device that sent it called the contact, while the
+                    # count is keyed by the address on the messages.
+                    read_key = self._canonical_uri(read_contact) if read_contact else ''
+                    for counted in [uri for uri in sync_incoming
+                                    if read_key and self._canonical_uri(uri) == read_key]:
+                        del sync_incoming[counted]
+                        BlinkLogger().log_debug(
+                            'Journal: %s was read, dropping its pending banner count'
+                            % counted)
                 elif content_type == 'text/pgp-public-key':
                     uri = msg['contact']
                     if msg.get('direction') == 'outgoing':
@@ -1518,7 +1580,26 @@ class SMSWindowManagerClass(NSObject):
         # updates -- and none of them is news. With nothing notable in the
         # batch there is no banner at all, rather than one announcing
         # traffic the user cannot see and did not ask about.
-        senders = incoming_counts or {}
+        senders = dict(incoming_counts or {})
+        # A conversation the user is looking at right now is not news. Its
+        # host cleared the badge as the messages were shown, so a banner
+        # would be the only thing left claiming an unread state that no
+        # longer exists -- and it would be claiming it about the pane the
+        # user is reading.
+        for uri in [uri for uri in senders if self._conversationIsOnScreen(account, uri)]:
+            BlinkLogger().log_info('No banner for %s: the conversation is on screen' % uri)
+            del senders[uri]
+        if senders:
+            # Exactly what the banner is about to claim. Without it the log
+            # holds the per-content-type journal summary and nothing about
+            # the number the user actually sees, so a miscount (traffic that
+            # should never have been notable) is indistinguishable from a
+            # genuine catch-up.
+            BlinkLogger().log_info(
+                'Unread notification for %s: %d message(s) from %d contact(s) [%s]'
+                % (account.id, sum(senders.values()), len(senders),
+                   ', '.join('%s=%d' % (uri, count) for uri, count
+                             in sorted(senders.items(), key=lambda item: -item[1]))))
         if not senders:
             if sync_contacts:
                 BlinkLogger().log_debug('Journal sync carried nothing notable; no banner')
@@ -2286,60 +2367,25 @@ class SMSWindowManagerClass(NSObject):
                 self.last_message_times[key] = when
                 loaded += 1
         BlinkLogger().log_info('Conversation order seeded from %d conversation(s)' % loaded)
+
+        # And which account each of them is being held on, for the same
+        # reason: without it every conversation comes back on whatever the
+        # account popup says after a restart, rather than on the account
+        # it was actually being held on.
+        try:
+            accounts = self.history.last_message_accounts()
+        except Exception as e:
+            BlinkLogger().log_error('Cannot read the last message accounts: %s' % e)
+            accounts = {}
+        for uri, local_uri in accounts.items():
+            key = self._canonical_uri(uri)
+            if key and local_uri and key not in self.message_accounts:
+                self.message_accounts[key] = str(local_uri)
+        if accounts:
+            BlinkLogger().log_info('Conversation accounts seeded from %d conversation(s)'
+                                   % len(accounts))
         if loaded:
             self._postConversationOrderChanged(None)
-        # Deferred: the Messages group is filed by other code paths that are
-        # still running at this point, so asking now reports a short list.
-        call_later(8, self.logMessagesGroupTimes)
-
-    @objc.python_method
-    def logMessagesGroupTimes(self):
-        """One line per Messages-group contact: what the row will draw.
-
-        The whole chain in one place -- the contact's URIs, the canonical
-        key each one reduces to, and the stamp that key resolves to in
-        last_message_times -- because a contact list where every row shows
-        the same time can break at any of those three joints and reading
-        the code cannot tell you which.
-        """
-        log = BlinkLogger().log_info
-        try:
-            from ContactListModel import MESSAGES_GROUP_ID
-            group = next(g for g in AddressbookManager().get_groups()
-                         if g.id == MESSAGES_GROUP_ID)
-        except StopIteration:
-            log('Messages group times: no Messages group exists yet')
-            return
-        except Exception as e:
-            log('Messages group times: cannot read the group: %s' % e)
-            return
-
-        contacts = list(group.contacts)
-        log('Messages group times: %d contact(s), %d stamp(s) in the map'
-            % (len(contacts), len(self.last_message_times)))
-        for contact in contacts:
-            try:
-                uris = [str(u.uri) for u in contact.uris if u.uri]
-            except Exception:
-                uris = []
-            parts = []
-            for uri in uris:
-                key = self._canonical_uri(uri)
-                stamp = self.last_message_times.get(key)
-                parts.append('%s -> %s = %s' % (uri, key, stamp or 'none'))
-            log('Messages group times: name=%r %s'
-                % (contact.name or '', '; '.join(parts) or 'no uris'))
-
-        orphans = set(self.last_message_times)
-        for contact in contacts:
-            try:
-                for u in contact.uris:
-                    orphans.discard(self._canonical_uri(u.uri))
-            except Exception:
-                pass
-        if orphans:
-            log('Messages group times: %d stamp(s) match no contact: %s'
-                % (len(orphans), ', '.join(sorted(orphans)[:20])))
 
     @objc.python_method
     @run_in_green_thread
@@ -2549,6 +2595,10 @@ class SMSWindowManagerClass(NSObject):
                                             % (key, e))
             self.viewer_hosts.pop(viewer, None)
             closed = True
+        # Whoever was typing at it is not typing at anything the user can
+        # see any more, and no timer will fire to say so: the viewer's
+        # idle timer goes away with the viewer.
+        self.noteComposing(key, False)
         return closed
 
     @objc.python_method
@@ -2582,6 +2632,31 @@ class SMSWindowManagerClass(NSObject):
                     BlinkLogger().log_info('Deleted the public key held for %s' % uri)
             except OSError as e:
                 BlinkLogger().log_error('Cannot delete %s: %s' % (key_file, e))
+
+    @objc.python_method
+    def openViewerForURI(self, uri):
+        """A conversation already open with this address, whatever account
+        it sends from, or None.
+
+        Selecting a contact resolves the account from the account popup,
+        so without this a user who switches the popup gets a SECOND
+        conversation with the same person -- same row, same history, a
+        different object behind it. What a click on a row means is the
+        conversation they already have, so an open one wins; the popup
+        only decides which account a NEW conversation starts on.
+
+        Bonjour is left out: those are addressed by instance id, and two
+        neighbours can present the same address.
+        """
+        key = self._canonical_uri(uri)
+        if not key:
+            return None
+        for viewer in self.allViewers():
+            if getattr(viewer, 'account', None) is BonjourAccount():
+                continue
+            if self._canonical_uri(getattr(viewer, 'remote_uri', '')) == key:
+                return viewer
+        return None
 
     @objc.python_method
     def noteUnreadMessage(self, remote_uri, delta=1):
@@ -2618,6 +2693,175 @@ class SMSWindowManagerClass(NSObject):
     @objc.python_method
     def unreadCountForURI(self, remote_uri):
         return self.unread_counts.get(self._canonical_uri(remote_uri), 0)
+
+    @objc.python_method
+    def noteMessageAccount(self, account, remote_uri):
+        """Record which account a message to or from this person used."""
+        key = self._canonical_uri(remote_uri)
+        if not key or account is None:
+            return
+        self.message_accounts[key] = str(account.id)
+
+    @objc.python_method
+    def accountForRemoteURI(self, remote_uri):
+        """The account this conversation last used, if it is still usable.
+
+        None when nothing is known about the address, or when the account
+        it used has since been deleted or disabled -- in which case the
+        caller falls back to whatever it would have chosen anyway.
+        """
+        wanted = self.message_accounts.get(self._canonical_uri(remote_uri))
+        if not wanted:
+            return None
+        try:
+            account = AccountManager().get_account(wanted)
+        except KeyError:
+            return None
+        return account if account is not None and account.enabled else None
+
+    @objc.python_method
+    def adoptAccount(self, viewer, account):
+        """Move an open conversation onto the account a message arrived on.
+
+        A reply typed after a message that came in on another account has
+        to go back the way it came, or it reaches the peer from an address
+        they never wrote to -- and the header would be naming an account
+        that has nothing to do with what is on the screen.
+        """
+        if viewer is None or account is None:
+            return
+        if getattr(viewer, 'account', None) is account:
+            return
+        try:
+            viewer.setAccount(account)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot move the conversation with %s to %s: %s'
+                                    % (getattr(viewer, 'remote_uri', viewer), account.id, e))
+
+    @objc.python_method
+    def noteComposing(self, remote_uri, flag):
+        """Record that the remote party of a conversation is (not) typing.
+
+        Announced only on a change: the sender refreshes its "active" state
+        every minute or so for as long as someone keeps typing, and a
+        notification per refresh would redraw the contact list for nothing.
+        """
+        key = self._canonical_uri(remote_uri)
+        if not key:
+            return
+        flag = bool(flag)
+        if flag == bool(self.composing_states.get(key, False)):
+            return
+        if flag:
+            self.composing_states[key] = True
+        else:
+            self.composing_states.pop(key, None)
+            # Whoever cleared it owns it now: a deadline left behind would
+            # fire later against a state that is already gone.
+            self.composing_deadlines.pop(key, None)
+        BlinkLogger().log_info('Is-Composing: %s %s' % (key, 'is typing' if flag else 'stopped typing'))
+        self.notification_center.post_notification(
+            'BlinkComposingStateChanged', sender=self,
+            data=NotificationData(key=key, composing=flag))
+
+    @objc.python_method
+    def noteComposingIndication(self, remote_uri, flag, refresh=None):
+        """An is-composing indication off the wire, whatever is open.
+
+        The one path a typing state takes to the contact rows, and it
+        deliberately knows nothing about conversations: someone typing at
+        an address is a fact about that address, exactly like the unread
+        count beside it. A viewer, when there is one, additionally draws
+        it in its own header -- but the row never waits for one to exist,
+        because a conversation nobody has opened is precisely when a
+        typing indicator is worth something.
+
+        That also means the timeout cannot be left to the viewer, which is
+        where it used to live. `refresh` is what the sender promised: the
+        state may be believed for that many seconds without hearing again.
+        RFC 3994 puts the default at 120, the number used elsewhere here.
+        """
+        key = self._canonical_uri(remote_uri)
+        if not key:
+            return
+        if not flag:
+            self.noteComposing(key, False)
+            return
+
+        seconds = refresh if refresh else 120
+        self.composing_deadlines[key] = monotonic() + seconds
+        self.noteComposing(key, True)
+        # Checked a second late so a refresh that arrives exactly on time
+        # has already moved the deadline past this one.
+        call_later(seconds + 1, self.expireComposing, key)
+
+    @objc.python_method
+    def expireComposing(self, key):
+        """Drop a typing state nobody refreshed."""
+        deadline = self.composing_deadlines.get(key)
+        if deadline is None:
+            return                      # already cleared
+        if monotonic() < deadline:
+            return                      # refreshed since; a later check owns it
+        self.composing_deadlines.pop(key, None)
+        self.noteComposing(key, False)
+
+    @objc.python_method
+    def isComposingForURI(self, remote_uri):
+        return bool(self.composing_states.get(self._canonical_uri(remote_uri), False))
+
+    @objc.python_method
+    def noteViewer_isComposing_(self, viewer, flag):
+        """Route a remote typing state to the contact row and to the host.
+
+        The row is updated whether or not the conversation is currently
+        being shown: a host exists only once the user has opened the
+        conversation, and someone typing at a conversation nobody has
+        opened is exactly the case the row is there to show.
+
+        windowForViewer() returns None for an unhosted viewer, which is why
+        this exists at all -- every caller used to dereference it straight
+        away.
+        """
+        self.noteComposing(getattr(viewer, 'remote_uri', None), flag)
+        host = self.windowForViewer(viewer)
+        if host is None:
+            return
+        try:
+            host.noteView_isComposing_(viewer, flag)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot show the typing state for %s: %s'
+                                    % (getattr(viewer, 'remote_uri', viewer), e))
+
+    @objc.python_method
+    def _conversationIsOnScreen(self, account, remote_uri):
+        """Whether this conversation is in front of the user right now.
+
+        Asked of the panel host directly, since it is the one that knows
+        whether the messages pane is showing and which conversation is
+        selected in it; a window host is on screen when it is the key
+        window and the conversation is its selected tab.
+        """
+        for viewer in self.allViewers():
+            if viewer.account != account or viewer.remote_uri != remote_uri:
+                continue
+            host = self.windowForViewer(viewer)
+            if host is None:
+                continue
+            try:
+                visible = getattr(host, 'isConversationVisible', None)
+                if visible is not None:
+                    if visible(viewer):
+                        return True
+                    continue
+                window = host.window()
+                if (window is not None and window.isKeyWindow()
+                        and host.selectedSessionController() is viewer):
+                    return True
+            except Exception as e:
+                BlinkLogger().log_error('Cannot tell whether the conversation with %s '
+                                        'is on screen: %s' % (remote_uri, e))
+        return False
 
     @objc.python_method
     def _postUnreadChanged(self, key, count):
@@ -2731,6 +2975,7 @@ class SMSWindowManagerClass(NSObject):
             call_id=call_id or msgid, encryption=encryption,
             read=0 if (unread and direction == 'incoming') else 1,
         )
+        self.noteMessageAccount(account, remote_uri)
         if stamps_conversation_time:
             self.noteMessageTime(remote_uri, timestamp)
         return True
@@ -2812,6 +3057,25 @@ class SMSWindowManagerClass(NSObject):
                    msg.get('contact'), msg.get('timestamp'), msg.get('disposition')))
 
     @objc.python_method
+    def _journalMessageAlreadyTakenIn(self, msg):
+        """Whether this journal entry is a message we already took in live.
+
+        The journal carries everything, including what arrived over the
+        wire while the app was running -- so every message received during
+        a conversation comes back on the next timer tick. It is the same
+        message: already stored, already on screen, quite possibly already
+        read. Counting it again is how a chat that was read minutes ago
+        ends with "3 messages received while you were away".
+
+        The live path records each id it accepts in seen_message_ids (it
+        uses the same ring to drop a sender's retransmission), so the id
+        being in there means this device has already had the message
+        through the front door. Peeked at, not recorded: a journal entry
+        must not be able to make a later live message look like a repeat.
+        """
+        return bool(msg.get('message_id')) and msg['message_id'] in self.seen_message_ids
+
+    @objc.python_method
     def _journal_message_is_notable(self, account, msg):
         """Return True iff a journaled incoming message should bump the
         unread badge on the SMS tab.
@@ -2824,7 +3088,20 @@ class SMSWindowManagerClass(NSObject):
         consumed / label / reply / caregiver / …) and control/sync
         message is dropped without rendering — none of those should
         increment the counter.
+
+        OTR wire traffic is excluded for the same reason: it arrives as
+        text/plain but is addressed to the OTR implementation, not to a
+        reader. _persist_journal_message drops it without making a row,
+        so counting it here badges a conversation that gained nothing and
+        announces "15 messages received while you were away" for what was
+        a handshake.
         """
+        if self._journalMessageAlreadyTakenIn(msg):
+            return False
+
+        if is_otr_wire_text(msg.get('content')):
+            return False
+
         content_type = msg['content_type']
         if content_type in ('text/plain', 'text/html') + FILE_TRANSFER_CONTENT_TYPES:
             return True
@@ -2960,6 +3237,7 @@ class SMSWindowManagerClass(NSObject):
             metadata=store_metadata, related_msg_id=related_msg_id,
             related_action=related_action, category=category,
         )
+        self.noteMessageAccount(account, msg['contact'])
         if stamps_conversation_time:
             self.noteMessageTime(msg['contact'], msg['timestamp'])
 
@@ -3141,7 +3419,7 @@ class SMSWindowManagerClass(NSObject):
         viewer.gotMessage(sender_identity, msg['message_id'], msg['message_id'], direction, (msg['content'] or '').encode(), msg['content_type'], is_replication_message=False, window=window, cpim_imdn_events=msg['disposition'], imdn_timestamp=msg['timestamp'], account=account, from_journal=True, status=status, metadata=msg.get('metadata'))
 
         if create_if_needed:
-            self.windowForViewer(viewer).noteView_isComposing_(viewer, False)
+            self.noteViewer_isComposing_(viewer, False)
 
     @objc.python_method
     def syncOutgoingMessage(self, account, msg, last_id=None):
@@ -3212,7 +3490,7 @@ class SMSWindowManagerClass(NSObject):
         viewer.gotMessage(sender_identity, msg['message_id'], msg['message_id'], direction, (msg['content'] or '').encode(), msg['content_type'], is_replication_message=True, window=window, cpim_imdn_events=msg['disposition'], imdn_timestamp=msg['timestamp'], account=account, from_journal=True, status=status, metadata=msg.get('metadata'))
 
         if (last_id and create_if_needed):
-            self.windowForViewer(viewer).noteView_isComposing_(viewer, False)
+            self.noteViewer_isComposing_(viewer, False)
 
     def setOwner_(self, owner):
         self._owner = owner
@@ -3331,6 +3609,15 @@ class SMSWindowManagerClass(NSObject):
         Returns the viewer, as it always has, despite the name.
         """
         viewer = self.viewerForTarget(target, display_name, account, create_if_needed=False, instance_id=instance_id, selected_contact=selected_contact, is_replication_message=is_replication_message)
+
+        if viewer is None and instance_id is None:
+            # Nothing matched on (target, account), but the conversation
+            # with this person may be open on a DIFFERENT account -- and
+            # it is the same conversation: same row, same history, same
+            # person. Without this an open conversation silently misses
+            # every message that arrives on another of the user's
+            # accounts, which is filed and badged behind its back.
+            viewer = self.openViewerForURI(target)
 
         if content_type == IMDNDocument.content_type:
             # IMDN never creates or raises anything; it only moves statuses.
@@ -3754,6 +4041,13 @@ class SMSWindowManagerClass(NSObject):
                                    content_type, content, imdn_id, is_cpim,
                                    is_replication_message, instance_id)
 
+        # A request meant for the server, seen in passing. It is not a
+        # message: it renders as nothing, stores as nothing, and warning
+        # about it would put a line in the log for every key lookup anyone
+        # makes. The line above already recorded that it arrived.
+        if content_type in SERVER_API_REQUEST_CONTENT_TYPES:
+            return
+
         # Live only: a replicated copy has already been through the
         # server's store and replay, so it cannot say what was on the wire.
         if content_type in FILE_TRANSFER_CONTENT_TYPES and not is_replication_message:
@@ -3902,6 +4196,20 @@ class SMSWindowManagerClass(NSObject):
                 content_type = msg.content_type.value if msg.content_type is not None else None
                 last_active = msg.last_active.value if msg.last_active is not None else None
 
+                # The rows first and unconditionally. A conversation being
+                # open is a fact about this application, not about the
+                # person typing, and the indicator must not depend on one
+                # -- an unopened conversation is exactly where it earns
+                # its keep. Discarding an indication that is older than
+                # the refresh it asks for is the one thing checked first,
+                # the same rule the viewer applies to its own header.
+                stale = (state == 'active' and last_active is not None
+                         and last_active - ISOTimestamp.now() > datetime.timedelta(seconds=refresh or 120))
+                if not stale:
+                    self.noteComposingIndication(
+                        format_identity_to_string(window_tab_identity, format='aor'),
+                        state == 'active', refresh)
+
                 viewer = self.getWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, create_if_needed=False, note_new_message=False, instance_id=instance_id)
 
                 if viewer:
@@ -4018,6 +4326,13 @@ class SMSWindowManagerClass(NSObject):
                     None, uri=remote_uri, icon=icon)
             return
 
+        # The conversation continues over whichever account the two of
+        # them are actually using. Done before the message is handed over
+        # so the transcript's note about the move sits above it rather
+        # than under the message that caused it.
+        self.noteMessageAccount(account, viewer.remote_uri)
+        self.adoptAccount(viewer, account)
+
         if note_new_message:
             self.windowForViewer(viewer).noteNewMessageForSession_(viewer)
 
@@ -4026,7 +4341,7 @@ class SMSWindowManagerClass(NSObject):
         window = self.windowForViewer(viewer).window()
         viewer.gotMessage(sender_identity, imdn_id, call_id, direction, content, content_type, is_replication_message=is_replication_message, window=window, cpim_imdn_events=cpim_imdn_events, imdn_timestamp=imdn_timestamp, account=account, status=status, metadata=metadata)
         
-        self.windowForViewer(viewer).noteView_isComposing_(viewer, False)
+        self.noteViewer_isComposing_(viewer, False)
 
 
 class ImportPrivateKeyController(NSObject):

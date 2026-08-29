@@ -1436,7 +1436,8 @@ class NativeChatViewController(ChatViewController):
         if key in logged:
             return
         logged.add(key)
-        from MessageBubbleView import _image, avatar_initials
+        from Avatars import avatar_initials
+        from MessageBubbleView import _image
         who = name or 'me'
         if icon_path and _image(icon_path) is not None:
             BlinkLogger().log_info('Avatar for %s: %s' % (who, icon_path))

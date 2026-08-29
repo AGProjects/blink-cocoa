@@ -21,7 +21,7 @@ picture, two labels and two buttons, and every outlet is one more thing
 to mis-wire.
 """
 
-__all__ = ['confirm_attachments']
+__all__ = ['confirm_attachments', 'choose_picture', 'crop_image']
 
 import os
 import tempfile
@@ -114,27 +114,34 @@ FILETYPE_PNG = 4
 MIN_CROP = 8.0
 # The grips, drawn small and caught generously: the square the user sees
 # is not the square they have to hit.
-HANDLE_SIZE = 7.0
-HANDLE_GRAB = 11.0
+HANDLE_SIZE = 9.0
+HANDLE_GRAB = 14.0
+# Bare picture around the outside of the crop view, so that a selection
+# flush against the picture's edge still has its grips drawn whole and,
+# more to the point, inside the view. A grip centred on the boundary used
+# to be half outside it: the visible half looked like decoration, and a
+# click on the outer half went to the window instead of here, which is
+# what "the square cannot be resized" turned out to mean.
+CROP_MARGIN = 10.0
+# How much of the largest possible square the picture opens with. Not all
+# of it: a selection that already fills the frame cannot be dragged any
+# bigger, so the first thing anybody tries -- pull a corner outwards --
+# would do nothing at all.
+DEFAULT_SQUARE = 0.85
 
 
-def _crop_to_file(path, picture, selection):
-    """Write the selected part of the picture as a new file, and return it.
+def _crop_rep(source, picture, selection):
+    """The selected part of a picture, as a bitmap of its own.
 
-    Never in place. Cropping a file the user picked in a panel would edit
-    something that lives on their disc and was only ever lent to the
-    conversation; the crop is a new file in a temporary folder of its own,
-    and the original is still there to revert to.
+    `picture` is where the whole picture was drawn on screen and
+    `selection` the rectangle the user put over it, both in the same view's
+    coordinates; the crop itself is worked out in the picture's own pixels.
+    Shared by everything that crops: a file on its way out, a contact's
+    photograph, a camera shot that has never been on disc at all.
     """
     from AppKit import (NSBitmapImageRep,
                         NSDeviceRGBColorSpace,
-                        NSGraphicsContext,
-                        NSImage)
-
-    source = NSImage.alloc().initWithContentsOfFile_(path)
-    if source is None:
-        BlinkLogger().log_error('Cannot read %s to crop it' % path)
-        return None
+                        NSGraphicsContext)
 
     # Measured in pixels, not points. A picture carrying a resolution of
     # its own has a size in points that is not what is stored in it, and a
@@ -148,13 +155,15 @@ def _crop_to_file(path, picture, selection):
         size = source.size()
         width, height = int(size.width), int(size.height)
     if width <= 0 or height <= 0:
-        BlinkLogger().log_error('Cannot tell how big %s is, so not cropping it'
-                                % path)
+        BlinkLogger().log_error('Cannot tell how big the picture is, so not '
+                                'cropping it')
         return None
     source.setSize_(NSMakeSize(width, height))
 
     if picture.size.width <= 0 or picture.size.height <= 0:
         BlinkLogger().log_error('Cannot crop against a picture of no size')
+        return None
+    if selection is None:
         return None
     across = width / picture.size.width
     down = height / picture.size.height
@@ -197,6 +206,50 @@ def _crop_to_file(path, picture, selection):
             COMPOSITE_COPY, 1.0)
     finally:
         NSGraphicsContext.restoreGraphicsState()
+    return rep
+
+
+def crop_image(image, picture, selection):
+    """The selected part of a picture in hand, as a picture in hand.
+
+    For a crop that never goes near the disc -- a camera shot on its way to
+    becoming somebody's avatar. The source is copied before anything is
+    measured: working out the crop sets the image's size to its pixel size,
+    and that is not a thing to do to a picture somebody else is holding.
+    """
+    from AppKit import NSImage
+
+    if image is None:
+        return None
+    try:
+        rep = _crop_rep(image.copy(), picture, selection)
+    except Exception as e:
+        BlinkLogger().log_error('Cannot crop the picture: %s' % e)
+        return None
+    if rep is None:
+        return None
+    cropped = NSImage.alloc().initWithSize_(rep.size())
+    cropped.addRepresentation_(rep)
+    return cropped
+
+
+def _crop_to_file(path, picture, selection):
+    """Write the selected part of the picture as a new file, and return it.
+
+    Never in place. Cropping a file the user picked in a panel would edit
+    something that lives on their disc and was only ever lent to the
+    conversation; the crop is a new file in a temporary folder of its own,
+    and the original is still there to revert to.
+    """
+    from AppKit import NSImage
+
+    source = NSImage.alloc().initWithContentsOfFile_(path)
+    if source is None:
+        BlinkLogger().log_error('Cannot read %s to crop it' % path)
+        return None
+    rep = _crop_rep(source, picture, selection)
+    if rep is None:
+        return None
 
     # A photograph stays a photograph: re-encoding a cropped JPEG as PNG
     # can triple what goes over the wire for no visible gain. Purely an
@@ -255,6 +308,15 @@ class BlinkCropView(NSView):
 
     image = None
     selection = None
+    # Locked to a square when the picture is being chosen as somebody's
+    # photograph: it ends up drawn in a circle, so a rectangle would only
+    # be a promise the contact list cannot keep. It also starts with the
+    # largest centred square already selected, because for an avatar that
+    # is the answer often enough to be worth offering.
+    squareSelection = False
+    # Empty space kept between the view's edge and the picture, so the
+    # grips of a selection at the picture's edge are still inside the view.
+    margin = 0.0
     _anchor = None
     # What this drag is doing: 'new', 'move' or 'resize', with the grip
     # being pulled and the rectangle as it stood when the drag began.
@@ -268,7 +330,7 @@ class BlinkCropView(NSView):
     @objc.python_method
     def setPicture(self, image):
         self.image = image
-        self.selection = None
+        self.selection = self._centredSquare() if self.squareSelection else None
         # Through _refresh rather than a plain redraw: the grips that were
         # there a moment ago still own cursor rects, and a pointer that
         # keeps offering to resize a rectangle nobody can see any more is
@@ -277,8 +339,18 @@ class BlinkCropView(NSView):
 
     @objc.python_method
     def pictureRect(self):
-        """Where the picture actually is inside the box: fitted, centred."""
+        """Where the picture actually is inside the box: fitted, centred.
+
+        Inside the margin, not inside the whole view: everything else here
+        measures against this rectangle, so keeping the picture off the
+        view's own edge is all it takes to bring the grips into reach.
+        """
         bounds = self.bounds()
+        if self.margin:
+            bounds = NSMakeRect(bounds.origin.x + self.margin,
+                                bounds.origin.y + self.margin,
+                                max(bounds.size.width - 2 * self.margin, 1.0),
+                                max(bounds.size.height - 2 * self.margin, 1.0))
         if self.image is None:
             return NSMakeRect(0, 0, 0, 0)
         size = self.image.size()
@@ -288,8 +360,56 @@ class BlinkCropView(NSView):
                     bounds.size.height / size.height)
         w = size.width * scale
         h = size.height * scale
-        return NSMakeRect((bounds.size.width - w) / 2.0,
-                          (bounds.size.height - h) / 2.0, w, h)
+        # From the inset box's own origin, not the view's. Centring inside
+        # the box and then measuring from zero puts the picture back
+        # against the left and bottom edges -- margin on two sides only,
+        # which is exactly the half of the grips that could not be caught.
+        return NSMakeRect(bounds.origin.x + (bounds.size.width - w) / 2.0,
+                          bounds.origin.y + (bounds.size.height - h) / 2.0,
+                          w, h)
+
+    @objc.python_method
+    def _centredSquare(self):
+        """The square the picture opens with, in the middle of it.
+
+        A little short of the largest one it holds, so there is somewhere
+        for a corner dragged outwards to go.
+        """
+        picture = self.pictureRect()
+        largest = min(picture.size.width, picture.size.height)
+        side = max(largest * DEFAULT_SQUARE, min(largest, MIN_CROP * 3))
+        if side < MIN_CROP:
+            return None
+        return NSMakeRect(picture.origin.x + (picture.size.width - side) / 2.0,
+                          picture.origin.y + (picture.size.height - side) / 2.0,
+                          side, side)
+
+    @objc.python_method
+    def _squared(self, rect, keep_x, keep_y, side=None):
+        """The rectangle reduced to a square, with one corner held still.
+
+        keep_x and keep_y name the edge that does not move -- 'min' for
+        left/bottom, 'max' for right/top -- which is always the corner
+        opposite the one the pointer is dragging.
+
+        `side` is the length the caller wants, for the cases where the
+        rectangle alone cannot say: a single edge being dragged outwards
+        lengthens one dimension only, and taking the shorter of the two
+        would mean the four edge grips could shrink a square but never
+        grow one. Left out, the shorter side wins, which is what keeps a
+        corner drag inside the picture without a second correction.
+        """
+        picture = self.pictureRect()
+        if side is None:
+            side = min(rect.size.width, rect.size.height)
+        side = min(side, picture.size.width, picture.size.height)
+        x = rect.origin.x if keep_x == 'min' else rect.origin.x + rect.size.width - side
+        y = rect.origin.y if keep_y == 'min' else rect.origin.y + rect.size.height - side
+        x = max(picture.origin.x,
+                min(x, picture.origin.x + picture.size.width - side))
+        y = max(picture.origin.y,
+                min(y, picture.origin.y + picture.size.height - side))
+        return NSMakeRect(x, y, side, side)
 
     # -- drawing ---------------------------------------------------------
 
@@ -328,6 +448,16 @@ class BlinkCropView(NSView):
             outline = NSBezierPath.bezierPathWithRect_(selection)
             outline.setLineWidth_(1.0)
             outline.stroke()
+            if self.squareSelection:
+                # The circle the square will be shown as, drawn inside it:
+                # a contact photograph is cropped square here and displayed
+                # round everywhere else, and the corners it loses are worth
+                # seeing before the choice is made.
+                circle = NSBezierPath.bezierPathWithOvalInRect_(selection)
+                circle.setLineWidth_(1.0)
+                NSColor.whiteColor().colorWithAlphaComponent_(0.7).set()
+                circle.stroke()
+                NSColor.whiteColor().set()
             # The grips, drawn last so they sit on top of their own edge.
             # White with a dark outline rather than one or the other: a
             # white square is invisible against a white picture, and a
@@ -360,6 +490,23 @@ class BlinkCropView(NSView):
             if selection is None:
                 return
             self.addCursorRect_cursor_(selection, NSCursor.openHandCursor())
+            # The borders, before the grips: same order as _gripAt answers
+            # in, and the later rect wins where two overlap.
+            left = selection.origin.x
+            right = left + selection.size.width
+            bottom = selection.origin.y
+            top = bottom + selection.size.height
+            band = HANDLE_GRAB * 2
+            for x in (left, right):
+                self.addCursorRect_cursor_(
+                    NSMakeRect(x - HANDLE_GRAB, bottom, band,
+                               selection.size.height),
+                    NSCursor.resizeLeftRightCursor())
+            for y in (bottom, top):
+                self.addCursorRect_cursor_(
+                    NSMakeRect(left, y - HANDLE_GRAB, selection.size.width,
+                               band),
+                    NSCursor.resizeUpDownCursor())
             for grip, centre in self._handles(selection):
                 box = NSMakeRect(centre[0] - HANDLE_GRAB, centre[1] - HANDLE_GRAB,
                                  HANDLE_GRAB * 2, HANDLE_GRAB * 2)
@@ -403,11 +550,46 @@ class BlinkCropView(NSView):
 
     @objc.python_method
     def _gripAt(self, point, selection):
-        """Which grip the pointer is on, or None for none of them."""
+        """Which grip the pointer is on, or None for none of them.
+
+        The eight drawn squares first, and then the whole of the border
+        they sit on: an edge is a line the length of the selection and a
+        far bigger target than the nine-point square drawn at its middle,
+        and there is no reason to insist on the square. Grabbing a
+        millimetre off a corner now resizes instead of starting a new
+        rectangle from scratch, which was the difference between a crop
+        that can be adjusted and one that has to be redrawn every time.
+        """
         for grip, centre in self._handles(selection):
             if (abs(point.x - centre[0]) <= HANDLE_GRAB
                     and abs(point.y - centre[1]) <= HANDLE_GRAB):
                 return grip
+
+        # A selection barely bigger than the grab distance is all border;
+        # treating it that way would leave no middle to pick it up by.
+        if (selection.size.width < 3 * HANDLE_GRAB
+                or selection.size.height < 3 * HANDLE_GRAB):
+            return None
+
+        left = selection.origin.x
+        right = left + selection.size.width
+        bottom = selection.origin.y
+        top = bottom + selection.size.height
+        if not (left - HANDLE_GRAB <= point.x <= right + HANDLE_GRAB
+                and bottom - HANDLE_GRAB <= point.y <= top + HANDLE_GRAB):
+            return None
+        grip_x = 0
+        if abs(point.x - left) <= HANDLE_GRAB:
+            grip_x = -1
+        elif abs(point.x - right) <= HANDLE_GRAB:
+            grip_x = 1
+        grip_y = 0
+        if abs(point.y - bottom) <= HANDLE_GRAB:
+            grip_y = -1
+        elif abs(point.y - top) <= HANDLE_GRAB:
+            grip_y = 1
+        if grip_x or grip_y:
+            return (grip_x, grip_y)
         return None
 
     @objc.python_method
@@ -528,11 +710,31 @@ class BlinkCropView(NSView):
         if self._mode == 'new':
             if self._anchor is None:
                 return
-            self.selection = self._between(self._anchor, point)
+            rect = self._between(self._anchor, point)
+            if self.squareSelection:
+                rect = self._squared(
+                    rect, 'min' if point.x >= self._anchor.x else 'max',
+                    'min' if point.y >= self._anchor.y else 'max')
+            self.selection = rect
         elif self._mode == 'move':
+            # already square, if it has to be: moving never resizes
             self.selection = self._moved(point)
         else:
-            self.selection = self._resized(point)
+            rect = self._resized(point)
+            if self.squareSelection and self._grip is not None:
+                grip_x, grip_y = self._grip
+                # A corner takes the shorter of the two sides; a single
+                # edge takes the side it is actually dragging, so pulling
+                # one outwards grows the square instead of doing nothing.
+                if grip_x and grip_y:
+                    side = None
+                elif grip_x:
+                    side = rect.size.width
+                else:
+                    side = rect.size.height
+                rect = self._squared(rect, 'max' if grip_x < 0 else 'min',
+                                     'max' if grip_y < 0 else 'min', side)
+            self.selection = rect
         self._refresh()
 
     def mouseUp_(self, event):
@@ -553,7 +755,11 @@ class BlinkCropView(NSView):
         if mode == 'new' and (selection is None
                               or selection.size.width < MIN_CROP
                               or selection.size.height < MIN_CROP):
-            self.selection = None
+            # A click in square mode goes back to the suggested square
+            # rather than to nothing: 'no selection' there would mean
+            # sending the whole rectangular picture to be squeezed into a
+            # circle, which is not what a click on a photograph means.
+            self.selection = self._centredSquare() if self.squareSelection else None
         self._refresh()
         if self._onChange is not None:
             try:
@@ -583,9 +789,17 @@ class AttachmentPreviewController(NSObject):
     _revert_button = None
     _original = None
     _temporary = None
+    # What the window is for. Sending an attachment is the original job and
+    # stays the default; choosing somebody's photograph is the same window
+    # with a different question written on it -- its own title, its own
+    # accept button, and a crop locked to a square.
+    _window_title = None
+    _accept_title = None
+    _square = False
 
     @objc.python_method
-    def setupWithPaths(self, paths, title):
+    def setupWithPaths(self, paths, title, window_title=None,
+                       accept_title=None, square=False):
         """Build the window. Separate from init on purpose.
 
         Overriding ObjC's own init from Python is a thing that works until
@@ -594,6 +808,9 @@ class AttachmentPreviewController(NSObject):
         """
         self.paths = list(paths)
         self._temporary = []
+        self._window_title = window_title
+        self._accept_title = accept_title
+        self._square = square
         self._build(title)
         return self
 
@@ -641,11 +858,16 @@ class AttachmentPreviewController(NSObject):
         size = image.size()
         if not size.width or not size.height:
             return None
-        scale = min(HERO_W / size.width, HERO_H / size.height, 1.0)
-        w = max(size.width * scale, 1.0)
-        h = max(size.height * scale, 1.0)
+        scale = min((HERO_W - 2 * CROP_MARGIN) / size.width,
+                    (HERO_H - 2 * CROP_MARGIN) / size.height, 1.0)
+        w = max(size.width * scale, 1.0) + 2 * CROP_MARGIN
+        h = max(size.height * scale, 1.0) + 2 * CROP_MARGIN
         view = BlinkCropView.alloc().initWithFrame_(
             NSMakeRect((WINDOW_W - w) / 2.0, 0, w, h))
+        # Both before the picture, not after: setPicture works out the
+        # square it starts with, and that is measured off the margin.
+        view.margin = CROP_MARGIN
+        view.squareSelection = bool(self._square)
         view.setPicture(image)
         view._onChange = self._selectionChanged
         return view
@@ -704,7 +926,8 @@ class AttachmentPreviewController(NSObject):
         window = NSWindow.alloc().initWithContentRect_styleMask_backing_defer_(
             NSMakeRect(0, 0, WINDOW_W, height), NSTitledWindowMask,
             NSBackingStoreBuffered, False)
-        window.setTitle_(NSLocalizedString("Send Attachment", "Window title"))
+        window.setTitle_(self._window_title
+                         or NSLocalizedString("Send Attachment", "Window title"))
         window.setReleasedWhenClosed_(False)
         content = window.contentView()
 
@@ -744,7 +967,8 @@ class AttachmentPreviewController(NSObject):
             scroll.setDocumentView_(rows)
             content.addSubview_(scroll)
 
-        send = self._button(NSLocalizedString("Send", "Button title"),
+        send = self._button(self._accept_title
+                            or NSLocalizedString("Send", "Button title"),
                             'send:', '\r')
         cancel = self._button(NSLocalizedString("Cancel", "Button title"),
                               'cancel:', chr(27))
@@ -762,8 +986,13 @@ class AttachmentPreviewController(NSObject):
             crop = self._button(NSLocalizedString("Crop", "Button title"),
                                 'crop:')
             crop.setFrame_(NSMakeRect(PAD, PAD, BUTTON_W, BUTTON_H))
-            crop.setEnabled_(False)
+            # Enabled from the start when the picture came up with a square
+            # already selected, which is how the photograph chooser opens.
+            crop.setEnabled_(hero.selection is not None)
             crop.setToolTip_(NSLocalizedString(
+                "Drag a square across the picture -- move it by its middle, "
+                "resize it by its corners and edges", "Tooltip")
+                if self._square else NSLocalizedString(
                 "Drag a rectangle across the picture -- move it by its "
                 "middle, resize it by its corners and edges -- then crop "
                 "to it", "Tooltip"))
@@ -884,9 +1113,37 @@ class AttachmentPreviewController(NSObject):
                 os.rmdir(os.path.dirname(path))
             except OSError:
                 pass
-        self._temporary = [keep] if keep else []
+        # Emptied rather than left holding `keep`: what is kept may be the
+        # user's own file, which was never ours to remove, and a list called
+        # 'temporary' is a list something will eventually delete.
+        self._temporary = []
+
+    @objc.python_method
+    def _applyPendingCrop(self):
+        """Accepting with a square drawn means that square, not the whole thing.
+
+        Only where the crop is locked to a square -- a contact photograph,
+        which opens with one already suggested. Making the user press Crop
+        and then Use Photo would be two answers to one question, and the
+        first of them easy to miss.
+        """
+        hero = self._hero
+        if hero is None or hero.selection is None:
+            return
+        picture = hero.pictureRect()
+        selection = hero.selection
+        # A selection that is the whole picture has nothing to cut, and
+        # cropping to it would only re-encode it a second time.
+        if (abs(selection.origin.x - picture.origin.x) < 1.0
+                and abs(selection.origin.y - picture.origin.y) < 1.0
+                and abs(selection.size.width - picture.size.width) < 1.0
+                and abs(selection.size.height - picture.size.height) < 1.0):
+            return
+        self.crop_(None)
 
     def send_(self, sender):
+        if self._square:
+            self._applyPendingCrop()
         self.accepted = True
         NSApp.stopModal()
 
@@ -914,3 +1171,54 @@ def confirm_attachments(paths, parent=None, title=None):
         # Never a reason to lose what the user asked to send: a preview
         # that will not build falls back to the behaviour that had none.
         return paths
+
+
+def choose_picture(path, parent=None, title=None, accept=None):
+    """Show one picture, let the user crop it square, and return what they chose.
+
+    The same window as the attachment preview, asking a different question:
+    a contact's photograph rather than a file on its way out. The crop is
+    locked to a square because the answer is drawn in a circle, and the
+    return value is an NSImage rather than a path -- every temporary file
+    written on the way is cleaned up before this returns, so the caller
+    ends up holding pixels and no litter.
+
+    Returns None when the user cancels, or when the file cannot be read.
+    """
+    from AppKit import NSImage
+
+    path = str(path or '')
+    if not os.path.isfile(path):
+        return None
+    try:
+        controller = AttachmentPreviewController.alloc().init()
+        if controller is None:
+            return NSImage.alloc().initWithContentsOfFile_(path)
+        controller.setupWithPaths(
+            [path],
+            title or NSLocalizedString(
+                "Drag the square where you want it, or resize it by its "
+                "corners and edges", "Label"),
+            window_title=NSLocalizedString("Contact Photo", "Window title"),
+            accept_title=accept or NSLocalizedString("Use Photo", "Button title"),
+            square=True)
+        chosen = controller.runModal(parent)
+        if not chosen:
+            return None
+        image = NSImage.alloc().initWithContentsOfFile_(chosen[0])
+        if chosen[0] != path:
+            # A crop, in a temporary folder of its own, which runModal
+            # deliberately kept for us. We are holding the pixels now, so it
+            # can go -- and only it: the original belongs to whoever the
+            # path came from and is never ours to remove.
+            try:
+                os.unlink(chosen[0])
+                os.rmdir(os.path.dirname(chosen[0]))
+            except OSError:
+                pass
+        return image
+    except Exception as e:
+        BlinkLogger().log_error('Cannot show the photo chooser: %s' % e)
+        # Never a reason to lose the picture the user picked: a chooser
+        # that will not build falls back to the whole file, uncropped.
+        return NSImage.alloc().initWithContentsOfFile_(path)

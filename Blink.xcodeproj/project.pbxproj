@@ -1056,6 +1056,9 @@
 		AD00000000000000750001 /* CameraCapture.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000750000 /* CameraCapture.py */; };
 		AD00000000000000750002 /* CameraCapture.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000750000 /* CameraCapture.py */; };
 		AD00000000000000750003 /* CameraCapture.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000750000 /* CameraCapture.py */; };
+		AD00000000000000760001 /* Avatars.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000760000 /* Avatars.py */; };
+		AD00000000000000760002 /* Avatars.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000760000 /* Avatars.py */; };
+		AD00000000000000760003 /* Avatars.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000760000 /* Avatars.py */; };
 		DE2607221A93A9D6004FAEF8 /* Profiler.py in Resources */ = {isa = PBXBuildFile; fileRef = DE2607211A93A9D6004FAEF8 /* Profiler.py */; };
 		DE2607231A93A9D6004FAEF8 /* Profiler.py in Resources */ = {isa = PBXBuildFile; fileRef = DE2607211A93A9D6004FAEF8 /* Profiler.py */; };
 		DE2607251A93A9D6004FAEF8 /* Profiler.py in Resources */ = {isa = PBXBuildFile; fileRef = DE2607211A93A9D6004FAEF8 /* Profiler.py */; };
@@ -1953,6 +1956,7 @@
 		AD0000000000000000730000 /* VideoPlayback.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoPlayback.py; sourceTree = "<group>"; };
 		AD00000000000000740000 /* AttachmentPreview.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AttachmentPreview.py; sourceTree = "<group>"; };
 		AD00000000000000750000 /* CameraCapture.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = CameraCapture.py; sourceTree = "<group>"; };
+		AD00000000000000760000 /* Avatars.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = Avatars.py; sourceTree = "<group>"; };
 		DE2607211A93A9D6004FAEF8 /* Profiler.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = Profiler.py; sourceTree = "<group>"; };
 		DE3A672F13A8A987006EEB0F /* default.crt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = default.crt; sourceTree = "<group>"; };
 		DE3AC1CA174F7F57009A6CE3 /* Python.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Python.framework; path = Distribution/Frameworks/Python.framework; sourceTree = "<group>"; };
@@ -2287,6 +2291,7 @@
 				AD00000000000000004F0000 /* MessagePaneController.py */,
 				AD00000000000000750000 /* CameraCapture.py */,
 				AD00000000000000740000 /* AttachmentPreview.py */,
+				AD00000000000000760000 /* Avatars.py */,
 				AD00000000000000006F0000 /* FileTransferCache.py */,
 				AD00000000000000005F0000 /* MapTileCache.py */,
 				AD00000000000000004C0000 /* MessageListView.py */,
@@ -3012,6 +3017,7 @@
 				AD00000000000000004F0001 /* MessagePaneController.py in Resources */,
 				AD00000000000000750001 /* CameraCapture.py in Resources */,
 				AD00000000000000740001 /* AttachmentPreview.py in Resources */,
+				AD00000000000000760001 /* Avatars.py in Resources */,
 				AD00000000000000006F0001 /* FileTransferCache.py in Resources */,
 				AD00000000000000005F0001 /* MapTileCache.py in Resources */,
 				AD00000000000000004C0001 /* MessageListView.py in Resources */,
@@ -3300,6 +3306,7 @@
 				AD00000000000000004F0002 /* MessagePaneController.py in Resources */,
 				AD00000000000000750002 /* CameraCapture.py in Resources */,
 				AD00000000000000740002 /* AttachmentPreview.py in Resources */,
+				AD00000000000000760002 /* Avatars.py in Resources */,
 				AD00000000000000006F0002 /* FileTransferCache.py in Resources */,
 				AD00000000000000005F0002 /* MapTileCache.py in Resources */,
 				AD00000000000000004C0002 /* MessageListView.py in Resources */,
@@ -3609,6 +3616,7 @@
 				AD00000000000000004F0003 /* MessagePaneController.py in Resources */,
 				AD00000000000000750003 /* CameraCapture.py in Resources */,
 				AD00000000000000740003 /* AttachmentPreview.py in Resources */,
+				AD00000000000000760003 /* Avatars.py in Resources */,
 				AD00000000000000006F0003 /* FileTransferCache.py in Resources */,
 				AD00000000000000005F0003 /* MapTileCache.py in Resources */,
 				AD00000000000000004C0003 /* MessageListView.py in Resources */,
@@ -4625,7 +4633,7 @@
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 945;
+				CURRENT_PROJECT_VERSION = 946;
 				DEVELOPMENT_TEAM = 4DFEFUDLKZ;
 				ENABLE_HARDENED_RUNTIME = YES;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
@@ -4652,7 +4660,7 @@
 					"$(PROJECT_DIR)/Distribution/Frameworks/libs",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.6;
-				MARKETING_VERSION = 9.5.2;
+				MARKETING_VERSION = 9.5.3;
 				ONLY_ACTIVE_ARCH = NO;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				OTHER_CODE_SIGN_FLAGS = "";
@@ -4676,7 +4684,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 945;
+				CURRENT_PROJECT_VERSION = 946;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 4DFEFUDLKZ;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -4702,7 +4710,7 @@
 					"$(PROJECT_DIR)/Distribution/Frameworks/libs",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.6;
-				MARKETING_VERSION = 9.5.2;
+				MARKETING_VERSION = 9.5.3;
 				ONLY_ACTIVE_ARCH = NO;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				OTHER_CODE_SIGN_FLAGS = "";

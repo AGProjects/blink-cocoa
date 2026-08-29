@@ -17,6 +17,7 @@ from AppKit import (NSApp,
 
 from Foundation import (CIImage,
                         NSArray,
+                        NSIntersectionRect,
                         NSBitmapImageRep,
                         NSBezierPath,
                         NSBox,
@@ -52,6 +53,7 @@ import hashlib
 import unicodedata
 
 from application.system import makedirs
+from BlinkLogger import BlinkLogger
 from sipsimple.configuration.settings import SIPSimpleSettings
 
 from application.notification import NotificationCenter, IObserver, NotificationData
@@ -61,6 +63,75 @@ from util import run_in_gui_thread
 
 
 from resources import ApplicationData
+
+
+# What the library keeps: an avatar, not the photograph it was cut out of.
+# The old crop window handed back a fixed 220-point bitmap, so nothing here
+# ever had to think about size. The chooser that replaced it crops in
+# pixels, at full resolution -- right for a picture on its way to somebody
+# else, far too much for a row in this grid, which is read and decoded in
+# its entirety every time the library is refreshed.
+LIBRARY_ICON_SIZE = 256.0
+
+
+def _thumbnail_sized(image):
+    """The same picture, no bigger than a stored avatar needs to be.
+
+    Measured and built in PIXELS. A picture's size in points is not what is
+    stored in it -- a JPEG carrying a resolution of its own can report 200
+    points and hold three thousand pixels -- and lockFocus draws at the
+    screen's backing scale, so a "256-point" thumbnail comes out 512 pixels
+    square on any Retina Mac. Both roads lead to the same place: a library
+    of full-size photographs that is decoded from end to end every time it
+    is refreshed.
+    """
+    if image is None:
+        return image
+    try:
+        from AppKit import (NSBitmapImageRep as _Rep,
+                            NSDeviceRGBColorSpace,
+                            NSGraphicsContext)
+        width = height = 0
+        for rep in image.representations():
+            width = max(width, int(rep.pixelsWide()))
+            height = max(height, int(rep.pixelsHigh()))
+        if width <= 0 or height <= 0:
+            size = image.size()
+            width, height = int(size.width), int(size.height)
+        if width <= 0 or height <= 0:
+            return image
+        scale = min(LIBRARY_ICON_SIZE / width, LIBRARY_ICON_SIZE / height, 1.0)
+        if scale >= 1.0:
+            return image
+        w = max(int(round(width * scale)), 1)
+        h = max(int(round(height * scale)), 1)
+        rep = _Rep.alloc().\
+            initWithBitmapDataPlanes_pixelsWide_pixelsHigh_bitsPerSample_samplesPerPixel_hasAlpha_isPlanar_colorSpaceName_bytesPerRow_bitsPerPixel_(
+                None, w, h, 8, 4, True, False, NSDeviceRGBColorSpace, 0, 0)
+        if rep is None:
+            return image
+        rep.setSize_(NSMakeSize(w, h))
+        context = NSGraphicsContext.graphicsContextWithBitmapImageRep_(rep)
+        if context is None:
+            return image
+        # A copy, sized to its own pixels: setSize_ on the picture itself
+        # would be a change to something the caller is still holding.
+        source = image.copy()
+        source.setSize_(NSMakeSize(width, height))
+        NSGraphicsContext.saveGraphicsState()
+        try:
+            NSGraphicsContext.setCurrentContext_(context)
+            source.drawInRect_fromRect_operation_fraction_(
+                NSMakeRect(0, 0, w, h), NSMakeRect(0, 0, width, height),
+                NSCompositeCopy, 1.0)
+        finally:
+            NSGraphicsContext.restoreGraphicsState()
+        smaller = NSImage.alloc().initWithSize_(NSMakeSize(w, h))
+        smaller.addRepresentation_(rep)
+        return smaller
+    except Exception as e:
+        BlinkLogger().log_error('Cannot scale the chosen picture: %s' % e)
+        return image
 
 
 class IconViewBox(NSBox):
@@ -156,6 +227,15 @@ class EditImageView(NSImageView):
 
             NSColor.whiteColor().set()
             NSFrameRect(self.cropRectangle)
+            # The circle an avatar will be shown as. Only when the crop is
+            # actually a square: setCropSize_(None) hands the whole view to
+            # the crop for a chat snapshot, which is sent as a rectangular
+            # picture and would otherwise be promised a shape it never gets.
+            if abs(NSWidth(self.cropRectangle) - NSHeight(self.cropRectangle)) < 1.0:
+                circle = NSBezierPath.bezierPathWithOvalInRect_(self.cropRectangle)
+                circle.setLineWidth_(1.0)
+                NSColor.whiteColor().colorWithAlphaComponent_(0.7).set()
+                circle.stroke()
 
             clip = NSBezierPath.bezierPathWithRect_(rect)
             clip.setWindingRule_(NSEvenOddWindingRule)
@@ -194,6 +274,13 @@ class PhotoPicker(NSObject):
     libraryCollectionView = objc.IBOutlet()
     contentArrayController = objc.IBOutlet()
     captured_image = None
+    # The crop tool laid over the photograph just taken. The nib's own
+    # EditImageView could only shove a fixed 220-point box around and drew
+    # no handles at all, so there was nothing on screen to say the frame
+    # could be changed -- because it could not be. This is the same view
+    # the file chooser and the Messages pane use: a square that can be
+    # drawn, moved, and resized by its corners and its edges.
+    cropView = None
 
     countdown_counter = 5
     timer = None
@@ -220,9 +307,6 @@ class PhotoPicker(NSObject):
         except AttributeError:
             pass
 
-        if self.high_res:
-            self.photoView.setCropSize_()
-
         if not self.history:
             self.tabView.selectTabViewItem_(self.cameraTabView)
             self.previewButton.setHidden_(True)
@@ -247,7 +331,6 @@ class PhotoPicker(NSObject):
 
     @objc.python_method
     def _NH_CameraSnapshotDidSucceed(self, notification):
-        self.photoView.setHidden_(False)
         self.captureView.setHidden_(True)
         self.previewButton.setHidden_(False)
         self.countdownCheckbox.setHidden_(True)
@@ -256,12 +339,11 @@ class PhotoPicker(NSObject):
         self.useButton.setEnabled_(True)
 
         self.captured_image = notification.data.image
-        image = notification.data.image
-        image.setScalesWhenResized_(True)
-        h = self.photoView.frame().size.height
-        w = h * self.captured_image.size().width/self.captured_image.size().height
-        image.setSize_(NSMakeSize(w, h))
-        self.photoView.setImage_(image)
+        # Straight to the crop tool, unscaled: it fits the picture to
+        # itself and crops in the picture's own pixels, so there is nothing
+        # to be gained by resizing the image first -- and setSize_ on the
+        # shot we are about to keep is a change to the thing itself.
+        self._showCropTool(self.captured_image)
 
     @objc.python_method
     def _NH_VideoDeviceDidChangeCamera(self, notification):
@@ -327,12 +409,17 @@ class PhotoPicker(NSObject):
         else:
             self.captureView.show()
             self.cameraLabel.setHidden_(False)
+            self._hideCropTool()
             self.photoView.setHidden_(True)
             self.captureView.setHidden_(False)
             self.previewButton.setHidden_(True)
             #self.countdownCheckbox.setHidden_(False)
             self.mirrorButton.setHidden_(False)
             self.captureButton.setHidden_(False)
+            # Nothing taken yet, nothing to use: Use is enabled by the
+            # capture itself. It stays on for a picture already framed, so
+            # that leaving the tab and coming back does not throw it away.
+            self.useButton.setEnabled_(self.captured_image is not None)
             if self.captureView.captureSession and self.captureView.captureSession.isRunning():
                 self.captureButton.setEnabled_(True)
             else:
@@ -340,6 +427,10 @@ class PhotoPicker(NSObject):
 
     @objc.IBAction
     def previewButtonClicked_(self, sender):
+        # Back to the live camera: the shot that was on screen is being
+        # retaken, so it stops being the answer this panel would give.
+        self._hideCropTool()
+        self.captured_image = None
         self.photoView.setHidden_(True)
         self.captureView.setHidden_(False)
         self.captureView.show()
@@ -417,17 +508,68 @@ class PhotoPicker(NSObject):
         self.cropWindowImage.setFrame_(frame)
 
     @objc.python_method
+    def _cropTool(self):
+        """The crop view, in the place the nib gave the still photograph."""
+        if self.cropView is None:
+            from AttachmentPreview import BlinkCropView, CROP_MARGIN
+            container = self.photoView.superview()
+            # Clipped to the container: the nib places the image view three
+            # points wider than the box it sits in, and a click outside a
+            # parent's bounds never reaches the child.
+            frame = NSIntersectionRect(self.photoView.frame(),
+                                       container.bounds())
+            view = BlinkCropView.alloc().initWithFrame_(frame)
+            view.margin = CROP_MARGIN
+            # Square for an avatar, because it ends up in a circle. A
+            # snapshot on its way into a conversation is a picture like any
+            # other and keeps the free rectangle.
+            view.squareSelection = not self.high_res
+            view.setAutoresizingMask_(self.photoView.autoresizingMask())
+            view.setHidden_(True)
+            container.addSubview_(view)
+            self.cropView = view
+        return self.cropView
+
+    @objc.python_method
+    def _showCropTool(self, image):
+        """Put the photograph just taken under the crop tool."""
+        view = self._cropTool()
+        view.setPicture(image)
+        view.setHidden_(False)
+        # The nib's image view stays where it is and stays empty: it is
+        # what the crop view was sized and placed from.
+        self.photoView.setHidden_(True)
+
+    @objc.python_method
+    def _hideCropTool(self):
+        if self.cropView is not None:
+            self.cropView.setHidden_(True)
+
+    @objc.python_method
+    def _croppedCapture(self):
+        """What was actually framed, or the whole shot if nothing was."""
+        view = self.cropView
+        if (self.captured_image is None or view is None
+                or view.selection is None):
+            return self.captured_image
+        from AttachmentPreview import crop_image
+        return crop_image(self.captured_image, view.pictureRect(),
+                          view.selection) or self.captured_image
+
+    @objc.python_method
     def storeCaptured(self):
         makedirs(self.storage_folder)
         dt = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
 
         if not self.captured_image:
-            return
+            # Both callers unpack two values from runModal.
+            return None, None
 
-        if self.high_res:
-            image = self.captured_image
-        else:
-            image = self.photoView.getCropped()
+        image = self._croppedCapture()
+        if not self.high_res:
+            # A library thumbnail, not the camera's full frame. A picture
+            # on its way into a conversation keeps every pixel it has.
+            image = _thumbnail_sized(image)
 
         path = self.storage_folder + "/photo%s.jpg" % dt
         jpg_data = NSBitmapImageRep.alloc().initWithData_(image.TIFFRepresentation()).representationUsingType_properties_(NSJPEGFileType, {NSImageCompressionFactor: 0.9})
@@ -440,36 +582,49 @@ class PhotoPicker(NSObject):
 
     @objc.python_method
     def cropAndAddImage(self, path):
-        try:
-            image = NSImage.alloc().initWithContentsOfFile_(path)
-        except:
-            NSRunAlertPanel(NSLocalizedString("Camera Capture Error", "Window title"), NSLocalizedString("%s is not a valid image", "Label") % path, NSLocalizedString("OK", "Button title"), None, None)
+        """Frame a picture from disc, then keep it in the library.
+
+        This used to open a crop window of its own: a fixed 220-point box
+        that could be moved but not resized, over a picture that could only
+        be zoomed with a slider, and no sign anywhere of the circle the
+        result would be shown as. It now uses the one chooser the contact
+        editor and the Messages pane use -- a square that can be drawn,
+        moved and resized by its corners and edges, with that circle
+        outlined inside it.
+
+        The old window and its outlets are still in the nib, and still
+        wired: nothing here needs them, and a nib whose actions have
+        nowhere to go is a nib that complains on load.
+        """
+        from AttachmentPreview import choose_picture
+
+        if not os.path.isfile(path):
+            NSRunAlertPanel(NSLocalizedString("Camera Capture Error", "Window title"),
+                            NSLocalizedString("%s is not a valid image", "Label") % path,
+                            NSLocalizedString("OK", "Button title"), None, None)
             return
 
-        rect = NSZeroRect.copy()
-        rect.size = image.size()
-        curSize = self.cropWindow.frame().size
-        if rect.size.width > curSize.width or rect.size.height > curSize.height:
-            self.cropWindowImage.setFrame_(rect)
-        self.cropOriginalImage = image.copy()
-        self.cropWindowImage.setImage_(image)
+        image = choose_picture(path, parent=self.window)
+        if image is None:
+            # Cancelled: nothing enters the library.
+            return
 
-        if NSApp.runModalForWindow_(self.cropWindow) == NSOKButton:
+        try:
+            makedirs(self.storage_folder)
             dt = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-            image = self.cropWindowImage.getCropped()
-
-            path = self.storage_folder + "/photo%s.png" % dt
-            jpg_data = NSBitmapImageRep.alloc().initWithData_(image.TIFFRepresentation()).representationUsingType_properties_(NSJPEGFileType, {NSImageCompressionFactor: 0.9})
+            # .jpg, because JPEG is what is written into it. The old name
+            # said .png over the same JPEG bytes.
+            out = self.storage_folder + "/photo%s.jpg" % dt
+            jpg_data = NSBitmapImageRep.alloc().initWithData_(
+                _thumbnail_sized(image).TIFFRepresentation()).representationUsingType_properties_(NSJPEGFileType, {NSImageCompressionFactor: 0.9})
             data = jpg_data.bytes().tobytes()
-            with open(path, 'wb') as f:
+            with open(out, 'wb') as f:
                 f.write(data)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot save the chosen picture: %s' % e)
+            return
 
-            self.cropWindow.orderOut_(None)
-            self.refreshLibrary()
-        else:
-            self.cropWindow.orderOut_(None)
-
-        #self.addImageFile(path)
+        self.refreshLibrary()
 
     @objc.python_method
     def addImageFile(self, path):
