@@ -751,6 +751,15 @@ class BlinkPresenceContact(BlinkContact):
     uris = BlinkPresenceContactAttribute('uris')
     organization = BlinkPresenceContactAttribute('organization')
 
+    # The same address is wrapped by more than one GUI contact at a time (the
+    # entry in its own group, the All Contacts mirror, the online contacts
+    # group), and each of them handles the same PIDF, so one transition
+    # produces one identical log line per wrapper. Keyed by the line itself,
+    # holding the monotonic time it was written, so an exact repeat arriving
+    # right after the first is dropped instead of printed again.
+    _logged_presence_lines = {}
+    _presence_log_dedupe_interval = 2.0
+
     def __init__(self, contact, log_presence_transitions=False):
         self.log_presence_transitions = log_presence_transitions
         self.contact = contact
@@ -1441,15 +1450,42 @@ class BlinkPresenceContact(BlinkContact):
                              device.get('status'),
                              ' note=%r' % device['notes'][0] if device.get('notes') else '')
                 for device in list(devices.values())[:4])
-            BlinkLogger().log_info(
+            log_line = (
                 'Presence for %s: %s -> %s, note %r -> %r, reported %s (%d device(s), %d note(s))%s'
                 % (self.uri or self.name or '?', self.old_presence_status, status,
                    self.old_presence_note, self.presence_note,
                    self.presence_timestamp or 'never', len(devices), note_count,
                    ' [%s]' % summary if summary else ''))
+            if self.presenceLineWasJustLogged(log_line):
+                return
+            BlinkLogger().log_info(log_line)
         except Exception as e:
             BlinkLogger().log_error('Cannot log the presence update for %s: %s'
                                     % (self.uri or '?', e))
+
+    @objc.python_method
+    def presenceLineWasJustLogged(self, log_line):
+        """True when this exact line was already written a moment ago.
+
+        Deduplication is on the composed line rather than on the contact,
+        because the duplicates come from different objects wrapping the same
+        address: nothing on one of them knows that another already reported
+        the transition. Two identical lines seconds apart carry no
+        information the first one did not, while a real change alters the
+        status, the note, the timestamp or the device summary and so lands
+        under a different key.
+        """
+        cache = BlinkPresenceContact._logged_presence_lines
+        interval = BlinkPresenceContact._presence_log_dedupe_interval
+        now = time.monotonic()
+        # Kept small: without this the map grows for the lifetime of the
+        # application, one entry per distinct transition ever logged.
+        for line, stamp in list(cache.items()):
+            if now - stamp > interval:
+                del cache[line]
+        last = cache.get(log_line)
+        cache[log_line] = now
+        return last is not None and now - last <= interval
 
     @objc.python_method
     @run_in_green_thread
