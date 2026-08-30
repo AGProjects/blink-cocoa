@@ -168,13 +168,15 @@ def _media_label(filename, filetype):
 # timestamp the message already carries, in a format nobody reads.
 _RECORDING_TITLES = (
     ('sylk-call-recording', 'Call Recording'),
-    # What a call recording is uploaded as. Deliberately not "call": the
-    # name goes to the server, into its logs and into every device's file
-    # list, and what a recording is OF is not the filename's business.
-    # Whether it was a call is in the companion metadata, and a device
-    # that reads that says "Call Recording"; one that cannot says this,
-    # which is true either way.
-    ('audio-recording', 'Audio Recording'),
+    # What a call recording is uploaded as. The NAME is deliberately not
+    # "call": it goes to the server, into its logs and into every device's
+    # file list, and what a recording is OF is not the filename's
+    # business. The TITLE is another matter -- it is drawn on a bubble in
+    # a conversation, where the one thing the reader wants to know is
+    # which of the two kinds of recording this is, and only
+    # sendCallRecording ever writes this prefix. A voice note is
+    # `sylk-audio-recording` and keeps its own title below.
+    ('audio-recording', 'Call Recording'),
     ('sylk-conf-recording', 'Conference Recording'),
     ('sylk-audio-recording', 'Audio Recording'),
     ('sylk-recording', 'Audio Recording'),

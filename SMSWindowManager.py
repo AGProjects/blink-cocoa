@@ -3565,11 +3565,34 @@ class SMSWindowManagerClass(NSObject):
         # placed it there.
         try:
             # Async: this is reached from the GUI thread on a live note,
-            # and nothing here waits for the answer.
-            self.history.move_message_async(transfer_id, account_id, account_id, party)
+            # and nothing here waits for the answer -- except the one
+            # thing only the move knows. A transfer that arrived before
+            # its note was filed under our own address with the
+            # conversation clock deliberately left alone; moving the row
+            # does not stamp the conversation it arrives in, and no later
+            # message will. Left unstamped the recording sits in the right
+            # chat, playable, in a conversation that never rose in the
+            # list -- which from the list is a recording that never came.
+            self.history.move_message_async(
+                transfer_id, account_id, account_id, party,
+                moved=lambda when: self._noteRecordingArrived(party, when))
         except Exception as e:
             BlinkLogger().log_error('Cannot place recording %s: %s' % (transfer_id, e))
         return True
+
+    @objc.python_method
+    @run_in_gui_thread
+    def _noteRecordingArrived(self, party, when):
+        """Stamp the conversation a moved recording landed in.
+
+        On the GUI thread because the move answers on the database one,
+        and the contact list is not the database thread's to touch.
+        """
+        try:
+            self.noteMessageTime(party, when)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot stamp the conversation with %s: %s'
+                                    % (party, e))
 
     @objc.python_method
     def _redirectToRecordingParty(self, msg):

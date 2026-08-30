@@ -1845,12 +1845,13 @@ class ChatHistory(object, metaclass=Singleton):
                  % (ChatMessage.sqlrepr(msgid), ChatMessage.sqlrepr(local_uri),
                     ChatMessage.sqlrepr(from_remote)))
         try:
-            rows = self.db.queryAll("select id from %s where %s" % (table, where))
+            rows = self.db.queryAll("select id, time from %s where %s" % (table, where))
         except Exception as e:
             BlinkLogger().log_error("Error looking for %s to move: %s" % (msgid, e))
             return False
         if not rows:
             return False
+        moved_time = rows[0][1]
         # Is the row already where it is being moved to? On the device that
         # made the recording it is: that device wrote the bubble under the
         # party before the upload even started, and what arrived under our
@@ -1878,7 +1879,13 @@ class ChatHistory(object, metaclass=Singleton):
         except Exception as e:
             BlinkLogger().log_error("Error moving %s: %s" % (msgid, e))
             return False
-        return True
+        # The time the moved row carries, so the caller can stamp the
+        # conversation it landed in. Nothing else will: the stamp was
+        # suppressed when the transfer arrived -- rightly, it was filed
+        # under our own address then -- and no later message re-stamps the
+        # party. Without it a recording sits in the right conversation,
+        # playable, in a chat that never rose in the list.
+        return moved_time or True
 
     def move_message(self, msgid, local_uri, from_remote, to_remote):
         """Put a stored message in a different conversation. True if it moved.
@@ -1895,7 +1902,8 @@ class ChatHistory(object, metaclass=Singleton):
         return block_on(self._move_message(str(msgid), str(local_uri),
                                            str(from_remote), str(to_remote)))
 
-    def move_message_async(self, msgid, local_uri, from_remote, to_remote):
+    def move_message_async(self, msgid, local_uri, from_remote, to_remote,
+                           moved=None):
         """The same move, from any thread, with nobody waiting on it.
 
         block_on parks the calling thread on the database thread's answer,
@@ -1905,11 +1913,20 @@ class ChatHistory(object, metaclass=Singleton):
         taken in on the GUI thread, and nothing here needs the answer --
         the row is either moved or it is not, and the next read sees
         whichever it is.
+
+        `moved` is called with the moved row's timestamp when there was
+        one to move -- the one thing a caller cannot work out for itself
+        once the row is gone from where it was looking.
         """
         if not msgid or not to_remote or from_remote == to_remote:
             return
-        self._move_message(str(msgid), str(local_uri),
-                           str(from_remote), str(to_remote))
+        d = self._move_message(str(msgid), str(local_uri),
+                               str(from_remote), str(to_remote))
+        if moved is not None and d is not None:
+            try:
+                d.addCallback(lambda result: moved(result) if result else None)
+            except AttributeError:
+                pass                    # not a Deferred; nothing to hang on
 
     @run_in_db_thread
     def delete_message(self, msgid):
