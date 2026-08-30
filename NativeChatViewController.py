@@ -26,8 +26,10 @@ import datetime
 import time
 import uuid
 
-from AppKit import (NSButton,
+from AppKit import (NSAlert,
+                    NSButton,
                     NSColor,
+                    NSPopUpButton,
                     NSFilenamesPboardType,
                     NSMenu,
                     NSMenuItem,
@@ -45,6 +47,7 @@ from AppKit import (NSButton,
                     NSViewWidthSizable)
 from Foundation import (NSArray, NSAttributedString, NSIntersectsRect,
                         NSLocalizedString, NSMakeRect, NSNotFound, NSPoint,
+                        NSUserDefaults,
                         NSNotificationCenter, NSRunLoop, NSRunLoopCommonModes,
                         NSTask, NSTaskDidTerminateNotification,
                         NSTimer, NSURL, NSWorkspace)
@@ -81,8 +84,54 @@ GRAB_AREA = 2
 # Filters whose result is a set of pictures rather than a conversation. A
 # column of bubbles wastes most of the window for those, so they are laid
 # out as tiles instead -- the wall of thumbnails the user came to look at.
-GRID_CATEGORIES = ('image', 'location')
+# Movies are one of them: a poster is a picture, and the ones with no
+# poster yet are the reason the grid has a Download all.
+GRID_CATEGORIES = ('image', 'location', 'video')
+# The width a grid opens at before anyone chooses one.
 GRID_COLUMNS = 3
+# How much air a grid puts between its cells. A wall of photographs is one
+# surface and is drawn as one -- two points, a hairline; a grid of location
+# bubbles is a set of separate things, each with its own header, caption and
+# rounded frame, and pushed together they read as one broken bubble.
+GRID_SPACING_TILES = 2.0
+GRID_SPACING_BUBBLES = 12.0
+# The categories whose cells are whole bubbles rather than bare pictures.
+GRID_BUBBLE_CATEGORIES = ('location',)
+# What the picker above the grid offers. Two is a pair of big pictures, six
+# is a contact sheet; past that a tile is too small to recognise a face in
+# at the width a conversation pane actually gets.
+GRID_COLUMN_CHOICES = (2, 3, 4, 5, 6)
+GRID_COLUMNS_KEY = 'MessageGridColumns'
+
+
+def grid_spacing_for(category):
+    """The gap between cells, which depends on what a cell IS."""
+    return (GRID_SPACING_BUBBLES if category in GRID_BUBBLE_CATEGORIES
+            else GRID_SPACING_TILES)
+
+
+def preferred_grid_columns():
+    """How many tiles across the grid draws, as the user last chose.
+
+    In NSUserDefaults rather than in the account settings, for the same
+    reason the transcript's font size is (MessageBubbleView.FONT_SIZE_KEY):
+    it is a property of this screen and this pair of eyes, not of the
+    conversation or the account, and it should not travel between them.
+    """
+    try:
+        stored = int(NSUserDefaults.standardUserDefaults().integerForKey_(GRID_COLUMNS_KEY))
+    except Exception:
+        stored = 0
+    # 0 is what a key that was never written reads back as, and anything
+    # outside the offered set is a value from some other build.
+    return stored if stored in GRID_COLUMN_CHOICES else GRID_COLUMNS
+
+
+def set_preferred_grid_columns(columns):
+    try:
+        NSUserDefaults.standardUserDefaults().setInteger_forKey_(int(columns), GRID_COLUMNS_KEY)
+    except Exception as e:
+        BlinkLogger().log_error('Cannot remember the grid width: %s' % e)
 
 # The paperclip beside the composer.
 ATTACH_GLYPH = chr(128206)
@@ -211,6 +260,17 @@ class NativeChatViewController(ChatViewController):
     history_note = ''
     _filter_keys = (None,)
     _filter_rebuild_pending = False
+    _month_dividers_pending = False
+    _vanished_sweep_pending = False
+    # The tile-count picker beside the filter chips, and the right margin the
+    # nib gave the chips before it was there.
+    _columns_control = None
+    _download_all_button = None
+    _filter_right_inset = None
+    # msgid -> (filename, reason) for transfers the server answered 404 for,
+    # waiting for the sweep that removes them. Per instance, never shared:
+    # replaced with a fresh dict on the first use in each conversation.
+    _vanished_transfers = None
     _media_fetch_pending = False
     _history_chrome_pending = False
     # The loaded-range sentence last written above the transcript, so the same
@@ -1547,6 +1607,9 @@ class NativeChatViewController(ChatViewController):
         if not self.bubbleMatchesFilter(bubble, self.message_filter):
             bubble.setHidden_(True)
         self.setNeedsFilterRebuild()
+        # Always, not only in a grid: the day rules of a filtered page need
+        # tidying whether or not it is laid out as tiles.
+        self.setNeedsDividerSweep()
         load_trace_bucket('- filter', _t)
 
     @objc.python_method
@@ -1596,9 +1659,146 @@ class NativeChatViewController(ChatViewController):
             return day.strftime('%A, %d %B')
         return day.strftime('%d %B %Y')
 
+    MONTH_PREFIX = '__month__:'
+
+    @objc.python_method
+    def _monthKey(self, stamp):
+        """The local calendar month a timestamp falls on, or None."""
+        key = self._dayKey(stamp)
+        return None if key is None else key[:2]
+
+    @objc.python_method
+    def _monthLabel(self, key):
+        """Always with the year on it.
+
+        A day rule can say "Tuesday" because the messages around it place
+        it, but a grid is a wall of pictures with no other dates in it, and
+        "August" over one of several walls is a question rather than an
+        answer -- the page reaches back through years, and this year's
+        August looks exactly like the last one.
+        """
+        return datetime.date(key[0], key[1], 1).strftime('%B %Y')
+
     @objc.python_method
     def _isDivider(self, view):
         return getattr(view, 'kind', None) == MessageBubbleView.KIND_DATE
+
+    @objc.python_method
+    def _isMonthDivider(self, view):
+        return bool(getattr(view, 'is_month', False))
+
+    @objc.python_method
+    @run_in_gui_thread
+    def setNeedsDividerSweep(self):
+        """Coalesce the rules pass: which rules belong depends on the page.
+
+        A page inserts fifty bubbles one at a time and every rule between
+        them is a function of all fifty -- which month each tile falls in,
+        and whether a day still has anything under it once the filter has
+        hidden what does not match.
+
+        On the GUI thread for the same reason as setNeedsFilterRebuild: a
+        timer armed off it never fires and wedges the flag.
+        """
+        if self._month_dividers_pending:
+            return
+        self._month_dividers_pending = True
+        NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
+            0.25, self, "dividerSweepTimer:", None, False)
+
+    def dividerSweepTimer_(self, timer):
+        self._month_dividers_pending = False
+        # One layout for the two passes: the month rules move views about
+        # and the visibility pass then decides what is left standing over
+        # nothing, and laying out between them draws a page that is right
+        # in neither.
+        self._rebuildMonthDividers()
+        self._refreshDividerVisibility()
+        if self.messageListView is not None:
+            self.messageListView.layoutMessages()
+
+    @objc.python_method
+    def _refreshDividerVisibility(self):
+        """Hide a rule that no longer heads anything.
+
+        A day rule is placed when its first message is inserted, and the
+        filter hides messages one at a time afterwards -- so a filter that
+        keeps one message out of a page of fifty left ten date pills
+        standing over nothing. The Links filter shows it worst, because it
+        narrows a page of text down to the few that carry a link.
+
+        Walked backwards, which is the only direction that answers the
+        question in one pass: a rule heads whatever follows it, so by the
+        time it is reached the answer -- did anything visible come after --
+        is already known.
+        """
+        if self.messageListView is None:
+            return
+        try:
+            changed = False
+            follows = False
+            for view in reversed(list(self.messageListView.subviews())):
+                if self._isDivider(view):
+                    hidden = not follows
+                    if bool(view.isHidden()) != hidden:
+                        view.setHidden_(hidden)
+                        changed = True
+                    # Whatever came after this rule belongs to it, not to
+                    # the rule above.
+                    follows = False
+                elif not view.isHidden():
+                    follows = True
+            if changed:
+                BlinkLogger().log_debug('Date rules tidied for the %s filter'
+                                        % (self.message_filter or 'all'))
+        except Exception as e:
+            BlinkLogger().log_error('Cannot tidy the date rules: %s' % e)
+
+    @objc.python_method
+    def _rebuildMonthDividers(self):
+        """A month rule above the first tile of each month.
+
+        A grid has no day rules -- a day of photographs is a handful of
+        tiles and a rule between every one of them is more rule than
+        picture -- but a page of fifty images can reach back a year, and a
+        wall with no dates in it says nothing about when any of it
+        happened. So the grid is broken by month instead: each month is its
+        own wall under its own heading.
+
+        Rebuilt in one pass rather than maintained per insert like the day
+        rules: the whole point is that the page is now short (fifty tiles),
+        and a pass over fifty views is cheaper than the bookkeeping that
+        keeps a day rule correct as messages arrive out of order.
+        """
+        if self.messageListView is None:
+            return
+        try:
+            for view in list(self.messageListView.subviews()):
+                if self._isMonthDivider(view):
+                    self.messageListView.removeMessageView_(view)
+
+            if self.message_filter not in GRID_CATEGORIES:
+                return
+
+            previous = None
+            for view in list(self.messageListView.subviews()):
+                if self._isDivider(view) or view.isHidden():
+                    continue
+                key = self._monthKey(getattr(view, 'message_timestamp', None))
+                if key is None or key == previous:
+                    continue
+                previous = key
+                divider = self._newBubble()
+                divider.configure(msgid='%s%d-%02d' % ((self.MONTH_PREFIX,) + key),
+                                  kind=MessageBubbleView.KIND_DATE,
+                                  content=self._monthLabel(key),
+                                  message_timestamp=None,
+                                  expand_smileys=False)
+                divider.is_month = True
+                self.messageListView.insertMessageView_beforeView_(
+                    divider, divider.msgid, view)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot place the month rules: %s' % e)
 
     @objc.python_method
     def _indexOfView(self, views, view):
@@ -1685,6 +1885,9 @@ class NativeChatViewController(ChatViewController):
         a time, and a full pass per insert is quadratic.
         """
         if self.messageListView is None or self._isDivider(bubble):
+            return
+        if self.message_filter in GRID_CATEGORIES:
+            # A grid is dated by month, not by day: see _rebuildMonthDividers.
             return
         key = self._dayKey(getattr(bubble, 'message_timestamp', None))
         if key is None:
@@ -1789,7 +1992,8 @@ class NativeChatViewController(ChatViewController):
             self.lastMessagesLabel.setTextColor_(NSColor.secondaryLabelColor())
         except Exception as e:
             BlinkLogger().log_debug('Cannot set the history label colour: %s' % e)
-        parts = [text for text in (self.loadedRangeLabel(), self.history_note) if text]
+        range_text = self.loadedRangeLabel()
+        parts = [text for text in (range_text, self.history_note) if text]
         text = u' \u2014 '.join(parts)
         try:
             self.lastMessagesLabel.setStringValue_(text)
@@ -1800,7 +2004,10 @@ class NativeChatViewController(ChatViewController):
         # on change rather than on every refresh: this runs again whenever the
         # stored total lands, a filter narrows the view or the window is
         # resized, and none of those are news unless the range itself moved.
-        if text and text != self._history_chrome_text:
+        # Only once there is a range to report: the note is set before the
+        # first bubble is inserted, and "Showing Hold up-scrolling..." says
+        # nothing.
+        if range_text and text != self._history_chrome_text:
             self._history_chrome_text = text
             try:
                 self.delegate.log_info('Showing %s' % text)
@@ -1886,12 +2093,138 @@ class NativeChatViewController(ChatViewController):
 
     @objc.python_method
     def bubbleDidRequestDelete(self, msgid):
+        """Delete a message, once the user has said so out loud.
+
+        Asked rather than done: this is reached from a trash glyph a
+        mis-aimed click can land on and from a menu item next to Copy, and
+        the thing it destroys cannot be fetched back -- the row goes, and
+        with it the only record this device has of the message.
+
+        Whether the OTHER side loses it too is a second question, and
+        deliberately not the default. Deleting your own copy is tidying;
+        reaching into someone else's transcript is not, and it is offered
+        only for a message this account sent, because that is the only one
+        the other end will accept a removal for.
+        """
+        remote = self._confirmDelete(msgid)
+        if remote is None:
+            return                      # cancelled
         # A recording cannot go on playing out of a message that is being
         # removed -- the file underneath it is about to be gone.
         AudioPlayback().stop_for_key(str(msgid))
         VideoPlayback().stop_for_key(str(msgid))
-        if hasattr(self.delegate, 'delete_message'):
-            self.delegate.delete_message(msgid)
+        delete = getattr(self.delegate, 'delete_message', None)
+        if delete is None:
+            return
+        BlinkLogger().log_info('Deleting message %s%s'
+                               % (msgid, ' here and on the other side' if remote
+                                  else ' on this computer'))
+        try:
+            delete(msgid, local=not remote)
+        except TypeError:
+            # A delegate from before the local/remote split. Its delete
+            # sends the removal on, so it is only safe for the answer the
+            # user actually gave.
+            if remote:
+                delete(msgid)
+            else:
+                BlinkLogger().log_error('This conversation cannot delete a message '
+                                        'without telling the other side; nothing was deleted')
+
+    @objc.python_method
+    def _peerIdentity(self):
+        """(name, avatar path) for the other side of this conversation.
+
+        Read from the identity the transcript already resolved for incoming
+        messages, which is the one on every bubble from them -- so a panel
+        that speaks about someone shows the same face and the same name the
+        conversation does. Falls back to the delegate for a conversation
+        that has nothing incoming in it yet: a thread where only we have
+        spoken still has a recipient.
+        """
+        name = icon = None
+        entry = self.__dict__.get('_sender_identities', {}).get('incoming')
+        if entry:
+            name, icon = entry[1], entry[2]
+        delegate = self.delegate
+        name = name or getattr(delegate, 'display_name', None) \
+            or getattr(delegate, 'remote_uri', None)
+        if not icon:
+            uri = getattr(delegate, 'remote_uri', None)
+            try:
+                from AppKit import NSApp
+                if uri:
+                    icon = NSApp.delegate().contactsWindowController.iconPathForURI(str(uri))
+            except Exception as e:
+                BlinkLogger().log_debug('No avatar for %s: %s' % (uri, e))
+        return str(name or ''), icon
+
+    @objc.python_method
+    def _confirmDelete(self, msgid):
+        """Ask before deleting. None to cancel, or whether to delete remotely.
+
+        The tick is only put on the panel for an outgoing message, so the
+        answer for an incoming one is always "just here" without the user
+        having to be told why the choice is missing.
+        """
+        bubble = None
+        if self.messageListView is not None:
+            bubble = self.messageListView.viewForMessageId_(self._strip_c(msgid))
+        outgoing = str(getattr(bubble, 'direction', '') or '') == 'outgoing'
+        name = None
+        meta = getattr(bubble, 'transfer_meta', None)
+        if isinstance(meta, dict):
+            name = meta.get('filename')
+
+        peer, icon_path = self._peerIdentity()
+
+        try:
+            alert = NSAlert.alloc().init()
+            # The other side's face, not the application's. A panel that is
+            # about to take something out of a conversation should say which
+            # conversation, and the avatar says it before the sentence does.
+            try:
+                from Avatars import avatar_image
+                avatar = avatar_image(icon_path, peer, 64.0)
+                if avatar is not None:
+                    alert.setIcon_(avatar)
+            except Exception as e:
+                BlinkLogger().log_debug('No avatar on the delete panel: %s' % e)
+
+            alert.setMessageText_(
+                NSLocalizedString("Delete \u201c%s\u201d?", "Window title") % name
+                if name else NSLocalizedString("Delete this message?", "Window title"))
+            alert.setInformativeText_(
+                NSLocalizedString("It will be removed from your conversation with %s on "
+                                  "this computer. This cannot be undone.", "Label") % peer
+                if peer else
+                NSLocalizedString("It will be removed from this conversation on this "
+                                  "computer. This cannot be undone.", "Label"))
+            alert.addButtonWithTitle_(NSLocalizedString("Delete", "Button"))
+            alert.addButtonWithTitle_(NSLocalizedString("Cancel", "Button"))
+
+            checkbox = None
+            if outgoing:
+                try:
+                    from AppKit import NSSwitchButton
+                except ImportError:
+                    NSSwitchButton = 3
+                checkbox = NSButton.alloc().initWithFrame_(NSMakeRect(0, 0, 320, 18))
+                checkbox.setButtonType_(NSSwitchButton)
+                checkbox.setTitle_(
+                    NSLocalizedString("Delete it for %s too", "Label") % peer if peer
+                    else NSLocalizedString("Delete from the other side too", "Label"))
+                checkbox.setState_(0)
+                alert.setAccessoryView_(checkbox)
+
+            if alert.runModal() != 1000:        # NSAlertFirstButtonReturn
+                BlinkLogger().log_debug('Delete of %s cancelled' % msgid)
+                return None
+            return bool(checkbox.state()) if checkbox is not None else False
+        except Exception as e:
+            # A panel that cannot be shown is not permission to delete.
+            BlinkLogger().log_error('Cannot ask about deleting %s: %s' % (msgid, e))
+            return None
 
     @objc.python_method
     def bubbleDidRequestEdit(self, msgid, text, timestamp=None):
@@ -2764,6 +3097,9 @@ class NativeChatViewController(ChatViewController):
                 bubble.appendLocationPoint(latitude, longitude, accuracy, point_timestamp)
             else:
                 bubble._syncTrackSlider()
+            # It is a map NOW, and it was a text bubble when the filter
+            # last saw it. See _refreshBubbleFilter.
+            self._refreshBubbleFilter(bubble)
             self.messageListView.layoutMessages()
 
     @objc.python_method
@@ -3013,6 +3349,13 @@ class NativeChatViewController(ChatViewController):
         # _shouldAutoFetch declines to go and find out again.
         stored_error = meta.get('error')
         if stored_error:
+            if self._isGoneReason(stored_error):
+                # A file the server answered 404 for in some earlier run.
+                # Nothing about it can change, so the message goes rather
+                # than being replayed as a red line saying so for ever.
+                FileTransferCache().note_gone(meta, str(stored_error))
+                self._discardVanishedTransfer(bubble, str(stored_error))
+                return
             # No transfer_status here: the caption itself already ends in a
             # warning line built from this very key (file_transfer_summary),
             # and the bubble reddens it. Setting the status too would print
@@ -3239,6 +3582,13 @@ class NativeChatViewController(ChatViewController):
                 text = NSLocalizedString("Download failed: %s" % reason, "Label")
             else:
                 text = NSLocalizedString("Download failed, click to retry", "Label")
+            if meta is not None and FileTransferCache().is_gone(meta):
+                # Not shown as a failure at all. There is nothing for the
+                # user to do about a file the server no longer has, and a
+                # grid of red "download failed" cells is a wall of dead
+                # ends where there should be pictures.
+                self._discardVanishedTransfer(bubble, reason)
+                return
             self._setTransferStatus(bubble, text, failed=True)
             if reason and meta is not None \
                     and FileTransferCache().is_permanent_failure(meta):
@@ -3276,6 +3626,88 @@ class NativeChatViewController(ChatViewController):
                 NSWorkspace.sharedWorkspace().openFile_(path)
             except Exception as e:
                 BlinkLogger().log_error('Cannot open %s: %s' % (path, e))
+
+    # What the server says when the file is not there. Matched on the
+    # reason TEXT as well as on the live verdict, because a failure
+    # recorded in an earlier run comes back as the sentence that was
+    # written into the message's envelope and nothing else.
+    GONE_MARKERS = ('HTTP 404', 'HTTP 410')
+
+    @objc.python_method
+    def _isGoneReason(self, reason):
+        reason = str(reason or '')
+        return any(marker in reason for marker in self.GONE_MARKERS)
+
+    @objc.python_method
+    def _discardVanishedTransfer(self, bubble, reason):
+        """Forget a message whose file the server no longer has.
+
+        Hidden at once, removed and deleted from history a moment later.
+        The two are separate on purpose: this is reached from inside the
+        render loop, which goes on to use the bubble it has just inserted,
+        and taking a view out of the list underneath it is how a page ends
+        up laid out around a hole. So the sweep is coalesced onto a timer
+        and does the removal once, for everything that turned out to be
+        gone in the same pass.
+
+        The row goes with it, LOCALLY: delete_message(local=True) does not
+        send the removal to the other side. Their copy of the message is
+        theirs, and a file that expired off the server is not a reason to
+        reach into someone else's transcript.
+        """
+        msgid = getattr(bubble, 'msgid', None)
+        if not msgid:
+            return
+        meta = getattr(bubble, 'transfer_meta', None) or {}
+        try:
+            account, peer = self._transferPeers()
+            if meta and FileTransferCache().local_file(meta, account, peer):
+                # The file is on this disc. What the server says about it is
+                # then only about the server: the picture draws from here,
+                # and a message we can still show is not one to throw away.
+                return
+        except Exception:
+            pass
+        try:
+            if not bubble.isHidden():
+                bubble.setHidden_(True)
+        except Exception:
+            pass
+        if self._vanished_transfers is None:
+            self._vanished_transfers = {}
+        self._vanished_transfers[str(msgid)] = (meta.get('filename') or str(msgid),
+                                                str(reason or ''))
+        if self._vanished_sweep_pending:
+            return
+        self._vanished_sweep_pending = True
+        NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
+            0.25, self, "vanishedSweepTimer:", None, False)
+
+    def vanishedSweepTimer_(self, timer):
+        self._vanished_sweep_pending = False
+        vanished, self._vanished_transfers = self._vanished_transfers or {}, {}
+        if not vanished:
+            return
+        delete = getattr(self.delegate, 'delete_message', None)
+        for msgid, (name, reason) in vanished.items():
+            BlinkLogger().log_info('Dropping %s: %s' % (name, reason))
+            if delete is None:
+                # No delegate to delete through -- the history viewer, say.
+                # The bubble still goes; the row is not ours to remove.
+                self.removeMessage(msgid)
+                continue
+            try:
+                # local=True: delete our copy, tell nobody.
+                delete(msgid, local=True)
+            except Exception as e:
+                BlinkLogger().log_error('Cannot drop %s: %s' % (msgid, e))
+                self.removeMessage(msgid)
+        BlinkLogger().log_info('Dropped %d message(s) whose file the server no longer has'
+                               % len(vanished))
+        if self.messageListView is not None:
+            self.messageListView.layoutMessages()
+        self.setNeedsFilterRebuild()
+        self.setNeedsHistoryChrome()
 
     @objc.python_method
     def _rememberTransferFailure(self, bubble, reason):
@@ -3721,9 +4153,19 @@ class NativeChatViewController(ChatViewController):
         self.updateHistoryChrome()
 
     @objc.python_method
+    @run_in_gui_thread
     def setNeedsFilterRebuild(self):
         """Coalesce chip rebuilds: history replay inserts thousands of
-        messages one at a time and each could change what types exist."""
+        messages one at a time and each could change what types exist.
+
+        On the GUI thread, whoever asks. The timer that does the rebuild
+        attaches to the run loop of the thread that schedules it, so one
+        call from the history thread armed a timer that could never fire
+        and left the pending flag set -- and every later request, from the
+        GUI thread or not, was then dropped as already pending. The filter
+        bar stayed exactly as it was at that moment, which for a
+        conversation still loading its first page meant hidden.
+        """
         if self._filter_rebuild_pending:
             return
         self._filter_rebuild_pending = True
@@ -3788,6 +4230,37 @@ class NativeChatViewController(ChatViewController):
             BlinkLogger().log_debug('Cannot describe the grid: %s' % e)
 
     @objc.python_method
+    def _refreshBubbleFilter(self, bubble):
+        """Test one bubble against the filter again, after its kind changed.
+
+        A location bubble is born as a TEXT bubble: showMessage builds it
+        and inserts it, and showLocationMessage switches it to
+        KIND_LOCATION only afterwards, because everything a map inherits
+        -- grouping, avatar, ticks, header -- comes from the text path.
+        _insert had already asked whether the bubble belonged in the
+        current filter, and at that moment the honest answer was "this is
+        text". So under the Locations filter every map hid itself the
+        instant it was drawn, and the grid came up empty in a conversation
+        full of shares.
+
+        Nothing else in the transcript changes category after insertion --
+        a file transfer is classified from its envelope, which the bubble
+        carries before it is inserted -- so this is asked here and nowhere
+        else.
+        """
+        if bubble is None or self.messageListView is None:
+            return
+        hidden = not self.bubbleMatchesFilter(bubble, self.message_filter)
+        if bool(bubble.isHidden()) == hidden:
+            return
+        bubble.setHidden_(hidden)
+        BlinkLogger().log_debug('Bubble %s %s by the %s filter once it became a map'
+                                % (bubble.msgid, 'hidden' if hidden else 'shown',
+                                   self.message_filter or 'all'))
+        self.messageListView.setNeedsMessageLayout()
+        self.setNeedsDividerSweep()
+
+    @objc.python_method
     def bubbleMatchesFilter(self, bubble, category):
         if category is None:
             return True
@@ -3808,7 +4281,16 @@ class NativeChatViewController(ChatViewController):
 
         Empty chips are dropped, like mobile -- a bar full of types the
         contact has never sent says nothing.
+
+        Asked of the conversation rather than of the page whenever the
+        delegate can answer it. A page is one category deep now: counted off
+        the bubbles on screen, choosing Images would leave a bar with Images
+        as its only chip and no way back to the conversation.
         """
+        stored = getattr(self.delegate, 'available_categories', None)
+        if stored:
+            return [(key, title) for key, title in MESSAGE_CATEGORIES if key in stored]
+
         present = set()
         has_link = False
         if self.messageListView is not None:
@@ -3851,6 +4333,7 @@ class NativeChatViewController(ChatViewController):
             BlinkLogger().log_info('Filter bar hidden: only %d category present'
                                    % len(categories))
             control.setHidden_(True)
+            self._layoutFilterRow(False)
             if self.message_filter is not None:
                 self.message_filter = None
                 self.applyMessageFilter()
@@ -3869,8 +4352,218 @@ class NativeChatViewController(ChatViewController):
             selected = 0
             self.message_filter = None
         control.setSelectedSegment_(selected)
+        self._installGridColumnsControl()
+        self._installDownloadAllButton()
+        self._layoutFilterRow(self.message_filter in GRID_CATEGORIES)
         BlinkLogger().log_debug('Filter bar: %s (selected %s)'
                                 % (' | '.join(titles), titles[selected]))
+
+    # -- how wide the grid is ----------------------------------------------
+
+    @objc.python_method
+    def _installGridColumnsControl(self):
+        """The tile-count picker, beside the filter chips.
+
+        Built here rather than in the nib because the nib is hand-authored
+        XML shared by three viewers, and a control added to it has to be
+        added three times and connected by hand each time. It only shows
+        while the transcript is a grid: there is nothing for it to say
+        about a column of messages.
+        """
+        if self._columns_control is not None:
+            return
+        control = self.messageFilterControl
+        parent = control.superview() if control is not None else None
+        if parent is None:
+            return
+        try:
+            popup = NSPopUpButton.alloc().initWithFrame_pullsDown_(
+                NSMakeRect(0, 0, 96, 20), False)
+            try:
+                from AppKit import NSControlSizeSmall
+            except ImportError:
+                NSControlSizeSmall = 1
+            popup.cell().setControlSize_(NSControlSizeSmall)
+            popup.setFont_(NSFont.systemFontOfSize_(NSFont.smallSystemFontSize()))
+            popup.setAutoresizingMask_(NSViewMinXMargin | NSViewMinYMargin)
+            popup.setToolTip_(NSLocalizedString("How many pictures the grid puts across", "Tooltip"))
+            for columns in GRID_COLUMN_CHOICES:
+                popup.addItemWithTitle_(NSLocalizedString("%d columns", "Label") % columns)
+                # The number itself, not the title: the title is translated
+                # and parsing it back is how a localised build ends up with
+                # a one-column grid.
+                popup.lastItem().setRepresentedObject_(columns)
+            popup.setTarget_(self)
+            popup.setAction_('gridColumnsChanged:')
+            popup.sizeToFit()
+            popup.setHidden_(True)
+            parent.addSubview_(popup)
+            self._columns_control = popup
+            self._selectGridColumns(preferred_grid_columns())
+            BlinkLogger().log_debug('Grid width picker installed, showing %d columns'
+                                    % preferred_grid_columns())
+        except Exception as e:
+            BlinkLogger().log_error('Cannot build the grid width picker: %s' % e)
+
+    @objc.python_method
+    def _selectGridColumns(self, columns):
+        popup = self._columns_control
+        if popup is None:
+            return
+        try:
+            index = list(GRID_COLUMN_CHOICES).index(int(columns))
+        except ValueError:
+            index = list(GRID_COLUMN_CHOICES).index(GRID_COLUMNS)
+        popup.selectItemAtIndex_(index)
+
+    @objc.python_method
+    def _layoutFilterRow(self, show_columns):
+        """Share the row between the chips and the width picker.
+
+        Springs do the rest: the chips keep a fixed distance from the right
+        edge, so widening the window widens them and leaves the picker
+        where it is, and the picker itself is pinned to the top right.
+        """
+        control = self.messageFilterControl
+        parent = control.superview() if control is not None else None
+        if parent is None:
+            return
+        if show_columns and self._columns_control is None:
+            # Reached before the chips were last rebuilt -- a filter chosen
+            # on a bar that was already up.
+            self._installGridColumnsControl()
+        if show_columns and self._download_all_button is None:
+            self._installDownloadAllButton()
+        try:
+            frame = control.frame()
+            width = parent.bounds().size.width
+            if self._filter_right_inset is None:
+                # Measured once, before anything here has moved the chips:
+                # the margin the nib drew, which every later layout keeps.
+                self._filter_right_inset = max(width - (frame.origin.x + frame.size.width), 0.0)
+
+            popup = self._columns_control
+            show = bool(show_columns) and popup is not None and not control.isHidden()
+            if popup is not None:
+                popup.setHidden_(not show)
+
+            right = self._filter_right_inset
+            if show:
+                popup_frame = popup.frame()
+                gap = 8.0
+                right += popup_frame.size.width + gap
+                popup.setFrame_(NSMakeRect(
+                    max(width - self._filter_right_inset - popup_frame.size.width, 0.0),
+                    frame.origin.y + (frame.size.height - popup_frame.size.height) / 2.0,
+                    popup_frame.size.width, popup_frame.size.height))
+
+            # Only where files do not fetch themselves. In a grid of
+            # pictures every cell fills in on its own as it scrolls past,
+            # and a button that has nothing to do is a button that teaches
+            # the user it does nothing.
+            button = self._download_all_button
+            show_button = show and self.message_filter == 'video'
+            if button is not None:
+                button.setHidden_(not show_button)
+                if show_button:
+                    button_frame = button.frame()
+                    right += button_frame.size.width + gap
+                    button.setFrame_(NSMakeRect(
+                        max(width - right + gap, 0.0),
+                        frame.origin.y + (frame.size.height - button_frame.size.height) / 2.0,
+                        button_frame.size.width, button_frame.size.height))
+            control.setFrame_(NSMakeRect(frame.origin.x, frame.origin.y,
+                                         max(width - frame.origin.x - right, 40.0),
+                                         frame.size.height))
+        except Exception as e:
+            BlinkLogger().log_error('Cannot lay the filter row out: %s' % e)
+
+    @objc.python_method
+    def _installDownloadAllButton(self):
+        """Fetch everything on screen, for the grids that do not fetch.
+
+        A picture fetches itself as it scrolls past; a movie deliberately
+        does not once it is a few days old, because a scroll back through a
+        year of clips would quietly pull down gigabytes. That leaves a wall
+        of films that are not here, and clicking each one is the thing this
+        button exists to not do.
+        """
+        if self._download_all_button is not None:
+            return
+        control = self.messageFilterControl
+        parent = control.superview() if control is not None else None
+        if parent is None:
+            return
+        try:
+            button = NSButton.alloc().initWithFrame_(NSMakeRect(0, 0, 110, 20))
+            try:
+                from AppKit import NSControlSizeSmall
+            except ImportError:
+                NSControlSizeSmall = 1
+            button.setBezelStyle_(1)            # NSBezelStyleRounded
+            button.cell().setControlSize_(NSControlSizeSmall)
+            button.setFont_(NSFont.systemFontOfSize_(NSFont.smallSystemFontSize()))
+            button.setTitle_(NSLocalizedString("Download all", "Button"))
+            button.setToolTip_(NSLocalizedString("Download every file shown here", "Tooltip"))
+            button.setAutoresizingMask_(NSViewMinXMargin | NSViewMinYMargin)
+            button.setTarget_(self)
+            button.setAction_('downloadAllVisible:')
+            button.sizeToFit()
+            button.setHidden_(True)
+            parent.addSubview_(button)
+            self._download_all_button = button
+        except Exception as e:
+            BlinkLogger().log_error('Cannot build the download-all button: %s' % e)
+
+    @objc.IBAction
+    def downloadAllVisible_(self, sender):
+        """Fetch every file in the viewport, whatever the automatic rules say.
+
+        The viewport rather than the page: the automatic rules exist to keep
+        scrolling from pulling down the world, and the honest scope for "all"
+        is what the user is actually looking at. Scrolling on and clicking
+        again takes the next screenful.
+        """
+        if self.messageListView is None:
+            return
+        asked = 0
+        try:
+            visible = self.outputView.documentVisibleRect()
+            for view in self.messageListView.subviews():
+                if getattr(view, 'transfer_meta', None) is None or view.isHidden():
+                    continue
+                if not NSIntersectsRect(visible, view.frame()):
+                    continue
+                if view.media_image is not None or view.media_pending:
+                    continue            # here already, or on its way
+                if getattr(view, 'media_path', None):
+                    continue            # on this disc, just not drawn as a tile
+                if self.fetchMediaForBubble(view, force=True):
+                    asked += 1
+        except Exception as e:
+            BlinkLogger().log_error('Cannot download what is on screen: %s' % e)
+        BlinkLogger().log_info('Download all: %d file(s) in the viewport asked for' % asked)
+
+    @objc.IBAction
+    def gridColumnsChanged_(self, sender):
+        try:
+            columns = int(sender.selectedItem().representedObject())
+        except Exception:
+            columns = GRID_COLUMNS
+        if columns not in GRID_COLUMN_CHOICES:
+            columns = GRID_COLUMNS
+        set_preferred_grid_columns(columns)
+        BlinkLogger().log_info('Grid width: %d columns' % columns)
+        if self.messageListView is None or self.message_filter not in GRID_CATEGORIES:
+            return
+        self.messageListView.grid_columns = columns
+        # Every tile measured again from scratch: the cell is a different
+        # width now, and a bubble that keeps the frame it had draws its
+        # picture at the size it had there.
+        for view in self.messageListView.subviews():
+            if hasattr(view, 'invalidateLayout'):
+                view.invalidateLayout()
+        self.messageListView.layoutMessages()
 
     @objc.IBAction
     def filterMessages_(self, sender):
@@ -3892,6 +4585,31 @@ class NativeChatViewController(ChatViewController):
             return
         category = self.message_filter
         grid = category in GRID_CATEGORIES
+
+        # The page is fetched BY the filter where the delegate can do it: a
+        # conversation holds far more than the fifty messages on screen, and
+        # hiding the ones of the wrong type showed an empty grid of a
+        # conversation full of pictures. The transcript is emptied and the
+        # last fifty of the chosen type are read from SQL instead; the
+        # bubbles arrive already knowing they are tiles, because _insert
+        # sets grid_mode from this same filter.
+        reload_for_category = getattr(self.delegate, 'reload_for_category', None)
+        if reload_for_category is not None:
+            columns = preferred_grid_columns()
+            self.messageListView.grid_columns = columns if grid else 0
+            self.messageListView.grid_spacing = grid_spacing_for(category)
+            self._layoutFilterRow(grid)
+            BlinkLogger().log_info('Filter %s: reloading the newest page of that type%s'
+                                   % (category or 'all',
+                                      ' as a %d-column grid' % columns if grid else ''))
+            reload_for_category(category)
+            self.updateHistoryChrome()
+            return
+
+        # No delegate to ask -- the history viewer and the old chat window
+        # render a fixed set of messages and have no paging of their own, so
+        # the filter stays what it always was there: a view of what is
+        # already loaded.
         shown = 0
         for view in self.messageListView.subviews():
             hidden = not self.bubbleMatchesFilter(view, category)
@@ -3911,14 +4629,16 @@ class NativeChatViewController(ChatViewController):
                 view.invalidateLayout()
             if not hidden:
                 shown += 1
-        self.messageListView.grid_columns = GRID_COLUMNS if grid else 0
+        self.messageListView.grid_columns = preferred_grid_columns() if grid else 0
+        self.messageListView.grid_spacing = grid_spacing_for(category)
+        self._layoutFilterRow(grid)
         self.messageListView.layoutMessages()
         if grid:
             self._logGridGeometry()
         BlinkLogger().log_info('Filter %s: %d of %d message(s) shown%s'
                                % (category or 'all', shown,
                                   self.messageListView.subviews().count(),
-                                  ' as a %d-column grid' % GRID_COLUMNS if grid else ''))
+                                  ' as a %d-column grid' % preferred_grid_columns() if grid else ''))
         self.messageListView.scrollToBottom()
         self.setNeedsMediaFetch()
         self.updateHistoryChrome()

@@ -389,6 +389,10 @@ class SMSViewController(NSObject):
     # means "the present", which is every conversation until the user picks
     # a date out of the history navigator.
     history_before_date = None
+    # Which filter chips the stored conversation holds, read from SQL after
+    # each page. None until the first page has landed, and the filter bar
+    # falls back to reading the bubbles on screen until then.
+    available_categories = None
 
     @objc.python_method
     def nibName(self):
@@ -3295,6 +3299,15 @@ class SMSViewController(NSObject):
          self.replay_history()
 
     @objc.python_method
+    def active_category(self):
+        """The filter chip the transcript is showing, or None for all.
+
+        Read off the renderer rather than held here: the segmented control
+        owns it, and a second copy is one more thing to keep in step.
+        """
+        return getattr(self.chatViewController, 'message_filter', None)
+
+    @objc.python_method
     def history_remote_uris(self):
         """Every address this conversation's history is filed under.
 
@@ -3372,6 +3385,37 @@ class SMSViewController(NSObject):
 
         self.log_info('Jumping to history %s' % (date_text or 'present'))
         self.history_before_date = cursor
+        self._restart_history(NSLocalizedString("Loading previous messages...", "Label"))
+
+    @objc.python_method
+    @run_in_gui_thread
+    def reload_for_category(self, category):
+        """Reopen the transcript as a page of one type of message.
+
+        A filter used to be a view of whatever happened to be loaded: fifty
+        messages came back, the ones of the wrong type were hidden, and
+        picking Images out of a conversation whose last fifty messages were
+        all text showed an empty grid of a conversation full of pictures.
+        The filter is now what the page is fetched BY -- the last fifty
+        IMAGES, and scrolling up asks for the fifty before those.
+
+        Each change starts the window again from the newest end, because
+        the cursor it pages with (oldest_timestamp) belongs to the category
+        it was walked in: kept across a change it would ask for the fifty
+        pictures older than a text message.
+        """
+        self._restart_history(NSLocalizedString("Loading messages...", "Label"))
+
+    @objc.python_method
+    def _restart_history(self, note):
+        """Empty the transcript and fetch the newest page again.
+
+        Everything reset here is per-window state that describes the page on
+        screen -- which ids are drawn, which shares have their trail, which
+        recordings have their waveform. A reload that kept any of it would
+        skip the rows it names as already rendered and draw a page with
+        holes in it.
+        """
         self.oldest_timestamp = None
         self.message_count_from_history = 0
         self.msg_id_list = set()
@@ -3383,8 +3427,7 @@ class SMSViewController(NSObject):
         self.audio_metadata = {}
         self.chatViewController.clear()
         self.chatViewController.setHandleScrolling_(True)
-        self.chatViewController.loadingTextIndicator.setStringValue_(
-            NSLocalizedString("Loading previous messages...", "Label"))
+        self.chatViewController.loadingTextIndicator.setStringValue_(note)
         self.chatViewController.loadingProgressIndicator.startAnimation_(None)
         self.replay_history()
 
@@ -3401,12 +3444,14 @@ class SMSViewController(NSObject):
             # that span still arrive with the messages they belong to, and a
             # conversation whose recent traffic is mostly sidecars no longer
             # opens showing six messages out of a hundred fetched rows.
+            category = self.active_category()
             page_start = self.history.renderable_cutoff(
                 remote_uri=remote_uris, media_type=('chat', 'sms'),
                 count=self.showHistoryEntries,
                 search_text=self.chatViewController.search_text,
                 before_date=self.oldest_timestamp or self.history_before_date,
-                exclude_related_actions=LOCATION_TICK_ACTIONS)
+                exclude_related_actions=LOCATION_TICK_ACTIONS,
+                category=category)
             load_trace_mark(self.trace_key, 'probe')
             # With a cutoff the page is bounded by TIME, and the count is only
             # a safety valve. Without one the conversation holds fewer bubbles
@@ -3452,16 +3497,25 @@ class SMSViewController(NSObject):
                     self.zoom_period_label = NSLocalizedString("Displaying all messages", "Label")
                     self.chatViewController.setHandleScrolling_(False)
                 
-                results = self.history.get_messages(remote_uri=remote_uris, media_type=('chat', 'sms'), after_date=after_date or page_start, before_date=self.oldest_timestamp or self.history_before_date, count=page_count, search_text=self.chatViewController.search_text, exclude_related_actions=LOCATION_TICK_ACTIONS)
+                results = self.history.get_messages(remote_uri=remote_uris, media_type=('chat', 'sms'), after_date=after_date or page_start, before_date=self.oldest_timestamp or self.history_before_date, count=page_count, search_text=self.chatViewController.search_text, exclude_related_actions=LOCATION_TICK_ACTIONS, category=category)
             else:
-                results = self.history.get_messages(remote_uri=remote_uris, media_type=('chat', 'sms'), after_date=page_start, count=page_count, search_text=self.chatViewController.search_text, exclude_related_actions=LOCATION_TICK_ACTIONS)
+                results = self.history.get_messages(remote_uri=remote_uris, media_type=('chat', 'sms'), after_date=page_start, count=page_count, search_text=self.chatViewController.search_text, exclude_related_actions=LOCATION_TICK_ACTIONS, category=category)
 
+            results = self._withRelatedRows(results, category)
             messages = [row for row in reversed(results)]
             load_trace_mark(self.trace_key, 'query')
             load_trace_note(self.trace_key, '%d rows' % len(messages))
-        except Exception:
+        except Exception as e:
+            # Printed AND logged: on stderr alone this is invisible to
+            # anyone reading activity.txt, and what it looks like from the
+            # outside is a conversation that never finishes loading.
             import traceback
             traceback.print_exc()
+            self.log_error('Cannot replay history: %s' % e)
+            # The spinner belongs to the page that is no longer coming. Left
+            # running it is the whole visible symptom -- a conversation that
+            # never finishes loading, with no way to tell it from a slow one.
+            self._noteReplayFailed(str(e))
         else:
             # Decrypt PGP messages off the GUI thread so the UI stays responsive
             # while we work through the journal. The render method below only
@@ -3486,6 +3540,89 @@ class SMSViewController(NSObject):
                 self.log_info('Cannot count stored messages: %s' % e)
                 total = -1
             self._noteTotalHistoryMessages(total)
+
+            # Which chips the CONVERSATION holds, not which the page holds.
+            # The bar used to be built from the bubbles on screen, and a
+            # page is now one category deep -- read off the page it would
+            # offer the user a bar with one chip on it and no way back.
+            try:
+                categories = self.history.present_categories(
+                    remote_uri=remote_uris, media_type=('chat', 'sms'))
+            except Exception as e:
+                self.log_info('Cannot read the categories present: %s' % e)
+            else:
+                self._noteAvailableCategories(categories)
+
+    @objc.python_method
+    @run_in_gui_thread
+    def _noteReplayFailed(self, reason):
+        try:
+            self.chatViewController.loadingProgressIndicator.stopAnimation_(None)
+            self.chatViewController.loadingTextIndicator.setStringValue_("")
+            self.chatViewController.setHistoryNote(
+                NSLocalizedString("Messages could not be loaded", "Label"))
+        except AttributeError:
+            pass
+
+    @objc.python_method
+    @run_in_gui_thread
+    def _noteAvailableCategories(self, categories):
+        """Hand the chip set to the transcript, on the GUI thread.
+
+        This is read on the history thread and used by a control, and the
+        rebuild it asks for is scheduled with an NSTimer -- which attaches
+        to the run loop of whatever thread schedules it. Asked for from the
+        history thread the timer never fired, and the pending flag it sets
+        was never cleared, so the filter bar was rebuilt exactly once per
+        conversation and then never again: the bar the user lost.
+        """
+        self.available_categories = categories
+        self.log_debug('Conversation holds %s' % (', '.join(sorted(categories)) or 'no categories'))
+        try:
+            self.chatViewController.setNeedsFilterRebuild()
+        except AttributeError:
+            pass                        # a renderer with no filter bar
+
+    @objc.python_method
+    def _withRelatedRows(self, results, category):
+        """Add the sidecar rows the page's messages hang off.
+
+        An unfiltered page reaches back to a timestamp and takes every row
+        in that span, so a recording's waveform and a reply's link arrive
+        with the messages they belong to. A category page asks for one type
+        of bubble, and those rows are of no type at all -- so they have to
+        be asked for by the ids of the page they serve, or a filtered Audio
+        view draws recordings with no waveform and quotes with no text.
+        """
+        if not category or not results:
+            return results
+        try:
+            return self._mergeRelatedRows(results, category)
+        except Exception as e:
+            # The page itself is not worth losing over its trimmings. This
+            # failed once and the transcript stayed empty with the spinner
+            # running, because the whole replay is wrapped in one except.
+            self.log_error('Cannot add the rows related to this page: %s' % e)
+            return results
+
+    @objc.python_method
+    def _mergeRelatedRows(self, results, category):
+        extra = self.history.related_messages([row.msgid for row in results])
+        if not extra:
+            return results
+        seen = set(row.msgid for row in results)
+        # Nothing older than the page itself. The cursor the next scroll
+        # back pages from is the oldest row RENDERED, so a waveform that
+        # happened to be stored before the recording it belongs to would
+        # move the window past pictures that had never been drawn.
+        oldest = min(row.time for row in results)
+        merged = list(results) + [row for row in extra
+                                  if row.msgid not in seen and row.time >= oldest]
+        # The page arrives newest first and the renderer reverses it.
+        merged.sort(key=lambda row: row.time, reverse=True)
+        self.log_debug('Page carries %d related row(s) for %d %s message(s)'
+                       % (len(merged) - len(results), len(results), category))
+        return merged
 
     @objc.python_method
     @run_in_gui_thread
@@ -3671,12 +3808,16 @@ class SMSViewController(NSObject):
 #        self.log_info('Oldest message timestamp %s' % self.oldest_timestamp)
 
         if len(messages):
-            oldest_timestamp = messages[0].time
-            if self.oldest_timestamp is None:
+            # The OLDEST row of the page, whichever end of the list it is at.
+            # messages[0] was the oldest on the first load and the NEWEST on
+            # every scroll back, because the list is reversed a few lines up
+            # -- so each scroll moved the window back by a single message and
+            # re-read the fifty above it, which the renderer then skipped as
+            # "already in the conversation". Asking for the minimum directly
+            # is order-independent and says what it means.
+            oldest_timestamp = min(message.time for message in messages)
+            if self.oldest_timestamp is None or oldest_timestamp < self.oldest_timestamp:
                 self.oldest_timestamp = oldest_timestamp
-            else:
-                if oldest_timestamp < self.oldest_timestamp:
-                    self.oldest_timestamp = oldest_timestamp
 
         self.log_debug('Render history started')
         self.message_count_from_history = len(messages)
@@ -3819,7 +3960,7 @@ class SMSViewController(NSObject):
                 already_shown = getattr(self.chatViewController,
                                         'hasRenderedMessage', None)
                 if already_shown is not None and already_shown(message.msgid):
-                    self.log_info('Skip %s: already in the conversation' % message.msgid)
+                    self.log_debug('Skip %s: already in the conversation' % message.msgid)
                     # Recorded even though nothing is drawn: the guard set is
                     # what a later journal copy of this message is tested
                     # against, and a row skipped here is still a row on screen.
@@ -4015,9 +4156,19 @@ class SMSViewController(NSObject):
             loaded = len(self.chatViewController.rendered_messages)
         except TypeError:
             loaded = 0
-        # The stored total is counted after this point now, so it is reported
-        # when it lands rather than as "unknown" on every single load.
-        self.log_info('Render history completed: %d loaded in view' % loaded)
+        # Two different counts, and reporting only the first one read as ten
+        # missing messages: rendered_messages holds everything the renderer
+        # put in the transcript, INCLUDING the system notes a location share
+        # or an encryption change leaves behind, while the range label counts
+        # messages -- notes and day dividers are neither dated nor sent by
+        # anyone, so they are not part of "40 messages, 14 Aug - 29 Aug".
+        try:
+            _, _, in_view = self.chatViewController.loadedMessageRange()
+        except Exception:
+            in_view = loaded
+        notes = max(loaded - in_view, 0)
+        self.log_info('Render history completed: %d message(s) in view%s'
+                      % (in_view, '' if not notes else ', %d system note(s)' % notes))
         self.chatViewController.loadingProgressIndicator.stopAnimation_(None)
         self.chatViewController.loadingTextIndicator.setStringValue_("")
 
@@ -4030,7 +4181,9 @@ class SMSViewController(NSObject):
         # to put the range back over whatever the scroll handler wrote.
         self.chatViewController.setNeedsHistoryChrome()
 
-        load_trace_note(self.trace_key, '%d drawn' % loaded)
+        load_trace_note(self.trace_key, '%d drawn' % in_view)
+        if notes:
+            load_trace_note(self.trace_key, '%d notes' % notes)
         load_trace_mark(self.trace_key, 'render')
         if loaded:
             load_trace_arm(self.trace_key)

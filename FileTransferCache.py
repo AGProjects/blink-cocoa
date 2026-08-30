@@ -61,7 +61,9 @@ AUTO_VIDEO_MAX_AGE_DAYS = 7
 MAX_ENCRYPT_BYTES = 20 * 1000 * 1000
 
 # How many full-size pictures to keep decoded at once.
-MAX_CACHED_ORIGINALS = 40
+# Comfortably more than one page of tiles (50), so a grid that has just
+# been fetched does not evict its own pictures while it is drawing them.
+MAX_CACHED_ORIGINALS = 60
 
 # The path SylkServer serves file transfers from, appended to the API root.
 # The full URL of one transfer is
@@ -169,6 +171,16 @@ def display_name(meta):
 # Blink quits, because a timeout says nothing about the file itself.
 FAILURE_PERMANENT = 'permanent'
 FAILURE_TRANSIENT = 'transient'
+# GONE is PERMANENT with one more thing known about it: the server answered
+# that the file is not there. Not "we cannot open it", not "we are not
+# allowed" -- there is nothing at that address and there never will be
+# again, so the message it belongs to is a reference to nothing and the
+# transcript stops carrying it.
+FAILURE_GONE = 'gone'
+
+# The status codes that mean exactly that: 404 for a file the server does
+# not have, 410 for one it is telling us it deliberately no longer has.
+GONE_STATUS = (404, 410)
 
 
 class FileTransferCache(object):
@@ -183,6 +195,9 @@ class FileTransferCache(object):
             cls._instance._failed = {}
             # keys whose failure will not change by asking again
             cls._instance._permanent = set()
+            # keys the server answered 404/410 for: not a failure to fetch
+            # the file so much as the file not being there to fetch
+            cls._instance._gone = set()
             cls._instance._uploads = {}
             cls._instance._upload_phase = {}
             cls._instance._originals = OrderedDict()
@@ -270,6 +285,7 @@ class FileTransferCache(object):
         for key in list(self._pending.keys()):
             self._pending.pop(key, None)
         self._permanent.clear()
+        self._gone.clear()
         return target
 
     def store(self, meta, account, peer, source):
@@ -325,6 +341,26 @@ class FileTransferCache(object):
     def is_permanent_failure(self, meta):
         """Whether the last failure was one that retrying cannot fix."""
         return self._key(meta) in self._permanent
+
+    def is_gone(self, meta):
+        """Whether the server answered that this file is not there.
+
+        Narrower than is_permanent_failure on purpose: a body we hold no
+        key for is permanent too, and that message is still a message --
+        the key can arrive tomorrow. A 404 cannot be undone by anything
+        this end, so it is the only verdict the transcript acts on by
+        forgetting the message.
+        """
+        return self._key(meta) in self._gone
+
+    def note_gone(self, meta, reason):
+        """Adopt a 404 recorded in a previous run, from the envelope."""
+        key = self._key(meta)
+        if not key:
+            return
+        self._failed[key] = reason
+        self._permanent.add(key)
+        self._gone.add(key)
 
     def note_permanent_failure(self, meta, reason):
         """Adopt a failure recorded in a previous run.
@@ -592,9 +628,9 @@ class FileTransferCache(object):
             status = 0
 
         if error is not None or location is None or (status and status >= 400):
-            if status == 404:
-                reason = ('HTTP 404, the server does not have this file '
-                          '(expired, or stored under a different name)')
+            if status in GONE_STATUS:
+                reason = ('HTTP %d, the server does not have this file '
+                          '(expired, or stored under a different name)' % status)
             elif error is not None:
                 reason = str(error.localizedDescription()
                              if hasattr(error, 'localizedDescription') else error)
@@ -603,7 +639,9 @@ class FileTransferCache(object):
             # 4xx is the server saying this request is wrong and will stay
             # wrong -- gone, renamed, not ours. 5xx and every transport
             # error are the server or the network having a bad moment.
-            if status and 400 <= status < 500:
+            if status in GONE_STATUS:
+                kind = FAILURE_GONE
+            elif status and 400 <= status < 500:
                 kind = FAILURE_PERMANENT
             else:
                 kind = FAILURE_TRANSIENT
@@ -662,10 +700,14 @@ class FileTransferCache(object):
         self._phase.pop(key, None)
         if path is None:
             self._failed[key] = failure or 'unknown error'
-            if kind == FAILURE_PERMANENT:
+            if kind in (FAILURE_PERMANENT, FAILURE_GONE):
                 self._permanent.add(key)
             else:
                 self._permanent.discard(key)
+            if kind == FAILURE_GONE:
+                self._gone.add(key)
+            else:
+                self._gone.discard(key)
             # The whole URL, not just the name: a transfer that fails is
             # almost always failing on WHERE it is being asked for -- a
             # missing or extra .asc, a transfer id that does not match the
@@ -677,6 +719,7 @@ class FileTransferCache(object):
         else:
             self._failed.pop(key, None)
             self._permanent.discard(key)
+            self._gone.discard(key)
             BlinkLogger().log_info('Downloaded %s to %s' % (display_name(meta), path))
 
         for callback in callbacks:

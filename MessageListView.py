@@ -49,6 +49,9 @@ MESSAGE_SPACING = 2.0
 # The gap between tiles when the list is showing a grid rather than a
 # conversation. Wider than the message spacing on purpose: tiles are read
 # as a set of separate things, messages as one running column.
+# The gap between tiles. Two points for a wall of photographs, which is
+# meant to read as one surface; a grid of whole bubbles needs air instead,
+# and the renderer sets grid_spacing to say which kind this is.
 GRID_SPACING = 2.0
 
 
@@ -60,6 +63,7 @@ class MessageListView(ListView):
     # first layout, which can happen after the filter has already asked for
     # a grid, and it would reset it back to a column.
     grid_columns = 0
+    grid_spacing = GRID_SPACING
 
     # the linen pattern colour for each appearance, built on first use
     _patterns = {}
@@ -412,8 +416,9 @@ class MessageListView(ListView):
         look at. Each row is as tall as its tallest tile, so a portrait
         picture does not crop and does not overlap the row below it.
         """
-        cell_w = max((width - GRID_SPACING * (columns - 1)) / float(columns), 40.0)
-        x_step = cell_w + GRID_SPACING
+        spacing = max(float(getattr(self, 'grid_spacing', GRID_SPACING) or 0.0), 0.0)
+        cell_w = max((width - spacing * (columns - 1)) / float(columns), 40.0)
+        x_step = cell_w + spacing
 
         y = 0.0
         column = 0
@@ -423,10 +428,25 @@ class MessageListView(ListView):
         for view in self.subviews():
             if view.isHidden():
                 continue
+            if getattr(view, 'kind', None) == 'date':
+                # A divider is the one thing in a grid that is not a tile.
+                # It takes the full width and ends the row it lands in, so
+                # each month reads as its own wall of pictures rather than
+                # a rule drawn through the middle of one.
+                if column:
+                    y += row_height + spacing
+                    column = 0
+                    row_height = 0.0
+                if hasattr(view, 'layoutForWidth_'):
+                    view.layoutForWidth_(width)
+                height = NSHeight(view.frame())
+                view.setFrame_(NSMakeRect(0.0, y, width, height))
+                y += height + spacing
+                laid_out += 1
+                continue
             if not getattr(view, 'grid_mode', False):
-                # Only tiles belong in a grid. A day divider or a system
-                # note has no picture to show and would take a cell to say
-                # so, breaking the wall of thumbnails into strips.
+                # Only tiles belong in the wall itself. A system note has no
+                # picture to show and would take a cell to say so.
                 continue
             if hasattr(view, 'layoutForWidth_'):
                 view.layoutForWidth_(cell_w)
@@ -438,13 +458,13 @@ class MessageListView(ListView):
             column += 1
             if column >= columns:
                 column = 0
-                y += row_height + GRID_SPACING
+                y += row_height + spacing
                 row_height = 0.0
 
         if column:
-            y += row_height + GRID_SPACING
+            y += row_height + spacing
 
-        total = max(y - GRID_SPACING, 0.0) if laid_out else 0.0
+        total = max(y - spacing, 0.0) if laid_out else 0.0
         self._total_height = total
 
         frame = self.frame()

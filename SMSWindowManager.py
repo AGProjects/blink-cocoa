@@ -693,6 +693,29 @@ class SMSWindowManagerClass(NSObject):
     # no host. Nothing is ever stored: is-composing is a state with an
     # expiry, not a message.
     composing_states = {}
+    # canonical remote uri -> when a location-sharing state stops being
+    # believable, as a monotonic deadline. A share announces both its
+    # start and its stop, but the stop is the one that can go missing --
+    # the phone loses the network, the app is killed, the battery goes --
+    # so the state is held on a lease that every tick of the share renews
+    # rather than on the promise that a teardown will arrive.
+    location_sharing_deadlines = {}
+    # canonical remote uri -> True while the remote party is sharing their
+    # location with us. Lives here for the reason the typing state does:
+    # the contact row has to show it for a conversation nobody has opened,
+    # and those have no viewer. Nothing is ever stored -- a share is a
+    # state with an expiry, and the map bubbles are its record.
+    location_sharing_states = {}
+    # A one-shot is a single pin, not a share: nothing follows it and
+    # nothing will ever say it stopped. The row acknowledges it for about
+    # as long as it takes to notice, then lets it go.
+    LOCATION_SHARING_ONE_SHOT_SECONDS = 5
+    # How long a live share is believed without hearing from it again.
+    # Generous next to the tick rate of a moving share, because the cost
+    # of being late here is a row that says someone is sharing for a few
+    # minutes after they stopped, and the cost of being early is an
+    # indicator that blinks out under a share that is still running.
+    LOCATION_SHARING_IDLE_SECONDS = 300
     # canonical remote uri -> naive UTC datetime of the newest message we
     # know about. Seeded once from history, kept current by every path that
     # stores a message. The Messages group is ordered by this.
@@ -2899,6 +2922,113 @@ class SMSWindowManagerClass(NSObject):
         return bool(self.composing_states.get(self._canonical_uri(remote_uri), False))
 
     @objc.python_method
+    def noteLocationSharing(self, remote_uri, flag):
+        """Record that the remote party is (not) sharing their location.
+
+        Announced only on a change, exactly like noteComposing: a live
+        share ticks every few seconds for as long as it runs, and a
+        notification per tick would redraw the contact list for nothing.
+        """
+        key = self._canonical_uri(remote_uri)
+        if not key:
+            return
+        flag = bool(flag)
+        if flag == bool(self.location_sharing_states.get(key, False)):
+            return
+        if flag:
+            self.location_sharing_states[key] = True
+        else:
+            self.location_sharing_states.pop(key, None)
+            # Whoever cleared it owns it: a lease left behind would fire
+            # later against a state that is already gone.
+            self.location_sharing_deadlines.pop(key, None)
+        BlinkLogger().log_info('Location sharing: %s %s'
+                               % (key, 'is sharing location' if flag else 'stopped sharing location'))
+        self.notification_center.post_notification(
+            'BlinkLocationSharingStateChanged', sender=self,
+            data=NotificationData(key=key, sharing=flag))
+
+    @objc.python_method
+    def noteLocationSharingIndication(self, remote_uri, payload):
+        """A location tick off the wire, whatever is open.
+
+        The one path a share takes to the contact rows, and like the
+        typing indicator it deliberately knows nothing about
+        conversations: someone sharing their location with an address is
+        a fact about that address. A conversation nobody has opened is
+        precisely when the indicator is worth something -- it is what
+        says a pin is waiting to be looked at.
+
+        `payload` is a decoded location payload, or the cleartext
+        classification of one we could not decrypt; both carry the action,
+        which is all this needs.
+        """
+        key = self._canonical_uri(remote_uri)
+        if not key or not payload:
+            return
+
+        action = payload.get('action')
+        envelope = payload.get('envelope') or {}
+
+        if action in ('location_stop', 'meeting_end', 'meeting_reject'):
+            self.noteLocationSharing(key, False)
+            return
+
+        if action == 'location_once' or payload.get('one_shot') or envelope.get('one_shot'):
+            seconds = self.LOCATION_SHARING_ONE_SHOT_SECONDS
+        elif action in ('location_start', 'location_update'):
+            # A trail tick counts as a start: it is proof the share is
+            # running, and the origin can easily be one we never saw --
+            # a fresh install, or Blink started in the middle of it.
+            seconds = self._location_sharing_lease(payload, envelope)
+        else:
+            # A request, a meet-up handshake: nothing is being shared yet.
+            return
+
+        self.location_sharing_deadlines[key] = monotonic() + seconds
+        self.noteLocationSharing(key, True)
+        # Checked a second late so a tick that arrives exactly on time has
+        # already moved the lease past this one.
+        call_later(seconds + 1, self.expireLocationSharing, key)
+
+    @objc.python_method
+    def _location_sharing_lease(self, payload, envelope=None):
+        """How long a live share may be believed on the strength of one tick.
+
+        The idle timeout, shortened by the share's own `expires` when it
+        says it ends sooner: a share with two minutes left to run should
+        not leave the row lit for five after its last tick.
+        """
+        seconds = self.LOCATION_SHARING_IDLE_SECONDS
+        expires = payload.get('expires') or (envelope or {}).get('expires')
+        stamp = self._normalized_timestamp(expires)
+        if stamp is None:
+            return seconds
+        remaining = (stamp - datetime.datetime.utcnow()).total_seconds()
+        if remaining <= 0:
+            # Already expired on paper, yet here is a tick from it. The
+            # tick is the better evidence -- a clock skewed by a few
+            # seconds must not make a running share invisible -- so it
+            # gets the shortest lease rather than none at all.
+            return self.LOCATION_SHARING_ONE_SHOT_SECONDS
+        return min(seconds, remaining)
+
+    @objc.python_method
+    def expireLocationSharing(self, key):
+        """Drop a sharing state no tick renewed."""
+        deadline = self.location_sharing_deadlines.get(key)
+        if deadline is None:
+            return                      # already cleared
+        if monotonic() < deadline:
+            return                      # renewed since; a later check owns it
+        self.location_sharing_deadlines.pop(key, None)
+        self.noteLocationSharing(key, False)
+
+    @objc.python_method
+    def isSharingLocationForURI(self, remote_uri):
+        return bool(self.location_sharing_states.get(self._canonical_uri(remote_uri), False))
+
+    @objc.python_method
     def noteViewer_isComposing_(self, viewer, flag):
         """Route a remote typing state to the contact row and to the host.
 
@@ -4390,6 +4520,20 @@ class SMSWindowManagerClass(NSObject):
                 and content_type in (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE)
                 and self._is_silent_location_tick(str(account.id), content, metadata, content_type)):
             note_new_message = False
+        # A share the other side is running is a fact about their address,
+        # exactly like a typing state, so it is noted here rather than in
+        # the viewer: the contact row has to show it whether or not the
+        # conversation is open. Falls back to the cleartext classification
+        # when the coordinates cannot be decrypted -- the row is saying
+        # that a share is running, which the v2 envelope states in the
+        # clear even when its `value` is a blob we have no key for.
+        if (direction == 'incoming'
+                and content_type in (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE)):
+            payload = (self._decode_location_payload(str(account.id), content, metadata, content_type)
+                       or envelope_summary(content, metadata, content_type))
+            self.noteLocationSharingIndication(
+                format_identity_to_string(window_tab_identity, format='aor'), payload)
+
         # NOTHING arriving over the wire creates a conversation. An open
         # conversation still receives the message live; otherwise the message
         # is written straight to history, the contact's unread count goes up

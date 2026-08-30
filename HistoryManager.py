@@ -515,6 +515,78 @@ class SessionHistory(object, metaclass=Singleton):
             return True
 
 
+# The words Sylk Mobile stores in messages.category
+# (app.js#_classifyMessageCategory), so the same message lands under the same
+# chip on both clients: text, image, audio, video, other, location. NULL is
+# not a category -- it means "this row is not a bubble": a PGP key, a
+# waveform, a reply link, a trail tick. Every category query excludes it.
+CATEGORY_TEXT_TYPES = ('text', 'text/plain', 'text/html')
+CATEGORY_KEY_TYPES = ('text/pgp-public-key', 'text/pgp-private-key')
+CATEGORY_FILE_TYPES = ('application/sylk-file-transfer',
+                       'application/vnd.gsma.rcs-ft-http+xml')
+CATEGORY_LOCATION_TYPE = 'application/sylk-location-sharing'
+# Which location actions open a bubble is NOT restated here. SylkLocation
+# owns that vocabulary (COORDINATE_ACTIONS, SIGNAL_ACTIONS, UPDATE_ACTIONS)
+# and the store path already asks it; a second copy in this module is a
+# second thing to keep in step, and the first version of this code kept a
+# copy, got it wrong, and filled the Locations grid with system notes.
+
+
+def classify_category(content_type, body=None, related_action=None, metadata=None):
+    """Which filter chip a stored row belongs to, or None for a non-bubble.
+
+    Derived at INSERT time, exactly as related_msg_id and related_action
+    already are, so that "the last fifty images" is an indexed query rather
+    than a walk over every row of a conversation parsing envelopes. Nothing
+    here decrypts: a file transfer is classified from its cleartext envelope
+    and a location from its action, and a row whose envelope is armoured is
+    left NULL for update_decrypted_message to stamp when it is opened.
+
+    Mirrors Sylk Mobile's _classifyMessageCategory (app/app.js) word for
+    word, including 'other' for a file that is none of the three media
+    kinds, so a conversation filters identically on both clients.
+    """
+    content_type = str(content_type or '')
+    if not content_type:
+        return None
+    if content_type in CATEGORY_KEY_TYPES:
+        return None                     # a key is not a message
+    if content_type in CATEGORY_TEXT_TYPES or content_type.startswith('text/'):
+        return 'text'
+    if content_type in CATEGORY_FILE_TYPES:
+        try:
+            from MessageHost import file_transfer_category
+        except ImportError:
+            return None
+        # None when the envelope cannot be read -- an armoured body, or a
+        # row that is a transfer by content type and nothing by content.
+        return file_transfer_category(body)
+    if content_type == CATEGORY_LOCATION_TYPE:
+        # Blink's own rule rather than a second reading of it. A browsable
+        # location bubble is one that CARRIES COORDINATES and is not a trail
+        # tick -- which related_action alone cannot tell you: a start, a
+        # stop, a location request and every meeting reply are all
+        # non-update actions, and not one of them draws a map. Stamping
+        # those as 'location' is what filled the Locations grid with
+        # messages that render as system notes and then hid every one of
+        # them, leaving it empty in a conversation full of shares.
+        #
+        # envelope_summary reads the CLEARTEXT envelope, so this stays free
+        # of decryption like the rest of this function, and it is the same
+        # call the store path makes (SylkLocation, envelope_summary), so
+        # the two cannot drift apart.
+        try:
+            from SylkLocation import envelope_summary
+        except ImportError:
+            return None
+        try:
+            summary = envelope_summary(body, metadata, content_type)
+        except Exception:
+            return None
+        return (summary or {}).get('category')
+    return None
+
+
 class ChatMessage(SQLObject):
     class sqlmeta:
         table = 'chat_messages'
@@ -580,6 +652,11 @@ class ChatMessage(SQLObject):
     # can find them; NULL on trail update ticks. Derived from related_action,
     # so no decryption.
     category          = StringCol(default=None)
+    # Every category page is "the newest rows of THIS type for these
+    # addresses", which is remote_uri + category + an ORDER BY time. Without
+    # the index SQLite finds the address's rows and then sorts the whole
+    # conversation in a temp B-tree to hand back fifty pictures.
+    category_time_idx = DatabaseIndex('remote_uri', 'category', 'time')
     # Epoch seconds after which the row may be purged. Location trail ticks
     # are written with now + 30 days on mobile (LOCATION_RETENTION_SEC).
     # Declared now because mobile shipped three separate migrations that were
@@ -596,7 +673,7 @@ class ChatMessage(SQLObject):
 
 
 class ChatHistory(object, metaclass=Singleton):
-    __version__ = 11
+    __version__ = 14
 
     def __init__(self):
         path = ApplicationData.get('history')
@@ -809,8 +886,128 @@ class ChatHistory(object, metaclass=Singleton):
             except Exception as e:
                 BlinkLogger().log_error("Error adding index remote_time_index: %s" % e)
 
+        if next_upgrade_version < 12:
+            # The category column has existed since version 10 and only
+            # location rows were ever stamped with one. Filtering by type
+            # now pages from SQL rather than hiding what is already on
+            # screen, so every stored row needs its type -- and the index
+            # that makes asking for it cheap.
+            query = ("CREATE INDEX IF NOT EXISTS category_time_index "
+                     "ON chat_messages (remote_uri, category, time)")
+            try:
+                self.db.queryAll(query)
+            except Exception as e:
+                BlinkLogger().log_error("Error adding index category_time_index: %s" % e)
+            self._backfill_categories()
+
+        if next_upgrade_version < 13:
+            # Run again. The version 12 pass classified 1226 transfers and
+            # left 330 of them stored with no category all the same, so
+            # something between the UPDATE and the file did not hold --
+            # unfinished writes in the write-ahead log at the moment the
+            # process ended is the likeliest reading. The pass only touches
+            # rows that still have no category, so a second one costs
+            # nothing where the first worked, and it now says what it has
+            # left behind instead of leaving it to be discovered.
+            self._backfill_categories()
+
+        if next_upgrade_version < 14:
+            # Version 12 read the location rows the way Sylk Mobile does --
+            # anything that is not a trail tick is browsable -- and Blink
+            # does not agree: it draws a share starting, a share stopping
+            # and every meeting reply as a system note, so those rows are
+            # not bubbles and the Locations grid hid every one of them.
+            # Corrected against the rule the store path itself uses.
+            self._reclassify_locations()
+
         TableVersions().set_table_version(ChatMessage.sqlmeta.table, self.__version__)
 
+    def _backfill_categories(self):
+        """Stamp a category on every stored row that has none.
+
+        Caller is in the db thread. Runs once, from the version 12 upgrade:
+        the version bump is the guard, so there is no flag to keep and no
+        second pass on later launches.
+
+        Text goes in one UPDATE -- its type is the content type, and SQL
+        can read that. File transfers are read out, classified in Python
+        from the envelope in `body`, and written back grouped by the
+        category they turned out to be. Location rows are not touched here
+        at all: _reclassify_locations owns them, because deciding one takes
+        the same envelope read whether the row has a category already or
+        not. A row whose envelope is armoured
+        classifies as nothing and stays NULL; update_decrypted_message
+        stamps it when the body is opened.
+        """
+        started = time.time()
+        keys = ','.join(ChatMessage.sqlrepr(t) for t in CATEGORY_KEY_TYPES)
+        updates = 0
+        try:
+            self.db.queryAll(
+                "update chat_messages set category = 'text' where category is null"
+                " and (content_type = 'text' or content_type like 'text/%%')"
+                " and content_type not in (%s)" % keys)
+        except Exception as e:
+            BlinkLogger().log_error("Error stamping stored message categories: %s" % e)
+
+        types = ','.join(ChatMessage.sqlrepr(t) for t in CATEGORY_FILE_TYPES)
+        try:
+            rows = list(self.db.queryAll(
+                "select id, content_type, body from chat_messages"
+                " where category is null and content_type in (%s)" % types))
+        except Exception as e:
+            BlinkLogger().log_error("Error reading stored file transfers: %s" % e)
+            rows = []
+
+        buckets = {}
+        for row in rows:
+            try:
+                category = classify_category(row[1], row[2])
+            except Exception:
+                category = None
+            if category is None:
+                continue
+            buckets.setdefault(category, []).append(int(row[0]))
+
+        for category, ids in buckets.items():
+            # By id and in chunks: a conversation can hold tens of thousands
+            # of transfers, and one statement per row is minutes of work
+            # while the first conversation is waiting to open.
+            for start in range(0, len(ids), 500):
+                chunk = ids[start:start + 500]
+                try:
+                    self.db.queryAll(
+                        "update chat_messages set category = %s where id in (%s)"
+                        % (ChatMessage.sqlrepr(category),
+                           ','.join(str(i) for i in chunk)))
+                    updates += len(chunk)
+                except Exception as e:
+                    BlinkLogger().log_error("Error stamping %s messages: %s" % (category, e))
+
+        # Written now rather than at whatever point the connection next
+        # decides to: this is the end of a migration, and the version bump
+        # that follows it is what stops the work being done again.
+        try:
+            commit = getattr(self.db, 'commit', None)
+            if commit is not None:
+                commit()
+        except Exception as e:
+            BlinkLogger().log_debug('Nothing to commit after the category pass: %s' % e)
+
+        # What is STILL unclassified, read back from the database rather
+        # than counted in memory: the count in memory is what the pass
+        # believes it wrote, and the two disagreeing is the whole reason
+        # this line exists.
+        try:
+            left = self.db.queryAll(
+                "select count(*) from chat_messages where category is null"
+                " and content_type in (%s)" % types)[0][0]
+        except Exception:
+            left = -1
+        BlinkLogger().log_info('Classified %d stored file transfer(s) of %d unclassified '
+                               'row(s) in %.1fs; %s still without a category'
+                               % (updates, len(rows), time.time() - started,
+                                  'none' if left == 0 else left))
     @run_in_db_thread
     def _mark_conversation_read(self, local_uri, remote_uri):
         """Mark every unread message from one address as seen."""
@@ -870,6 +1067,19 @@ class ChatHistory(object, metaclass=Singleton):
             if message:
                 message.body = body
                 message.encryption = encryption
+                # An armoured file-transfer envelope cannot be classified at
+                # insert, so the row was stored with no category and is
+                # invisible to the Images filter. This is the first moment
+                # its kind can be read, and it is read once.
+                if message.category is None:
+                    try:
+                        category = classify_category(message.content_type, body,
+                                                     message.related_action,
+                                                     message.metadata)
+                    except Exception:
+                        category = None
+                    if category is not None:
+                        message.category = category
             else:
                 BlinkLogger().log_error("Error updating message %s: not found" % msgid)
 
@@ -942,6 +1152,18 @@ class ChatHistory(object, metaclass=Singleton):
 
         if not cpim_timestamp:
             cpim_timestamp = str(ISOTimestamp.now())
+
+        # Derived here rather than at each of the eight call sites: the
+        # journal, the sync, the send path and the resend all reach this
+        # one function, and a row stored without its category is a picture
+        # the Images filter cannot find. A caller that already knows better
+        # -- the location path classifies from the cleartext envelope --
+        # passes its own and is left alone.
+        if category is None:
+            try:
+                category = classify_category(content_type, body, related_action, metadata)
+            except Exception as e:
+                BlinkLogger().log_error('Cannot classify message %s: %s' % (msgid, e))
 
         try:
             timestamp = dateutil.parser.isoparse(cpim_timestamp)
@@ -1143,9 +1365,84 @@ class ChatHistory(object, metaclass=Singleton):
     def get_daily_entries(self, local_uri=None, remote_uri=None, media_type=None, search_text=None, order_text=None, after_date=None, before_date=None):
         return block_on(self._get_daily_entries(local_uri, remote_uri, media_type, search_text, order_text, after_date, before_date))
 
+    def _reclassify_locations(self):
+        """Set the category of every location row to what the envelope says.
+
+        Caller is in the db thread. Unlike the file-transfer pass this one
+        looks at rows that ALREADY have a category, because it exists to
+        correct them: version 12 stamped every non-update location row as
+        'location', and most of those are signals -- a share starting, a
+        share stopping, a meeting accepted -- which the transcript draws as
+        a system note and the Locations filter then hides. The grid came up
+        empty for conversations full of shares.
+
+        Both directions, therefore: 'location' onto the coordinate origins,
+        and NULL back onto everything else.
+        """
+        started = time.time()
+        try:
+            rows = list(self.db.queryAll(
+                "select id, body, metadata, category from chat_messages"
+                " where content_type = %s" % ChatMessage.sqlrepr(CATEGORY_LOCATION_TYPE)))
+        except Exception as e:
+            BlinkLogger().log_error("Error reading stored locations: %s" % e)
+            return
+
+        stamp, clear, browsable = [], [], 0
+        for row in rows:
+            try:
+                category = classify_category(CATEGORY_LOCATION_TYPE, row[1], None, row[2])
+            except Exception:
+                category = None
+            if category:
+                browsable += 1
+            if category == row[3]:
+                continue
+            (stamp if category else clear).append(int(row[0]))
+
+        for ids, value in ((stamp, ChatMessage.sqlrepr('location')), (clear, 'null')):
+            for start in range(0, len(ids), 500):
+                chunk = ids[start:start + 500]
+                try:
+                    self.db.queryAll(
+                        "update chat_messages set category = %s where id in (%s)"
+                        % (value, ','.join(str(i) for i in chunk)))
+                except Exception as e:
+                    BlinkLogger().log_error("Error setting the category of %d location "
+                                            "row(s): %s" % (len(chunk), e))
+        try:
+            commit = getattr(self.db, 'commit', None)
+            if commit is not None:
+                commit()
+        except Exception:
+            pass
+        BlinkLogger().log_info('Locations: %d of %d row(s) are browsable shares '
+                               '(%d stamped, %d cleared) in %.1fs'
+                               % (browsable, len(rows), len(stamp), len(clear),
+                                  time.time() - started))
+
+    @staticmethod
+    def _category_sql(category):
+        """The WHERE fragment for one filter chip, or '' for no filter.
+
+        'links' is stored as 'text': whether a message contains a link is a
+        property of its body, and the renderer already decides that with the
+        same regular expression it uses to draw the link. So the page is a
+        page of text and the chip narrows it -- which can show fewer than a
+        page of links, and scrolling back asks for the next fifty texts.
+        Mobile draws the line in the same place (it folds 'links' into
+        'text' and narrows in JS).
+        """
+        if not category:
+            return ''
+        if category == 'links':
+            category = 'text'
+        return " and category = %s" % ChatMessage.sqlrepr(category)
+
     @run_in_db_thread
-    def _get_messages(self, msgid, call_id, local_uri, remote_uri, media_type, date, after_date, before_date, search_text, orderBy, orderType, count, exclude_related_actions=None):
+    def _get_messages(self, msgid, call_id, local_uri, remote_uri, media_type, date, after_date, before_date, search_text, orderBy, orderType, count, exclude_related_actions=None, category=None):
         query='1=1'
+        query += self._category_sql(category)
         if exclude_related_actions:
             # Rows that belong to another row rather than standing on their
             # own -- a live-location trail tick against the share that
@@ -1193,8 +1490,90 @@ class ChatHistory(object, metaclass=Singleton):
             BlinkLogger().log_error("Error getting chat messages from chat history table: %s" % e)
             return []
 
-    def get_messages(self, msgid=None, call_id=None, local_uri=None, remote_uri=None, media_type=None, date=None, after_date=None, before_date=None, search_text=None, orderBy='time', orderType='desc', count=100, exclude_related_actions=None):
-        return block_on(self._get_messages(msgid, call_id, local_uri, remote_uri, media_type, date, after_date, before_date, search_text, orderBy, orderType, count, exclude_related_actions))
+    def get_messages(self, msgid=None, call_id=None, local_uri=None, remote_uri=None, media_type=None, date=None, after_date=None, before_date=None, search_text=None, orderBy='time', orderType='desc', count=100, exclude_related_actions=None, category=None):
+        return block_on(self._get_messages(msgid, call_id, local_uri, remote_uri, media_type, date, after_date, before_date, search_text, orderBy, orderType, count, exclude_related_actions, category))
+
+    @run_in_db_thread
+    def _present_categories(self, local_uri, remote_uri, media_type):
+        query = ('select distinct category from %s where category is not null'
+                 % ChatMessage.sqlmeta.table)
+        if local_uri:
+            query += " and local_uri=%s" % ChatMessage.sqlrepr(local_uri)
+        if remote_uri:
+            if isinstance(remote_uri, str):
+                remote_uri = (remote_uri,)
+            query += " and remote_uri in (%s)" % ','.join(ChatMessage.sqlrepr(uri) for uri in remote_uri)
+        if media_type:
+            if isinstance(media_type, str):
+                media_type = (media_type,)
+            query += " and media_type in (%s)" % ','.join(ChatMessage.sqlrepr(m) for m in media_type)
+        try:
+            found = set(str(row[0]) for row in self.db.queryAll(query) if row[0])
+        except Exception as e:
+            BlinkLogger().log_error("Error reading the categories present: %s" % e)
+            return set()
+
+        # The Links chip has no category of its own -- a link is a property
+        # of a text body -- so it is probed for rather than counted. LIMIT 1:
+        # the chip only needs to know whether there is one.
+        if 'text' in found:
+            probe = query.replace('select distinct category from', 'select 1 from', 1)
+            probe = probe.replace('where category is not null',
+                                  "where category = 'text'", 1)
+            probe += (" and (body like '%http://%' or body like '%https://%'"
+                      " or body like '%www.%') limit 1")
+            try:
+                if self.db.queryAll(probe):
+                    found.add('links')
+            except Exception as e:
+                BlinkLogger().log_error("Error probing for links: %s" % e)
+        return found
+
+    def present_categories(self, local_uri=None, remote_uri=None, media_type=None):
+        """Which filter chips this conversation actually holds.
+
+        Asked of SQL rather than counted off the bubbles on screen, because
+        the bubbles on screen are now a page of ONE category: reading the
+        chips off them would collapse the bar to the chip already chosen and
+        take the user's way back out of it.
+        """
+        return block_on(self._present_categories(local_uri, remote_uri, media_type))
+
+    @run_in_db_thread
+    def _related_messages(self, msgids):
+        query = "related_msg_id in (%s)" % ','.join(ChatMessage.sqlrepr(str(i)) for i in msgids)
+        try:
+            return list(ChatMessage.select(query))
+        except Exception as e:
+            BlinkLogger().log_error("Error getting related rows: %s" % e)
+            return []
+
+    def related_messages(self, msgids):
+        """The sidecar rows belonging to a page of messages.
+
+        A category page asks for one type of bubble, and the rows that hang
+        off those bubbles -- a recording's waveform, a reply link -- have no
+        category of their own, so the page query cannot bring them along the
+        way an unfiltered page does. Without them a filtered Audio view
+        draws recordings with no waveform and replies with no quote.
+        """
+        msgids = [i for i in (msgids or []) if i]
+        if not msgids:
+            return []
+        rows = []
+        # SQLite caps a statement at 999 host parameters; these are inlined
+        # rather than bound, but the same order of magnitude is the sane
+        # ceiling for one IN list.
+        #
+        # block_on, like every other reader here: _related_messages runs in
+        # the database thread and hands back a Deferred. Extending a list
+        # with one does not raise -- a Deferred is iterable, so the list
+        # quietly ends up holding the Deferred itself -- and the caller then
+        # fails on the first attribute it reads off it, which is how a page
+        # of pictures came back as nothing at all.
+        for start in range(0, len(msgids), 500):
+            rows.extend(block_on(self._related_messages(msgids[start:start + 500])))
+        return rows
 
     # Content types that become a bubble. The renderer's own allow-list is
     # is_renderable_content_type() in MessageHost; this is its SQL shadow,
@@ -1214,8 +1593,9 @@ class ChatHistory(object, metaclass=Singleton):
                       " 'application/sylk-location-sharing'))")
 
     @run_in_db_thread
-    def _renderable_cutoff(self, local_uri, remote_uri, media_type, after_date, before_date, search_text, count, exclude_related_actions=None):
+    def _renderable_cutoff(self, local_uri, remote_uri, media_type, after_date, before_date, search_text, count, exclude_related_actions=None, category=None):
         query = 'select time from %s where 1=1' % ChatMessage.sqlmeta.table
+        query += self._category_sql(category)
         if exclude_related_actions:
             actions = ','.join(ChatMessage.sqlrepr(action) for action in exclude_related_actions)
             query += " and (related_action is null or related_action not in (%s))" % actions
@@ -1252,7 +1632,7 @@ class ChatHistory(object, metaclass=Singleton):
 
     def renderable_cutoff(self, local_uri=None, remote_uri=None, media_type=None,
                           after_date=None, before_date=None, search_text=None, count=100,
-                          exclude_related_actions=None):
+                          exclude_related_actions=None, category=None):
         """The timestamp of the Nth-newest row that would become a bubble.
 
         Returns None when the conversation holds fewer than `count` of them,
@@ -1266,7 +1646,7 @@ class ChatHistory(object, metaclass=Singleton):
         """
         return block_on(self._renderable_cutoff(local_uri, remote_uri, media_type,
                                                 after_date, before_date, search_text, count,
-                                                exclude_related_actions))
+                                                exclude_related_actions, category))
 
     @run_in_db_thread
     def _location_ticks(self, origin_msgid, actions, count):

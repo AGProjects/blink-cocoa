@@ -28,6 +28,7 @@ from html.parser import HTMLParser
 
 from AppKit import (NSAttributedString,
                     NSBackgroundColorAttributeName,
+                    NSMenu,
                     NSBezierPath,
                     NSButton,
                     NSMomentaryChangeButton,
@@ -89,7 +90,11 @@ except ImportError:
 
 from AudioPlayback import (AUDIO_CHANNELS, channel_peaks, has_spectrum,
                            level_at, spectrum_frame)
-from MessageHost import file_transfer_summary, load_trace_tick, load_trace_bucket
+from MessageHost import (file_transfer_category, file_transfer_summary,
+                         load_trace_tick, load_trace_bucket)
+# The same "1.2 MB" the caption is built from, so a tile and a bubble
+# never disagree about how big the same file is.
+from MessageHost import _format_size as format_file_size
 from VideoPlayback import VideoPlayback
 from application.system import makedirs
 
@@ -136,6 +141,10 @@ LOCK_SIZE     = 11.0
 # and the border reads as a soft edge on the bubble rather than a drawn box.
 BUBBLE_BORDER_W = 0.5
 MIN_BUBBLE_W  = 80.0
+# The inset of a whole bubble inside its grid cell. Small on purpose: the
+# gap between cells is the grid's own spacing, and this only keeps the
+# bubble's rounded frame off the edge of the cell it sits in.
+GRID_CELL_MARGIN = 4.0
 # A bubble is only as wide as it needs to be. Below this it stops
 # shrinking: a two-letter reply in a 30pt bubble reads as a mistake.
 MIN_TEXT_BODY_W = 40.0
@@ -828,6 +837,14 @@ COLOR_AUDIO_LOCAL  = _rgb(46, 204, 113)
 # a white symbol is the one pairing that stays legible over both a snow
 # field and a night shot.
 COLOR_VIDEO_SCRIM  = NSColor.blackColor().colorWithAlphaComponent_(0.42)
+# The size pill on a tile. Darker than the badge scrim: it sits over the
+# corner of a photograph rather than over the middle of one, and a corner
+# is as often white sky as it is anything else.
+COLOR_PILL_BG      = NSColor.blackColor().colorWithAlphaComponent_(0.55)
+COLOR_PILL_TEXT    = NSColor.whiteColor()
+PILL_INSET         = 6.0
+PILL_PAD_X         = 6.0
+PILL_PAD_Y         = 2.0
 COLOR_VIDEO_EDGE   = NSColor.whiteColor().colorWithAlphaComponent_(0.55)
 COLOR_VIDEO_GLYPH  = NSColor.whiteColor()
 # The play key and the Download button. A filled disc in one confident
@@ -1570,6 +1587,11 @@ class MessageBubbleView(NSView):
             # column: no avatar, no header, no caption, just the picture or
             # the map filling a square cell.
             self.grid_mode = False
+            # A date rule that names a month rather than a day. The grid
+            # dates itself by month: a day of photographs is a handful of
+            # tiles, and a rule between every one of them is more rule than
+            # picture.
+            self.is_month = False
             self.renderer = None
             self.found = False
             # Location bubbles keep their parts so a trail tick or a status
@@ -1606,6 +1628,15 @@ class MessageBubbleView(NSView):
             # An inline image for a file transfer: the decoded picture once
             # it is on disc, and the flag that says one is on its way.
             self.media_image = None
+            # What kind of file this bubble's transfer is, worked out once.
+            self._transfer_category = None
+            # The picture a grid tile draws, and the path it was read for.
+            # Held ON THE VIEW so that the view is an owner of it for as
+            # long as it can be asked to draw it: a reference that lives
+            # only in FileTransferCache can be evicted between the tile
+            # being drawn and the display list it went into being replayed.
+            self.tile_image = None
+            self._tile_image_path = None
             self.media_pending = False
             # An outgoing transfer on its way up: same bar, other direction.
             self.upload_pending = False
@@ -1944,9 +1975,15 @@ class MessageBubbleView(NSView):
         elif self.kind == self.KIND_DATE:
             style = NSMutableParagraphStyle.alloc().init()
             style.setAlignment_(NSCenterTextAlignment)
+            # A month heads a whole grid of pictures rather than sitting
+            # between two messages, so it is given the weight to be read as
+            # a heading instead of as another rule.
+            size = meta_font_size(self.font_size)
+            font = (NSFont.boldSystemFontOfSize_(size + 1.0) if self.is_month
+                    else NSFont.systemFontOfSize_(size))
             body = NSAttributedString.alloc().initWithString_attributes_(
                 self.content or '',
-                {NSFontAttributeName: NSFont.systemFontOfSize_(meta_font_size(self.font_size)),
+                {NSFontAttributeName: font,
                  NSForegroundColorAttributeName: COLOR_META,
                  NSParagraphStyleAttributeName: style})
         elif self.kind == self.KIND_SYSTEM:
@@ -2253,7 +2290,7 @@ class MessageBubbleView(NSView):
 
     @objc.python_method
     def _showsProgress(self):
-        return bool(self.media_pending or self.upload_pending) and not self.grid_mode
+        return bool(self.media_pending or self.upload_pending) and not self._tileMode()
 
     @objc.python_method
     def _isRepliable(self):
@@ -2265,7 +2302,7 @@ class MessageBubbleView(NSView):
         -- the link travels as that id and nothing else.
         """
         return (bool(self.msgid)
-                and not self.grid_mode
+                and not self._tileMode()
                 and self.kind not in (self.KIND_DATE, self.KIND_SYSTEM))
 
     @objc.python_method
@@ -2369,7 +2406,7 @@ class MessageBubbleView(NSView):
     @objc.python_method
     def _showsDownloadButton(self):
         """A file we hold nothing of yet, and are not already fetching."""
-        return (not self.grid_mode
+        return (not self._tileMode()
                 and self.transfer_meta is not None
                 and self.media_image is None
                 and not self.media_path
@@ -2449,7 +2486,7 @@ class MessageBubbleView(NSView):
         key that appears to hang.
         """
         return (bool(self.audio_path)
-                and not self.grid_mode
+                and not self._tileMode()
                 and self.kind not in (self.KIND_DATE, self.KIND_SYSTEM))
 
     @objc.python_method
@@ -2463,7 +2500,7 @@ class MessageBubbleView(NSView):
         get forty megabytes first is a play key that appears to hang.
         """
         return (bool(self.video_path)
-                and not self.grid_mode
+                and not self._tileMode()
                 and self.kind not in (self.KIND_DATE, self.KIND_SYSTEM))
 
     @objc.python_method
@@ -2965,7 +3002,7 @@ class MessageBubbleView(NSView):
         a divider or a system note is nobody's reply.
         """
         return (bool(self.reply_to)
-                and not self.grid_mode
+                and not self._tileMode()
                 and self.kind not in (self.KIND_DATE, self.KIND_SYSTEM)
                 and bool(self.reply_text or self.reply_sender))
 
@@ -3074,7 +3111,7 @@ class MessageBubbleView(NSView):
         given and has nothing to give back, and a tile owns its cell.
         """
         return (self.kind == self.KIND_TEXT
-                and not self.grid_mode
+                and not self._tileMode()
                 and not self._showsMedia()
                 and not self._showsMap())
 
@@ -3125,6 +3162,21 @@ class MessageBubbleView(NSView):
         return left + sender + right
 
     @objc.python_method
+    def _tileMode(self):
+        """Whether this cell is nothing but its picture.
+
+        A photograph in a grid gives up everything around it -- header,
+        caption, margins, rounded corners -- because the picture IS the
+        message and a wall of them reads as a wall. A location is not a
+        picture: the map is only half of what a share says, and without
+        the name above it, the accuracy and status under it, and the
+        slider that walks the trail, a tile is a picture OF a map rather
+        than the share itself. So a location keeps the whole bubble and
+        the grid only decides how wide it is.
+        """
+        return self.grid_mode and self.kind != self.KIND_LOCATION
+
+    @objc.python_method
     def _showsTrack(self):
         """A trail worth scrubbing: two points or more.
 
@@ -3132,7 +3184,7 @@ class MessageBubbleView(NSView):
         to be usable, and the grid is for picking a share out of many
         rather than for reading one.
         """
-        return (not self.grid_mode
+        return (not self._tileMode()
                 and self._showsMap()
                 and len(self.location_track or []) > 1)
 
@@ -3188,7 +3240,7 @@ class MessageBubbleView(NSView):
         grouped run so consecutive bubbles keep one edge instead of stepping
         in and out by 36pt.
         """
-        return not self.grid_mode and self.kind not in (self.KIND_SYSTEM, self.KIND_DATE)
+        return not self._tileMode() and self.kind not in (self.KIND_SYSTEM, self.KIND_DATE)
 
     @objc.python_method
     def _drawsAvatar(self):
@@ -3220,22 +3272,34 @@ class MessageBubbleView(NSView):
         the transcript runs it over every message on the first layout pass.
         """
         avail = max(width - MARGIN_LEFT - MARGIN_RIGHT, MIN_BUBBLE_W)
-        if self.grid_mode:
+        if self._tileMode():
             # A tile owns its whole cell, and the cell can be narrower than
             # a bubble is allowed to be -- three columns in a 300pt pane is
             # under a hundred points each. Forcing MIN_BUBBLE_W here is
             # what would make the tiles overlap each other.
             avail = max(width, 40.0)
+        elif self.grid_mode:
+            # A whole bubble in a cell: it keeps everything it has in the
+            # transcript, but it does not share the cell with anyone.
+            avail = max(width - GRID_CELL_MARGIN * 2, 40.0)
         container_w = min(avail - OPPOSITE_GUTTER, avail * BUBBLE_FRAC)
         container_w = max(container_w, min(avail, MIN_BUBBLE_W))
 
         avatar_slot = (AVATAR_SIZE + 4.0) if self._showsAvatar() else 0.0
         bubble_w = max(container_w - avatar_slot, MIN_BUBBLE_W)
 
-        if self.grid_mode:
+        if self._tileMode():
             container_w = avail
             bubble_w = container_w
             avatar_slot = 0.0
+        elif self.grid_mode:
+            # No opposite gutter and no 97% -- both of those exist to leave
+            # room for the other party's side of a COLUMN of bubbles, and
+            # in a cell they are just a bubble that stops short of its own
+            # cell for no reason. A share ends up drawing its map at half
+            # the width it was given.
+            container_w = avail
+            bubble_w = max(container_w - avatar_slot, 40.0)
         elif self.kind == self.KIND_DATE:
             container_w = avail
             bubble_w = container_w
@@ -3250,9 +3314,9 @@ class MessageBubbleView(NSView):
 
         # A tile is edge to edge: no bubble padding, no row margins, so the
         # pictures meet their neighbours instead of floating in a frame.
-        pad = 0.0 if self.grid_mode else PAD
-        margin_top = 0.0 if self.grid_mode else MARGIN_TOP
-        margin_bottom = 0.0 if self.grid_mode else MARGIN_BOTTOM
+        pad = 0.0 if self._tileMode() else PAD
+        margin_top = 0.0 if self._tileMode() else MARGIN_TOP
+        margin_bottom = 0.0 if self._tileMode() else MARGIN_BOTTOM
         body_w = max(bubble_w - 2 * pad, 20.0)
 
         body = self._body_field.attributedStringValue()
@@ -3320,7 +3384,7 @@ class MessageBubbleView(NSView):
 
         header_h = 0.0 if self.kind in (self.KIND_SYSTEM, self.KIND_DATE) else HEADER_H
         inset = MAP_INSET_X
-        if self.grid_mode:
+        if self._tileMode():
             # A tile is all picture: no header above it, no caption under
             # it, and no side margins eating a cell that is already narrow.
             header_h = 0.0
@@ -3328,16 +3392,18 @@ class MessageBubbleView(NSView):
             inset = 0.0
         if self._showsMap():
             map_w = max(body_w - 2 * inset, 40.0)
-            map_h = (map_w * GRID_CELL_ASPECT if self.grid_mode
+            map_h = (map_w * GRID_CELL_ASPECT if self._tileMode()
                      else min(max(map_w * MAP_ASPECT, MAP_MIN_H), MAP_MAX_H))
-            map_block = map_h + (0.0 if self.grid_mode else MAP_GAP)
+            map_block = map_h + (0.0 if self._tileMode() else MAP_GAP)
         elif self._showsMedia():
             # Fit the width, keep the real aspect, stop at the ceiling.
             map_w = max(body_w - 2 * inset, 40.0)
             size = self.media_image.size()
             ratio = (size.height / size.width) if size.width else MAP_ASPECT
-            if self.grid_mode:
+            if self._tileMode():
                 map_h = map_w * GRID_CELL_ASPECT
+                # Layout, not drawing: see _ensureTileImage.
+                self._ensureTileImage()
             else:
                 limit = self._mediaWidthLimit()
                 if limit is not None:
@@ -3347,7 +3413,7 @@ class MessageBubbleView(NSView):
                     map_w = map_h / ratio if ratio else map_w
             # No caption underneath, so no gap to reserve for one.
             map_block = map_h
-            if not self.grid_mode:
+            if not self._tileMode():
                 self._ensureMediaResolution(map_w, map_h)
         elif self._showsVideo() and self.video_no_poster:
             # A movie whose poster could not be decoded still needs a
@@ -3358,7 +3424,7 @@ class MessageBubbleView(NSView):
             map_w = max(body_w - 2 * inset, 40.0)
             map_h = min(map_w * VIDEO_WELL_ASPECT, self._mediaHeightLimit(map_w))
             map_block = map_h
-        elif self.grid_mode and self.transfer_meta is not None:
+        elif self._tileMode() and self.transfer_meta is not None:
             # A picture that has not arrived yet still holds its cell, so
             # the grid does not reflow under the user as each one lands.
             map_w = max(body_w, 40.0)
@@ -3366,7 +3432,7 @@ class MessageBubbleView(NSView):
             map_block = map_h
         else:
             map_w = map_h = map_block = 0.0
-        if self._showsMedia() and not self.grid_mode:
+        if self._showsMedia() and not self._tileMode():
             # The picture decides the bubble, not the other way round. Until
             # now the width came from the pane and only the PICTURE was
             # narrowed to fit its aspect or its height ceiling, so a portrait
@@ -3390,8 +3456,10 @@ class MessageBubbleView(NSView):
         bubble_h = (pad + header_h + quote_block + map_block + track_block
                     + body_h + audio_block + download_block + pad)
 
-        if self.grid_mode:
+        if self._tileMode():
             container_x = 0.0
+        elif self.grid_mode:
+            container_x = GRID_CELL_MARGIN
         elif self.direction == 'outgoing' \
                 and self.kind not in (self.KIND_SYSTEM, self.KIND_DATE):
             container_x = width - MARGIN_RIGHT - container_w
@@ -3516,7 +3584,7 @@ class MessageBubbleView(NSView):
             return
 
         if self.kind != self.KIND_SYSTEM:
-            if self.grid_mode:
+            if self._tileMode():
                 # Nothing behind a tile: the picture is the whole cell, and
                 # a rounded bubble under it only shows as a hairline of
                 # background between neighbours.
@@ -3537,7 +3605,7 @@ class MessageBubbleView(NSView):
                 _draw_avatar(self._avatar_rect, _image(path),
                              self.avatar_name or self.sender_label)
 
-            if self.grid_mode:
+            if self._tileMode():
                 # No header on a tile, so nothing in the header is a target
                 # either: a rect left over from the last full-width draw
                 # would sit somewhere arbitrary inside a small cell.
@@ -3559,6 +3627,15 @@ class MessageBubbleView(NSView):
             elif self._showsVideo() and self.video_no_poster \
                     and self._map_rect.size.width > 0:
                 self._drawVideoWell()
+            elif self._tileMode() and self.transfer_meta is not None \
+                    and self._map_rect.size.width > 0:
+                self._drawPendingTile()
+
+            if self._tileMode() and self.transfer_meta is not None:
+                # A tile has no caption, so the one thing the wall cannot
+                # say about a file is how big it is -- which is exactly what
+                # decides whether to open a clip now or later.
+                self._drawSizePill()
 
             # Gated on what the bubble is NOW, not on a rect left over
             # from an earlier measure: a stale rect is how a Download button
@@ -3572,23 +3649,46 @@ class MessageBubbleView(NSView):
                 self._drawDownloadButton()
 
     @objc.python_method
-    def _tileImage(self):
-        """The picture a grid tile draws: the file itself, unscaled by us.
+    def _ensureTileImage(self):
+        """Resolve the tile's picture in LAYOUT, and keep a reference to it.
 
         A tile magnifies whatever it is given -- it fills its cell rather
-        than fitting inside it -- so it is the one place where a copy that
-        is even slightly short of the mark shows as blocks. Handing AppKit
-        the original and letting it downsample into the cell removes every
-        intermediate step between the file and the screen.
+        than fitting inside it -- so it draws the file itself and lets
+        AppKit downsample into the cell, with no intermediate copy.
+
+        Where that picture is fetched is not a detail. It used to be
+        fetched inside drawRect:, straight out of FileTransferCache, and
+        the cache dictionary was then the only thing holding it: the view
+        kept a smaller `media_image` from when the transfer landed, not
+        this one. A grid paints more tiles in one scroll pass than the
+        cache holds, so an eviction could land between a tile recording
+        its display list and CoreAnimation replaying it at commit -- and
+        the replay read the bytes of an image that had just lost its last
+        owner (EXC_BAD_ACCESS in imageProvider_getBytesAtPosition, under
+        CABackingStoreUpdate/_NSScrollingConcurrentMainThreadSynchronizer).
+        Owning it here makes the view outlive every draw of it. Drawing
+        also stops doing file I/O, which is the other half of what a
+        cleared cache cost: every tile re-decoded its JPEG per frame.
         """
         if not self.media_path or self.video_path:
-            return self.media_image
+            self.tile_image = None
+            self._tile_image_path = None
+            return
+        if self.tile_image is not None and self._tile_image_path == self.media_path:
+            return
         try:
             from FileTransferCache import FileTransferCache
-            return FileTransferCache().original(self.media_path) or self.media_image
+            image = FileTransferCache().original(self.media_path)
         except Exception as e:
             BlinkLogger().log_debug('Cannot read the picture for a tile: %s' % e)
-            return self.media_image
+            image = None
+        self.tile_image = image
+        self._tile_image_path = self.media_path if image is not None else None
+
+    @objc.python_method
+    def _tileImage(self):
+        """The picture a grid tile draws. Resolved by _ensureTileImage."""
+        return self.tile_image or self.media_image
 
     @objc.python_method
     def _ensureMediaResolution(self, width, height):
@@ -3656,7 +3756,7 @@ class MessageBubbleView(NSView):
         tiles tile.
         """
         rect = self._map_rect
-        if self.grid_mode:
+        if self._tileMode():
             # Never draw into more than the tile actually occupies. This
             # rect comes from the last layout, and one measured while the
             # bubble was still a full-width message describes a frame
@@ -3668,7 +3768,7 @@ class MessageBubbleView(NSView):
             rect = NSIntersectionRect(rect, self.bounds())
         if rect.size.width <= 0 or self.media_image is None:
             return
-        radius = 0.0 if self.grid_mode else MAP_RADIUS
+        radius = 0.0 if self._tileMode() else MAP_RADIUS
         frame = NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(
             rect, radius, radius)
         COLOR_MAP_BG.set()
@@ -3679,14 +3779,14 @@ class MessageBubbleView(NSView):
         # ten times a second for the length of a movie is the most
         # expensive thing in the transcript. The frame is still painted,
         # so the rounded corner and the border read as they did.
-        if self.video_path and not self.grid_mode \
+        if self.video_path and not self._tileMode() \
                 and VideoPlayback().is_current(str(self.msgid or '')):
             COLOR_MAP_BORDER.set()
             frame.setLineWidth_(1.0)
             frame.stroke()
             return
 
-        image = self._tileImage() if self.grid_mode else self.media_image
+        image = self._tileImage() if self._tileMode() else self.media_image
         if image is None:
             return
         context = NSGraphicsContext.currentContext()
@@ -3701,7 +3801,7 @@ class MessageBubbleView(NSView):
                 context.setImageInterpolation_(NSImageInterpolationHigh)
             except Exception:
                 pass
-            if self.grid_mode:
+            if self._tileMode():
                 # Logged once per bubble: the numbers handed to AppKit are
                 # the last thing between a correct layout and a wrong
                 # picture, and everything before them already reads right.
@@ -3729,10 +3829,102 @@ class MessageBubbleView(NSView):
         if self.video_path and not VideoPlayback().is_current(str(self.msgid or '')):
             self._drawPlayBadge(rect)
 
-        if not self.grid_mode:
+        if not self._tileMode():
             COLOR_MAP_BORDER.set()
             frame.setLineWidth_(1.0)
             frame.stroke()
+
+    @objc.python_method
+    def transferCategory(self):
+        """'image' / 'video' / 'audio' / 'other' for this bubble's file.
+
+        Cached: it is asked on every draw of a tile, and it is a parse of
+        the envelope.
+        """
+        if self.transfer_meta is None:
+            return None
+        if self._transfer_category is None:
+            try:
+                self._transfer_category = file_transfer_category(self.content) or 'other'
+            except Exception:
+                self._transfer_category = 'other'
+        return self._transfer_category
+
+    @objc.python_method
+    def _drawSizePill(self):
+        """The file's size, bottom left, over the picture.
+
+        Bottom LEFT because the play badge is centred and the corner
+        opposite is where a duration would go; and over the picture rather
+        than under it because a tile is all picture -- there is no under.
+        """
+        meta = self.transfer_meta or {}
+        try:
+            text = format_file_size(meta.get('filesize'))
+        except Exception:
+            text = None
+        if not text:
+            return
+        rect = NSIntersectionRect(self._map_rect, self.bounds())
+        if rect.size.width <= 0 or rect.size.height <= 0:
+            return
+        label = NSAttributedString.alloc().initWithString_attributes_(
+            text, {NSFontAttributeName: NSFont.systemFontOfSize_(META_FONT_SIZE),
+                   NSForegroundColorAttributeName: COLOR_PILL_TEXT})
+        size = label.size()
+        width = size.width + PILL_PAD_X * 2
+        height = size.height + PILL_PAD_Y * 2
+        if width > rect.size.width - PILL_INSET or height > rect.size.height - PILL_INSET:
+            return                      # a cell too small to say it in
+        pill = NSMakeRect(rect.origin.x + PILL_INSET,
+                          rect.origin.y + rect.size.height - PILL_INSET - height,
+                          width, height)
+        COLOR_PILL_BG.set()
+        NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(
+            pill, height / 2.0, height / 2.0).fill()
+        label.drawAtPoint_((pill.origin.x + PILL_PAD_X, pill.origin.y + PILL_PAD_Y))
+
+    @objc.python_method
+    def _drawPendingTile(self):
+        """The cell of a file that is not on this disc yet.
+
+        A grid of movies is mostly this: a video does not fetch itself
+        once it is a few days old, so the wall would otherwise be empty
+        cells with nothing in them to say what they are or that anything
+        can be done about them. The well and the badge say "a film, not
+        here yet"; the bar along the bottom appears while it is coming.
+        """
+        rect = NSIntersectionRect(self._map_rect, self.bounds())
+        if rect.size.width <= 0 or rect.size.height <= 0:
+            return
+        COLOR_MAP_BG.set()
+        NSBezierPath.bezierPathWithRect_(rect).fill()
+        if self.transferCategory() == 'video':
+            self._drawPlayBadge(rect)
+
+        progress = self.transfer_progress
+        fraction = None
+        try:
+            fraction = progress[0] if progress else None
+        except (TypeError, IndexError):
+            fraction = None
+        if fraction is None:
+            return
+        # Along the bottom edge of the cell, the full width of it: a tile is
+        # too small for the bar and the label the transcript draws, and the
+        # only thing worth knowing here is how far along it is.
+        height = 3.0
+        COLOR_MAP_BORDER.set()
+        NSBezierPath.bezierPathWithRect_(
+            NSMakeRect(rect.origin.x, rect.origin.y + rect.size.height - height,
+                       rect.size.width, height)).fill()
+        try:
+            NSColor.controlAccentColor().set()
+        except Exception:
+            NSColor.alternateSelectedControlColor().set()
+        NSBezierPath.bezierPathWithRect_(
+            NSMakeRect(rect.origin.x, rect.origin.y + rect.size.height - height,
+                       rect.size.width * max(min(float(fraction), 1.0), 0.0), height)).fill()
 
     @objc.python_method
     def _drawVideoWell(self):
@@ -4361,7 +4553,7 @@ class MessageBubbleView(NSView):
         # Square corners in a grid, for the same reason a picture loses its
         # rounding there: tiles meant to meet cannot each show background
         # through four corners.
-        map_radius = 0.0 if self.grid_mode else MAP_RADIUS
+        map_radius = 0.0 if self._tileMode() else MAP_RADIUS
         frame = NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(
             rect, map_radius, map_radius)
         COLOR_MAP_BG.set()
@@ -4443,7 +4635,7 @@ class MessageBubbleView(NSView):
         finally:
             context.restoreGraphicsState()
 
-        if not self.grid_mode:
+        if not self._tileMode():
             COLOR_MAP_BORDER.set()
             frame.setLineWidth_(1.0)
             frame.stroke()
@@ -4452,7 +4644,7 @@ class MessageBubbleView(NSView):
     def _drawZoomControls(self):
         """A + over a - in the map's top corner, the way a slippy map does."""
         rect = self._map_rect
-        if self.grid_mode or rect.size.width < ZOOM_BUTTON * 2 \
+        if self._tileMode() or rect.size.width < ZOOM_BUTTON * 2 \
                 or rect.size.height < ZOOM_BUTTON * 3:
             # A tile is a thumbnail to pick from, not a map to read, and a
             # cell too small for the pair would have them covering it.
@@ -4507,7 +4699,7 @@ class MessageBubbleView(NSView):
         rail = ZOOM_BUTTON * 2 - 1.0            # the +/- pair, sharing a seam
         need_w = 2.0 * (ZOOM_INSET + ZOOM_BUTTON + CONTROL_GAP) + PAN_BUTTON
         need_h = 2.0 * (ZOOM_INSET + rail + CONTROL_GAP) + PAN_BUTTON
-        if self.grid_mode or rect.size.width < need_w or rect.size.height < need_h:
+        if self._tileMode() or rect.size.width < need_w or rect.size.height < need_h:
             # Too small to carry controls without becoming them. A grid
             # tile is a thumbnail to pick from, never a map to read.
             return
@@ -4825,10 +5017,63 @@ class MessageBubbleView(NSView):
         """
         return bool(allowed) and rect.size.width > 0 and NSPointInRect(point, rect)
 
+    def menuForEvent_(self, event):
+        """The right-click menu on a tile.
+
+        A tile has no room for the header the transcript hangs its copy and
+        delete affordances off -- the picture IS the cell -- so in a grid
+        this is the only way to reach them, and it is offered on a picture
+        bubble in the transcript too rather than being a second, different
+        set of actions there.
+
+        A movie gets one too, downloaded or not: a clip that is still on
+        the server is a message like any other, and Delete is the one thing
+        that applies to it whether the file ever arrives or not. Nothing is
+        offered for a bubble that carries no file and no picture -- a menu
+        of items that do not apply reads as a bug.
+        """
+        if not self.msgid or self.renderer is None:
+            return None
+        category = self.transferCategory()
+        picture = self.media_image is not None or bool(self.media_path)
+        if category is None and not picture:
+            return None
+        try:
+            menu = NSMenu.alloc().init()
+            menu.setAutoenablesItems_(False)
+            # Copy puts a PICTURE on the pasteboard. For a movie that would
+            # be its poster -- a still of something the user asked to copy
+            # as a film -- so it is not offered; the same is true of a file
+            # that has not arrived, where there is nothing to copy at all.
+            if category == 'image' and picture:
+                item = menu.addItemWithTitle_action_keyEquivalent_(
+                    NSLocalizedString("Copy", "Menu item"), "menuCopyPicture:", "")
+                item.setTarget_(self)
+            item = menu.addItemWithTitle_action_keyEquivalent_(
+                NSLocalizedString("Delete\u2026", "Menu item"), "menuDeletePicture:", "")
+            item.setTarget_(self)
+            return menu
+        except Exception as e:
+            BlinkLogger().log_error('Cannot build the menu for %s: %s' % (self.msgid, e))
+            return None
+
+    def menuCopyPicture_(self, sender):
+        # The same call the copy affordance makes, which puts the file on
+        # disc on the pasteboard rather than the copy the tile is drawing:
+        # what gets pasted is the picture that was sent, at the size it was
+        # sent at.
+        self.copyBodyToPasteboard()
+
+    def menuDeletePicture_(self, sender):
+        renderer = self.renderer
+        if renderer is not None and hasattr(renderer, 'bubbleDidRequestDelete'):
+            BlinkLogger().log_debug('Bubble %s: delete from the menu' % self.msgid)
+            renderer.bubbleDidRequestDelete(self.msgid)
+
     def mouseDown_(self, event):
         point = self.convertPoint_fromView_(event.locationInWindow(), None)
         renderer = self.renderer
-        header = self.kind not in (self.KIND_SYSTEM, self.KIND_DATE) and not self.grid_mode
+        header = self.kind not in (self.KIND_SYSTEM, self.KIND_DATE) and not self._tileMode()
 
         if self.msgid and self._hits(point, self._delete_rect, header):
             if renderer is not None and hasattr(renderer, 'bubbleDidRequestDelete'):
