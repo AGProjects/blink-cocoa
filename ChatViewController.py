@@ -864,15 +864,34 @@ class ChatViewController(NSObject):
                 self.scrollingTimer = None
 
             if scrollTop == 0 and self.handle_scrolling:
-                current_label = self.lastMessagesLabel.stringValue()
-                new_label = NSLocalizedString("Keep scrolling up for more than one second to load older messages", "Label")
-                if current_label != new_label and NSLocalizedString("Loading", "Label") not in current_label:
-                    self.lastMessagesLabel.setStringValue_(new_label)
+                self._setScrollNote(NSLocalizedString("Keep scrolling up for more than one second to load older messages", "Label"))
                 NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(4, self, "showLastScrollLabel:", None, False)
 
     def showLastScrollLabel_(self, timer):
-        if self.delegate.zoom_period_label != '':
+        # The transcript that reports its own loaded range says what is on
+        # screen better than a period label can, and that label is frozen
+        # anyway -- the zoom factor stopped advancing when paging moved to a
+        # timestamp cutoff, so it read "Displaying messages from last day"
+        # over three days and two hundred messages.
+        if getattr(self, 'setHistoryNote', None) is not None:
+            self._setScrollNote('')
+        elif self.delegate.zoom_period_label != '':
             self.lastMessagesLabel.setStringValue_(self.delegate.zoom_period_label)
+
+    @objc.python_method
+    def _setScrollNote(self, text):
+        """Say what scrolling is doing WITHOUT covering the loaded range.
+
+        These messages used to be written straight into lastMessagesLabel,
+        which is also where the transcript puts "200 messages, 26 Aug 17:39 -
+        29 Aug 16:16". Whichever wrote last won, so the range disappeared the
+        moment the user scrolled and never came back.
+        """
+        setter = getattr(self, 'setHistoryNote', None)
+        if setter is not None:
+            setter(text)
+        else:
+            self.lastMessagesLabel.setStringValue_(text)
 
     def scrollTimerDelay_(self, timer):
         if self.scrolling_back:
@@ -880,22 +899,13 @@ class ChatViewController(NSObject):
             if self.scrolling_zoom_factor > 7:
                 self.scrolling_zoom_factor = 7
             self.loadingProgressIndicator.startAnimation_(None)
-            self.lastMessagesLabel.setStringValue_(NSLocalizedString("Loading messages...", "Label"))
-            if self.scrolling_zoom_factor == 1:
-                zoom_period_label = NSLocalizedString("Loading messages from last day...", "Label")
-            elif self.scrolling_zoom_factor == 2:
-                zoom_period_label = NSLocalizedString("Loading messages from last week...", "Label")
-            elif self.scrolling_zoom_factor == 3:
-                zoom_period_label = NSLocalizedString("Loading messages from last month...", "Label")
-            elif self.scrolling_zoom_factor == 4:
-                zoom_period_label = NSLocalizedString("Loading messages from last three months...", "Label")
-            elif self.scrolling_zoom_factor == 5:
-                zoom_period_label = NSLocalizedString("Loading messages from last six months...", "Label")
-            elif self.scrolling_zoom_factor == 6:
-                zoom_period_label = NSLocalizedString("Loading messages from last year...", "Label")
-            elif self.scrolling_zoom_factor == 7:
-                zoom_period_label = NSLocalizedString("Loading all messages...", "Label")
-            self.lastMessagesLabel.setStringValue_(zoom_period_label)
+            # One page of older messages, not a widening period: what a
+            # scroll back actually does now is reach back to whatever
+            # timestamp holds the next page, so naming a period ("last
+            # week", "last six months") described something that no longer
+            # happens -- and named it from a zoom factor that stopped
+            # advancing years ago.
+            self._setScrollNote(NSLocalizedString("Loading older messages...", "Label"))
             self.delegate.scroll_back_in_time()
 
     @objc.python_method
