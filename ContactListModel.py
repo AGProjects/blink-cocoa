@@ -2548,6 +2548,47 @@ class CustomListModel(NSObject):
         return False
 
     @objc.python_method
+    def sharingLocationForContact(self, contact):
+        """Is anyone sharing their location with this contact's rows?
+
+        Fans out over the contact's addresses exactly as the typing
+        indicator and the unread badge do: the state is keyed by
+        canonical URI and one contact can hold several.
+        """
+        try:
+            from SMSWindowManager import SMSWindowManager
+            manager = SMSWindowManager()
+        except Exception:
+            return False
+
+        try:
+            identifier = getattr(contact, 'id', None)
+            if identifier and '@' not in str(identifier):
+                # Bonjour contacts are keyed by instance id, not URI
+                if manager.isSharingLocationForURI(str(identifier)):
+                    return True
+            for uri in getattr(contact, 'uris', ()):
+                if manager.isSharingLocationForURI(str(uri.uri)):
+                    return True
+        except Exception:
+            return False
+        return False
+
+    @objc.python_method
+    @run_in_gui_thread
+    def _NH_BlinkLocationSharingStateChanged(self, notification):
+        """Redraw the row of whoever started or stopped sharing.
+
+        Same reasoning as the typing handler: one row, never reloadData().
+        """
+        key = getattr(notification.data, 'key', None)
+        sharing = bool(getattr(notification.data, 'sharing', False))
+        names = self._reloadRowsForKey(key)
+        BlinkLogger().log_info('Location sharing: indicator %s for %s, %d contact row(s) updated%s'
+                               % ('on' if sharing else 'off', key, len(names),
+                                  ': %s' % ', '.join(names) if names else ''))
+
+    @objc.python_method
     @run_in_gui_thread
     def _NH_BlinkComposingStateChanged(self, notification):
         """Redraw the row of whoever started or stopped typing.
@@ -2658,6 +2699,7 @@ class CustomListModel(NSObject):
         cell.setMessageIcon_(None)
         cell.setUnreadCount_(self.unreadCountForContact(item) if isinstance(item, BlinkContact) else 0)
         cell.setComposing_(self.composingForContact(item) if isinstance(item, BlinkContact) else False)
+        cell.setSharingLocation_(self.sharingLocationForContact(item) if isinstance(item, BlinkContact) else False)
         # Only in the Messages group: elsewhere a row is a contact, not a
         # conversation, and stamping every one of them with a chat time
         # turns the address book into something it is not.
@@ -3252,6 +3294,7 @@ class ContactListModel(CustomListModel):
     def awakeFromNib(self):
         self.nc.add_observer(self, name="BlinkUnreadMessageCountChanged")
         self.nc.add_observer(self, name="BlinkComposingStateChanged")
+        self.nc.add_observer(self, name="BlinkLocationSharingStateChanged")
         self.nc.add_observer(self, name="BlinkConversationOrderChanged")
         self.nc.add_observer(self, name="BlinkOnlineContactMustBeRemoved")
         self.nc.add_observer(self, name="BonjourAccountDidAddNeighbour")

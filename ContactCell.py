@@ -88,6 +88,13 @@ from ContactListModel import presence_status_for_contact, presence_status_icons,
 # simply not there.
 COMPOSING_TEXT = NSString.stringWithString_('\u270e is typing\u2026')
 
+# The same line, for the other transient state a row can be in: someone
+# is sharing their location with us right now. U+1F4CD (the round pin) is
+# deliberately the emoji form here rather than a text glyph -- it is the
+# marker the map bubbles and the system notes already use for location,
+# so the row says the same thing in the same alphabet.
+SHARING_LOCATION_TEXT = NSString.stringWithString_('\U0001F4CD is sharing location\u2026')
+
 
 class ContactCell(NSTextFieldCell):
     contact = None
@@ -102,6 +109,11 @@ class ContactCell(NSTextFieldCell):
     # the second line in place of the contact's detail: it is transient
     # text, not a count, so it has no business in the badge corner.
     composing = False
+    # True while the other party is sharing their location with us. Drawn
+    # on the same line as the typing indicator and for the same reason:
+    # it is a state of the conversation, not a count, and it lasts only as
+    # long as the share does.
+    sharingLocation = False
     # The avatar: a circle at the left of the row. It used to sit two points
     # off the window's edge, which was close enough to read as touching it
     # once the picture became a filled circle rather than a rectangle inside
@@ -171,6 +183,9 @@ class ContactCell(NSTextFieldCell):
             # travelled all the way from the wire to the row that draws it.
             BlinkLogger().log_debug('Typing indicator on the row for %s'
                                     % getattr(self.contact, 'uri', self.contact))
+
+    def setSharingLocation_(self, flag):
+        self.sharingLocation = bool(flag)
 
     def setUnreadCount_(self, count):
         try:
@@ -329,6 +344,12 @@ class ContactCell(NSTextFieldCell):
             # row whose detail happens to be empty is still a row someone
             # is typing at.
             text = COMPOSING_TEXT
+            attrs = self.secondLineAttributes if not self.isHighlighted() else self.secondLineAttributes_highlighted
+        elif self.sharingLocation:
+            # Typing wins when both are true: it is the shorter-lived of
+            # the two and the one the user is about to see the result of,
+            # and the share is still there on the line the moment it stops.
+            text = SHARING_LOCATION_TEXT
             attrs = self.secondLineAttributes if not self.isHighlighted() else self.secondLineAttributes_highlighted
         elif self.contact.detail:
             text = self.contact.detail
