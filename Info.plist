@@ -44,6 +44,14 @@
 				<string>tel</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>Blink internal URI</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>blink</string>
+			</array>
+		</dict>
 	</array>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
