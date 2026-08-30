@@ -377,6 +377,10 @@ GRID_CROP_ANCHOR = 0.28
 TRACK_SLIDER_H  = 17.0
 TRACK_CAPTION_H = 13.0
 TRACK_GAP       = 3.0
+# Clear air under the scrubber before the coordinate line. Without it the
+# caption sat against the slider's own caption and the three read as one
+# block of small print rather than as a control with a line beneath it.
+TRACK_BODY_GAP  = 6.0
 
 def _default_body_font_size():
     """The size AppKit uses for message-like content, 13pt as things stand.
@@ -1849,8 +1853,13 @@ class MessageBubbleView(NSView):
 
         left = NSMutableParagraphStyle.alloc().init()
         left.setLineBreakMode_(NSLineBreakByWordWrapping)
+        # A caption under a picture, not a line of the conversation: at the
+        # body size the coordinates shouted over the map they describe. One
+        # step above the meta size keeps them the strongest thing under the
+        # map without competing with what people actually write.
         body = NSMutableAttributedString.alloc().initWithString_attributes_(
-            head, {NSFontAttributeName: NSFont.systemFontOfSize_(self.font_size),
+            head, {NSFontAttributeName: NSFont.systemFontOfSize_(
+                       meta_font_size(self.font_size) + 1.0),
                    NSForegroundColorAttributeName: self.textColor(),
                    NSParagraphStyleAttributeName: left})
         if not status:
@@ -2011,7 +2020,11 @@ class MessageBubbleView(NSView):
             if self.transfer_meta is not None:
                 self._body_field.setAttributedStringValue_(self._transferCaption())
                 return
-            if self.kind == self.KIND_LOCATION and self.location_status:
+            if self.kind == self.KIND_LOCATION:
+                # Every location bubble's text is a caption, whether or not
+                # the share ever picked up a footer. Gating this on the
+                # status left a one-shot pin reading at the body size while
+                # a live share's read as a caption.
                 self._body_field.setAttributedStringValue_(self._locationCaption())
                 return
             _t = load_trace_tick()
@@ -3472,7 +3485,7 @@ class MessageBubbleView(NSView):
                 bubble_w = body_w + 2 * pad
                 container_w = bubble_w + avatar_slot
 
-        track_block = ((TRACK_SLIDER_H + TRACK_CAPTION_H + TRACK_GAP)
+        track_block = ((TRACK_SLIDER_H + TRACK_CAPTION_H + TRACK_GAP + TRACK_BODY_GAP)
                        if self._showsTrack() else 0.0)
         download_block = ((DOWNLOAD_H + DOWNLOAD_GAP)
                           if (self._showsDownloadButton() or self._showsProgress())
