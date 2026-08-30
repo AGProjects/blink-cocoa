@@ -520,6 +520,12 @@ class SessionHistory(object, metaclass=Singleton):
 # chip on both clients: text, image, audio, video, other, location. NULL is
 # not a category -- it means "this row is not a bubble": a PGP key, a
 # waveform, a reply link, a trail tick. Every category query excludes it.
+# What a conversation is MADE of. Everything else in chat_messages is a
+# record of something that happened near one -- a presence note, a missed
+# call, an answering-machine take -- and rows of those kinds are stored
+# under the address they concern but are not messages with it.
+MESSAGE_MEDIA_TYPES = ('chat', 'sms')
+
 CATEGORY_TEXT_TYPES = ('text', 'text/plain', 'text/html')
 CATEGORY_KEY_TYPES = ('text/pgp-public-key', 'text/pgp-private-key')
 CATEGORY_FILE_TYPES = ('application/sylk-file-transfer',
@@ -1707,11 +1713,20 @@ class ChatHistory(object, metaclass=Singleton):
         """Total stored messages for a conversation, ignoring paging."""
         return block_on(self._count_messages(local_uri, remote_uri, media_type))
 
+    @staticmethod
+    def _media_type_sql(media_type):
+        """' where media_type in (...)', or '' for every kind of row."""
+        if not media_type:
+            return ''
+        if isinstance(media_type, str):
+            media_type = (media_type,)
+        return (' where media_type in (%s)'
+                % ','.join(ChatMessage.sqlrepr(kind) for kind in media_type))
+
     @run_in_db_thread
     def _last_message_times(self, media_type):
         query = 'select remote_uri, max(time) from %s' % ChatMessage.sqlmeta.table
-        if media_type:
-            query += ' where media_type = %s' % ChatMessage.sqlrepr(media_type)
+        query += self._media_type_sql(media_type)
         query += ' group by remote_uri'
         try:
             rows = self.db.queryAll(query)
@@ -1731,9 +1746,7 @@ class ChatHistory(object, metaclass=Singleton):
     @run_in_db_thread
     def _last_message_accounts(self, media_type):
         table = ChatMessage.sqlmeta.table
-        where = ''
-        if media_type:
-            where = ' where media_type = %s' % ChatMessage.sqlrepr(media_type)
+        where = self._media_type_sql(media_type)
         # The local_uri of the newest row per conversation. Joined against
         # the grouped maximum rather than selected with it: a bare
         # `select remote_uri, local_uri, max(time) ... group by` leaves
@@ -1758,7 +1771,7 @@ class ChatHistory(object, metaclass=Singleton):
                 result[str(remote_uri)] = str(local_uri)
         return result
 
-    def last_message_accounts(self, media_type=None):
+    def last_message_accounts(self, media_type=MESSAGE_MEDIA_TYPES):
         """{remote_uri: local_uri} -- which account each conversation last used.
 
         What restores, across a restart, the account a conversation is
@@ -1767,8 +1780,17 @@ class ChatHistory(object, metaclass=Singleton):
         """
         return block_on(self._last_message_accounts(media_type))
 
-    def last_message_times(self, media_type=None):
+    def last_message_times(self, media_type=MESSAGE_MEDIA_TYPES):
         """{remote_uri: 'YYYY-MM-DD HH:MM:SS'} for every conversation.
+
+        MESSAGES, by default and by name. chat_messages also holds rows
+        that are not messages -- a presence note when somebody's
+        availability changes, a missed call, an answering-machine take --
+        and taking the newest row of ANY kind put a contact at the top of
+        the list because their phone had gone from available to busy.
+        Nothing anyone said, nothing to read, and a conversation dated
+        today whose last message was yesterday. Only a message moves a
+        conversation.
 
         One grouped query instead of a per-contact scan: the Messages group
         needs the newest timestamp for every contact it holds at once, and
@@ -1815,6 +1837,79 @@ class ChatHistory(object, metaclass=Singleton):
         else:
             self.db.queryAll('vacuum')
             return True
+
+    @run_in_db_thread
+    def _move_message(self, msgid, local_uri, from_remote, to_remote):
+        table = ChatMessage.sqlmeta.table
+        where = ("msgid=%s and local_uri=%s and remote_uri=%s"
+                 % (ChatMessage.sqlrepr(msgid), ChatMessage.sqlrepr(local_uri),
+                    ChatMessage.sqlrepr(from_remote)))
+        try:
+            rows = self.db.queryAll("select id from %s where %s" % (table, where))
+        except Exception as e:
+            BlinkLogger().log_error("Error looking for %s to move: %s" % (msgid, e))
+            return False
+        if not rows:
+            return False
+        # Is the row already where it is being moved to? On the device that
+        # made the recording it is: that device wrote the bubble under the
+        # party before the upload even started, and what arrived under our
+        # own address is the server's echo of it. Two rows for one message
+        # is the thing to avoid, and the echo is the one to drop.
+        try:
+            existing = self.db.queryAll(
+                "select id from %s where msgid=%s and local_uri=%s and remote_uri=%s"
+                % (table, ChatMessage.sqlrepr(msgid), ChatMessage.sqlrepr(local_uri),
+                   ChatMessage.sqlrepr(to_remote)))
+        except Exception:
+            existing = None
+        try:
+            if existing:
+                self.db.queryAll("delete from %s where %s" % (table, where))
+                BlinkLogger().log_info('Dropped the echo of %s; the conversation with %s '
+                                       'already holds it' % (msgid, to_remote))
+            else:
+                self.db.queryAll(
+                    "update %s set remote_uri=%s, cpim_from=%s where %s"
+                    % (table, ChatMessage.sqlrepr(to_remote),
+                       ChatMessage.sqlrepr(to_remote), where))
+                BlinkLogger().log_info('Moved %s from the conversation with %s to the one '
+                                       'with %s' % (msgid, from_remote, to_remote))
+        except Exception as e:
+            BlinkLogger().log_error("Error moving %s: %s" % (msgid, e))
+            return False
+        return True
+
+    def move_message(self, msgid, local_uri, from_remote, to_remote):
+        """Put a stored message in a different conversation. True if it moved.
+
+        For a call recording that arrived before the note saying whose it
+        is. The note cannot be waited for -- it is a separate message and
+        the two can cross -- so the transfer is filed where its addresses
+        say, and moved here when the note turns up.
+
+        BLOCKING. Callers on the GUI thread want move_message_async.
+        """
+        if not msgid or not to_remote or from_remote == to_remote:
+            return False
+        return block_on(self._move_message(str(msgid), str(local_uri),
+                                           str(from_remote), str(to_remote)))
+
+    def move_message_async(self, msgid, local_uri, from_remote, to_remote):
+        """The same move, from any thread, with nobody waiting on it.
+
+        block_on parks the calling thread on the database thread's answer,
+        which is what a green thread is for and what the GUI thread cannot
+        do: asked there it raises "TwistedHub hub can only be instantiated
+        once" and the move silently does not happen. A live message is
+        taken in on the GUI thread, and nothing here needs the answer --
+        the row is either moved or it is not, and the next read sees
+        whichever it is.
+        """
+        if not msgid or not to_remote or from_remote == to_remote:
+            return
+        self._move_message(str(msgid), str(local_uri),
+                           str(from_remote), str(to_remote))
 
     @run_in_db_thread
     def delete_message(self, msgid):

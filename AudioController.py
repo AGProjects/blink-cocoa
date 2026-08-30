@@ -56,6 +56,7 @@ from sipsimple.audio import WavePlayer
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.streams import MediaStreamRegistry
 from sipsimple.threading import call_in_thread
+from sipsimple.threading.green import run_in_green_thread
 from sipsimple.util import ISOTimestamp
 
 import AudioSession
@@ -1322,6 +1323,135 @@ class AudioController(MediaStream):
         self.add_to_history(media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
 
     @objc.python_method
+    def shareRecordingWithOwnDevices(self, filename):
+        """Put a finished call recording in the conversation as a transfer.
+
+        Addressed to this account, not to the person on the call: the
+        recording goes up so that the rest of MY devices can play it, and
+        the other party -- who was there -- is sent nothing. The bubble is
+        filed in the conversation with them all the same, because that is
+        where anyone would look for the recording of a call with them.
+
+        This half only decides WHETHER to, because it runs on the GUI
+        thread with the call still tearing down. The file is not touched
+        here: it is not finished yet.
+        """
+        try:
+            if not filename:
+                return
+            account = self.sessionController.account
+            if account is None or isinstance(account, BonjourAccount):
+                return
+
+            from SMSWindowManager import SMSWindowManager
+            if not SMSWindowManager().fileTransferBaseURL(account):
+                # A plain SIP proxy with no transfer service. There is
+                # nowhere to put the file, and offering it to the other
+                # party over MSRP -- which is what sendFile falls back to
+                # -- would send them the recording, which is the one thing
+                # this must not do.
+                self.sessionController.log_info(
+                    'Not sharing the recording: %s has no file transfer service'
+                    % account.id)
+                return
+
+            display_name = format_identity_to_string(self.sessionController.remoteIdentity,
+                                                     check_contact=True, format='compact')
+            self._prepareRecordingForSharing(filename, account,
+                                             self.sessionController.target_uri, display_name)
+        except Exception as e:
+            self.sessionController.log_error('Cannot share the recording: %s' % e)
+
+    @objc.python_method
+    @run_in_green_thread
+    def _prepareRecordingForSharing(self, filename, account, target, display_name):
+        """Wait for the file, then make it the shape a voice note is.
+
+        Both halves are why this is not done in the notification handler.
+
+        FINISH, because the file the notification announces is not a
+        playable one. sipsimple hands the WAV port to its mixer to be
+        freed on the mixer's own thread, pjmedia writes the RIFF and data
+        lengths from that free, and on this path the free does not arrive:
+        ten seconds after the stop the header still declares zero bytes of
+        audio, which is kAudioFileInvalidFileError to every player on the
+        system -- including the one in Blink's own call history. So the
+        recording is given a moment to finish itself and then finished
+        here, in place, by writing the two lengths the file's own size
+        already implies.
+
+        CONVERT, because a call recording should be the same kind of file
+        as a voice note: AAC in an .m4a at mobile's settings, which plays
+        in the transcript, on a phone, and anywhere else, at a fifteenth
+        of the bytes. If the conversion cannot be done the PCM is shared
+        as it is -- a large recording beats no recording.
+        """
+        from AudioRecorder import (wait_for_wave, wave_duration, finalise_wave,
+                                   to_recording_format)
+        from AudioPlayback import derive_peaks
+        try:
+            wait_for_wave(filename)
+            # Whatever the wait concluded: finalise_wave hands back the
+            # path unchanged when the header was already right, so this
+            # costs a header read on the builds where the recorder does
+            # come back to write it.
+            recording = finalise_wave(filename)
+            if recording is None:
+                self.sessionController.log_error(
+                    'Not sharing %s: it is not a recording this can read' % filename)
+                return
+            duration = wave_duration(recording)
+            # Measured from the PCM, before the conversion: it is the same
+            # sound either way, and reading the file we already have beats
+            # decoding the AAC back again. Blocking, which is why this
+            # runs here rather than anywhere near the GUI thread.
+            peaks = derive_peaks(recording)
+            converted = to_recording_format(recording)
+            # Only what WE made is ours to delete afterwards: the repair
+            # usually happens in the user's own file, which stays.
+            repaired = recording if recording != filename else None
+            if converted and repaired:
+                try:
+                    os.remove(repaired)     # it existed to be converted from
+                except OSError:
+                    pass
+                repaired = None
+            self._shareRecording(converted or recording, duration, peaks, account,
+                                 target, display_name,
+                                 temporary=converted or repaired)
+        except Exception as e:
+            self.sessionController.log_error('Cannot prepare the recording: %s' % e)
+
+    @objc.python_method
+    @run_in_gui_thread
+    def _shareRecording(self, path, duration, peaks, account, target, display_name,
+                        temporary=None):
+        """Hand the finished file to the conversation with that contact."""
+        viewer = None
+        try:
+            from SMSWindowManager import SMSWindowManager
+            viewer = SMSWindowManager().viewerForTarget(target, display_name, account)
+            if viewer is None:
+                return
+            transfer_id = viewer.sendCallRecording(path, duration=duration, peaks=peaks)
+            self.sessionController.log_info(
+                'Recording of the call with %s shared with this account as %s'
+                % (target, transfer_id or 'nothing'))
+        except Exception as e:
+            self.sessionController.log_error('Cannot share the recording: %s' % e)
+            return
+        finally:
+            # The converted copy was only ever a way to hand the bytes
+            # over: the conversation has filed its own copy by now. Unless
+            # filing FAILED, in which case the transfer is reading this
+            # very file and it has to stay until the upload is done.
+            if temporary and temporary != getattr(viewer, 'last_transfer_source', None):
+                try:
+                    os.remove(temporary)
+                except OSError:
+                    pass
+
+    @objc.python_method
     def updateTransferProgress(self, msg):
         self.updateAudioStatusWithSessionState(msg)
 
@@ -1390,6 +1520,7 @@ class AudioController(MediaStream):
         self.segmentedButtons.setImage_forSegment_(NSImage.imageNamed_("record"), self.record_segment)
         self.segmentedConferenceButtons.setImage_forSegment_(NSImage.imageNamed_("record"), self.conference_record_segment)
         self.addRecordingToHistory(data.filename)
+        self.shareRecordingWithOwnDevices(data.filename)
 
         nc_title = NSLocalizedString("Audio Call Recorded", "System notification title")
         nc_subtitle = format_identity_to_string(self.sessionController.remoteIdentity, check_contact=True, format='full')

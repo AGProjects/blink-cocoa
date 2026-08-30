@@ -141,10 +141,14 @@ LOCK_SIZE     = 11.0
 # and the border reads as a soft edge on the bubble rather than a drawn box.
 BUBBLE_BORDER_W = 0.5
 MIN_BUBBLE_W  = 80.0
-# The inset of a whole bubble inside its grid cell. Small on purpose: the
-# gap between cells is the grid's own spacing, and this only keeps the
-# bubble's rounded frame off the edge of the cell it sits in.
-GRID_CELL_MARGIN = 4.0
+# The inset of a whole bubble inside its grid cell. Zero: the gap between
+# cells is the grid's own spacing and that is the only knob worth having,
+# because anything here is added to it on both sides -- an inset of four
+# and a spacing of twelve read as twenty points of grey between two maps,
+# which is what "the margins are too big" looked like. Kept as a named
+# constant rather than deleted: the cell is a layout rect with no edge of
+# its own, so if a bubble ever grows a shadow this is where it goes.
+GRID_CELL_MARGIN = 0.0
 # A bubble is only as wide as it needs to be. Below this it stops
 # shrinking: a two-letter reply in a 30pt bubble reads as a mistake.
 MIN_TEXT_BODY_W = 40.0
@@ -251,7 +255,12 @@ AUDIO_SPECTRUM_PAD = 6.0
 # track worth scrubbing, and the clock. The spectrum and the meters take
 # rows of their own beneath it now and cost that row no width at all, so
 # there is no separate, wider floor for a recording that carries one.
-AUDIO_MIN_BODY_W = AUDIO_KEY_SIZE + AUDIO_KEY_GAP * 2 + 110.0
+# Widened by a third over the bare floor those controls need. A track
+# is the one thing in a bubble whose usefulness is its width: the
+# same second of audio is a wider target to scrub to, and the
+# waveform drawn over it has that many more bars to be a shape
+# rather than a smear.
+AUDIO_MIN_BODY_W = (AUDIO_KEY_SIZE + AUDIO_KEY_GAP * 2 + 110.0) * 1.3
 
 # The play symbol struck over a movie's poster. Proportional to the
 # picture, because the same badge serves a full-width bubble and a grid
@@ -3239,8 +3248,15 @@ class MessageBubbleView(NSView):
         a picture floating mid-row. The column stays reserved through a
         grouped run so consecutive bubbles keep one edge instead of stepping
         in and out by 36pt.
+
+        Never in a grid, whatever kind of cell it is. A column of bubbles
+        is a conversation between two people and the avatar is who is
+        speaking; a grid is one person's shares, all from the same face,
+        and repeating it in every cell spends a quarter of the width on
+        the one thing every cell has in common. The name goes in the
+        bubble's own header instead -- see _showsSender.
         """
-        return not self._tileMode() and self.kind not in (self.KIND_SYSTEM, self.KIND_DATE)
+        return not self.grid_mode and self.kind not in (self.KIND_SYSTEM, self.KIND_DATE)
 
     @objc.python_method
     def _drawsAvatar(self):
@@ -3248,8 +3264,18 @@ class MessageBubbleView(NSView):
 
     @objc.python_method
     def _showsSender(self):
+        """Whether the bubble names who it is from.
+
+        Grouping suppresses it in a transcript: a run of messages from one
+        person is read as one turn, and repeating the name on every line
+        of it is noise. A grid has no runs -- each cell stands alone, out
+        of order with whatever is beside it, and with no avatar now that a
+        grid draws none -- so every cell names its owner or none of them
+        say who they are from.
+        """
         return (self.kind not in (self.KIND_SYSTEM, self.KIND_DATE)
-                and not self.grouped and bool(self.sender_label))
+                and (self.grid_mode or not self.grouped)
+                and bool(self.sender_label))
 
     def layoutForWidth_(self, width):
         signature = self._layoutSignature()

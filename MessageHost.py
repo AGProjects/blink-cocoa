@@ -77,7 +77,9 @@ __all__ = ['USE_MESSAGE_PANEL',
            'load_trace_buckets_to', 'load_trace_tick', 'load_trace_bucket',
            'load_trace_bucket_span',
            'location_summary', 'public_key_short_checksum',
-           'file_transfer_category', 'MESSAGE_CATEGORIES']
+           'file_transfer_category', 'CALL_RECORDING_ACTION',
+           'call_recording_envelope', 'call_recording_metadata',
+           'MESSAGE_CATEGORIES']
 
 
 # ---------------------------------------------------------------------------
@@ -166,6 +168,13 @@ def _media_label(filename, filetype):
 # timestamp the message already carries, in a format nobody reads.
 _RECORDING_TITLES = (
     ('sylk-call-recording', 'Call Recording'),
+    # What a call recording is uploaded as. Deliberately not "call": the
+    # name goes to the server, into its logs and into every device's file
+    # list, and what a recording is OF is not the filename's business.
+    # Whether it was a call is in the companion metadata, and a device
+    # that reads that says "Call Recording"; one that cannot says this,
+    # which is true either way.
+    ('audio-recording', 'Audio Recording'),
     ('sylk-conf-recording', 'Conference Recording'),
     ('sylk-audio-recording', 'Audio Recording'),
     ('sylk-recording', 'Audio Recording'),
@@ -1015,6 +1024,143 @@ MESSAGE_CATEGORIES = (
     ('location', 'Locations'),
     ('other', 'Other'),
 )
+
+
+# A call recording is uploaded from an account to ITSELF: the server takes
+# no upload claiming another sender, and nobody but the recorder should
+# receive the recording of a call. So the transfer that comes back names us
+# at both ends, and filed by its addresses it opens a conversation with
+# ourselves -- the one place nobody would look for the recording of a call
+# with someone else.
+#
+# Which conversation it belongs to therefore travels the way a waveform
+# does: as its own sylk-message-metadata message keyed on the TRANSFER id.
+# Not in the transfer's envelope, which the server rebuilds from the upload
+# URL and strips (see peaks_metadata), and not in the filename, which would
+# make the name of every recording a protocol.
+CALL_RECORDING_ACTION = 'call_recording'
+
+
+def call_recording_envelope(transfer_id, party_uri, display_name,
+                            duration, timestamp, encrypt=None):
+    """The body of the companion message that places a call recording.
+
+    The sending half of call_recording_metadata, shaped like
+    peaks_envelope because it travels the same road for the same reason:
+    keyed on the transfer id, since that is the only identifier the
+    receiving side can pair a bubble with -- and named for what it is,
+    unlike the `messageId` the peaks and reply envelopes carry.
+
+    WHO the call was with is the one sensitive thing here, and it does not
+    travel in clear. The cleartext envelope says only what any observer
+    can already see -- that this transfer is a call recording, and which
+    transfer -- while `value` is armoured to the recording account's own
+    key, exactly as a location tick armours its coordinates and leaves its
+    lifecycle in the clear (SylkLocation, payload version 2).
+
+    `encrypt` takes the plaintext and returns the armoured text. Without
+    one this returns None rather than a cleartext party: a client that
+    cannot encrypt has nothing to say here, and saying it in clear would
+    put "who called whom" on the wire and in the server's store, which is
+    the whole thing this shape exists to avoid.
+    """
+    import json
+
+    value = {'uri': str(party_uri)}
+    if display_name:
+        value['display_name'] = str(display_name)
+    if duration:
+        try:
+            value['duration'] = round(float(duration), 2)
+        except (TypeError, ValueError):
+            pass
+    if encrypt is None:
+        return None
+    armoured = encrypt(json.dumps(value))
+    if not armoured:
+        return None
+    return json.dumps({'fileTransferId': str(transfer_id),
+                       'action': CALL_RECORDING_ACTION,
+                       'value': str(armoured),
+                       'timestamp': str(timestamp)})
+
+
+def call_recording_metadata(body, decrypt=None):
+    """Where a call recording belongs, or None.
+
+    The reading half::
+
+        {"fileTransferId": "<the transfer this is about>",
+         "action":         "call_recording",
+         "value":          "-----BEGIN PGP MESSAGE----- ...",
+         "timestamp":      ...}
+
+    `fileTransferId` rather than the `messageId` the older companions use:
+    in those it holds a TRANSFER id under a name that says message, which
+    every reader of that code has had to be told. And no `metadataId`: the
+    message already has an id of its own, and a second one names nothing
+    that needs naming.
+
+    where the armour opens to::
+
+        {"uri": "<the other party>", "display_name": ..., "duration": ...}
+
+    `decrypt` takes the armoured text and returns the plaintext, or None
+    when this device holds no key for it. Everything outside `value` is
+    read without it, so a device that cannot open the value still knows
+    that the transfer is a call recording -- it simply cannot say whose,
+    and leaves the bubble where it landed.
+
+    Returns {'transfer_id', 'uri', 'display_name', 'duration'}, or None.
+    A message of this shape that names no party is not usable: moving
+    somebody else's transfer into another conversation on a half-read
+    envelope is worse than leaving a recording where it is.
+    """
+    import json
+
+    if isinstance(body, bytes):
+        try:
+            body = body.decode('utf-8')
+        except UnicodeDecodeError:
+            return None
+    if not isinstance(body, str) or CALL_RECORDING_ACTION not in body:
+        return None
+    try:
+        envelope = json.loads(body)
+    except (ValueError, TypeError):
+        return None
+    if not isinstance(envelope, dict):
+        return None
+    if envelope.get('action') != CALL_RECORDING_ACTION:
+        return None
+    transfer_id = str(envelope.get('fileTransferId') or '').strip()
+    value = envelope.get('value')
+    if isinstance(value, str):
+        # Armoured, which is the only shape that goes on the wire. An
+        # unarmoured string would be a party in clear, and this refuses to
+        # read one rather than reward a client for sending it.
+        if not value.lstrip().startswith('-----BEGIN PGP MESSAGE-----'):
+            return None
+        if decrypt is None:
+            return None
+        try:
+            value = json.loads(decrypt(value) or '')
+        except (ValueError, TypeError):
+            return None
+    if not transfer_id or not isinstance(value, dict):
+        return None
+    uri = str(value.get('uri') or '').strip()
+    if not uri:
+        return None
+    duration = value.get('duration')
+    try:
+        duration = round(float(duration), 2) if duration else None
+    except (TypeError, ValueError):
+        duration = None
+    return {'transfer_id': transfer_id,
+            'uri': uri,
+            'display_name': str(value.get('display_name') or '') or None,
+            'duration': duration}
 
 
 def file_transfer_category(body):

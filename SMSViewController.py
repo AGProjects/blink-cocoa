@@ -37,6 +37,7 @@ import hashlib
 import ast
 import re
 import tempfile
+import time
 import json
 
 from binascii import unhexlify, hexlify
@@ -68,6 +69,7 @@ from BlinkLogger import BlinkLogger
 from ChatViewController import MSG_STATE_SENDING, MSG_STATE_SENT, MSG_STATE_DELIVERED, MSG_STATE_FAILED, MSG_STATE_DISPLAYED, MSG_STATE_FAILED_LOCAL, MSG_STATE_DEFERRED
 from HistoryManager import ChatHistory
 from MessageHost import (FILE_TRANSFER_CONTENT_TYPE,
+                         call_recording_envelope,
                          is_renderable_content_type, peaks_metadata,
                          pgp_plaintext, pgp_plaintext_bytes,
                          peaks_envelope, reply_envelope, reply_metadata,
@@ -1123,15 +1125,22 @@ class SMSViewController(NSObject):
         if content_type in ('text/pgp-public-key', 'text/pgp-private-key'):
             return
 
-        # Location payloads — application/sylk-location-sharing (the
-        # coordinate ticks and the lifecycle signals) and its legacy
-        # predecessor application/sylk-message-metadata — carry their own
-        # envelope and their own encryption rules, so they get a dedicated
-        # renderer instead of the text path.
-        if content_type in (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE):
-            # A reply link wears the same content type as a legacy location
-            # tick. It is not a message and never becomes a bubble: it says
-            # that some OTHER message is a reply to a third one.
+        # Two content types that never take the text path, for opposite
+        # reasons: application/sylk-location-sharing carries coordinate
+        # ticks and lifecycle signals with an envelope and encryption
+        # rules of their own, so it gets a dedicated renderer;
+        # application/sylk-message-metadata carries nothing that is
+        # rendered at all.
+        if content_type == LEGACY_LOCATION_CONTENT_TYPE:
+            # The companion pipeline, and nothing else. Every flavour of
+            # it is a note ABOUT another message -- a reply link, a
+            # recording's waveform, a consumed mark, the note saying which
+            # conversation a call recording belongs in. None becomes a
+            # bubble, none asks for a receipt, and none raises a banner.
+            # Location travelled here once and has had a content type of
+            # its own for a long time; a flavour this build does not know
+            # is still not a location, so it is taken in silently rather
+            # than announced as one.
             link = reply_metadata(content)
             if link is not None:
                 self.note_reply_link(link, timestamp=imdn_timestamp)
@@ -1139,7 +1148,9 @@ class SMSViewController(NSObject):
             recording = peaks_metadata(content)
             if recording is not None:
                 self.note_audio_metadata(recording)
-                return
+            return
+
+        if content_type == LOCATION_CONTENT_TYPE:
             self._receive_location_message(message_tuple)
             return
 
@@ -1288,10 +1299,16 @@ class SMSViewController(NSObject):
                 # no-conversation-open path, and it handles HTML, PGP
                 # ciphertext and location envelopes on the same grounds.
                 nc_body = SMSWindowManager()._notificationBody(content, content_type)
-                nc_title, nc_icon = SMSWindowManager().notificationIdentity(
-                    self.remote_uri, self.display_name)
-                NSApp.delegate().notify_new_message(nc_title, nc_body, None,
-                                                    uri=self.remote_uri, icon=nc_icon)
+                if nc_body is None:
+                    # A content type that cannot be announced at all --
+                    # the companion metadata pipeline. Not a banner with
+                    # an empty line: no banner.
+                    pass
+                else:
+                    nc_title, nc_icon = SMSWindowManager().notificationIdentity(
+                        self.remote_uri, self.display_name)
+                    NSApp.delegate().notify_new_message(nc_title, nc_body, None,
+                                                        uri=self.remote_uri, icon=nc_icon)
 
             if encrypted:
                 encryption = 'verified' if self.encryption.verified or self.pgp_encrypted else 'unverified'
@@ -2011,6 +2028,199 @@ class SMSViewController(NSObject):
         return sent
 
     @objc.python_method
+    def sendCallRecording(self, path, duration=None, peaks=None):
+        """File a recording of a call as a transfer to this account.
+
+        The recording is not the other party's to receive -- they were on
+        the call -- so it is addressed to this account, and the server
+        emits it to our own devices and to nobody else. That is the whole
+        difference from sendFile: the POST is the send, and SylkServer
+        takes the receiver out of the URL.
+
+        From us, to us -- both ends. The server refuses an upload that
+        claims to come from anybody but the account whose token authorises
+        it, so the message it writes names us twice and, filed by its
+        addresses, would open a conversation with ourselves: the one place
+        nobody would look for the recording of a call with someone else.
+        Where it belongs is not in this envelope at all -- the server
+        rebuilds the one it broadcasts and keeps none of our fields. It
+        travels as its own encrypted note, sent from here immediately
+        afterwards: see _sendCallRecordingNote.
+
+        The bubble here is ours all the same, drawn outgoing from the
+        moment the file is on disc -- it is our recording, and waiting for
+        the round trip to draw it would make it look lost.
+
+        `call_recording` on the envelope is what makes it read as a
+        recording rather than as a stray audio file: Sylk Mobile stamps
+        the same key, and Blink's own classifier already believes it over
+        the mime type.
+        """
+        # This is for accounts that speak SylkServer's API and no others.
+        # Two conditions, and neither is a formality:
+        #
+        # The upload service, because sendFile's fallback for an account
+        # without one is to offer the file to the other party over MSRP --
+        # the one thing a call recording must never do. Checked here as
+        # well as by the caller for that reason.
+        #
+        # The API token, because the upload endpoint takes the same
+        # credential the journal does and answers 403 without it. An
+        # account that has never been issued one does not speak this API,
+        # and a POST that is going to be refused would put a red "could
+        # not send" line in a conversation about a file the user never
+        # asked to send.
+        from SMSWindowManager import SMSWindowManager
+        if not SMSWindowManager().fileTransferBaseURL(self.account):
+            self.log_info('Not sharing the recording: %s has no file transfer service'
+                          % self.account.id)
+            return None
+        if not self._apiToken():
+            self.log_info('Not sharing the recording: %s holds no API token yet'
+                          % self.account.id)
+            return None
+        try:
+            size = os.path.getsize(path)
+        except OSError:
+            size = 0
+        self.log_info('Sharing the recording %s (%s bytes) with this account'
+                      % (os.path.basename(str(path)), size))
+        # A neutral name. It says the file is a recording, which is what
+        # a filename is for, and nothing about whose call it was or even
+        # that it was a call -- the name goes to the server, into its
+        # logs, and into the file list of every device. What kind of
+        # recording it is travels in the companion metadata, encrypted;
+        # see call_recording_envelope.
+        #
+        # The keys below stay in OUR envelope, which never leaves this
+        # device: the upload sends bytes, and the message the server
+        # broadcasts is one it writes itself.
+        stamp = int(time.time() * 1000)
+        extension = os.path.splitext(str(path))[1] or '.wav'
+        # The note BEFORE the upload, not after it.
+        #
+        # Both travel to our other devices, and the transfer's broadcast is
+        # gated on the upload finishing while the note is a few hundred
+        # bytes on the message queue -- so sending the note first is what
+        # makes it arrive first, and a device that has it in hand files the
+        # recording in the right conversation on arrival instead of
+        # dropping it into the notes-to-self chat and moving it a moment
+        # later. The id exists before either of them: it is ours to choose,
+        # and nothing but this ordering depends on choosing it here.
+        from FileTransferCache import new_transfer_id
+        transfer_id = new_transfer_id()
+        self._sendCallRecordingNote(transfer_id, duration)
+        self._sendCallRecordingPeaks(transfer_id, peaks)
+        return self.sendFile(path, duration=duration,
+                             receiver=str(self.account.id),
+                             transfer_id=transfer_id,
+                             filename='audio-recording-%d%s' % (stamp, extension),
+                             extra={'call_recording': True})
+
+    @objc.python_method
+    def _sealToSelf(self, text):
+        """Armour text to this account's own key, or None.
+
+        One key, ours. This is a note from us to our own devices about a
+        file only we can hear, and every device of this account holds the
+        key that opens it.
+        """
+        if self.my_public_key is None:
+            return None
+        try:
+            cipher = pgpy.constants.SymmetricKeyAlgorithm.AES256
+            sessionkey = cipher.gen_key()
+            try:
+                return str(self.my_public_key.encrypt(pgpy.PGPMessage.new(text),
+                                                      cipher=cipher,
+                                                      sessionkey=sessionkey))
+            finally:
+                del sessionkey
+        except Exception as e:
+            self.log_error('Cannot seal the call recording note: %s' % e)
+            return None
+
+    @objc.python_method
+    def _sendToOwnDevices(self, body, content_type=LEGACY_LOCATION_CONTENT_TYPE):
+        """Send a companion message to this account rather than to the peer.
+
+        A viewer can only send to the person it is a conversation with, so
+        anything addressed to ourselves goes through a viewer for our own
+        address. Model-only: viewerForTarget never touches a window.
+        """
+        from SMSWindowManager import SMSWindowManager
+        viewer = SMSWindowManager().viewerForTarget(
+            SIPURI.parse(str('sip:%s' % self.account.id)),
+            str(self.account.id), self.account)
+        if viewer is None:
+            return False
+        viewer.sendMessage(body, content_type)
+        return True
+
+    @objc.python_method
+    def _sendCallRecordingPeaks(self, transfer_id, peaks):
+        """Ship a recording's waveform to our own devices.
+
+        Same reason as the placement note and the same road: the server
+        relays a fixed field set for a transfer and drops `peaks` with
+        everything else, so the shape of a recording cannot travel with
+        the recording. In clear, like every other waveform -- it is a
+        picture of loudness over time, and mobile reads exactly this
+        shape.
+
+        Noted locally as well as sent, so our own bubble draws the strip
+        it measured rather than measuring it again on the next launch.
+        """
+        if not peaks or not (peaks.get('l') or peaks.get('r')):
+            return
+        body = peaks_envelope(transfer_id, str(uuid.uuid4()), peaks, None,
+                              str(self.account.id), ISOTimestamp.now())
+        try:
+            if self._sendToOwnDevices(body):
+                self.log_info('Waveform for recording %s sent to our other devices '
+                              '(%d bins)' % (transfer_id, len(peaks.get('l') or [])))
+        except Exception as e:
+            self.log_error('Cannot send the waveform of %s: %s' % (transfer_id, e))
+        self.note_audio_metadata({'transfer_id': str(transfer_id),
+                                  'peaks': {'l': list(peaks.get('l') or []),
+                                            'r': list(peaks.get('r') or [])},
+                                  'spectrum': None})
+
+    @objc.python_method
+    def _sendCallRecordingNote(self, transfer_id, duration):
+        """Say which conversation a recording belongs in, to our own devices.
+
+        The transfer itself cannot say it. The server rebuilds the envelope
+        it broadcasts from the upload URL, so nothing we stamp on ours
+        survives, and the addresses that do survive are our own at both
+        ends. This note carries the answer on the same
+        sylk-message-metadata pipeline that carries waveforms and replies,
+        keyed on the transfer id -- and with the party sealed inside it,
+        because who we called is exactly the part that should not be
+        readable by anything the message passes through.
+
+        Sent through a viewer for our OWN address: every device of this
+        account receives it and files the recording, and nobody else is a
+        recipient of anything.
+        """
+        body = call_recording_envelope(transfer_id, self.remote_uri, self.display_name,
+                                       duration, ISOTimestamp.now(),
+                                       encrypt=self._sealToSelf)
+        if body is None:
+            self.log_error('Cannot place recording %s: it cannot be sealed to this '
+                           'account, and the party does not go out in clear' % transfer_id)
+            return
+        try:
+            if not self._sendToOwnDevices(body):
+                self.log_error('Cannot place recording %s: no conversation with this '
+                               'account' % transfer_id)
+                return
+            self.log_info('Recording %s placed in the conversation with %s for our '
+                          'other devices' % (transfer_id, self.remote_uri))
+        except Exception as e:
+            self.log_error('Cannot place recording %s: %s' % (transfer_id, e))
+
+    @objc.python_method
     def sendVoiceRecording(self, path, duration, peaks):
         """Send a voice note made in the composer, waveform and all.
 
@@ -2057,13 +2267,22 @@ class SMSViewController(NSObject):
                                   'spectrum': spectrum})
 
     @objc.python_method
-    def sendFile(self, path, duration=None):
+    def sendFile(self, path, duration=None, receiver=None, sender=None,
+                 filename=None, extra=None, transfer_id=None):
         """Send one file. Returns its transfer id, or None.
 
         `duration` is the length of a recording, which nothing can read
         off the envelope: it is put there so the bubble's clock is right
         on the first draw instead of a beat later, once the player has
         opened the file to ask.
+
+        `sender` and `receiver` are who the SERVER is told the file is
+        from and for, and they are parameters because they are not always
+        us and the person we are talking to: a call recording is addressed
+        to this account, so that only our own devices receive it. `extra`
+        is folded into the envelope -- `call_recording` is what makes a
+        recording read as one on the local row, the only copy of this
+        envelope that anything ever reads.
         """
         from SMSWindowManager import SMSWindowManager
         from FileTransferCache import (FileTransferCache, guess_filetype,
@@ -2096,12 +2315,15 @@ class SMSViewController(NSObject):
         # The filename travels in a URL and becomes a path on the other
         # side, so the same normalisation mobile applies is applied here:
         # spaces and colons out, no leading dots or slashes.
-        filename = re.sub(r'[\s:]', '_', os.path.basename(path)).lstrip('./') \
+        filename = re.sub(r'[\s:]', '_', filename or os.path.basename(path)).lstrip('./') \
             or ('file-%s' % new_transfer_id())
 
-        transfer_id = new_transfer_id()
-        sender = str(self.account.id)
-        receiver = self.remote_uri
+        # Given, when the caller has already had to say the id out loud:
+        # a call recording announces where it belongs BEFORE it is
+        # uploaded, and that announcement names the transfer.
+        transfer_id = str(transfer_id or new_transfer_id())
+        sender = str(sender or self.account.id)
+        receiver = str(receiver or self.remote_uri)
         meta = {
             'filename': filename,
             'filesize': size,
@@ -2114,15 +2336,27 @@ class SMSViewController(NSObject):
         }
         if duration:
             meta['duration'] = round(float(duration), 2)
+        if extra:
+            meta.update(extra)
 
         timestamp = ISOTimestamp.now()
-        self.log_info('Sending %s (%s bytes) to %s as %s'
-                      % (filename, size, receiver, transfer_id))
+        self.log_info('Sending %s (%s bytes) %sto %s as %s'
+                      % (filename, size,
+                         '' if sender == str(self.account.id) else 'as %s ' % sender,
+                         receiver, transfer_id))
         # Filed before anything else happens: from here on this is a file
         # the conversation holds, exactly like one that arrived, so the
         # bubble opens it rather than offering to fetch it back off the
         # server -- and the upload reads our copy, so moving the original
         # mid-transfer cannot break it.
+        if receiver == str(self.account.id):
+            # Uploaded to ourselves: a call recording. The server will
+            # broadcast it back to this device too, and that copy must not
+            # be taken in -- see SMSWindowManager.noteOwnSelfTransfer.
+            try:
+                SMSWindowManager().noteOwnSelfTransfer(transfer_id)
+            except Exception as e:
+                self.log_error('Cannot note our own transfer %s: %s' % (transfer_id, e))
         stored = FileTransferCache().store(meta, self.local_uri, self.remote_uri, path)
         # What the upload will read. Normally the cache's copy, but the
         # cache falls back to the original when it cannot make one, and a
@@ -2261,9 +2495,32 @@ class SMSViewController(NSObject):
         return str(token) if token else None
 
     @objc.python_method
+    def _isSelfTransfer(self, meta):
+        """Whether this transfer is addressed to us rather than to them.
+
+        Read off the envelope rather than carried in a parameter: the
+        envelope is what the server acts on, so anything deciding how to
+        treat the file should be deciding from the same thing.
+        """
+        try:
+            return str(meta.get('receiver', {}).get('uri') or '') == str(self.account.id)
+        except AttributeError:
+            return False
+
+    @objc.python_method
     def _canEncryptFile(self, meta):
         from FileTransferCache import MAX_ENCRYPT_BYTES
-        if not self.account.sms.enable_pgp or self.public_key is None:
+        try:
+            if not self.account.sms.enable_pgp:
+                return False
+        except AttributeError:
+            return False                # an account with no SMS settings
+        if self._isSelfTransfer(meta):
+            # Sealed to us and nobody else. The other party's key has no
+            # business on a file they are not being sent.
+            if self.my_public_key is None:
+                return False
+        elif self.public_key is None:
             return False
         try:
             return int(meta.get('filesize') or 0) <= MAX_ENCRYPT_BYTES
@@ -2291,11 +2548,18 @@ class SMSViewController(NSObject):
         cipher = pgpy.constants.SymmetricKeyAlgorithm.AES256
         sessionkey = cipher.gen_key()
         try:
-            encrypted = self.public_key.encrypt(pgp_message, cipher=cipher,
-                                                sessionkey=sessionkey)
-            if self.my_public_key:
-                encrypted = self.my_public_key.encrypt(encrypted, cipher=cipher,
+            if self._isSelfTransfer(meta):
+                # One key, ours. A recording of a call is not the other
+                # party's to open -- they were there -- and sealing it to
+                # their key as well would hand them exactly that.
+                encrypted = self.my_public_key.encrypt(pgp_message, cipher=cipher,
                                                        sessionkey=sessionkey)
+            else:
+                encrypted = self.public_key.encrypt(pgp_message, cipher=cipher,
+                                                    sessionkey=sessionkey)
+                if self.my_public_key:
+                    encrypted = self.my_public_key.encrypt(encrypted, cipher=cipher,
+                                                           sessionkey=sessionkey)
         finally:
             del sessionkey
 
@@ -2483,7 +2747,16 @@ class SMSViewController(NSObject):
         
         if content_type in ('application/sylk-message-remove', 'application/sylk-conversation-read', 'application/sylk-conversation-remove',
                             LEGACY_LOCATION_CONTENT_TYPE):
-            self.add_to_history(mInfo)
+            # Stored, but it does not move the conversation. None of these
+            # is a message: a removal, a read receipt, and -- the only
+            # flavour of the metadata type this client sends -- a reply
+            # link, a waveform or a note saying which conversation a
+            # recording belongs in. A recording made in a call with
+            # someone else sends two of them to our OWN address, and with
+            # the clock stamped they pushed a conversation with ourselves
+            # to the top of the contact list for a recording that lives in
+            # somebody else's.
+            self.add_to_history(mInfo, stamps_conversation_time=False)
             self.messages[mInfo.id] = mInfo
 
         if mInfo.status != MSG_STATE_FAILED_LOCAL:

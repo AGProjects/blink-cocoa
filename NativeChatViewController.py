@@ -92,9 +92,11 @@ GRID_COLUMNS = 3
 # How much air a grid puts between its cells. A wall of photographs is one
 # surface and is drawn as one -- two points, a hairline; a grid of location
 # bubbles is a set of separate things, each with its own header, caption and
-# rounded frame, and pushed together they read as one broken bubble.
+# rounded frame, and pushed together they read as one broken bubble. This
+# is the whole gap now -- the bubble no longer insets itself inside its
+# cell as well, which is what made twelve read as twenty.
 GRID_SPACING_TILES = 2.0
-GRID_SPACING_BUBBLES = 12.0
+GRID_SPACING_BUBBLES = 8.0
 # The categories whose cells are whole bubbles rather than bare pictures.
 GRID_BUBBLE_CATEGORIES = ('location',)
 # What the picker above the grid offers. Two is a pair of big pictures, six

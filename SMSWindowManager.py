@@ -71,7 +71,6 @@ from KeyEscrow import (escrow_is_missing, install_keypair, log_self_contact,
                        restore_from_own_contact, write_self_keys)
 from HistoryManager import ChatHistory
 from SMSViewController import SMSViewController, is_otr_wire_text
-from MessageHost import peaks_metadata, reply_metadata
 from MessageHost import load_trace_tick, load_trace_bucket
 from MessageBubbleView import PlaybackStopButton
 from PlaybackMonitor import PLAYBACK_STATE_CHANGED, playback_monitor
@@ -100,7 +99,7 @@ def _describe_payload_value(value):
         return '<%d chars: %s...>' % (len(value), value[:60])
     return repr(value)
 from MessageHost import (FILE_TRANSFER_CONTENT_TYPE, FILE_TRANSFER_CONTENT_TYPES,
-                         file_transfer_envelope,
+                         call_recording_metadata, file_transfer_envelope,
                          pgp_plaintext,
                          pgp_plaintext_bytes, public_key_short_checksum)
 from SylkLocation import (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE,
@@ -1612,12 +1611,15 @@ class SMSWindowManagerClass(NSObject):
                         or content_type in FILE_TRANSFER_CONTENT_TYPES):
                     # application/sylk-location-sharing carries the
                     # one-shot / live / meet coordinate ticks and the
-                    # lifecycle signals; application/sylk-message-metadata
-                    # is its legacy predecessor (action='location') and is
-                    # still read. Treat both like a regular text message at
-                    # the persistence layer; the renderer branches on
-                    # content_type to draw a location bubble or post a
-                    # system note.
+                    # lifecycle signals. application/sylk-message-metadata
+                    # is the COMPANION pipeline -- waveforms, reply links,
+                    # consumed marks, the note saying which conversation a
+                    # call recording belongs in. It once carried locations
+                    # too (action='location'); it does not any more, and
+                    # nothing arriving on it is a location. Both are
+                    # stored like a regular text message here; what each
+                    # one IS is decided by the renderer and by
+                    # _journal_message_is_notable, not here.
                     if msg['direction'] == 'incoming':
                         sync_contacts.add(msg['contact'])
                         # Counted for the banner, so it must count what the
@@ -3139,15 +3141,33 @@ class SMSWindowManagerClass(NSObject):
             self.noteFileTransferURL(account, body)
 
         if content_type in (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE):
-            # A reply link and a recording's waveform share the legacy
-            # location content type but are neither ticks nor bubbles.
-            # Stored verbatim, because each is the ONLY record of
-            # something a message needs: losing the first turns a reply
-            # back into an unrelated remark, and losing the second leaves
-            # a recording with a bare scrub bar for ever -- the server
-            # relays a fixed field set for a transfer and drops the rest,
-            # so there is nowhere else for the waveform to come from.
-            if reply_metadata(body) is not None or peaks_metadata(body) is not None:
+            payload = None
+            # application/sylk-message-metadata is the companion pipeline
+            # in its entirety -- a waveform, a reply link, a consumed
+            # mark, the note saying which conversation a call recording
+            # belongs in. None of them is a location, whatever the name of
+            # the constant says, and none is a thing anyone reads.
+            inert = content_type == LEGACY_LOCATION_CONTENT_TYPE
+            if not inert:
+                payload = self._decode_location_payload(str(account.id), body,
+                                                        metadata, content_type)
+                inert = payload is None
+            if inert:
+                # Stored verbatim, because each is the ONLY record of
+                # something a message needs: losing a reply link turns a
+                # reply back into an unrelated remark, losing a waveform
+                # leaves a recording with a bare scrub bar for ever, and
+                # losing an unknown flavour loses it for the build that
+                # would have understood it -- the server relays a fixed
+                # field set for a transfer and drops the rest, so there is
+                # nowhere else for any of it to come from.
+                #
+                # Then reported as NOT new, because "stored" is what the
+                # caller posts a banner and an unread count on. None of
+                # these has a line to put in a banner: a note about a
+                # recording the user had just made themselves reached them
+                # as "Location", the label this content type wears when it
+                # really is one.
                 self.history.add_message(
                     msgid, 'sms', str(account.id), remote_uri,
                     direction,
@@ -3157,27 +3177,16 @@ class SMSWindowManagerClass(NSObject):
                     MSG_STATE_DELIVERED if direction == 'incoming' else MSG_STATE_SENT,
                     call_id=call_id or msgid, encryption='', read=1)
                 return False            # nothing was said, so nothing is unread
-            payload = self._decode_location_payload(str(account.id), body, metadata, content_type)
-            if payload is None:
-                # A metadata flavour nothing here understands. Kept for
-                # the same reason the journal keeps one: this is the only
-                # copy, and a build that learns the flavour later finds
-                # nothing if it was thrown away. Inert -- never unread,
-                # never moves the conversation, never drawn.
-                stamps_conversation_time = False
-                encryption = ''
-                unread = False
-            else:
-                body = storable_envelope(payload)
-                if payload['is_coordinate']:
-                    row_id = location_bubble_id(payload, msgid)
-                    if payload['is_update']:
-                        self.history.update_message_body(row_id, body,
-                                                         merge=merge_location_bodies)
-                        return False
-                    msgid = row_id
-                encryption = ''
-                stamps_conversation_time = is_notable_action(payload)
+            body = storable_envelope(payload)
+            if payload['is_coordinate']:
+                row_id = location_bubble_id(payload, msgid)
+                if payload['is_update']:
+                    self.history.update_message_body(row_id, body,
+                                                     merge=merge_location_bodies)
+                    return False
+                msgid = row_id
+            encryption = ''
+            stamps_conversation_time = is_notable_action(payload)
 
         if direction == 'incoming':
             cpim_from, cpim_to = remote_uri, str(account.id)
@@ -3267,13 +3276,23 @@ class SMSWindowManagerClass(NSObject):
         tags, a location as a JSON envelope.
         """
         from MessageHost import file_transfer_summary
+        if content_type == LEGACY_LOCATION_CONTENT_TYPE:
+            # None, not a label: this content type CANNOT raise a banner.
+            # It is the companion pipeline -- a waveform, a reply link, a
+            # consumed mark, the note placing a call recording -- and none
+            # of those is a thing anyone reads. Every path that posts a
+            # banner already refuses it before reaching here; refusing it
+            # again in the one function they all go through is what makes
+            # that a property of the program rather than of four call
+            # sites agreeing. Callers must skip a None body.
+            return None
         try:
             body = content.decode() if isinstance(content, bytes) else (content or '')
         except UnicodeDecodeError:
             return NSLocalizedString("Message", "Label")
         if body.strip().startswith('-----BEGIN PGP MESSAGE-----'):
             return NSLocalizedString("Encrypted message", "Label")
-        if content_type in (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE):
+        if content_type == LOCATION_CONTENT_TYPE:
             return NSLocalizedString("Location", "Label")
         # Both spellings of a transfer -- the Sylk JSON envelope and the
         # GSMA RCS FT-HTTP XML -- resolve to the same one-line description
@@ -3346,7 +3365,13 @@ class SMSWindowManagerClass(NSObject):
         content_type = msg['content_type']
         if content_type in ('text/plain', 'text/html') + FILE_TRANSFER_CONTENT_TYPES:
             return True
-        if content_type not in (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE):
+        if content_type == LEGACY_LOCATION_CONTENT_TYPE:
+            # The companion pipeline. Every flavour of it is a note ABOUT
+            # some other message -- a waveform, a reply link, a recording's
+            # address -- and not one of them is a thing the user reads, so
+            # none of them is ever counted or announced.
+            return False
+        if content_type != LOCATION_CONTENT_TYPE:
             return False
         # From the cleartext envelope only: deciding whether a tick bumps
         # the unread counter must not cost a decrypt, since this is asked
@@ -3434,8 +3459,12 @@ class SMSWindowManagerClass(NSObject):
         related_msg_id = related_action = category = None
         store_metadata = None
 
-        if content_type in (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE) \
-                and reply_metadata(body) is None and peaks_metadata(body) is None:
+        if content_type == LEGACY_LOCATION_CONTENT_TYPE:
+            # Companion metadata: stored verbatim, and it does not move
+            # the conversation up the contact list. It is not a location
+            # and there is nothing here to classify.
+            stamps_conversation_time = False
+        elif content_type == LOCATION_CONTENT_TYPE:
             # NOTHING IS DECRYPTED HERE. The tick is stored exactly as it
             # arrived and classified from its cleartext envelope, so a
             # journal of thousands of trail ticks costs no PGP work at all
@@ -3482,8 +3511,104 @@ class SMSWindowManagerClass(NSObject):
         if stamps_conversation_time:
             self.noteMessageTime(msg['contact'], msg['timestamp'])
 
+    # Transfers this device uploaded to its OWN address -- call
+    # recordings. The server broadcasts a transfer to every device of the
+    # account including the one that sent it, and for these the echo
+    # cannot fold into the row we already wrote: ours is filed under the
+    # person on the call, the echo is addressed to us at both ends.
+    ownSelfTransfers = set()
+
+    @objc.python_method
+    def noteOwnSelfTransfer(self, transfer_id):
+        if transfer_id:
+            self.ownSelfTransfers.add(str(transfer_id))
+
+    # transfer id -> the conversation that transfer belongs in, learned
+    # from a call_recording note. Held because the note and the transfer
+    # are separate messages that can cross: whichever lands first waits
+    # here for the other.
+    callRecordingParties = {}
+
+    @objc.python_method
+    def noteCallRecording(self, account, content):
+        """Take in a call_recording note, and place its recording.
+
+        The note says which conversation a transfer belongs in, sealed to
+        this account's own key. Undecryptable is a no-op: every device of
+        an account holds that key, so a note we cannot open is not ours to
+        act on.
+
+        Returns True when the body WAS such a note, so the caller knows it
+        has been dealt with.
+        """
+        account_id = str(getattr(account, 'id', account) or '')
+        try:
+            note = call_recording_metadata(
+                content, decrypt=lambda armour: self._decrypt_pgp_for_account(account_id, armour))
+        except Exception as e:
+            BlinkLogger().log_error('Cannot read a call recording note: %s' % e)
+            return False
+        if note is None:
+            return False
+
+        transfer_id = note['transfer_id']
+        party = note['uri']
+        self.callRecordingParties[transfer_id] = party
+        BlinkLogger().log_info('Recording %s belongs to the conversation with %s'
+                               % (transfer_id, party))
+        # The transfer may already be here, filed under our own address --
+        # the two messages cross, and the note is not always the first to
+        # land. Moving is only ever needed on a device that did not make
+        # the recording: the one that did wrote the row under the party
+        # before the upload started, and its echo was refused by the
+        # unique index on (msgid, local_uri, remote_uri) as soon as this
+        # placed it there.
+        try:
+            # Async: this is reached from the GUI thread on a live note,
+            # and nothing here waits for the answer.
+            self.history.move_message_async(transfer_id, account_id, account_id, party)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot place recording %s: %s' % (transfer_id, e))
+        return True
+
+    @objc.python_method
+    def _redirectToRecordingParty(self, msg):
+        """File a journalled transfer by the conversation a note named.
+
+        A call recording is uploaded from an account to itself -- the
+        server refuses an upload claiming any other sender, and nobody but
+        the recorder should receive it -- so the entry the journal hands
+        back names us at both ends. `contact` is what every path below
+        uses to decide which conversation a message belongs to, so it is
+        corrected here, once, rather than in each of them.
+
+        Corrected BEFORE the row is written, which is what makes the
+        recording device's copy free: the echo then carries the same
+        (msgid, local_uri, remote_uri) as the row that device already
+        wrote, and the unique index refuses it instead of drawing the
+        recording a second time in a conversation with ourselves.
+        """
+        try:
+            if msg.get('content_type') not in FILE_TRANSFER_CONTENT_TYPES:
+                return
+            transfer_id = str(msg.get('message_id') or '')
+            party = self.callRecordingParties.get(transfer_id)
+            if not party or party == msg.get('contact'):
+                return
+            BlinkLogger().log_info('Transfer %s belongs to the conversation with %s, '
+                                   'not %s' % (transfer_id, party, msg.get('contact')))
+            msg['contact'] = party
+        except Exception as e:
+            BlinkLogger().log_error('Cannot place a recording: %s' % e)
+
     @objc.python_method
     def syncIncomingMessage(self, account, msg, last_id=None):
+        if msg.get('content_type') == LEGACY_LOCATION_CONTENT_TYPE \
+                and self.noteCallRecording(account, msg.get('content')):
+            # A note about a recording, not a message: it places a bubble
+            # and is never one itself.
+            pass
+        self._redirectToRecordingParty(msg)
         direction = 'incoming'
         BlinkLogger().log_debug(self._describe_journal_message(msg, direction))
         if not self._journal_bulk:
@@ -3664,6 +3789,10 @@ class SMSWindowManagerClass(NSObject):
 
     @objc.python_method
     def syncOutgoingMessage(self, account, msg, last_id=None):
+        if msg.get('content_type') == LEGACY_LOCATION_CONTENT_TYPE \
+                and self.noteCallRecording(account, msg.get('content')):
+            pass
+        self._redirectToRecordingParty(msg)
         direction = 'outgoing'
         BlinkLogger().log_debug(self._describe_journal_message(msg, direction))
 
@@ -4221,9 +4350,9 @@ class SMSWindowManagerClass(NSObject):
         else:
             account = BonjourAccount()
 
+        imdn_id = None
         if data.content_type == 'message/cpim':
             is_cpim = True
-            imdn_id = None
 
             try:
                 cpim_message = CPIMPayload.decode(data.body)
@@ -4254,6 +4383,66 @@ class SMSWindowManagerClass(NSObject):
             content_type = data.content_type
             sender_identity = data.from_header
             window_tab_identity = data.to_header if direction == 'outgoing' else sender_identity
+
+        # A note about a call recording: it says which conversation the
+        # recording belongs in, and places it.
+        if content_type == LEGACY_LOCATION_CONTENT_TYPE and account is not None:
+            try:
+                self.noteCallRecording(account, content)
+            except Exception as e:
+                BlinkLogger().log_error('Cannot read a call recording note: %s' % e)
+
+        # And the recording itself, which is uploaded from an account to
+        # itself -- the server takes an upload from nobody else -- so
+        # filed by its addresses it would open a conversation with
+        # ourselves.
+        if content_type in FILE_TRANSFER_CONTENT_TYPES:
+            party = None
+            try:
+                envelope = file_transfer_envelope(content) or {}
+                transfer_id = str(envelope.get('transfer_id') or '')
+                # The Sylk JSON envelope names the transfer; the GSMA RCS
+                # FT-HTTP XML the server broadcasts does not, and that is
+                # the spelling our own upload comes back in. Its CPIM
+                # Message-ID is the transfer id -- the server reuses ours
+                # -- so the id of the message is the fallback, and it is
+                # the ONLY thing that identifies the echo of a recording.
+                # Without it the echo was taken in whole: a second bubble
+                # in a conversation with ourselves, that conversation
+                # pushed to the top of the list, and a row for the note to
+                # go and delete a moment later.
+                candidates = set(x for x in (transfer_id, str(imdn_id or ''),
+                                             str(call_id or '')) if x)
+                echo = candidates & self.ownSelfTransfers
+                if echo:
+                    transfer_id = sorted(echo)[0]
+                    # Our own upload, come back to us. This device already
+                    # has the row, the file and the bubble, in the right
+                    # conversation. Taken in again it is a notification
+                    # about a recording we just made ourselves and a
+                    # conversation with ourselves shoved to the top of the
+                    # list -- and the row it would write is the one the
+                    # note then has to go and delete. Swallowed here, at
+                    # the door, which is the only place it costs nothing.
+                    BlinkLogger().log_info('Swallowed the echo of our own transfer %s'
+                                           % transfer_id)
+                    return
+                # The same fallback, for the same reason, on the device
+                # that did NOT make the recording: the note names a
+                # transfer id, and the XML the transfer arrives in does
+                # not repeat it anywhere but the message id.
+                for candidate in (transfer_id, str(imdn_id or ''), str(call_id or '')):
+                    party = candidate and self.callRecordingParties.get(candidate)
+                    if party:
+                        break
+            except Exception as e:
+                BlinkLogger().log_error('Cannot place a recording: %s' % e)
+            if party:
+                BlinkLogger().log_info('Transfer belongs to the conversation with %s, '
+                                       'not %s' % (party,
+                                                   format_identity_to_string(window_tab_identity)))
+                window_tab_identity = ChatIdentity(
+                    SIPURI.parse(str('sip:%s' % party)), '')
 
         # Every message needs an id that a second copy of it would share.
         # A CPIM body with no Message-ID header left this as None, and None
@@ -4499,8 +4688,15 @@ class SMSWindowManagerClass(NSObject):
                                         % (content_type, imdn_id, e))
             return
 
+        # application/sylk-message-metadata is deliberately absent. It is
+        # the companion pipeline -- waveforms, reply links, consumed
+        # marks, the note placing a call recording -- and not one of its
+        # flavours is a message: none may raise a banner, and none may
+        # count as unread. It used to carry locations as well, which is
+        # how a note about the user's own recording reached them as a
+        # notification reading "Location".
         note_new_message = content_type in ('text/plain', 'text/html',
-                                            LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE
+                                            LOCATION_CONTENT_TYPE
                                             ) + FILE_TRANSFER_CONTENT_TYPES and direction == 'incoming'
         # Only genuine incoming chat text (text/* — text/plain, text/html)
         # may raise the window to the front. Location payloads (coordinate
@@ -4517,7 +4713,7 @@ class SMSWindowManagerClass(NSObject):
         # the origin opens a bubble, so only the origin may bump the
         # unread counter.
         if (note_new_message
-                and content_type in (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE)
+                and content_type == LOCATION_CONTENT_TYPE
                 and self._is_silent_location_tick(str(account.id), content, metadata, content_type)):
             note_new_message = False
         # A share the other side is running is a fact about their address,
@@ -4527,8 +4723,7 @@ class SMSWindowManagerClass(NSObject):
         # when the coordinates cannot be decrypted -- the row is saying
         # that a share is running, which the v2 envelope states in the
         # clear even when its `value` is a blob we have no key for.
-        if (direction == 'incoming'
-                and content_type in (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE)):
+        if direction == 'incoming' and content_type == LOCATION_CONTENT_TYPE:
             payload = (self._decode_location_payload(str(account.id), content, metadata, content_type)
                        or envelope_summary(content, metadata, content_type))
             self.noteLocationSharingIndication(
@@ -4582,11 +4777,12 @@ class SMSWindowManagerClass(NSObject):
                 # already puts "Blink" above both, so a title of "New
                 # message" spends the most prominent line saying what the
                 # banner obviously is.
-                name, icon = self.notificationIdentity(
-                    remote_uri, window_tab_identity.display_name)
-                NSApp.delegate().notify_new_message(
-                    name, self._notificationBody(content, content_type),
-                    None, uri=remote_uri, icon=icon)
+                nc_body = self._notificationBody(content, content_type)
+                if nc_body is not None:
+                    name, icon = self.notificationIdentity(
+                        remote_uri, window_tab_identity.display_name)
+                    NSApp.delegate().notify_new_message(
+                        name, nc_body, None, uri=remote_uri, icon=icon)
             return
 
         # The conversation continues over whichever account the two of

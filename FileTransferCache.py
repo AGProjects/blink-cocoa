@@ -54,11 +54,21 @@ MAX_AUTO_IMAGE_BYTES = 8 * 1024 * 1024
 MAX_AUTO_VIDEO_BYTES = 20 * 1024 * 1024
 AUTO_VIDEO_MAX_AGE_DAYS = 7
 
-# Past this a file goes up as it is. Encrypting reads the whole thing into
-# memory and armours it, and Sylk Mobile draws the same line at 20 MB
-# (ENCRYPTABLE_FILE_SIZE_DEFAULT) -- staying with its number keeps the two
-# clients' behaviour identical for the same file.
-MAX_ENCRYPT_BYTES = 20 * 1000 * 1000
+# Past this a file goes up as it is: encrypting reads the whole thing into
+# memory and armours it, which is a copy and a half of the file in RAM and
+# a pause on the thread doing it.
+#
+# 50 MB, where Sylk Mobile's built-in default is 20
+# (ENCRYPTABLE_FILE_SIZE_DEFAULT). The two were the same number until a
+# call recording made the difference matter: a wav of a few minutes'
+# conversation clears 20 MB easily, and a recording of a call is exactly
+# the file that should not travel in the clear. Mobile lets the account
+# raise its own ceiling (device.maxEncryptFileSize), so a higher limit
+# here is not a client disagreeing with the format -- it is this client
+# using a bigger one of the same setting. What a peer receives is
+# unaffected either way: an encrypted transfer says so in its name, and
+# the size it was encrypted at is the sender's business.
+MAX_ENCRYPT_BYTES = 50 * 1000 * 1000
 
 # How many full-size pictures to keep decoded at once.
 # Comfortably more than one page of tiles (50), so a grid that has just

@@ -25,7 +25,9 @@ so the recipient draws our recording with no special handling.
 """
 
 __all__ = ['AudioRecorder', 'microphone_authorized', 'request_microphone',
-           'NOISE_FLOOR_DB', 'MAX_RECORDING_SECONDS']
+           'NOISE_FLOOR_DB', 'MAX_RECORDING_SECONDS',
+           'wave_is_finalised', 'wait_for_wave', 'wave_duration',
+           'finalise_wave', 'to_recording_format']
 
 import os
 import tempfile
@@ -86,6 +88,266 @@ MAX_RECORDING_SECONDS = 600.0
 # in one folder until they are sent, and a second take must not land on
 # the first one's bytes while it is still being uploaded.
 RECORDING_PREFIX = 'sylk-audio-recording'
+
+
+# ---------------------------------------------------------------------------
+# Call recordings
+#
+# The call recorder is not this class: a call is recorded by sipsimple's
+# RecordingWaveFile, straight to PCM, because the mixer writes what it
+# hears rather than encoding it. What follows turns one of those into the
+# same thing a voice note is -- an AAC .m4a at mobile's settings -- so a
+# recording plays in the transcript, on a phone, and anywhere else with no
+# decoder to ship and a tenth of the bytes.
+# ---------------------------------------------------------------------------
+
+# afconvert is part of macOS (CoreAudio's own command line tools) and has
+# been since the beginning. Named rather than found on PATH: a PATH lookup
+# is a thing that can be poisoned, and this is the only binary this module
+# will ever run.
+AFCONVERT = '/usr/bin/afconvert'
+
+# How long to wait for the recorder to finish writing before giving up.
+# sipsimple stops a recording by handing its WAV port to the mixer to be
+# freed on the mixer's own thread (RecordingWaveFile._stop, "Defer freeing
+# port + pool until the async REMOVE_PORT completes"), and pjmedia writes
+# the RIFF and data sizes into the header from that free. So at the moment
+# AudioStreamDidStopRecording is posted the file on disc still declares a
+# length of zero, and anything that opens it gets
+# kAudioFileInvalidFileError -- which is what "cannot play the recording"
+# was.
+# Short, because it is not really a wait for anything any more: the
+# destroy that would write the header does not arrive on this path, so
+# this is only the courtesy pause that lets a build where it DOES arrive
+# take the fast road. finalise_wave handles the rest.
+FINALISE_TIMEOUT = 3.0
+FINALISE_POLL = 0.2
+
+
+def _wave_layout(path):
+    """(declared data bytes, byte rate, where the samples start), or Nones.
+
+    Only the header is read: enough to say whether the writer has been
+    round to patch it, enough to work out how long the recording is
+    without opening an audio framework to ask, and enough to write the
+    sizes in ourselves when nothing else will.
+    """
+    import struct
+    try:
+        with open(path, 'rb') as handle:
+            riff = handle.read(12)
+            if len(riff) < 12 or riff[:4] != b'RIFF' or riff[8:12] != b'WAVE':
+                return None, None, None
+            byte_rate = None
+            while True:
+                header = handle.read(8)
+                if len(header) < 8:
+                    return None, byte_rate, None
+                name, size = struct.unpack('<4sI', header)
+                if name == b'fmt ':
+                    fmt = handle.read(size)
+                    if len(fmt) >= 12:
+                        byte_rate = struct.unpack('<I', fmt[8:12])[0]
+                    continue
+                if name == b'data':
+                    return size, byte_rate, handle.tell()
+                handle.seek(size + (size & 1), 1)
+    except (OSError, struct.error) as e:
+        BlinkLogger().log_debug('Cannot read the WAV header of %s: %s' % (path, e))
+        return None, None, None
+
+
+def _wave_actual_bytes(path):
+    """How many bytes of samples are really there, or None."""
+    _, _, offset = _wave_layout(path)
+    if offset is None:
+        return None
+    try:
+        return max(os.path.getsize(path) - offset, 0)
+    except OSError:
+        return None
+
+
+def wave_is_finalised(path):
+    """Whether the recorder has been back to write the sizes in.
+
+    A data chunk of zero is a file still being written -- or one whose
+    writer was never destroyed, which looks exactly the same and is just
+    as unplayable.
+    """
+    declared, _, offset = _wave_layout(path)
+    if not declared or offset is None:
+        return False
+    try:
+        return os.path.getsize(path) >= offset + declared
+    except OSError:
+        return False
+
+
+def finalise_wave(path):
+    """A playable copy of a recording whose header says it is empty.
+
+    Returns `path` itself when the header is already right, a new path
+    beside it in the temporary directory when it had to be repaired, and
+    None when the file is not a WAV this can make sense of.
+
+    Why this exists rather than a longer wait: pjmedia writes the RIFF and
+    data lengths from pjmedia_port_destroy, sipsimple defers that destroy
+    to its mixer (RecordingWaveFile._stop -> AudioMixer
+    ._remove_port_deferred), and on this path it does not arrive -- ten
+    seconds after the stop notification the header still declares zero
+    bytes of audio, which is kAudioFileInvalidFileError to every player on
+    the system. The samples are all on disc; only the two numbers in front
+    of them are wrong, and the file length says what they should be.
+
+    Repaired IN PLACE where the file can be written, and that is
+    deliberate: the recording in the user's history is the one they will
+    go back to, nothing else is ever going to finish it, and a folder of
+    call recordings that no player will open is the actual bug. Only the
+    two length fields are written -- eight bytes, no sample touched -- so
+    a writer that does come back later simply writes the same numbers
+    again. A copy is the fallback for a file we may not write.
+    """
+    declared, _, offset = _wave_layout(path)
+    if offset is None:
+        return None
+    try:
+        actual = max(os.path.getsize(path) - offset, 0)
+    except OSError:
+        return None
+    if not actual:
+        return None                     # a header and nothing else
+    if declared == actual:
+        return path                     # nothing to repair
+
+    import struct
+
+    def patch(handle):
+        handle.seek(4)
+        handle.write(struct.pack('<I', offset + actual - 8))
+        handle.seek(offset - 4)
+        handle.write(struct.pack('<I', actual))
+
+    try:
+        with open(path, 'r+b') as handle:
+            patch(handle)
+    except OSError as e:
+        BlinkLogger().log_debug('Cannot write the sizes into %s (%s); using a copy'
+                                % (path, e))
+    except struct.error as e:
+        BlinkLogger().log_error('Cannot finalise %s: %s' % (path, e))
+        return None
+    else:
+        BlinkLogger().log_info('Wrote the missing sizes into %s: %d bytes of audio, '
+                               'a header that said %d'
+                               % (os.path.basename(path), actual, declared or 0))
+        return path
+
+    target = os.path.join(tempfile.gettempdir(),
+                          'finalised-%s' % os.path.basename(path))
+    try:
+        with open(path, 'rb') as source, open(target, 'wb') as handle:
+            handle.write(source.read())
+        with open(target, 'r+b') as handle:
+            patch(handle)
+    except (OSError, struct.error) as e:
+        BlinkLogger().log_error('Cannot finalise %s: %s' % (path, e))
+        try:
+            os.remove(target)
+        except OSError:
+            pass
+        return None
+    BlinkLogger().log_info('Wrote the missing sizes into a copy of %s: %d bytes'
+                           % (os.path.basename(path), actual))
+    return target
+
+
+def wait_for_wave(path, timeout=FINALISE_TIMEOUT):
+    """Block until a recording is complete on disc. True if it got there.
+
+    BLOCKING -- call it off the GUI thread. Returning False is not a
+    failure: it means the sizes have to be written in here instead, which
+    is what finalise_wave is for.
+    """
+    deadline = time.time() + max(float(timeout), 0.0)
+    while True:
+        if wave_is_finalised(path):
+            return True
+        if time.time() >= deadline:
+            BlinkLogger().log_info('%s was not finalised by the recorder; '
+                                   'writing its sizes in here' % os.path.basename(path))
+            return False
+        time.sleep(FINALISE_POLL)
+
+
+def wave_duration(path):
+    """How long a WAV runs, in seconds, or None.
+
+    Measured from the file rather than from the header when the two
+    disagree, so this answers for a recording whose sizes were never
+    written in as well as for one whose were.
+    """
+    declared, byte_rate, offset = _wave_layout(path)
+    if not byte_rate or offset is None:
+        return None
+    actual = _wave_actual_bytes(path)
+    size = declared if declared and (actual is None or declared <= actual) else actual
+    if not size:
+        return None
+    return round(float(size) / float(byte_rate), 2)
+
+
+def to_recording_format(path):
+    """A voice-note-shaped copy of a WAV: AAC, 16 kHz, mono, 32 kbit/s.
+
+    The same numbers RECORDING_SETTINGS gives AVAudioRecorder, so a call
+    recording and a voice note are the same kind of file -- and mobile
+    records exactly this, which is what makes either of them playable
+    there. A minute of call goes from about 3.8 MB of PCM to 240 KB.
+
+    Returns the new path, or None -- and None is not a failure the caller
+    has to treat as one: the WAV is still a perfectly good recording, it
+    is merely fifteen times the size.
+
+    BLOCKING. afconvert rather than an AVAssetExportSession because the
+    export presets do not take settings: the preset picks its own sample
+    rate and bitrate, and "the same format as a voice note" then depends
+    on what version of macOS is running.
+    """
+    if not os.path.isfile(AFCONVERT):
+        BlinkLogger().log_info('No %s here; sharing the recording as PCM' % AFCONVERT)
+        return None
+    target = os.path.join(tempfile.gettempdir(),
+                          '%s.m4a' % os.path.splitext(os.path.basename(path))[0])
+    command = [AFCONVERT, '-f', 'm4af',
+               '-d', 'aac@%d' % int(RECORDING_SETTINGS[AVSampleRateKey]),
+               '-c', str(int(RECORDING_SETTINGS[AVNumberOfChannelsKey])),
+               '-b', str(int(RECORDING_SETTINGS[AVEncoderBitRateKey])),
+               path, target]
+    try:
+        import subprocess
+        result = subprocess.run(command, stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT, timeout=120)
+    except Exception as e:
+        BlinkLogger().log_error('Cannot convert %s: %s' % (path, e))
+        return None
+    if result.returncode != 0 or not os.path.isfile(target) or not os.path.getsize(target):
+        BlinkLogger().log_error('afconvert refused %s: %s'
+                                % (os.path.basename(path),
+                                   (result.stdout or b'').decode('utf-8', 'replace').strip()
+                                   or 'exit %d' % result.returncode))
+        try:
+            os.remove(target)
+        except OSError:
+            pass
+        return None
+    try:
+        BlinkLogger().log_info('Converted %s to %s (%d -> %d bytes)'
+                               % (os.path.basename(path), os.path.basename(target),
+                                  os.path.getsize(path), os.path.getsize(target)))
+    except OSError:
+        pass
+    return target
 
 
 def microphone_authorized():
