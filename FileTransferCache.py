@@ -24,6 +24,7 @@ import os
 import re
 import shutil
 import uuid
+from collections import OrderedDict
 from urllib.parse import unquote
 
 from AppKit import NSImage
@@ -184,7 +185,7 @@ class FileTransferCache(object):
             cls._instance._permanent = set()
             cls._instance._uploads = {}
             cls._instance._upload_phase = {}
-            cls._instance._originals = {}
+            cls._instance._originals = OrderedDict()
             cls._instance._natural = {}
             cls._instance._tasks = {}
             cls._instance._phase = {}
@@ -290,7 +291,18 @@ class FileTransferCache(object):
         try:
             if os.path.exists(target) and os.path.getsize(target) == os.path.getsize(source):
                 return target
-            shutil.copyfile(source, target)
+            # Same reasoning as _consume: never truncate a path something
+            # may still have mapped.
+            temporary = '%s.part-%s' % (target, uuid.uuid4().hex[:8])
+            try:
+                shutil.copyfile(source, temporary)
+                os.replace(temporary, target)
+            except (OSError, shutil.Error):
+                try:
+                    os.unlink(temporary)
+                except OSError:
+                    pass
+                raise
             BlinkLogger().log_info('Filed %s under %s' % (display_name(meta), target))
             return target
         except (OSError, shutil.Error) as e:
@@ -618,8 +630,25 @@ class FileTransferCache(object):
                     raise ValueError('could not be decrypted')
                 payload = plaintext
             target = self.path_for(meta, account, peer)
-            with open(target, 'wb') as handle:
-                handle.write(payload)
+            # Written aside and moved into place. An NSImage made from a
+            # path keeps the file mapped and decodes it lazily, at draw
+            # time, so truncating that path in place -- which is what
+            # opening it 'wb' does, from URLSession's thread, while the
+            # picture is on screen -- pulls the bytes out from under
+            # CoreGraphics. os.replace swaps the directory entry instead:
+            # the old mapping keeps the bytes it was made with, and the
+            # next NSImage gets the new file.
+            temporary = '%s.part-%s' % (target, uuid.uuid4().hex[:8])
+            try:
+                with open(temporary, 'wb') as handle:
+                    handle.write(payload)
+                os.replace(temporary, target)
+            except Exception:
+                try:
+                    os.unlink(temporary)
+                except OSError:
+                    pass
+                raise
             return target, None, None
         except Exception as e:
             return None, str(e), kind
@@ -703,6 +732,7 @@ class FileTransferCache(object):
             return None
         cached = self._originals.get(path)
         if cached is not None:
+            self._originals.move_to_end(path)
             return cached
         try:
             image = NSImage.alloc().initWithContentsOfFile_(path)
@@ -711,9 +741,17 @@ class FileTransferCache(object):
             return None
         if image is None:
             return None
-        if len(self._originals) >= MAX_CACHED_ORIGINALS:
-            self._originals.clear()
         self._originals[path] = image
+        # One at a time, least recently drawn first. This used to clear the
+        # whole dictionary, and that is what crashed the grid: a scroll pass
+        # paints more tiles than the cache holds, so the wipe landed BETWEEN
+        # a tile's drawRect: and the replay of the display list it recorded,
+        # and the cache was the only owner of the picture that display list
+        # was about to read. CoreGraphics went to fetch the bytes of an
+        # NSImage nothing held any more -- EXC_BAD_ACCESS inside
+        # imageProvider_getBytesAtPosition, under CABackingStoreUpdate.
+        while len(self._originals) > MAX_CACHED_ORIGINALS:
+            self._originals.popitem(last=False)
         return image
 
     def image(self, path, width):
