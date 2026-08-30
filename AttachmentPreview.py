@@ -61,6 +61,13 @@ BUTTON_H = 32.0
 # and tells the user nothing about what they are about to send.
 HERO_W = WINDOW_W - 2 * PAD
 HERO_H = 300.0
+# The "Send original" box under a single attachment, and the transport
+# under a movie: a play button and the bar it scrubs.
+CHECK_H = 18.0
+PLAYER_BAR_H = 32.0
+PLAY_W = 64.0
+# Room for the box at the right-hand end of a row in a multi-file list.
+ROW_CHECK_W = 86.0
 # A row in a multi-file list: thumbnail, name, size.
 ROW_H = 52.0
 THUMB = 40.0
@@ -68,10 +75,43 @@ LIST_MAX_H = 320.0
 
 IMAGE_SUFFIXES = ('.png', '.jpg', '.jpeg', '.gif', '.tiff', '.tif', '.bmp',
                   '.heic', '.heif', '.webp')
+# What the preview will offer to play, and -- with the pictures -- what
+# the "Send original" box appears for. Anything else is a file: there is
+# nothing to make smaller and no frame to show, so the box would be a
+# control that does nothing.
+VIDEO_SUFFIXES = ('.mp4', '.m4v', '.mov', '.qt', '.avi', '.mkv', '.webm',
+                  '.3gp', '.mpg', '.mpeg', '.m2v', '.wmv')
 
 
 def _is_image(path):
     return os.path.splitext(path)[1].lower() in IMAGE_SUFFIXES
+
+
+def _is_video(path):
+    return os.path.splitext(path)[1].lower() in VIDEO_SUFFIXES
+
+
+def _is_media(path):
+    """Whether sending this is a choice between original and smaller."""
+    return _is_image(path) or _is_video(path)
+
+
+def _default_send_original():
+    """The box's starting state, from Preferences -> File Transfers.
+
+    A preference rather than a constant because the answer is a habit:
+    somebody sending design work wants every file whole and should not
+    have to say so thirty times, and everybody else never opens the pane.
+    Per-batch from there -- ticking the box for one send does not change
+    the habit, which is the same shape as the toggle on mobile.
+    """
+    try:
+        from sipsimple.configuration.settings import SIPSimpleSettings
+        return bool(SIPSimpleSettings().file_transfer.send_media_as_original)
+    except Exception:
+        # A setting that cannot be read is not a reason to lose the
+        # window: compress, which is what the unticked box means.
+        return False
 
 
 def _thumbnail(path, size):
@@ -86,6 +126,17 @@ def _thumbnail(path, size):
         image = NSImage.alloc().initWithContentsOfFile_(path)
         if image is not None:
             return image
+    if _is_video(path):
+        # A row of identical movie icons says nothing about which clip is
+        # which. VideoPlayback already knows how to pull a frame a second
+        # in, which is the same picture the chat bubble will show.
+        try:
+            from VideoPlayback import poster_image
+            poster = poster_image(path)
+            if poster is not None:
+                return poster
+        except Exception as e:
+            BlinkLogger().log_debug('Cannot read a poster frame: %s' % e)
     icon = NSWorkspace.sharedWorkspace().iconForFile_(path)
     if icon is not None:
         icon.setSize_(NSMakeSize(size, size))
@@ -109,6 +160,13 @@ def _describe(path):
 COMPOSITE_COPY = 1
 FILETYPE_JPEG = 3
 FILETYPE_PNG = 4
+# NSButtonTypeSwitch, and the two run-loop modes the transport timer has
+# to be scheduled in. A modal window runs its own mode, and a timer added
+# only to the default one does not fire while the preview is up -- which
+# is every timer this window will ever have.
+BUTTON_TYPE_SWITCH = 1
+RUNLOOP_DEFAULT_MODE = 'kCFRunLoopDefaultMode'
+RUNLOOP_MODAL_MODE = 'NSModalPanelRunLoopMode'
 
 # Smaller than this in either direction and the drag was a click.
 MIN_CROP = 8.0
@@ -796,6 +854,20 @@ class AttachmentPreviewController(NSObject):
     _window_title = None
     _accept_title = None
     _square = False
+    # The movie's working set: the box its picture goes in, the key the
+    # shared player is holding it under, the transport that drives it and
+    # the timer that keeps the transport honest.
+    _video = None
+    _video_key = None
+    _play_button = None
+    _slider = None
+    _timer = None
+    # One "send original" flag per attachment, and the boxes that set
+    # them. By index rather than by path: a crop replaces the path under
+    # index 0, and a dictionary keyed on names would lose the answer the
+    # moment the user cropped.
+    _send_original = None
+    _checkboxes = None
 
     @objc.python_method
     def setupWithPaths(self, paths, title, window_title=None,
@@ -873,6 +945,100 @@ class AttachmentPreviewController(NSObject):
         return view
 
     @objc.python_method
+    def _videoView(self, path):
+        """A box the movie plays in, sized to the movie.
+
+        The picture comes from VideoPlayback, the one player this
+        application has: the same layer the chat bubbles borrow, lent to
+        this window while it is up and handed back when it closes. An
+        image view holds the poster frame underneath it, so the box shows
+        the clip straight away rather than a black rectangle waiting to
+        be pressed -- which is the whole point of stopping here, since a
+        file name has never told anybody which take they picked.
+        """
+        try:
+            from VideoPlayback import is_playable, poster_image
+        except Exception as e:
+            BlinkLogger().log_error('Cannot load the video player: %s' % e)
+            return None
+        try:
+            if not is_playable(path):
+                return None
+        except Exception:
+            return None
+
+        poster = None
+        try:
+            poster = poster_image(path)
+        except Exception as e:
+            BlinkLogger().log_debug('Cannot read a poster frame: %s' % e)
+
+        size = poster.size() if poster is not None else None
+        if size is not None and size.width and size.height:
+            scale = min(HERO_W / size.width, HERO_H / size.height, 1.0)
+            w = max(size.width * scale, 1.0)
+            h = max(size.height * scale, 1.0)
+        else:
+            # Nothing to measure it by: a 16:9 box, which is what most of
+            # what arrives here turns out to be.
+            w = HERO_W
+            h = HERO_W * 9.0 / 16.0
+
+        view = NSImageView.alloc().initWithFrame_(
+            NSMakeRect((WINDOW_W - w) / 2.0, 0, w, h))
+        view.setImageScaling_(NSImageScaleProportionallyUpOrDown)
+        if poster is not None:
+            view.setImage_(poster)
+        # attach() adds a sublayer, and a view that has not been told to
+        # be layer-backed has nowhere to put one.
+        view.setWantsLayer_(True)
+        self._video_key = 'attachment-preview:%s' % path
+        return view
+
+    @objc.python_method
+    def _transport(self, frame):
+        """Play/pause and a bar to scrub, under the movie."""
+        from AppKit import NSSlider
+        view = NSView.alloc().initWithFrame_(frame)
+
+        play = self._button(NSLocalizedString("Play", "Button title"),
+                            'playPause:')
+        play.setFrame_(NSMakeRect(0, 0, PLAY_W, frame.size.height))
+        view.addSubview_(play)
+        self._play_button = play
+
+        slider = NSSlider.alloc().initWithFrame_(
+            NSMakeRect(PLAY_W + GAP, 0,
+                       max(frame.size.width - PLAY_W - GAP, 1.0),
+                       frame.size.height))
+        slider.setMinValue_(0.0)
+        slider.setMaxValue_(1.0)
+        slider.setDoubleValue_(0.0)
+        slider.setTarget_(self)
+        slider.setAction_('scrub:')
+        view.addSubview_(slider)
+        self._slider = slider
+        return view
+
+    @objc.python_method
+    def _checkbox(self, frame, index, title):
+        """The "send it whole" box for the attachment at this index."""
+        box = NSButton.alloc().initWithFrame_(frame)
+        box.setButtonType_(BUTTON_TYPE_SWITCH)
+        box.setTitle_(title)
+        box.setFont_(NSFont.systemFontOfSize_(11))
+        box.setTarget_(self)
+        box.setAction_('originalToggled:')
+        box.setTag_(index)
+        box.setState_(1 if self._send_original[index] else 0)
+        box.setToolTip_(NSLocalizedString(
+            "Send the file exactly as it is on disc -- nothing re-encoded, "
+            "nothing removed. Unticked, pictures and movies are made "
+            "smaller first.", "Tooltip"))
+        self._checkboxes.append(box)
+        return box
+
+    @objc.python_method
     def _rowsView(self):
         """Every attachment as a row, tallest-first is not a thing here.
 
@@ -896,6 +1062,16 @@ class AttachmentPreviewController(NSObject):
             name, size = _describe(path)
             text_x = THUMB + GAP
             text_w = view.frame().size.width - text_x
+            if _is_media(path):
+                # Per file, because a selection is rarely all one thing:
+                # the screenshot can go smaller while the clip the whole
+                # point of the message goes whole.
+                text_w -= ROW_CHECK_W
+                view.addSubview_(self._checkbox(
+                    NSMakeRect(view.frame().size.width - ROW_CHECK_W,
+                               y + (ROW_H - CHECK_H) / 2.0,
+                               ROW_CHECK_W, CHECK_H),
+                    index, NSLocalizedString("Original", "Checkbox")))
             view.addSubview_(self._label(
                 NSMakeRect(text_x, y + ROW_H / 2.0 - 1, text_w, 17),
                 NSFont.systemFontOfSize_(13), NSColor.labelColor(), name,
@@ -908,20 +1084,46 @@ class AttachmentPreviewController(NSObject):
 
     @objc.python_method
     def _build(self, title):
-        single_image = len(self.paths) == 1 and _is_image(self.paths[0])
+        single = len(self.paths) == 1
+        single_image = single and _is_image(self.paths[0])
         hero = self._heroView(self.paths[0]) if single_image else None
+        # A movie gets the same box a picture gets, with a player in it.
+        video = (self._videoView(self.paths[0])
+                 if (single and not single_image and _is_video(self.paths[0]))
+                 else None)
         self._hero = hero
+        self._video = video
         self._original = self.paths[0] if hero is not None else None
 
-        if hero is not None:
-            body_h = hero.frame().size.height
+        # One flag per attachment, in step with self.paths, seeded from
+        # the habit in Preferences. Only media can carry it: for anything
+        # else there is nothing to make smaller, so the answer is always
+        # "as it is" and no box is offered.
+        default_original = _default_send_original()
+        self._send_original = [bool(default_original and _is_media(p))
+                               for p in self.paths]
+        self._checkboxes = []
+
+        body = hero if hero is not None else video
+        if body is not None:
+            body_h = body.frame().size.height
         else:
             body_h = min(ROW_H * max(len(self.paths), 1), LIST_MAX_H)
 
         header_h = 20.0
-        caption_h = 17.0 if (hero is not None) else 0.0
-        height = (PAD + BUTTON_H + GAP + body_h + (GAP + caption_h if caption_h else 0)
-                  + GAP + header_h + PAD)
+        caption_h = 17.0 if (body is not None) else 0.0
+        transport_h = PLAYER_BAR_H if video is not None else 0.0
+        # The box sits under a single attachment; in a list it sits in
+        # each row and costs no height of its own. Never in the photograph
+        # chooser: that window is picking a contact's picture, not sending
+        # anything, and "send original" is not a question it is asking.
+        check_h = (CHECK_H if (single and not self._square
+                               and _is_media(self.paths[0])) else 0.0)
+        height = (PAD + BUTTON_H + GAP
+                  + (check_h + GAP if check_h else 0)
+                  + (caption_h + GAP if caption_h else 0)
+                  + (transport_h + GAP if transport_h else 0)
+                  + body_h + GAP + header_h + PAD)
 
         window = NSWindow.alloc().initWithContentRect_styleMask_backing_defer_(
             NSMakeRect(0, 0, WINDOW_W, height), NSTitledWindowMask,
@@ -939,11 +1141,15 @@ class AttachmentPreviewController(NSObject):
             truncating=True))
 
         y -= GAP + body_h
-        if hero is not None:
-            frame = hero.frame()
-            hero.setFrame_(NSMakeRect(frame.origin.x, y,
+        if body is not None:
+            frame = body.frame()
+            body.setFrame_(NSMakeRect(frame.origin.x, y,
                                       frame.size.width, frame.size.height))
-            content.addSubview_(hero)
+            content.addSubview_(body)
+            if transport_h:
+                y -= GAP + transport_h
+                content.addSubview_(self._transport(
+                    NSMakeRect(PAD, y, WINDOW_W - 2 * PAD, transport_h)))
             # The name under the picture rather than over it: what the
             # recipient will see it called, which for a pasted screenshot
             # is the only place it appears at all.
@@ -966,6 +1172,12 @@ class AttachmentPreviewController(NSObject):
             scroll.setDrawsBackground_(False)
             scroll.setDocumentView_(rows)
             content.addSubview_(scroll)
+
+        if check_h:
+            y -= GAP + check_h
+            content.addSubview_(self._checkbox(
+                NSMakeRect(PAD, y, WINDOW_W - 2 * PAD, check_h), 0,
+                NSLocalizedString("Send original", "Checkbox")))
 
         send = self._button(self._accept_title
                             or NSLocalizedString("Send", "Button title"),
@@ -1031,10 +1243,17 @@ class AttachmentPreviewController(NSObject):
             self.window.center()
 
         self.accepted = False
+        if self._video is not None:
+            self._startTransport()
         try:
             NSApp.runModalForWindow_(self.window)
         finally:
             self.window.orderOut_(None)
+            # The clip stops with the window. A player left running is
+            # sound coming out of a conversation that has no window to
+            # point at, and a layer left attached is one this controller
+            # can never be collected past.
+            self._stopTransport()
             # The view holds a bound method of this controller, which
             # holds the view: left alone that is a pair neither of them
             # ever lets go of.
@@ -1045,6 +1264,134 @@ class AttachmentPreviewController(NSObject):
         self._discardTemporaries(
             self.paths[0] if (self.accepted and self.paths) else None)
         return list(self.paths) if self.accepted else []
+
+    @objc.python_method
+    def sendOriginalFlags(self):
+        """One flag per path, in the order runModal returned them."""
+        paths = self.paths or []
+        flags = list(self._send_original or [])
+        # Belt and braces: a mismatch can only come from a path list that
+        # changed under us, and the safe answer for a file we have no
+        # answer for is the one that alters nothing.
+        while len(flags) < len(paths):
+            flags.append(True)
+        return flags[:len(paths)]
+
+    def originalToggled_(self, sender):
+        try:
+            index = int(sender.tag())
+        except Exception:
+            return
+        if 0 <= index < len(self._send_original or []):
+            self._send_original[index] = bool(sender.state())
+
+    # -- the movie -------------------------------------------------------
+
+    @objc.python_method
+    def _player(self):
+        """The application's one video player, or None if it will not load."""
+        try:
+            from VideoPlayback import VideoPlayback
+            return VideoPlayback()
+        except Exception as e:
+            BlinkLogger().log_error('Cannot reach the video player: %s' % e)
+            return None
+
+    @objc.python_method
+    def _startTransport(self):
+        player = self._player()
+        if player is None:
+            return
+        try:
+            player.load(self.paths[0], self._video_key)
+            player.attach(self._video)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot load the movie: %s' % e)
+
+        # Scheduled in the modal mode as well as the default one. A modal
+        # window runs its own run-loop mode, and a timer added only to the
+        # default mode does not fire while this window is up -- which is
+        # the only time this one has anything to do.
+        from Foundation import NSTimer, NSRunLoop
+        try:
+            timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(
+                0.2, self, 'tick:', None, True)
+            loop = NSRunLoop.currentRunLoop()
+            loop.addTimer_forMode_(timer, RUNLOOP_MODAL_MODE)
+            loop.addTimer_forMode_(timer, RUNLOOP_DEFAULT_MODE)
+            self._timer = timer
+        except Exception as e:
+            BlinkLogger().log_error('Cannot drive the preview transport: %s' % e)
+
+    @objc.python_method
+    def _stopTransport(self):
+        if self._timer is not None:
+            try:
+                self._timer.invalidate()
+            except Exception:
+                pass
+            self._timer = None
+        if self._video is None:
+            return
+        player = self._player()
+        if player is None:
+            return
+        try:
+            player.stop_for_key(self._video_key)
+            # Only if it is still ours: something else may have taken the
+            # layer while this window was up, and taking it back off them
+            # would blank a bubble that is legitimately playing.
+            if player.host() is self._video:
+                player.detach()
+        except Exception as e:
+            BlinkLogger().log_debug('Cannot stop the preview player: %s' % e)
+
+    @objc.python_method
+    def _syncTransport(self):
+        """Keep the button and the bar telling the truth."""
+        player = self._player()
+        if player is None or self._video is None:
+            return
+        # attach on every pass, as its docstring asks: it is what keeps
+        # the layer over the poster rather than somewhere the picture no
+        # longer is.
+        player.attach(self._video)
+        playing = player.is_playing(self._video_key)
+        if self._play_button is not None:
+            self._play_button.setTitle_(
+                NSLocalizedString("Pause", "Button title") if playing
+                else NSLocalizedString("Play", "Button title"))
+        if self._slider is not None and playing:
+            # Only while it runs. Writing the position back under a finger
+            # that is dragging the knob is a scrubber fighting the person
+            # using it.
+            try:
+                self._slider.setDoubleValue_(
+                    float(player.progress(self._video_key) or 0.0))
+            except Exception:
+                pass
+
+    def playPause_(self, sender):
+        player = self._player()
+        if player is None or not self.paths:
+            return
+        try:
+            player.toggle(self.paths[0], self._video_key)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot play the movie: %s' % e)
+        self._syncTransport()
+
+    def scrub_(self, sender):
+        player = self._player()
+        if player is None:
+            return
+        try:
+            player.seek(float(sender.doubleValue()), self._video_key)
+        except Exception as e:
+            BlinkLogger().log_debug('Cannot seek the movie: %s' % e)
+
+    def tick_(self, timer):
+        self._syncTransport()
 
     @objc.python_method
     def _selectionChanged(self):
@@ -1153,10 +1500,17 @@ class AttachmentPreviewController(NSObject):
 
 
 def confirm_attachments(paths, parent=None, title=None):
-    """Ask before sending. Returns the paths to send, or [] for no.
+    """Ask before sending. Returns [(path, send_original), ...], or [] for no.
 
     The one entry point for every source: whatever produced the files,
     this is what stands between them and the transfer.
+
+    The second half of each pair is the answer to the "Send original"
+    box: True means the file goes exactly as it is on disc, False that
+    the caller may make it smaller first. It is a pair rather than two
+    lists because the answer belongs to the file -- a selection is rarely
+    all one thing, and losing which flag went with which picture is the
+    one mistake this window exists to prevent.
     """
     paths = [str(p) for p in (paths or []) if os.path.isfile(str(p))]
     if not paths:
@@ -1164,13 +1518,17 @@ def confirm_attachments(paths, parent=None, title=None):
     try:
         controller = AttachmentPreviewController.alloc().init()
         if controller is None:
-            return paths
-        return controller.setupWithPaths(paths, title).runModal(parent)
+            return [(path, True) for path in paths]
+        chosen = controller.setupWithPaths(paths, title).runModal(parent)
+        if not chosen:
+            return []
+        return list(zip(chosen, controller.sendOriginalFlags()))
     except Exception as e:
         BlinkLogger().log_error('Cannot show the attachment preview: %s' % e)
         # Never a reason to lose what the user asked to send: a preview
-        # that will not build falls back to the behaviour that had none.
-        return paths
+        # that will not build falls back to the behaviour that had none,
+        # which sent every file exactly as it arrived.
+        return [(path, True) for path in paths]
 
 
 def choose_picture(path, parent=None, title=None, accept=None):

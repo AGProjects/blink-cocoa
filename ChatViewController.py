@@ -658,17 +658,56 @@ class ChatViewController(NSObject):
             confirm_attachments = None
 
         if confirm_attachments is not None:
-            paths = confirm_attachments(paths, self.attachmentPreviewParent(),
-                                        title or self.attachmentPreviewTitle())
-            if not paths:
+            plan = confirm_attachments(paths, self.attachmentPreviewParent(),
+                                       title or self.attachmentPreviewTitle())
+            if not plan:
                 BlinkLogger().log_info('Attachment cancelled')
                 return 0
+        else:
+            # No preview means nobody was asked, and a question nobody was
+            # asked is answered the way it always was: send it as it is.
+            plan = [(path, True) for path in paths]
+
+        paths = [self.prepareAttachment(path, send_original)
+                 for (path, send_original) in plan]
 
         try:
             return send(paths) or 0
         except Exception as e:
             BlinkLogger().log_error('Cannot send the attachments: %s' % e)
             return 0
+
+    @objc.python_method
+    def prepareAttachment(self, path, send_original):
+        """The file that actually goes, for the answer the user gave.
+
+        The single place a picture or a movie is made smaller on its way
+        out. It runs after the preview and before the transfer, so what
+        the conversation hands to the uploader is already the artefact the
+        recipient will get -- which is what lets the transcript reference
+        the file that was really sent rather than the one that was picked.
+
+        Not yet implemented: every path comes back unchanged, so today
+        this is exactly the behaviour that was here before. What goes in
+        it, to match what mobile already does (sylk-mobile app.js,
+        resizeBeforeUpload / compressVideoBeforeUpload):
+
+          * `send_original` True -> return `path`, always. The box means
+            the bytes on disc, not a gentler preset, and it is the escape
+            hatch for somebody sending a file that has to stay intact.
+          * pictures -> CGImageSource to CGImageDestination, longest edge
+            capped at 1200 and never enlarged (the bug mobile shipped),
+            kCGImageDestinationLossyCompressionQuality 0.95, EXIF dropped
+            -- and the result used only if it came out smaller.
+          * movies -> AVAssetReader/AVAssetWriter, longest edge 960, H.264
+            High with AAC-LC 128k in an MP4 written for streaming, at the
+            bitrate mobile derives from the source. Slow and asynchronous:
+            the preview will need a progress bar and a cancel before this
+            one can land.
+          * either way, write into a temporary directory, hand back that
+            path, and unlink it once the transfer has taken it.
+        """
+        return path
 
     @objc.python_method
     def attachmentPreviewParent(self):

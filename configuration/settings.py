@@ -86,6 +86,12 @@ class FileTransferSettingsExtension(FileTransferSettings):
     auto_accept = Setting(type=bool, default=False)
     render_incoming_video_in_chat_window = Setting(type=bool, default=False)
     render_incoming_image_in_chat_window = Setting(type=bool, default=True)
+    # What the "Send original" box in the attachment preview starts as.
+    # False means pictures and movies are made smaller before they go,
+    # which is the default on mobile too and the reason the box exists at
+    # all: the person who needs the file intact ticks it, everybody else
+    # never thinks about it.
+    send_media_as_original = Setting(type=bool, default=False)
 
 
 class LogsSettingsExtension(LogsSettings):
