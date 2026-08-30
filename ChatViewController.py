@@ -340,14 +340,39 @@ class ChatInputTextView(NSTextView):
         confirm(paths)
         return True
 
+    def paste_(self, sender):
+        """Cmd-V into the composer: a file if the board holds one, else text.
+
+        Reached from the Edit menu and from keyDown_ below. A picture or a
+        file becomes a transfer the owner confirms; everything else is
+        pasted as plain text, which is what this view holds -- the nib says
+        importsGraphics="NO", so the inherited paste_ would consult types it
+        cannot read and quietly do nothing.
+        """
+        if self._pasteAsTransfer():
+            return
+        self.pasteAsPlainText_(sender)
+
     def keyDown_(self, event):
         self._applyChatLanguage()
         if event.keyCode() == 36 and (event.modifierFlags() & NSShiftKeyMask):
             self.insertText_('\r\n')
         elif (event.modifierFlags() & NSCommandKeyMask):
             keys = event.characters()
-            if keys[0] == 'i' and self.owner.delegate.sessionController.info_panel is not None:
+            key = keys.lower() if keys else ''
+            if key == 'i' and self.owner.delegate.sessionController.info_panel is not None:
                 self.owner.delegate.sessionController.info_panel.toggle()
+            elif key == 'v' and self.isEditable():
+                # Cmd-V is normally consumed by the Edit menu's Paste item
+                # before it ever reaches a key handler -- but only while that
+                # item is ENABLED, and for a plain text view it is disabled
+                # whenever the board holds something this view cannot read
+                # (an image, a file from the Finder). The keystroke then fell
+                # through to here, where every unrecognised Command
+                # combination is swallowed, so Cmd-V did nothing at all.
+                # Handled explicitly instead of widening the swallow: the
+                # rest of the Command space is left exactly as it was.
+                self.paste_(None)
         elif self.isEditable():
             objc.super(ChatInputTextView, self).keyDown_(event)
 
