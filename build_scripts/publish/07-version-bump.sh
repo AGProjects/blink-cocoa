@@ -23,6 +23,22 @@
 # will not offer the update. This script refuses a non-increasing build number
 # unless --force is given.
 #
+# The entry is cloned from the previous one, so anything stale in that entry
+# propagates forever. Two fields are therefore rewritten explicitly rather
+# than inherited:
+#
+#   enclosure url  -- must end in .dmg. Sparkle 1.x names the downloaded file
+#                     from the server's suggested filename, and picks an
+#                     unarchiver by that name's EXTENSION. An enclosure
+#                     pointing at a redirector script (download-beta.phtml)
+#                     downloads fine and then fails with "An error occurred
+#                     while extracting the archive", because .phtml matches no
+#                     unarchiver. Point it at the file itself.
+#   minimumSystemVersion -- the OS Blink is actually built for, from
+#                     blink_min_os.sh. An appcast claiming a newer floor than
+#                     the app has silently withholds every update from the
+#                     users on the older OS.
+#
 # Run it after 06-dmg.sh and before 08-upload.sh (which rsyncs the appcast).
 #
 set -u
@@ -34,6 +50,14 @@ PROJECT="../../Blink.xcodeproj"
 APPCAST="../../ReleaseNotes/BlinkAppcast.xml"
 CHANGELOG="../../ReleaseNotes/changelog-classic.html"
 SCHEME="Blink"
+DMG="dmg/Blink.dmg"
+
+# Where 08-upload.sh puts the DMG, as a URL. It has to be the .dmg itself:
+# see the note above about how Sparkle chooses an unarchiver.
+DMG_URL="${BLINK_DMG_URL:-https://download.ag-projects.com/Blink/MacOSX/Blink.dmg}"
+
+# The floor the app is really built for.
+MIN_OS="$(BLINK_MIN_OS="${BLINK_MIN_OS:-}" . ../blink_min_os.sh >/dev/null 2>&1; echo "${BLINK_MIN_OS:-13.0}")"
 
 FORCE=0
 EXPLICIT_MKT=""
@@ -108,9 +132,16 @@ fi
 NEWDATE="$(date "+%a %b %e %H:%M:%S %Z %Y")"
 
 # --- prepend a cloned <item> with the new versions + date ------------------
-APPCAST="$APPCAST" MKT="$MKT" BUILD="$BUILD" NEWDATE="$NEWDATE" python3 - <<'PY'
+DMG_LENGTH=""
+if [ -f "$DMG" ]; then
+    DMG_LENGTH="$(stat -f%z "$DMG" 2>/dev/null || echo '')"
+fi
+
+APPCAST="$APPCAST" MKT="$MKT" BUILD="$BUILD" NEWDATE="$NEWDATE" \
+DMG_URL="$DMG_URL" MIN_OS="$MIN_OS" DMG_LENGTH="$DMG_LENGTH" python3 - <<'PY'
 import os, re, sys
 path = os.environ["APPCAST"]; mkt = os.environ["MKT"]; build = os.environ["BUILD"]; date = os.environ["NEWDATE"]
+dmg_url = os.environ["DMG_URL"]; min_os = os.environ["MIN_OS"]; length = os.environ.get("DMG_LENGTH", "")
 s = open(path, encoding="utf-8").read()
 m = re.search(r'[ \t]*<item>.*?</item>\n', s, re.S)
 if not m:
@@ -130,6 +161,17 @@ else:
     nb = re.sub(r'(^([ \t]*)sparkle:version="[^"]*"\n)',
                 r'\1\2sparkle:shortVersionString="%s"\n' % mkt, nb, count=1, flags=re.M)
 nb = re.sub(r'<pubDate>.*?</pubDate>', '<pubDate>%s</pubDate>' % date, nb, count=1, flags=re.S)
+# Stated rather than inherited -- see the note at the top of this script.
+nb = re.sub(r'(<enclosure\s+url=")[^"]*(")', r'\g<1>%s\g<2>' % dmg_url, nb, count=1)
+nb = re.sub(r'<sparkle:minimumSystemVersion>[^<]*</sparkle:minimumSystemVersion>',
+            '<sparkle:minimumSystemVersion>%s</sparkle:minimumSystemVersion>' % min_os,
+            nb, count=1)
+if length:
+    if 'length=' in nb:
+        nb = re.sub(r'length="[^"]*"', 'length="%s"' % length, nb, count=1)
+    else:
+        nb = re.sub(r'(^([ \t]*)sparkle:version="[^"]*"\n)',
+                    r'\1\2length="%s"\n' % length, nb, count=1, flags=re.M)
 if nb == block:
     sys.exit("Refusing to write: template substitution changed nothing.")
 s = s[:m.start()] + nb + s[m.start():]

@@ -7,12 +7,12 @@
       <language>en</language>
          <item>
             <title>Version 9.6.0</title>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
 		<sparkle:releaseNotesLink>
 			https://blink.sipthor.net/ReleaseNotes/changelog-classic.html
 		</sparkle:releaseNotesLink>
             <pubDate>Sun Aug 30 17:53:56 CEST 2026</pubDate>
-            <enclosure url="https://blink.sipthor.net/download-beta.phtml?os=mac"
+            <enclosure url="https://download.ag-projects.com/Blink/MacOSX/Blink.dmg"
                        sparkle:version="949"
                        sparkle:shortVersionString="9.6.0"
                        type="application/octet-stream"
@@ -20,7 +20,7 @@
          </item>
          <item>
             <title>Version 9.5.5</title>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
 		<sparkle:releaseNotesLink>
 			https://blink.sipthor.net/ReleaseNotes/changelog-classic.html
 		</sparkle:releaseNotesLink>
@@ -33,7 +33,7 @@
          </item>
          <item>
             <title>Version 9.5.3</title>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
 		<sparkle:releaseNotesLink>
 			https://blink.sipthor.net/ReleaseNotes/changelog-classic.html
 		</sparkle:releaseNotesLink>
@@ -46,7 +46,7 @@
          </item>
          <item>
             <title>Version 9.5.2</title>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
 		<sparkle:releaseNotesLink>
 			https://blink.sipthor.net/ReleaseNotes/changelog-classic.html
 		</sparkle:releaseNotesLink>
@@ -59,7 +59,7 @@
          </item>
          <item>
             <title>Version 9.5.1</title>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
 		<sparkle:releaseNotesLink>
 			https://blink.sipthor.net/ReleaseNotes/changelog-classic.html
 		</sparkle:releaseNotesLink>
@@ -72,7 +72,7 @@
          </item>
          <item>
             <title>Version 9.5.0</title>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
 		<sparkle:releaseNotesLink>
 			https://blink.sipthor.net/ReleaseNotes/changelog-classic.html
 		</sparkle:releaseNotesLink>
@@ -85,7 +85,7 @@
          </item>
          <item>
             <title>Version 9.4.8</title>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
 		<sparkle:releaseNotesLink>
 			https://blink.sipthor.net/ReleaseNotes/changelog-classic.html
 		</sparkle:releaseNotesLink>
@@ -98,7 +98,7 @@
          </item>
          <item>
             <title>Version 9.4.7</title>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
 		<sparkle:releaseNotesLink>
 			https://blink.sipthor.net/ReleaseNotes/changelog-classic.html
 		</sparkle:releaseNotesLink>
@@ -111,7 +111,7 @@
          </item>
          <item>
             <title>Version 9.4.6</title>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
 		<sparkle:releaseNotesLink>
 			https://blink.sipthor.net/ReleaseNotes/changelog-classic.html
 		</sparkle:releaseNotesLink>
@@ -124,7 +124,7 @@
          </item>
          <item>
             <title>Version 9.4.5</title>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
 		<sparkle:releaseNotesLink>
 			https://blink.sipthor.net/ReleaseNotes/changelog-classic.html
 		</sparkle:releaseNotesLink>
@@ -137,7 +137,7 @@
          </item>
          <item>
             <title>Version 9.4.4</title>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
 		<sparkle:releaseNotesLink>
 			https://blink.sipthor.net/ReleaseNotes/changelog-classic.html
 		</sparkle:releaseNotesLink>
@@ -150,7 +150,7 @@
          </item>
          <item>
             <title>Version 9.4.3</title>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
 		<sparkle:releaseNotesLink>
 			https://blink.sipthor.net/ReleaseNotes/changelog-classic.html
 		</sparkle:releaseNotesLink>
@@ -162,7 +162,7 @@
          </item>
          <item>
             <title>Version 9.4.0</title>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
 		<sparkle:releaseNotesLink>
 			https://blink.sipthor.net/ReleaseNotes/changelog-beta.html
 		</sparkle:releaseNotesLink>
@@ -174,7 +174,7 @@
          </item>
          <item>
             <title>Version 9.3.2</title>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
 		<sparkle:releaseNotesLink>
 			https://blink.sipthor.net/ReleaseNotes/changelog-beta.html
 		</sparkle:releaseNotesLink>
@@ -186,7 +186,7 @@
          </item>
          <item>
             <title>Version 9.3.0</title>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
 		<sparkle:releaseNotesLink>
 			https://blink.sipthor.net/ReleaseNotes/changelog-beta.html
 		</sparkle:releaseNotesLink>
