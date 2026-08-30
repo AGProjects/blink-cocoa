@@ -53,8 +53,6 @@
 	<string>13.0</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Required for VoIP calls</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Required to share your location in a conversation</string>
 	<key>NSContactsUsageDescription</key>
 	<string>Required for calling your contacts. No data is collected. Privacy policy available at http://icanblink.com/privacy</string>
 	<key>NSMainNibFile</key>
