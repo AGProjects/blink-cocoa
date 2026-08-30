@@ -25,6 +25,7 @@ __all__ = ['confirm_attachments', 'choose_picture', 'crop_image']
 
 import os
 import tempfile
+import time
 
 import objc
 
@@ -42,6 +43,8 @@ from AppKit import (NSApp,
                     NSTextField,
                     NSTitledWindowMask,
                     NSView,
+                    NSViewHeightSizable,
+                    NSViewWidthSizable,
                     NSWindow,
                     NSWorkspace)
 from Foundation import (NSLocalizedString, NSMakePoint, NSMakeRect,
@@ -64,8 +67,18 @@ HERO_H = 300.0
 # The "Send original" box under a single attachment, and the transport
 # under a movie: a play button and the bar it scrubs.
 CHECK_H = 18.0
+# A second line under the name and the size: what the file IS -- how many
+# pixels across, how many frames a second, how long. Its own line rather
+# than more words on the first one, because the first line is a name that
+# can be any length and these are the facts that must not be the half
+# that gets truncated away.
+FACTS_H = 14.0
 PLAYER_BAR_H = 32.0
 PLAY_W = 64.0
+# The two marks that bound a trim, at the right-hand end of the scrub bar.
+# Narrow on purpose: they are punctuation on the bar, not buttons of their
+# own standing, and the bar is the thing worth the width.
+MARK_W = 30.0
 # Room for the box at the right-hand end of a row in a multi-file list.
 ROW_CHECK_W = 86.0
 # A row in a multi-file list: thumbnail, name, size.
@@ -143,6 +156,127 @@ def _thumbnail(path, size):
     return icon
 
 
+_FACTS_CACHE = {}
+
+
+def _picture_facts(path):
+    """"4032 x 3024", or '' if the file will not say.
+
+    From the file's properties, not from a decode: this runs while a
+    window is being laid out, and opening a 48-megapixel photograph to
+    find out how wide it is would be felt.
+    """
+    try:
+        from Quartz import (CGImageSourceCreateWithURL,
+                            CGImageSourceCopyPropertiesAtIndex,
+                            kCGImagePropertyPixelWidth,
+                            kCGImagePropertyPixelHeight,
+                            kCGImagePropertyOrientation)
+        from Foundation import NSURL
+    except Exception:
+        return ''
+    source = CGImageSourceCreateWithURL(NSURL.fileURLWithPath_(str(path)), None)
+    if source is None:
+        return ''
+    props = CGImageSourceCopyPropertiesAtIndex(source, 0, None)
+    if not props:
+        return ''
+    width = props.get(kCGImagePropertyPixelWidth)
+    height = props.get(kCGImagePropertyPixelHeight)
+    if not width or not height:
+        return ''
+    # A photograph taken sideways is stored the way the sensor read it,
+    # with a tag saying which way up it goes. The number that means
+    # anything to a person is the one they will see.
+    try:
+        if int(props.get(kCGImagePropertyOrientation, 1)) >= 5:
+            width, height = height, width
+    except (TypeError, ValueError):
+        pass
+    return '%d x %d' % (int(width), int(height))
+
+
+def _movie_facts(path):
+    """"1920 x 1080, 30 fps, 0:42", or as much of it as the file will say."""
+    try:
+        from AVFoundation import AVURLAsset, AVMediaTypeVideo
+        from CoreMedia import CMTimeGetSeconds
+        from Foundation import NSURL
+    except Exception:
+        return ''
+    asset = AVURLAsset.URLAssetWithURL_options_(
+        NSURL.fileURLWithPath_(str(path)), None)
+    if asset is None:
+        return ''
+    parts = []
+    try:
+        tracks = list(asset.tracksWithMediaType_(AVMediaTypeVideo) or [])
+    except Exception:
+        tracks = []
+    if tracks:
+        track = tracks[0]
+        try:
+            size = track.naturalSize()
+            width, height = abs(size.width), abs(size.height)
+            # Phone video is recorded landscape and rotated by a
+            # transform; the stored size is the sensor's, the useful one
+            # is what plays. A quarter turn is a b and c of magnitude 1.
+            transform = track.preferredTransform()
+            if abs(getattr(transform, 'b', 0)) > 0.5 and abs(getattr(transform, 'c', 0)) > 0.5:
+                width, height = height, width
+            if width and height:
+                parts.append('%d x %d' % (int(round(width)), int(round(height))))
+        except Exception:
+            pass
+        try:
+            fps = float(track.nominalFrameRate() or 0.0)
+            if fps > 0:
+                parts.append('%g fps' % round(fps, 2))
+        except Exception:
+            pass
+    try:
+        seconds = float(CMTimeGetSeconds(asset.duration()) or 0.0)
+        if seconds > 0:
+            parts.append(_seconds(seconds))
+    except Exception:
+        pass
+    return ', '.join(parts)
+
+
+def _facts(path):
+    """What the file is, past its name and its size. Cached; '' if unknown.
+
+    Cached because it is asked for on every layout of a window that
+    relays out on every trim, every crop and every tick of the transport,
+    and the answer cannot change for a given path -- a trim writes a new
+    file rather than editing one.
+    """
+    path = str(path or '')
+    try:
+        stamp = (path, os.path.getmtime(path), os.path.getsize(path))
+    except OSError:
+        return ''
+    try:
+        return _FACTS_CACHE[stamp]
+    except KeyError:
+        pass
+    try:
+        if _is_image(path):
+            answer = _picture_facts(path)
+        elif _is_video(path):
+            answer = _movie_facts(path)
+        else:
+            answer = ''
+    except Exception as e:
+        BlinkLogger().log_debug('Cannot read what %s is: %s'
+                                % (os.path.basename(path), e))
+        answer = ''
+    if len(_FACTS_CACHE) > 200:
+        _FACTS_CACHE.clear()
+    _FACTS_CACHE[stamp] = answer
+    return answer
+
+
 def _describe(path):
     """"name -- 2.4 MB", or just the name when the size cannot be read."""
     name = os.path.basename(path)
@@ -164,7 +298,15 @@ FILETYPE_PNG = 4
 # to be scheduled in. A modal window runs its own mode, and a timer added
 # only to the default one does not fire while the preview is up -- which
 # is every timer this window will ever have.
-BUTTON_TYPE_SWITCH = 1
+#
+# THREE. The value here was 1, which is NSButtonTypePushOnPushOff -- so
+# every "send original" box was drawn as a push button that stayed in
+# when clicked, not as a tick box. It still answered the same question
+# and still remembered the answer; it just did not look like a thing you
+# tick, and a button that is only sometimes pushed in is not something
+# anyone reads as on or off. The enum: 0 momentary light, 1 push on/push
+# off, 2 toggle, 3 SWITCH, 4 radio.
+BUTTON_TYPE_SWITCH = 3
 RUNLOOP_DEFAULT_MODE = 'kCFRunLoopDefaultMode'
 RUNLOOP_MODAL_MODE = 'NSModalPanelRunLoopMode'
 
@@ -291,6 +433,111 @@ def crop_image(image, picture, selection):
     return cropped
 
 
+def _seconds(value):
+    """0:07, or 1:04:09 for something long enough to need the hours."""
+    try:
+        total = int(round(float(value)))
+    except (TypeError, ValueError):
+        return '?'
+    if total < 0:
+        total = 0
+    hours, rest = divmod(total, 3600)
+    minutes, secs = divmod(rest, 60)
+    if hours:
+        return '%d:%02d:%02d' % (hours, minutes, secs)
+    return '%d:%02d' % (minutes, secs)
+
+
+def _trim_to_file(path, start, end):
+    """Write the part between two instants as a new movie, and return it.
+
+    Never in place, for the same reason a crop never is: the file was
+    lent to the conversation, not given to it, and the original has to
+    still be there to revert to.
+
+    Passthrough first -- it copies the existing streams into a new
+    container without re-encoding, so a trim costs a moment rather than
+    minutes and the clip that arrives is bit-for-bit the part that was
+    kept. It cuts on the nearest sync frames, so the result can run a
+    fraction longer at the ends than the marks asked for; re-encoding to
+    land exactly on them would spend the quality of the whole clip on
+    tenths of a second at its edges. Only if passthrough will not take
+    the job at all do we re-encode.
+    """
+    from AVFoundation import (AVURLAsset, AVAssetExportSession,
+                              AVAssetExportPresetPassthrough,
+                              AVAssetExportPresetHighestQuality,
+                              AVFileTypeQuickTimeMovie, AVFileTypeMPEG4)
+    from CoreMedia import CMTimeMakeWithSeconds, CMTimeRangeMake
+    from Foundation import NSURL, NSDate, NSRunLoop
+
+    url = NSURL.fileURLWithPath_(str(path))
+    asset = AVURLAsset.URLAssetWithURL_options_(url, None)
+    if asset is None:
+        BlinkLogger().log_error('Cannot read %s to trim it' % path)
+        return None
+
+    suffix = os.path.splitext(path)[1].lower()
+    mp4 = suffix in ('.mp4', '.m4v')
+    folder = tempfile.mkdtemp(prefix='blink-trim-')
+    target = os.path.join(folder, '%s-part%s'
+                          % (os.path.splitext(os.path.basename(path))[0],
+                             '.mp4' if mp4 else '.mov'))
+
+    # 600 is the timescale QuickTime has used since it was QuickTime: it
+    # divides every common frame rate, so a mark taken off a scrub bar
+    # lands on a frame boundary rather than a hair either side of one.
+    time_range = CMTimeRangeMake(CMTimeMakeWithSeconds(float(start), 600),
+                                 CMTimeMakeWithSeconds(float(end - start), 600))
+
+    attempts = ((AVAssetExportPresetPassthrough,
+                 AVFileTypeMPEG4 if mp4 else AVFileTypeQuickTimeMovie),
+                (AVAssetExportPresetHighestQuality, AVFileTypeMPEG4))
+    for preset, filetype in attempts:
+        session = AVAssetExportSession.exportSessionWithAsset_presetName_(
+            asset, preset)
+        if session is None:
+            continue
+        try:
+            supported = list(session.supportedFileTypes() or [])
+        except Exception:
+            supported = []
+        if supported and filetype not in supported:
+            filetype = supported[0]
+            target = os.path.splitext(target)[0] + (
+                '.mp4' if 'mpeg-4' in str(filetype).lower() else '.mov')
+        try:
+            if os.path.exists(target):
+                os.remove(target)
+        except OSError:
+            pass
+        session.setOutputURL_(NSURL.fileURLWithPath_(target))
+        session.setOutputFileType_(filetype)
+        session.setTimeRange_(time_range)
+        session.exportAsynchronouslyWithCompletionHandler_(lambda: None)
+        # Waited for on the run loop rather than with a lock: this is the
+        # GUI thread with a modal window on it, and a thread parked on a
+        # semaphore here is a beachball. Both modes, because a modal
+        # window runs its own.
+        deadline = time.time() + 600
+        while session.status() in (1, 2) and time.time() < deadline:
+            NSRunLoop.currentRunLoop().runMode_beforeDate_(
+                RUNLOOP_MODAL_MODE, NSDate.dateWithTimeIntervalSinceNow_(0.05))
+            NSRunLoop.currentRunLoop().runMode_beforeDate_(
+                RUNLOOP_DEFAULT_MODE, NSDate.dateWithTimeIntervalSinceNow_(0.0))
+        if session.status() == 3 and os.path.exists(target):
+            return target
+        error = session.error()
+        BlinkLogger().log_error('Cannot trim %s with %s: %s'
+                                % (os.path.basename(str(path)), preset,
+                                   error.localizedDescription() if error else 'no reason given'))
+    try:
+        os.rmdir(folder)
+    except OSError:
+        pass
+    return None
+
+
 def _crop_to_file(path, picture, selection):
     """Write the selected part of the picture as a new file, and return it.
 
@@ -342,6 +589,151 @@ def _crop_to_file(path, picture, selection):
         BlinkLogger().log_error('Cannot write the cropped picture to %s' % out)
         return None
     return out
+
+
+class BlinkScrubBar(NSView):
+    """The bar under a movie: where it has got to, and what will be kept.
+
+    An NSSlider drew the first of those and could draw neither of the
+    others. A slider has one filled portion, in one colour, and no way to
+    say "this part of the track is the part that is going to be sent" --
+    which is the one thing this bar now has to say, because the marks are
+    not a setting somewhere else, they are an edit to the clip.
+
+    So: the track, the selection between the marks in green, how far
+    playback has got in blue -- or in green, once there IS a selection,
+    because then the playhead is running through the part being kept and
+    the colour is what says so. A tick at each mark, drawn full height
+    over everything, so a mark is visible whether the playhead has
+    reached it or not.
+    """
+
+    progress = 0.0
+    start = None                        # 0..1, or None for "from the top"
+    end = None                          # 0..1, or None for "to the end"
+    _onScrub = None
+
+    # The bar is drawn thinner than the view it lives in: the view has to
+    # be tall enough to catch a pointer comfortably, and a track that
+    # tall reads as a container rather than as a bar.
+    TRACK_H = 6.0
+    KNOB_R = 6.0
+    TICK_W = 2.0
+
+    def isFlipped(self):
+        return True
+
+    @objc.python_method
+    def _trackRect(self):
+        bounds = self.bounds()
+        inset = self.KNOB_R
+        return NSMakeRect(inset, (bounds.size.height - self.TRACK_H) / 2.0,
+                          max(bounds.size.width - 2 * inset, 1.0), self.TRACK_H)
+
+    @objc.python_method
+    def _x(self, fraction):
+        track = self._trackRect()
+        return track.origin.x + track.size.width * max(0.0, min(1.0, fraction))
+
+    @objc.python_method
+    def _fraction(self, point):
+        track = self._trackRect()
+        if track.size.width <= 0:
+            return 0.0
+        return max(0.0, min(1.0, (point.x - track.origin.x) / track.size.width))
+
+    @objc.python_method
+    def _accent(self):
+        try:
+            return NSColor.controlAccentColor()
+        except AttributeError:
+            return NSColor.systemBlueColor()
+
+    def drawRect_(self, rect):
+        track = self._trackRect()
+        radius = self.TRACK_H / 2.0
+        selected = self.start is not None or self.end is not None
+        lo = 0.0 if self.start is None else self.start
+        hi = 1.0 if self.end is None else self.end
+
+        NSColor.tertiaryLabelColor().set()
+        NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(
+            track, radius, radius).fill()
+
+        if selected:
+            # The part that will be sent, under everything else: a band
+            # the playhead runs along rather than a line it crosses.
+            band = NSMakeRect(self._x(lo), track.origin.y,
+                              max(self._x(hi) - self._x(lo), 1.0), track.size.height)
+            NSColor.systemGreenColor().colorWithAlphaComponent_(0.30).set()
+            NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(
+                band, radius, radius).fill()
+
+        played = max(self._x(self.progress) - track.origin.x, 0.0)
+        if played > 0:
+            (NSColor.systemGreenColor() if selected else self._accent()).set()
+            NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(
+                NSMakeRect(track.origin.x, track.origin.y, played,
+                           track.size.height), radius, radius).fill()
+
+        # The marks themselves, over both, full height and hard-edged: a
+        # mark that fades into the band it bounds is a mark you cannot
+        # place accurately.
+        bounds = self.bounds()
+        NSColor.systemGreenColor().set()
+        for mark in (self.start, self.end):
+            if mark is None:
+                continue
+            x = self._x(mark)
+            NSBezierPath.fillRect_(NSMakeRect(x - self.TICK_W / 2.0, 0.0,
+                                              self.TICK_W, bounds.size.height))
+
+        knob = NSMakeRect(self._x(self.progress) - self.KNOB_R,
+                          bounds.size.height / 2.0 - self.KNOB_R,
+                          2 * self.KNOB_R, 2 * self.KNOB_R)
+        NSColor.controlBackgroundColor().set()
+        NSBezierPath.bezierPathWithOvalInRect_(knob).fill()
+        NSColor.separatorColor().set()
+        NSBezierPath.bezierPathWithOvalInRect_(knob).stroke()
+
+    @objc.python_method
+    def _scrubTo(self, point):
+        fraction = self._fraction(point)
+        # Confined to the marks. Dragging the playhead outside the part
+        # being kept would be scrubbing through footage that is on its
+        # way to being thrown away, and would then have to jump back the
+        # moment play was pressed.
+        if self.start is not None:
+            fraction = max(fraction, self.start)
+        if self.end is not None:
+            fraction = min(fraction, self.end)
+        self.progress = fraction
+        self.setNeedsDisplay_(True)
+        if self._onScrub is not None:
+            self._onScrub(fraction)
+
+    def mouseDown_(self, event):
+        self._scrubTo(self.convertPoint_fromView_(event.locationInWindow(), None))
+
+    def mouseDragged_(self, event):
+        self._scrubTo(self.convertPoint_fromView_(event.locationInWindow(), None))
+
+    @objc.python_method
+    def setProgress(self, fraction):
+        try:
+            fraction = max(0.0, min(1.0, float(fraction)))
+        except (TypeError, ValueError):
+            return
+        if abs(fraction - self.progress) < 0.0005:
+            return
+        self.progress = fraction
+        self.setNeedsDisplay_(True)
+
+    @objc.python_method
+    def setMarks(self, start, end):
+        self.start = start
+        self.end = end
+        self.setNeedsDisplay_(True)
 
 
 class BlinkCropView(NSView):
@@ -843,6 +1235,10 @@ class AttachmentPreviewController(NSObject):
     # and every file a crop has written so far.
     _hero = None
     _caption = None
+    # The single-attachment "Send original" box, kept for the same reason
+    # the caption is: a crop replaces the file, and the size on the box is
+    # the size of the file it is talking about.
+    _original_box = None
     _crop_button = None
     _revert_button = None
     _original = None
@@ -859,19 +1255,86 @@ class AttachmentPreviewController(NSObject):
     # the timer that keeps the transport honest.
     _video = None
     _video_key = None
+    # The empty, layer-backed view the player's picture goes into. NOT the
+    # image view holding the poster -- see _videoView.
+    _video_host = None
     _play_button = None
     _slider = None
+    # The part of a movie to keep, in seconds from its start. None means
+    # "from the beginning" and "to the end", which is what an untouched
+    # clip is -- so a trim nobody set up is a trim that does nothing, and
+    # marking only one end is a perfectly good half-answer.
+    _trim_start = None
+    _trim_end = None
+    _trim_button = None
+    # Set while a rewind-to-the-start is in flight. Seeking is
+    # asynchronous, so for a tick or two after pressing play the clock
+    # still reads the end mark we stopped at -- and the guard that stops
+    # playback AT that mark would read it too and stop us again, one
+    # frame after starting. Which is what "play does nothing" looked
+    # like.
+    _resuming_at = None
+    # Set when playback was stopped BY the end mark. Remembered rather
+    # than worked out from the clock: AVPlayer seeks to the nearest sync
+    # frame within a tolerance, so the position it comes to rest at can
+    # be a good fraction of a second short of the mark. Asking "are we at
+    # the end?" then answers no, and play carries on from just before the
+    # mark for the second of footage still left -- which is a clip that
+    # appears to start a second before its own end.
+    _stopped_at_end = False
+    # The file as it was picked, and the smaller copy made from it while
+    # this window was being built. self.paths[0] is whichever of the two
+    # is currently going to be sent, so everything the window shows -- the
+    # picture, the name, the size, the pixel count -- describes the
+    # ARTEFACT rather than the source.
+    _source = None
+    _shrunk = None
+    # True once the single attachment in this window has been settled
+    # here: paths[0] is then the file to send and there is nothing left
+    # for the sending side to prepare.
+    _resolved = False
+    _mark_in = None
+    _mark_out = None
     _timer = None
     # One "send original" flag per attachment, and the boxes that set
     # them. By index rather than by path: a crop replaces the path under
     # index 0, and a dictionary keyed on names would lose the answer the
     # moment the user cropped.
     _send_original = None
+    # A second way to say yes. The review window offers "Send original"
+    # beside "Send": by then the question is no longer whether to shrink
+    # the file but which of two files that now both exist should go, and
+    # that is a choice between two buttons rather than a box to tick.
+    _alternate_title = None
+    _alternate_button = None
+    alternate = False
+    # A third answer, and the only one that is neither yes nor no: go
+    # back and change the clip. The review window is the first place in
+    # this flow where the user can see what they actually made, which is
+    # exactly the place they are most likely to want another go at it.
+    _back_title = None
+    back = False
+    _send_button = None
+    # The review window shows a file that has already been made -- the
+    # smaller copy, encoded and sitting on disc. It gets no editing
+    # controls at all: no "Send original" box, because the question it
+    # asks is which of two existing files should go and it asks that with
+    # buttons; and no Crop, Trim or Revert, because those describe an edit
+    # to the source, and the source was left behind two steps ago. They
+    # also had nowhere to sit -- "Send Original (84.1 MB)" is a wide
+    # button, and Trim and Revert were drawn straight through it.
+    _review = False
+    # Something to say under the name and size -- what the file was before
+    # it was made smaller, in the one window where that is the point.
+    _caption_note = None
+    _facts_label = None
     _checkboxes = None
 
     @objc.python_method
     def setupWithPaths(self, paths, title, window_title=None,
-                       accept_title=None, square=False):
+                       accept_title=None, square=False,
+                       alternate_title=None, review=False,
+                       caption_note=None, back_title=None):
         """Build the window. Separate from init on purpose.
 
         Overriding ObjC's own init from Python is a thing that works until
@@ -883,6 +1346,10 @@ class AttachmentPreviewController(NSObject):
         self._window_title = window_title
         self._accept_title = accept_title
         self._square = square
+        self._alternate_title = alternate_title
+        self._review = review
+        self._back_title = back_title
+        self._caption_note = caption_note
         self._build(title)
         return self
 
@@ -989,16 +1456,28 @@ class AttachmentPreviewController(NSObject):
         view.setImageScaling_(NSImageScaleProportionallyUpOrDown)
         if poster is not None:
             view.setImage_(poster)
-        # attach() adds a sublayer, and a view that has not been told to
-        # be layer-backed has nowhere to put one.
-        view.setWantsLayer_(True)
+
+        # The picture goes into an EMPTY view on top of the poster, not
+        # into the image view itself. A layer-backed NSImageView does not
+        # simply put its image in its layer's contents -- it hosts the
+        # image in a sublayer of its own -- so a player layer added
+        # alongside that one is ordered against it by AppKit rather than
+        # by us, and the poster ends up drawn over the movie: sound, a
+        # running clock, and a still frame. The chat bubbles have always
+        # done it this way (MessageBubbleView._videoHost); this window was
+        # the one place that did not.
+        host = NSView.alloc().initWithFrame_(view.bounds())
+        host.setWantsLayer_(True)
+        host.setAutoresizingMask_(NSViewWidthSizable | NSViewHeightSizable)
+        view.addSubview_(host)
+        self._video_host = host
+
         self._video_key = 'attachment-preview:%s' % path
         return view
 
     @objc.python_method
     def _transport(self, frame):
         """Play/pause and a bar to scrub, under the movie."""
-        from AppKit import NSSlider
         view = NSView.alloc().initWithFrame_(frame)
 
         play = self._button(NSLocalizedString("Play", "Button title"),
@@ -1007,17 +1486,35 @@ class AttachmentPreviewController(NSObject):
         view.addSubview_(play)
         self._play_button = play
 
-        slider = NSSlider.alloc().initWithFrame_(
+        marks_w = 2 * MARK_W + GAP
+        slider = BlinkScrubBar.alloc().initWithFrame_(
             NSMakeRect(PLAY_W + GAP, 0,
-                       max(frame.size.width - PLAY_W - GAP, 1.0),
+                       max(frame.size.width - PLAY_W - GAP - GAP - marks_w, 1.0),
                        frame.size.height))
-        slider.setMinValue_(0.0)
-        slider.setMaxValue_(1.0)
-        slider.setDoubleValue_(0.0)
-        slider.setTarget_(self)
-        slider.setAction_('scrub:')
+        slider._onScrub = self._scrubbedTo
         view.addSubview_(slider)
         self._slider = slider
+
+        # Where a cut starts and where it ends, marked at the playhead.
+        # On the bar rather than beside the Trim button because that is
+        # where the answer is: you scrub to the moment and say "here".
+        mark_in = self._button('[', 'markIn:')
+        mark_in.setFrame_(NSMakeRect(frame.size.width - marks_w, 0,
+                                     MARK_W, frame.size.height))
+        mark_in.setToolTip_(NSLocalizedString(
+            "Start the clip here. Press it again to take the mark off -- "
+            "while it is on, the movie will not play before it.", "Tooltip"))
+        view.addSubview_(mark_in)
+        self._mark_in = mark_in
+
+        mark_out = self._button(']', 'markOut:')
+        mark_out.setFrame_(NSMakeRect(frame.size.width - MARK_W, 0,
+                                      MARK_W, frame.size.height))
+        mark_out.setToolTip_(NSLocalizedString(
+            "End the clip here. Press it again to take the mark off -- "
+            "while it is on, the movie will not play past it.", "Tooltip"))
+        view.addSubview_(mark_out)
+        self._mark_out = mark_out
         return view
 
     @objc.python_method
@@ -1085,15 +1582,6 @@ class AttachmentPreviewController(NSObject):
     @objc.python_method
     def _build(self, title):
         single = len(self.paths) == 1
-        single_image = single and _is_image(self.paths[0])
-        hero = self._heroView(self.paths[0]) if single_image else None
-        # A movie gets the same box a picture gets, with a player in it.
-        video = (self._videoView(self.paths[0])
-                 if (single and not single_image and _is_video(self.paths[0]))
-                 else None)
-        self._hero = hero
-        self._video = video
-        self._original = self.paths[0] if hero is not None else None
 
         # One flag per attachment, in step with self.paths, seeded from
         # the habit in Preferences. Only media can carry it: for anything
@@ -1104,6 +1592,28 @@ class AttachmentPreviewController(NSObject):
                                for p in self.paths]
         self._checkboxes = []
 
+        # A picture is made smaller BEFORE the window is drawn. Resizing
+        # one takes a moment, and doing it later meant the window said
+        # nothing about what unticking the box would buy: the picture,
+        # its dimensions and its size were the source's either way, and
+        # the box read "Send original (12.4 MB)" next to a caption that
+        # also said 12.4 MB. Prepared here, the two lines say different
+        # things, which is the whole content of the choice.
+        if single and not self._square and not self._review \
+                and _is_image(self.paths[0]):
+            self._prepareSinglePicture()
+
+        single_image = single and _is_image(self.paths[0])
+        hero = self._heroView(self.paths[0]) if single_image else None
+        # A movie gets the same box a picture gets, with a player in it.
+        video = (self._videoView(self.paths[0])
+                 if (single and not single_image and _is_video(self.paths[0]))
+                 else None)
+        self._hero = hero
+        self._video = video
+        self._original = (self.paths[0]
+                          if (hero is not None or video is not None) else None)
+
         body = hero if hero is not None else video
         if body is not None:
             body_h = body.frame().size.height
@@ -1112,15 +1622,20 @@ class AttachmentPreviewController(NSObject):
 
         header_h = 20.0
         caption_h = 17.0 if (body is not None) else 0.0
+        facts_h = (FACTS_H if (body is not None
+                               and (_facts(self.paths[0]) or video is not None))
+                   else 0.0)
         transport_h = PLAYER_BAR_H if video is not None else 0.0
         # The box sits under a single attachment; in a list it sits in
         # each row and costs no height of its own. Never in the photograph
         # chooser: that window is picking a contact's picture, not sending
         # anything, and "send original" is not a question it is asking.
         check_h = (CHECK_H if (single and not self._square
+                               and not self._review
                                and _is_media(self.paths[0])) else 0.0)
         height = (PAD + BUTTON_H + GAP
                   + (check_h + GAP if check_h else 0)
+                  + (facts_h + 4.0 if facts_h else 0)
                   + (caption_h + GAP if caption_h else 0)
                   + (transport_h + GAP if transport_h else 0)
                   + body_h + GAP + header_h + PAD)
@@ -1164,6 +1679,16 @@ class AttachmentPreviewController(NSObject):
             # Kept, because a crop changes both halves of it: a new name
             # and a size that is the whole point of having cropped.
             self._caption = caption
+
+            if facts_h:
+                y -= 4.0 + facts_h
+                facts = self._label(
+                    NSMakeRect(PAD, y, WINDOW_W - 2 * PAD, facts_h),
+                    NSFont.systemFontOfSize_(10), NSColor.tertiaryLabelColor(),
+                    '', truncating=True)
+                content.addSubview_(facts)
+                self._facts_label = facts
+                self._noteFacts()
         else:
             rows = self._rowsView()
             scroll = NSScrollView.alloc().initWithFrame_(
@@ -1175,9 +1700,16 @@ class AttachmentPreviewController(NSObject):
 
         if check_h:
             y -= GAP + check_h
-            content.addSubview_(self._checkbox(
+            # The size on the box, not only in the caption underneath.
+            # What the tick decides is exactly how many megabytes leave
+            # this machine, and the caption's figure is the file's --
+            # true, but read as a property of the attachment rather than
+            # as the consequence of the box directly above it.
+            box = self._checkbox(
                 NSMakeRect(PAD, y, WINDOW_W - 2 * PAD, check_h), 0,
-                NSLocalizedString("Send original", "Checkbox")))
+                self._originalTitle(self._source or self.paths[0]))
+            self._original_box = box
+            content.addSubview_(box)
 
         send = self._button(self._accept_title
                             or NSLocalizedString("Send", "Button title"),
@@ -1190,8 +1722,34 @@ class AttachmentPreviewController(NSObject):
                                     BUTTON_W, BUTTON_H))
         content.addSubview_(send)
         content.addSubview_(cancel)
+        self._send_button = send
+        self._refreshAcceptTitle()
 
-        if hero is not None:
+        if self._alternate_title:
+            # Wider than the other two: it carries a size, and a button
+            # whose text is elided is a button nobody can act on.
+            alt_w = BUTTON_W + 72.0
+            alternate = self._button(self._alternate_title, 'alternate:')
+            alternate.setFrame_(NSMakeRect(
+                WINDOW_W - PAD - 2 * BUTTON_W - 2 * GAP - alt_w, PAD,
+                alt_w, BUTTON_H))
+            content.addSubview_(alternate)
+            self._alternate_button = alternate
+
+        # The editing controls sit bottom-left -- which is also where the
+        # review window's wide "Send Original (84.1 MB)" button reaches.
+        # That window has no edits to offer, so it gets neither the
+        # buttons nor the collision; what it gets instead is Back.
+        if self._review:
+            if self._back_title:
+                back = self._button(self._back_title, 'back:')
+                back.setFrame_(NSMakeRect(PAD, PAD, BUTTON_W, BUTTON_H))
+                back.setToolTip_(NSLocalizedString(
+                    "Go back to the movie you picked, to trim it again",
+                    "Tooltip"))
+                content.addSubview_(back)
+
+        elif hero is not None:
             # Left of the window, away from Send: these two change what is
             # about to go, rather than answering the question the window
             # is asking.
@@ -1218,6 +1776,30 @@ class AttachmentPreviewController(NSObject):
             revert.setEnabled_(False)
             revert.setToolTip_(NSLocalizedString(
                 "Go back to the whole picture", "Tooltip"))
+            content.addSubview_(revert)
+            self._revert_button = revert
+
+        elif video is not None:
+            # The same two places, doing the same two jobs: change what is
+            # about to go, and put it back.
+            trim = self._button(NSLocalizedString("Trim", "Button title"),
+                                'trim:')
+            trim.setFrame_(NSMakeRect(PAD, PAD, BUTTON_W, BUTTON_H))
+            trim.setEnabled_(False)
+            trim.setToolTip_(NSLocalizedString(
+                "Scrub to where the clip should start and press [, then to "
+                "where it should end and press ] -- Trim keeps that part "
+                "and sends it instead of the whole movie", "Tooltip"))
+            content.addSubview_(trim)
+            self._trim_button = trim
+
+            revert = self._button(NSLocalizedString("Revert", "Button title"),
+                                  'revert:')
+            revert.setFrame_(NSMakeRect(PAD + BUTTON_W + GAP, PAD,
+                                        BUTTON_W, BUTTON_H))
+            revert.setEnabled_(False)
+            revert.setToolTip_(NSLocalizedString(
+                "Go back to the whole movie", "Tooltip"))
             content.addSubview_(revert)
             self._revert_button = revert
 
@@ -1266,6 +1848,11 @@ class AttachmentPreviewController(NSObject):
         return list(self.paths) if self.accepted else []
 
     @objc.python_method
+    def resolved(self):
+        """Whether paths[0] is already the artefact, needing no preparation."""
+        return bool(self._resolved)
+
+    @objc.python_method
     def sendOriginalFlags(self):
         """One flag per path, in the order runModal returned them."""
         paths = self.paths or []
@@ -1284,6 +1871,46 @@ class AttachmentPreviewController(NSObject):
             return
         if 0 <= index < len(self._send_original or []):
             self._send_original[index] = bool(sender.state())
+        # The window follows the answer: tick it and the source is what
+        # is drawn and measured, untick it and the smaller copy is.
+        if index == 0 and self._applyOriginalChoice():
+            self._showPicture(self.paths[0])
+        self._refreshAcceptTitle()
+        self._noteFacts()
+
+    @objc.python_method
+    def _refreshAcceptTitle(self):
+        """Say what the button will actually do.
+
+        A movie that is going to be made smaller is shown again before it
+        goes -- encoded, playable, with its new size -- so this button
+        does not send it: it starts the work that leads to that second
+        window. Calling it Send there is a button that lies about what
+        pressing it does, and the moment the tick box changes the answer
+        it changes with it.
+
+        Only for a window whose accept button had no title of its own.
+        "Use Photo" in the contact-picture chooser means what it says,
+        and the review window's Send really does send.
+        """
+        if self._send_button is None or self._accept_title or self._review:
+            return
+        # Asked of the encoder rather than of this module's own list of
+        # suffixes: the two do not agree (this window will play a .wmv
+        # that AVFoundation will not re-encode), and the button has to
+        # match what will actually happen, not what this file thinks a
+        # movie is.
+        try:
+            from MediaCompression import is_movie
+        except Exception:
+            is_movie = _is_video
+        flags = self._send_original or []
+        previewed = any(is_movie(path) and not flags[index]
+                        for index, path in enumerate(self.paths or [])
+                        if index < len(flags))
+        self._send_button.setTitle_(
+            NSLocalizedString("Preview", "Button title") if previewed
+            else NSLocalizedString("Send", "Button title"))
 
     # -- the movie -------------------------------------------------------
 
@@ -1304,7 +1931,7 @@ class AttachmentPreviewController(NSObject):
             return
         try:
             player.load(self.paths[0], self._video_key)
-            player.attach(self._video)
+            player.attach(self._video_host)
         except Exception as e:
             BlinkLogger().log_error('Cannot load the movie: %s' % e)
 
@@ -1341,7 +1968,7 @@ class AttachmentPreviewController(NSObject):
             # Only if it is still ours: something else may have taken the
             # layer while this window was up, and taking it back off them
             # would blank a bubble that is legitimately playing.
-            if player.host() is self._video:
+            if player.host() is self._video_host:
                 player.detach()
         except Exception as e:
             BlinkLogger().log_debug('Cannot stop the preview player: %s' % e)
@@ -1350,23 +1977,35 @@ class AttachmentPreviewController(NSObject):
     def _syncTransport(self):
         """Keep the button and the bar telling the truth."""
         player = self._player()
-        if player is None or self._video is None:
+        if player is None or self._video_host is None:
             return
         # attach on every pass, as its docstring asks: it is what keeps
         # the layer over the poster rather than somewhere the picture no
         # longer is.
-        player.attach(self._video)
+        player.attach(self._video_host)
         playing = player.is_playing(self._video_key)
         if self._play_button is not None:
             self._play_button.setTitle_(
                 NSLocalizedString("Pause", "Button title") if playing
                 else NSLocalizedString("Play", "Button title"))
-        if self._slider is not None and playing:
-            # Only while it runs. Writing the position back under a finger
-            # that is dragging the knob is a scrubber fighting the person
-            # using it.
+        if playing and self._confineToMarks(player):
+            # It ran into the end mark and was stopped there; the button
+            # says Play again, and re-reading the position below would be
+            # reading it mid-seek.
+            playing = False
+            if self._play_button is not None:
+                self._play_button.setTitle_(
+                    NSLocalizedString("Play", "Button title"))
+        if self._slider is not None and playing and self._resuming_at is None:
+            # Only while it runs, and not while a rewind is still in
+            # flight -- the clock reads the mark we came from until the
+            # seek lands, and writing that back would snap the bar to the
+            # end for a tick just as it started again. Writing the
+            # position back under a finger that is dragging the knob is
+            # the same fault in the other direction: a scrubber fighting
+            # the person using it.
             try:
-                self._slider.setDoubleValue_(
+                self._slider.setProgress(
                     float(player.progress(self._video_key) or 0.0))
             except Exception:
                 pass
@@ -1375,20 +2014,301 @@ class AttachmentPreviewController(NSObject):
         player = self._player()
         if player is None or not self.paths:
             return
+        # Pressing play with the head before the start mark -- or sitting
+        # on the end mark where the last run stopped it -- starts the part
+        # that is being kept, rather than playing two frames and halting.
+        length = self._movieLength()
+        if length and not player.is_playing(self._video_key):
+            try:
+                where = float(player.position(self._video_key) or 0.0)
+            except Exception:
+                where = None
+            start = 0.0 if self._trim_start is None else self._trim_start
+            end = length if self._trim_end is None else self._trim_end
+            # `_stopped_at_end` first, because it is the only one of these
+            # that is reliable at the end mark. `finished` covers a clip
+            # with no end mark that ran to its own end: toggle() would
+            # rewind that to zero, which is the wrong place when there is
+            # a start mark.
+            spent = (self._stopped_at_end
+                     or player.finished(self._video_key)
+                     or where is None
+                     or where < start - 0.02
+                     or where >= end - 0.25)
+            if spent:
+                # Play always means play the part that is being kept, from
+                # the top of it. A clip stopped ON its end mark has nothing
+                # left to play, so pressing play there is a request to hear
+                # it again -- from the start mark if there is one, and from
+                # the beginning if there is not.
+                self._stopped_at_end = False
+                self._resuming_at = start
+                try:
+                    player.seek(start / length, self._video_key)
+                except Exception:
+                    self._resuming_at = None
+                if self._slider is not None:
+                    self._slider.setProgress(start / length)
         try:
             player.toggle(self.paths[0], self._video_key)
         except Exception as e:
             BlinkLogger().log_error('Cannot play the movie: %s' % e)
         self._syncTransport()
 
-    def scrub_(self, sender):
+    @objc.python_method
+    def _scrubbedTo(self, fraction):
+        """The bar was dragged. It has already clamped to the marks."""
+        self._stopped_at_end = False
         player = self._player()
         if player is None:
             return
         try:
-            player.seek(float(sender.doubleValue()), self._video_key)
+            player.seek(float(fraction), self._video_key)
         except Exception as e:
             BlinkLogger().log_debug('Cannot seek the movie: %s' % e)
+
+    @objc.python_method
+    def _markFractions(self):
+        """The two marks as 0..1 of the clip, or (None, None)."""
+        length = self._movieLength()
+        if not length:
+            return None, None
+        start = None if self._trim_start is None else max(
+            0.0, min(1.0, self._trim_start / length))
+        end = None if self._trim_end is None else max(
+            0.0, min(1.0, self._trim_end / length))
+        return start, end
+
+    @objc.python_method
+    def _confineToMarks(self, player):
+        """Keep playback inside the marks. True if it was stopped at the end.
+
+        The marks are an edit, not a preference: while one is on, the part
+        outside it is not part of the clip any more, and playing through
+        it would be previewing something the recipient is never going to
+        see. Taking the mark off puts that footage back -- which is what
+        makes the pair of them a selection rather than a setting.
+        """
+        length = self._movieLength()
+        if not length:
+            return False
+        try:
+            where = float(player.position(self._video_key) or 0.0)
+        except Exception:
+            return False
+        if self._resuming_at is not None:
+            # Waiting for the rewind to take. Cleared by the head being
+            # genuinely back inside the kept part rather than by it
+            # reaching the exact instant asked for: AVPlayer seeks to the
+            # nearest sync frame, and toggle() rewinds a finished clip to
+            # zero on its own, so the position it actually lands on is
+            # not one to test for equality against.
+            limit = length if self._trim_end is None else self._trim_end
+            if where < limit - 0.05:
+                self._resuming_at = None
+            else:
+                return False
+        if self._trim_end is not None and where >= self._trim_end - 0.02:
+            self._stopped_at_end = True
+            try:
+                player.pause()
+                player.seek(self._trim_end / length, self._video_key)
+            except Exception:
+                pass
+            if self._slider is not None:
+                self._slider.setProgress(self._trim_end / length)
+            return True
+        if self._trim_start is not None and where < self._trim_start - 0.02:
+            try:
+                player.seek(self._trim_start / length, self._video_key)
+            except Exception:
+                pass
+            if self._slider is not None:
+                self._slider.setProgress(self._trim_start / length)
+        return False
+
+    @objc.python_method
+    def _playhead(self):
+        """Where the movie is now, in seconds, or None."""
+        player = self._player()
+        if player is None:
+            return None
+        try:
+            if not player.is_current(self._video_key):
+                return None
+            return float(player.position(self._video_key) or 0.0)
+        except Exception:
+            return None
+
+    @objc.python_method
+    def _movieLength(self):
+        player = self._player()
+        if player is None:
+            return 0.0
+        try:
+            return float(player.duration(self._video_key) or 0.0)
+        except Exception:
+            return 0.0
+
+    @objc.python_method
+    def _noteTrimRange(self):
+        """Say what would be kept, and let Trim be pressed if anything is.
+
+        The marks go in the caption beside the name and the size, which is
+        already the line that says what is about to be sent -- and after a
+        trim that line is the new file's own name and size, so the two
+        readings never disagree.
+        """
+        length = self._movieLength()
+        start = self._trim_start
+        end = self._trim_end
+        usable = (start is not None or end is not None)
+        if usable and length:
+            lo = 0.0 if start is None else start
+            hi = length if end is None else end
+            usable = hi - lo > 0.05 and (lo > 0.05 or hi < length - 0.05)
+        if self._trim_button is not None:
+            self._trim_button.setEnabled_(bool(usable))
+        # The marks just moved; wherever the head is now, it is not
+        # resting on an end mark that still exists in the same place.
+        self._stopped_at_end = False
+        # The bar says the same thing in colour: the kept part green, a
+        # tick at each mark, and the playhead running green rather than
+        # blue while there is a selection for it to run through.
+        if self._slider is not None:
+            lo, hi = self._markFractions()
+            self._slider.setMarks(lo, hi)
+        # A mark set behind the playhead moves the playhead onto it, so
+        # what is on screen is inside what is about to be kept.
+        player = self._player()
+        if player is not None:
+            try:
+                self._confineToMarks(player)
+            except Exception:
+                pass
+        self._noteFacts()
+
+    @objc.python_method
+    def _noteFacts(self):
+        """The second caption line: what the file is, and what is kept of it.
+
+        Everything on this line is about the artefact rather than about
+        its name -- the pixels, the frame rate, the length, the part
+        between the marks, and in the review window what the clip weighed
+        before it was encoded. They belong together because they are the
+        answers to one question: what is actually going to arrive.
+        """
+        if self._facts_label is None:
+            return
+        parts = []
+        facts = _facts(self.paths[0]) if self.paths else ''
+        if facts:
+            parts.append(facts)
+        if self._trim_start is not None or self._trim_end is not None:
+            length = self._movieLength()
+            parts.append(NSLocalizedString("keeping %s to %s", "Label")
+                         % (_seconds(self._trim_start or 0),
+                            _seconds(self._trim_end
+                                     if self._trim_end is not None else length)))
+        if self._caption_note:
+            parts.append(self._caption_note)
+        self._facts_label.setStringValue_('   --   '.join(parts))
+
+    @objc.python_method
+    def _showMovie(self, path):
+        """Put a different clip in the box: poster, player, caption, box.
+
+        The video counterpart of _showPicture, and needed for the same
+        reason: a trim makes a new file, and every part of the window that
+        was describing the old one has to be told.
+        """
+        self._stopTransport()
+        self._trim_start = self._trim_end = None
+        self._resuming_at = None
+        self._stopped_at_end = False
+        if self._slider is not None:
+            self._slider.setMarks(None, None)
+            self._slider.setProgress(0.0)
+        self._video_key = 'attachment-preview:%s' % path
+        # The poster sits UNDER the player's layer, so a stale one shows
+        # through until the first frame is drawn -- a trimmed clip opening
+        # on the whole movie's first frame, which is exactly the frame the
+        # trim was cutting away.
+        try:
+            from VideoPlayback import poster_image
+            poster = poster_image(path)
+            if poster is not None and self._video is not None:
+                self._video.setImage_(poster)
+        except Exception as e:
+            BlinkLogger().log_debug('Cannot read a poster frame: %s' % e)
+        self._startTransport()
+        self._noteTrimRange()
+        if self._original_box is not None:
+            self._original_box.setTitle_(self._originalTitle(path))
+
+    def markIn_(self, sender):
+        """Set the start mark at the playhead, or take it off again.
+
+        A toggle, because a mark is not only a place: while it is on, the
+        movie will not play before it. Taking it off is how you hear the
+        part you were about to cut, and a button that can only ever add a
+        mark leaves no way to do that.
+        """
+        if self._trim_start is not None:
+            self._trim_start = None
+            self._noteTrimRange()
+            return
+        where = self._playhead()
+        if where is None:
+            return
+        self._trim_start = where
+        if self._trim_end is not None and self._trim_end <= where:
+            # A start past the end is not a clip. Taking the end with it
+            # is kinder than refusing the press: the user has just said
+            # where the interesting part begins, and can say where it
+            # stops next.
+            self._trim_end = None
+        self._noteTrimRange()
+
+    def markOut_(self, sender):
+        """Set the end mark at the playhead, or take it off again."""
+        if self._trim_end is not None:
+            self._trim_end = None
+            self._noteTrimRange()
+            return
+        where = self._playhead()
+        if where is None:
+            return
+        if self._trim_start is not None and where <= self._trim_start:
+            return
+        self._trim_end = where
+        self._noteTrimRange()
+
+    def trim_(self, sender):
+        """Keep the part between the marks, as a new file."""
+        length = self._movieLength()
+        start = 0.0 if self._trim_start is None else self._trim_start
+        end = length if self._trim_end is None else self._trim_end
+        if not length or end - start <= 0.05:
+            return
+        # Stopped first: the export reads the file this player has open,
+        # and the trimmed clip is about to become the one on screen.
+        self._stopTransport()
+        try:
+            path = _trim_to_file(self.paths[0], start, end)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot trim the movie: %s' % e)
+            path = None
+        if not path:
+            BlinkLogger().log_error('The trim produced nothing, leaving %s '
+                                    'as it was' % self.paths[0])
+            self._startTransport()
+            return
+        self._temporary.append(path)
+        self.paths[0] = path
+        self._showMovie(path)
+        if self._revert_button is not None:
+            self._revert_button.setEnabled_(True)
 
     def tick_(self, timer):
         self._syncTransport()
@@ -1402,6 +2322,50 @@ class AttachmentPreviewController(NSObject):
             self._hero is not None and self._hero.selection is not None)
 
     @objc.python_method
+    def _prepareSinglePicture(self):
+        """Make the smaller copy now, and show it if that is what will go.
+
+        Cheap enough to do while the window is being built -- ImageIO
+        scales on decode -- and it is the only way this window can be
+        honest: what is drawn, named, measured and counted in pixels is
+        the file that will actually arrive.
+        """
+        self._source = self.paths[0]
+        self._resolved = True
+        try:
+            from MediaCompression import shrink
+        except Exception as e:
+            BlinkLogger().log_debug('Cannot load the image encoder: %s' % e)
+            return
+        smaller = shrink(self._source)
+        if not smaller:
+            # Already small, or an encoder that would not take it. The
+            # box has nothing to offer and the original is what goes.
+            return
+        self._shrunk = smaller
+        self._temporary.append(smaller)
+        self._applyOriginalChoice()
+
+    @objc.python_method
+    def _applyOriginalChoice(self):
+        """Put the file the box currently asks for in front of the user."""
+        if not self._shrunk or not self._source:
+            return False
+        wanted = self._source if self._send_original[0] else self._shrunk
+        if wanted == self.paths[0]:
+            return False
+        self.paths[0] = wanted
+        return True
+
+    @objc.python_method
+    def _originalTitle(self, path):
+        """"Send original (2.4 MB)", or the bare title if it cannot be read."""
+        _, whole = _describe(path)
+        if not whole:
+            return NSLocalizedString("Send original", "Checkbox")
+        return NSLocalizedString("Send original (%s)", "Checkbox") % whole
+
+    @objc.python_method
     def _showPicture(self, path):
         """Put a different file in the box, and say so underneath."""
         from AppKit import NSImage
@@ -1412,6 +2376,13 @@ class AttachmentPreviewController(NSObject):
             name, size = _describe(path)
             self._caption.setStringValue_(
                 '%s  %s' % (name, size) if size else name)
+        self._noteFacts()
+        # The box is about THIS file, and a crop has just made it a
+        # different one -- usually a much smaller one, which is most of
+        # the reason for cropping.
+        if self._original_box is not None:
+            self._original_box.setTitle_(
+                self._originalTitle(self._source or path))
         self._selectionChanged()
 
     def crop_(self, sender):
@@ -1436,16 +2407,40 @@ class AttachmentPreviewController(NSObject):
             return
         self._temporary.append(path)
         self.paths[0] = path
+        # The crop takes the prepared file's place, so the box goes on
+        # meaning what it meant: ticked, the untouched source; unticked,
+        # what is on screen.
+        if self._shrunk is not None:
+            self._shrunk = path
         self._showPicture(path)
         if self._revert_button is not None:
             self._revert_button.setEnabled_(True)
 
     def revert_(self, sender):
-        """Back to the picture as it arrived, however many crops ago."""
-        if self._hero is None or not self._original:
+        """Back to the file as this window first showed it.
+
+        For a picture that means the prepared copy rather than the source:
+        undoing a crop and declining to make the file smaller are two
+        different acts, and the box is what says the second one.
+        """
+        if not self._original:
+            return
+        if self._hero is not None and self._shrunk is not None \
+                and self._source is not None:
+            # The crop is gone; make the smaller copy again from the
+            # untouched source, since the one we had WAS the crop.
+            self._shrunk = None
+            self.paths[0] = self._source
+            self._prepareSinglePicture()
+            self._showPicture(self.paths[0])
+            if self._revert_button is not None:
+                self._revert_button.setEnabled_(False)
             return
         self.paths[0] = self._original
-        self._showPicture(self._original)
+        if self._hero is not None:
+            self._showPicture(self._original)
+        elif self._video is not None:
+            self._showMovie(self._original)
         if self._revert_button is not None:
             self._revert_button.setEnabled_(False)
 
@@ -1494,6 +2489,18 @@ class AttachmentPreviewController(NSObject):
         self.accepted = True
         NSApp.stopModal()
 
+    def back_(self, sender):
+        """Not yes and not no: show me the clip again so I can change it."""
+        self.accepted = False
+        self.back = True
+        NSApp.stopModal()
+
+    def alternate_(self, sender):
+        """Yes, but the other file."""
+        self.accepted = True
+        self.alternate = True
+        NSApp.stopModal()
+
     def cancel_(self, sender):
         self.accepted = False
         NSApp.stopModal()
@@ -1522,6 +2529,13 @@ def confirm_attachments(paths, parent=None, title=None):
         chosen = controller.setupWithPaths(paths, title).runModal(parent)
         if not chosen:
             return []
+        if controller.resolved():
+            # A single picture, settled in the window itself: what came
+            # back IS the file to send, at the size the user was looking
+            # at when they pressed Send. Reported as an original so
+            # nothing downstream re-encodes a picture that has already
+            # been through the encoder once.
+            return [(chosen[0], True)]
         return list(zip(chosen, controller.sendOriginalFlags()))
     except Exception as e:
         BlinkLogger().log_error('Cannot show the attachment preview: %s' % e)
@@ -1529,6 +2543,282 @@ def confirm_attachments(paths, parent=None, title=None):
         # that will not build falls back to the behaviour that had none,
         # which sent every file exactly as it arrived.
         return [(path, True) for path in paths]
+
+
+class CompressionProgressController(NSObject):
+    """A bar, a name and a Stop button, while a movie is re-encoded.
+
+    Its own window rather than a sheet on the preview: the preview has
+    already closed by the time this runs -- the user has said "send this"
+    and is watching the work that answer started.
+    """
+
+    window = None
+    cancelled = False
+    _bar = None
+    _label = None
+
+    @objc.python_method
+    def setupWithName(self, name, parent=None):
+        from AppKit import (NSProgressIndicator, NSProgressIndicatorBarStyle)
+
+        width = 380.0
+        height = PAD + BUTTON_H + GAP + 20.0 + GAP + 17.0 + PAD
+        self.window = NSWindow.alloc().initWithContentRect_styleMask_backing_defer_(
+            NSMakeRect(0, 0, width, height), NSTitledWindowMask,
+            NSBackingStoreBuffered, False)
+        self.window.setTitle_(NSLocalizedString("Preparing", "Window title"))
+        self.window.setReleasedWhenClosed_(False)
+        content = self.window.contentView()
+
+        y = height - PAD - 17.0
+        label = NSTextField.alloc().initWithFrame_(
+            NSMakeRect(PAD, y, width - 2 * PAD, 17.0))
+        label.setBezeled_(False)
+        label.setDrawsBackground_(False)
+        label.setEditable_(False)
+        label.setSelectable_(False)
+        label.setFont_(NSFont.systemFontOfSize_(13))
+        label.setStringValue_(
+            NSLocalizedString("Making %s smaller", "Label") % name)
+        label.setLineBreakMode_(NSLineBreakByTruncatingMiddle)
+        content.addSubview_(label)
+        self._label = label
+
+        y -= GAP + 20.0
+        bar = NSProgressIndicator.alloc().initWithFrame_(
+            NSMakeRect(PAD, y, width - 2 * PAD, 20.0))
+        bar.setStyle_(NSProgressIndicatorBarStyle)
+        bar.setIndeterminate_(False)
+        bar.setMinValue_(0.0)
+        bar.setMaxValue_(1.0)
+        bar.setDoubleValue_(0.0)
+        content.addSubview_(bar)
+        self._bar = bar
+
+        stop = NSButton.alloc().initWithFrame_(
+            NSMakeRect(width - PAD - BUTTON_W, PAD, BUTTON_W, BUTTON_H))
+        stop.setBezelStyle_(NSRoundedBezelStyle)
+        stop.setTitle_(NSLocalizedString("Stop", "Button title"))
+        stop.setTarget_(self)
+        stop.setAction_('stop:')
+        stop.setKeyEquivalent_(chr(27))
+        content.addSubview_(stop)
+
+        if parent is not None:
+            try:
+                frame = parent.frame()
+                self.window.setFrameOrigin_((
+                    frame.origin.x + (frame.size.width - width) / 2.0,
+                    frame.origin.y + (frame.size.height - height) * 0.6))
+            except Exception:
+                self.window.center()
+        else:
+            self.window.center()
+        return self
+
+    def stop_(self, sender):
+        self.cancelled = True
+        if self._label is not None:
+            self._label.setStringValue_(
+                NSLocalizedString("Stopping", "Label"))
+
+    @objc.python_method
+    def show(self):
+        if self.window is not None:
+            self.window.makeKeyAndOrderFront_(None)
+
+    @objc.python_method
+    def close(self):
+        if self.window is not None:
+            self.window.orderOut_(None)
+            self.window = None
+
+    @objc.python_method
+    def note(self, fraction):
+        if self._bar is not None:
+            try:
+                self._bar.setDoubleValue_(float(fraction))
+            except Exception:
+                pass
+
+
+def prepare_attachments(plan, parent=None):
+    """Turn the preview's answers into the files that will actually go.
+
+    `plan` is what confirm_attachments returned: (path, send_original)
+    pairs. This is the second half of sending -- the half that does the
+    work the first half only asked about -- and it returns a plain list
+    of paths, each of them the artefact the recipient will receive.
+
+    A picture is made smaller and that is the end of it: it takes a
+    moment, the result is a picture of the same picture, and stopping to
+    ask about it would be a dialog between the user and a JPEG. A MOVIE
+    is shown: re-encoding one is slow enough to need a progress bar and
+    lossy enough to be worth looking at, and the whole reason for the
+    wait is a size the user has not seen yet. So the clip comes back in
+    the preview window, playable, with what it weighed and what it weighs
+    now -- and "Send original" beside "Send", because by then the choice
+    is between two files that both exist.
+
+    Returns [] if the user cancels, which cancels the whole send.
+    """
+    try:
+        import MediaCompression
+    except Exception as e:
+        BlinkLogger().log_error('Cannot load the media encoder: %s' % e)
+        return [path for (path, _) in (plan or [])]
+
+    prepared = []
+    temporary = []
+    for path, send_original in (plan or []):
+        if send_original or not MediaCompression.can_shrink(path):
+            prepared.append(path)
+            continue
+
+        if MediaCompression.is_picture(path):
+            smaller = MediaCompression.shrink(path)
+            if smaller:
+                temporary.append(smaller)
+            prepared.append(smaller or path)
+            continue
+
+        # Encode, look at it, and -- if the answer is Back -- go round
+        # again with whatever comes out of the preview. The review window
+        # is the first place the result of a trim can actually be seen,
+        # so it is the first place anyone can tell it was cut in the
+        # wrong spot; a flow that could only accept or abandon at that
+        # point would make every mistake cost the whole send.
+        source = path
+        while True:
+            progress = CompressionProgressController.alloc().init()
+            if progress is not None:
+                progress = progress.setupWithName(os.path.basename(source), parent)
+                progress.show()
+            try:
+                smaller = MediaCompression.shrink(
+                    source,
+                    progress=(progress.note if progress is not None else None),
+                    cancelled=(lambda: bool(progress.cancelled))
+                    if progress is not None else None)
+            finally:
+                stopped = bool(progress.cancelled) if progress is not None else False
+                if progress is not None:
+                    progress.close()
+            if stopped:
+                # Stopping the encode stops the send. The alternative is
+                # sending the whole clip to somebody who has just said
+                # they did not want to wait for the small one, which is
+                # the opposite of what Stop means.
+                BlinkLogger().log_info('Sending %s was stopped while it was '
+                                       'being made smaller'
+                                       % os.path.basename(source))
+                _remove_all(temporary)
+                return []
+            if not smaller:
+                # Nothing to look at: it came back no smaller, or the
+                # encoder would not take it, and the file that goes is
+                # the one already agreed to in the first window.
+                prepared.append(source)
+                break
+
+            temporary.append(smaller)
+            choice = confirm_compressed(source, smaller, parent)
+            if choice is None:
+                _remove_all(temporary)
+                return []
+            if choice == 'send':
+                prepared.append(smaller)
+                break
+            if choice == 'original':
+                # The smaller one was looked at and turned down. Nothing
+                # is coming back for it.
+                temporary.remove(smaller)
+                _remove_all([smaller])
+                prepared.append(source)
+                break
+
+            # Back: the whole first window again, marks and all, on the
+            # clip this attempt was made from -- so a trim can be redone
+            # rather than merely regretted. The encode just rejected goes
+            # now rather than at the end: a few rounds of this would
+            # otherwise leave a copy of the movie in the temporary
+            # directory for every one of them.
+            temporary.remove(smaller)
+            _remove_all([smaller])
+            again = confirm_attachments([source], parent)
+            if not again:
+                _remove_all(temporary)
+                return []
+            source, as_is = again[0]
+            if source not in temporary and source != path:
+                # A fresh trim, in a temporary folder of its own. Tracked
+                # so that giving up later takes it with everything else.
+                temporary.append(source)
+            if as_is:
+                # They ticked "Send original" on the way back through.
+                # That is an answer, not a detour: send what is in front
+                # of them, trimmed or not, without encoding it again.
+                prepared.append(source)
+                break
+
+    return prepared
+
+
+def confirm_compressed(original, compressed, parent=None):
+    """Show the smaller clip and ask what to do with it.
+
+    'send' for the smaller one, 'original' for the clip it was made from,
+    'back' to go and change that clip, None to give up on sending at all.
+    """
+    _, was = _describe(original)
+    try:
+        controller = AttachmentPreviewController.alloc().init()
+        if controller is None:
+            return 'send'
+        controller.setupWithPaths(
+            [compressed],
+            NSLocalizedString("Send this smaller version?", "Label"),
+            window_title=NSLocalizedString("Ready to Send", "Window title"),
+            accept_title=NSLocalizedString("Send", "Button title"),
+            alternate_title=(NSLocalizedString("Send Original (%s)",
+                                               "Button title") % was
+                             if was else
+                             NSLocalizedString("Send Original", "Button title")),
+            review=True,
+            back_title=NSLocalizedString("Back", "Button title"),
+            caption_note=(NSLocalizedString("was %s", "Label") % was
+                          if was else None))
+        chosen = controller.runModal(parent)
+        if not chosen:
+            return 'back' if controller.back else None
+        return 'original' if controller.alternate else 'send'
+    except Exception as e:
+        BlinkLogger().log_error('Cannot show the prepared movie: %s' % e)
+        return 'send'
+
+
+def _remove_all(paths):
+    """Throw away every temporary file made for a send that is not happening.
+
+    Each of these lives alone in a folder of its own, so the folder goes
+    with it. Which is exactly why the folder is checked first: this
+    removes a DIRECTORY TREE, and a path that turned out to be the user's
+    own file would take the folder it lives in -- their Movies, their
+    desktop -- with it. Only our own temporary folders qualify.
+    """
+    import shutil
+    root = os.path.realpath(tempfile.gettempdir())
+    for path in paths or []:
+        folder = os.path.dirname(os.path.realpath(str(path)))
+        if not os.path.basename(folder).startswith(('blink-send-', 'blink-trim-')):
+            continue
+        if os.path.dirname(folder) != root:
+            continue
+        try:
+            shutil.rmtree(folder)
+        except OSError as e:
+            BlinkLogger().log_debug('Cannot remove %s: %s' % (folder, e))
 
 
 def choose_picture(path, parent=None, title=None, accept=None):

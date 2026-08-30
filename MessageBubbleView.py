@@ -372,6 +372,11 @@ CONTROL_GAP   = 4.0
 # and taking that from the top third is where faces and subjects sit.
 GRID_CELL_ASPECT = 4.0 / 3.0
 GRID_CROP_ANCHOR = 0.28
+# What a tile records as its decoded size when it is holding the original
+# file's picture rather than a thumbnail of it: bigger than any cell, so
+# nothing ever asks for a larger copy of something that is already the
+# whole thing.
+TILE_PIXELS_UNBOUNDED = 1 << 30
 # The scrubber under a live share's map: a slider and the line that says
 # which point of the trail it is sitting on.
 TRACK_SLIDER_H  = 17.0
@@ -1650,6 +1655,11 @@ class MessageBubbleView(NSView):
             # being drawn and the display list it went into being replayed.
             self.tile_image = None
             self._tile_image_path = None
+            # The longest side, in pixels, the held tile was decoded at. A
+            # cell that grows past it is decoded again; one that shrinks
+            # keeps what it has rather than making a second, smaller copy
+            # of a picture that is already in memory.
+            self._tile_image_pixels = 0
             self.media_pending = False
             # An outgoing transfer on its way up: same bar, other direction.
             self.upload_pending = False
@@ -3441,8 +3451,9 @@ class MessageBubbleView(NSView):
             ratio = (size.height / size.width) if size.width else MAP_ASPECT
             if self._tileMode():
                 map_h = map_w * GRID_CELL_ASPECT
-                # Layout, not drawing: see _ensureTileImage.
-                self._ensureTileImage()
+                # Layout, not drawing: see _ensureTileImage. The cell goes
+                # with it -- a tile is decoded at the size it is drawn at.
+                self._ensureTileImage(map_w, map_h)
             else:
                 limit = self._mediaWidthLimit()
                 if limit is not None:
@@ -3688,41 +3699,123 @@ class MessageBubbleView(NSView):
                 self._drawDownloadButton()
 
     @objc.python_method
-    def _ensureTileImage(self):
+    def _ensureTileImage(self, width=0.0, height=0.0):
         """Resolve the tile's picture in LAYOUT, and keep a reference to it.
 
-        A tile magnifies whatever it is given -- it fills its cell rather
-        than fitting inside it -- so it draws the file itself and lets
-        AppKit downsample into the cell, with no intermediate copy.
+        Two separate things go wrong when a grid draws the file itself,
+        and both of them end in the same crash.
 
-        Where that picture is fetched is not a detail. It used to be
-        fetched inside drawRect:, straight out of FileTransferCache, and
-        the cache dictionary was then the only thing holding it: the view
-        kept a smaller `media_image` from when the transfer landed, not
-        this one. A grid paints more tiles in one scroll pass than the
-        cache holds, so an eviction could land between a tile recording
-        its display list and CoreAnimation replaying it at commit -- and
-        the replay read the bytes of an image that had just lost its last
-        owner (EXC_BAD_ACCESS in imageProvider_getBytesAtPosition, under
-        CABackingStoreUpdate/_NSScrollingConcurrentMainThreadSynchronizer).
-        Owning it here makes the view outlive every draw of it. Drawing
-        also stops doing file I/O, which is the other half of what a
-        cleared cache cost: every tile re-decoded its JPEG per frame.
+        The first is ownership. A grid paints more tiles in one scroll
+        pass than any cache holds, so an eviction could land between a
+        tile recording its display list and CoreAnimation replaying it at
+        commit -- and the replay read the bytes of an image that had just
+        lost its last owner (EXC_BAD_ACCESS in
+        imageProvider_getBytesAtPosition, under CABackingStoreUpdate and
+        _NSScrollingConcurrentMainThreadSynchronizer). Holding the image
+        HERE, on the view, makes the view an owner of it for as long as it
+        can be asked to draw it.
+
+        The second is what an NSImage made from a path actually owns,
+        which is not the pixels: it is backed by the file, decoded lazily
+        at rasterization time into a buffer CoreGraphics owns and may
+        discard -- under memory pressure, or when the same shared NSImage
+        is asked to draw at yet another size, which is what a page of
+        tiles does to one picture on every scroll. So the same crash came
+        back with the view owning the image. What the tile holds now is a
+        thumbnail decoded up front by ImageIO (FileTransferCache.tile):
+        an ordinary bitmap, finished before it is drawn, with no file and
+        no provider left in the path the display list replays.
+
+        `width` and `height` are the cell about to be filled. The decode
+        is measured against the SCREEN's pixels -- a tile fills its cell
+        rather than fitting inside it, so anything less is magnified --
+        and rounded up to one of a few steps, so resizing the window
+        re-uses what has already been decoded.
         """
         if not self.media_path or self.video_path:
             self.tile_image = None
             self._tile_image_path = None
+            self._tile_image_pixels = 0
             return
-        if self.tile_image is not None and self._tile_image_path == self.media_path:
-            return
+
         try:
-            from FileTransferCache import FileTransferCache
-            image = FileTransferCache().original(self.media_path)
+            window = self.window()
+            scale = float(window.backingScaleFactor()) if window is not None else 2.0
+        except Exception:
+            scale = 2.0
+        # 2.0 rather than 1.0 when there is no window yet: a tile laid out
+        # before the view is in one would otherwise decode a copy for a
+        # non-Retina screen and, on the Retina screen it is about to be
+        # shown on, draw it at half the resolution the cell can carry.
+        scale = max(scale, 1.0)
+
+        from FileTransferCache import FileTransferCache, tile_pixels
+        # What the cell needs is the SHORT side of the picture, because a
+        # tile fills its cell: a landscape photograph in a portrait cell is
+        # cropped down to a band of its middle, and it is the height of
+        # that band that has to hold up. ImageIO caps the LONG side, so the
+        # long side is asked for in proportion -- a 16:9 photograph filling
+        # a 3:4 cell needs to come back about 2.4 times the cell's height.
+        # Capped, or a panorama would decode a strip several thousand
+        # pixels wide to fill one small square of it.
+        need = max(float(width or 0.0), float(height or 0.0)) * scale
+        stretch = 1.0
+        natural = self.media_natural_size
+        try:
+            if natural is not None and natural.width and natural.height:
+                stretch = min(max(natural.width, natural.height)
+                              / min(natural.width, natural.height), 3.0)
+        except Exception:
+            stretch = 1.0
+        wanted = tile_pixels(need * stretch)
+
+        if (self.tile_image is not None
+                and self._tile_image_path == self.media_path
+                and self._tile_image_pixels >= wanted):
+            return
+
+        cache = FileTransferCache()
+        image = None
+        try:
+            image = cache.tile(self.media_path, wanted)
+            if image is not None:
+                # Measured rather than trusted: media_natural_size can be
+                # missing, and a picture whose short side still lands under
+                # the cell would be magnified -- the very thing tiles were
+                # coming out looking like.
+                size = image.size()
+                short = min(size.width, size.height)
+                long_side = max(size.width, size.height)
+                corrected = tile_pixels(wanted * need / short) if short else wanted
+                # Only when OUR cap is what made it small. ImageIO never
+                # enlarges: a picture that came back under the cap is the
+                # whole file, and asking again for more of it is a second
+                # decode that can only return the same pixels.
+                if (short and short + 0.5 < need and corrected > wanted
+                        and long_side >= wanted - 0.5):
+                    bigger = cache.tile(self.media_path, corrected)
+                    if bigger is not None:
+                        image, wanted = bigger, corrected
         except Exception as e:
-            BlinkLogger().log_debug('Cannot read the picture for a tile: %s' % e)
+            BlinkLogger().log_debug('Cannot decode a tile of the picture: %s' % e)
             image = None
+        pixels = wanted
+        if image is None:
+            # A format ImageIO will not thumbnail is still a picture AppKit
+            # can draw. Rare enough to be worth the old path rather than an
+            # empty cell -- and the old path is only unsafe for pictures it
+            # is given, so this is a handful of them rather than a page.
+            try:
+                image = cache.original(self.media_path)
+            except Exception as e:
+                BlinkLogger().log_debug('Cannot read the picture for a tile: %s' % e)
+                image = None
+            # Nothing more will be gained by asking again at a larger size.
+            pixels = TILE_PIXELS_UNBOUNDED
+
         self.tile_image = image
         self._tile_image_path = self.media_path if image is not None else None
+        self._tile_image_pixels = pixels if image is not None else 0
 
     @objc.python_method
     def _tileImage(self):

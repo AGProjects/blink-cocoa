@@ -668,8 +668,25 @@ class ChatViewController(NSObject):
             # asked is answered the way it always was: send it as it is.
             plan = [(path, True) for path in paths]
 
-        paths = [self.prepareAttachment(path, send_original)
-                 for (path, send_original) in plan]
+        try:
+            from AttachmentPreview import prepare_attachments
+        except Exception as e:
+            BlinkLogger().log_error('Cannot load the attachment preparation: %s' % e)
+            prepare_attachments = None
+
+        if prepare_attachments is not None:
+            # The second half: makes the files smaller where the first
+            # half said it may, shows a movie's result before it goes,
+            # and comes back empty if the user changed their mind about
+            # any of it.
+            paths = prepare_attachments(plan, self.attachmentPreviewParent())
+            if not paths:
+                BlinkLogger().log_info('Attachment cancelled while it was '
+                                       'being prepared')
+                return 0
+        else:
+            paths = [self.prepareAttachment(path, send_original)
+                     for (path, send_original) in plan]
 
         try:
             return send(paths) or 0
@@ -681,33 +698,21 @@ class ChatViewController(NSObject):
     def prepareAttachment(self, path, send_original):
         """The file that actually goes, for the answer the user gave.
 
-        The single place a picture or a movie is made smaller on its way
-        out. It runs after the preview and before the transfer, so what
-        the conversation hands to the uploader is already the artefact the
-        recipient will get -- which is what lets the transcript reference
-        the file that was really sent rather than the one that was picked.
-
-        Not yet implemented: every path comes back unchanged, so today
-        this is exactly the behaviour that was here before. What goes in
-        it, to match what mobile already does (sylk-mobile app.js,
-        resizeBeforeUpload / compressVideoBeforeUpload):
-
-          * `send_original` True -> return `path`, always. The box means
-            the bytes on disc, not a gentler preset, and it is the escape
-            hatch for somebody sending a file that has to stay intact.
-          * pictures -> CGImageSource to CGImageDestination, longest edge
-            capped at 1200 and never enlarged (the bug mobile shipped),
-            kCGImageDestinationLossyCompressionQuality 0.95, EXIF dropped
-            -- and the result used only if it came out smaller.
-          * movies -> AVAssetReader/AVAssetWriter, longest edge 960, H.264
-            High with AAC-LC 128k in an MP4 written for streaming, at the
-            bitrate mobile derives from the source. Slow and asynchronous:
-            the preview will need a progress bar and a cancel before this
-            one can land.
-          * either way, write into a temporary directory, hand back that
-            path, and unlink it once the transfer has taken it.
+        One file, no window: the plain form of what prepare_attachments
+        does for a whole selection, for any caller that has no user to
+        show a progress bar to. `send_original` True returns the path
+        untouched -- the box means the bytes on disc, not a gentler
+        preset, and it is the escape hatch for somebody sending a file
+        that has to stay intact.
         """
-        return path
+        if send_original:
+            return path
+        try:
+            from MediaCompression import shrink
+        except Exception as e:
+            BlinkLogger().log_error('Cannot load the media encoder: %s' % e)
+            return path
+        return shrink(path) or path
 
     @objc.python_method
     def attachmentPreviewParent(self):

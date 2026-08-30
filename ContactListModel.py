@@ -1948,6 +1948,18 @@ class BlinkGroup(NSObject):
         self.contacts = []
         self.group = group
         self.name = name
+        if self.isMessagesGroup():
+            # Not the user's group to keep or to edit the membership of.
+            # It is a record of who they have messages with, written by
+            # SMSWindowManager as messages arrive: putting somebody in it
+            # by hand would state something untrue, taking somebody out
+            # would be undone by their next message, and deleting it
+            # would only mean it came back on the next sync. Renaming it
+            # is left alone -- the name is the user's business, what is
+            # in it is not.
+            self.deletable = False
+            self.add_contact_allowed = False
+            self.remove_contact_allowed = False
 
     def copyWithZone_(self, zone):
         return self

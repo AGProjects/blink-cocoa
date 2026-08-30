@@ -262,6 +262,7 @@ class ContactWindowController(NSWindowController):
     backend = None
     loggerModel = None
     participants = []
+    pendingAttachments = None
 
     # Notification-storm dampers. Bonjour neighbour adds, account
     # registrations and presence updates can each post BlinkContactsHaveChanged
@@ -1369,6 +1370,14 @@ class ContactWindowController(NSWindowController):
             for uri, media_type, participants in NSApp.delegate().urisToOpen:
                 self.joinConference(uri, media_type, participants)
             NSApp.delegate().urisToOpen = []
+
+        # A share that launched Blink has been waiting for a contact list
+        # to pick from. It exists now.
+        if NSApp.delegate().sharesToOpen:
+            shares = NSApp.delegate().sharesToOpen
+            NSApp.delegate().sharesToOpen = []
+            for url in shares:
+                NSApp.delegate().handleShareURL(url)
 
     @objc.python_method
     def sendMessageToURI(self, uri=None):
@@ -3189,12 +3198,22 @@ class ContactWindowController(NSWindowController):
         return (target, display_name, account, instance_id)
 
     @objc.python_method
-    def openMessagesForURI(self, uri):
+    def openMessagesForURI(self, uri, prefill=None, attachments=None):
         """Reveal the messages pane showing the conversation with one address.
 
         Unlike switchMessagePaneToSelectedContact this DOES open the pane:
         it exists for someone clicking a notification about a message, and
         the whole point of that click is to be shown the message.
+
+        prefill puts text in the composer without sending it. That is for
+        the Share menu: text or a link shared from another app opens the
+        conversation ready to send, because a link shared by reflex should
+        not leave before its sender has looked at it.
+
+        attachments are file paths to offer through the usual preview once
+        the conversation is up -- the same gate the file panel, the camera
+        and Cmd-V go through, so a picture shared from Finder can still be
+        cropped or made smaller before it goes anywhere.
         """
         uri = str(uri or '').strip()
         if not uri:
@@ -3246,11 +3265,57 @@ class ContactWindowController(NSWindowController):
                 return False
             manager.presentViewer(viewer, focus=True, note_new_message=False)
             pane.selectViewer(viewer)
+            if prefill:
+                self.prefillComposer(viewer, prefill)
+            if attachments:
+                self.presentAttachmentsLater(viewer, attachments)
             BlinkLogger().log_info('Opened the conversation with %s' % uri)
             return True
         except Exception as e:
             BlinkLogger().log_error('Cannot open the conversation with %s: %s' % (uri, e))
             return False
+
+    @objc.python_method
+    def presentAttachmentsLater(self, viewer, paths):
+        """Offer files through the preview, once the conversation is up.
+
+        A turn of the run loop later, on purpose: the preview runs modally
+        and a modal window opened in the middle of building a conversation
+        stops the conversation from finishing. The user should see who
+        they are sending to behind the thing asking what to send.
+        """
+        self.pendingAttachments = (viewer, [str(path) for path in paths])
+        self.performSelector_withObject_afterDelay_(
+            'presentPendingAttachments:', None, 0.0)
+
+    def presentPendingAttachments_(self, sender):
+        pending = self.pendingAttachments
+        self.pendingAttachments = None
+        if not pending:
+            return
+        viewer, paths = pending
+        try:
+            sent = viewer.chatViewController.confirmAndSendFiles(paths)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot offer the shared files: %s' % e)
+            return
+        BlinkLogger().log_info('Shared %d of %d file(s)' % (sent, len(paths)))
+
+    @objc.python_method
+    def prefillComposer(self, viewer, text):
+        """Put text in a conversation's composer, leaving it unsent.
+
+        Appends rather than replaces: whatever the user had half-typed in
+        there is theirs, and losing it to a share would be worse than the
+        share arriving on a second line.
+        """
+        try:
+            input_text = viewer.chatViewController.inputText
+            existing = str(input_text.string() or '')
+            input_text.setString_('%s\n%s' % (existing, text) if existing else text)
+            input_text.window().makeFirstResponder_(input_text)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot fill the composer for the share: %s' % e)
 
     @objc.python_method
     def messageTargetForURI(self, uri):

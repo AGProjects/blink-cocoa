@@ -1497,8 +1497,24 @@ class SMSWindowManagerClass(NSObject):
                     self.history.delete_messages(local_uri=str(account.id), remote_uri=msg['content'])
                     self.history.delete_messages(local_uri=msg['content'], remote_uri=str(account.id))
                 elif content_type == 'application/sylk-message-remove':
-                    BlinkLogger().log_debug('Remove message %s with %s' % (msg['message_id'], msg['contact']))
-                    self.history.delete_message(msg['message_id']);
+                    # The id to delete is the TARGET's, and it is in the
+                    # payload -- msg['message_id'] is the id of this removal
+                    # notice itself, which matches no message and deletes
+                    # nothing. Every removal that reached this device by
+                    # catch-up rather than live therefore did nothing at all:
+                    # the bubble stayed on screen and the row stayed in
+                    # history. The live path has always read the payload; this
+                    # now reads the same field, and both go through one place
+                    # so an open conversation is updated either way.
+                    target_id, target_contact = self._parseMessageRemoval(msg.get('content'))
+                    if target_id is None:
+                        BlinkLogger().log_error('Cannot read the removal carried by journal entry %s'
+                                                % msg['message_id'])
+                    else:
+                        BlinkLogger().log_debug('Remove message %s with %s'
+                                                % (target_id, target_contact or msg.get('contact')))
+                        self.applyMessageRemoval(account, target_id,
+                                                 target_contact or msg.get('contact'))
                 elif content_type == 'message/imdn':
                     if first_sync:
                         # Nothing has ever been synced on this device, so every
@@ -3764,6 +3780,83 @@ class SMSWindowManagerClass(NSObject):
             BlinkLogger().log_error('Cannot tell whether journal message %s is unread: %s'
                                     % (msg.get('message_id'), e))
             return False
+
+    @objc.python_method
+    def _parseMessageRemoval(self, content):
+        """The target message id and its contact out of a removal payload.
+
+        The body is JSON -- {"contact": ..., "message_id": ...} -- and it
+        arrives as bytes off the wire and as a string (occasionally already
+        decoded into a dict) out of the journal, so all three are accepted
+        here rather than at each call site. Returns (None, None) when the
+        payload cannot be read; a removal nobody can parse must not take a
+        guessed id down with it.
+        """
+        if content is None:
+            return None, None
+        payload = content
+        if isinstance(payload, bytes):
+            try:
+                payload = payload.decode()
+            except UnicodeDecodeError as e:
+                BlinkLogger().log_error('Cannot decode a message removal: %s' % e)
+                return None, None
+        if isinstance(payload, str):
+            try:
+                payload = json.loads(payload)
+            except (TypeError, ValueError) as e:
+                BlinkLogger().log_error('Cannot parse the message removal %s: %s'
+                                        % (payload[:200], e))
+                return None, None
+        if not isinstance(payload, dict):
+            return None, None
+        target_id = payload.get('message_id')
+        return (target_id or None), payload.get('contact')
+
+    @objc.python_method
+    def applyMessageRemoval(self, account, target_id, contact):
+        """Take a removed message out of history and off the screen.
+
+        The live notice and the journalled copy both land here. History is
+        the part that must always happen -- it is what keeps the message
+        gone across a restart -- and it is done on whatever thread we are
+        on. The transcript is only touched when the conversation happens to
+        be open, and on the GUI thread, because a journal page is applied
+        off it.
+        """
+        self.history.delete_message(target_id)
+        viewer = self._viewerForContact(account, contact) if contact else None
+        if viewer is not None:
+            self._markMessageRemovedInViewer(viewer, target_id)
+
+    @objc.python_method
+    def _viewerForContact(self, account, contact):
+        """The open viewer for a contact, or None if nobody has it open.
+
+        Matched canonically: a removal carries whatever the device that
+        sent it called the contact, while the viewer holds the address the
+        messages themselves came in on.
+        """
+        key = self._canonical_uri(contact)
+        if not key:
+            return None
+        account_id = str(account.id) if account is not None else None
+        for viewer in self.allViewers():
+            viewer_account = getattr(viewer, 'account', None)
+            if account_id is not None and viewer_account is not None:
+                if str(viewer_account.id) != account_id:
+                    continue
+            if self._canonical_uri(getattr(viewer, 'remote_uri', None)) == key:
+                return viewer
+        return None
+
+    @objc.python_method
+    @run_in_gui_thread
+    def _markMessageRemovedInViewer(self, viewer, target_id):
+        try:
+            viewer.chatViewController.markMessage(target_id, 'deleted')
+        except Exception as e:
+            BlinkLogger().log_error('Cannot mark message %s as deleted: %s' % (target_id, e))
 
     @objc.python_method
     def _hasViewerFor(self, remote_uri, account):

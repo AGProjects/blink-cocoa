@@ -32,7 +32,31 @@ from Foundation import (NSData,
                         NSMakeSize,
                         NSMutableURLRequest,
                         NSURL,
-                        NSURLSession)
+                        NSURLSession,
+                        NSZeroSize)
+
+# ImageIO, for decoding a grid tile at tile size. Guarded because it is the
+# one import here that is not part of every PyObjC build: without it the
+# grid falls back to drawing the original, which is what it did before.
+try:
+    from Quartz import (CGImageSourceCreateWithURL,
+                        CGImageSourceCreateThumbnailAtIndex,
+                        kCGImageSourceCreateThumbnailFromImageAlways,
+                        kCGImageSourceCreateThumbnailWithTransform,
+                        kCGImageSourceShouldCacheImmediately,
+                        kCGImageSourceThumbnailMaxPixelSize)
+    HAS_IMAGE_IO = True
+except ImportError:
+    try:
+        from ImageIO import (CGImageSourceCreateWithURL,
+                             CGImageSourceCreateThumbnailAtIndex,
+                             kCGImageSourceCreateThumbnailFromImageAlways,
+                             kCGImageSourceCreateThumbnailWithTransform,
+                             kCGImageSourceShouldCacheImmediately,
+                             kCGImageSourceThumbnailMaxPixelSize)
+        HAS_IMAGE_IO = True
+    except ImportError:
+        HAS_IMAGE_IO = False
 
 from application.system import makedirs
 from resources import ApplicationData
@@ -70,10 +94,44 @@ AUTO_VIDEO_MAX_AGE_DAYS = 7
 # the size it was encrypted at is the sender's business.
 MAX_ENCRYPT_BYTES = 50 * 1000 * 1000
 
-# How many full-size pictures to keep decoded at once.
-# Comfortably more than one page of tiles (50), so a grid that has just
-# been fetched does not evict its own pictures while it is drawing them.
-MAX_CACHED_ORIGINALS = 60
+# How many full-size pictures to keep decoded at once. Twelve, where it was
+# sixty: sixty phone photographs decoded in full is measured in gigabytes,
+# and gigabytes of decoded image is how CoreGraphics ends up discarding a
+# buffer something is still drawing from. Nothing needs the cache to be
+# large any more -- a grid decodes tiles instead (see tile()), and every
+# bubble holds its own picture for as long as it can be asked to draw it,
+# so this is a first-render convenience and not an owner.
+MAX_CACHED_ORIGINALS = 12
+
+# The sizes a grid tile is decoded at, in pixels of its longest side. A tile
+# asks for the cell it is going into times the screen's backing scale, and
+# gets the next step up: a handful of buckets means a grid that is resized,
+# or one column narrower on a different window, re-uses what it already
+# decoded instead of decoding the whole page again.
+TILE_PIXEL_STEPS = (256, 512, 768, 1024, 1536, 2048)
+
+# What the decoded tiles may occupy between them. A budget rather than a
+# count, because a tile for a two-column grid is twenty times the bitmap of
+# one for six columns, and a fixed count of the big ones is gigabytes.
+# Holding as many as fit is what stops a grid re-decoding the same pictures
+# every time they scroll back on screen; holding them under a ceiling is
+# what stops the app being the reason the system runs out of memory --
+# which is where the whole class of crash this cache exists to prevent
+# comes from.
+MAX_TILE_BYTES = 128 * 1024 * 1024
+MAX_CACHED_TILES = 600
+
+
+def tile_pixels(wanted):
+    """The step a tile of this size is decoded at."""
+    try:
+        wanted = float(wanted)
+    except (TypeError, ValueError):
+        wanted = 0.0
+    for step in TILE_PIXEL_STEPS:
+        if wanted <= step:
+            return step
+    return TILE_PIXEL_STEPS[-1]
 
 # The path SylkServer serves file transfers from, appended to the API root.
 # The full URL of one transfer is
@@ -211,6 +269,11 @@ class FileTransferCache(object):
             cls._instance._uploads = {}
             cls._instance._upload_phase = {}
             cls._instance._originals = OrderedDict()
+            # decoded grid tiles, keyed by (path, pixels), with what each
+            # one costs and what they cost between them
+            cls._instance._tiles = OrderedDict()
+            cls._instance._tile_cost = {}
+            cls._instance._tile_bytes = 0
             cls._instance._natural = {}
             cls._instance._tasks = {}
             cls._instance._phase = {}
@@ -806,6 +869,99 @@ class FileTransferCache(object):
         while len(self._originals) > MAX_CACHED_ORIGINALS:
             self._originals.popitem(last=False)
         return image
+
+    def tile(self, path, pixels):
+        """A grid tile's picture: decoded ONCE, at tile size, into memory.
+
+        Not a convenience. A grid draws its cells out of a display list
+        that CoreAnimation replays when the transaction commits, and what
+        it replays is a chain of CoreGraphics providers reading from
+        whatever the image is backed by. An NSImage made with
+        initWithContentsOfFile_ is backed by the FILE: nothing is decoded
+        until something rasterizes it, and the read happens down in
+        imageProvider_getBytesAtPosition, at commit time, out of a buffer
+        CoreGraphics owns and considers its own to discard -- it is
+        volatile under memory pressure, and it is re-made when the same
+        NSImage is asked to draw at yet another size, which is exactly
+        what fifty tiles sharing one picture do on every scroll pass.
+        Holding the NSImage does not hold that buffer, so the crash the
+        grid kept dying of (EXC_BAD_ACCESS in memmove, under
+        CABackingStoreUpdate/ripc_DrawImage) survived being given an
+        owner: the owner owned the wrong thing.
+
+        A thumbnail from ImageIO is the other kind of image. It is
+        decoded here, on this thread, into a bitmap that is finished
+        before it is ever drawn -- kCGImageSourceShouldCacheImmediately
+        -- so replaying a display list that references it is a read of
+        ordinary retained memory with no provider, no file and no
+        re-decode in it.
+
+        It is also a fraction of the work: a 4032x3024 photograph drawn
+        into a 150pt cell was being interpolated down on every frame of
+        every scroll, per tile. `kCGImageSourceCreateThumbnailWithTransform`
+        keeps EXIF orientation, which the full-size path got from AppKit
+        for free and a thumbnail does not.
+        """
+        if not path or not HAS_IMAGE_IO:
+            return None
+        pixels = tile_pixels(pixels)
+        key = (path, pixels)
+        cached = self._tiles.get(key)
+        if cached is not None:
+            self._tiles.move_to_end(key)
+            return cached
+        image = self._decode_tile(path, pixels)
+        if image is None:
+            return None
+        self._tiles[key] = image
+        self._tile_cost[key] = self._tile_size(image)
+        self._tile_bytes += self._tile_cost[key]
+        # Least recently drawn first, one at a time, and never the one just
+        # made: a tile is evicted from the cache, not from the view that
+        # asked for it, which holds its own reference for as long as it can
+        # be asked to draw it.
+        while (len(self._tiles) > MAX_CACHED_TILES
+               or self._tile_bytes > MAX_TILE_BYTES) and len(self._tiles) > 1:
+            gone, _ = self._tiles.popitem(last=False)
+            self._tile_bytes -= self._tile_cost.pop(gone, 0)
+        return image
+
+    def _tile_size(self, image):
+        """Roughly what one decoded tile occupies, in bytes."""
+        try:
+            size = image.size()
+            return max(int(size.width * size.height * 4), 0)
+        except Exception:
+            return 0
+
+    def _decode_tile(self, path, pixels):
+        """One tile-sized bitmap out of a file, or None if ImageIO cannot."""
+        try:
+            url = NSURL.fileURLWithPath_(str(path))
+            source = CGImageSourceCreateWithURL(url, None)
+            if source is None:
+                BlinkLogger().log_debug('No image source for %s' % path)
+                return None
+            options = {
+                # ALWAYS: a JPEG carrying its own embedded thumbnail would
+                # otherwise hand back the camera's 160px preview, and a
+                # grid of those is a wall of mush.
+                kCGImageSourceCreateThumbnailFromImageAlways: True,
+                kCGImageSourceCreateThumbnailWithTransform: True,
+                kCGImageSourceThumbnailMaxPixelSize: int(pixels),
+                kCGImageSourceShouldCacheImmediately: True,
+            }
+            cgimage = CGImageSourceCreateThumbnailAtIndex(source, 0, options)
+            if cgimage is None:
+                BlinkLogger().log_debug('ImageIO made no tile for %s' % path)
+                return None
+            # NSZeroSize means "the size the pixels actually are", so the
+            # bubble's own scaling starts from the decoded size rather than
+            # from the size of the original file.
+            return NSImage.alloc().initWithCGImage_size_(cgimage, NSZeroSize)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot decode a tile of %s: %s' % (path, e))
+            return None
 
     def image(self, path, width):
         """The picture, ready to draw at any size.

@@ -243,7 +243,8 @@ def _haversine(lat1, lon1, lat2, lon2):
 from ChatViewController import (ChatViewController, ChatMessageObject,
                                 pasteboard_attachments, pasteboard_can_attach)
 from MessageBubbleView import MessageBubbleView, _url_re
-from FileTransferCache import (FileTransferCache, envelope as transfer_envelope,
+from FileTransferCache import (FileTransferCache, display_name,
+                               envelope as transfer_envelope,
                                is_encrypted, AUTO_VIDEO_MAX_AGE_DAYS,
                                MAX_AUTO_IMAGE_BYTES, MAX_AUTO_VIDEO_BYTES)
 from sipsimple.threading.green import run_in_green_thread
@@ -2176,7 +2177,12 @@ class NativeChatViewController(ChatViewController):
         name = None
         meta = getattr(bubble, 'transfer_meta', None)
         if isinstance(meta, dict):
-            name = meta.get('filename')
+            # display_name, not the raw envelope: an encrypted transfer
+            # travels as <name>.asc, and .asc is how it was carried rather
+            # than what it is. The bubble does not show it, the Finder
+            # never sees it, and a panel asking "Delete Photo.jpg.asc?"
+            # is asking about a file the user has never been shown.
+            name = display_name(meta) or meta.get('filename')
 
         peer, icon_path = self._peerIdentity()
 

@@ -182,6 +182,7 @@ class BlinkAppDelegate(NSObject):
     # session's windows, so it survives a restart along with the counts
     unreadMessages = 0
     urisToOpen = []
+    sharesToOpen = []
     wait_for_enrollment = False
     updater = None
 
@@ -1204,9 +1205,17 @@ class BlinkAppDelegate(NSObject):
         return external_url_pattern.sub("", url)
 
     def getURL_withReplyEvent_(self, event, replyEvent):
+        url = event.descriptorForKeyword_(fourcharToInt('----')).stringValue()
+
+        if url and str(url).lower().startswith('blink:'):
+            # The share extension's hand-off, and it must not go anywhere
+            # near the normalising below: that strips spaces, and what
+            # this URL carries is a file path.
+            self.handleShareURL(str(url))
+            return
+
         participants = set()
         media_type = set()
-        url = event.descriptorForKeyword_(fourcharToInt('----')).stringValue()
         url = self.normalizeExternalURL(url)
 
         BlinkLogger().log_info("Will start outgoing session from external link: %s" % url)
@@ -1233,6 +1242,30 @@ class BlinkAppDelegate(NSObject):
             self.contactsWindowController.joinConference(str(url), list(media_type), list(participants))
 
     @objc.python_method
+    def handleShareURL(self, url):
+        """Something arrived from the Share menu. Ask who it is for.
+
+        A share can be what launched Blink, in which case there is no
+        contact list yet to pick from. Queue it and let the contacts
+        window deal with it once it is up, the same way an external sip:
+        link waits.
+        """
+        BlinkLogger().log_info('Share arrived from the Share menu: %s' % url)
+
+        if not self.ready:
+            BlinkLogger().log_info('Not ready yet; the share waits for the contact list')
+            self.sharesToOpen.append(url)
+            return
+
+        try:
+            import ShareController
+            ShareController.handle_share_url(url)
+        except Exception:
+            import traceback
+            BlinkLogger().log_error('Cannot handle the share %s: %s'
+                                    % (url, traceback.format_exc()))
+
+    @objc.python_method
     def registerURLHandler(self):
         event_class = event_id = fourcharToInt("GURL")
         event_manager = NSAppleEventManager.sharedAppleEventManager()
@@ -1241,4 +1274,6 @@ class BlinkAppDelegate(NSObject):
         bundleID = NSBundle.mainBundle().bundleIdentifier()
         LaunchServices.LSSetDefaultHandlerForURLScheme("sip", bundleID)
         LaunchServices.LSSetDefaultHandlerForURLScheme("tel", bundleID)
+        # blink: is ours alone -- the share extension talks to us over it.
+        LaunchServices.LSSetDefaultHandlerForURLScheme("blink", bundleID)
 

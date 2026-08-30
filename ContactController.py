@@ -296,7 +296,7 @@ class AddContactController(NSObject):
 
         self.update_default_uri()
         self.subscriptions = {'presence': {'subscribe': True, 'policy': 'allow'},  'dialog': {'subscribe': False, 'policy': 'block'}}
-        self.all_groups = [g for g in self.groupsList if g.group is not None and not isinstance(g.group, VirtualGroup) and g.add_contact_allowed]
+        self.all_groups = self.selectableGroups()
         self.belonging_groups = []
         if group is not None:
             self.belonging_groups.append(group)
@@ -413,7 +413,7 @@ class AddContactController(NSObject):
 
     @objc.python_method
     def _NH_BlinkGroupsHaveChanged(self, notification):
-        self.all_groups = list(g for g in self.groupsList if g.group is not None and not isinstance(g.group, VirtualGroup) and g.add_contact_allowed)
+        self.all_groups = self.selectableGroups()
         self.loadGroupNames()
 
     @objc.python_method
@@ -482,11 +482,43 @@ class AddContactController(NSObject):
         return True
 
     @objc.python_method
+    def isReadOnlyGroup(self, group):
+        """The Messages group is not the user's to file people into.
+
+        It is a record of who they have messages with, written by
+        SMSWindowManager as messages arrive. Putting somebody in it by
+        hand would state something untrue, and taking somebody out would
+        be undone by their next message -- so it is shown, and shown
+        ticked, but never offered as a choice.
+        """
+        try:
+            return bool(group.isMessagesGroup())
+        except AttributeError:
+            return False
+
+    @objc.python_method
+    def selectableGroups(self):
+        """The groups the popup lists.
+
+        add_contact_allowed is what makes a group a place the user can
+        file somebody, and it is the filter. The Messages group is the
+        one exception worth listing anyway: the contact IS in it and the
+        contact list shows them in it, so a popup that silently left it
+        out would look like the group had been lost.
+        """
+        return [g for g in self.groupsList
+                if g.group is not None and not isinstance(g.group, VirtualGroup)
+                and (g.add_contact_allowed or self.isReadOnlyGroup(g))]
+
+    @objc.python_method
     def loadGroupNames(self):
         if self.belonging_groups is None:
             return
 
         self.groupPopUp.removeAllItems()
+        # Enabling is ours to decide, not the responder chain's: the
+        # Messages group is listed but never selectable.
+        self.groupPopUp.menu().setAutoenablesItems_(False)
         nr_groups = len(self.belonging_groups)
         if nr_groups == 0:
             title = NSLocalizedString("No Selected Groups", "Menu item")
@@ -507,6 +539,8 @@ class AddContactController(NSObject):
                 menu_item.setState_(NSOnState)
             else:
                 menu_item.setState_(NSOffState)
+            if self.isReadOnlyGroup(grp):
+                menu_item.setEnabled_(False)
 
         self.groupPopUp.menu().addItem_(NSMenuItem.separatorItem())
         self.groupPopUp.addItemWithTitle_(NSLocalizedString("Select All", "Menu item"))
@@ -583,6 +617,10 @@ class AddContactController(NSObject):
 
         grp = item.representedObject()
         if grp:
+            # A disabled item should not get here at all; this is the
+            # same rule stated where it cannot be routed around.
+            if self.isReadOnlyGroup(grp):
+                return
             if grp in self.belonging_groups:
                 self.belonging_groups.remove(grp)
             else:
@@ -591,9 +629,14 @@ class AddContactController(NSObject):
         else:
             menu_item = self.groupPopUp.itemAtIndex_(index)
             if menu_item.title() == NSLocalizedString("Select All", "Menu item"):
-                self.belonging_groups = self.all_groups
+                # All of them means all the ones that are the user's to
+                # choose, plus whatever the software already decided.
+                self.belonging_groups = [g for g in self.all_groups
+                                         if not self.isReadOnlyGroup(g)
+                                         or g in self.belonging_groups]
             elif menu_item.title() == NSLocalizedString("Deselect All", "Menu item"):
-                self.belonging_groups = []
+                self.belonging_groups = [g for g in self.belonging_groups
+                                         if self.isReadOnlyGroup(g)]
             elif menu_item.title() == NSLocalizedString("Add Group...", "Menu item"):
                 self.model.addGroup()
 
@@ -799,7 +842,7 @@ class EditContactController(AddContactController):
 
         self.blink_contact = blink_contact
         self.belonging_groups = self.model.getBlinkGroupsForBlinkContact(blink_contact)
-        self.all_groups = [g for g in self.groupsList if g.group is not None and not isinstance(g.group, VirtualGroup) and g.add_contact_allowed]
+        self.all_groups = self.selectableGroups()
         self.nameText.setStringValue_(blink_contact.name or "")
         self.publicKey.setStringValue_(self.publicKeyLabelForContact(blink_contact))
         # so the checksum can be copied out and compared against the phone
