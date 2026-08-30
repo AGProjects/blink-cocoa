@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>BlinkVersionDate</key>
-	<string>July 5th, 2026</string>
+	<string>Aug 30th, 2026</string>
 	<key>BrandingFile</key>
 	<string>branding</string>
 	<key>CFBundleDevelopmentRegion</key>
@@ -53,10 +53,10 @@
 	<string>13.0</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Required for VoIP calls</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Required to share your location in a conversation</string>
 	<key>NSContactsUsageDescription</key>
 	<string>Required for calling your contacts</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Required to share your location in a conversation</string>
 	<key>NSMainNibFile</key>
 	<string>MainWindow</string>
 	<key>NSMicrophoneUsageDescription</key>
