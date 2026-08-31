@@ -75,6 +75,37 @@ def pgp_enabled_for_account(account):
     return bool(getattr(getattr(account, 'sms', None), 'enable_pgp', False))
 
 
+def active_account_uris():
+    """The address of every enabled account, as history files them.
+
+    History rows carry the local account in local_uri -- the account a
+    message was sent FROM when it is outgoing and the one it arrived TO
+    when it is incoming -- so this list is what scopes a transcript, a
+    badge or a conversation order to the accounts that are actually
+    switched on.
+
+    Bonjour is included when it is enabled, unlike the account list the
+    conversation-move menu is built from: that one leaves Bonjour out
+    because a conversation cannot be moved onto it, which is a different
+    question from whether its messages should be shown. Its rows are filed
+    under 'bonjour@local', which is what str(BonjourAccount().id) returns.
+
+    Returns None -- meaning "do not filter" -- when the account list
+    cannot be read at all. An empty list is a real answer and means the
+    opposite: no account is enabled, so nothing matches. Blanking every
+    transcript in the application is not the right response to a failure
+    to read a setting.
+    """
+    try:
+        from sipsimple.account import AccountManager
+        return [str(account.id) for account in AccountManager().get_accounts()
+                if account.enabled]
+    except Exception as e:
+        from BlinkLogger import BlinkLogger
+        BlinkLogger().log_error('Cannot read the enabled account list: %s' % e)
+        return None
+
+
 def strip_addressbook_special_characters(contact):
     return _pstn_addressbook_chars_substract_regexp.sub("", contact)
 

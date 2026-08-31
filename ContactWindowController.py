@@ -1798,6 +1798,22 @@ class ContactWindowController(NSWindowController):
             mitem.setEnabled_(False)
             self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
 
+            # A removed conversation. Nothing has actually been deleted yet:
+            # the messages are marked and hidden, the files they carried are
+            # still on disc, and these two items are the fork -- have it all
+            # back, or have it gone for good. Offered first because that is
+            # the only decision to make about a row in this group.
+            if self._deletedConversationURIs(item):
+                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(
+                    NSLocalizedString("Restore Conversation", "Menu item"),
+                    "restoreDeletedConversation:", "")
+                mitem.setRepresentedObject_(item)
+                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(
+                    NSLocalizedString("Delete Conversation Permanently...", "Menu item"),
+                    "purgeDeletedConversation:", "")
+                mitem.setRepresentedObject_(item)
+                self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+
             has_fully_qualified_sip_uri = is_sip_aor_format(item.uri)
 
             gruu_devices = None
@@ -5455,6 +5471,70 @@ class ContactWindowController(NSWindowController):
             self.model.deleteContactsFromGroup(item)
             self.refreshContactsList()
             self.searchContacts()
+
+    @objc.python_method
+    def _deletedConversationURIs(self, item):
+        """Which of a contact's addresses have a removed conversation.
+
+        Asked of the message manager rather than of the outline: the same
+        menu is built for a row in the contact list and for one in the
+        search results, and only one of those has a group above it.
+        """
+        try:
+            from SMSWindowManager import SMSWindowManager
+            manager = SMSWindowManager()
+        except Exception:
+            return []
+        if not getattr(manager, 'deleted_conversations', None):
+            return []
+        found = []
+        try:
+            for uri in getattr(item, 'uris', ()) or ():
+                address = str(uri.uri)
+                if manager._canonical_uri(address) in manager.deleted_conversations:
+                    found.append(address)
+            if not found:
+                address = str(getattr(item, 'uri', '') or '')
+                if address and manager._canonical_uri(address) in manager.deleted_conversations:
+                    found.append(address)
+        except Exception:
+            return []
+        return found
+
+    @objc.IBAction
+    def restoreDeletedConversation_(self, sender):
+        item = sender.representedObject()
+        addresses = self._deletedConversationURIs(item)
+        if not addresses:
+            return
+        from SMSWindowManager import SMSWindowManager
+        manager = SMSWindowManager()
+        for address in addresses:
+            manager.restoreConversation(address)
+        self.refreshContactsList()
+        self.searchContacts()
+
+    @objc.IBAction
+    def purgeDeletedConversation_(self, sender):
+        item = sender.representedObject()
+        addresses = self._deletedConversationURIs(item)
+        if not addresses:
+            return
+        # The one step with no way back, so it is the one step that asks.
+        message = NSLocalizedString("Permanently delete the conversation with %s, "
+                                    "including every file downloaded from it? "
+                                    "This cannot be undone.", "Label") % item.name
+        message = re.sub("%", "%%", message)
+        ret = NSRunAlertPanel(NSLocalizedString("Delete Conversation", "Window title"),
+                              message,
+                              NSLocalizedString("Delete", "Button title"),
+                              NSLocalizedString("Cancel", "Button title"), None)
+        if ret != NSAlertDefaultReturn:
+            return
+        from SMSWindowManager import SMSWindowManager
+        SMSWindowManager().purgeDeletedConversations(addresses)
+        self.refreshContactsList()
+        self.searchContacts()
 
     @objc.IBAction
     def renameGroup_(self, sender):

@@ -4338,8 +4338,24 @@ class NativeChatViewController(ChatViewController):
         # One type on its own is not a choice; the bar only earns its row
         # when there is something to switch between.
         if len(categories) < 2:
-            BlinkLogger().log_info('Filter bar hidden: only %d category present'
-                                   % len(categories))
+            # Two different reasons to end up here, and only one of them is
+            # worth a line in the log. awakeFromNib builds the bar before
+            # the first page has been fetched, so the conversation has not
+            # said what it holds and the list is empty: that is the bar
+            # waiting, not a conversation with one kind of message in it,
+            # and reporting "only 0 category present" for every conversation
+            # the user opens says nothing except that the transcript has not
+            # loaded yet. The real rebuild follows from
+            # _noteAvailableCategories once the page is in.
+            known = getattr(self.delegate, 'available_categories', None)
+            drawn = (self.messageListView is not None
+                     and len(self.messageListView.subviews()) > 0)
+            if known or drawn:
+                BlinkLogger().log_info('Filter bar hidden: only %d category present'
+                                       % len(categories))
+            else:
+                BlinkLogger().log_debug('Filter bar hidden: the conversation has '
+                                        'not said what it holds yet')
             control.setHidden_(True)
             self._layoutFilterRow(False)
             if self.message_filter is not None:

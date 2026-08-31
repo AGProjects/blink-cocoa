@@ -450,7 +450,7 @@ class SessionHistory(object, metaclass=Singleton):
     def _get_last_chat_conversations(self, count, media=['chat'], skip_conference_uris=False, days=60, status=None):
         results = []
         media_type = list("'%s'" % m for m in media)
-        extra_where = "1=1"
+        extra_where = NOT_DELETED_SQL
         if skip_conference_uris:
             extra_where += " and remote_uri not like '%@conference.%'"
         if status:
@@ -676,10 +676,37 @@ class ChatMessage(SQLObject):
     # SQLObject.expire() on every row, and a column of that name is refused
     # at class-definition time.
     expire_time       = IntCol(default=0)
+    # THE TOMBSTONE. 1 for a row that has been removed but not yet purged;
+    # every read filters it out, so a tombstoned message is gone from the
+    # transcript, the grid, the unread count and the conversation list
+    # while its body and its downloaded file stay exactly where they are.
+    #
+    # Removal is not one act but two, and which one applies depends on who
+    # asked. A removal arriving over the wire -- another device of the
+    # user's, or the peer -- only ever tombstones: the content and any
+    # files stay recoverable and re-syncable, as they do on Sylk Mobile
+    # (app.js deleteMessageSync). The user deleting something HERE is the
+    # hard delete, rows and files together, and so is emptying the Deleted
+    # group. Nothing sweeps tombstones on a timer.
+    deleted           = IntCol(default=0)
+    # Epoch seconds at which the tombstone was set, 0 while the row is
+    # live. Not the message's own time: it is the clock the revival rule
+    # is read against -- activity NEWER than this un-hides the
+    # conversation, a journal echo older than it must not -- and it is
+    # what orders the Deleted group by when things were removed.
+    deleted_time      = IntCol(default=0)
+
+
+# The tombstone test, spelled the same way at every read site. NULL is
+# tested for as well as 0 because a row can predate the column: one
+# imported from another device, or stored by a build older than version
+# 15. A missing tombstone is a live message, and a reader that only tests
+# `deleted = 0` makes every such row disappear.
+NOT_DELETED_SQL = "(deleted is null or deleted = 0)"
 
 
 class ChatHistory(object, metaclass=Singleton):
-    __version__ = 14
+    __version__ = 15
 
     def __init__(self):
         path = ApplicationData.get('history')
@@ -926,6 +953,24 @@ class ChatHistory(object, metaclass=Singleton):
             # Corrected against the rule the store path itself uses.
             self._reclassify_locations()
 
+        if next_upgrade_version < 15:
+            # The tombstone pair. DEFAULT 0 rather than NULL so everything
+            # already stored reads as live without a backfill pass, but every
+            # reader still spells the test `(deleted is null or deleted = 0)`:
+            # a row imported from another device, or written by a build that
+            # predates this, can carry NULL and must not vanish because of it.
+            for column, declaration in (('deleted', 'INTEGER DEFAULT 0'),
+                                        ('deleted_time', 'INTEGER DEFAULT 0')):
+                query = "alter table chat_messages add column '%s' %s" % (column, declaration)
+                try:
+                    self.db.queryAll(query)
+                    BlinkLogger().log_info("Added column '%s' to table %s"
+                                           % (column, ChatMessage.sqlmeta.table))
+                except dberrors.OperationalError as e:
+                    if not str(e).startswith('duplicate column name'):
+                        BlinkLogger().log_error("Error adding column %s to table %s: %s"
+                                                % (column, ChatMessage.sqlmeta.table, e))
+
         TableVersions().set_table_version(ChatMessage.sqlmeta.table, self.__version__)
 
     def _backfill_categories(self):
@@ -1033,18 +1078,26 @@ class ChatHistory(object, metaclass=Singleton):
         return self._mark_conversation_read(local_uri, remote_uri)
 
     @run_in_db_thread
-    def _unread_counts(self):
+    def _unread_counts(self, local_uri):
         """{remote uri: how many messages are waiting}, for every address."""
         query = ("select remote_uri, count(*) from chat_messages "
-                 "where read = 0 and direction = 'incoming' group by remote_uri")
+                 "where read = 0 and direction = 'incoming' and %s"
+                 % NOT_DELETED_SQL)
+        query += self._uri_in_sql('local_uri', local_uri)
+        query += " group by remote_uri"
         try:
             return dict((str(row[0]), int(row[1])) for row in self.db.queryAll(query))
         except Exception as e:
             BlinkLogger().log_error("Error reading the unread counts: %s" % e)
             return {}
 
-    def unread_counts(self):
-        return block_on(self._unread_counts())
+    def unread_counts(self, local_uri=None):
+        """Badges per address, optionally only for the accounts named.
+
+        local_uri follows _uri_in_sql: None counts every account, a list
+        counts only those, and an empty list counts nothing.
+        """
+        return block_on(self._unread_counts(local_uri))
 
     @run_in_db_thread
     def update_message_status(self, msgid, status, direction='outgoing'):
@@ -1250,7 +1303,7 @@ class ChatHistory(object, metaclass=Singleton):
 
     @run_in_db_thread
     def _get_contacts(self, remote_uri, media_type, search_text, after_date, before_date):
-        query = "select distinct(remote_uri) from chat_messages where 1=1 "
+        query = "select distinct(remote_uri) from chat_messages where %s " % NOT_DELETED_SQL
         if remote_uri:
             if remote_uri is not tuple:
                 remote_uri = (remote_uri,)
@@ -1292,7 +1345,13 @@ class ChatHistory(object, metaclass=Singleton):
             for uri in remote_uri:
                 remote_uri_sql += '%s,' % ChatMessage.sqlrepr(uri)
             remote_uri_sql = remote_uri_sql.rstrip(",")
-            query = "select date, local_uri, remote_uri, media_type from chat_messages where remote_uri in (%s)" % remote_uri_sql
+            query = ("select date, local_uri, remote_uri, media_type from chat_messages"
+                     " where %s and remote_uri in (%s)" % (NOT_DELETED_SQL, remote_uri_sql))
+            # Scoped by account as well when the caller asks for it: this
+            # branch used to ignore local_uri outright, so a conversation's
+            # date menu offered days whose only messages were on an account
+            # the transcript would not show.
+            query += self._uri_in_sql('local_uri', local_uri)
             if media_type:
                 if media_type is not tuple:
                     media_type = (media_type,)
@@ -1313,7 +1372,8 @@ class ChatHistory(object, metaclass=Singleton):
 
         elif local_uri:
             query = "select date, local_uri, remote_uri, media_type from chat_messages"
-            query += " where local_uri = %s" % ChatMessage.sqlrepr(local_uri)
+            query += " where %s" % NOT_DELETED_SQL
+            query += self._uri_in_sql('local_uri', local_uri)
             if media_type:
                 if media_type is not tuple:
                     media_type = (media_type,)
@@ -1338,7 +1398,8 @@ class ChatHistory(object, metaclass=Singleton):
                 query += " order by date DESC"
 
         else:
-            query = "select date, local_uri, remote_uri, media_type from chat_messages where 1=1"
+            query = ("select date, local_uri, remote_uri, media_type from chat_messages where %s"
+                     % NOT_DELETED_SQL)
             if media_type:
                 if media_type is not tuple:
                     media_type = (media_type,)
@@ -1445,9 +1506,36 @@ class ChatHistory(object, metaclass=Singleton):
             category = 'text'
         return " and category = %s" % ChatMessage.sqlrepr(category)
 
+    @staticmethod
+    def _uri_in_sql(column, value):
+        """The WHERE fragment restricting `column` to one address or several.
+
+        Three answers, and the difference between the last two is the whole
+        point of having this in one place:
+
+        * None -- no filter at all. What every caller that does not care
+          about the account passes, and what a caller whose account list
+          could not be read passes rather than blanking the result.
+        * a string -- the old `column = x`, unchanged, so the callers that
+          have always passed a single address keep working.
+        * a sequence -- `column in (...)`, and an EMPTY sequence becomes
+          `and 0`. That is a real answer meaning "nothing matches" -- no
+          account is enabled -- and the plain `if value:` test the query
+          builders used to do turned it into "no filter", which is the
+          opposite.
+        """
+        if value is None:
+            return ''
+        if isinstance(value, str):
+            return " and %s=%s" % (column, ChatMessage.sqlrepr(value))
+        values = list(value)
+        if not values:
+            return " and 0"
+        return " and %s in (%s)" % (column, ','.join(ChatMessage.sqlrepr(uri) for uri in values))
+
     @run_in_db_thread
     def _get_messages(self, msgid, call_id, local_uri, remote_uri, media_type, date, after_date, before_date, search_text, orderBy, orderType, count, exclude_related_actions=None, category=None):
-        query='1=1'
+        query = NOT_DELETED_SQL
         query += self._category_sql(category)
         if exclude_related_actions:
             # Rows that belong to another row rather than standing on their
@@ -1460,8 +1548,7 @@ class ChatHistory(object, metaclass=Singleton):
             query += " and msgid=%s" % ChatMessage.sqlrepr(msgid)
         if call_id:
             query += " and sip_callid=%s" % ChatMessage.sqlrepr(call_id)
-        if local_uri:
-            query += " and local_uri=%s" % ChatMessage.sqlrepr(local_uri)
+        query += self._uri_in_sql('local_uri', local_uri)
         if remote_uri:
             if remote_uri is not tuple:
                 remote_uri = (remote_uri,)
@@ -1501,10 +1588,11 @@ class ChatHistory(object, metaclass=Singleton):
 
     @run_in_db_thread
     def _present_categories(self, local_uri, remote_uri, media_type):
-        query = ('select distinct category from %s where category is not null'
-                 % ChatMessage.sqlmeta.table)
-        if local_uri:
-            query += " and local_uri=%s" % ChatMessage.sqlrepr(local_uri)
+        # The tombstone test goes AFTER 'category is not null', not before:
+        # the links probe below rewrites that exact phrase.
+        query = ('select distinct category from %s where category is not null and %s'
+                 % (ChatMessage.sqlmeta.table, NOT_DELETED_SQL))
+        query += self._uri_in_sql('local_uri', local_uri)
         if remote_uri:
             if isinstance(remote_uri, str):
                 remote_uri = (remote_uri,)
@@ -1600,13 +1688,12 @@ class ChatHistory(object, metaclass=Singleton):
 
     @run_in_db_thread
     def _renderable_cutoff(self, local_uri, remote_uri, media_type, after_date, before_date, search_text, count, exclude_related_actions=None, category=None):
-        query = 'select time from %s where 1=1' % ChatMessage.sqlmeta.table
+        query = 'select time from %s where %s' % (ChatMessage.sqlmeta.table, NOT_DELETED_SQL)
         query += self._category_sql(category)
         if exclude_related_actions:
             actions = ','.join(ChatMessage.sqlrepr(action) for action in exclude_related_actions)
             query += " and (related_action is null or related_action not in (%s))" % actions
-        if local_uri:
-            query += " and local_uri=%s" % ChatMessage.sqlrepr(local_uri)
+        query += self._uri_in_sql('local_uri', local_uri)
         # A single address or a collection of them -- a conversation is filed
         # under every URI its contact owns, and that arrives as a list.
         if remote_uri:
@@ -1683,9 +1770,8 @@ class ChatHistory(object, metaclass=Singleton):
 
     @run_in_db_thread
     def _count_messages(self, local_uri, remote_uri, media_type):
-        query = '1=1'
-        if local_uri:
-            query += " and local_uri=%s" % ChatMessage.sqlrepr(local_uri)
+        query = NOT_DELETED_SQL
+        query += self._uri_in_sql('local_uri', local_uri)
         if remote_uri:
             if remote_uri is not tuple:
                 remote_uri = (remote_uri,)
@@ -1715,18 +1801,27 @@ class ChatHistory(object, metaclass=Singleton):
 
     @staticmethod
     def _media_type_sql(media_type):
-        """' where media_type in (...)', or '' for every kind of row."""
+        """The WHERE clause for the last-message queries.
+
+        Always returns one now, because the tombstone test belongs in it
+        whether or not a media type was asked for. These two queries order
+        the Messages group and pick the account a conversation reopens on:
+        left unfiltered, a removed conversation keeps its place at the top
+        of the list by the time of the message it is no longer showing.
+        """
+        clause = ' where %s' % NOT_DELETED_SQL
         if not media_type:
-            return ''
+            return clause
         if isinstance(media_type, str):
             media_type = (media_type,)
-        return (' where media_type in (%s)'
+        return (clause + ' and media_type in (%s)'
                 % ','.join(ChatMessage.sqlrepr(kind) for kind in media_type))
 
     @run_in_db_thread
-    def _last_message_times(self, media_type):
+    def _last_message_times(self, media_type, local_uri):
         query = 'select remote_uri, max(time) from %s' % ChatMessage.sqlmeta.table
         query += self._media_type_sql(media_type)
+        query += self._uri_in_sql('local_uri', local_uri)
         query += ' group by remote_uri'
         try:
             rows = self.db.queryAll(query)
@@ -1744,9 +1839,10 @@ class ChatHistory(object, metaclass=Singleton):
         return result
 
     @run_in_db_thread
-    def _last_message_accounts(self, media_type):
+    def _last_message_accounts(self, media_type, local_uri):
         table = ChatMessage.sqlmeta.table
-        where = self._media_type_sql(media_type)
+        where = self._media_type_sql(media_type) + self._uri_in_sql('local_uri', local_uri)
+        outer = self._uri_in_sql('m.local_uri', local_uri)
         # The local_uri of the newest row per conversation. Joined against
         # the grouped maximum rather than selected with it: a bare
         # `select remote_uri, local_uri, max(time) ... group by` leaves
@@ -1754,8 +1850,9 @@ class ChatHistory(object, metaclass=Singleton):
         query = ('select m.remote_uri, m.local_uri from %(table)s m '
                  'join (select remote_uri, max(time) as newest from %(table)s%(where)s '
                  'group by remote_uri) latest '
-                 'on m.remote_uri = latest.remote_uri and m.time = latest.newest '
-                 'group by m.remote_uri' % {'table': table, 'where': where})
+                 'on m.remote_uri = latest.remote_uri and m.time = latest.newest%(outer)s '
+                 'group by m.remote_uri'
+                 % {'table': table, 'where': where, 'outer': outer})
         try:
             rows = self.db.queryAll(query)
         except Exception as e:
@@ -1771,16 +1868,16 @@ class ChatHistory(object, metaclass=Singleton):
                 result[str(remote_uri)] = str(local_uri)
         return result
 
-    def last_message_accounts(self, media_type=MESSAGE_MEDIA_TYPES):
+    def last_message_accounts(self, media_type=MESSAGE_MEDIA_TYPES, local_uri=None):
         """{remote_uri: local_uri} -- which account each conversation last used.
 
         What restores, across a restart, the account a conversation is
         being held on: it is a property of the conversation rather than of
         whichever account happens to be selected in the popup.
         """
-        return block_on(self._last_message_accounts(media_type))
+        return block_on(self._last_message_accounts(media_type, local_uri))
 
-    def last_message_times(self, media_type=MESSAGE_MEDIA_TYPES):
+    def last_message_times(self, media_type=MESSAGE_MEDIA_TYPES, local_uri=None):
         """{remote_uri: 'YYYY-MM-DD HH:MM:SS'} for every conversation.
 
         MESSAGES, by default and by name. chat_messages also holds rows
@@ -1797,7 +1894,7 @@ class ChatHistory(object, metaclass=Singleton):
         doing that one contact at a time is what makes a contact list with
         a few hundred conversations crawl on every reorder.
         """
-        return block_on(self._last_message_times(media_type))
+        return block_on(self._last_message_times(media_type, local_uri))
 
     @run_in_db_thread
     def delete_messages(self, local_uri=None, remote_uri=None, media_type=None, date=None, after_date=None, before_date=None):
@@ -1927,6 +2024,194 @@ class ChatHistory(object, metaclass=Singleton):
                 d.addCallback(lambda result: moved(result) if result else None)
             except AttributeError:
                 pass                    # not a Deferred; nothing to hang on
+
+    # -- tombstones ---------------------------------------------------------
+    #
+    # A removal that arrives over the wire hides rows; it does not take
+    # them out. What follows is the marking half of the flow Sylk Mobile
+    # calls soft delete (app.js deleteMessageSync / _setMessagesDeletedForUri)
+    # -- the purge half is delete_message / delete_messages above, reached
+    # only when the user deletes something on THIS device or empties the
+    # Deleted group.
+
+    def _storage_time(self, value):
+        """A time as the `time` column stores it: UTC, naive, to the second.
+
+        Rows are written with the timestamp converted to UTC and stripped
+        of its offset (see add_message), so a floor compared against them
+        has to be in the same shape. An aware value is converted, a naive
+        one is taken as already-UTC, and a string is trusted as given.
+        """
+        if value is None:
+            return None
+        if isinstance(value, str):
+            # A journal entry carries an ISO timestamp, not a storage-shaped
+            # one; comparing that against the column as text would compare
+            # '2026-08-31T10:06:20+00:00' with '2026-08-31 10:06:20' and get
+            # the answer wrong by the width of the offset.
+            try:
+                value = dateutil.parser.isoparse(value)
+            except (ValueError, TypeError, OverflowError, DateParserError):
+                return value
+        try:
+            if value.tzinfo is not None:
+                value = value.astimezone(timezone2.utc).replace(tzinfo=None)
+            return value.strftime('%Y-%m-%d %H:%M:%S')
+        except Exception as e:
+            BlinkLogger().log_error('Cannot read the removal time %r: %s' % (value, e))
+            return None
+
+    @staticmethod
+    def _conversation_sql(local_uri, remote_uri):
+        """Every row of one conversation, whichever way round it was filed.
+
+        Case-insensitive, and deliberately so: the address arrives from the
+        wire, or as the canonical key the message manager holds, and neither
+        is guaranteed to be spelled the way the rows were written. A removal
+        that matched only the exact spelling would hide nothing and report
+        nothing wrong.
+
+        `local_uri` may be None -- a restore can be triggered by a message
+        arriving for an address whose account we have not recorded yet, and
+        refusing to restore for want of it would leave a conversation hidden
+        with a live message in it.
+        """
+        remote = ChatMessage.sqlrepr(str(remote_uri).lower())
+        if not local_uri:
+            return ('lower(remote_uri) = %(remote)s or lower(local_uri) = %(remote)s'
+                    % {'remote': remote})
+        local = ChatMessage.sqlrepr(str(local_uri).lower())
+        return ('(lower(local_uri) = %(local)s and lower(remote_uri) = %(remote)s)'
+                ' or (lower(local_uri) = %(remote)s and lower(remote_uri) = %(local)s)'
+                % {'local': local, 'remote': remote})
+
+    def _set_deleted(self, where, deleted, when=None):
+        """Flip the tombstone on every row matching `where`; return the count.
+
+        Counted before the update and narrowed to rows that are actually
+        going to change, so the number reported is what happened rather
+        than what was looked at. Caller is already in the db thread.
+        """
+        state = NOT_DELETED_SQL if deleted else 'deleted = 1'
+        try:
+            matched = self.db.queryAll("select count(*) from %s where (%s) and %s"
+                                       % (ChatMessage.sqlmeta.table, where, state))
+            affected = int(matched[0][0]) if matched else 0
+        except Exception as e:
+            BlinkLogger().log_error('Error counting the rows to mark deleted: %s' % e)
+            affected = -1
+        if affected == 0:
+            return 0
+        stamp = int(when if when is not None else time.time()) if deleted else 0
+        try:
+            self.db.queryAll("update %s set deleted = %d, deleted_time = %d where (%s) and %s"
+                             % (ChatMessage.sqlmeta.table, 1 if deleted else 0,
+                                stamp, where, state))
+        except Exception as e:
+            BlinkLogger().log_error('Error marking rows deleted: %s' % e)
+            return 0
+        return max(affected, 0)
+
+    @run_in_db_thread
+    def tombstone_message(self, msgid, when=None):
+        """Hide one message and everything filed against it.
+
+        Two statements, as mobile has them. The first takes the row itself
+        AND its trail -- a live-location track is an origin plus every tick
+        that carries its id in related_msg_id, and hiding the origin alone
+        would leave the ticks to redraw the bubble on the next page load.
+        The second takes the metadata sidecars that name the message in
+        their envelope: a recording's waveform, a reply link. They are
+        keyed by the id INSIDE the JSON rather than by a column, which is
+        why this is a LIKE and not a join, and it is matched in the compact
+        spelling the senders use.
+
+        Nothing on disc is touched. That is the point of a tombstone: the
+        removal can have come from a device whose user may yet restore it.
+        """
+        identifier = ChatMessage.sqlrepr(msgid)
+        affected = self._set_deleted('msgid = %s or related_msg_id = %s'
+                                     % (identifier, identifier), True, when)
+        sidecars = self._set_deleted(
+            'content_type = %s and body like %s'
+            % (ChatMessage.sqlrepr('application/sylk-message-metadata'),
+               ChatMessage.sqlrepr('%%"messageId":"%s"%%' % msgid)), True, when)
+        BlinkLogger().log_info('Message %s marked deleted, %d row(s) affected%s'
+                               % (msgid, affected,
+                                  ', %d sidecar(s)' % sidecars if sidecars else ''))
+        return affected + sidecars
+
+    @run_in_db_thread
+    def tombstone_conversation(self, local_uri, remote_uri, before_time=None, when=None):
+        """Hide a whole conversation, up to the moment it was removed.
+
+        `before_time` is when the removal was PERFORMED, not when it
+        arrived: a remove replayed out of the journal, or re-broadcast by
+        the server, must not take down messages that were exchanged after
+        it. Mobile guards the same way (removeConversation's action time)
+        and it is what stops a conversation that has since come back to
+        life from being hidden again by a stale notice.
+
+        Both orderings of the pair are marked. History has been written
+        under either one over the years, and the removal has to mean the
+        conversation rather than one direction of it.
+        """
+        pair = self._conversation_sql(local_uri, remote_uri)
+        floor = self._storage_time(before_time)
+        if floor:
+            pair = '(%s) and time <= %s' % (pair, ChatMessage.sqlrepr(floor))
+        affected = self._set_deleted(pair, True, when)
+        BlinkLogger().log_info('Conversation with %s marked deleted, %d row(s) affected%s'
+                               % (remote_uri, affected,
+                                  ' (up to %s)' % floor if floor else ''))
+        return affected
+
+    @run_in_db_thread
+    def restore_conversation(self, local_uri, remote_uri):
+        """Un-hide a conversation: every tombstoned row of it comes back.
+
+        `local_uri` may be None. A restore can be triggered by a message
+        arriving for an address whose account we have not recorded yet, and
+        refusing to restore for want of the account would leave the
+        conversation hidden with a live message in it -- so the address
+        alone is enough, on either side of the pair.
+        """
+        pair = self._conversation_sql(local_uri, remote_uri)
+        affected = self._set_deleted(pair, False)
+        BlinkLogger().log_info('Conversation with %s restored, %d row(s) affected'
+                               % (remote_uri, affected))
+        return affected
+
+    @run_in_db_thread
+    def _deleted_conversations(self):
+        """{remote uri: (rows, when it was removed)} for hidden conversations.
+
+        A conversation is hidden when EVERY row it has is a tombstone.
+        Derived rather than stored: one live message -- a restore, or a
+        reply arriving after the removal -- and it is a conversation
+        again, with nothing to keep in step.
+        """
+        table = ChatMessage.sqlmeta.table
+        query = ('select remote_uri, count(*), max(deleted_time) from %(table)s'
+                 ' where deleted = 1 and remote_uri not in'
+                 ' (select remote_uri from %(table)s where %(live)s)'
+                 ' group by remote_uri' % {'table': table, 'live': NOT_DELETED_SQL})
+        try:
+            rows = self.db.queryAll(query)
+        except Exception as e:
+            BlinkLogger().log_error('Error reading the deleted conversations: %s' % e)
+            return {}
+        result = {}
+        for row in rows:
+            try:
+                if row[0]:
+                    result[str(row[0])] = (int(row[1] or 0), int(row[2] or 0))
+            except Exception:
+                continue
+        return result
+
+    def deleted_conversations(self):
+        return block_on(self._deleted_conversations())
 
     @run_in_db_thread
     def delete_message(self, msgid):

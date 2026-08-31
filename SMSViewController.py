@@ -84,7 +84,7 @@ from SylkLocation import (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE,
                           merge_location_bodies, one_shot_envelope,
                           row_metadata, session_bubble_ids, storable_envelope,
                           system_note)
-from util import format_identity_to_string, html2txt, otr_enabled_for_account, pgp_enabled_for_account, sipuri_components_from_string, run_in_gui_thread
+from util import active_account_uris, format_identity_to_string, html2txt, otr_enabled_for_account, pgp_enabled_for_account, sipuri_components_from_string, run_in_gui_thread
 from ChatOTR import ChatOtrSmp
 import SMSWindowManager
 
@@ -2644,7 +2644,18 @@ class SMSViewController(NSObject):
         if stamps_conversation_time:
             try:
                 from SMSWindowManager import SMSWindowManager
-                SMSWindowManager().noteMessageTime(remote_uri, message.timestamp)
+                manager = SMSWindowManager()
+                manager.noteMessageTime(remote_uri, message.timestamp)
+                # And put the other party in the Messages group, on the same
+                # condition. A conversation handled by an open viewer stores
+                # its messages here rather than through the manager, so this
+                # was the one path into the history table that never filed
+                # its contact: a chat started with a contact created a moment
+                # ago left them out of the list entirely. The flag is the
+                # right test for both -- it already means "this row is a
+                # message", so the read receipts and reply links that must
+                # not reorder the list must not create a row in it either.
+                manager.fileConversationContact(remote_uri, self.account)
             except Exception as e:
                 self.log_debug('Cannot record the conversation time for %s: %s' % (remote_uri, e))
 
@@ -3609,6 +3620,25 @@ class SMSViewController(NSObject):
         return remote_uris
 
     @objc.python_method
+    def history_local_uris(self):
+        """The accounts this conversation may show messages from.
+
+        The companion of history_remote_uris, and here for the same reason:
+        every history query the transcript makes has to agree about it. A
+        row is filed under the local account it went out from or came in on,
+        so this is what keeps a conversation from replaying messages that
+        belong to an account the user has since switched off.
+
+        The conversation's OWN account gets no exemption. If it is the one
+        being disabled the transcript comes back empty, which is the honest
+        answer -- nothing can be sent from it either.
+
+        None means the account list could not be read, and every query
+        treats that as "do not filter" rather than showing nothing.
+        """
+        return active_account_uris()
+
+    @objc.python_method
     @run_in_green_thread
     def load_history_date_index(self, callback):
         """Hand the caller every day this conversation has messages on.
@@ -3620,6 +3650,7 @@ class SMSViewController(NSObject):
         days = []
         try:
             rows = self.history.get_daily_entries(remote_uri=self.history_remote_uris(),
+                                                  local_uri=self.history_local_uris(),
                                                   media_type=('chat', 'sms'))
             days = sorted({str(row[0]) for row in rows if row and row[0]}, reverse=True)
         except Exception as e:
@@ -3710,6 +3741,7 @@ class SMSViewController(NSObject):
         #BlinkLogger().log_info("Replay message history for %s" % str(self.target_uri))
         try:
             remote_uris = self.history_remote_uris()
+            local_uris = self.history_local_uris()
 
             # How far back the newest `showHistoryEntries` BUBBLES reach. The
             # page is then fetched by time rather than by row count, so the
@@ -3719,7 +3751,8 @@ class SMSViewController(NSObject):
             # opens showing six messages out of a hundred fetched rows.
             category = self.active_category()
             page_start = self.history.renderable_cutoff(
-                remote_uri=remote_uris, media_type=('chat', 'sms'),
+                remote_uri=remote_uris, local_uri=local_uris,
+                media_type=('chat', 'sms'),
                 count=self.showHistoryEntries,
                 search_text=self.chatViewController.search_text,
                 before_date=self.oldest_timestamp or self.history_before_date,
@@ -3738,7 +3771,10 @@ class SMSViewController(NSObject):
                 load_trace_note(self.trace_key, 'no cutoff')
 
             zoom_factor = self.chatViewController.scrolling_zoom_factor
-            self.log_info('Replay history with zoom factor %s for %s' % (zoom_factor, ", ".join(remote_uris)))
+            self.log_info('Replay history with zoom factor %s for %s on %s'
+                          % (zoom_factor, ", ".join(remote_uris),
+                             ", ".join(local_uris) if local_uris else
+                             ('every account' if local_uris is None else 'no enabled account')))
             after_date = None
 
             if zoom_factor:
@@ -3770,9 +3806,9 @@ class SMSViewController(NSObject):
                     self.zoom_period_label = NSLocalizedString("Displaying all messages", "Label")
                     self.chatViewController.setHandleScrolling_(False)
                 
-                results = self.history.get_messages(remote_uri=remote_uris, media_type=('chat', 'sms'), after_date=after_date or page_start, before_date=self.oldest_timestamp or self.history_before_date, count=page_count, search_text=self.chatViewController.search_text, exclude_related_actions=LOCATION_TICK_ACTIONS, category=category)
+                results = self.history.get_messages(remote_uri=remote_uris, local_uri=local_uris, media_type=('chat', 'sms'), after_date=after_date or page_start, before_date=self.oldest_timestamp or self.history_before_date, count=page_count, search_text=self.chatViewController.search_text, exclude_related_actions=LOCATION_TICK_ACTIONS, category=category)
             else:
-                results = self.history.get_messages(remote_uri=remote_uris, media_type=('chat', 'sms'), after_date=page_start, count=page_count, search_text=self.chatViewController.search_text, exclude_related_actions=LOCATION_TICK_ACTIONS, category=category)
+                results = self.history.get_messages(remote_uri=remote_uris, local_uri=local_uris, media_type=('chat', 'sms'), after_date=page_start, count=page_count, search_text=self.chatViewController.search_text, exclude_related_actions=LOCATION_TICK_ACTIONS, category=category)
 
             results = self._withRelatedRows(results, category)
             messages = [row for row in reversed(results)]
@@ -3808,7 +3844,7 @@ class SMSViewController(NSObject):
             # the user waited on before seeing anything; behind it, it runs
             # on the database thread while the transcript draws.
             try:
-                total = self.history.count_messages(remote_uri=remote_uris, media_type=('chat', 'sms'))
+                total = self.history.count_messages(remote_uri=remote_uris, local_uri=local_uris, media_type=('chat', 'sms'))
             except Exception as e:
                 self.log_info('Cannot count stored messages: %s' % e)
                 total = -1
@@ -3820,7 +3856,8 @@ class SMSViewController(NSObject):
             # offer the user a bar with one chip on it and no way back.
             try:
                 categories = self.history.present_categories(
-                    remote_uri=remote_uris, media_type=('chat', 'sms'))
+                    remote_uri=remote_uris, local_uri=local_uris,
+                    media_type=('chat', 'sms'))
             except Exception as e:
                 self.log_info('Cannot read the categories present: %s' % e)
             else:

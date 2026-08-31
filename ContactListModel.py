@@ -1938,6 +1938,16 @@ class BlinkGroupAttribute(object):
 
 
 MESSAGES_GROUP_ID = '_messages'
+# The Deleted group: conversations that have been removed but not purged.
+# Every row in one of them is a tombstone (chat_messages.deleted = 1), so
+# the history is still there, the downloaded files are still on disc, and
+# the contact is one menu item away from having both back. Emptying the
+# group is what finally deletes anything.
+#
+# A real address book group like Messages rather than a VirtualBlinkGroup:
+# membership has to survive a restart, and it is the same kind of fact --
+# where a conversation currently lives -- written by the same hand.
+DELETED_GROUP_ID = '_deleted'
 # Anything with no message at all sorts as if it were sent at the epoch, so
 # the whole no-history tail keeps the alphabetical order underneath.
 NO_MESSAGES = datetime.datetime(1970, 1, 1)
@@ -1960,6 +1970,15 @@ class BlinkGroup(NSObject):
         self.contacts = []
         self.group = group
         self.name = name
+        if self.isDeletedGroup():
+            # Membership here means "removed", which is a fact about the
+            # conversation and not a filing decision: it is set by a removal
+            # and cleared by a restore. Dragging somebody in or out would
+            # claim something that is not true and would be undone by the
+            # next removal or restore anyway.
+            self.deletable = False
+            self.add_contact_allowed = False
+            self.remove_contact_allowed = False
         if self.isMessagesGroup():
             # Not the user's group to keep or to edit the membership of.
             # It is a record of who they have messages with, written by
@@ -1979,6 +1998,10 @@ class BlinkGroup(NSObject):
     @objc.python_method
     def isMessagesGroup(self):
         return getattr(self.group, 'id', None) == MESSAGES_GROUP_ID
+
+    @objc.python_method
+    def isDeletedGroup(self):
+        return getattr(self.group, 'id', None) == DELETED_GROUP_ID
 
     @objc.python_method
     def sortContacts(self):

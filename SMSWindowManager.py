@@ -107,7 +107,7 @@ from SylkLocation import (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE,
                           bubble_id as location_bubble_id, location_payload,
                           merge_location_bodies, storable_envelope)
 from FileTransferCache import FILE_TRANSFER_PATH, base_url_from_transfer
-from util import format_identity_to_string, run_in_gui_thread, call_later
+from util import active_account_uris, format_identity_to_string, run_in_gui_thread, call_later
 
 # Requests addressed to SylkServer, not to a person. The server answers each
 # of them on its own content type -- a key lookup comes back as
@@ -774,6 +774,16 @@ class SMSWindowManagerClass(NSObject):
     # write that keeps failing is attempted once rather than per reload.
     escrow_repaired = set()
     generate_prompt_deferred = {}
+    # The enabled accounts as of the last time anything was reloaded for
+    # them, or None before the first look. Enabling an account announces
+    # itself twice -- the setting changes and the account then activates --
+    # and a conversation that reloads its whole transcript twice for one
+    # click is the thing this remembers to avoid.
+    _active_account_uris = None
+    # False until accountsDidChange has looked once. A separate flag rather
+    # than testing _active_account_uris for None, because None is also a
+    # real value there: it is what an unreadable account list leaves behind.
+    _active_accounts_seen = False
 
     def init(self):
         self = objc.super(SMSWindowManagerClass, self).init()
@@ -781,6 +791,7 @@ class SMSWindowManagerClass(NSObject):
             self.notification_center = NotificationCenter()
             self.notification_center.add_observer(self, name="SIPEngineGotMessage")
             self.notification_center.add_observer(self, name="SIPAccountDidActivate")
+            self.notification_center.add_observer(self, name="SIPAccountDidDeactivate")
             self.notification_center.add_observer(self, name="CFGSettingsObjectDidChange")
             self.notification_center.add_observer(self, name="SIPAccountRegistrationDidSucceed")
             self.notification_center.add_observer(self, name="MessageSaved")
@@ -806,6 +817,9 @@ class SMSWindowManagerClass(NSObject):
             # and put back the badges for whatever was left unread.
             self.loadLastMessageTimes()
             self.loadUnreadCounts()
+            # Which conversations are currently hidden, so the first
+            # message that arrives for one of them can bring it back.
+            self.loadDeletedConversations()
 
         return self
 
@@ -976,10 +990,69 @@ class SMSWindowManagerClass(NSObject):
                 if account.sms.enable_replication:
                     self.requestSyncToken(account)
 
+            # Which messages belong to this application at all changes with
+            # this setting: history rows are filed under the account that
+            # carried them, and a disabled account's are no longer shown.
+            if 'enabled' in data.modified:
+                self.accountsDidChange()
+
     @objc.python_method
     def _NH_SIPAccountDidActivate(self, account, data):
-       pass
-       #BlinkLogger().log_info("Account %s activated" % account.id)
+        self.accountsDidChange()
+
+    @objc.python_method
+    def _NH_SIPAccountDidDeactivate(self, account, data):
+        self.accountsDidChange()
+
+    @objc.python_method
+    def accountsDidChange(self):
+        """Bring everything that is scoped by account back into line.
+
+        Reached from three directions for one user action -- the `enabled`
+        setting changing, the account activating, the account deactivating
+        -- so the first thing it does is ask whether the answer has actually
+        moved. Without that, one click in Preferences reloads every open
+        transcript two or three times over.
+
+        Also the reason this is on the manager rather than on a window or on
+        the message pane: those see one viewer, or the selected one, and a
+        conversation sitting in a background tab has to come back correct
+        too.
+        """
+        active = active_account_uris()
+        key = None if active is None else tuple(sorted(active))
+        if self._active_accounts_seen and key == self._active_account_uris:
+            return
+        first_look = not self._active_accounts_seen
+        SMSWindowManagerClass._active_account_uris = key
+        SMSWindowManagerClass._active_accounts_seen = True
+        if first_look:
+            # Startup. The seeds are about to run for the first time and
+            # nothing is open yet, so there is nothing to bring into line.
+            return
+
+        BlinkLogger().log_info('Enabled accounts changed to %s; reloading conversations'
+                               % (', '.join(key) if key else 'none'))
+        self.reloadOpenConversations()
+        self.reloadConversationState()
+
+    @objc.python_method
+    @run_in_gui_thread
+    def reloadOpenConversations(self):
+        """Replay every open transcript against the accounts now enabled.
+
+        _restart_history is the reload the category chips already use: it
+        empties the transcript, drops the per-page bookkeeping that would
+        otherwise make the new page skip rows it thinks are already drawn,
+        and fetches the newest page again.
+        """
+        note = NSLocalizedString("Loading messages...", "Label")
+        for viewer in list(self.allViewers()):
+            try:
+                viewer._restart_history(note)
+            except Exception as e:
+                BlinkLogger().log_error('Cannot reload the conversation with %s: %s'
+                                        % (getattr(viewer, 'remote_uri', '?'), e))
 
     @objc.python_method
     def _resolvePendingSave(self, msgid):
@@ -1494,8 +1567,10 @@ class SMSWindowManagerClass(NSObject):
 
                 if content_type == 'application/sylk-conversation-remove':
                     BlinkLogger().log_debug('Remove conversation with %s' % msg['content'])
-                    self.history.delete_messages(local_uri=str(account.id), remote_uri=msg['content'])
-                    self.history.delete_messages(local_uri=msg['content'], remote_uri=str(account.id))
+                    # The entry's own timestamp is when the removal was
+                    # PERFORMED, which is the floor the hiding stops at.
+                    self.applyConversationRemoval(account, msg['content'],
+                                                  before_time=msg.get('timestamp'))
                 elif content_type == 'application/sylk-message-remove':
                     # The id to delete is the TARGET's, and it is in the
                     # payload -- msg['message_id'] is the id of this removal
@@ -2109,6 +2184,38 @@ class SMSWindowManagerClass(NSObject):
             return None
 
     @objc.python_method
+    @run_in_gui_thread
+    def fileConversationContact(self, remote_uri, account=None):
+        """File the other party under Messages because they said something.
+
+        The membership rules used to have a hole in the middle of them.
+        ensureMessagesGroupContains is reached when a journal sync brings a
+        conversation in, and when a live message arrives for a conversation
+        that is NOT open -- but a message handled by an open viewer went
+        straight to the history table and nothing filed its contact. For
+        anyone already in the group that is invisible; start a conversation
+        with a contact created a moment ago and they never appear in the
+        list at all, however much is said.
+
+        On the GUI thread because the work behind it is address book and
+        AppKit -- the same reason _applyRestoredUnreadCounts is.
+        """
+        if not remote_uri:
+            return
+        if account is BonjourAccount():
+            # A Bonjour conversation is addressed by instance id on the
+            # link-local account. Filing one would put a UUID in the address
+            # book, sync it to XCAP and bring it back on every launch, for a
+            # neighbour who is gone the moment they close their laptop.
+            return
+        try:
+            self.noteMessageAccount(account, remote_uri)
+            if self.ensureMessagesGroupContains(remote_uri) is not None:
+                self.addContactsToMessagesGroup()
+        except Exception as e:
+            BlinkLogger().log_error('Cannot file %s under Messages: %s' % (remote_uri, e))
+
+    @objc.python_method
     def _canonical_uri(self, raw_uri):
         """Normalize a SIP URI for duplicate-detection purposes.
 
@@ -2480,7 +2587,7 @@ class SMSWindowManagerClass(NSObject):
         empty, and the Messages group quietly fell back to alphabetical.
         """
         try:
-            stored = self.history.last_message_times()
+            stored = self.history.last_message_times(local_uri=active_account_uris())
         except Exception as e:
             BlinkLogger().log_error('Cannot read the last message times: %s' % e)
             return
@@ -2502,7 +2609,7 @@ class SMSWindowManagerClass(NSObject):
         # account popup says after a restart, rather than on the account
         # it was actually being held on.
         try:
-            accounts = self.history.last_message_accounts()
+            accounts = self.history.last_message_accounts(local_uri=active_account_uris())
         except Exception as e:
             BlinkLogger().log_error('Cannot read the last message accounts: %s' % e)
             accounts = {}
@@ -2526,7 +2633,7 @@ class SMSWindowManagerClass(NSObject):
         when it is called from anywhere else.
         """
         try:
-            stored = self.history.unread_counts()
+            stored = self.history.unread_counts(local_uri=active_account_uris())
         except Exception as e:
             BlinkLogger().log_error('Cannot read the unread counts: %s' % e)
             return
@@ -2540,6 +2647,39 @@ class SMSWindowManagerClass(NSObject):
             BlinkLogger().log_debug('No unread messages were waiting')
             return
         self._applyRestoredUnreadCounts(counts)
+
+    @objc.python_method
+    @run_in_gui_thread
+    def reloadConversationState(self):
+        """Rebuild the badges and the conversation order from history.
+
+        The seeds it calls only ever merge upward -- loadLastMessageTimes
+        keeps the later timestamp, _applyRestoredUnreadCounts ADDS to the
+        counts and announces only the keys it restored. That is right at
+        startup, where they are filling in from nothing, and wrong here,
+        where the whole point is that some conversations must now count for
+        less or for nothing at all. So the dictionaries are emptied first,
+        and the keys that had a badge before are announced as zero: the
+        contact list is told what to take away, since nothing in the
+        re-seed will mention them again.
+
+        Messages-group membership is deliberately left alone. It is
+        address-book state the user can see and edit, and a contact whose
+        only traffic was on a switched-off account is better left in the
+        list without a badge than removed from the user's address book by a
+        settings toggle -- re-enabling the account brings the badge back.
+        """
+        had_unread = [key for key, count in self.unread_counts.items() if count]
+        self.unread_counts.clear()
+        self.last_message_times.clear()
+        self.message_accounts.clear()
+
+        for key in had_unread:
+            self._postUnreadChanged(key, 0)
+        self._postConversationOrderChanged(None)
+
+        self.loadLastMessageTimes()
+        self.loadUnreadCounts()
 
     @objc.python_method
     @run_in_gui_thread
@@ -2573,6 +2713,11 @@ class SMSWindowManagerClass(NSObject):
         when = self._normalized_timestamp(timestamp)
         if not key or when is None:
             return
+        # Before the early return below, not after: a message that is older
+        # than the newest one we already know about is still news to a
+        # conversation that has been removed, and the revival rule is about
+        # the removal's clock rather than the conversation's.
+        self._reviveDeletedConversation(key, when)
         known = self.last_message_times.get(key)
         if known is not None and when <= known:
             return
@@ -2670,6 +2815,259 @@ class SMSWindowManagerClass(NSObject):
                                    'transfer: %s' % (account.id, base))
         except Exception as e:
             BlinkLogger().log_error('Cannot remember the file transfer URL: %s' % e)
+
+    # -- removed conversations ----------------------------------------------
+    #
+    # Removed is not deleted. A conversation-remove arriving over the wire
+    # marks every row of the conversation as a tombstone and files its
+    # contact under Deleted: nothing is taken off the disc, so the history
+    # and the files downloaded from it are still there to be restored. The
+    # user emptying the Deleted group is what finally deletes them, and it
+    # goes through purgeConversationsForURIs below.
+    #
+    # canonical uri -> epoch seconds at which the conversation was removed.
+    # Held in memory because it is asked on the arrival of every message:
+    # activity NEWER than that moment brings the conversation back, and an
+    # old journal entry replayed afterwards must not.
+    deleted_conversations = {}
+
+    @objc.python_method
+    @run_in_green_thread
+    def loadDeletedConversations(self):
+        """Seed the removed set from history, off the GUI thread.
+
+        Green for the same reason as loadLastMessageTimes: ChatHistory
+        answers through block_on. Derived from the rows themselves rather
+        than from the Deleted group, so the two cannot drift -- the rows
+        are what every read filters on.
+        """
+        try:
+            stored = self.history.deleted_conversations()
+        except Exception as e:
+            BlinkLogger().log_error('Cannot read the deleted conversations: %s' % e)
+            return
+        for uri, (rows, when) in stored.items():
+            key = self._canonical_uri(uri)
+            if key:
+                self.deleted_conversations[key] = when
+        if stored:
+            BlinkLogger().log_info('%d removed conversation(s) are waiting in Deleted'
+                                   % len(stored))
+
+    @objc.python_method
+    def applyConversationRemoval(self, account, payload, before_time=None):
+        """A conversation was removed on another device.
+
+        Marks it, files the contact under Deleted and takes it off the
+        screen. `before_time` is when the removal was performed: rows newer
+        than that are left alone, so a notice replayed out of the journal
+        cannot hide a conversation that has since come back to life.
+
+        `payload` is whatever the notice carried -- the address on its own,
+        or {"contact": ...}, live as bytes or replayed as text. Both shapes
+        are in the wild, exactly as for conversation-read.
+        """
+        remote_uri = self._removalContact(payload)
+        if not remote_uri:
+            BlinkLogger().log_error('Cannot read the conversation removal %r' % payload)
+            return
+        key = self._canonical_uri(remote_uri)
+        if not key or self.illegal_uri(remote_uri):
+            return
+        when = int(time.time())
+        try:
+            self.history.tombstone_conversation(str(account.id), remote_uri,
+                                                before_time=before_time, when=when)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot mark the conversation with %s deleted: %s'
+                                    % (remote_uri, e))
+            return
+
+        self.deleted_conversations[key] = when
+        self.closeConversationForURI(key)
+        self.last_message_times.pop(key, None)
+        if self.unread_counts.pop(key, None):
+            self._postUnreadChanged(key, 0)
+        self._postConversationOrderChanged(key)
+        self.fileConversationAsDeleted(remote_uri, True)
+        BlinkLogger().log_info('Conversation with %s removed and filed under Deleted'
+                               % remote_uri)
+
+    @objc.python_method
+    def _removalContact(self, content):
+        """The address a conversation removal is about, or None."""
+        if content is None:
+            return None
+        if isinstance(content, bytes):
+            content = content.decode('utf-8', 'replace')
+        return self._conversationReadContact(str(content))
+
+    @objc.python_method
+    def _reviveDeletedConversation(self, key, when):
+        """Bring a removed conversation back when something new arrives.
+
+        NEW is the whole of it: only activity later than the moment of the
+        removal counts. A message replayed from the journal, or a delivery
+        echo of something that was already there when the conversation was
+        removed, is not the conversation coming back to life -- and if an
+        old message could revive it, no removal would ever survive the next
+        sync. Same rule as Sylk Mobile's _reviveDeletedContactForActivity.
+        """
+        removed_at = self.deleted_conversations.get(key)
+        if removed_at is None:
+            return False
+        try:
+            stamp = int(when.replace(tzinfo=datetime.timezone.utc).timestamp())
+        except Exception:
+            return False
+        if stamp <= removed_at:
+            return False
+        BlinkLogger().log_info('Conversation with %s came back: a message from %s is '
+                               'newer than the removal' % (key, when))
+        self.restoreConversation(key)
+        return True
+
+    @objc.python_method
+    def restoreConversation(self, remote_uri):
+        """Un-hide a removed conversation and file it back under Messages."""
+        key = self._canonical_uri(remote_uri)
+        if not key:
+            return
+        self.deleted_conversations.pop(key, None)
+        try:
+            deferred = self.history.restore_conversation(self.message_accounts.get(key),
+                                                         remote_uri)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot restore the conversation with %s: %s'
+                                    % (remote_uri, e))
+            return
+        self.fileConversationAsDeleted(remote_uri, False)
+        # The seeds below READ the rows this restore is un-hiding, so they
+        # wait for it: fired straight away they race the update in the
+        # database thread pool and the conversation comes back with no time
+        # against it and no unread badge until the next restart.
+        try:
+            deferred.addCallback(lambda result: self._conversationRestored(key))
+        except AttributeError:
+            self._conversationRestored(key)
+
+    @objc.python_method
+    def _conversationRestored(self, key):
+        """Rebuild what the hidden rows were keeping out of the maps."""
+        self._postConversationOrderChanged(key)
+        # The restored rows carry their own times and unread marks; the
+        # in-memory maps are rebuilt from them rather than guessed at here.
+        self.loadLastMessageTimes()
+        self.loadUnreadCounts()
+
+    @objc.python_method
+    @run_in_gui_thread
+    def fileConversationAsDeleted(self, uri, deleted):
+        """Move a conversation's contact between Messages and Deleted.
+
+        Address-book work, so it happens on the GUI thread: the removal
+        itself can arrive on any of them.
+        """
+        contact = self._findContactByCanonicalURI(uri)
+        if contact is None:
+            return
+        # Imported here rather than at module scope: ContactListModel
+        # reaches back into this module, and the pair of top-level imports
+        # is a cycle.
+        from ContactListModel import DELETED_GROUP_ID, MESSAGES_GROUP_ID
+        try:
+            if deleted:
+                target = self._conversationGroup(DELETED_GROUP_ID, create=True)
+                if target is not None and contact not in set(target.contacts):
+                    target.contacts.add(contact)
+                    target.save()
+                source = self._conversationGroup(MESSAGES_GROUP_ID, create=False)
+                if source is not None and contact in set(source.contacts):
+                    source.contacts.remove(contact)
+                    source.save()
+            else:
+                source = self._conversationGroup(DELETED_GROUP_ID, create=False)
+                if source is not None and contact in set(source.contacts):
+                    source.contacts.remove(contact)
+                    source.save()
+                # Back into Messages through the one place that knows how to
+                # make that group -- including promoting it to the top, which
+                # a plain create does not do.
+                self.new_contacts.add(contact)
+                self.addContactsToMessagesGroup()
+        except Exception as e:
+            BlinkLogger().log_error('Cannot file %s as %s: %s'
+                                    % (uri, 'deleted' if deleted else 'restored', e))
+
+    @objc.python_method
+    def purgeDeletedConversations(self, uris):
+        """Empty the Deleted group of these conversations, for good.
+
+        The other half of the tombstone: everything that was kept back
+        goes now -- the rows, the files downloaded from them, the public
+        key held for the address -- and the contact comes out of the
+        Deleted group. This is the only path in the removal flow that
+        destroys anything, and it exists because the user asked for it
+        here, on this device.
+        """
+        targets = [uri for uri in uris if self._canonical_uri(uri)]
+        if not targets:
+            return
+        for uri in targets:
+            self.deleted_conversations.pop(self._canonical_uri(uri), None)
+        self.purgeConversationsForURIs(targets, reason='deleted permanently')
+        for uri in targets:
+            self.unfileConversationFromDeleted(uri)
+
+    @objc.python_method
+    @run_in_gui_thread
+    def unfileConversationFromDeleted(self, uri):
+        """Take a conversation's contact out of the Deleted group.
+
+        Out of the group only. The contact itself is left alone: it may be
+        one the user made by hand, with a name and a picture they chose,
+        and deleting a conversation is not deleting a person.
+        """
+        contact = self._findContactByCanonicalURI(uri)
+        if contact is None:
+            return
+        from ContactListModel import DELETED_GROUP_ID
+        group = self._conversationGroup(DELETED_GROUP_ID, create=False)
+        if group is None:
+            return
+        try:
+            if contact in set(group.contacts):
+                group.contacts.remove(contact)
+                group.save()
+        except Exception as e:
+            BlinkLogger().log_error('Cannot take %s out of Deleted: %s' % (uri, e))
+
+    @objc.python_method
+    def _conversationGroup(self, group_id, create=False):
+        """The Messages or Deleted group; only Deleted is made here.
+
+        The Messages group has a maker of its own in
+        addContactsToMessagesGroup, and it does more than create the group.
+        """
+        try:
+            return next(group for group in AddressbookManager().get_groups()
+                        if group.id == group_id)
+        except StopIteration:
+            pass
+        if not create:
+            return None
+        try:
+            group = Group(id=group_id)
+        except DuplicateIDError:
+            return None
+        group.name = 'Deleted'
+        # Below Messages rather than above it: what is in it is what the
+        # user has removed, and it stays collapsed until they go looking.
+        group.position = 1
+        group.expanded = False
+        group.save()
+        BlinkLogger().log_info('Created the Deleted group')
+        return group
 
     @objc.python_method
     def purgeConversationsForURIs(self, uris, reason='contact deleted'):
@@ -3815,16 +4213,23 @@ class SMSWindowManagerClass(NSObject):
 
     @objc.python_method
     def applyMessageRemoval(self, account, target_id, contact):
-        """Take a removed message out of history and off the screen.
+        """Take a removed message off the screen and mark it removed.
 
-        The live notice and the journalled copy both land here. History is
-        the part that must always happen -- it is what keeps the message
-        gone across a restart -- and it is done on whatever thread we are
-        on. The transcript is only touched when the conversation happens to
-        be open, and on the GUI thread, because a journal page is applied
-        off it.
+        The live notice and the journalled copy both land here. MARKED,
+        not deleted: this removal was performed somewhere else -- another
+        device of the user's, or the peer -- and what it is entitled to do
+        is hide the message. The row keeps its body and the transfer keeps
+        its file, so the conversation can be restored whole from the
+        Deleted group; deleting is what the user does on this device, and
+        it goes through ChatHistory.delete_message instead.
+
+        The marking is the part that must always happen -- it is what
+        keeps the message gone across a restart -- and it is done on
+        whatever thread we are on. The transcript is only touched when the
+        conversation happens to be open, and on the GUI thread, because a
+        journal page is applied off it.
         """
-        self.history.delete_message(target_id)
+        self.history.tombstone_message(target_id)
         viewer = self._viewerForContact(account, contact) if contact else None
         if viewer is not None:
             self._markMessageRemovedInViewer(viewer, target_id)
@@ -4780,9 +5185,14 @@ class SMSWindowManagerClass(NSObject):
             return
 
         elif content_type == 'application/sylk-conversation-remove':
-           self.history.delete_messages(local_uri=str(account.id), remote_uri=msg['content'])
-           self.history.delete_messages(local_uri=msg['content'], remote_uri=str(account.id))
-           return
+            # It also read `msg['content']` here, and `msg` is the
+            # is-composing document parsed in the branch above -- bound only
+            # when one has arrived, and never a dict. Every live conversation
+            # removal has therefore ended in an exception rather than in a
+            # removal. The address is in `content`, in either of the two
+            # shapes the journal and this client use.
+            self.applyConversationRemoval(account, content, before_time=imdn_timestamp)
+            return
 
         elif content_type not in ('text/plain', 'text/html', 'application/sylk-message-remove',
                                   LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE
@@ -4863,15 +5273,12 @@ class SMSWindowManagerClass(NSObject):
             except (json.decoder.JSONDecodeError, TypeError, KeyError) as e:
                 BlinkLogger().log_error('Error parsing message remove %s: %s' % (content.decode(), str(e)))
             else:
-                BlinkLogger().log_info('Remove message %s from %s (%s)'
-                                       % (msg_id,
-                                          format_identity_to_string(window_tab_identity, format='aor'),
-                                          'in conversation' if viewer else 'history only'))
-                if viewer:
-                    viewer.delete_message(msg_id, local=True)
-                else:
-                    # No open conversation to update — delete from history directly.
-                    self.history.delete_message(msg_id)
+                contact = format_identity_to_string(window_tab_identity, format='aor')
+                BlinkLogger().log_info('Remove message %s from %s' % (msg_id, contact))
+                # Through applyMessageRemoval, exactly as a journalled
+                # removal goes: one road, so a live notice and a replayed
+                # one cannot disagree about what removal means.
+                self.applyMessageRemoval(account, msg_id, contact)
 
             return
 
