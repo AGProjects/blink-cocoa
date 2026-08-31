@@ -2256,9 +2256,20 @@ class ChatHistory(object, metaclass=Singleton):
             'content_type = %s and body like %s'
             % (ChatMessage.sqlrepr('application/sylk-message-metadata'),
                ChatMessage.sqlrepr('%%"messageId":"%s"%%' % msgid)), True, when)
-        BlinkLogger().log_info('Message %s marked deleted, %d row(s) affected%s'
-                               % (msgid, affected,
-                                  ', %d sidecar(s)' % sidecars if sidecars else ''))
+        if not affected and not sidecars:
+            # Said plainly, because the removal looks like it worked
+            # otherwise. A removal names a message id, and the two ends of
+            # an MSRP file transfer used to mint one each -- so a file the
+            # peer removed on their side named an id that had never
+            # existed here, and nothing came off the screen. New transfers
+            # share the id the SDP carries; anything sent before that
+            # cannot be matched and this is where it shows.
+            BlinkLogger().log_info('Message %s marked deleted, 0 row(s) affected -- '
+                                   'no message with that id in this history' % msgid)
+        else:
+            BlinkLogger().log_info('Message %s marked deleted, %d row(s) affected%s'
+                                   % (msgid, affected,
+                                      ', %d sidecar(s)' % sidecars if sidecars else ''))
         return affected + sidecars
 
     @run_in_db_thread

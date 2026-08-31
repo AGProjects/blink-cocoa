@@ -655,7 +655,7 @@ class SessionControllersManager(object, metaclass=Singleton):
             self.redial_uri = fancy_uri
 
     def send_files_to_contact(self, account, contact_uri, filenames, route=None,
-                              instance_id=None):
+                              instance_id=None, transfer_id=None):
         """Send files by the road the caller names. MSRP unless told otherwise.
 
         `route` is 'web' only when something has decided an upload is
@@ -695,7 +695,12 @@ class SessionControllersManager(object, metaclass=Singleton):
                 file = zipped
 
             try:
-                xfer = OutgoingPushFileTransferHandler(account, target_uri, file)
+                # Only when one file is going: the id names THIS transfer,
+                # and handing the same one to a batch would file them all
+                # as the same thing at the other end.
+                xfer = OutgoingPushFileTransferHandler(
+                    account, target_uri, file,
+                    transfer_id=transfer_id if len(filenames) == 1 else None)
                 if instance_id:
                     # Told, not guessed. The handler works the neighbour out
                     # from the address it is sending to, and a conversation

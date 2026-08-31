@@ -2580,7 +2580,8 @@ class SMSViewController(NSObject):
         try:
             NSApp.delegate().contactsWindowController.sessionControllersManager \
                 .send_files_to_contact(self.account, self.target_uri, [stored],
-                                       instance_id=self.instance_id)
+                                       instance_id=self.instance_id,
+                                       transfer_id=transfer_id)
         except Exception as e:
             self.log_error('Cannot send %s over MSRP: %s' % (name, e))
             self.chatViewController.showSystemMessage(

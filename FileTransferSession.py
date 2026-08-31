@@ -463,13 +463,23 @@ class OutgoingPushFileTransferHandler(FileTransfer):
     direction = 'outgoing'
     transfer_type = 'push'
 
-    def __init__(self, account, target_uri, file_path):
+    def __init__(self, account, target_uri, file_path, transfer_id=None):
         self.account = account
         self._file_selector = FileSelector.for_file(file_path)
         self.remote_identity = format_identity_to_string(target_uri)
         self.resolveRemoteDeviceId(target_uri)
         self.target_uri = target_uri
         self._ended = False
+        # The id this transfer is known by ON BOTH SIDES. RFC 5547 puts it
+        # in the SDP as a=file-transfer-id and the receiving stream adopts
+        # it, so whatever is set here is what the peer will file the file
+        # under. A conversation sending a file has already built its
+        # envelope, its bubble and its history row around an id; without
+        # passing it in, the handler minted a second one, the peer stored
+        # the file under THAT, and the two sides had no id in common --
+        # which is why a removal sent by the peer named a message this
+        # side had never heard of and took nothing off the screen.
+        self.transfer_id = str(transfer_id) if transfer_id else None
 
     @property
     def target_text(self):
@@ -496,7 +506,7 @@ class OutgoingPushFileTransferHandler(FileTransfer):
         notification_center = NotificationCenter()
         file_path = self._file_selector.name.decode() if isinstance(self._file_selector.name, bytes) else self._file_selector.name
 
-        self.ft_info = FileTransferInfo(transfer_id=str(uuid.uuid4()),
+        self.ft_info = FileTransferInfo(transfer_id=self.transfer_id or str(uuid.uuid4()),
                                         direction='outgoing',
                                         file_size=self._file_selector.size,
                                         local_uri=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour@local',

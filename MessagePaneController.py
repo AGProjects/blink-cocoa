@@ -38,6 +38,7 @@ from AppKit import (NSRoundedBezelStyle,
                     NSImageOnly,
                     NSNoImage,
                     NSLineBreakByTruncatingTail,
+                    NSLineBreakByTruncatingMiddle,
                     NSBezelBorder,
                     NSMenu,
                     NSMenuItem,
@@ -138,6 +139,11 @@ ACCOUNT_PILL_H = 15.0
 # the pill that follows it.
 ACCOUNT_PILL_PAD = 7.0
 ACCOUNT_PILL_GAP = 6.0
+# What the account pill is left when the address would otherwise take the
+# whole line. Enough to read "From a@b" as a pill rather than as an
+# ellipsis; the address gives way first because it is the half that
+# truncates gracefully.
+ACCOUNT_PILL_MIN_W = 76.0
 MONTH_NAMES = ('January', 'February', 'March', 'April', 'May', 'June', 'July',
                'August', 'September', 'October', 'November', 'December')
 
@@ -476,6 +482,12 @@ class MessagePaneController(NSObject):
 
         self.infoLabel = self._label(NSMakeRect(text_x, HEADER_HEIGHT / 2.0 - 16, 300, 14),
                                      NSFont.systemFontOfSize_(11), NSColor.secondaryLabelColor())
+        # Truncated in the MIDDLE, unlike the name above it. This line is an
+        # address, and for a Bonjour neighbour an instance id and the
+        # computer it runs on -- both ends carry the information and the
+        # middle of a uuid carries none, so a tail ellipsis would drop the
+        # only human-readable half.
+        self.infoLabel.cell().setLineBreakMode_(NSLineBreakByTruncatingMiddle)
         # Sized to its text rather than stretched, because the account pill
         # is placed immediately after it and has to know where it ends.
         header.addSubview_(self.infoLabel)
@@ -738,10 +750,44 @@ class MessagePaneController(NSObject):
             width = self.infoLabel.frame().size.width
         except Exception:
             width = frame.size.width
+
+        # Never past the buttons. sizeToFit asks the text how wide it would
+        # LIKE to be, and for a Bonjour conversation that is an instance id
+        # plus a computer name -- wider than the header -- so the label was
+        # laid straight across the call, history, text-size and lock
+        # buttons and drew its address behind them.
+        room = max(0.0, self._headerContentRightEdge() - frame.origin.x)
+        if self._accountPillApplies(viewer):
+            # The pill sits after the address on the same line, so the room
+            # it needs comes out of the address's share rather than being
+            # taken from it afterwards.
+            room = max(0.0, room - ACCOUNT_PILL_GAP - ACCOUNT_PILL_MIN_W)
+        width = min(width, room)
         self.infoLabel.setFrame_(
             NSMakeRect(frame.origin.x, frame.origin.y, width, frame.size.height))
+        # What was trimmed is still readable on hover.
+        self.infoLabel.setToolTip_(text or None)
 
+        self._fitNameLabel()
         self.updateAccountPill(viewer)
+
+    @objc.python_method
+    def _fitNameLabel(self):
+        """Stop the first line at the buttons too.
+
+        It is width-sizable, so it grows with the pane and would otherwise
+        run under them on a long name in a narrow window -- the same
+        overlap the line below it had, one line up.
+        """
+        label = getattr(self, 'nameLabel', None)
+        if label is None:
+            return
+        frame = label.frame()
+        width = max(0.0, self._headerContentRightEdge() - frame.origin.x)
+        if abs(width - frame.size.width) < 0.5:
+            return
+        label.setFrame_(
+            NSMakeRect(frame.origin.x, frame.origin.y, width, frame.size.height))
 
     @objc.python_method
     def _headerContentRightEdge(self):
