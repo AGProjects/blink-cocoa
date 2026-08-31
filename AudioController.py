@@ -1758,6 +1758,22 @@ class AudioController(MediaStream):
         self.stopRinging()
 
     @objc.python_method
+    def _NH_BlinkSessionGotProvisionalResponse(self, sender, data):
+        # Show the reason phrase of a non-ringing provisional response in the
+        # audio status line, e.g. "Push sent..." for the 110 that SIP Thor
+        # returns while it waits for a pushed callee to register. Only while
+        # we are still setting the call up -- once we are ringing or connected
+        # the regular status text wins.
+        if self.status not in (STREAM_WAITING_DNS_LOOKUP, STREAM_CONNECTING, STREAM_PROPOSING):
+            return
+
+        reason = data.reason
+        if not reason:
+            return
+
+        self.updateAudioStatusWithSessionState('%s...' % reason.rstrip('.'))
+
+    @objc.python_method
     def _NH_BlinkSessionGotRingIndication(self, sender, data):
         if self.early_media:
             return
