@@ -1440,6 +1440,16 @@ class BlinkPresenceContact(BlinkContact):
         """
         if status == self.old_presence_status and self.presence_note == self.old_presence_note:
             return
+        # "We did not know, and the answer is offline" is not an event.
+        # Tearing down an account's subscriptions walks every contact and
+        # resets it to offline, so disabling one account wrote a line per
+        # address in the book -- two thirds of every presence line in the
+        # log came from this one shape. Nothing else is suppressed: a first
+        # sighting as available, away or busy still logs, and a contact that
+        # HAS been heard from going offline is a real transition and logs
+        # too.
+        if self.old_presence_status is None and status == 'offline':
+            return
         try:
             # Counted here rather than taken from handle_pidfs's `has_notes`:
             # that name starts as a count and is rebound to
