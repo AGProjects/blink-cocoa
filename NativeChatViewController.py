@@ -261,6 +261,10 @@ class NativeChatViewController(ChatViewController):
     # a remark about the history itself ("there are no previous messages"),
     # shown next to the loaded range rather than instead of it
     history_note = ''
+    # Whether the conversation has anything older than what is drawn. True
+    # until a probe says otherwise: offering to fetch more and finding none
+    # is a smaller fault than hiding messages that are there.
+    _more_history = True
     _filter_keys = (None,)
     _filter_rebuild_pending = False
     _month_dividers_pending = False
@@ -1996,7 +2000,8 @@ class NativeChatViewController(ChatViewController):
         except Exception as e:
             BlinkLogger().log_debug('Cannot set the history label colour: %s' % e)
         range_text = self.loadedRangeLabel()
-        parts = [text for text in (range_text, self.history_note) if text]
+        parts = [text for text in (range_text, self.history_note,
+                                   self.scrollBackHint()) if text]
         text = u' \u2014 '.join(parts)
         try:
             self.lastMessagesLabel.setStringValue_(text)
@@ -2072,6 +2077,46 @@ class NativeChatViewController(ChatViewController):
         except Exception:
             return str(when)
         return time.strftime('%d %b %H:%M' if with_date else '%H:%M', local)
+
+    @objc.python_method
+    def scrollBackHint(self):
+        """The offer to fetch older messages, when there are any to fetch.
+
+        Composed here rather than asserted by the conversation, because
+        this is the only place that knows both numbers: what is on screen,
+        and what the conversation holds. Set from the replay it was
+        unconditional -- every page that came back with rows offered more,
+        including the page that had just shown the user everything there
+        was, which is an offer that does nothing and reads as a promise the
+        transcript is hiding something.
+
+        The conversation probes for it after each page and says so through
+        setMoreHistoryAvailable. It is NOT derived from the stored-message
+        total: that counts every row, including the reply links, waveforms
+        and read receipts that never become bubbles, so a conversation
+        showing all of itself still compared as though it were hiding
+        something.
+
+        Unknown counts as available: the capability is real, and refusing
+        to mention it because a probe did not come back hides something
+        that does work.
+        """
+        if not self._more_history:
+            return ''
+        _oldest, _newest, count = self.loadedMessageRange()
+        if not count:
+            return ''
+        return NSLocalizedString("Hold up-scrolling to load more messages...", "Label")
+
+    @objc.python_method
+    @run_in_gui_thread
+    def setMoreHistoryAvailable(self, available):
+        """Note whether scrolling back would find anything, and redraw."""
+        available = bool(available)
+        if available == self._more_history:
+            return
+        self._more_history = available
+        self.updateHistoryChrome()
 
     @objc.python_method
     def loadedRangeLabel(self):
@@ -3258,10 +3303,21 @@ class NativeChatViewController(ChatViewController):
 
     @objc.python_method
     def _transferPeers(self):
-        """(account, peer) the cache files a transfer under."""
+        """(account, peer) the cache files a transfer under.
+
+        Asked of the conversation rather than read off remote_uri: a
+        Bonjour neighbour is filed under their instance id, because the
+        link-local address they answer on is different every session and a
+        file stored under one could never be found again.
+        """
         delegate = self.delegate
+        peer = None
+        try:
+            peer = delegate.conversation_peer_uri()
+        except AttributeError:
+            peer = getattr(delegate, 'remote_uri', '')
         return (str(getattr(delegate, 'local_uri', '') or 'account'),
-                str(getattr(delegate, 'remote_uri', '') or 'peer'))
+                str(peer or 'peer'))
 
     @objc.python_method
     def _decryptor(self):
@@ -3536,6 +3592,12 @@ class NativeChatViewController(ChatViewController):
                 continue
             meta = getattr(view, 'transfer_meta', None)
             if meta is None:
+                continue
+            if getattr(view, 'transfer_pushed', False):
+                # Somebody is reporting this one's progress directly. The
+                # cache only knows about NSURLSession transfers, so asking
+                # it about an MSRP session returns nothing and would erase
+                # the figure that was just pushed in.
                 continue
             active += 1
             progress = cache.upload_progress(meta) if outgoing else cache.progress(meta)
@@ -3853,12 +3915,33 @@ class NativeChatViewController(ChatViewController):
 
     @objc.python_method
     @run_in_gui_thread
+    def setTransferProgress(self, msgid, fraction, phase='upload'):
+        """Report a transfer's progress from outside.
+
+        For a transfer this application is not driving through
+        NSURLSession -- an MSRP session, which reports its own progress by
+        notification. The polling timer cannot ask the cache about one, so
+        the figure is pushed here instead and the bubble is marked so the
+        timer leaves it alone.
+        """
+        bubble = self.messageListView.viewForMessageId_(msgid) \
+            if self.messageListView is not None else None
+        if bubble is None:
+            return
+        bubble.upload_pending = True
+        bubble.transfer_pushed = True
+        bubble.transfer_progress = (max(0.0, min(1.0, float(fraction))), phase)
+        bubble.setNeedsDisplay_(True)
+
+    @objc.python_method
+    @run_in_gui_thread
     def clearTransferProgress(self, msgid):
         bubble = self.messageListView.viewForMessageId_(msgid) \
             if self.messageListView is not None else None
         if bubble is None:
             return
         bubble.upload_pending = False
+        bubble.transfer_pushed = False
         bubble.transfer_progress = None
         bubble.invalidateLayout()
         self.messageListView.layoutMessages()
@@ -4350,9 +4433,12 @@ class NativeChatViewController(ChatViewController):
             known = getattr(self.delegate, 'available_categories', None)
             drawn = (self.messageListView is not None
                      and len(self.messageListView.subviews()) > 0)
+            # Debug either way: a conversation holding one kind of message
+            # is the ordinary case, not an event, and this runs on every
+            # rebuild -- which is every page of history that lands.
             if known or drawn:
-                BlinkLogger().log_info('Filter bar hidden: only %d category present'
-                                       % len(categories))
+                BlinkLogger().log_debug('Filter bar hidden: only %d category present'
+                                        % len(categories))
             else:
                 BlinkLogger().log_debug('Filter bar hidden: the conversation has '
                                         'not said what it holds yet')

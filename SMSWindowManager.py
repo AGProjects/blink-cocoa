@@ -70,7 +70,24 @@ from BlinkLogger import BlinkLogger
 from KeyEscrow import (escrow_is_missing, install_keypair, log_self_contact,
                        restore_from_own_contact, write_self_keys)
 from HistoryManager import ChatHistory
-from SMSViewController import SMSViewController, is_otr_wire_text
+from SMSViewController import SMSViewController, is_otr_wire_text, is_placeholder_uri
+
+
+def bare_instance_id(value):
+    """A neighbour's instance id in the one form everything files it under.
+
+    settings.instance_id is a uuid4 URN -- "urn:uuid:<uuid>" -- and that is
+    what travels in the TXT record and in the instance_id URI parameter. It
+    is stored bare, because half the application strips the prefix and half
+    does not, and a key that appears in two spellings is two conversations:
+    one for the neighbour whose message arrived with the conversation open,
+    another for the same neighbour when it was closed. Asked here so there
+    is one answer.
+    """
+    text = str(value or '').strip()
+    if text.lower().startswith('urn:uuid:'):
+        text = text[9:]
+    return text
 from MessageHost import load_trace_tick, load_trace_bucket
 from MessageBubbleView import PlaybackStopButton
 from PlaybackMonitor import PLAYBACK_STATE_CHANGED, playback_monitor
@@ -316,7 +333,8 @@ class SMSWindowController(NSWindowController):
         if session is None:
             return
         try:
-            if SMSWindowManager().clearUnreadMessages(session.remote_uri):
+            manager = SMSWindowManager()
+            if manager.clearUnreadMessages(manager.conversationKeyFor(session)):
                 session.announce_conversation_read()
         except Exception as e:
             BlinkLogger().log_error('Cannot clear unread for %s: %s' % (session, e))
@@ -779,6 +797,12 @@ class SMSWindowManagerClass(NSObject):
     # itself twice -- the setting changes and the account then activates --
     # and a conversation that reloads its whole transcript twice for one
     # click is the thing this remembers to avoid.
+    # Conversations that exist without being on screen. Reopened at launch
+    # to retry messages that never went out, they have no host -- nothing is
+    # displaying them -- and allViewers only knows about viewers a window or
+    # the pane is holding, so without this the heartbeat would never reach
+    # them and the retry they were reopened for would never happen.
+    background_viewers = []
     _active_account_uris = None
     # False until accountsDidChange has looked once. A separate flag rather
     # than testing _active_account_uris for None, because None is also a
@@ -792,6 +816,7 @@ class SMSWindowManagerClass(NSObject):
             self.notification_center.add_observer(self, name="SIPEngineGotMessage")
             self.notification_center.add_observer(self, name="SIPAccountDidActivate")
             self.notification_center.add_observer(self, name="SIPAccountDidDeactivate")
+            self.notification_center.add_observer(self, name="BlinkFileTransferDidEnd")
             self.notification_center.add_observer(self, name="CFGSettingsObjectDidChange")
             self.notification_center.add_observer(self, name="SIPAccountRegistrationDidSucceed")
             self.notification_center.add_observer(self, name="MessageSaved")
@@ -856,6 +881,39 @@ class SMSWindowManagerClass(NSObject):
                 continue
             seen.add(viewer)
             yield viewer
+        for viewer in list(self.background_viewers):
+            # Dropped as soon as something is showing it: from then on it is
+            # an ordinary viewer and the loops above find it. `seen` already
+            # covers this for one pass; removing it keeps the list from
+            # growing for the life of the application.
+            if viewer in seen or self.windowForViewer(viewer) is not None:
+                self._forgetBackgroundViewer(viewer)
+                continue
+            seen.add(viewer)
+            yield viewer
+
+    @objc.python_method
+    def retainViewerInBackground(self, viewer):
+        """Keep a conversation running without putting it on screen.
+
+        For messages waiting to be sent to somebody who was not reachable
+        when they were written. The conversation has to exist for them to be
+        retried at all -- the heartbeat and the route lookup both live on
+        the viewer -- but existing is not a reason to interrupt the user
+        with a window.
+        """
+        if viewer is None or viewer in self.background_viewers:
+            return
+        if self.windowForViewer(viewer) is not None:
+            return                      # already being shown by somebody
+        self.background_viewers.append(viewer)
+
+    @objc.python_method
+    def _forgetBackgroundViewer(self, viewer):
+        try:
+            self.background_viewers.remove(viewer)
+        except ValueError:
+            pass
 
     @objc.python_method
     def _NH_XCAPManagerDidReloadData(self, sender, data):
@@ -2014,6 +2072,13 @@ class SMSWindowManagerClass(NSObject):
     def saveContact(self, uri, data={}):
         if self.illegal_uri(uri):
             return
+        if self._canonical_uri(uri) in self._bonjourConversationKeys():
+            # A neighbour's public key arriving is not a reason to put them
+            # in the address book. Their row lives in the Bonjour group and
+            # is rebuilt from history; an entry here would be saved, synced
+            # to XCAP and outlive the network it made sense on.
+            BlinkLogger().log_debug('Not filing the Bonjour neighbour %s in the address book' % uri)
+            return
 
         contact = self.getContact(uri)
         if contact is not None:
@@ -2073,6 +2138,17 @@ class SMSWindowManagerClass(NSObject):
             # so that gap doesn't generate a duplicate Contact.
             contact = self._findContactByCanonicalURI(uri)
             if contact is None:
+                # The last gate before an address book entry exists. Every
+                # caller that can create one comes through here -- the
+                # unread restore at launch, a contact-update message, a
+                # public key arriving -- and each had its own idea of what
+                # may be filed, so a key that is not an address got in
+                # through whichever one had not been taught yet. Asked
+                # once, here, where the creating actually happens.
+                if not self.isFileableAddress(uri):
+                    BlinkLogger().log_info('Not adding an address book contact for %s: '
+                                           'not an address anybody can be written to' % uri)
+                    return None
                 BlinkLogger().log_info('Adding contact for %s' % uri)
                 contact = NSApp.delegate().contactsWindowController.model.addContactForUri(uri)
                 self.new_contacts.add(contact)
@@ -2173,6 +2249,8 @@ class SMSWindowManagerClass(NSObject):
         """
         if self.illegal_uri(uri):
             return None
+        if not self.isFileableAddress(uri):
+            return None
         try:
             contact = self.getContact(uri)          # creates it when absent
             if contact is None:
@@ -2182,6 +2260,147 @@ class SMSWindowManagerClass(NSObject):
         except Exception as e:
             BlinkLogger().log_error('Cannot file %s under Messages: %s' % (uri, e))
             return None
+
+    @objc.python_method
+    def isFileableAddress(self, uri):
+        """Whether this conversation key may become an address book contact.
+
+        getContact CREATES one when the address is unknown, and a created
+        contact is saved, synced to XCAP, and comes back on every launch --
+        so the question of what may be filed has to be answered before it,
+        not after.
+
+        A Bonjour conversation is keyed by the neighbour's instance id, and
+        a conversation restored from history with the neighbour away is
+        addressed by a loopback placeholder. Neither is an address anybody
+        can be written to, and neither belongs to a person the address book
+        can hold. fileConversationContact knows this and routes a neighbour
+        to the Bonjour group instead -- but it is not the only door.
+        _applyRestoredUnreadCounts comes through here at launch, with the
+        keys of every conversation that has unread messages and no account
+        in sight, and the Bonjour group is not loaded yet at that point, so
+        the shape of the key is the only thing there is to go on:
+
+            Adding contact for 0aa407ca-4c53-46b6-ab15-f31d0b77c3ac
+            Added 1 contact(s) to the Messages group
+
+        That contact was a UUID with no address, in the user's address
+        book, replicated. Deleting it -- the obvious thing to do with it --
+        took the neighbour's whole conversation and its downloaded files
+        with it, because deleting a contact purges the history filed under
+        its addresses.
+        """
+        key = str(uri or '').strip()
+        if not key:
+            return False
+        if '@' not in key:
+            # An instance id, or anything else that is not an address at
+            # all. Nothing to write to, so nothing to file.
+            BlinkLogger().log_debug('Not filing %s under Messages: not an address' % key)
+            return False
+        if is_placeholder_uri(key):
+            BlinkLogger().log_debug('Not filing %s under Messages: a placeholder address' % key)
+            return False
+        if self._canonical_uri(key) in self._bonjourConversationKeys():
+            BlinkLogger().log_debug('Not filing %s under Messages: a Bonjour neighbour' % key)
+            return False
+        return True
+
+    @objc.python_method
+    def _NH_BlinkFileTransferDidEnd(self, sender, data):
+        """Put a file received over MSRP into the conversation.
+
+        A file that arrives over a served account arrives as a MESSAGE --
+        an application/sylk-file-transfer envelope -- and lands in the
+        transcript like anything else. One that arrives over MSRP is a
+        session, not a message: nothing is said, so nothing was filed, and
+        the file showed up only in the File Transfers window. For a Bonjour
+        neighbour that is every file they will ever send.
+
+        So the envelope is synthesised here from what the transfer itself
+        knows, and takes the same road a received message does: stored
+        under the conversation, counted unread, announced, and drawn if the
+        conversation happens to be open.
+        """
+        if getattr(sender, 'direction', None) != 'incoming':
+            return                      # one of ours going out; its viewer has it
+        if getattr(data, 'error', False):
+            return                      # nothing arrived to file
+        ft = getattr(sender, 'ft_info', None)
+        account = getattr(sender, 'account', None)
+        if ft is None or account is None or not ft.file_path:
+            return
+        try:
+            self._fileIncomingTransfer(sender, ft, account)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot put the received file %s in the conversation: %s'
+                                    % (ft.file_path, e))
+
+    @objc.python_method
+    def _fileIncomingTransfer(self, sender, ft, account):
+        from FileTransferCache import FileTransferCache, guess_filetype
+
+        local_uri = str(ft.local_uri or account.id)
+        # The instance id for a neighbour, resolved while they were still
+        # discoverable: the link-local address on ft_info is a different one
+        # every session, and a file filed under it could never be found again.
+        peer = str(getattr(sender, 'remote_device_id', None) or ft.remote_uri or '')
+        if not peer:
+            return
+
+        path = ft.file_path
+        filename = os.path.basename(path)
+        try:
+            size = os.path.getsize(path)
+        except OSError:
+            size = ft.file_size or 0
+        meta = {
+            'filename': filename,
+            'filesize': size,
+            'filetype': guess_filetype(path),
+            'transfer_id': str(ft.transfer_id),
+            'sender': {'uri': peer},
+            'receiver': {'uri': local_uri},
+            'direction': 'incoming',
+        }
+        # Where the transcript looks for a received file. The transfer wrote
+        # it wherever the user receives files; this is the conversation's own
+        # copy, so moving theirs does not empty the bubble, and deleting the
+        # conversation takes it with it.
+        FileTransferCache().store(meta, local_uri, peer, path)
+
+        viewer = self._viewerForContact(account, peer)
+        # Having the conversation open is not the same as reading it: it can
+        # be a tab behind another window, or the pane can be showing someone
+        # else. Unread is decided by whether the user is LOOKING, which is
+        # the same rule the banner below follows and the same one a received
+        # message follows.
+        on_screen = self._conversationIsOnScreen(account, peer)
+        timestamp = ISOTimestamp.now()
+        stored = self._persistLiveMessage(
+            account, peer, meta['transfer_id'], meta['transfer_id'], 'incoming',
+            json.dumps(meta), FILE_TRANSFER_CONTENT_TYPE, timestamp,
+            unread=not on_screen)
+        BlinkLogger().log_info('Received %s (%s bytes) from %s as %s'
+                               % (filename, size, peer, meta['transfer_id']))
+
+        if viewer is not None:
+            viewer.noteIncomingTransfer(meta, timestamp)
+        if stored and not on_screen:
+            self.fileConversationContact(peer, account)
+            self.noteUnreadMessage(peer)
+
+        # A banner unless the user is looking at this conversation, which is
+        # the rule a received message follows -- having the conversation
+        # open somewhere is not the same as reading it, and a file arriving
+        # is the one thing about an MSRP transfer the user cannot otherwise
+        # be told now that its window no longer comes to the front.
+        if on_screen:
+            return
+        nc_body = self._notificationBody(json.dumps(meta), FILE_TRANSFER_CONTENT_TYPE)
+        if nc_body is not None:
+            name, icon = self.notificationIdentity(peer, None)
+            NSApp.delegate().notify_new_message(name, nc_body, None, uri=peer, icon=icon)
 
     @objc.python_method
     @run_in_gui_thread
@@ -2203,10 +2422,19 @@ class SMSWindowManagerClass(NSObject):
         if not remote_uri:
             return
         if account is BonjourAccount():
-            # A Bonjour conversation is addressed by instance id on the
-            # link-local account. Filing one would put a UUID in the address
-            # book, sync it to XCAP and bring it back on every launch, for a
-            # neighbour who is gone the moment they close their laptop.
+            # Never the address book: a UUID filed there would sync to XCAP
+            # and come back on every launch, for a neighbour who is gone the
+            # moment they close their laptop. The Bonjour group keeps its own
+            # list instead, rebuilt from history at each activation -- but it
+            # has to be told about a conversation started since then, or a
+            # neighbour met and talked to and lost inside one session would
+            # take their row with them.
+            try:
+                group = NSApp.delegate().contactsWindowController.model.bonjour_group
+            except Exception as e:
+                BlinkLogger().log_debug('No Bonjour group to note %s in: %s' % (remote_uri, e))
+            else:
+                group.note_conversation(remote_uri, ISOTimestamp.now())
             return
         try:
             self.noteMessageAccount(account, remote_uri)
@@ -2214,6 +2442,57 @@ class SMSWindowManagerClass(NSObject):
                 self.addContactsToMessagesGroup()
         except Exception as e:
             BlinkLogger().log_error('Cannot file %s under Messages: %s' % (remote_uri, e))
+
+    @objc.python_method
+    def mergeConversations(self, from_uri, to_uri):
+        """Move one conversation's live state onto another's key.
+
+        The stored messages are moved by the caller; these are the things
+        held only in memory -- the unread badge, the place in the
+        conversation order, the account last used -- which would otherwise
+        keep pointing at a key nothing will mention again.
+        """
+        source = self._canonical_uri(from_uri)
+        target = self._canonical_uri(to_uri)
+        if not source or not target or source == target:
+            return
+
+        unread = self.unread_counts.pop(source, 0)
+        if unread:
+            self.unread_counts[target] = self.unread_counts.get(target, 0) + unread
+            self._postUnreadChanged(source, 0)
+            self._postUnreadChanged(target, self.unread_counts[target])
+
+        when = self.last_message_times.pop(source, None)
+        if when is not None:
+            current = self.last_message_times.get(target)
+            if current is None or when > current:
+                self.last_message_times[target] = when
+        self.message_accounts.pop(source, None)
+        self.composing_states.pop(source, None)
+        self.composing_deadlines.pop(source, None)
+
+        # The conversation under the old key is not a conversation any more.
+        self.closeConversationForURI(source)
+        self._postConversationOrderChanged(target)
+
+    @objc.python_method
+    def _bonjourConversationKeys(self):
+        """Every instance id the Bonjour group is holding a conversation for.
+
+        Asked rather than tested for shape: an instance id is a bare uuid,
+        but so is nothing else here, and guessing from the shape of a string
+        is how an address that merely looks unusual ends up treated as a
+        neighbour.
+        """
+        try:
+            group = NSApp.delegate().contactsWindowController.model.bonjour_group
+        except Exception:
+            return frozenset()
+        keys = set(group.conversation_keys or {})
+        keys.update(str(contact.id) for contact in group.contacts
+                    if getattr(contact, 'id', None))
+        return frozenset(self._canonical_uri(key) for key in keys)
 
     @objc.python_method
     def _canonical_uri(self, raw_uri):
@@ -3457,7 +3736,7 @@ class SMSWindowManagerClass(NSObject):
         this exists at all -- every caller used to dereference it straight
         away.
         """
-        self.noteComposing(getattr(viewer, 'remote_uri', None), flag)
+        self.noteComposing(self.conversationKeyFor(viewer), flag)
         host = self.windowForViewer(viewer)
         if host is None:
             return
@@ -3476,8 +3755,13 @@ class SMSWindowManagerClass(NSObject):
         selected in it; a window host is on screen when it is the key
         window and the conversation is its selected tab.
         """
+        key = self._canonical_uri(remote_uri)
         for viewer in self.allViewers():
-            if viewer.account != account or viewer.remote_uri != remote_uri:
+            # By key, not by address: a Bonjour conversation is asked about
+            # under the neighbour's instance id and holds their link-local
+            # address, so comparing the two said "not on screen" about the
+            # conversation the user was looking at.
+            if viewer.account != account or key not in self.viewerKeys(viewer):
                 continue
             host = self.windowForViewer(viewer)
             if host is None:
@@ -3657,11 +3941,22 @@ class SMSWindowManagerClass(NSObject):
         """
         name = str(fallback or uri or '')
         icon = None
+        controller = None
         try:
             controller = NSApp.delegate().contactsWindowController
             contact = controller.getFirstContactFromAllContactsGroupMatchingURI(str(uri))
         except Exception:
             contact = None
+        if contact is None and controller is not None:
+            # A Bonjour neighbour is deliberately not an address book
+            # entry, and their conversation is keyed by instance id, so the
+            # lookup above can never find one: the banner was headed by a
+            # UUID -- the one thing about the sender that tells the user
+            # nothing. Their row in the Bonjour group knows them.
+            try:
+                contact = controller.model.getBonjourContactMatchingDeviceId(str(uri))
+            except Exception:
+                contact = None
         if contact is not None:
             try:
                 if contact.name:
@@ -3674,6 +3969,18 @@ class SMSWindowManagerClass(NSObject):
                     icon = path
             except Exception:
                 icon = None
+        # The user's own name for a neighbour wins over the one their
+        # machine announces, here as in the contact list and the
+        # conversation header -- and the announced name arrives as
+        # "Name (computer)", which is two facts where a banner has room
+        # for one.
+        try:
+            from ContactListModel import bonjour_display_name, bonjour_neighbours
+            key = str(uri or '')
+            if key and key in bonjour_neighbours():
+                name = bonjour_display_name(key, fallback) or name
+        except Exception as e:
+            BlinkLogger().log_debug('Cannot read the name of neighbour %s: %s' % (uri, e))
         return name, icon
 
     @objc.python_method
@@ -4212,7 +4519,7 @@ class SMSWindowManagerClass(NSObject):
         return (target_id or None), payload.get('contact')
 
     @objc.python_method
-    def applyMessageRemoval(self, account, target_id, contact):
+    def applyMessageRemoval(self, account, target_id, contact, viewer=None):
         """Take a removed message off the screen and mark it removed.
 
         The live notice and the journalled copy both land here. MARKED,
@@ -4228,9 +4535,17 @@ class SMSWindowManagerClass(NSObject):
         whatever thread we are on. The transcript is only touched when the
         conversation happens to be open, and on the GUI thread, because a
         journal page is applied off it.
+
+        `viewer` is for a caller that has already found the conversation by
+        a better key than an address. Without it the fallback matches on the
+        contact's address, which is right for a SIP conversation and wrong
+        for a Bonjour one -- those are addressed by instance id, and the
+        link-local address a neighbour is answering on today is not what
+        their conversation is filed under.
         """
         self.history.tombstone_message(target_id)
-        viewer = self._viewerForContact(account, contact) if contact else None
+        if viewer is None and contact:
+            viewer = self._viewerForContact(account, contact)
         if viewer is not None:
             self._markMessageRemovedInViewer(viewer, target_id)
 
@@ -4251,9 +4566,44 @@ class SMSWindowManagerClass(NSObject):
             if account_id is not None and viewer_account is not None:
                 if str(viewer_account.id) != account_id:
                     continue
-            if self._canonical_uri(getattr(viewer, 'remote_uri', None)) == key:
+            if key in self.viewerKeys(viewer):
                 return viewer
         return None
+
+    @objc.python_method
+    def viewerKeys(self, viewer):
+        """Every key one open conversation answers to.
+
+        remote_uri is the address the messages came in on; it is NOT what a
+        Bonjour conversation is filed under. A neighbour is keyed by their
+        instance id everywhere it matters -- history, the transfer cache,
+        the unread badge -- so a lookup by that key has to find the open
+        viewer too. It did not, which is how a file arriving from a
+        neighbour whose conversation was open in front of the user was
+        filed as unread, announced in a banner, and never drawn.
+        """
+        keys = set()
+        for value in (getattr(viewer, 'remote_uri', None),
+                      getattr(viewer, 'instance_id', None)):
+            key = self._canonical_uri(value)
+            if key:
+                keys.add(key)
+        try:
+            key = self._canonical_uri(viewer.conversation_peer_uri())
+        except Exception:
+            key = ''
+        if key:
+            keys.add(key)
+        return keys
+
+    @objc.python_method
+    def conversationKeyFor(self, viewer):
+        """The key this viewer's rows and badge are filed under."""
+        try:
+            key = str(viewer.conversation_peer_uri() or '')
+        except Exception:
+            key = ''
+        return key or str(getattr(viewer, 'remote_uri', '') or '')
 
     @objc.python_method
     @run_in_gui_thread
@@ -4440,8 +4790,18 @@ class SMSWindowManagerClass(NSObject):
         Pure model work: never creates, raises or touches a window. Call
         presentViewer() to put the result on screen.
         """
-        if instance_id and instance_id.startswith('urn:uuid:'):
-            instance_id = instance_id[9:]
+        instance_id = bare_instance_id(instance_id) or None
+
+        # A Bonjour conversation is addressed by instance id. Without one
+        # there is nobody to address: no route can be resolved, every
+        # message fails, and the viewer cannot be moved to an account that
+        # would work. The callers all choose the account properly now, so
+        # reaching here means a path that does not -- refuse rather than
+        # build the conversation and let it fail message by message.
+        if account is BonjourAccount() and not instance_id:
+            BlinkLogger().log_error('Refusing a Bonjour conversation with %s: '
+                                    'no neighbour instance id' % target)
+            return None
 
         if display_name and display_name.startswith("sip:"):
             display_name = display_name[4:]
@@ -4837,7 +5197,13 @@ class SMSWindowManagerClass(NSObject):
     
         call_id = data.headers.get('Call-ID', Null).body
         is_replication_message = data.headers.get('X-Replicated-Message', Null).body
-        instance_id = data.from_header.uri.parameters.get('instance_id', None)
+        # Bare, at the door. Everything downstream keys on it -- the
+        # history row, the transfer cache folder, the contact row, the
+        # unread badge -- and the URN form reached some of them and not
+        # others, which showed up as a second Bonjour contact named
+        # urn:uuid:<the id of a neighbour already in the list>.
+        instance_id = bare_instance_id(
+            data.from_header.uri.parameters.get('instance_id', None)) or None
         # The transport's own repeat: same request, same Call-Id, sent
         # again because our answer did not get back in time.
         if self._seenMessage(call_id):
@@ -5165,8 +5531,17 @@ class SMSWindowManagerClass(NSObject):
                 stale = (state == 'active' and last_active is not None
                          and last_active - ISOTimestamp.now() > datetime.timedelta(seconds=refresh or 120))
                 if not stale:
+                    # Under the key this conversation is filed by, which
+                    # for a neighbour is their instance id: the contact
+                    # row asks by the key it carries, and a Bonjour row
+                    # carries the id. Keyed by the address, the state was
+                    # stored under something nothing reads -- and the
+                    # address the indication arrives on is not even the
+                    # one the row holds, since the row keeps a port and
+                    # transport the wire aor does not.
                     self.noteComposingIndication(
-                        format_identity_to_string(window_tab_identity, format='aor'),
+                        instance_id if (account is BonjourAccount() and instance_id)
+                        else format_identity_to_string(window_tab_identity, format='aor'),
                         state == 'active', refresh)
 
                 viewer = self.getWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, create_if_needed=False, note_new_message=False, instance_id=instance_id)
@@ -5278,13 +5653,30 @@ class SMSWindowManagerClass(NSObject):
                 # Through applyMessageRemoval, exactly as a journalled
                 # removal goes: one road, so a live notice and a replayed
                 # one cannot disagree about what removal means.
-                self.applyMessageRemoval(account, msg_id, contact)
+                #
+                # The viewer is handed over rather than looked up again:
+                # applyMessageRemoval finds one by matching the contact
+                # address, and a Bonjour conversation is addressed by
+                # instance id -- the address it happens to be answering on
+                # is not what it is filed under. getWindow above already
+                # found it, by the right key.
+                self.applyMessageRemoval(account, msg_id, contact, viewer=viewer)
 
             return
 
         if viewer is None:
             # No conversation open for this contact: persist and notify.
-            remote_uri = format_identity_to_string(window_tab_identity, format='aor')
+            #
+            # The instance id for a Bonjour neighbour, not the address they
+            # happen to be answering on. Every other path files their
+            # conversation under the instance id -- an open viewer does it
+            # in add_to_history, the transfer cache does it, the contact row
+            # looks up its unread badge by it -- and this one did not, so a
+            # message that arrived while the conversation was closed went
+            # into history under an address that is different next session,
+            # and its unread count was counted against a key nothing reads.
+            remote_uri = (instance_id if (account is BonjourAccount() and instance_id)
+                          else format_identity_to_string(window_tab_identity, format='aor'))
             try:
                 stored = self._persistLiveMessage(
                     account, remote_uri, imdn_id, call_id, direction,
@@ -5300,8 +5692,13 @@ class SMSWindowManagerClass(NSObject):
                 # problem replicated ones did: nothing else files the sender
                 # under Messages, so an unread badge would have no row to sit
                 # on.
-                self.ensureMessagesGroupContains(remote_uri)
-                self.addContactsToMessagesGroup()
+                #
+                # Through fileConversationContact rather than straight at
+                # the group, because that is where the rule about Bonjour
+                # lives: a neighbour is keyed by instance id, and handing a
+                # UUID to ensureMessagesGroupContains would create an
+                # address book contact named after it and sync it to XCAP.
+                self.fileConversationContact(remote_uri, account)
                 count = self.noteUnreadMessage(remote_uri)
                 BlinkLogger().log_info('Message %s from %s stored, %d unread'
                                        % (content_type, remote_uri, count))
@@ -5326,7 +5723,6 @@ class SMSWindowManagerClass(NSObject):
 
         if note_new_message:
             self.windowForViewer(viewer).noteNewMessageForSession_(viewer)
-
         status = MSG_STATE_DELIVERED if direction == 'incoming' else MSG_STATE_SENT
 
         window = self.windowForViewer(viewer).window()

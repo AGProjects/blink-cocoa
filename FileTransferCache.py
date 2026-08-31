@@ -454,6 +454,38 @@ class FileTransferCache(object):
         self._gone.clear()
         return target
 
+    def move_peer(self, account, from_peer, to_peer):
+        """Move one conversation's stored files under another peer.
+
+        The folder is keyed by (account, peer), so a conversation that
+        changes key -- two Bonjour rows merged into one -- leaves its files
+        where nothing will look for them again.
+        """
+        import shutil
+        source = os.path.join(self.directory(), self._safe(account), self._safe(from_peer))
+        target = os.path.join(self.directory(), self._safe(account), self._safe(to_peer))
+        if not os.path.isdir(source) or os.path.abspath(source) == os.path.abspath(target):
+            return 0
+        moved = 0
+        try:
+            makedirs(target)
+            for name in os.listdir(source):
+                src_path = os.path.join(source, name)
+                dst_path = os.path.join(target, name)
+                if os.path.exists(dst_path):
+                    continue            # already there under the other key
+                shutil.move(src_path, dst_path)
+                moved += 1
+            if not os.listdir(source):
+                os.rmdir(source)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot move the files of %s to %s: %s'
+                                    % (from_peer, to_peer, e))
+        if moved:
+            BlinkLogger().log_info('Moved %d stored file(s) from %s to %s'
+                                   % (moved, from_peer, to_peer))
+        return moved
+
     def store(self, meta, account, peer, source):
         """File a copy of an outgoing transfer where a received one would go.
 
@@ -1057,7 +1089,7 @@ class FileTransferCache(object):
             return None
 
     def image(self, path, width):
-        """The picture, ready to draw at any size.
+        """The picture a message bubble draws, decoded before it is drawn.
 
         This used to hand back a copy re-rendered at the requested width,
         first through lockFocus and then through an explicit bitmap. Both
@@ -1066,8 +1098,35 @@ class FileTransferCache(object):
         arithmetic around them was right. AppKit downsamples an image into
         whatever rectangle it is drawn in, and it does that better than a
         re-render into an intermediate bitmap -- so there is no
-        intermediate bitmap any more. `width` is kept in the signature
-        because callers reason in terms of the size they need; nothing
-        depends on getting a copy of exactly that size.
+        intermediate bitmap any more.
+
+        It then handed back `original()`, which is an NSImage backed by the
+        FILE: nothing is decoded until something rasterizes it, and the read
+        happens down in imageProvider_getBytesAtPosition at commit time, out
+        of a buffer CoreGraphics owns and considers its own to discard. That
+        is the crash the grid was cured of by decoding tiles here instead
+        (see tile()) -- and a full-width photograph in a transcript is the
+        same picture through the same providers, which is why scrolling a
+        conversation with one in it died the same way:
+
+            EXC_BAD_ACCESS in _platform_memmove, under
+            imageProvider_getBytesAtPosition / ripc_DrawImage /
+            CABackingStoreUpdate -- CoreGraphics replaying a display list
+            and reading bytes that are no longer there.
+
+        So the same decode: ImageIO, at a bounded size, with
+        kCGImageSourceShouldCacheImmediately, giving a bitmap that is
+        finished before it is ever drawn and lives in ordinary retained
+        memory with no provider, no file and no re-decode behind it. The
+        bubble holds it for as long as it can be asked to draw it.
+
+        `width` is the longest side the caller needs in PIXELS (callers
+        double for Retina); it picks the decode size, and a caller that
+        later needs more asks again. The file-backed path is kept only for
+        a format ImageIO will not thumbnail, which is a picture that would
+        otherwise not appear at all.
         """
+        image = self.tile(path, width)
+        if image is not None:
+            return image
         return self.original(path)

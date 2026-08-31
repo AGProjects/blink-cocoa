@@ -61,6 +61,12 @@ class FileTransfer(object):
 
     remote_identity = None
     target_uri = None
+    # For a Bonjour transfer: the neighbour's instance id, resolved while
+    # they are still on the network. Messages with a neighbour are filed
+    # under it, so a transfer filed under the link-local address it happened
+    # to use ended up as a second, unreachable conversation with the same
+    # person -- which is exactly what happened in the live database.
+    remote_device_id = None
 
     transfer_rate = None
     last_rate_pos = 0
@@ -138,6 +144,58 @@ class FileTransfer(object):
         notification_center = NotificationCenter()
         notification_center.post_notification("BlinkFileTransferSpeedDidUpdate", sender=self)
 
+    def resolveRemoteDeviceId(self, uri=None):
+        """Note which neighbour this is, while they are still discoverable.
+
+        Done when the transfer starts rather than when it is filed: by the
+        time a transfer ends the neighbour may have gone, and a device id
+        cannot be recovered from a link-local address afterwards -- that
+        address belonged to a machine on a network, not to a person.
+
+        The party's own SIP URI is asked first, because it carries the
+        instance id as a parameter and that is the answer rather than a
+        guess at it. The contact list is the fallback, and it matches on an
+        address, which two machines can share.
+
+        Only Bonjour has this problem. A SIP conversation is filed under the
+        peer's address, which is the same address the transfer has.
+        """
+        if self.account is not BonjourAccount():
+            return
+
+        try:
+            instance_id = uri.parameters.get('instance_id') if uri is not None else None
+        except AttributeError:
+            instance_id = None
+        if instance_id:
+            instance_id = str(instance_id)
+            if instance_id.startswith('urn:uuid:'):
+                instance_id = instance_id[9:]
+            self.remote_device_id = instance_id
+            return
+
+        try:
+            from AppKit import NSApp
+            contact = NSApp.delegate().contactsWindowController.getBonjourContact(
+                None, self.remote_identity, online_only=True)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot tell which neighbour %s is: %s'
+                                    % (self.remote_identity, e))
+            return
+        if contact is not None and getattr(contact, 'id', None):
+            self.remote_device_id = contact.id
+
+    @property
+    def history_remote_uri(self):
+        """The address this transfer is filed under in the message history.
+
+        A Bonjour neighbour is one conversation whichever address their
+        machine is answering on today, so their transfers belong under the
+        same instance id their messages do. Everyone else is already filed
+        under the address the transfer used.
+        """
+        return self.remote_device_id or self.ft_info.remote_uri
+
     def add_to_history(self):
         FileTransferHistory().add_transfer(transfer_id=self.ft_info.transfer_id, direction=self.ft_info.direction, local_uri=self.ft_info.local_uri, remote_uri=self.ft_info.remote_uri, file_path=self.ft_info.file_path, bytes_transfered=self.ft_info.bytes_transfered, file_size=self.ft_info.file_size or 0, status=self.ft_info.status)
 
@@ -145,11 +203,21 @@ class FileTransfer(object):
         message += "<p>%s (%s)" % (self.ft_info.file_path, format_size(self.ft_info.file_size or 0))
         media_type = 'file-transfer'
         local_uri = self.ft_info.local_uri
-        remote_uri = self.ft_info.remote_uri
+        # NOT ft_info.remote_uri: that stays the address the transfer
+        # actually used, which is what the File Transfers window shows.
+        # This is the conversation the transfer belongs to.
+        remote_uri = self.history_remote_uri
         direction = self.ft_info.direction
         status = 'delivered' if self.ft_info.status == 'completed' else 'failed'
-        cpim_from = self.ft_info.remote_uri
-        cpim_to = self.ft_info.remote_uri
+        # Both ends used to be the remote party, so an outgoing transfer
+        # claimed the peer had sent it to themselves. Anything reading a
+        # name off these rows -- the conversation list, the Bonjour group --
+        # got the wrong one, or none.
+        peer = self.ft_info.remote_uri
+        if direction == 'incoming':
+            cpim_from, cpim_to = peer, local_uri
+        else:
+            cpim_from, cpim_to = local_uri, peer
         timestamp = str(ISOTimestamp.now())
 
         ChatHistory().add_message(self.ft_info.transfer_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, "html", "0", status)
@@ -251,8 +319,24 @@ class FileTransfer(object):
             self.status = self.format_progress()
             notification.center.post_notification("BlinkFileTransferProgress", sender=self, data=NotificationData(progress=progress))
 
+    @property
+    def log_identity(self):
+        """Who this transfer is with, as the log should name them.
+
+        The address for anyone who has a stable one. For a Bonjour
+        neighbour, their instance id as well: the address is whichever
+        link-local one their machine answers on this afternoon, while the
+        id is the conversation the file actually belongs to -- the key its
+        history row, its folder under file_transfers and its unread badge
+        all use. Without it a line about a transfer cannot be matched to
+        the conversation it lands in.
+        """
+        if self.remote_device_id:
+            return '%s (%s)' % (self.remote_identity, self.remote_device_id)
+        return str(self.remote_identity)
+
     def log_info(self, text):
-        BlinkLogger().log_info("[%s file transfer with %s] %s" % (self.direction.title(), self.remote_identity, text))
+        BlinkLogger().log_info("[%s file transfer with %s] %s" % (self.direction.title(), self.log_identity, text))
 
     def lookup_destination(self, uri):
         self.log_info("Lookup destination for %s" % uri)
@@ -344,6 +428,7 @@ class IncomingFileTransferHandler(FileTransfer):
         self.handler = stream.handler
         self.account = session.account
         self.remote_identity = format_identity_to_string(session.remote_identity)
+        self.resolveRemoteDeviceId(getattr(session.remote_identity, 'uri', None))
 
     @property
     def target_text(self):
@@ -382,6 +467,7 @@ class OutgoingPushFileTransferHandler(FileTransfer):
         self.account = account
         self._file_selector = FileSelector.for_file(file_path)
         self.remote_identity = format_identity_to_string(target_uri)
+        self.resolveRemoteDeviceId(target_uri)
         self.target_uri = target_uri
         self._ended = False
 
@@ -442,6 +528,7 @@ class OutgoingPullFileTransferHandler(FileTransfer):
         self.account = account
         self._file_selector = FileSelector(name=os.path.basename(filename), hash=hash)
         self.remote_identity = format_identity_to_string(target_uri)
+        self.resolveRemoteDeviceId(target_uri)
         self.target_uri = SIPURI.new(target_uri)
         self._ended = False
 

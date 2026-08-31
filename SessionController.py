@@ -654,7 +654,8 @@ class SessionControllersManager(object, metaclass=Singleton):
             target_uri, display_name, full_uri, fancy_uri = sipuri_components_from_string(session_info.remote_uri)
             self.redial_uri = fancy_uri
 
-    def send_files_to_contact(self, account, contact_uri, filenames, route=None):
+    def send_files_to_contact(self, account, contact_uri, filenames, route=None,
+                              instance_id=None):
         """Send files by the road the caller names. MSRP unless told otherwise.
 
         `route` is 'web' only when something has decided an upload is
@@ -678,7 +679,12 @@ class SessionControllersManager(object, metaclass=Singleton):
         if not self.isMediaTypeSupported('file-transfer'):
             return
 
-        NSApp.delegate().contactsWindowController.showFileTransfers_(None)
+        if account is not BonjourAccount():
+            # A Bonjour transfer is a message in its conversation, drawn as
+            # a bubble with its own progress: raising this window as well
+            # takes the user somewhere they did not ask to go to be told
+            # something they can already see.
+            NSApp.delegate().contactsWindowController.showFileTransfers_(None)
         target_uri = normalize_sip_uri_for_outgoing_session(contact_uri, AccountManager().default_account)
 
         for file in filenames:
@@ -690,6 +696,15 @@ class SessionControllersManager(object, metaclass=Singleton):
 
             try:
                 xfer = OutgoingPushFileTransferHandler(account, target_uri, file)
+                if instance_id:
+                    # Told, not guessed. The handler works the neighbour out
+                    # from the address it is sending to, and a conversation
+                    # restored from history is addressed by a loopback
+                    # placeholder -- so the transfer was filed under
+                    # "3hrFTeWg@127.0.0.1" instead of under the neighbour.
+                    # The caller is the conversation and knows exactly who
+                    # this is.
+                    xfer.remote_device_id = instance_id
                 xfer.start()
             except Exception as exc:
                 BlinkLogger().log_error("Error while attempting to transfer file %s: %s" % (file, exc))
@@ -773,7 +788,32 @@ class SessionControllersManager(object, metaclass=Singleton):
         # Only "is there anywhere to upload to". Whether this contact
         # SHOULD be reached that way was settled by the caller -- by the
         # user picking Web Upload from the menu, or by upload_address.
-        if not filenames or not self.account_can_upload(account):
+        if not self.account_can_upload(account):
+            return False
+        return self.send_files_to_conversation(account, contact_uri, filenames)
+
+    def send_files_to_conversation(self, account, contact_uri, filenames, instance_id=None):
+        """Hand dropped files to the conversation. True if they were taken.
+
+        What makes a dropped file a MESSAGE rather than a bare transfer:
+        the conversation builds the application/sylk-file-transfer envelope,
+        files its own copy, draws the bubble and writes the history row, and
+        it is the conversation that knows whether this account uploads or
+        offers the file directly.
+
+        The upload path has always come through here. A Bonjour drop went
+        straight to an MSRP session instead and left nothing behind -- no
+        bubble, no row, nothing in the conversation to show a file had been
+        sent -- which is the whole reason this is a method of its own now.
+
+        instance_id addresses a Bonjour neighbour, who has no address that
+        stays theirs between sessions.
+
+        Returns False rather than raising for every reason it cannot go
+        this way, so a caller can fall back and a drop never ends in
+        nothing happening.
+        """
+        if not filenames:
             return False
 
         # Folders are compressed exactly as the MSRP path compresses them
@@ -801,7 +841,8 @@ class SessionControllersManager(object, metaclass=Singleton):
             # note_new_message off: that flag raises an unread marker, and
             # this is the user's own outgoing file, not mail arriving.
             viewer = SMSWindowManagerModule.SMSWindowManager().getWindow(
-                target_uri, '', account, focusTab=True, note_new_message=False)
+                target_uri, '', account, focusTab=True, note_new_message=False,
+                instance_id=instance_id)
         except Exception as exc:
             BlinkLogger().log_error("Cannot open a conversation with %s to upload to: %s"
                                     % (contact_uri, exc))
@@ -816,8 +857,8 @@ class SessionControllersManager(object, metaclass=Singleton):
             BlinkLogger().log_error("Cannot upload to %s: %s" % (contact_uri, exc))
             return False
 
-        BlinkLogger().log_info("Uploaded %d of %d dropped file(s) to %s"
-                               % (sent or 0, len(paths), contact_uri))
+        BlinkLogger().log_info("Sent %d of %d dropped file(s) to %s"
+                               % (sent or 0, len(paths), instance_id or contact_uri))
         # Taken either way. A file the conversation refused has already had
         # its reason shown in the transcript, and falling through to MSRP
         # would send it a second time by another road.
@@ -1048,11 +1089,20 @@ class SessionControllersManager(object, metaclass=Singleton):
         if self.pause_music:
             MusicApplications().pause()
 
-        self.ringer.add_incoming(session, streams)
-        session.blink_supported_streams = streams
-
         settings = SIPSimpleSettings()
         stream_type_list = list(set(stream.type for stream in streams))
+
+        # A neighbour's file is taken without a panel, so it is taken
+        # without a ringtone either: a sound that announces a question is
+        # noise when there is no question. Decided BEFORE the ringer is
+        # told, rather than by stopping it a moment later -- the tone
+        # starts inside add_incoming, and a tone started and stopped is
+        # still a tone the room hears.
+        silent_auto_accept = (session.account is BonjourAccount()
+                              and stream_type_list == ['file-transfer'])
+        if not silent_auto_accept:
+            self.ringer.add_incoming(session, streams)
+        session.blink_supported_streams = streams
 
         if match_contact:
             if settings.chat.auto_accept and stream_type_list == ['chat'] and NSApp.delegate().contactsWindowController.my_device_is_active:
@@ -1061,6 +1111,20 @@ class SessionControllersManager(object, metaclass=Singleton):
                 return
         elif session.account is BonjourAccount() and stream_type_list == ['chat']:
             BlinkLogger().log_info("Automatically accepting Bonjour chat session from %s" % format_identity_to_string(session.remote_identity))
+            self.startIncomingSession(session, streams)
+            return
+
+        if silent_auto_accept:
+            # No panel at all, and no ringtone -- see above. A neighbour
+            # is on this network, in this room, and already in the Bonjour
+            # list: there is nobody else who could be offering, so the
+            # question has one answer and asking it puts a panel in front
+            # of the user for every file. The transfer announces itself
+            # when it lands -- a bubble in the conversation, and a banner
+            # if they are not looking at it.
+            BlinkLogger().log_info("Automatically accepting file transfer from "
+                                   "Bonjour neighbour %s"
+                                   % format_identity_to_string(session.remote_identity))
             self.startIncomingSession(session, streams)
             return
 

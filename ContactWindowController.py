@@ -57,6 +57,7 @@ except ImportError:  # pragma: no cover -- older PyObjC
 from Foundation import (NSArray,
                         NSAttributedString,
                         NSBezierPath,
+                        NSBundle,
                         NSBitmapImageRep,
                         NSColor,
                         NSDate,
@@ -274,6 +275,8 @@ class ContactWindowController(NSWindowController):
     loggerModel = None
     participants = []
     pendingAttachments = None
+    pendingConversationOpen = None
+    conversationOpenRetries = None
 
     # Notification-storm dampers. Bonjour neighbour adds, account
     # registrations and presence updates can each post BlinkContactsHaveChanged
@@ -1421,6 +1424,12 @@ class ContactWindowController(NSWindowController):
                 account = BonjourAccount()
                 instance_id = contact.id
 
+        if instance_id is None:
+            account = self.messagingAccountFor(account, contact)
+            if account is None:
+                self.reportNoMessagingAccount(display_name or target)
+                return
+
         target = normalize_sip_uri_for_outgoing_session(target, account)
         if not target:
             return
@@ -1814,6 +1823,32 @@ class ContactWindowController(NSWindowController):
                 mitem.setRepresentedObject_(item)
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
 
+            # A Bonjour row. The generic Delete is not offered for these --
+            # the group forbids it and the contact is not deletable, both
+            # correctly, because there is no address book entry to delete.
+            # What there is, is a conversation. For a neighbour who has left
+            # the network the row exists only because of it, so deleting the
+            # conversation deletes the row; for one who is here, the row
+            # comes from discovery and stays, so only the messages go.
+            if type(item) is BonjourBlinkContact:
+                offline = item.bonjour_neighbour is None
+                # A Bonjour row cannot be edited -- there is no address book
+                # entry behind it, and there must not be one -- but the name
+                # it shows is whatever the far end announces, which is often
+                # a machine's idea of a person. This renames it locally.
+                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(
+                    NSLocalizedString("Rename...", "Menu item"),
+                    "renameBonjourContact:", "")
+                mitem.setRepresentedObject_(item)
+                title = (NSLocalizedString("Delete Conversation...", "Menu item") if offline
+                         else NSLocalizedString("Delete Messages...", "Menu item"))
+                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(
+                    title, "deleteBonjourConversation:", "")
+                mitem.setRepresentedObject_(item)
+                mitem.setEnabled_(
+                    self.model.bonjour_group.has_conversation(item.id) or offline)
+                self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+
             has_fully_qualified_sip_uri = is_sip_aor_format(item.uri)
 
             gruu_devices = None
@@ -2175,11 +2210,21 @@ class ContactWindowController(NSWindowController):
                     return
 
                 if not isinstance(item, BlinkBlockedPresenceContact) and not is_anonymous(item.uri):
-                    self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Start Audio Call", "Menu item"), "startAudioToSelected:", "")
+                    # A Bonjour neighbour who is not on the network cannot be
+                    # called: there is no route to resolve and nothing to
+                    # ring. The item stayed enabled and the call simply
+                    # failed, which the user had to read an error to
+                    # understand.
+                    reachable = not (type(item) is BonjourBlinkContact
+                                     and item.bonjour_neighbour is None)
+                    audio_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Start Audio Call", "Menu item"), "startAudioToSelected:", "")
+                    audio_item.setEnabled_(reachable)
 
                     if self.sessionControllersManager.isMediaTypeSupported('video'):
                         video_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Start Video Call", "Menu item"), "startVideoToSelected:", "")
-                        video_item.setEnabled_(self.contactSupportsMedia("video", item, item.uri) and settings.video.device)
+                        video_item.setEnabled_(reachable
+                                               and self.contactSupportsMedia("video", item, item.uri)
+                                               and settings.video.device)
 
                     if self.sessionControllersManager.isMediaTypeSupported('sms'):
                         if has_fully_qualified_sip_uri:
@@ -3184,6 +3229,54 @@ class ContactWindowController(NSWindowController):
         return account if account.enabled else None
 
     @objc.python_method
+    def reportNoMessagingAccount(self, display_name=None):
+        """Say why nothing opened, rather than opening nothing."""
+        who = (' %s' % display_name) if display_name else ''
+        BlinkLogger().log_info('No account can send a message to%s' % (who or ' this address'))
+        NSRunAlertPanel(
+            NSLocalizedString("Cannot Send Message", "Window title"),
+            NSLocalizedString("Bonjour can only reach neighbours on this network, and no other "
+                              "account is enabled. Enable a SIP account to send messages.",
+                              "Label"),
+            NSLocalizedString("OK", "Button title"), None, None)
+
+    @objc.python_method
+    def messagingAccountFor(self, account, contact=None):
+        """The account a message to this contact can actually go out on.
+
+        Bonjour is only ever the answer for a neighbour on this network. It
+        has no registrar and no way to reach anybody else: a conversation
+        opened on it with an ordinary SIP contact can never resolve a route,
+        every message in it fails, and setAccount refuses to move it
+        somewhere it would work -- so it is a conversation that exists only
+        to not function.
+
+        That used to be one click away. The account popup is the account
+        unless something overrides it, and the overrides only covered a live
+        neighbour, an address we had talked to before, and our own
+        addresses; with Bonjour selected, clicking any other contact made
+        exactly that dead conversation, and its messages went into history
+        filed under bonjour@local.
+
+        Returns None when there is no usable account at all, and the caller
+        says so rather than opening something that cannot work.
+        """
+        if account is not BonjourAccount():
+            return account
+        if contact is not None and contact in self.model.bonjour_group.contacts:
+            return account
+        try:
+            manager = AccountManager()
+            default = manager.default_account
+            if default is not None and default is not BonjourAccount() and default.enabled:
+                return default
+            return next((item for item in manager.get_accounts()
+                         if item is not BonjourAccount() and item.enabled), None)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot find an account to send from: %s' % e)
+            return None
+
+    @objc.python_method
     def messageTargetForContact(self, contact):
         """(target, display_name, account, instance_id) for a contact, or None.
 
@@ -3227,6 +3320,12 @@ class ContactWindowController(NSWindowController):
             elif own_account is not None:
                 account = own_account
 
+            # Whatever the popup says, this contact is not a neighbour.
+            account = self.messagingAccountFor(account, contact)
+            if account is None:
+                self.reportNoMessagingAccount(display_name)
+                return None
+
         target = normalize_sip_uri_for_outgoing_session(target, account)
         if not target:
             return None
@@ -3254,7 +3353,29 @@ class ContactWindowController(NSWindowController):
         if not uri:
             return False
         try:
-            contact = self.getFirstContactMatchingURI(uri)
+            contact = None
+            if '@' not in uri:
+                # A Bonjour neighbour. The banner names them by the key
+                # their conversation is filed under -- their instance id --
+                # and the address book has never heard of it, rightly: a
+                # neighbour is not an address book entry. Without this the
+                # click fell through to messageTargetForURI, which resolved
+                # a UUID to nothing and opened an empty conversation.
+                contact = self.model.getBonjourContactMatchingDeviceId(uri)
+                if contact is None and self.deferConversationOpen(uri, prefill, attachments):
+                    # Nothing to open it with YET. A banner clicked while
+                    # Blink is not running launches it, and this runs
+                    # while the Bonjour group is still empty -- the
+                    # accounts activate seconds later and the rows are
+                    # rebuilt from history after that. Asked again shortly
+                    # rather than answered with an empty conversation.
+                    return False
+                if contact is None:
+                    BlinkLogger().log_debug('No Bonjour row for %s' % uri)
+                elif self.conversationOpenRetries:
+                    self.conversationOpenRetries.pop(uri, None)
+            if contact is None:
+                contact = self.getFirstContactMatchingURI(uri)
             self.showWindow_(None)
             self.window().makeKeyAndOrderFront_(None)
             self.showMessagesPane()
@@ -3311,6 +3432,44 @@ class ContactWindowController(NSWindowController):
             return False
 
     @objc.python_method
+    def deferConversationOpen(self, uri, prefill=None, attachments=None):
+        """Ask again in a moment for a neighbour the list does not have yet.
+
+        True when the open has been rescheduled and the caller should stop;
+        False when the waiting is over, so the caller fails the open and
+        says so. The count is kept per address rather than passed back in,
+        because the retry goes through openMessagesForURI again -- and a
+        counter that started afresh on each pass would wait for ever.
+        """
+        retries = dict(self.conversationOpenRetries or {})
+        left = retries.get(uri, 10)
+        if left <= 0:
+            retries.pop(uri, None)
+            self.conversationOpenRetries = retries
+            BlinkLogger().log_info('Gave up waiting for the Bonjour row of %s' % uri)
+            return False
+        if self.pendingConversationOpen is not None:
+            # One at a time: a second click on the same banner should not
+            # start a second chain of retries.
+            return True
+        retries[uri] = left - 1
+        self.conversationOpenRetries = retries
+        BlinkLogger().log_info('Waiting for the Bonjour list before opening the '
+                               'conversation with %s (%d more)' % (uri, left - 1))
+        self.pendingConversationOpen = (uri, prefill, attachments)
+        self.performSelector_withObject_afterDelay_(
+            'retryPendingConversationOpen:', None, 1.5)
+        return True
+
+    def retryPendingConversationOpen_(self, sender):
+        pending = self.pendingConversationOpen
+        self.pendingConversationOpen = None
+        if not pending:
+            return
+        uri, prefill, attachments = pending
+        self.openMessagesForURI(uri, prefill, attachments)
+
+    @objc.python_method
     def presentAttachmentsLater(self, viewer, paths):
         """Offer files through the preview, once the conversation is up.
 
@@ -3360,6 +3519,15 @@ class ContactWindowController(NSWindowController):
             from sipsimple.account import AccountManager
             account = AccountManager().default_account
             if account is None:
+                return None
+            # A bare address is never a neighbour: neighbours are addressed
+            # by instance id and arrive here as contacts, not as text. The
+            # default account IS the popup selection, so without this a
+            # notification click or a share with Bonjour selected opened a
+            # conversation that could never resolve a route.
+            account = self.messagingAccountFor(account)
+            if account is None:
+                self.reportNoMessagingAccount(uri)
                 return None
             target = SIPURI.parse('sip:%s' % uri if '@' in uri and not uri.startswith('sip')
                                   else str(uri))
@@ -4120,14 +4288,20 @@ class ContactWindowController(NSWindowController):
         return self.model.getFirstContactMatchingURI(uri, exact_match)
 
     @objc.python_method
-    def getBonjourContact(self, instance, uri):
+    def getBonjourContact(self, instance, uri, online_only=False):
+        """The Bonjour row for a neighbour, by device id then by address.
+
+        Pass online_only when the answer is going to be dialled: the group
+        also holds rows for neighbours who are not on the network, and their
+        address is a placeholder.
+        """
         bonjour_contact = None
 
         if instance:
-            bonjour_contact = self.model.getBonjourContactMatchingDeviceId(instance)
+            bonjour_contact = self.model.getBonjourContactMatchingDeviceId(instance, online_only=online_only)
 
         if not bonjour_contact:
-            bonjour_contact = self.model.getBonjourContactMatchingUri(uri)
+            bonjour_contact = self.model.getBonjourContactMatchingUri(uri, online_only=online_only)
 
         return bonjour_contact
 
@@ -4536,7 +4710,7 @@ class ContactWindowController(NSWindowController):
             account = BonjourAccount()
             device_id = session_info.device_id
             BlinkLogger().log_info("Redialing to device %s of %s using bonjour account" % (device_id, display_name))
-            bonjour_contact = self.model.getBonjourContactMatchingDeviceId(device_id)
+            bonjour_contact = self.model.getBonjourContactMatchingDeviceId(device_id, online_only=True)
             BlinkLogger().log_info("Bonjour neighbour id %s found" % device_id)
 
             if bonjour_contact:
@@ -4616,11 +4790,39 @@ class ContactWindowController(NSWindowController):
                 target_uri = SIPURI.parse(str('sip:%s' % conversation['remote_uri']))
             else:
                 instance_id = conversation['remote_uri']
-                new_target = 'sip:' + ''.join(random.sample(string.ascii_letters+string.digits, 8)) + '@127.0.0.1:5060'
-                target_uri = SIPURI.parse(new_target)
-                selected_contact = BonjourBlinkContact(target_uri, None, instance_id, name=display_name)
+                # The Bonjour group holds a row for this neighbour now --
+                # live if they are here, restored from history if not -- so
+                # use it rather than inventing a second contact for the same
+                # person. The manufactured one carried a loopback address
+                # that went on to appear in the conversation header and in
+                # the history query as though it were somewhere real.
+                found = self.model.getBonjourContactMatchingDeviceId(instance_id)
+                if found is not None:
+                    selected_contact = found
+                    display_name = found.name
+                    target_uri = SIPURI.parse(str(found.uri))
+                else:
+                    new_target = 'sip:' + ''.join(random.sample(string.ascii_letters+string.digits, 8)) + '@127.0.0.1:5060'
+                    target_uri = SIPURI.parse(new_target)
+                    selected_contact = BonjourBlinkContact(target_uri, None, instance_id, name=display_name)
 
-            SMSWindowManager.SMSWindowManager().getWindow(target_uri, display_name, account, instance_id=instance_id, selected_contact=selected_contact)
+            # viewerForTarget, not getWindow: this runs ten seconds after
+            # launch, unasked, and getWindow puts the conversation on screen.
+            # A message pane opening by itself is the application deciding
+            # what the user is looking at. The conversation still has to
+            # EXIST -- that is what retries the messages that never went out
+            # and flushes them when the peer comes back -- but existing and
+            # being shown are different things, and viewerForTarget is the
+            # half that never touches a window.
+            manager = SMSWindowManager.SMSWindowManager()
+            viewer = manager.viewerForTarget(
+                target_uri, display_name, account,
+                instance_id=instance_id, selected_contact=selected_contact)
+            if viewer is not None:
+                manager.retainViewerInBackground(viewer)
+                BlinkLogger().log_info('Conversation with %s reopened in the background '
+                                       'to retry unsent messages'
+                                       % (instance_id or conversation['remote_uri']))
 
     @objc.python_method
     @run_in_green_thread
@@ -5537,6 +5739,90 @@ class ContactWindowController(NSWindowController):
         self.searchContacts()
 
     @objc.IBAction
+    def renameBonjourContact_(self, sender):
+        """Give a Bonjour neighbour a name of the user's choosing.
+
+        Stored against the instance id in the local neighbours file -- the
+        one thing about that machine that does not change -- so it survives
+        their address changing, their going away, and a restart, and it
+        follows the conversation rather than the address it was held on.
+
+        Never the address book: a contact there would be replicated to XCAP,
+        and a link-local neighbour has no server to replicate to.
+
+        An empty name clears the rename, which is how the announced name is
+        put back.
+        """
+        item = sender.representedObject()
+        if item is None or not getattr(item, 'id', None):
+            return
+        from ContactListModel import (bonjour_nickname, rename_bonjour_neighbour,
+                                      bonjour_display_name)
+        from NicknameController import BonjourNickname
+        current = bonjour_nickname(item.id) or item.name
+        nickname = BonjourNickname().runModal(current)
+        if nickname is None:
+            return                      # cancelled, which is not the same as cleared
+        if not rename_bonjour_neighbour(item.id, nickname):
+            return
+
+        item.name = bonjour_display_name(item.id, item.name) or item.id
+        self.model.bonjour_group.sortContacts()
+        # The conversation header reads the name through contactNameFor, so
+        # this reaches an open conversation as well as the row.
+        self.model.nc.post_notification("BlinkContactsHaveChanged",
+                                        sender=self.model.bonjour_group)
+        self.refreshContactsList()
+        self.searchContacts()
+
+    @objc.IBAction
+    def deleteBonjourConversation_(self, sender):
+        """Erase the messages held for one Bonjour neighbour.
+
+        The same purge a deleted contact's orphaned addresses get, aimed at
+        an instance id instead: the stored messages, the files downloaded
+        from them and the public key kept for them all go, and any open
+        conversation is closed first.
+
+        A neighbour who is not on the network loses their row with it --
+        history was the only reason it was there. One who is here keeps
+        theirs, because discovery put it there and would put it back.
+        """
+        item = sender.representedObject()
+        if item is None or not getattr(item, 'id', None):
+            return
+        offline = item.bonjour_neighbour is None
+        message = (NSLocalizedString("Permanently delete the conversation with %s, "
+                                     "including every file downloaded from it? "
+                                     "This cannot be undone.", "Label") if offline
+                   else NSLocalizedString("Permanently delete the messages with %s, "
+                                          "including every file downloaded from them? "
+                                          "This cannot be undone.", "Label")) % item.name
+        message = re.sub("%", "%%", message)
+        ret = NSRunAlertPanel(NSLocalizedString("Delete Conversation", "Window title"),
+                              message,
+                              NSLocalizedString("Delete", "Button title"),
+                              NSLocalizedString("Cancel", "Button title"), None)
+        if ret != NSAlertDefaultReturn:
+            return
+
+        from SMSWindowManager import SMSWindowManager
+        SMSWindowManager().purgeConversationsForURIs([item.id],
+                                                     reason='bonjour conversation deleted')
+        self.model.bonjour_group.conversation_keys.pop(item.id, None)
+        if offline:
+            try:
+                self.model.bonjour_group.contacts.remove(item)
+            except ValueError:
+                pass
+            else:
+                item.destroy()
+            self.model.nc.post_notification("BlinkContactsHaveChanged",
+                                            sender=self.model.bonjour_group)
+        self.refreshContactsList()
+        self.searchContacts()
+
+    @objc.IBAction
     def renameGroup_(self, sender):
         group = sender.representedObject()
         self.model.editGroup(group)
@@ -5778,6 +6064,8 @@ class ContactWindowController(NSWindowController):
             NSRunAlertPanel(NSLocalizedString("Cannot Send Message", "Window title"), NSLocalizedString("There are currently no active accounts", "Label"), NSLocalizedString("OK", "Button title"), None, None)
             return
 
+        contact = None
+        instance_id = None
         try:
             contact = self.getSelectedContacts()[0]
         except IndexError:
@@ -5790,6 +6078,17 @@ class ContactWindowController(NSWindowController):
             display_name = contact.name
             if contact in self.model.bonjour_group.contacts:
                 account = BonjourAccount()
+                # Carried through, which it was not before: a Bonjour
+                # conversation is addressed by instance id, and one opened
+                # without it cannot be routed or matched to the neighbour it
+                # belongs to.
+                instance_id = contact.id
+
+        if instance_id is None:
+            account = self.messagingAccountFor(account, contact)
+            if account is None:
+                self.reportNoMessagingAccount(display_name or target)
+                return
 
         target = normalize_sip_uri_for_outgoing_session(target, account)
         if not target:
@@ -5797,7 +6096,7 @@ class ContactWindowController(NSWindowController):
 
         try:
             NSApp.activateIgnoringOtherApps_(True)
-            SMSWindowManager.SMSWindowManager().getWindow(target, display_name, account, focusTab=True)
+            SMSWindowManager.SMSWindowManager().getWindow(target, display_name, account, focusTab=True, instance_id=instance_id, selected_contact=contact)
         except Exception:
             pass
 
@@ -5885,7 +6184,19 @@ class ContactWindowController(NSWindowController):
                 # to messages with everything else.
                 msrp_chat = self.sessionControllersManager.isPeerToPeerChatEnabled()
                 if isinstance(contact, BonjourBlinkContact):
-                    media_type = ("chat", "audio") if msrp_chat else ("audio",)
+                    # Messages, like every other contact. Bonjour used to be
+                    # the exception that still rang, which made
+                    # double-clicking a neighbour mean something different
+                    # from double-clicking anyone else -- and for one who is
+                    # not on the network it rang out into a failure the user
+                    # had to read to understand, since there is no route to
+                    # resolve and nothing to ring.
+                    #
+                    # The conversation is the useful thing either way: the
+                    # history is there to read, and anything typed to an
+                    # absent neighbour waits and is delivered when they come
+                    # back. Calling them is still a click away in the menu.
+                    media_type = "sms"
                 elif contact.preferred_media == "chat":
                     # A contact configured for MSRP chat before the preference
                     # was switched off falls back to messages rather than to a
@@ -7323,7 +7634,23 @@ class ContactWindowController(NSWindowController):
     def _NH_SIPApplicationDidStart(self, notification):
         # BlinkLogger().log_info('startup: SIPApplicationDidStart enter')
         self.ready = True
-        BlinkLogger().log_info('Application is ready')
+        # Which Blink this is. Two builds share one log file and one
+        # bundle id -- the one running from source and the one installed
+        # in /Applications -- and a banner clicked while neither is
+        # running launches whichever LaunchServices prefers, which is not
+        # the one being worked on. Runs of the two are then interleaved in
+        # activity.txt with nothing to tell them apart, and a fix that is
+        # plainly in the source reads as a fix that does not work.
+        try:
+            import sys
+            bundle = NSBundle.mainBundle()
+            BlinkLogger().log_info('Application is ready: %s (%s), python %s'
+                                   % (bundle.bundlePath(),
+                                      bundle.infoDictionary().get(
+                                          'CFBundleShortVersionString', '?'),
+                                      sys.executable))
+        except Exception:
+            BlinkLogger().log_info('Application is ready')
         # BlinkLogger().log_info('startup: callPendingURIs')
         self.callPendingURIs()
         # BlinkLogger().log_info('startup: refreshLdapDirectory')

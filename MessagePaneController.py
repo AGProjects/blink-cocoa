@@ -1582,8 +1582,16 @@ class MessagePaneController(NSObject):
             self._viewers.remove(viewer)
         self._unread.pop(viewer, None)
         if self._selected is viewer:
+            # Nothing is selected in its place. The only way a conversation
+            # is removed from the pane is the user deleting it, and jumping
+            # to whoever happens to be first in the list answers a question
+            # they did not ask: they deleted a conversation, they did not
+            # ask to read another one, and the next thing they see should
+            # not be somebody else's messages appearing where the deleted
+            # ones were. The pane shows its "choose a contact" state and
+            # waits.
             self._selected = None
-            self.selectViewer(self._viewers[0] if self._viewers else None)
+            self.selectViewer(None)
         if not self._viewers:
             # Nothing left to show. A pane standing open on "Select a
             # contact to see messages" after the conversation it was
@@ -1747,6 +1755,8 @@ class MessagePaneController(NSObject):
             self.updateLocationButton(None)
             self.updateCallButton(None)
             self._setInfoLine(None)
+            BlinkLogger().log_info('Message pane: %s -> nothing selected'
+                                   % self._conversationLabel(previous))
             return
 
         from MessageHost import load_trace_tick, load_trace_bucket
@@ -1803,8 +1813,81 @@ class MessagePaneController(NSObject):
         self._setInfoLine(viewer)
         load_trace_bucket('- info line', _t)
 
+        # One line per switch, saying what the pane is showing now and how
+        # much of it: which conversation went, which came, the key its rows
+        # are actually filed under, the account it is on, and the number of
+        # messages the transcript is holding. A conversation that comes up
+        # empty, or one whose key is not the one the history was written
+        # under, is otherwise indistinguishable from one that has nothing
+        # in it -- and the two need different answers.
+        BlinkLogger().log_info('Message pane: %s -> %s, %s'
+                               % (self._conversationLabel(previous),
+                                  self._conversationLabel(viewer, name),
+                                  self._messagesInViewSummary(viewer)))
+
         if self.isConversationVisible(viewer):
             self.conversationBecameVisible(viewer)
+        else:
+            # Selecting a conversation IS reading it. conversationBecameVisible
+            # is gated on the window being key and the pane being up, which is
+            # right for starting the read-receipt queue and wrong for the
+            # badge: the user has just picked this conversation out of the
+            # list and is looking at the transcript, so a counter still
+            # sitting on the row is telling them about messages that are on
+            # the screen in front of them.
+            self._unread.pop(viewer, None)
+            self._clearUnread(viewer)
+
+    @objc.python_method
+    def _conversationLabel(self, viewer, name=None):
+        """How one conversation is named in the switching log.
+
+        The name AND the key: a Bonjour neighbour is shown by name and
+        filed under an instance id, so a line with only one of the two
+        cannot be matched against what the history did.
+        """
+        if viewer is None:
+            return 'nothing'
+        try:
+            key = str(viewer.conversation_peer_uri())
+        except Exception:
+            key = str(getattr(viewer, 'remote_uri', '') or '?')
+        if name is None:
+            name = str(getattr(viewer, 'display_name', '') or '')
+        account = ''
+        try:
+            account = str(getattr(viewer.account, 'id', '') or '')
+        except Exception:
+            account = str(getattr(viewer, 'local_uri', '') or '')
+        label = '%s <%s>' % (name, key) if name and name != key else key
+        return '%s on %s' % (label, account) if account else label
+
+    @objc.python_method
+    def _messagesInViewSummary(self, viewer):
+        """How much of a conversation is on screen, for the switching log."""
+        controller = getattr(viewer, 'chatViewController', None)
+        if controller is None:
+            return 'no transcript'
+        rendered = 0
+        try:
+            rendered = len(controller.rendered_messages)
+        except Exception:
+            rendered = 0
+        try:
+            first, last, in_view = controller.loadedMessageRange()
+        except Exception:
+            return '%d bubble(s) in view' % rendered
+        notes = max(rendered - in_view, 0)
+        summary = '%d message(s) in view' % in_view
+        if notes:
+            summary += ', %d system note(s)' % notes
+        if in_view and first is not None and last is not None:
+            try:
+                summary += ', %s - %s' % (controller._rangeStamp(first),
+                                          controller._rangeStamp(last))
+            except Exception:
+                summary += ', %s - %s' % (first, last)
+        return summary
 
     @objc.python_method
     def contactNameFor(self, viewer):
@@ -1824,7 +1907,29 @@ class MessagePaneController(NSObject):
         except Exception:
             contact = None
         name = getattr(contact, 'name', None) if contact is not None else None
-        return str(name or getattr(viewer, 'display_name', '') or uri)
+        if name or getattr(viewer, 'display_name', ''):
+            name = str(name or viewer.display_name)
+            # Discovery labels a Bonjour neighbour "Name (computer)". The
+            # computer is on the line below now, so carrying it here says it
+            # twice in two lines and spends the title's width on the half
+            # that is already answered.
+            if getattr(viewer, 'account', None) is BonjourAccount():
+                try:
+                    from ContactListModel import bonjour_display_name
+                except Exception:
+                    return name
+                # The user's own name for this neighbour wins over the one
+                # their machine announces, here as in the contact list.
+                return bonjour_display_name(getattr(viewer, 'instance_id', None), name) or name
+            return name
+        # Last resort. Through the viewer so a Bonjour conversation falls
+        # back to its instance id rather than to a link-local address that
+        # has already changed, or to the loopback placeholder a
+        # conversation restored from history carries.
+        try:
+            return str(viewer.display_remote_uri())
+        except AttributeError:
+            return uri
 
     @objc.python_method
     def refreshContactDetails(self):
@@ -1874,13 +1979,21 @@ class MessagePaneController(NSObject):
     def _infoTextFor(self, viewer):
         try:
             from SMSWindowManager import SMSWindowManager
-            typing = SMSWindowManager().isComposingForURI(viewer.remote_uri)
+            manager = SMSWindowManager()
+            typing = manager.isComposingForURI(manager.conversationKeyFor(viewer))
         except Exception:
             typing = False
         if typing:
             return NSLocalizedString("is typing...", "Label")
         # The account is not in this string: it is the pill that follows it.
-        return str(viewer.remote_uri)
+        # Asked of the viewer rather than read off remote_uri, because a
+        # Bonjour neighbour is shown by instance id -- the address they are
+        # answering on is a link-local one that changes between sessions,
+        # and for a conversation restored from history it is a placeholder.
+        try:
+            return str(viewer.display_remote_uri())
+        except AttributeError:
+            return str(viewer.remote_uri)
 
     @objc.python_method
     def _loadAvatarFor(self, viewer, name=None):
@@ -1931,7 +2044,13 @@ class MessagePaneController(NSObject):
     def _clearUnread(self, viewer):
         try:
             from SMSWindowManager import SMSWindowManager
-            cleared = SMSWindowManager().clearUnreadMessages(viewer.remote_uri)
+            manager = SMSWindowManager()
+            # The key the badge and the rows are filed under, which for a
+            # Bonjour neighbour is their instance id rather than the
+            # link-local address the viewer holds. Clearing by the address
+            # marked nothing read and popped nothing off the counter, so the
+            # badge stayed on the row however often it was opened.
+            cleared = manager.clearUnreadMessages(manager.conversationKeyFor(viewer))
         except Exception as e:
             BlinkLogger().log_error('Cannot clear unread for %s: %s' % (viewer, e))
             return

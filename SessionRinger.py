@@ -18,7 +18,7 @@ from application.notification import NotificationCenter, IObserver
 from application.python import Null
 
 from sipsimple.configuration.settings import SIPSimpleSettings
-from sipsimple.account import AccountManager
+from sipsimple.account import AccountManager, BonjourAccount
 
 from sipsimple.audio import WavePlayer
 from sipsimple.application import SIPApplication
@@ -480,6 +480,15 @@ class Ringer(object):
         settings = SIPSimpleSettings()
         if not settings.audio.silent and not notification.data.error:
             if notification.sender.direction == 'incoming':
+                # A file from a neighbour is accepted without being asked
+                # about, and it arrives without being announced: the tone
+                # here is the other half of a ringtone that no longer
+                # plays, and a machine in the same room sending three
+                # pictures would chime three times for something the user
+                # never agreed to be interrupted by. The banner and the
+                # bubble are the notice.
+                if notification.sender.account is BonjourAccount():
+                    return
                 if self.file_transfer_incoming_sound:
                     self.file_transfer_incoming_sound.start()
             else:

@@ -134,6 +134,23 @@ CONTROL_CONTENT_TYPES = frozenset((
 OTR_WIRE_PREFIX = '?OTR'
 
 
+# Addresses that stand in for one we do not have: a Bonjour neighbour who is
+# not on the network, and a conversation reopened from the last-messages list.
+# They exist to be parsed by code that needs a SIPURI; nothing is filed under
+# them and nothing can be sent to them.
+_PLACEHOLDER_HOSTS = ('127.0.0.1', 'localhost')
+
+
+def is_placeholder_uri(uri):
+    text = str(uri or '')
+    for scheme in ('sips:', 'sip:'):
+        if text.lower().startswith(scheme):
+            text = text[len(scheme):]
+            break
+    host = text.split('@')[-1].split(';')[0].split(':')[0].strip().lower()
+    return host in _PLACEHOLDER_HOSTS
+
+
 def is_otr_wire_text(content):
     """Whether this body is OTR protocol traffic rather than a message."""
     if content is None:
@@ -380,6 +397,20 @@ class SMSViewController(NSObject):
     last_route = None
     chatOtrSmpWindow = None
     dns_lookup_in_progress = False
+    # {path handed to MSRP: transfer id of the bubble it belongs to}. An
+    # MSRP transfer reports its end by file path and shares no id with the
+    # conversation, so the path is the only handle back to the bubble.
+    msrp_transfers = None
+    # {transfer id: the last ft_info.status logged for it}. The state
+    # machine is reported by four different notifications, several of which
+    # fire repeatedly, so the change is what gets a line rather than the
+    # notification.
+    msrp_transfer_states = None
+    # {transfer id: (meta, local copy)} for files written for a neighbour who
+    # was not on the network. The counterpart of a pending message: the copy
+    # is made and the bubble drawn now, and the transfer itself waits for a
+    # route the same way a message does.
+    pending_transfers = None
     last_failure_reason = None
     last_route_failure_reason = None
     otr_negotiation_timer = None
@@ -445,6 +476,9 @@ class SMSViewController(NSObject):
 
             self.history = ChatHistory()
             self.msg_id_list = set() # prevent display of duplicate messages
+            self.msrp_transfers = {}
+            self.msrp_transfer_states = {}
+            self.pending_transfers = {}
             # Tracks the bubble id (the envelope's `sessionId`, plus the
             # meet `role` when a session carries two coordinate tracks) of
             # every location share that has been rendered in this viewer.
@@ -491,7 +525,29 @@ class SMSViewController(NSObject):
 
             self.local_uri = '%s@%s' % (account.id.username, account.id.domain)
             self.remote_uri = '%s@%s' % (self.target_uri.user.decode(), self.target_uri.host.decode())
-            self.contact = selected_contact or SMSWindowManager.SMSWindowManager().getContact(self.remote_uri, addGroup=True)
+            if selected_contact is not None:
+                self.contact = selected_contact
+            elif self.account is BonjourAccount():
+                # NEVER the address book for a neighbour. getContact creates
+                # a Contact when the address is unknown, and a link-local
+                # address is a machine on a network rather than a person:
+                # the entry is saved, filed under Messages, synced to XCAP
+                # and comes back on every launch, named after an IP that
+                # belonged to somebody for an afternoon. That is where rows
+                # like "76324180@192.168.3.50" came from.
+                #
+                # The Bonjour group already holds the row for this
+                # neighbour, keyed by their instance id -- live if they are
+                # here, restored from history if not.
+                try:
+                    self.contact = NSApp.delegate().contactsWindowController.getBonjourContact(
+                        self.instance_id, self.remote_uri)
+                except Exception as e:
+                    self.log_debug('Cannot find the Bonjour contact for %s: %s'
+                                   % (self.instance_id, e))
+                    self.contact = None
+            else:
+                self.contact = SMSWindowManager.SMSWindowManager().getContact(self.remote_uri, addGroup=True)
 
             self.display_name = self.contact.name if self.contact else display_name
             
@@ -520,6 +576,9 @@ class SMSViewController(NSObject):
 
             self.notification_center.add_observer(self, name='ChatStreamOTREncryptionStateChanged')
             self.notification_center.add_observer(self, name='BlinkContactsHaveChanged')
+            for name in ('BlinkFileTransferDidEnd', 'BlinkFileTransferDidStart',
+                         'BlinkFileTransferUpdate', 'BlinkFileTransferProgress'):
+                self.notification_center.add_observer(self, name=name)
             self.notification_center.add_observer(self, name='BlinkContactPresenceHasChanged')
             self.notification_center.add_observer(self, name='SIPAccountRegistrationDidSucceed', sender=self.account)
             self.notification_center.add_observer(self, name='PGPPublicKeyReceived', sender=self.account)
@@ -908,7 +967,27 @@ class SMSViewController(NSObject):
         self.log_info('Delete message %s ' % id)
         self.history.delete_message(id);
         self.chatViewController.markMessage(id, 'deleted')
-        if not local:
+        if local:
+            return
+        if self.account is BonjourAccount():
+            # There is no server to ask. sylk-api-message-remove is a call
+            # TO SylkServer, which performs the removal and relays a notice
+            # to the other party; sent to a neighbour it is a content type
+            # they do not act on, so the message stayed on their screen and
+            # in their history while it was gone from ours.
+            #
+            # So send the notice itself, in the shape the receiving side
+            # already understands -- the same JSON the journal and the
+            # server relay carry, read by _parseMessageRemoval. Peer to
+            # peer, the notice IS the removal; there is no third party to
+            # perform it.
+            #
+            # If they are not on the network it waits with everything else
+            # and goes out when they come back, which is right: a removal
+            # that arrives late still removes.
+            self.sendMessage(json.dumps({'contact': self.local_uri, 'message_id': id}),
+                             'application/sylk-message-remove')
+        else:
             self.sendMessage(id, 'application/sylk-api-message-remove')
 
     @objc.python_method
@@ -1289,8 +1368,20 @@ class SMSViewController(NSObject):
             if require_delivered_notification:
                 self.sendIMDNNotification(id, 'delivered')
 
-            if not is_replication_message and not window.isKeyWindow() and status != 'displayed':
-                from SMSWindowManager import SMSWindowManager
+            # "Is the user actually looking at THIS conversation", not "is
+            # our window the key one". With the messages pane there is one
+            # window holding every conversation, so isKeyWindow was true
+            # whenever the main window was in front -- including while the
+            # user was reading somebody else entirely, or had the pane
+            # closed -- and a message arriving in any other conversation
+            # raised no banner at all. It is the ordinary case for a Bonjour
+            # neighbour, whose conversation tends to be open already from an
+            # earlier exchange. _conversationIsOnScreen asks the host which
+            # conversation it is showing; it is also what the journal banner
+            # uses, so the two cannot disagree about what counts as read.
+            from SMSWindowManager import SMSWindowManager
+            on_screen = SMSWindowManager()._conversationIsOnScreen(self.account, self.remote_uri)
+            if not is_replication_message and not on_screen and status != 'displayed':
                 # Not the raw body. A file transfer arrives as an envelope
                 # -- Sylk JSON, or GSMA RCS FT-HTTP XML -- and the bubble
                 # renders it into a line about the file; a banner posting
@@ -1305,10 +1396,15 @@ class SMSViewController(NSObject):
                     # an empty line: no banner.
                     pass
                 else:
+                    # The conversation key, not the address: it is what the
+                    # click opens the conversation by, and for a Bonjour
+                    # neighbour the address is a link-local one that will be
+                    # somebody else's next week.
+                    nc_uri = self.conversation_peer_uri()
                     nc_title, nc_icon = SMSWindowManager().notificationIdentity(
-                        self.remote_uri, self.display_name)
+                        nc_uri, self.peer_display_name())
                     NSApp.delegate().notify_new_message(nc_title, nc_body, None,
-                                                        uri=self.remote_uri, icon=nc_icon)
+                                                        uri=nc_uri, icon=nc_icon)
 
             if encrypted:
                 encryption = 'verified' if self.encryption.verified or self.pgp_encrypted else 'unverified'
@@ -1850,7 +1946,10 @@ class SMSViewController(NSObject):
         """
         try:
             from SMSWindowManager import SMSWindowManager
-            SMSWindowManager().noteComposing(self.remote_uri, flag)
+            # The conversation key, not the address: the contact row reads
+            # the state by the key it carries, and a Bonjour row carries
+            # the neighbour's instance id.
+            SMSWindowManager().noteComposing(self.conversation_peer_uri(), flag)
         except Exception as e:
             self.log_error('Cannot note the typing state of %s: %s' % (self.remote_uri, e))
 
@@ -1934,7 +2033,22 @@ class SMSViewController(NSObject):
 
     @objc.python_method
     def _NH_BlinkContactsHaveChanged(self, sender, data):
-        self.bonjour_lookup_enabled = True
+        # Posted for every change to the address book, not only a neighbour
+        # arriving, so this asks whether ours is actually reachable rather
+        # than assuming the change was about them. Turning the flag on
+        # blindly meant a failed lookup -- and the retry storm behind it --
+        # on every unrelated contact change.
+        if self.account is BonjourAccount():
+            if not self.bonjour_lookup_enabled and self.bonjourNeighbourIsOnline():
+                self.log_info('Bonjour neighbour %s is back' % self.instance_id)
+                self.bonjour_lookup_enabled = True
+                # Resolve now rather than waiting for the next heartbeat.
+                # setRoutesResolved calls resend_pending, so whatever was
+                # written while they were away goes out as they reappear
+                # instead of up to ten seconds later.
+                self.lookup_destination(self.target_uri)
+        else:
+            self.bonjour_lookup_enabled = True
         # The address book moved under us: whichever contact this
         # conversation resolves to has to be worked out again.
         self.__dict__.pop('_matching_contact', None)
@@ -2240,10 +2354,15 @@ class SMSViewController(NSObject):
         if transfer_id is None:
             return None
         if self.last_transfer_route == 'msrp':
-            # An MSRP transfer carries the file and nothing else: there is
-            # no envelope in the conversation for a companion message to
-            # refer to, and the other end receives a plain audio file. The
-            # take stays where it is -- the transfer is reading it.
+            # No companion waveform message. This conversation now has an
+            # envelope and a transfer id for an MSRP send, but the OTHER end
+            # does not: they receive a plain audio file over a session, with
+            # no id to match a peaks message against. Sending one would
+            # leave them holding a waveform belonging to nothing.
+            #
+            # The path returned is the cache's copy, which is also what the
+            # transfer is reading -- so the caller's temporary take is no
+            # longer load-bearing and can go.
             return self.last_transfer_source
         if peaks and (peaks.get('l') or peaks.get('r')):
             self.send_audio_peaks(transfer_id, peaks)
@@ -2370,17 +2489,28 @@ class SMSViewController(NSObject):
 
     @objc.python_method
     def _sendFileOverMSRP(self, path):
-        """Offer a file straight to the other party. True, or None.
+        """Offer a file straight to the other party. Its transfer id, or None.
 
-        The road for an account with no file transfer service. There is
-        no message to file and no bubble to draw -- an MSRP transfer is a
-        session with the other end, not an envelope left on a server for
-        it to fetch -- so the transcript gets a note saying the file went
-        that way and the File Transfers window shows it moving.
+        The road for an account with no file transfer service -- a Bonjour
+        neighbour above all, where there is no server to leave the file on.
 
-        Returns True rather than a transfer id because there is no id in
-        this conversation to return: nothing here refers to an MSRP
-        transfer afterwards.
+        It used to leave nothing behind but a line of text saying a file
+        had gone that way. The file was in the conversation and the
+        conversation could not show it: no bubble, no picture, nothing to
+        open, and after a restart no trace at all.
+
+        So it is filed exactly as a served transfer is -- the same
+        application/sylk-file-transfer envelope, the same history row, the
+        same bubble, and a copy in the transfer cache under this
+        conversation. The one field it cannot have is `url`: nothing was
+        uploaded anywhere, and the copy in the cache IS the file. That is
+        what the renderer looks for first anyway, so a picture sent to a
+        neighbour draws from disc rather than being offered for download
+        from a server that does not exist.
+
+        The copy is also what goes on the wire, so the user moving or
+        deleting the original mid-transfer cannot break it, and deleting
+        the conversation takes the copy with it like any other.
         """
         name = os.path.basename(path)
 
@@ -2392,42 +2522,251 @@ class SMSViewController(NSObject):
                 ISOTimestamp.now(), is_error=True)
             return None
 
-        self.log_info('%s has no file transfer service; sending %s to %s over MSRP'
-                      % (self.account.id, name, self.remote_uri))
+        try:
+            size = os.path.getsize(path)
+        except OSError as e:
+            self.log_error('Cannot read %s: %s' % (path, e))
+            return None
+
+        from FileTransferCache import (FileTransferCache, guess_filetype,
+                                       new_transfer_id)
+        transfer_id = str(new_transfer_id())
+        filename = re.sub(r'[\s:]', '_', name).lstrip('./') or ('file-%s' % transfer_id)
+        meta = {
+            'filename': filename,
+            'filesize': size,
+            'filetype': guess_filetype(path),
+            'transfer_id': transfer_id,
+            'sender': {'uri': str(self.account.id)},
+            'receiver': {'uri': str(self.conversation_peer_uri())},
+            'direction': 'outgoing',
+        }
+
+        timestamp = ISOTimestamp.now()
+        stored = FileTransferCache().store(meta, self.local_uri,
+                                           self.conversation_peer_uri(), path)
+        self.last_transfer_route = 'msrp'
+        self.last_transfer_source = stored
+
+        if not self.bonjourNeighbourIsOnline():
+            # Held, exactly as a message written to an absent neighbour is
+            # held. The copy is already made and the bubble is already
+            # drawn, so the file is in the conversation from this moment --
+            # what waits is the session that carries it, and there is no
+            # session to be had with a machine that is not on the network.
+            self.log_info('File %s (%s bytes) waits for Bonjour neighbour %s as %s'
+                          % (filename, size, self.instance_id, transfer_id))
+            self._showOutgoingTransfer(meta, timestamp, stored, status=MSG_STATE_FAILED_LOCAL)
+            # Nothing is in flight, so no progress bar: showing the bubble
+            # attaches the local file and starts one, which for a file that
+            # has not been offered to anybody would sit at nought claiming
+            # to be uploading. The pending clock is the honest report.
+            self.chatViewController.clearTransferProgress(transfer_id)
+            self._persistOutgoingTransfer(meta, timestamp, status=MSG_STATE_FAILED_LOCAL)
+            self.pending_transfers[transfer_id] = (meta, stored)
+            return transfer_id
+
+        self._showOutgoingTransfer(meta, timestamp, stored)
+        self._persistOutgoingTransfer(meta, timestamp)
+        if not self._startTransfer(transfer_id, stored, name):
+            return None
+        return transfer_id
+
+    @objc.python_method
+    def _startTransfer(self, transfer_id, stored, name):
+        """Hand one file to an MSRP session. True when it was accepted."""
+        self.log_info('Sending %s to %s over MSRP as %s'
+                      % (stored, self.remote_uri, transfer_id))
         try:
             NSApp.delegate().contactsWindowController.sessionControllersManager \
-                .send_files_to_contact(self.account, self.target_uri, [path])
+                .send_files_to_contact(self.account, self.target_uri, [stored],
+                                       instance_id=self.instance_id)
         except Exception as e:
             self.log_error('Cannot send %s over MSRP: %s' % (name, e))
             self.chatViewController.showSystemMessage(
                 NSLocalizedString("Cannot send %s", "Label") % name,
                 ISOTimestamp.now(), is_error=True)
-            return None
-
-        self.last_transfer_route = 'msrp'
-        # Read where it lies: nothing was copied into the transfer cache,
-        # so a caller holding a temporary file must keep it until the
-        # transfer has finished with it.
-        self.last_transfer_source = path
-        self.chatViewController.showSystemMessage(
-            NSLocalizedString("Sending %s directly to the other party", "Label") % name,
-            ISOTimestamp.now())
+            return False
+        # What ties the transfer session's completion back to this bubble.
+        # MSRP reports by file path -- there is no id shared between the
+        # two -- so the path we handed it is the only handle there is.
+        self.msrp_transfers[stored] = transfer_id
         return True
 
     @objc.python_method
-    def _showOutgoingTransfer(self, meta, timestamp, path):
+    def _restorePendingTransfer(self, transfer_id, body):
+        """Put a file that never went out back on the waiting list.
+
+        Read off the stored envelope at replay, so a transfer written to an
+        absent neighbour survives a restart the way a pending message does.
+        Only if the copy is still on this disc: without the file there is
+        nothing to send, and the row would wait for ever.
+        """
+        from FileTransferCache import FileTransferCache
+        try:
+            meta = json.loads(body)
+        except (TypeError, ValueError) as e:
+            self.log_error('Cannot read the stored transfer %s: %s' % (transfer_id, e))
+            return
+        stored = FileTransferCache().local_file(meta, self.local_uri,
+                                                self.conversation_peer_uri())
+        if stored is None:
+            self.log_info('File %s is no longer here; it cannot be sent' % transfer_id)
+            return
+        self.pending_transfers[transfer_id] = (meta, stored)
+        self.log_info('File %s is waiting for %s' % (transfer_id, self.remote_uri))
+        if self.bonjourNeighbourIsOnline() and not self.routes:
+            self.lookup_destination(self.target_uri)
+
+    @objc.python_method
+    def resend_pending_transfers(self):
+        """Start the transfers that were waiting for the peer to appear.
+
+        Called where resend_pending is, and for the same reason: a route
+        existing is the event that unblocks both. A file differs from a
+        message only in that the waiting is done by the session rather than
+        by the sending queue.
+        """
+        if not self.pending_transfers or not self.bonjourNeighbourIsOnline():
+            return
+        for transfer_id, (meta, stored) in list(self.pending_transfers.items()):
+            if not os.path.exists(stored):
+                # The copy is gone -- the conversation was deleted, or the
+                # cache was cleared. There is nothing left to send and
+                # nothing to be done about it.
+                self.log_info('File %s is no longer here; not sending it' % transfer_id)
+                self.pending_transfers.pop(transfer_id, None)
+                self.update_message_status(transfer_id, MSG_STATE_FAILED)
+                continue
+            self.pending_transfers.pop(transfer_id, None)
+            if self._startTransfer(transfer_id, stored, meta.get('filename') or transfer_id):
+                self.update_message_status(transfer_id, MSG_STATE_SENDING)
+                # It is going now, so the bubble gets a bar at nought rather
+                # than keeping the clock it waited under. The session's own
+                # progress notifications move it from here.
+                self.chatViewController.setTransferProgress(transfer_id, 0.0)
+
+    @objc.python_method
+    @run_in_gui_thread
+    def noteIncomingTransfer(self, meta, timestamp):
+        """Draw a file that arrived over MSRP, now, in the open transcript.
+
+        The row is already written by the caller; this is the bubble. Kept
+        here rather than done by the manager because drawing into a
+        transcript is the viewer's business, and msg_id_list has to learn
+        the id or the next history replay will draw the file a second time.
+        """
+        transfer_id = meta.get('transfer_id')
+        if not transfer_id or transfer_id in self.msg_id_list:
+            return
+        self.msg_id_list.add(transfer_id)
+        sender_name = self.peer_display_name() or self.display_remote_uri()
+        icon = NSApp.delegate().contactsWindowController.iconPathForURI(str(self.remote_uri))
+        self.chatViewController.showMessage(
+            transfer_id, transfer_id, 'incoming', sender_name, icon,
+            json.dumps(meta), timestamp, state=MSG_STATE_DELIVERED, media_type='sms')
+
+    @objc.python_method
+    def _transferIdForSession(self, session):
+        """Which of our bubbles this transfer session belongs to, or None."""
+        try:
+            path = session.ft_info.file_path
+        except AttributeError:
+            return None
+        return (self.msrp_transfers or {}).get(path)
+
+    @objc.python_method
+    def _noteTransferState(self, sender):
+        """Log a transfer's state where the conversation can be read.
+
+        The transfer session logs under its own name -- "[Outgoing file
+        transfer with 76324180@192.168.3.50]" -- which is an address, and
+        for a Bonjour neighbour a different address every session. Reading
+        what happened to a file someone sent therefore meant matching two
+        unrelated log prefixes by timestamp.
+
+        The state, not the notification: four of them report progress and
+        three of those fire repeatedly, so a line is written only when
+        ft_info.status actually moves.
+        """
+        transfer_id = self._transferIdForSession(sender)
+        if transfer_id is None:
+            return                      # somebody else's transfer
+        try:
+            state = str(sender.ft_info.status or '')
+        except AttributeError:
+            return
+        if not state or (self.msrp_transfer_states or {}).get(transfer_id) == state:
+            return
+        self.msrp_transfer_states[transfer_id] = state
+        self.log_info('File transfer %s is %s' % (transfer_id, state))
+
+    @objc.python_method
+    def _NH_BlinkFileTransferDidStart(self, sender, data):
+        self._noteTransferState(sender)
+
+    @objc.python_method
+    def _NH_BlinkFileTransferUpdate(self, sender, data):
+        self._noteTransferState(sender)
+
+    @objc.python_method
+    def _NH_BlinkFileTransferProgress(self, sender, data):
+        self._noteTransferState(sender)
+        transfer_id = self._transferIdForSession(sender)
+        if transfer_id is None:
+            return
+        # Pushed rather than polled: the progress bar normally asks the
+        # transfer cache, which only knows about NSURLSession uploads, so
+        # an MSRP transfer showed a bar that never moved.
+        try:
+            self.chatViewController.setTransferProgress(
+                transfer_id, float(data.progress) / 100.0)
+        except (AttributeError, TypeError, ValueError):
+            pass
+
+    @objc.python_method
+    def _NH_BlinkFileTransferDidEnd(self, sender, data):
+        """Mark an MSRP transfer of ours delivered, or failed.
+
+        Without this the bubble kept its sending clock for ever: nothing
+        else in this conversation hears from an MSRP transfer again, and
+        the File Transfers window it does report to is somewhere else
+        entirely.
+        """
+        transfer_id = (self.msrp_transfers or {}).get(getattr(data, 'file_path', None))
+        if transfer_id is None:
+            return                      # somebody else's transfer
+        self._noteTransferState(sender)
+        self.msrp_transfers.pop(data.file_path, None)
+        self.msrp_transfer_states.pop(transfer_id, None)
+        failed = bool(getattr(data, 'error', False))
+        self.update_message_status(transfer_id,
+                                   MSG_STATE_FAILED if failed else MSG_STATE_DELIVERED)
+        # Takes the progress bar off the bubble and clears upload_pending,
+        # which is what draws "Uploading ...". Marking the message delivered
+        # does not touch either, so without this a file that arrived long
+        # ago kept a bar over it saying it was still going.
+        self.chatViewController.clearTransferProgress(transfer_id)
+        self.log_info('File transfer %s %s' % (transfer_id, 'failed' if failed else 'delivered'))
+
+    @objc.python_method
+    def _showOutgoingTransfer(self, meta, timestamp, path, status=MSG_STATE_SENDING):
         """Put the bubble up before the upload starts.
 
         The file is the user's own, already on disc: waiting for a round
         trip to the server before showing anything would make sending feel
         broken on a slow link.
+
+        `status` is MSG_STATE_FAILED_LOCAL for a transfer that has not been
+        started at all because the peer is not reachable -- the same
+        pending clock a message gets, drawn from the same state.
         """
         icon = NSApp.delegate().contactsWindowController.iconPathForURI(str(self.account.id))
         body = json.dumps(meta)
         self.msg_id_list.add(meta['transfer_id'])
         self.chatViewController.showMessage(
             meta['transfer_id'], meta['transfer_id'], 'outgoing', None, icon, body,
-            timestamp, state=MSG_STATE_SENDING, media_type='sms')
+            timestamp, state=status, media_type='sms')
         # The bubble renders from the local copy while it goes up: the
         # remote URL does not exist yet, and a picture the user just chose
         # should be visible immediately.
@@ -2572,7 +2911,7 @@ class SMSViewController(NSObject):
         return target
 
     @objc.python_method
-    def _persistOutgoingTransfer(self, meta, timestamp):
+    def _persistOutgoingTransfer(self, meta, timestamp, status=MSG_STATE_SENDING):
         """Store the row under the transfer id.
 
         The server replicates the message it emits back to us with that
@@ -2584,7 +2923,7 @@ class SMSViewController(NSObject):
             meta['transfer_id'], call_id=meta['transfer_id'], direction='outgoing',
             sender=ChatIdentity(self.account.uri, self.account.display_name),
             recipient=recipient, timestamp=timestamp, content=json.dumps(meta),
-            content_type=FILE_TRANSFER_CONTENT_TYPE, status=MSG_STATE_SENDING,
+            content_type=FILE_TRANSFER_CONTENT_TYPE, status=status,
             encryption='verified' if meta.get('encrypted') else '',
         )
         self.add_to_history(mInfo)
@@ -2636,7 +2975,7 @@ class SMSViewController(NSObject):
         cpim_from = format_identity_to_string(message.sender, format='full') if message.sender else ''
         cpim_timestamp = str(message.timestamp)
         
-        remote_uri = self.instance_id if (self.account is BonjourAccount() and self.instance_id) else self.remote_uri
+        remote_uri = self.conversation_peer_uri()
         self.msg_id_list.add(message.id)
 
         self.history.add_message(message.id, 'sms', self.local_uri, remote_uri, message.direction, cpim_from, cpim_to, cpim_timestamp, message.content.decode(), message.content_type, "0", message.status, call_id=message.call_id, encryption=message.encryption)
@@ -2777,6 +3116,15 @@ class SMSViewController(NSObject):
                  mInfo.queued = True
                  self.outgoing_queue.put(mInfo)
 
+        # Say so. A message to a neighbour who is not on the network goes
+        # onto a stopped queue and nothing else writes a line about it --
+        # the send is never attempted, so there is no failure to report and
+        # no route lookup to fail. From the log it looked as though nothing
+        # had happened at all.
+        if self.is_renderable(mInfo) and not self.bonjourNeighbourIsOnline():
+            self.log_info('Message %s is waiting for Bonjour neighbour %s to come '
+                          'back on this network' % (id, self.instance_id))
+
         if host.default_ip and (not self.last_route or self.paused):
              self.lookup_destination(self.target_uri)
 
@@ -2795,9 +3143,22 @@ class SMSViewController(NSObject):
 
         if self.account is BonjourAccount():
             if not self.bonjour_lookup_enabled:
+                # Cleared on the way out, like every other exit from this
+                # method. Leaving it set meant the first lookup after the
+                # neighbour went away latched dns_lookup_in_progress on for
+                # good: every later call returned at the top, so when they
+                # came back the route was never resolved and the messages
+                # held for them were never sent. The bug was unreachable
+                # until this flag started being turned off at all.
+                self.dns_lookup_in_progress = False
                 return
-            
-            blink_contact = NSApp.delegate().contactsWindowController.getBonjourContact(self.instance_id, str(uri))
+
+            # online_only: an offline row restored from history carries a
+            # loopback placeholder for an address, and routing to it would
+            # send the message to ourselves instead of leaving it pending
+            # for the neighbour to come back.
+            blink_contact = NSApp.delegate().contactsWindowController.getBonjourContact(
+                self.instance_id, str(uri), online_only=True)
 
             if blink_contact:
                 uri = SIPURI.parse(str(blink_contact.uri))
@@ -2892,6 +3253,13 @@ class SMSViewController(NSObject):
     @objc.python_method
     @run_in_gui_thread
     def setRoutesResolved(self, routes):
+        # Symmetrical with setRoutesFailed, which has always cleared this.
+        # The lookup is over either way, and the Bonjour branch reaches here
+        # without going through the DNS callback that clears it on the SIP
+        # path -- so a neighbour resolved once could never be resolved
+        # again, which matters because a neighbour changing address or
+        # transport is routine and each change needs a fresh lookup.
+        self.dns_lookup_in_progress = False
         self.routes = routes
         # Cleared so the next stretch without a route logs its reason again
         # instead of being deduped against a failure we have since recovered
@@ -2907,6 +3275,7 @@ class SMSViewController(NSObject):
 
         self.start_queue()
         self.resend_pending()
+        self.resend_pending_transfers()
 
         if not self.encryption.active and self.otr_enabled:
             self.startEncryption()
@@ -2939,6 +3308,24 @@ class SMSViewController(NSObject):
             self.outgoing_queue.put(message)
 
     @objc.python_method
+    def bonjourNeighbourIsOnline(self):
+        """Whether this conversation's neighbour is discoverable right now.
+
+        online_only, so a row restored from history -- which is in the
+        contact list but is not on the network -- does not count as the
+        neighbour being back.
+        """
+        if self.account is not BonjourAccount():
+            return True
+        try:
+            return NSApp.delegate().contactsWindowController.getBonjourContact(
+                self.instance_id, str(self.target_uri), online_only=True) is not None
+        except Exception as e:
+            self.log_debug('Cannot tell whether %s is on this network: %s'
+                           % (self.instance_id, e))
+            return False
+
+    @objc.python_method
     def setRoutesFailed(self, reason):
         self.last_route = None
         self.dns_lookup_in_progress = False
@@ -2960,14 +3347,42 @@ class SMSViewController(NSObject):
             self.log_info('Routes failed: %s' % reason)
             self.last_route_failure_reason = reason
         
+        # Bonjour is not a special case here any more. It used to be marked
+        # FAILED -- terminal, red, and dropped from self.messages -- so a
+        # message to a neighbour who had closed their laptop was lost the
+        # moment it was typed, while the same message to a SIP account with
+        # the server down kept its clock and went out later. A neighbour
+        # coming back is the same event as a server coming back: the
+        # heartbeat already has a Bonjour branch that resends these, and
+        # BlinkContactsHaveChanged re-arms it the moment one is rediscovered.
         for message in self.messages.values():
-            if message.content_type not in (IsComposingDocument.content_type, IMDNDocument.content_type):
-                status = MSG_STATE_FAILED if self.account is BonjourAccount() else MSG_STATE_FAILED_LOCAL
-                self.log_info('Routing message %s set to status %s' % (message.id, status))
-                self.update_message_status(message.id, status)
-                message.status = status
+            if message.content_type in (IsComposingDocument.content_type, IMDNDocument.content_type):
+                continue
+            if message.status == MSG_STATE_FAILED_LOCAL:
+                # Already pending. Saying so again writes the same row to
+                # the database, redraws the same bubble and prints the same
+                # two lines -- and this runs once per lookup, which is once
+                # per queued message, so N pending messages cost N squared
+                # of all three every time the route is missing.
+                continue
+            self.log_info('Routing message %s set to status %s' % (message.id, MSG_STATE_FAILED_LOCAL))
+            self.update_message_status(message.id, MSG_STATE_FAILED_LOCAL)
+            message.status = MSG_STATE_FAILED_LOCAL
 
-        #self.bonjour_lookup_enabled = False
+        if self.account is BonjourAccount():
+            # Stop trying. A neighbour who is not on the network is not
+            # coming back within the heartbeat -- they come back when
+            # Bonjour discovers them, and that posts BlinkContactsHaveChanged,
+            # which is what turns this flag on again. Without it every tick
+            # re-queued every pending message and re-ran a lookup that
+            # cannot succeed, which is the retry storm in the log.
+            #
+            # Nothing is lost by stopping: the messages keep their pending
+            # clock and their place in self.messages, and the heartbeat
+            # picks them up the moment the flag comes back.
+            if self.bonjour_lookup_enabled:
+                self.log_info('Bonjour neighbour %s is offline' % self.instance_id)
+            self.bonjour_lookup_enabled = False
 
     @objc.python_method
     def start_queue(self):
@@ -3167,7 +3582,7 @@ class SMSViewController(NSObject):
             self.log_info("%s message %s for %s sent failed: %s" % (message.content_type, message.id, message.recipient, reason))
 
             if self.is_renderable(message):
-                status = MSG_STATE_FAILED if self.account is BonjourAccount() else MSG_STATE_FAILED_LOCAL
+                status = MSG_STATE_FAILED_LOCAL
                 self.update_message_status(message.id, status)
                 message.status = status
                 message.pjsip_id = None
@@ -3200,7 +3615,7 @@ class SMSViewController(NSObject):
                 self.chatViewController.showSystemMessage("Recipient stopped OTR encryption", ISOTimestamp.now(), is_error=True)
                 self.stopEncryption()
                 if message.content_type not in (IsComposingDocument.content_type, IMDNDocument.content_type):
-                    status = MSG_STATE_FAILED if self.account is BonjourAccount() else MSG_STATE_FAILED_LOCAL
+                    status = MSG_STATE_FAILED_LOCAL
                     self.update_message_status(message.id, status)
                     message.status = status
                 return None
@@ -3617,7 +4032,63 @@ class SMSViewController(NSObject):
 
         if self.instance_id is not None and self.instance_id not in remote_uris:
             remote_uris.append(self.instance_id)
+
+        # A Bonjour conversation whose neighbour is not on the network is
+        # given a loopback address to stand in for one it cannot know --
+        # here, and when a conversation is reopened from the last-messages
+        # list. It is a placeholder to be parsed, not an address anybody is
+        # filed under, and it was going into the query as a real one.
+        remote_uris = [uri for uri in remote_uris if not is_placeholder_uri(uri)]
         return remote_uris
+
+    @objc.python_method
+    def conversation_peer_uri(self):
+        """The key this conversation's rows and files are filed under.
+
+        The peer's address, except for a Bonjour neighbour, who is filed
+        under their instance id: the link-local address their machine
+        answers on changes between sessions, so anything stored under it is
+        lost the next time they appear. History has always done this; the
+        transfer cache did not, which is why a file sent to a neighbour
+        could not be found again afterwards.
+        """
+        if self.account is BonjourAccount() and self.instance_id:
+            return self.instance_id
+        return self.remote_uri
+
+    @objc.python_method
+    def display_remote_uri(self):
+        """The address to SHOW for the other party.
+
+        For a Bonjour neighbour that is the instance id, bare. Not
+        remote_uri: that holds whichever link-local address their machine
+        answered on -- a DHCP address and a random port that change between
+        sessions and say nothing about who they are -- and for a
+        conversation restored from history with the neighbour away it is a
+        loopback placeholder, which is worse: an address nobody is at.
+
+        With the computer it runs on, when we have ever met it: two
+        machines of the same person carry the same name, and one person
+        reinstalling gets a new instance id on the SAME computer, so
+        neither half identifies a conversation on its own. This is the
+        line with room for both -- the contact row says only whether they
+        are here.
+
+        No domain on it. The account pill beside this already says the
+        conversation is on bonjour@local, so a bonjour.local suffix would
+        repeat that in the same line and push the id towards truncation.
+
+        The instance id is the one name for that machine that stays true,
+        and it is what the conversation is filed under in the history, so
+        showing it is also showing the user what they would search for.
+        """
+        if self.account is BonjourAccount() and self.instance_id:
+            try:
+                from ContactListModel import bonjour_identity
+            except Exception:
+                return str(self.instance_id)
+            return bonjour_identity(self.instance_id)
+        return str(self.remote_uri)
 
     @objc.python_method
     def history_local_uris(self):
@@ -3850,6 +4321,31 @@ class SMSViewController(NSObject):
                 total = -1
             self._noteTotalHistoryMessages(total)
 
+            # Whether anything OLDER than the page is worth fetching, which
+            # is not the same question as how many rows the conversation
+            # holds: that count includes the reply links, waveforms and read
+            # receipts that never become bubbles, so comparing it against
+            # what is on screen says "there is more" for a conversation that
+            # is showing all of itself.
+            #
+            # renderable_cutoff with count=1 answers it exactly and for the
+            # price of one indexed lookup: the newest row older than what we
+            # have that WOULD draw, or None if there is no such row.
+            try:
+                older = self.history.renderable_cutoff(
+                    remote_uri=remote_uris, local_uri=local_uris,
+                    media_type=('chat', 'sms'), count=1,
+                    before_date=self.oldest_timestamp or self.history_before_date,
+                    search_text=self.chatViewController.search_text,
+                    exclude_related_actions=LOCATION_TICK_ACTIONS, category=category)
+            except Exception as e:
+                self.log_debug('Cannot tell whether older messages exist: %s' % e)
+                older = None
+                unknown = True
+            else:
+                unknown = False
+            self._noteOlderMessagesAvailable(older is not None or unknown)
+
             # Which chips the CONVERSATION holds, not which the page holds.
             # The bar used to be built from the bubbles on screen, and a
             # page is now one category deep -- read off the page it would
@@ -3936,6 +4432,14 @@ class SMSViewController(NSObject):
 
     @objc.python_method
     @run_in_gui_thread
+    def _noteOlderMessagesAvailable(self, available):
+        """Whether scrolling back would find anything."""
+        try:
+            self.chatViewController.setMoreHistoryAvailable(available)
+        except AttributeError:
+            pass                        # a renderer with no history chrome
+
+    @objc.python_method
     def _noteTotalHistoryMessages(self, total):
         """The conversation's stored-message total has arrived.
 
@@ -4132,13 +4636,12 @@ class SMSViewController(NSObject):
         self.log_debug('Render history started')
         self.message_count_from_history = len(messages)
         if len(messages):
-            # A NOTE, not the label: written straight into the label it
-            # covered the loaded range -- "47 messages, 16 Aug 17:43 - 29
-            # Aug 21:27" -- with a scrolling hint, and nothing put the
-            # range back, so the one fact worth reading was never the one
-            # on screen. updateHistoryChrome shows both.
-            self.chatViewController.setHistoryNote(
-                NSLocalizedString("Hold up-scrolling to load more messages...", "Label"))
+            # No note. The scroll-back hint is composed by the chrome now,
+            # which is the only place that knows both how many messages are
+            # on screen and how many the conversation holds -- asserted from
+            # here it was unconditional, so a conversation showing all
+            # nineteen of its nineteen messages still offered to fetch more.
+            self.chatViewController.setHistoryNote('')
         else:
             # Nothing came back at all: THE only evidence that history has
             # run out. It used to be inferred from a page returning as many
@@ -4430,7 +4933,21 @@ class SMSViewController(NSObject):
                     # a third copy on the queue.
                     if (message.direction == 'outgoing'
                             and message.status == MSG_STATE_FAILED_LOCAL
+                            and message.content_type == FILE_TRANSFER_CONTENT_TYPE
+                            and message.msgid not in self.pending_transfers
+                            and ISOTimestamp.now() - timestamp < datetime.timedelta(days=7)):
+                        # A file that never went out. It must NOT go on the
+                        # sending queue below: that queue sends SIP messages,
+                        # and a transfer envelope handed to it is delivered
+                        # as a text message full of JSON. The file waits in
+                        # its own list instead, and goes when a route does.
+                        self._restorePendingTransfer(message.msgid, message.body)
+
+                    elif (message.direction == 'outgoing'
+                            and message.status == MSG_STATE_FAILED_LOCAL
+                            and message.content_type != FILE_TRANSFER_CONTENT_TYPE
                             and message.msgid not in self.messages
+                            and self.bonjourNeighbourIsOnline()
                             and ISOTimestamp.now() - timestamp < datetime.timedelta(days=7)):
 
                         encryption = 'verified' if self.pgp_encrypted else ''
@@ -4511,10 +5028,54 @@ class SMSViewController(NSObject):
             self.incoming_queue_started = True
  
     @objc.python_method
+    def peer_display_name(self):
+        """The name to put on the other party's bubbles and banners.
+
+        display_name is whatever this viewer was opened with: for a
+        Bonjour neighbour that is the name their machine announces --
+        "Name (computer)" -- or, for a conversation restored from history
+        with nobody on the network, nothing at all. The nickname the user
+        gave them wins over both, exactly as it does in the contact list
+        and the conversation header.
+        """
+        name = str(self.display_name or '')
+        if self.account is BonjourAccount():
+            try:
+                from ContactListModel import bonjour_display_name
+                return bonjour_display_name(self.instance_id, name) or name
+            except Exception as e:
+                self.log_debug('Cannot read the name of neighbour %s: %s'
+                               % (self.instance_id, e))
+        return name
+
+    @objc.python_method
     def normalizeSender(self, sender):
-        if sender == self.remote_uri and self.display_name:
-            sender = self.display_name
-        return sender
+        """The name to draw on an incoming bubble, given what history kept.
+
+        cpim_from holds whatever key the conversation is filed under, and
+        for a Bonjour neighbour that key is their instance id -- so every
+        bubble they ever sent was headed by a UUID. The loopback
+        placeholder a conversation restored from history is addressed by
+        reads no better. Any key that means "the other party in this
+        conversation" becomes their name.
+        """
+        name = self.peer_display_name()
+        if not name:
+            return sender
+        text = str(sender or '')
+        if not text:
+            return name
+        if self.account is BonjourAccount():
+            # A Bonjour conversation has exactly two ends, so an incoming
+            # message is from the neighbour whatever key or announced name
+            # the row carries -- and the announced one is "Name (computer)",
+            # which is the computer said twice with the header below.
+            return name
+        keys = {self.remote_uri, self.conversation_peer_uri()}
+        if self.instance_id:
+            keys.add(str(self.instance_id))
+            keys.add('urn:uuid:%s' % self.instance_id)
+        return name if (text in keys or is_placeholder_uri(text)) else text
 
     @objc.python_method
     def requestPublicKeyIfMissing(self):

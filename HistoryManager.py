@@ -526,6 +526,12 @@ class SessionHistory(object, metaclass=Singleton):
 # under the address they concern but are not messages with it.
 MESSAGE_MEDIA_TYPES = ('chat', 'sms')
 
+# What the link-local account calls itself, and so what every Bonjour row is
+# filed under. Two migrations exist to fold the older spellings -- 'bonjour'
+# and 'bonjour.local' -- into this one, so anything reading Bonjour history
+# can rely on it being the only value in the table.
+BONJOUR_LOCAL_URI = 'bonjour@local'
+
 CATEGORY_TEXT_TYPES = ('text', 'text/plain', 'text/html')
 CATEGORY_KEY_TYPES = ('text/pgp-public-key', 'text/pgp-private-key')
 CATEGORY_FILE_TYPES = ('application/sylk-file-transfer',
@@ -1839,6 +1845,65 @@ class ChatHistory(object, metaclass=Singleton):
         return result
 
     @run_in_db_thread
+    def _bonjour_conversations(self, media_type):
+        table = ChatMessage.sqlmeta.table
+        where = (self._media_type_sql(media_type)
+                 + self._uri_in_sql('local_uri', BONJOUR_LOCAL_URI))
+        # The newest row of each Bonjour conversation, joined against the
+        # grouped maximum for the same reason _last_message_accounts does
+        # it: a bare max() leaves which row the other columns come from up
+        # to the engine, and here those columns are the peer's name.
+        query = ('select m.remote_uri, latest.newest, m.direction, m.cpim_from, m.cpim_to '
+                 'from %(table)s m '
+                 'join (select remote_uri, max(time) as newest from %(table)s%(where)s '
+                 'group by remote_uri) latest '
+                 'on m.remote_uri = latest.remote_uri and m.time = latest.newest'
+                 '%(outer)s '
+                 'group by m.remote_uri'
+                 % {'table': table, 'where': where,
+                    'outer': self._uri_in_sql('m.local_uri', BONJOUR_LOCAL_URI)})
+        try:
+            rows = self.db.queryAll(query)
+        except Exception as e:
+            BlinkLogger().log_error('Error reading the Bonjour conversations: %s' % e)
+            return []
+
+        cpim_re = re.compile(r'^(?:"?(?P<display_name>[^<]*[^"\s])"?)?\s*<(?P<uri>.+)>$')
+        results = []
+        for row in rows:
+            try:
+                remote_uri, newest, direction, cpim_from, cpim_to = row
+            except Exception:
+                continue
+            if not remote_uri:
+                continue
+            # The peer is whichever end of the row is not us.
+            peer = cpim_from if direction == 'incoming' else cpim_to
+            match = cpim_re.match(peer or '')
+            results.append({'remote_uri': str(remote_uri),
+                            'time': str(newest) if newest else '',
+                            'display_name': match.group('display_name') if match else '',
+                            'last_uri': match.group('uri') if match else (str(peer) if peer else '')})
+        return results
+
+    def bonjour_conversations(self, media_type=MESSAGE_MEDIA_TYPES):
+        """Every Bonjour peer we have message history with.
+
+        One entry per remote_uri under the link-local account, carrying the
+        newest message time and the peer's last known name and address --
+        both read off that newest row, because a neighbour who is not on
+        the network has no record advertising either.
+
+        The key is normally the peer's instance id, which is stable across
+        their restarts and address changes. It can also be a plain address:
+        a neighbour that advertised no instance_id is filed under the
+        link-local address it happened to have, and those conversations can
+        never be reconnected to a device -- they exist to be read and
+        deleted.
+        """
+        return block_on(self._bonjour_conversations(media_type))
+
+    @run_in_db_thread
     def _last_message_accounts(self, media_type, local_uri):
         table = ChatMessage.sqlmeta.table
         where = self._media_type_sql(media_type) + self._uri_in_sql('local_uri', local_uri)
@@ -1983,6 +2048,61 @@ class ChatHistory(object, metaclass=Singleton):
         # party. Without it a recording sits in the right conversation,
         # playable, in a chat that never rose in the list.
         return moved_time or True
+
+    @run_in_db_thread
+    def _move_conversation(self, local_uri, from_remote, to_remote):
+        table = ChatMessage.sqlmeta.table
+        base = ("local_uri=%s and remote_uri=%s"
+                % (ChatMessage.sqlrepr(local_uri), ChatMessage.sqlrepr(from_remote)))
+        try:
+            rows = self.db.queryAll("select count(*) from %s where %s" % (table, base))
+            count = int(rows[0][0]) if rows else 0
+        except Exception as e:
+            BlinkLogger().log_error('Cannot count the conversation with %s: %s'
+                                    % (from_remote, e))
+            return 0
+        if not count:
+            return 0
+
+        # A message that exists under BOTH keys is dropped rather than
+        # moved: (msgid, local_uri, remote_uri) is unique, so the update
+        # would fail on it and take the whole move with it. Two rows for
+        # one message is the thing being avoided here, and either copy
+        # says the same thing.
+        try:
+            self.db.queryAll(
+                "delete from %(table)s where %(base)s and msgid in "
+                "(select msgid from %(table)s where local_uri=%(local)s and remote_uri=%(to)s)"
+                % {'table': table, 'base': base,
+                   'local': ChatMessage.sqlrepr(local_uri),
+                   'to': ChatMessage.sqlrepr(to_remote)})
+            self.db.queryAll(
+                "update %s set remote_uri=%s where %s"
+                % (table, ChatMessage.sqlrepr(to_remote), base))
+        except Exception as e:
+            BlinkLogger().log_error('Cannot move the conversation with %s to %s: %s'
+                                    % (from_remote, to_remote, e))
+            return 0
+        BlinkLogger().log_info('Moved %d message(s) from the conversation with %s '
+                               'to the one with %s' % (count, from_remote, to_remote))
+        return count
+
+    def move_conversation(self, local_uri, from_remote, to_remote):
+        """Put every message of one conversation into another. Rows moved.
+
+        For two rows that turn out to be the same person -- a Bonjour
+        neighbour who reinstalled and came back under a new instance id, so
+        their history is split between the id they used to have and the one
+        they have now.
+
+        The addresses on each row are left alone. cpim_from and cpim_to say
+        who actually sent and received the message, which is still true and
+        is what the peer's name is read from; only which conversation the
+        row belongs to is changing.
+        """
+        if not from_remote or not to_remote or from_remote == to_remote:
+            return 0
+        return block_on(self._move_conversation(local_uri, from_remote, to_remote))
 
     def move_message(self, msgid, local_uri, from_remote, to_remote):
         """Put a stored message in a different conversation. True if it moved.

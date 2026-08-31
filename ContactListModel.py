@@ -72,9 +72,12 @@ import base64
 import bisect
 import datetime
 import glob
+import json
 import os
+import random
 import re
 import pickle
+import string
 import unicodedata
 import urllib.request, urllib.parse, urllib.error
 import uuid
@@ -104,7 +107,7 @@ from ContactController import AddContactController, EditContactController
 from GroupController import AddGroupController
 from AudioSession import AudioSession
 from BlinkLogger import BlinkLogger
-from HistoryManager import SessionHistory
+from HistoryManager import SessionHistory, ChatHistory
 from SIPManager import MWIData
 from MergeContactController import MergeContactController
 from VirtualGroups import VirtualGroupsManager, VirtualGroup
@@ -148,6 +151,257 @@ presence_status_icons = {'away': NSImage.imageNamed_("away"),
                          'offline': NSImage.imageNamed_("offline"),
                          'blocked': NSImage.imageNamed_("blocked")
                          }
+
+
+def bonjour_offline_uri(key):
+    """A parseable address for a neighbour who is not on the network.
+
+    Deliberately NOT their last known one. That was a link-local address on
+    whatever network the message was written on, handed out by DHCP and
+    quite possibly somebody else's by now -- and every contact lookup in the
+    application matches on address, so keeping it would let this row answer
+    for a stranger.
+
+    When the key IS an address the row has nothing else to be, and it is
+    used: a neighbour that advertised no instance id is filed under the
+    address it had, and the unread count and conversation clock are looked
+    up through contact.uris, which would otherwise miss it. Those rows can
+    never be matched to a device again, which is why they exist to be read
+    and deleted.
+
+    Otherwise the loopback placeholder, the same one used when a
+    conversation is reopened from history elsewhere in the application. It
+    exists to be parsed and never to be dialled -- the conversation is
+    addressed by instance id, and getBonjourContact(online_only=True) is
+    what keeps it away from anything building a route.
+    """
+    if key and '@' in key:
+        return SIPURI.parse(str('sip:%s' % key))
+    return SIPURI.parse(str('sip:%s@127.0.0.1:5060'
+                            % ''.join(random.sample(string.ascii_letters + string.digits, 8))))
+
+
+def bonjour_preferred_transport():
+    """The transport a Bonjour conversation should use when it has a choice.
+
+    BonjourAccount().sip.transport, which until now nothing read: the
+    setting was in the Preferences panel, it defaulted to tcp, and the
+    application ignored it and always took TLS. This makes the control mean
+    what it says.
+
+    TCP is the default because Bonjour is link-local. TLS over a
+    link-local address authenticates nothing -- there is no name to verify
+    against and no CA that has heard of a neighbour's self-signed
+    certificate -- so it costs a handshake to prove nothing, and it is the
+    transport most likely to fail outright between two different builds.
+    """
+    try:
+        transport = str(BonjourAccount().sip.transport or '').lower()
+    except Exception as e:
+        BlinkLogger().log_error('Cannot read the Bonjour transport setting: %s' % e)
+        transport = ''
+    return transport if transport in ('tcp', 'tls', 'udp') else 'tcp'
+
+
+def bonjour_transport_rank(transport):
+    """How much this announcement is wanted; higher wins.
+
+    A neighbour announces itself over every transport it supports and each
+    one arrives as its own record, so a row is repeatedly offered a
+    different address for the same machine and has to decide whether to
+    move. The configured transport wins; the rest are ranked below it in a
+    fixed order so the choice between two also-rans is at least stable.
+
+    Nothing is excluded. A neighbour that announces only the transport we
+    did not ask for is still that neighbour, and refusing to show them
+    would look exactly like them not being on the network.
+    """
+    transport = str(transport or '').lower()
+    preferred = bonjour_preferred_transport()
+    if transport == preferred:
+        return 3
+    order = {'tls': 2, 'tcp': 1, 'udp': 0}
+    return order.get(transport, -1)
+
+
+def bonjour_person_name(name):
+    """A neighbour's name without the computer it was announced from.
+
+    Discovery labels a neighbour "Name (host)", because for a long time
+    that suffix was the only thing telling two machines of one person
+    apart. The computer now has a line of its own in the conversation
+    header, so carrying it in the name as well says it twice and pushes
+    the name towards truncation in every list that draws it.
+    """
+    text = str(name or '').strip()
+    match = re.match(r'^(?P<name>.+?)\s*\([^()]*\)$', text)
+    return match.group('name') if match else text
+
+
+# {instance id: {'name': ..., 'computer': ..., 'seen': ...}} for every
+# Bonjour neighbour this machine has ever discovered. Local, and local on
+# purpose: an address book contact would be replicated to XCAP, and there is
+# no server behind a link-local network to replicate to -- these facts are
+# about machines on whatever LAN this one is plugged into today.
+#
+# Recorded when a neighbour comes online, because that is the only moment
+# both facts are true and available. History is not a substitute: the
+# computer name only ever reaches the table inside the display name of an
+# OUTGOING row, so a conversation where we only received carries no record
+# of which machine it was with.
+BONJOUR_NEIGHBOURS_FILE = 'bonjour_neighbours.json'
+_bonjour_neighbours = None
+
+
+def bonjour_neighbours():
+    """The remembered neighbours, read once and kept."""
+    global _bonjour_neighbours
+    if _bonjour_neighbours is None:
+        _bonjour_neighbours = {}
+        path = ApplicationData.get(BONJOUR_NEIGHBOURS_FILE)
+        try:
+            with open(path, 'r') as f:
+                stored = json.load(f)
+        except (IOError, OSError):
+            pass                        # never written yet; not a fault
+        except Exception as e:
+            BlinkLogger().log_error('Cannot read the remembered Bonjour neighbours: %s' % e)
+        else:
+            if isinstance(stored, dict):
+                _bonjour_neighbours = stored
+    return _bonjour_neighbours
+
+
+def _write_bonjour_neighbours(known):
+    try:
+        with open(ApplicationData.get(BONJOUR_NEIGHBOURS_FILE), 'w') as f:
+            json.dump(known, f, indent=1)
+        return True
+    except Exception as e:
+        BlinkLogger().log_error('Cannot save the remembered Bonjour neighbours: %s' % e)
+        return False
+
+
+def remember_bonjour_neighbour(id, name, computer):
+    """Note who a neighbour is while they are here to be asked.
+
+    Written through on every change rather than at quit: the application is
+    not always closed politely, and losing this means a row whose second
+    line cannot say which machine it was.
+
+    The nickname is not touched. It is the user's answer to the same
+    question and it outranks this one, so a neighbour reappearing must not
+    quietly undo a rename.
+    """
+    if not id:
+        return
+    known = bonjour_neighbours()
+    previous = known.get(id) or {}
+    entry = dict(previous)
+    entry.update({'name': str(name or ''), 'computer': str(computer or ''),
+                  'seen': str(ISOTimestamp.now())})
+    if previous.get('name') == entry['name'] \
+            and previous.get('computer') == entry['computer']:
+        return                          # nothing new to write
+    known[id] = entry
+    _write_bonjour_neighbours(known)
+
+
+def rename_bonjour_neighbour(id, nickname):
+    """Call a neighbour what the user wants to call them.
+
+    A Bonjour row is not an address book entry -- there is nothing to edit,
+    and deliberately so, because an address book entry would be replicated
+    to a server that does not exist for a link-local network. But the name
+    it shows is whatever the far end chose to announce, which is often a
+    machine's idea of a person ("Unknown", a login name, the same name on
+    two computers), and the user had no way to correct it.
+
+    Kept beside the announced name rather than replacing it, so clearing
+    the nickname restores what discovery says instead of leaving the row
+    with no name at all.
+
+    Returns True when something changed.
+    """
+    if not id:
+        return False
+    known = bonjour_neighbours()
+    entry = dict(known.get(id) or {})
+    nickname = str(nickname or '').strip()
+    if nickname == str(entry.get('nickname') or ''):
+        return False
+    if nickname:
+        entry['nickname'] = nickname
+    else:
+        entry.pop('nickname', None)
+    known[id] = entry
+    _write_bonjour_neighbours(known)
+    BlinkLogger().log_info('Bonjour neighbour %s is now called %s'
+                           % (id, nickname or 'by the name it announces'))
+    return True
+
+
+def bonjour_nickname(id):
+    """What the user calls this neighbour, or '' if they have not said."""
+    return str((bonjour_neighbours().get(str(id or '')) or {}).get('nickname') or '')
+
+
+def bonjour_display_name(id, announced=None):
+    """The name to show for a neighbour: theirs unless the user renamed them.
+
+    Falls back to the name recorded the last time this neighbour was on the
+    network, so a caller who has only the instance id -- a banner about a
+    message that arrived with the conversation closed, a bubble replayed
+    from history -- still has a name to show rather than a UUID.
+    """
+    if not announced:
+        announced = (bonjour_neighbours().get(str(id or '')) or {}).get('name')
+    return bonjour_nickname(id) or bonjour_person_name(announced)
+
+
+def bonjour_identity(id, computer=None):
+    """Which machine this is: the instance id, and the computer it runs on.
+
+    Two machines of the same person carry the same name, and -- as this
+    application's own history shows -- one person reinstalling gets a new
+    instance id on the SAME computer, so neither half identifies a
+    conversation on its own. Both, or two of them read alike.
+
+    For the conversation header, which has the width for it. The contact
+    row says only whether they are here.
+    """
+    known = bonjour_neighbours().get(str(id or ''), {})
+    computer = computer or known.get('computer') or ''
+    identity = str(id or '')
+    return '%s @ %s' % (identity, computer) if computer else identity
+
+
+def is_own_bonjour_id(id):
+    """Whether this instance id is this very application.
+
+    settings.instance_id is what we advertise, so a record carrying it is
+    our own announcement coming back off the network. Compared bare
+    because the URN form is what travels and the bare form is what is
+    stored.
+    """
+    try:
+        from SMSWindowManager import bare_instance_id
+        mine = bare_instance_id(SIPSimpleSettings().instance_id)
+    except Exception:
+        return False
+    other = bare_instance_id(id)
+    return bool(mine) and mine == other
+
+
+def bonjour_offline_detail(id=None):
+    """The second line of an offline neighbour's row in the contact list.
+
+    A live neighbour's row shows their presence note or their address
+    there. Neither is available or true for one who has left the network,
+    and which machine they were is a question for the conversation header,
+    not for a list the user is scanning. Offline is the fact.
+    """
+    return NSLocalizedString("Offline", "Contact detail")
 
 
 def presence_status_for_contact(contact, uri=None):
@@ -1350,7 +1604,19 @@ class BlinkPresenceContact(BlinkContact):
                     try:
                         account = next((account for account in AccountManager().iter_accounts() if not isinstance(account, BonjourAccount) and self.account_has_pidfs_for_uris(account.id, all_uris)))
                     except StopIteration:
+                        # The fallback, not the search, is what filed presence
+                        # notes under bonjour@local: the search above excludes
+                        # Bonjour, but default_account IS whatever the toolbar
+                        # popup says, and with Bonjour selected every note
+                        # about every contact was written against the
+                        # link-local account. Bonjour publishes its own
+                        # presence over the LAN and subscribes to nobody, so
+                        # it is never the account a PIDF was received for.
                         account = AccountManager().default_account
+                        if isinstance(account, BonjourAccount):
+                            account = next((item for item in AccountManager().iter_accounts()
+                                            if not isinstance(item, BonjourAccount) and item.enabled),
+                                           None)
 
                     if account is not None:
                         local_uri = str(account.id)
@@ -2084,6 +2350,174 @@ class BonjourBlinkGroup(VirtualBlinkGroup):
         objc.super(BonjourBlinkGroup, self).__init__(name, expanded)
         self.not_filtered_contacts = [] # keep a list of all neighbours so that we can rebuild the contacts when the sip transport changes, by default TLS transport is preferred
         self.original_position = None
+        # {instance id: time of the last message}. What makes a row here
+        # survive its neighbour going away, and held on the group rather
+        # than as a flag on each contact because the remove handler has to
+        # answer the question for a contact it is about to throw away.
+        self.conversation_keys = {}
+
+    @objc.python_method
+    def has_conversation(self, key):
+        return bool(key) and key in self.conversation_keys
+
+    @objc.python_method
+    def note_conversation(self, key, timestamp=None):
+        """Remember that this neighbour has been talked to.
+
+        Called as messages are stored, so that a conversation started with
+        somebody discovered a minute ago outlives them closing their laptop
+        a minute later -- without it, the group would only learn about them
+        at the next activation.
+        """
+        if not key:
+            return
+        self.conversation_keys[key] = str(timestamp or '') or self.conversation_keys.get(key, '')
+
+    @objc.python_method
+    @run_in_green_thread
+    def load_offline_contacts(self):
+        """Seed the group from the messages we have, before anyone answers.
+
+        A neighbour is discovered or it is not, and until now that was the
+        whole list -- so a conversation with somebody who had closed their
+        laptop could not be opened, read, or even seen, though every message
+        of it was still in the table. History is the store: these rows are
+        rebuilt from it at each activation rather than kept anywhere, so
+        there is nothing to keep in step and nothing to garbage-collect.
+        The address book is deliberately not involved -- a contact there
+        would sync to XCAP and come back for ever.
+
+        Green, like loadLastMessageTimes and loadUnreadCounts and for the
+        same reason: ChatHistory answers through block_on, an eventlib
+        primitive that only works from a green thread. Called straight from
+        the account-activated notification it raised "TwistedHub hub can
+        only be instantiated once", the read returned nothing, and the group
+        came up holding only whoever discovery had found -- which is exactly
+        the symptom this method exists to fix.
+        """
+        try:
+            conversations = ChatHistory().bonjour_conversations()
+        except Exception as e:
+            BlinkLogger().log_error('Cannot read the stored Bonjour conversations: %s' % e)
+            return
+        folded = self._foldUrnConversations(conversations)
+        if folded:
+            try:
+                conversations = ChatHistory().bonjour_conversations()
+            except Exception as e:
+                BlinkLogger().log_error('Cannot re-read the Bonjour conversations: %s' % e)
+                return
+        self._applyOfflineContacts(conversations, folded)
+
+    @objc.python_method
+    def _foldUrnConversations(self, conversations):
+        """Put rows filed under urn:uuid:X back with X, once.
+
+        An instance id is a uuid4 URN on the wire and bare everywhere it is
+        stored, and for a while one path filed it as it arrived. The result
+        is two conversations with one neighbour: whichever spelling was
+        used when the message came in. They are definitionally the same
+        machine -- the URN adds no information -- so they are folded here
+        rather than left for the user to drag one onto the other.
+
+        Green thread, like the caller: the history answers through block_on.
+        Returns the (source, target) pairs that actually moved.
+        """
+        from HistoryManager import ChatHistory, BONJOUR_LOCAL_URI
+        from FileTransferCache import FileTransferCache
+        from SMSWindowManager import bare_instance_id
+        folded = []
+        for entry in conversations:
+            key = str(entry.get('remote_uri') or '')
+            bare = bare_instance_id(key)
+            if not bare or bare == key:
+                continue
+            try:
+                moved = ChatHistory().move_conversation(BONJOUR_LOCAL_URI, key, bare)
+                FileTransferCache().move_peer(BONJOUR_LOCAL_URI, key, bare)
+            except Exception as e:
+                BlinkLogger().log_error('Cannot fold %s into %s: %s' % (key, bare, e))
+                continue
+            folded.append((key, bare))
+            BlinkLogger().log_info('Folded the Bonjour conversation %s into %s '
+                                   '(%d message(s))' % (key, bare, moved))
+        return folded
+
+    @objc.python_method
+    @run_in_gui_thread
+    def _applyOfflineContacts(self, conversations, folded=()):
+        """Put the restored conversations in the group, on the GUI thread.
+
+        The read happens in a green thread because that is the only place
+        the history answers; building contacts and redrawing the list is
+        AppKit work. `known` is computed HERE rather than beside the query
+        because discovery runs while the query does -- a neighbour found in
+        between already has a row, and adding a second one for the same
+        instance id would show the same person twice.
+        """
+        for source, target in folded or ():
+            # The badge, the place in the conversation order and the account
+            # last used are held in memory under the key that has just gone.
+            try:
+                from SMSWindowManager import SMSWindowManager
+                SMSWindowManager().mergeConversations(source, target)
+            except Exception as e:
+                BlinkLogger().log_error('Cannot move the state of %s: %s' % (source, e))
+
+        # A conversation with ourselves, filed before this machine stopped
+        # taking its own advertisement for a neighbour. There is nobody
+        # there to reopen it with.
+        conversations = [entry for entry in conversations
+                         if not is_own_bonjour_id(entry.get('remote_uri'))]
+        for blink_contact in [c for c in self.contacts if is_own_bonjour_id(c.id)]:
+            BlinkLogger().log_info('Dropping our own row %s from the Bonjour group'
+                                   % blink_contact.id)
+            self.contacts.remove(blink_contact)
+            try:
+                self.not_filtered_contacts.remove(blink_contact)
+            except ValueError:
+                pass
+
+        known = set(blink_contact.id for blink_contact in self.contacts)
+        self.conversation_keys = dict((entry['remote_uri'], entry.get('time') or '')
+                                      for entry in conversations if entry.get('remote_uri'))
+        added = 0
+        for entry in conversations:
+            key = entry['remote_uri']
+            if not key or key in known:
+                continue
+            # Through bonjour_person_name: the name on the message was
+            # written while they were on the network and carries the host
+            # they were announced from, which the conversation header now
+            # shows on its own line.
+            blink_contact = BonjourBlinkContact(
+                bonjour_offline_uri(key), None, key,
+                name=bonjour_display_name(key, entry.get('display_name'))
+                     or entry.get('last_uri') or key)
+            # No presence state at all rather than 'offline': ContactCell
+            # draws nothing for a Bonjour contact whose state is None, and
+            # a white "offline" bar would claim we had asked and been told.
+            blink_contact.presence_state = None
+            blink_contact.detail = bonjour_offline_detail()
+            self.contacts.append(blink_contact)
+            added += 1
+            # One line each rather than a count: which neighbours came back
+            # and under which id is the thing worth being able to check
+            # against the table, and a total says none of it.
+            BlinkLogger().log_info('Bonjour history contact %s: %s, last message %s'
+                                   % (key, blink_contact.name,
+                                      (entry.get('time') or 'unknown')[:19]))
+
+        if added:
+            BlinkLogger().log_info('Bonjour: %d conversation(s) restored from history, '
+                                   '%d neighbour(s) already discovered' % (added, len(known)))
+            self.sortContacts()
+            # Announced here, not by the caller: the activation notification
+            # has long since been posted by the time this runs.
+            NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=self)
+        else:
+            BlinkLogger().log_info('Bonjour: no stored conversations to restore '
+                                   '(%d neighbour(s) discovered)' % len(known))
 
 
 class NoBlinkGroup(VirtualBlinkGroup):
@@ -2836,6 +3270,113 @@ class CustomListModel(NSObject):
                    if 'sip:%s' % uri in device['aor'] and 'file-transfer' in device['caps'])
 
     @objc.python_method
+    def mergeBonjourContacts(self, sourceContact, targetContact):
+        """Fold one Bonjour neighbour's conversation into another's.
+
+        The same person on the same machine gets a new instance id when
+        they reinstall, so their history splits in two: an old row nobody
+        can reach any more and a live one with nothing in it. Dropping the
+        dead one on the live one says they are the same, which is a thing
+        only the user can know -- the two ids are genuinely different
+        machines as far as anything here can tell.
+
+        Everything moves: the messages, and the files stored under the old
+        key, which are addressed by it and would otherwise be lost to the
+        bubbles that reference them. The source row then has nothing left
+        to exist for and goes.
+        """
+        if (sourceContact is targetContact or not sourceContact.id
+                or not targetContact.id or sourceContact.id == targetContact.id):
+            BlinkLogger().log_info('Not merging %r into %r: they are the same row'
+                                   % (getattr(sourceContact, 'id', None),
+                                      getattr(targetContact, 'id', None)))
+            return False
+
+        message = (NSLocalizedString("Move every message with %s into the conversation "
+                                     "with %s?", "Label")
+                   % (sourceContact.name, targetContact.name))
+        message += "\n\n"
+        message += (NSLocalizedString("They will be treated as the same neighbour from "
+                                      "now on, and %s will no longer be listed "
+                                      "separately.", "Label") % sourceContact.name)
+        if not MergeContactController(message).runModal_(message):
+            return False
+
+        self._moveBonjourConversation(sourceContact, targetContact)
+        return True
+
+    @objc.python_method
+    @run_in_green_thread
+    def _moveBonjourConversation(self, sourceContact, targetContact):
+        """The half that touches the history, off the GUI thread.
+
+        ChatHistory answers through block_on, an eventlib primitive that
+        only works from a green thread. Run from the drop -- which is
+        AppKit, and so the main thread -- it raised "TwistedHub hub can
+        only be instantiated once" AFTER queueing the update: the rows
+        moved, and everything below the call did not happen. The row for
+        the merged-away neighbour stayed in the list, its transfers stayed
+        under the old key, and nothing was logged, which is exactly what
+        this looked like from the outside.
+        """
+        from HistoryManager import ChatHistory, BONJOUR_LOCAL_URI
+        from FileTransferCache import FileTransferCache
+        moved = 0
+        try:
+            moved = ChatHistory().move_conversation(BONJOUR_LOCAL_URI,
+                                                    sourceContact.id, targetContact.id)
+            FileTransferCache().move_peer(BONJOUR_LOCAL_URI,
+                                          sourceContact.id, targetContact.id)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot merge %s into %s: %s'
+                                    % (sourceContact.id, targetContact.id, e))
+            return
+        self._applyBonjourMerge(sourceContact, targetContact, moved)
+
+    @objc.python_method
+    @run_in_gui_thread
+    def _applyBonjourMerge(self, sourceContact, targetContact, moved):
+        """The half that touches the list and the open conversations."""
+        try:
+            from SMSWindowManager import SMSWindowManager
+            manager = SMSWindowManager()
+            manager.mergeConversations(sourceContact.id, targetContact.id)
+            # The conversation under the old key has nothing left in it and
+            # no row to be reached from, so an open viewer on it is looking
+            # at a key nothing will mention again.
+            manager.closeConversationForURI(sourceContact.id)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot move the conversation state of %s: %s'
+                                    % (sourceContact.id, e))
+
+        group = self.bonjour_group
+        group.conversation_keys.pop(sourceContact.id, None)
+        group.note_conversation(targetContact.id, ISOTimestamp.now())
+        # By identity OR by id: the group rebuilds its rows, so the object
+        # the drop was started from is not necessarily the object in the
+        # list by the time the history has answered.
+        removed = 0
+        for holder in (group.contacts, group.not_filtered_contacts):
+            for existing in list(holder):
+                if existing is sourceContact or getattr(existing, 'id', None) == sourceContact.id:
+                    holder.remove(existing)
+                    removed += 1
+                    if existing is not sourceContact:
+                        continue
+        try:
+            sourceContact.destroy()
+        except Exception:
+            pass
+        group.sortContacts()
+        BlinkLogger().log_info('Merged the Bonjour conversation %s into %s '
+                               '(%d message(s), %d row(s) removed)'
+                               % (sourceContact.id, targetContact.id, moved, removed))
+        if not removed:
+            BlinkLogger().log_error('The row for %s is still listed after the merge'
+                                    % sourceContact.id)
+        self.nc.post_notification("BlinkContactsHaveChanged", sender=group)
+
+    @objc.python_method
     def sendDroppedFiles(self, table, account, item, filenames):
         """Route files dropped on a contact, asking first when it is a choice.
 
@@ -2856,6 +3397,28 @@ class CustomListModel(NSObject):
             user knows which one they meant.
         """
         manager = self.sessionControllersManager
+
+        if isinstance(item, BonjourBlinkContact):
+            # Through the conversation, like an upload, not straight to an
+            # MSRP session. The conversation is what builds the file
+            # transfer envelope, keeps its own copy, draws the bubble and
+            # writes the history row -- a drop that went round it left
+            # nothing behind but a transfer in a window somewhere else.
+            #
+            # It is also what holds the file when the neighbour is not on
+            # the network, instead of the drop failing outright.
+            #
+            # A Bonjour neighbour is addressed by instance id: there is no
+            # upload target to weigh against, so none of the choosing below
+            # applies to them.
+            if manager.send_files_to_conversation(account, str(item.uri), filenames,
+                                                  instance_id=item.id):
+                return True
+            BlinkLogger().log_error('Cannot hand the dropped files to the conversation '
+                                    'with %s; offering them over MSRP instead' % item.id)
+            return self._sendDroppedFilesTo(manager, account, str(item.uri),
+                                            filenames, route='msrp')
+
         addresses = self.contactAddresses(item)
         strings = [str(uri.uri) for uri in addresses] or [str(item.uri)]
 
@@ -3129,7 +3692,21 @@ class CustomListModel(NSObject):
                     return NSDragOperationMove
                 else:
                     # Dragged a contact on another contact
-                    if not isinstance(proposed_item, BlinkPresenceContact):
+                    if type(sourceContact) is BonjourBlinkContact:
+                        # Two neighbours: not an address book merge -- there
+                        # is no address book entry behind either -- but the
+                        # merge of their two conversations, which is what
+                        # acceptDrop does with this pair. Only onto another
+                        # neighbour, and never onto itself.
+                        if type(proposed_item) is not BonjourBlinkContact:
+                            BlinkLogger().log_debug(
+                                'Not dropping the neighbour %s on %r: only another '
+                                'neighbour can take their conversation'
+                                % (sourceContact.id, proposed_item))
+                            return NSDragOperationNone
+                        if proposed_item is sourceContact or proposed_item.id == sourceContact.id:
+                            return NSDragOperationNone
+                    elif not isinstance(proposed_item, BlinkPresenceContact):
                         return NSDragOperationNone
 
                     targetGroup = table.parentForItem_(proposed_item)
@@ -3137,7 +3714,10 @@ class CustomListModel(NSObject):
                     if targetGroup is None:
                         return NSDragOperationNone
 
-                    self.drop_on_contact_index = targetGroup.contacts.index(proposed_item)
+                    try:
+                        self.drop_on_contact_index = targetGroup.contacts.index(proposed_item)
+                    except ValueError:
+                        return NSDragOperationNone
                     return NSDragOperationCopy
 
     def outlineView_acceptDrop_item_childIndex_(self, table, info, item, index):
@@ -3249,6 +3829,27 @@ class CustomListModel(NSObject):
 
                     targetGroup = table.parentForItem_(item)
                     targetContact = targetGroup.contacts[self.drop_on_contact_index]
+
+                    # Two Bonjour rows are two MACHINES, not two address book
+                    # entries, and there is no address book entry behind
+                    # either to merge. What they do have is a conversation
+                    # each, and the reason to drop one on the other is that
+                    # they turn out to be the same person -- a neighbour who
+                    # reinstalled and came back under a new instance id.
+                    if (type(sourceContact) is BonjourBlinkContact
+                            and type(targetContact) is BonjourBlinkContact):
+                        BlinkLogger().log_info('Dropped the Bonjour neighbour %s (%s) on '
+                                               '%s (%s)'
+                                               % (sourceContact.name, sourceContact.id,
+                                                  targetContact.name, targetContact.id))
+                        return self.mergeBonjourContacts(sourceContact, targetContact)
+
+                    if targetContact.contact is None:
+                        # Nothing to merge into: a row with no address book
+                        # entry behind it. Everything below writes to
+                        # targetContact.contact.uris, which is None here.
+                        return False
+
                     target_uris = {uri.uri for uri in targetContact.contact.uris}
                     if isinstance(sourceContact, BonjourBlinkContact) and  sourceContact.id in target_uris:
                         return False
@@ -3480,19 +4081,38 @@ class ContactListModel(CustomListModel):
             return None
 
     @objc.python_method
-    def getBonjourContactMatchingDeviceId(self, device_id):
+    def getBonjourContactMatchingDeviceId(self, device_id, online_only=False):
+        """The Bonjour row for a device id, or None.
+
+        online_only is for callers that are about to build a route. The
+        group now also holds rows for neighbours who are not on the network,
+        restored from the messages we have with them, and those carry a
+        placeholder address -- handed to a caller that dials it, a message
+        meant for a neighbour would go to loopback instead of waiting for
+        them. Callers that only want a name or a set of addresses leave it
+        off, because for them the offline row is exactly the answer.
+        """
         try:
-            return next(blink_contact for blink_contact in self.bonjour_group.contacts if blink_contact.id == device_id)
+            return next(blink_contact for blink_contact in self.bonjour_group.contacts
+                        if blink_contact.id == device_id
+                        and (not online_only or blink_contact.bonjour_neighbour is not None))
         except StopIteration:
             return None
 
     @objc.python_method
-    def getBonjourContactMatchingUri(self, uri):
+    def getBonjourContactMatchingUri(self, uri, online_only=False):
+        """The Bonjour row for an address, or None.
+
+        online_only as in getBonjourContactMatchingDeviceId: an offline row
+        must never be the answer to "where do I send this".
+        """
+        candidates = [blink_contact for blink_contact in self.bonjour_group.contacts
+                      if not online_only or blink_contact.bonjour_neighbour is not None]
         try:
-            return next(blink_contact for blink_contact in self.bonjour_group.contacts if blink_contact.uri == uri)
+            return next(blink_contact for blink_contact in candidates if blink_contact.uri == uri)
         except StopIteration:
             try:
-                return next(blink_contact for blink_contact in self.bonjour_group.contacts if uri in blink_contact.uri)
+                return next(blink_contact for blink_contact in candidates if uri in blink_contact.uri)
             except StopIteration:
                 pass
 
@@ -4502,6 +5122,10 @@ class ContactListModel(CustomListModel):
     def _NH_SIPAccountDidActivate(self, notification):
         if notification.sender is BonjourAccount():
             self.bonjour_group.load_group()
+            # Before discovery has said anything, so a conversation the user
+            # had yesterday is in the list from the moment the group appears
+            # rather than only if its neighbour happens to be around.
+            self.bonjour_group.load_offline_contacts()
             positions = [g.position for g in AddressbookManager().get_groups()+VirtualGroupsManager().get_groups() if g.position is not None]
             positions.sort()
             self.groupsList.insert(bisect.bisect_left(positions, self.bonjour_group.group.position or 0), self.bonjour_group)
@@ -4549,7 +5173,31 @@ class ContactListModel(CustomListModel):
         settings = SIPSimpleSettings()
         BlinkLogger().log_debug("Add Bonjour neighbour %s: %s" % (id, uri))
 
-        display_name = '%s (%s)' % ((display_name or 'Unknown'), host)
+        # Not ourselves. This machine advertises itself on the same network
+        # it listens on, so its own record comes back through discovery like
+        # anybody else's -- the id is settings.instance_id and the URI is
+        # character for character the one we just published:
+        #
+        #   TLS Bonjour neighbour 3f3c29ca-… added: Adrian Georgescu (AG14Pro)
+        #       <sip:52398167@192.168.3.66:62314;transport=tls>
+        #   Published Bonjour TLS neighbour Adrian Georgescu
+        #       <sip:52398167@192.168.3.66:62314;transport=tls>
+        #
+        # A row for it is a conversation with this application, on a
+        # transport that would have to talk to its own listening socket.
+        if is_own_bonjour_id(id):
+            BlinkLogger().log_debug('Ignoring our own Bonjour advertisement %s <%s>'
+                                    % (id, uri))
+            return
+
+        # Remembered before the transport filter, not after: a neighbour
+        # announced only over a transport this machine does not use is still
+        # that machine, and their name is still the answer for the row their
+        # messages will draw.
+        remember_bonjour_neighbour(id, display_name or 'Unknown', host)
+
+        nickname = bonjour_nickname(id)
+        display_name = nickname or ('%s (%s)' % ((display_name or 'Unknown'), host))
 
         if uri.transport not in settings.sip.transport_list:
             return
@@ -4576,7 +5224,18 @@ class ContactListModel(CustomListModel):
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self.bonjour_group)
 
         else:
-            if (blink_contact.aor.transport == 'udp' and uri.transport in ('tcp', 'tls')) or (blink_contact.aor.transport == 'tcp' and uri.transport in ('tls')):
+            if blink_contact.bonjour_neighbour is None:
+                # An entry restored from history, being met for the first
+                # time this session. Its aor is a placeholder that no
+                # transport comparison can reason about, so take the real
+                # one outright rather than through the promotion test below.
+                blink_contact.update_uri(uri)
+                BlinkLogger().log_info("Bonjour neighbour %s is back: %s <%s>" % (id, display_name, uri))
+            elif bonjour_transport_rank(uri.transport) > bonjour_transport_rank(blink_contact.aor.transport):
+                # A better answer for the same machine than the one this row
+                # is holding. Was a fixed udp < tcp < tls ladder, which is
+                # why TLS was always what a Bonjour conversation ended up
+                # routed over whatever the account said.
                 blink_contact.update_uri(uri)
 
             blink_contact.name = display_name
@@ -4604,7 +5263,9 @@ class ContactListModel(CustomListModel):
             # BlinkLogger().log_info('startup: BonjourAccountDidUpdateNeighbour exit (transport filtered)')
             return
 
-        display_name = '%s (%s)' % ((display_name or 'Unknown'), host)
+        remember_bonjour_neighbour(id, record.name or 'Unknown', host)
+        nickname = bonjour_nickname(id)
+        display_name = nickname or ('%s (%s)' % ((display_name or 'Unknown'), host))
 
         BlinkLogger().log_debug("Update Bonjour neighbour %s: %s" % (id, uri))
 
@@ -4635,6 +5296,11 @@ class ContactListModel(CustomListModel):
         uri = record.uri
         id = record.id
 
+        # Bound before the lookup that may not find one: this used to be
+        # destroyed inside the second else below, where the name is unbound
+        # if the first lookup raised -- a NameError waiting for a neighbour
+        # that was in one list and not the other.
+        all_blink_contact = None
         try:
             all_blink_contact = next((blink_contact for blink_contact in self.bonjour_group.not_filtered_contacts if blink_contact.bonjour_neighbour==notification.data.neighbour))
         except StopIteration:
@@ -4649,25 +5315,50 @@ class ContactListModel(CustomListModel):
         else:
             BlinkLogger().log_debug("Bonjour neighbour %s removed: %s <%s>" % (id, display_name, uri))
             self.bonjour_group.contacts.remove(blink_contact)
-            if blink_contact.aor.transport == 'tls':
-                added = False
-                tcp_neighbours = [n for n in self.bonjour_group.not_filtered_contacts if n.aor.user == blink_contact.aor.user and n.aor.host == blink_contact.aor.host and n.aor.transport == 'tcp']
-                for n in tcp_neighbours:
-                    added = True
-                    self.bonjour_group.contacts.append(n)
-                if not added:
-                    udp_neighbours = [n for n in self.bonjour_group.not_filtered_contacts if n.aor.user == blink_contact.aor.user and n.aor.host == blink_contact.aor.host and n.aor.transport == 'udp']
-                    for n in udp_neighbours:
-                        self.bonjour_group.contacts.append(n)
-            elif blink_contact.aor.transport == 'tcp':
-                tls_neighbours = [n for n in self.bonjour_group.not_filtered_contacts if n.aor.user == blink_contact.aor.user and n.aor.host == blink_contact.aor.host and n.aor.transport == 'tls']
-                if not tls_neighbours:
-                    udp_neighbours = [n for n in self.bonjour_group.not_filtered_contacts if n.aor.user == blink_contact.aor.user and n.aor.host == blink_contact.aor.host and n.aor.transport == 'tcp']
-                    for n in udp_neighbours:
-                        self.bonjour_group.contacts.append(n)
+            # Whether the neighbour is still reachable another way. The same
+            # machine announces itself over several transports and each one
+            # is its own record, so losing the TLS announcement does not mean
+            # losing the neighbour -- and a row that has a replacement must
+            # not also be kept as an offline one, or the same person appears
+            # twice, once live and once not.
+            # The best announcement still standing for the same machine.
+            # Three hand-written transport cases before, one per transport
+            # the row might have been holding, which between them did not
+            # cover every combination and could not follow a configured
+            # preference at all -- now it is the same ranking the promotion
+            # above uses, asked of whatever is left.
+            remaining = [n for n in self.bonjour_group.not_filtered_contacts
+                         if n is not blink_contact
+                         and n.aor.user == blink_contact.aor.user
+                         and n.aor.host == blink_contact.aor.host]
+            replaced = False
+            if remaining:
+                best = max(remaining, key=lambda n: bonjour_transport_rank(n.aor.transport))
+                self.bonjour_group.contacts.append(best)
+                replaced = True
+                BlinkLogger().log_debug('Bonjour neighbour %s kept over %s'
+                                        % (id, best.aor.transport))
 
-            all_blink_contact.destroy()
-            blink_contact.destroy()
+            if not replaced and self.bonjour_group.has_conversation(blink_contact.id):
+                # Kept, not destroyed. Everything they ever said is still in
+                # the table under this instance id, and destroying the row
+                # was the only reason it could not be read: nothing else in
+                # the application can reach a Bonjour conversation without
+                # one. The row goes grey and stays put; if they come back,
+                # the add handler adopts this same object and it goes green
+                # again rather than a second one appearing beside it.
+                blink_contact.bonjour_neighbour = None
+                blink_contact.presence_state = None
+                blink_contact.name = bonjour_display_name(blink_contact.id, blink_contact.name)
+                blink_contact.update_uri(bonjour_offline_uri(blink_contact.id))
+                blink_contact.detail = bonjour_offline_detail()
+                self.bonjour_group.contacts.append(blink_contact)
+                BlinkLogger().log_info("Bonjour neighbour %s left; its conversation is kept" % id)
+            else:
+                blink_contact.destroy()
+
+            if all_blink_contact is not None:
+                all_blink_contact.destroy()
             self.bonjour_group.sortContacts()
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self.bonjour_group)
         # BlinkLogger().log_info('startup: BonjourAccountDidRemoveNeighbour exit')
@@ -4846,7 +5537,26 @@ class ContactListModel(CustomListModel):
 
         try:
             from SMSWindowManager import SMSWindowManager
-            SMSWindowManager().purgeConversationsForURIs(orphaned)
+            manager = SMSWindowManager()
+            # Never a neighbour's conversation. A Bonjour conversation is
+            # keyed by an instance id and is not address book state at all;
+            # if such a key has found its way onto a contact -- as one did,
+            # created by the unread-restore path at launch -- then deleting
+            # that contact would take the neighbour's whole history and
+            # their downloaded files with it, which is not what deleting a
+            # contact means. The Bonjour group's own Delete Conversation is
+            # the way to remove one, and it says so first.
+            neighbours = manager._bonjourConversationKeys()
+            spared = [uri for uri in orphaned
+                      if manager._canonical_uri(uri) in neighbours]
+            if spared:
+                BlinkLogger().log_info('Keeping the Bonjour conversation(s) of %s: '
+                                       'a neighbour is not address book state'
+                                       % ', '.join(spared))
+                orphaned = [uri for uri in orphaned
+                            if manager._canonical_uri(uri) not in neighbours]
+            if orphaned:
+                manager.purgeConversationsForURIs(orphaned)
         except Exception as e:
             BlinkLogger().log_error('Cannot purge the data of a deleted contact: %s' % e)
 

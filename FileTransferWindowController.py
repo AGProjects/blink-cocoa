@@ -18,7 +18,17 @@ import unicodedata
 
 from application.notification import NotificationCenter, IObserver
 from application.python import Null
+from sipsimple.account import BonjourAccount
 from sipsimple.threading.green import run_in_green_thread
+
+
+def _is_bonjour(transfer):
+    """Whether this transfer belongs to a link-local neighbour.
+
+    Those are shown as messages in their conversation, so this window has
+    nothing to add by putting itself in front of the user for one.
+    """
+    return getattr(transfer, 'account', None) is BonjourAccount()
 from zope.interface import implementer
 
 import ListView
@@ -222,7 +232,11 @@ class FileTransferWindowController(NSObject):
             self.listView.scrollRectToVisible_(NSMakeRect(0, h-1, 100, 1))
 
         file_path = sender.ft_info.file_path.decode() if isinstance(sender.ft_info.file_path, bytes) else sender.ft_info.file_path
-        if 'screencapture' not in file_path:
+        if 'screencapture' not in file_path and not _is_bonjour(sender):
+            # A Bonjour transfer is a message in a conversation now: the
+            # bubble is where the user sees it, and this window arriving in
+            # front of whatever they were doing announces the same file a
+            # second time, somewhere they did not ask to look.
             self.window.orderFront_(None)
 
         count = len(self.listView.subviews())
@@ -241,7 +255,7 @@ class FileTransferWindowController(NSObject):
     def _NH_BlinkFileTransferDidEnd(self, sender, data):
         self.listView.relayout()
         self.refresh_transfer_rate()
-        if not data.error:
+        if not data.error and not _is_bonjour(sender):
             # jump dock icon and bring window to front
             if isinstance(sender, IncomingFileTransferHandler):
                 self.window.orderFront_(None)

@@ -365,8 +365,34 @@ class BlinkAppDelegate(NSObject):
             return
 
         if self._postUserNotification(title, body, subtitle, uri, icon):
+            self._logNotification('Notification Center', title, body, subtitle, uri)
             return
         self._postLegacyNotification(title, body, subtitle, uri, icon)
+        self._logNotification('legacy Notification Center', title, body, subtitle, uri)
+
+    @objc.python_method
+    def _logNotification(self, road, title, body, subtitle, uri):
+        """Say what was just put on screen, and by which road.
+
+        Every banner in the application comes through gui_notify, so this
+        is the one place that sees them all. Worth a line because a banner
+        is the one thing the user is shown that leaves no other trace: it
+        appears, it goes, and afterwards there is nothing to say whether it
+        was ever posted, what it said, or which of the two Notification
+        Center paths carried it -- which matters, since the deprecated one
+        can accept a request and deliver nothing.
+        """
+        def one_line(text, limit=160):
+            text = ' '.join(str(text or '').split())
+            return text if len(text) <= limit else text[:limit - 1] + '\u2026'
+
+        parts = ['title=%r' % one_line(title, 80)]
+        if subtitle:
+            parts.append('subtitle=%r' % one_line(subtitle, 80))
+        parts.append('body=%r' % one_line(body))
+        if uri:
+            parts.append('for %s' % uri)
+        BlinkLogger().log_info('Posted a banner to %s: %s' % (road, ', '.join(parts)))
 
     @objc.python_method
     def _postLegacyNotification(self, title, body, subtitle=None, uri=None, icon=None):

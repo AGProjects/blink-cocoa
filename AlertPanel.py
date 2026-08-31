@@ -344,7 +344,16 @@ class AlertPanel(NSObject, object):
             frame.origin.x = NSMaxX(view.frame()) - 10 - (NSWidth(frame) + 10) * typeCount
             fileIcon.setFrame_(frame)
             fileIcon.setHidden_(False)
-            if settings.file_transfer.auto_accept and NSApp.delegate().contactsWindowController.my_device_is_active:
+            if isinstance(session.account, BonjourAccount):
+                # A neighbour's transfer is taken without a panel at all --
+                # SessionController accepts a new file-transfer session from
+                # Bonjour before anything reaches here. This is the leftover
+                # road: a file-transfer stream PROPOSED on a session that is
+                # already up, which still comes through the panel. Same
+                # answer, so the same two seconds rather than ten to twenty.
+                BlinkLogger().log_info("Auto answer proposed file transfer from a Bonjour neighbour")
+                self.enableAutoAnswer(view, session, 2)
+            elif settings.file_transfer.auto_accept and NSApp.delegate().contactsWindowController.my_device_is_active:
                 BlinkLogger().log_info("Auto answer enabled for file transfers from known contacts")
                 self.enableAutoAnswer(view, session, random.uniform(10, 20))
 
