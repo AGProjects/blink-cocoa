@@ -700,7 +700,6 @@
 		AD0000000000000000720001 /* SmileyPicker.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000720000 /* SmileyPicker.py */; };
 		AD0000000000000000720003 /* SmileyPicker.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000720000 /* SmileyPicker.py */; };
 		AD0000000000000000730001 /* VideoPlayback.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000730000 /* VideoPlayback.py */; };
-		AD0000000000000000730002 /* VideoPlayback.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000730000 /* VideoPlayback.py */; };
 		AD0000000000000000730003 /* VideoPlayback.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000730000 /* VideoPlayback.py */; };
 		AD00000000000000740001 /* AttachmentPreview.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000740000 /* AttachmentPreview.py */; };
 		AD00000000000000740003 /* AttachmentPreview.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000740000 /* AttachmentPreview.py */; };
@@ -1528,7 +1527,6 @@
 		AD0000000000000000710000 /* AudioRecorderView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AudioRecorderView.py; sourceTree = "<group>"; };
 		AD0000000000000000720000 /* SmileyPicker.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SmileyPicker.py; sourceTree = "<group>"; };
 		AD0000000000000000730000 /* VideoPlayback.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoPlayback.py; sourceTree = "<group>"; };
-		ADFEED000000000000000000 /* PlaybackMonitor.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = PlaybackMonitor.py; sourceTree = "<group>"; };
 		AD00000000000000740000 /* AttachmentPreview.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AttachmentPreview.py; sourceTree = "<group>"; };
 		AD00000000000000750000 /* CameraCapture.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = CameraCapture.py; sourceTree = "<group>"; };
 		AD00000000000000760000 /* Avatars.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = Avatars.py; sourceTree = "<group>"; };
