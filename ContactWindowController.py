@@ -5591,15 +5591,16 @@ class ContactWindowController(NSWindowController):
             AccountManager().default_account = account
 
             if account is BonjourAccount():
+                # All other groups stay visible, the Bonjour group is simply
+                # promoted to the top of the list.
                 self.model.moveBonjourGroupFirst()
                 self.contactOutline.reloadData()
                 self.contactOutline.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(0), False)
                 self.contactOutline.scrollRowToVisible_(0)
             else:
-                if self.model.bonjour_group in self.model.groupsList and self.model.groupsList.index(self.model.bonjour_group) == 0:
-                    self.model.restoreBonjourGroupPosition()
-                # Always reload: leaving the Bonjour account brings back the
-                # groups hidden by HIDE_OTHER_GROUPS_FOR_BONJOUR_ACCOUNT
+                # Leaving the Bonjour account demotes the Bonjour group to the
+                # end of the list, it is not restored to its former position.
+                self.model.moveBonjourGroupLast()
                 self.refreshContactsList()
                 if self.model.bonjour_group.group is not None and not self.model.bonjour_group.group.expanded:
                     self.contactOutline.collapseItem_(self.model.bonjour_group)

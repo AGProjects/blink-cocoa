@@ -121,24 +121,26 @@ status_localized = {
 
 ICON_SIZE = 128
 
-# When the Bonjour account is selected in the account popup, show only the
-# Bonjour Neighbours group and hide all other groups (contacts, history,
-# favorites, etc.). Bonjour is a link-local mode: the other groups hold
-# contacts that cannot be reached over it, so they only add noise.
+# Selecting the Bonjour account no longer hides the other groups: every group
+# stays visible, the Bonjour Neighbours group is simply promoted to the top of
+# the list. When another (non-Bonjour) account is selected, the Bonjour group
+# is demoted to the end of the list instead of being restored to its former
+# position. See ContactListModel.moveBonjourGroupFirst /
+# moveBonjourGroupLast / positionBonjourGroup and
+# ContactWindowController.accountSelectionChanged_.
 #
-# Set to False to restore the previous behaviour, where selecting Bonjour
-# merely moved the Bonjour group to the top of the list and left every other
-# group visible (see ContactListModel.moveBonjourGroupFirst and
-# ContactWindowController.accountSelectionChanged_).
+# Set this back to True to get the old behaviour, where selecting Bonjour
+# showed only the Bonjour Neighbours group and hid contacts, history,
+# favorites, etc.
 #
 # Notes:
-#  - This is display-only filtering: groupsList itself is left untouched, so
-#    group ordering, drag & drop indexes, search and any other code that walks
-#    groupsList keeps working on the full list.
+#  - The hiding, when enabled, is display-only filtering: groupsList itself is
+#    left untouched, so group ordering, drag & drop indexes, search and any
+#    other code that walks groupsList keeps working on the full list.
 #  - The filtering happens in ContactListModel.visibleGroupsList; the outline
 #    view is refreshed on account switch, so toggling accounts is enough for
 #    the change to become visible.
-HIDE_OTHER_GROUPS_FOR_BONJOUR_ACCOUNT = True
+HIDE_OTHER_GROUPS_FOR_BONJOUR_ACCOUNT = False
 
 presence_status_icons = {'away': NSImage.imageNamed_("away"),
                          'busy': NSImage.imageNamed_("busy"),
@@ -3891,10 +3893,34 @@ class ContactListModel(CustomListModel):
     @objc.python_method
     def moveBonjourGroupFirst(self):
         if self.bonjour_group in self.groupsList:
+            if self.groupsList.index(self.bonjour_group) == 0:
+                return
             self.bonjour_group.original_position = self.groupsList.index(self.bonjour_group)
             self.groupsList.remove(self.bonjour_group)
             self.groupsList.insert(0, self.bonjour_group)
             self.saveGroupPosition()
+
+    @objc.python_method
+    def moveBonjourGroupLast(self):
+        # Demote the Bonjour Neighbours group to the end of the list. Used when
+        # a non-Bonjour account is selected: the group stays visible but is no
+        # longer in the way of the groups that matter for that account.
+        if self.bonjour_group in self.groupsList:
+            if self.groupsList.index(self.bonjour_group) == len(self.groupsList) - 1:
+                return
+            self.bonjour_group.original_position = self.groupsList.index(self.bonjour_group)
+            self.groupsList.remove(self.bonjour_group)
+            self.groupsList.append(self.bonjour_group)
+            self.saveGroupPosition()
+
+    @objc.python_method
+    def positionBonjourGroup(self):
+        # Keep the Bonjour group where the currently selected account wants it:
+        # first for the Bonjour account, last for any other account.
+        if self.bonjourAccountIsSelected():
+            self.moveBonjourGroupFirst()
+        else:
+            self.moveBonjourGroupLast()
 
     @objc.python_method
     def restoreBonjourGroupPosition(self):
@@ -4446,6 +4472,7 @@ class ContactListModel(CustomListModel):
             positions = [g.position for g in AddressbookManager().get_groups()+VirtualGroupsManager().get_groups() if g.position is not None]
             positions.sort()
             self.groupsList.insert(bisect.bisect_left(positions, self.bonjour_group.group.position or 0), self.bonjour_group)
+            self.positionBonjourGroup()
             self.nc.post_notification("BonjourGroupWasActivated", sender=self)
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
         else:
