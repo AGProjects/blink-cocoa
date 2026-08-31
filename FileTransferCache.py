@@ -296,14 +296,24 @@ class FileTransferCache(object):
         keep = '-_.@+'
         return ''.join(c if (c.isalnum() or c in keep) else '_' for c in str(text or ''))[:96]
 
-    def path_for(self, meta, account, peer):
+    def folder_for(self, meta, account, peer, create=True):
+        """The folder one transfer's file lives in.
+
+        Split out of path_for so a removal can ask where a file would be
+        without making the folder on the way to deleting it.
+        """
         folder = os.path.join(self.directory(), self._safe(account), self._safe(peer),
                               self._safe(meta.get('transfer_id') or meta.get('filename')))
-        try:
-            makedirs(folder)
-        except Exception:
-            pass
-        return os.path.join(folder, self._safe(display_name(meta)) or 'file')
+        if create:
+            try:
+                makedirs(folder)
+            except Exception:
+                pass
+        return folder
+
+    def path_for(self, meta, account, peer):
+        return os.path.join(self.folder_for(meta, account, peer),
+                            self._safe(display_name(meta)) or 'file')
 
     def local_file(self, meta, account, peer):
         """The downloaded file's path, or None if it is not here yet."""
@@ -349,6 +359,89 @@ class FileTransferCache(object):
             except OSError as e:
                 BlinkLogger().log_error('Cannot remove %s: %s' % (folder, e))
         return removed
+
+    def purge_transfer(self, meta, account, peer):
+        """Delete the file behind ONE message, and forget everything held
+        about it.
+
+        A removed message takes its file with it. The row going while the
+        bytes stay is how a picture the user deleted is still in the cache
+        directory afterwards -- still on disc, still the thing a re-download
+        check finds, and still drawable from whatever is holding a decoded
+        copy of it.
+
+        The whole per-transfer folder goes rather than the one file inside
+        it: path_for() gives every transfer a folder of its own, named
+        after its id, so there is nothing else in there and an empty
+        directory left behind serves nobody. Refuses anything that does not
+        resolve inside the cache directory -- this is an rmtree driven by
+        fields that came off the wire.
+
+        Returns how many files went; 0 when the file was never downloaded.
+        """
+        # Without one of these the folder name is empty and the path
+        # collapses onto the PEER's folder -- an rmtree of every file ever
+        # exchanged with that address, for one removed message.
+        if not (meta.get('transfer_id') or meta.get('filename')):
+            BlinkLogger().log_error('Refusing to remove a transfer with neither an id nor a filename')
+            return 0
+        try:
+            folder = self.folder_for(meta, account, peer, create=False)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot locate the file of %s: %s' % (display_name(meta), e))
+            return 0
+
+        root = os.path.abspath(self.directory())
+        target = os.path.abspath(folder)
+        if not target.startswith(root + os.sep) or target == root:
+            BlinkLogger().log_error('Refusing to remove %s: outside the file transfer cache' % target)
+            return 0
+
+        removed = 0
+        if os.path.isdir(target):
+            for base, _, files in os.walk(target):
+                removed += len(files)
+            try:
+                shutil.rmtree(target)
+            except OSError as e:
+                BlinkLogger().log_error('Cannot remove %s: %s' % (target, e))
+                return 0
+
+        self.forget_transfer(meta, target)
+        return removed
+
+    def forget_transfer(self, meta, folder=None):
+        """Drop what is held in memory about one transfer.
+
+        Kept apart from the disc side so it can be called on its own. An
+        NSImage cached under a path whose file is gone goes on drawing the
+        deleted picture for the rest of the session, and a remembered
+        failure under the same key would answer for a transfer that no
+        longer exists.
+        """
+        key = self._key(meta)
+        if key:
+            self._pending.pop(key, None)
+            self._failed.pop(key, None)
+            self._uploads.pop(key, None)
+            self._upload_phase.pop(key, None)
+            self._tasks.pop(key, None)
+            self._phase.pop(key, None)
+            self._permanent.discard(key)
+            self._gone.discard(key)
+
+        if not folder:
+            return
+        prefix = folder if folder.endswith(os.sep) else folder + os.sep
+        for path in [p for p in self._originals if str(p).startswith(prefix)]:
+            self._originals.pop(path, None)
+        for path in [p for p in self._natural if str(p).startswith(prefix)]:
+            self._natural.pop(path, None)
+        for tile_key in [k for k in self._tiles if str(k[0]).startswith(prefix)]:
+            self._tiles.pop(tile_key, None)
+            self._tile_bytes -= self._tile_cost.pop(tile_key, 0)
+        if self._tile_bytes < 0:
+            self._tile_bytes = 0
 
     def forget_peer(self, peer):
         """Drop a peer's in-memory state: pending fetches and failures."""

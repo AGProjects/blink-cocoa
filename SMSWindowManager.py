@@ -4852,12 +4852,21 @@ class SMSWindowManagerClass(NSObject):
         viewer = self.getWindow(SIPURI.new(window_tab_identity.uri), window_tab_identity.display_name, account, note_new_message=raise_window, create_if_needed=False, instance_id=instance_id)
 
         if content_type == 'application/sylk-message-remove':
+            # The removal notice carries no id of its own (the wire log
+            # shows it as id=-); the id that matters is the TARGET's, and
+            # it is in the payload. Logged here so the line that says a
+            # removal arrived can be tied to the one HistoryManager
+            # writes saying how many rows it took out.
             try:
                 json_data = json.loads(content.decode())
                 msg_id = json_data['message_id']
             except (json.decoder.JSONDecodeError, TypeError, KeyError) as e:
-                BlinkLogger().log_debug('Error parsing message remove %s: %s' % (content.decode(), str(e)))
+                BlinkLogger().log_error('Error parsing message remove %s: %s' % (content.decode(), str(e)))
             else:
+                BlinkLogger().log_info('Remove message %s from %s (%s)'
+                                       % (msg_id,
+                                          format_identity_to_string(window_tab_identity, format='aor'),
+                                          'in conversation' if viewer else 'history only'))
                 if viewer:
                     viewer.delete_message(msg_id, local=True)
                 else:

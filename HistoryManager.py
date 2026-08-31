@@ -1930,16 +1930,79 @@ class ChatHistory(object, metaclass=Singleton):
 
     @run_in_db_thread
     def delete_message(self, msgid):
+        """Delete one message by id and report how many rows went.
+
+        The count is taken before the delete rather than from the
+        cursor: queryAll hands back a connection from the pool, so a
+        changes() asked afterwards is not guaranteed to be asked of the
+        connection that did the deleting. Returned as well as logged --
+        0 rows is the signature of a removal whose target id never
+        matched anything here, which is otherwise indistinguishable
+        from a removal that worked.
+        """
         where =  " where msgid=%s" % ChatMessage.sqlrepr(msgid)
+        # Read before deleting, for two reasons: it is the row count the
+        # log reports, and a file transfer's envelope -- the only place
+        # the path of its downloaded file can be worked out from -- goes
+        # with the row.
+        doomed = []
+        try:
+            for row in ChatMessage.selectBy(msgid=msgid):
+                doomed.append((row.content_type, row.body, row.local_uri, row.remote_uri))
+            affected = len(doomed)
+        except Exception as e:
+            BlinkLogger().log_error("Error looking up message %s in chat history table: %s" % (msgid, e))
+            affected = -1
         try:
             query = "delete from chat_messages %s" % where
             self.db.queryAll(query)
         except Exception as e:
-            BlinkLogger().log_error("Error deleting messages from chat history table: %s" % e)
+            BlinkLogger().log_error("Error deleting message %s from chat history table: %s" % (msgid, e))
             return False
         else:
+            BlinkLogger().log_info("Message %s deleted from history, %s row(s) affected"
+                                   % (msgid, affected if affected >= 0 else 'unknown'))
+            # After the delete, never before: a file thrown away for a row
+            # that then failed to go would leave a bubble pointing at
+            # nothing.
+            for content_type, body, local_uri, remote_uri in doomed:
+                self._delete_message_file(msgid, content_type, body, local_uri, remote_uri)
             self.db.queryAll('vacuum')
-            return True
+            return affected
+
+    def _delete_message_file(self, msgid, content_type, body, local_uri, remote_uri):
+        """Take the downloaded file of a removed message with it.
+
+        Only file transfers have one, and only the cache knows where it
+        is: it is filed under (account, peer, transfer id), and the
+        transfer id is inside the envelope stored as the row's body. A
+        message removed on another device arrives here as an id and
+        nothing else, so this is the only point at which the file behind
+        it can still be identified at all.
+        """
+        try:
+            from MessageHost import FILE_TRANSFER_CONTENT_TYPES, file_transfer_envelope
+        except ImportError as e:
+            BlinkLogger().log_error('Cannot check %s for a file: %s' % (msgid, e))
+            return 0
+        if str(content_type or '') not in FILE_TRANSFER_CONTENT_TYPES:
+            return 0
+        try:
+            meta = file_transfer_envelope(body)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot read the transfer envelope of %s: %s' % (msgid, e))
+            return 0
+        if not meta:
+            return 0
+        try:
+            from FileTransferCache import FileTransferCache
+            removed = FileTransferCache().purge_transfer(meta, local_uri, remote_uri)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot delete the file of %s: %s' % (msgid, e))
+            return 0
+        BlinkLogger().log_info('Message %s carried %s: %d file(s) deleted'
+                               % (msgid, meta.get('filename') or 'a file', removed))
+        return removed
 
 
 class FileTransfer(SQLObject):
