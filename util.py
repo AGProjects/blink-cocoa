@@ -5,7 +5,7 @@ __all__ = ['audio_codecs', 'allocate_autorelease_pool', 'beautify_audio_codec', 
            'compare_identity_addresses', 'escape_html', 'external_url_pattern', 'format_uri_type', 'format_identity_to_string', 'format_date', 'format_size', 'format_size_rounded', 'is_sip_aor_format', 'is_anonymous', 'image_file_extension_pattern', 'html2txt', 'normalize_sip_uri_for_outgoing_session', 'osx_version',
            'sipuri_components_from_string', 'strip_addressbook_special_characters', 'sip_prefix_pattern', 'video_file_extension_pattern',  'translate_alpha2digit', 'checkValidPhoneNumber',
            'AccountInfo', 'DictDiffer', 'local_to_utc', 'utc_to_local', 'execute_once', 'trusted_cas', 'otr_enabled_for_account',
-           'pgp_enabled_for_account']
+           'pgp_enabled_for_account', 'log_gui_exception']
 
 from AppKit import NSApp, NSRunAlertPanel
 from Foundation import NSAutoreleasePool, NSBundle, NSTimer, NSThread, NSLocalizedString
@@ -388,6 +388,50 @@ def run_in_gui_thread(func):
             NSApp.delegate().performSelectorOnMainThread_withObject_waitUntilDone_("callObject:", lambda: func(*args, **kw), False)
             del pool
     return wrapper
+
+
+# A Python exception that escapes into an AppKit callback is fatal on recent
+# macOS: AppKit answers it with +[NSApplication _crashOnException:] and the
+# process is gone, with the Python traceback recorded nowhere in the crash
+# report. Table and outline views are the usual way in. Their data source is
+# asked for values while the view draws, and drawing is not under the
+# application's control -- switching the system between light and dark
+# appearance redraws every visible view at once -- so a row that is for a
+# moment out of step with the model it came from takes the whole application
+# down, hours after whatever put it out of step.
+#
+# Data source and cell display methods therefore catch what they raise, log
+# it and hand the view something it can draw. The row is wrong either way;
+# this only decides whether it is wrong on screen or fatal.
+_gui_exception_log_times = {}
+_gui_exception_log_interval = 5.0
+
+
+def log_gui_exception(context):
+    """Log the exception being handled, with its traceback.
+
+    Meant for the except: block of a GUI callback, where re-raising kills
+    the application. `context` says which callback it was, since the
+    traceback alone does not identify the table or the window.
+
+    Identical tracebacks arriving within seconds of each other are logged
+    once: a table asks its data source for every visible row on every
+    redraw, so one bad row is one log line here and a hundred without it.
+    """
+    import traceback
+    from BlinkLogger import BlinkLogger
+
+    trace = traceback.format_exc().rstrip()
+    now = time.monotonic()
+    for key, stamp in list(_gui_exception_log_times.items()):
+        if now - stamp > _gui_exception_log_interval:
+            del _gui_exception_log_times[key]
+    key = (context, trace)
+    last = _gui_exception_log_times.get(key)
+    _gui_exception_log_times[key] = now
+    if last is not None and now - last <= _gui_exception_log_interval:
+        return
+    BlinkLogger().log_error('Exception in %s:\n%s' % (context, trace))
 
 
 def call_later(delay, func, *args, **kw):

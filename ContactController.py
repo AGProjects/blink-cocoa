@@ -52,7 +52,7 @@ from sipsimple.core import SIPCoreError, SIPURI
 from zope.interface import implementer
 
 from VirtualGroups import VirtualGroup
-from util import checkValidPhoneNumber, format_uri_type, run_in_gui_thread
+from util import checkValidPhoneNumber, format_uri_type, log_gui_exception, run_in_gui_thread
 
 
 # PNG, spelled out rather than imported: AppKit renamed the file-type
@@ -689,7 +689,11 @@ class AddContactController(NSObject):
             return None
 
     def numberOfRowsInTableView_(self, table):
-        return len(self.uris)+1
+        try:
+            return len(self.uris)+1
+        except Exception:
+            log_gui_exception('the contact addresses row count')
+            return 0
 
     def tableViewSelectionDidChange_(self, notification):
         row = self.addressTable.selectedRow()
@@ -699,15 +703,19 @@ class AddContactController(NSObject):
         return
 
     def tableView_objectValueForTableColumn_row_(self, table, column, row):
-        if row >= len(self.uris):
+        try:
+            if row >= len(self.uris):
+                return ""
+            cell = column.dataCell()
+            column = int(column.identifier())
+            contact_uri = self.uris[row]
+            if column == 0:
+                return contact_uri.uri
+            elif column == 1:
+                return cell.indexOfItemWithTitle_(contact_uri.type or 'SIP')
+        except Exception:
+            log_gui_exception('the contact addresses data source (row %s)' % row)
             return ""
-        cell = column.dataCell()
-        column = int(column.identifier())
-        contact_uri = self.uris[row]
-        if column == 0:
-            return contact_uri.uri
-        elif column == 1:
-            return cell.indexOfItemWithTitle_(contact_uri.type or 'SIP')
 
     def tableView_setObjectValue_forTableColumn_row_(self, table, object, column, row):
         cell = column.dataCell()

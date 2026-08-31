@@ -110,7 +110,7 @@ from MergeContactController import MergeContactController
 from VirtualGroups import VirtualGroupsManager, VirtualGroup
 from PresencePublisher import on_the_phone_activity
 from resources import ApplicationData, Resources
-from util import allocate_autorelease_pool, format_date, format_uri_type, is_anonymous, sipuri_components_from_string, sip_prefix_pattern, strip_addressbook_special_characters, run_in_gui_thread, utc_to_local, call_later
+from util import allocate_autorelease_pool, format_date, format_uri_type, is_anonymous, log_gui_exception, sipuri_components_from_string, sip_prefix_pattern, strip_addressbook_special_characters, run_in_gui_thread, utc_to_local, call_later
 
 status_localized = {
     'busy':      NSLocalizedString("busy", "Label"),
@@ -2492,11 +2492,15 @@ class CustomListModel(NSObject):
 
     # data source methods
     def outlineView_numberOfChildrenOfItem_(self, outline, item):
-        if item is None:
-            return len(self.visibleGroupsList)
-        elif isinstance(item, BlinkGroup):
-            return len(item.contacts)
-        else:
+        try:
+            if item is None:
+                return len(self.visibleGroupsList)
+            elif isinstance(item, BlinkGroup):
+                return len(item.contacts)
+            else:
+                return 0
+        except Exception:
+            log_gui_exception('the contact list row count (%s)' % type(item).__name__)
             return 0
 
     def outlineView_shouldEditTableColumn_item_(self, outline, column, item):
@@ -2506,7 +2510,11 @@ class CustomListModel(NSObject):
         return item is None or isinstance(item, BlinkGroup)
 
     def outlineView_objectValueForTableColumn_byItem_(self, outline, column, item):
-        return item and item.name
+        try:
+            return item and item.name
+        except Exception:
+            log_gui_exception('the contact list data source (%s)' % type(item).__name__)
+            return None
 
     def outlineView_setObjectValue_forTableColumn_byItem_(self, outline, object, column, item):
         if isinstance(item, BlinkGroup) and object != item.name:
@@ -2744,20 +2752,23 @@ class CustomListModel(NSObject):
         return False
 
     def outlineView_willDisplayCell_forTableColumn_item_(self, outline, cell, column, item):
-        cell.setMessageIcon_(None)
-        cell.setUnreadCount_(self.unreadCountForContact(item) if isinstance(item, BlinkContact) else 0)
-        cell.setComposing_(self.composingForContact(item) if isinstance(item, BlinkContact) else False)
-        cell.setSharingLocation_(self.sharingLocationForContact(item) if isinstance(item, BlinkContact) else False)
-        # Only in the Messages group: elsewhere a row is a contact, not a
-        # conversation, and stamping every one of them with a chat time
-        # turns the address book into something it is not.
-        cell.setLastMessageTime_(self.lastMessageTimeForRow(outline, item))
+        try:
+            cell.setMessageIcon_(None)
+            cell.setUnreadCount_(self.unreadCountForContact(item) if isinstance(item, BlinkContact) else 0)
+            cell.setComposing_(self.composingForContact(item) if isinstance(item, BlinkContact) else False)
+            cell.setSharingLocation_(self.sharingLocationForContact(item) if isinstance(item, BlinkContact) else False)
+            # Only in the Messages group: elsewhere a row is a contact, not a
+            # conversation, and stamping every one of them with a chat time
+            # turns the address book into something it is not.
+            cell.setLastMessageTime_(self.lastMessageTimeForRow(outline, item))
 
-        if isinstance(item, BlinkContact):
-            cell.setContact_(item)
-        else:
-            cell.setContact_(None)
-            cell.setGroup_(item)
+            if isinstance(item, BlinkContact):
+                cell.setContact_(item)
+            else:
+                cell.setContact_(None)
+                cell.setGroup_(item)
+        except Exception:
+            log_gui_exception('the contact list cell display (%s)' % type(item).__name__)
 
     def outlineView_toolTipForCell_rect_tableColumn_item_mouseLocation_(self, ov, cell, rect, tc, item, mouse):
         if isinstance(item, BlinkContact):

@@ -79,7 +79,7 @@ from NicknameController import NicknameController
 from SIPManager import SIPManager
 from SmileyManager import SmileyManager
 from SubjectController import SubjectController
-from util import format_identity_to_string, format_size_rounded, otr_enabled_for_account, sip_prefix_pattern, beautify_audio_codec, run_in_gui_thread
+from util import format_identity_to_string, format_size_rounded, log_gui_exception, otr_enabled_for_account, sip_prefix_pattern, beautify_audio_codec, run_in_gui_thread
 from MessageBubbleView import (FONT_SIZE_STEP, set_transcript_font_size,
                                transcript_font_size)
 
@@ -1721,7 +1721,10 @@ class ChatWindowController(NSWindowController):
             except:
                 pass
         elif tableView == self.conferenceFilesTableView:
-            return len(self.conference_shared_files)
+            try:
+                return len(self.conference_shared_files)
+            except Exception:
+                log_gui_exception('the conference files row count')
 
         return 0
 
@@ -1736,8 +1739,11 @@ class ChatWindowController(NSWindowController):
             except:
                 pass
         elif tableView == self.conferenceFilesTableView:
-            if row < len(self.conference_shared_files):
-                return self.conference_shared_files[row].name
+            try:
+                if row < len(self.conference_shared_files):
+                    return self.conference_shared_files[row].name
+            except Exception:
+                log_gui_exception('the conference files data source (row %s)' % row)
         return None
 
     def tableView_willDisplayCell_forTableColumn_row_(self, tableView, cell, tableColumn, row):
@@ -1751,8 +1757,11 @@ class ChatWindowController(NSWindowController):
             except:
                 pass
         elif tableView == self.conferenceFilesTableView:
-            if row < len(self.conference_shared_files):
-                cell.conference_file = self.conference_shared_files[row]
+            try:
+                if row < len(self.conference_shared_files):
+                    cell.conference_file = self.conference_shared_files[row]
+            except Exception:
+                log_gui_exception('the conference files cell display (row %s)' % row)
 
     # drag/drop
     def tableView_validateDrop_proposedRow_proposedDropOperation_(self, table, info, row, oper):

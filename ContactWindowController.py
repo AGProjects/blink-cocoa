@@ -161,7 +161,7 @@ from VideoMirrorController import VideoMirrorController
 from configuration.datatypes import UserIcon
 from resources import ApplicationData, Resources
 from util import allocate_autorelease_pool, format_date, format_identity_to_string, format_uri_type, is_anonymous, is_sip_aor_format, normalize_sip_uri_for_outgoing_session
-from util import run_in_gui_thread, sip_prefix_pattern, sipuri_components_from_string, translate_alpha2digit, AccountInfo, utc_to_local
+from util import log_gui_exception, run_in_gui_thread, sip_prefix_pattern, sipuri_components_from_string, translate_alpha2digit, AccountInfo, utc_to_local
 
 
 PARTICIPANTS_MENU_ADD_CONFERENCE_CONTACT = 314
@@ -6242,8 +6242,8 @@ class ContactWindowController(NSWindowController):
         if tableView == self.participantsTableView:
             try:
                 return len(self.participants)
-            except:
-                pass
+            except Exception:
+                log_gui_exception('the audio participants row count')
 
         return 0
 
@@ -6255,8 +6255,8 @@ class ContactWindowController(NSWindowController):
                         return self.participants[row]
                     else:
                         return self.participants[row].name
-            except:
-                pass
+            except Exception:
+                log_gui_exception('the audio participants data source (row %s)' % row)
         return None
 
     def tableView_willDisplayCell_forTableColumn_row_(self, tableView, cell, tableColumn, row):
@@ -6267,8 +6267,8 @@ class ContactWindowController(NSWindowController):
                         cell.setContact_(None)
                     else:
                         cell.setContact_(self.participants[row])
-            except:
-                pass
+            except Exception:
+                log_gui_exception('the audio participants cell display (row %s)' % row)
 
     # drag/drop
     def tableView_validateDrop_proposedRow_proposedDropOperation_(self, table, info, row, oper):

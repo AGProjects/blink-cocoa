@@ -51,7 +51,7 @@ from BlinkLogger import BlinkLogger
 from MessageHost import pgp_plaintext
 from ContactListModel import BlinkHistoryViewerContact, BlinkPresenceContact
 from HistoryManager import ChatHistory, SessionHistory
-from util import is_anonymous, sipuri_components_from_string, run_in_gui_thread
+from util import is_anonymous, log_gui_exception, sipuri_components_from_string, run_in_gui_thread
 
 
 SQL_LIMIT=1000
@@ -762,30 +762,32 @@ class HistoryViewer(NSWindowController):
                     self.refreshMessages(remote_uri=(self.dayly_entries[row].objectForKey_('remote_uri_sql'),), local_uri=self.dayly_entries[row].objectForKey_('local_uri'), date=self.dayly_entries[row].objectForKey_('date'), media_type=self.dayly_entries[row].objectForKey_('type'))
 
     def numberOfRowsInTableView_(self, table):
-        if table == self.indexTable:
-            return self.dayly_entries.count()
-        elif table == self.contactTable:
-            return len(self.contacts)
+        try:
+            if table == self.indexTable:
+                return self.dayly_entries.count()
+            elif table == self.contactTable:
+                return len(self.contacts)
+        except Exception:
+            log_gui_exception('the history viewer row count')
         return 0
 
     def tableView_objectValueForTableColumn_row_(self, table, column, row):
-        if table == self.indexTable:
-            ident = column.identifier()
-            if ident == 'type':
-                return self.format_media_type(self.dayly_entries[row].objectForKey_(ident))
+        try:
+            if table == self.indexTable:
+                ident = column.identifier()
+                if ident == 'type':
+                    return self.format_media_type(self.dayly_entries[row].objectForKey_(ident))
 
-            try:
                 return str(self.dayly_entries[row].objectForKey_(ident))
-            except IndexError:
-                return None
-        elif table == self.contactTable:
-            try:
+            elif table == self.contactTable:
                 if type(self.contacts[row]) in (str, str):
                     return self.contacts[row]
                 else:
                     return self.contacts[row].name
-            except IndexError:
-                return None
+        except IndexError:
+            return None
+        except Exception:
+            log_gui_exception('the history viewer data source (row %s)' % row)
         return None
 
     def tableView_willDisplayCell_forTableColumn_row_(self, table, cell, tableColumn, row):
@@ -796,8 +798,8 @@ class HistoryViewer(NSWindowController):
                         cell.setContact_(None)
                     else:
                         cell.setContact_(self.contacts[row])
-            except:
-                pass
+            except Exception:
+                log_gui_exception('the history viewer cell display (row %s)' % row)
 
     def showWindow_(self, sender):
         self.window().makeKeyAndOrderFront_(None)

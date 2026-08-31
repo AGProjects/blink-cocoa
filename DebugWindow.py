@@ -29,7 +29,7 @@ from zope.interface import implementer
 
 from BlinkLogger import BlinkLogger
 from sipsimple.configuration.settings import SIPSimpleSettings
-from util import run_in_gui_thread, format_size
+from util import log_gui_exception, run_in_gui_thread, format_size
 from SessionInfoController import ice_candidates
 
 # User choices for debug: Disabled, Simplified, Full
@@ -283,10 +283,18 @@ class DebugWindow(NSObject):
         pass
 
     def numberOfRowsInTableView_(self, table):
-        return len(self.notifications)
+        try:
+            return len(self.notifications)
+        except Exception:
+            log_gui_exception('the notifications row count')
+            return 0
 
     def tableView_objectValueForTableColumn_row_(self, table, column, row):
-        return self.notifications[row][int(column.identifier())]
+        try:
+            return self.notifications[row][int(column.identifier())]
+        except Exception:
+            log_gui_exception('the notifications data source (row %s)' % row)
+            return None
 
     @objc.IBAction
     def notificationsCheckboxClicked_(self, sender):

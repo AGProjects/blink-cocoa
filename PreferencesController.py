@@ -66,7 +66,7 @@ from PreferenceOptions import AccountSectionOrder, AccountSettingsOrder, AecSlid
 from SIPManager import SIPManager
 from VerticalBoxView import VerticalBoxView
 from resources import ApplicationData
-from util import run_in_gui_thread, AccountInfo, osx_version, trusted_cas
+from util import log_gui_exception, run_in_gui_thread, AccountInfo, osx_version, trusted_cas
 
 
 @implementer(IObserver)
@@ -805,7 +805,14 @@ class PreferencesController(NSWindowController, object):
 
     @objc.python_method
     def getAccountForRow(self, row):
-        return self.accounts[row]
+        try:
+            return self.accounts[row]
+        except IndexError:
+            # The table draws from the row count it was last given, so it
+            # can ask for a row that removing an account has already taken
+            # away. Callers below handle the absence; raising here would
+            # reach AppKit, which ends the process.
+            return None
 
     @objc.python_method
     def refresh_account_table(self):
@@ -1272,19 +1279,30 @@ class PreferencesController(NSWindowController, object):
             view.restore()
 
     def numberOfRowsInTableView_(self, table):
-        return len(self.accounts)
+        try:
+            return len(self.accounts)
+        except Exception:
+            log_gui_exception('the accounts row count')
+            return 0
 
     def tableView_objectValueForTableColumn_row_(self, table, column, row):
-        if column.identifier() == "enable":
-            account_info = self.getAccountForRow(row)
-            return NSOnState if account_info and account_info.account.enabled else NSOffState
-        elif column.identifier() == "name":
-            account_info = self.getAccountForRow(row)
-            return account_info and account_info.name
+        try:
+            if column.identifier() == "enable":
+                account_info = self.getAccountForRow(row)
+                return NSOnState if account_info and account_info.account.enabled else NSOffState
+            elif column.identifier() == "name":
+                account_info = self.getAccountForRow(row)
+                return account_info and account_info.name
+        except Exception:
+            log_gui_exception('the accounts data source (row %s)' % row)
+            return None
 
     def tableView_willDisplayCell_forTableColumn_row_(self, table, cell, column, row):
         if column.identifier() == "status":
             account_info = self.getAccountForRow(row)
+            if account_info is None:
+                cell.setImage_(None)
+                return
             if not account_info.account.enabled:
                 cell.setImage_(None)
                 cell.accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Registration disabled", "Accesibility text"), NSAccessibilityTitleAttribute)
@@ -1505,6 +1523,8 @@ class PreferencesController(NSWindowController, object):
 
     def tableView_setObjectValue_forTableColumn_row_(self, table, object, column, row):
         account_info = self.getAccountForRow(row)
+        if account_info is None:
+            return
         if not object:
             account_info.account.enabled = False
         else:

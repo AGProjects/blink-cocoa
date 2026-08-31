@@ -73,7 +73,7 @@ from TableView import TableView
 
 from configuration.datatypes import AccountSoundFile, AnsweringMachineSoundFile, SoundFile, NightVolume
 from resources import ApplicationData
-from util import audio_codecs, video_codecs, osx_version, trusted_cas
+from util import audio_codecs, video_codecs, log_gui_exception, osx_version, trusted_cas
 
 
 def makeLabel(label):
@@ -524,13 +524,21 @@ class MultipleSelectionOption(Option):
         self.addSubview_(self.swin)
 
     def numberOfRowsInTableView_(self, table):
-        return len(self.options)
+        try:
+            return len(self.options)
+        except Exception:
+            log_gui_exception('the options row count')
+            return 0
 
     def tableView_objectValueForTableColumn_row_(self, table, column, row):
-        if column.identifier() == "check":
-            return self.options[row] in self.selection and NSOnState or NSOffState
-        else:
-            return self.options[row]
+        try:
+            if column.identifier() == "check":
+                return self.options[row] in self.selection and NSOnState or NSOffState
+            else:
+                return self.options[row]
+        except Exception:
+            log_gui_exception('the options data source (row %s)' % row)
+            return None
 
     def tableView_setObjectValue_forTableColumn_row_(self, table, object, column, row):
         if object:
@@ -1804,13 +1812,21 @@ class ObjectTupleOption(Option):
         self.addSubview_(self.swin)
 
     def numberOfRowsInTableView_(self, table):
-        return len(self.values)+1
+        try:
+            return len(self.values)+1
+        except Exception:
+            log_gui_exception('the values row count')
+            return 0
 
     def tableView_objectValueForTableColumn_row_(self, table, column, row):
-        if row >= len(self.values):
+        try:
+            if row >= len(self.values):
+                return ""
+            column = int(column.identifier())
+            return self.values[row][column]
+        except Exception:
+            log_gui_exception('the values data source (row %s)' % row)
             return ""
-        column = int(column.identifier())
-        return self.values[row][column]
 
     def tableView_validateDrop_proposedRow_proposedDropOperation_(self, table, info, row, oper):
         if row >= len(self.values):

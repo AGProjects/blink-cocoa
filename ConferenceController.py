@@ -37,7 +37,7 @@ from zope.interface import implementer
 
 from SIPManager import SIPManager
 from ConferenceConfigurationPanel import ConferenceConfigurationPanel
-from util import run_in_gui_thread, sip_prefix_pattern
+from util import log_gui_exception, run_in_gui_thread, sip_prefix_pattern
 
 
 def random_room():
@@ -360,6 +360,9 @@ class JoinConferenceWindowController(NSObject):
             return self._participants[row]
         except IndexError:
             return None
+        except Exception:
+            log_gui_exception('the conference participants data source (row %s)' % row)
+            return None
 
     def awakeFromNib(self):
         self.participantsTable.registerForDraggedTypes_(NSArray.arrayWithObjects_("x-blink-sip-uri"))
@@ -629,9 +632,12 @@ class AddParticipantsWindowController(NSObject):
 
     def tableView_objectValueForTableColumn_row_(self, table, column, row):
         try:
-           return self._participants[row]
-        except:
-           return None
+            return self._participants[row]
+        except IndexError:
+            return None
+        except Exception:
+            log_gui_exception('the add participants data source (row %s)' % row)
+            return None
 
     def awakeFromNib(self):
         self.participantsTable.registerForDraggedTypes_(NSArray.arrayWithObjects_("x-blink-sip-uri"))
