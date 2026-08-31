@@ -13,6 +13,7 @@ from AppKit import (NSAccessibilityChildrenAttribute,
                     NSCommandKeyMask,
                     NSEventTrackingRunLoopMode,
                     NSLeftMouseUp,
+                    NSLineBreakByTruncatingTail,
                     NSSound)
 
 from Foundation import (NSBundle,
@@ -24,6 +25,7 @@ from Foundation import (NSBundle,
                         NSMaxX,
                         NSMenu,
                         NSMinX,
+                        NSWidth,
                         NSRunLoop,
                         NSRunLoopCommonModes,
                         NSString,
@@ -83,6 +85,10 @@ def loadImages():
 
 
 STATISTICS_INTERVAL = 1.0
+
+# Minimum horizontal space kept between the audio status label and the
+# session control buttons on the right side of the audio tile
+AUDIO_STATUS_BUTTONS_GAP = 6
 
 # For voice over IP over Ethernet, an RTP packet contains 54 bytes (or 432 bits) header. These 54 bytes consist of 14 bytes Ethernet header, 20 bytes IP header, 8 bytes UDP header and 12 bytes RTP header.
 RTP_PACKET_OVERHEAD = 54
@@ -224,6 +230,7 @@ class AudioController(MediaStream):
         self.contact = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(self.sessionController.target_uri, exact_match=True)
 
         self.label.setTextColor_(NSColor.labelColor())
+        self.audioStatus.cell().setLineBreakMode_(NSLineBreakByTruncatingTail)
 
         item = self.view.menu().itemWithTag_(20) # add to contacts
         item.setEnabled_(not self.contact)
@@ -605,7 +612,7 @@ class AudioController(MediaStream):
                 if self.sessionController.outbound_audio_calls < 3 and self.duration < 3 and self.sessionController.account is not BonjourAccount() and self.sessionController.session.direction == 'outgoing' and self.sessionController.remoteIdentity.user.isdigit():
                     self.audioStatus.setTextColor_(NSColor.orangeColor())
                     self.audioStatus.setStringValue_(NSLocalizedString("Enter DTMF using keyboard", "Audio status label"))
-                    self.audioStatus.sizeToFit()
+                    self.sizeAudioStatusToFit()
                 else:
                     if not self.hangup_reason:
                         self.updateAudioStatusWithCodecInformation()
@@ -622,6 +629,35 @@ class AudioController(MediaStream):
         self.label.setStringValue_(text)
         
     @objc.python_method
+    def sizeAudioStatusToFit(self):
+        """Fit the status label to its text without running under the session control buttons"""
+        frame = self.audioStatus.frame()
+        origin_x = NSMinX(frame)
+
+        self.audioStatus.sizeToFit()
+        frame = self.audioStatus.frame()
+        frame.origin.x = origin_x
+
+        limit = None
+        for buttons in (self.segmentedButtons, self.segmentedConferenceButtons):
+            if buttons is None or buttons.isHidden():
+                continue
+            edge = NSMinX(buttons.frame())
+            limit = edge if limit is None else min(limit, edge)
+
+        if limit is None:
+            limit = NSMaxX(self.view.bounds())
+
+        available = limit - AUDIO_STATUS_BUTTONS_GAP - origin_x
+        if available < 0:
+            available = 0
+
+        if NSWidth(frame) > available:
+            frame.size.width = available
+
+        self.audioStatus.setFrame_(frame)
+
+    @objc.python_method
     def updateAudioStatusWithSessionState(self, text, error=False):
         if not error and self.zrtp_show_verify_phrase:
             return
@@ -634,7 +670,7 @@ class AudioController(MediaStream):
         formattedText = NSAttributedString.alloc().initWithString_attributes_(NSLocalizedString(text, "audio_status_Label"), NSDictionary.dictionaryWithObject_forKey_(NSColor.orangeColor(), NSForegroundColorAttributeName))
 
         self.audioStatus.setStringValue_(formattedText)
-        self.audioStatus.sizeToFit()
+        self.sizeAudioStatusToFit()
         self.audioStatus.display()
 
     @objc.python_method
@@ -646,7 +682,7 @@ class AudioController(MediaStream):
             self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
             self.audioStatus.setStringValue_(NSLocalizedString("Encrypted using ZRTP", "Audio status label"))
             self.show_zrtp_ok_status_countdown -= 1
-            self.audioStatus.sizeToFit()
+            self.sizeAudioStatusToFit()
             return
         
         if self.transfer_in_progress or self.transferred:
@@ -673,7 +709,7 @@ class AudioController(MediaStream):
                 #self.audioStatus.setStringValue_(u"%s (%s %0.fkHz)" % (hd_label, codec, sample_rate))
                 self.audioStatus.setStringValue_("%s (%s)" % (hd_label, codec))
 
-        self.audioStatus.sizeToFit()
+        self.sizeAudioStatusToFit()
 
     @objc.python_method
     def updateLabelColor(self):
@@ -778,7 +814,7 @@ class AudioController(MediaStream):
                     self.updateAudioStatusWithSessionState(status)
                 else:
                     self.updateAudioStatusWithSessionState(NSLocalizedString("Session Cancelled", "Audio status label"))
-            self.audioStatus.sizeToFit()
+            self.sizeAudioStatusToFit()
 
         elif status == STREAM_FAILED:
             self.audioEndTime = time.time()
