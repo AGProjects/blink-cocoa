@@ -274,6 +274,13 @@ class NativeChatViewController(ChatViewController):
     _columns_control = None
     _download_all_button = None
     _filter_right_inset = None
+    # What the grid's checkboxes have ticked, in the order they were
+    # ticked, and the last plain tick -- which is what a shift-click
+    # extends from. Replaced per instance on first use: a list left at
+    # class level would be one selection shared by every conversation open.
+    _selection = None
+    _selection_anchor = None
+    _delete_selection_button = None
     # msgid -> (filename, reason) for transfers the server answered 404 for,
     # waiting for the sweep that removes them. Per instance, never shared:
     # replaced with a fresh dict on the first use in each conversation.
@@ -1597,6 +1604,11 @@ class NativeChatViewController(ChatViewController):
         if bool(getattr(bubble, 'grid_mode', False)) != grid:
             bubble.grid_mode = grid
             bubble.invalidateLayout()
+        # A page fetched by scrolling back arrives into a grid that may
+        # already have ticks in it. It draws its own empty checkbox from
+        # grid_mode alone; all it needs is to arrive unticked.
+        if getattr(bubble, 'selected', False):
+            bubble.selected = False
         _t = load_trace_tick()
         self._attachTransfer(bubble)
         load_trace_bucket('- transfer', _t)
@@ -3253,6 +3265,11 @@ class NativeChatViewController(ChatViewController):
         if self.messageListView is not None:
             self.messageListView.removeMessageId_(msgid)
             self._pruneOrphanDividers()
+        # A ticked picture that has gone -- deleted from the other side, or
+        # swept because the server no longer has its file -- must not stay
+        # in the selection: Delete would then be counting a message that is
+        # not on screen for anyone to see it counted.
+        self._forgetSelected(msgid)
         try:
             self.rendered_messages = [m for m in self.rendered_messages if m.msgid != msgid]
         except TypeError:
@@ -4464,6 +4481,7 @@ class NativeChatViewController(ChatViewController):
         control.setSelectedSegment_(selected)
         self._installGridColumnsControl()
         self._installDownloadAllButton()
+        self._installSelectionControls()
         self._layoutFilterRow(self.message_filter in GRID_CATEGORIES)
         BlinkLogger().log_debug('Filter bar: %s (selected %s)'
                                 % (' | '.join(titles), titles[selected]))
@@ -4544,6 +4562,8 @@ class NativeChatViewController(ChatViewController):
             self._installGridColumnsControl()
         if show_columns and self._download_all_button is None:
             self._installDownloadAllButton()
+        if show_columns and self._delete_selection_button is None:
+            self._installSelectionControls()
         try:
             frame = control.frame()
             width = parent.bounds().size.width
@@ -4558,9 +4578,12 @@ class NativeChatViewController(ChatViewController):
                 popup.setHidden_(not show)
 
             right = self._filter_right_inset
+            # Hoisted out of the branch below: every control in this row is
+            # placed right to left against the same gap, and the selection
+            # pair is laid out whether or not the width picker was.
+            gap = 8.0
             if show:
                 popup_frame = popup.frame()
-                gap = 8.0
                 right += popup_frame.size.width + gap
                 popup.setFrame_(NSMakeRect(
                     max(width - self._filter_right_inset - popup_frame.size.width, 0.0),
@@ -4576,6 +4599,22 @@ class NativeChatViewController(ChatViewController):
             if button is not None:
                 button.setHidden_(not show_button)
                 if show_button:
+                    button_frame = button.frame()
+                    right += button_frame.size.width + gap
+                    button.setFrame_(NSMakeRect(
+                        max(width - right + gap, 0.0),
+                        frame.origin.y + (frame.size.height - button_frame.size.height) / 2.0,
+                        button_frame.size.width, button_frame.size.height))
+
+            # Only once something is ticked. The checkboxes on the tiles
+            # are the affordance; this is what acts on them, and until
+            # there is something for it to act on it is a button whose
+            # scope nobody can see.
+            button = self._delete_selection_button
+            show_delete = show and self.selectionCount() > 0
+            if button is not None:
+                button.setHidden_(not show_delete)
+                if show_delete:
                     button_frame = button.frame()
                     right += button_frame.size.width + gap
                     button.setFrame_(NSMakeRect(
@@ -4624,6 +4663,298 @@ class NativeChatViewController(ChatViewController):
             self._download_all_button = button
         except Exception as e:
             BlinkLogger().log_error('Cannot build the download-all button: %s' % e)
+
+    # -- picking pictures out of the grid ----------------------------------
+
+    @objc.python_method
+    def _installSelectionControls(self):
+        """The Delete button for whatever the grid's checkboxes have ticked.
+
+        It is only in the row while something is ticked. A Delete standing
+        over a transcript with nothing chosen is a button whose scope
+        nobody can see, and the ticks on the tiles are what say what it is
+        about to act on.
+        """
+        if self._delete_selection_button is not None:
+            return
+        control = self.messageFilterControl
+        parent = control.superview() if control is not None else None
+        if parent is None:
+            return
+        try:
+            from AppKit import NSControlSizeSmall
+        except ImportError:
+            NSControlSizeSmall = 1
+        try:
+            button = NSButton.alloc().initWithFrame_(NSMakeRect(0, 0, 90, 20))
+            button.setBezelStyle_(1)            # NSBezelStyleRounded
+            button.cell().setControlSize_(NSControlSizeSmall)
+            button.setFont_(NSFont.systemFontOfSize_(NSFont.smallSystemFontSize()))
+            button.setTitle_(NSLocalizedString("Delete", "Button"))
+            button.setToolTip_(NSLocalizedString("Delete every ticked picture", "Tooltip"))
+            button.setAutoresizingMask_(NSViewMinXMargin | NSViewMinYMargin)
+            button.setTarget_(self)
+            button.setAction_('deleteSelection:')
+            button.sizeToFit()
+            button.setHidden_(True)
+            parent.addSubview_(button)
+            self._delete_selection_button = button
+            BlinkLogger().log_debug('The ticked-pictures Delete button is installed')
+        except Exception as e:
+            BlinkLogger().log_error('Cannot build the Delete button for ticked pictures: %s' % e)
+
+    @objc.python_method
+    def selectionCount(self):
+        """How many tiles are ticked. Asked by the tiles' own menu."""
+        return len(self._selection or [])
+
+    @objc.python_method
+    def clearSelection(self):
+        """Untick everything and put the Delete button away."""
+        had = bool(self._selection)
+        self._selection = []
+        self._selection_anchor = None
+        if had:
+            self._applySelection()
+        self._updateSelectionChrome()
+
+    @objc.python_method
+    def _forgetSelected(self, msgid):
+        """Drop one id from the selection, for a message that has gone."""
+        if not self._selection:
+            return
+        msgid = str(msgid)
+        if msgid in self._selection:
+            self._selection.remove(msgid)
+            if self._selection_anchor == msgid:
+                self._selection_anchor = None
+            self._updateSelectionChrome()
+
+    @objc.python_method
+    def _updateSelectionChrome(self):
+        """Say what Delete would take, or take the button out of the row.
+
+        The count goes on the button rather than into a label of its own:
+        the row already carries the chips, a width picker and sometimes a
+        Download all, and "Delete 12" answers both questions a label
+        would have.
+        """
+        chosen = self.selectionCount()
+        button = self._delete_selection_button
+        if button is not None:
+            button.setTitle_((NSLocalizedString("Delete %d", "Button") % chosen) if chosen
+                             else NSLocalizedString("Delete", "Button"))
+            button.sizeToFit()
+        self._layoutFilterRow(self.message_filter in GRID_CATEGORIES)
+
+    @objc.python_method
+    def _selectableIds(self):
+        """The ids on screen, in the order the grid draws them.
+
+        Drawing order rather than history order: shift-click means
+        "everything between these two tiles", and between is a thing the
+        wall says. Hidden views and dividers are left out for the same
+        reason -- neither is a cell anyone can tick.
+        """
+        ids = []
+        if self.messageListView is None:
+            return ids
+        for view in self.messageListView.subviews():
+            if view.isHidden() or self._isDivider(view):
+                continue
+            msgid = getattr(view, 'msgid', None)
+            if msgid:
+                ids.append(str(msgid))
+        return ids
+
+    @objc.python_method
+    def _applySelection(self):
+        """Put the ticks where the selection says they are."""
+        if self.messageListView is None:
+            return
+        chosen = set(self._selection or [])
+        for view in self.messageListView.subviews():
+            if not hasattr(view, 'selected'):
+                continue
+            selected = str(getattr(view, 'msgid', '') or '') in chosen
+            if bool(view.selected) != selected:
+                view.selected = selected
+                view.setNeedsDisplay_(True)
+
+    @objc.python_method
+    def bubbleDidToggleSelection(self, msgid, extend=False):
+        """A checkbox was clicked. Shift extends from the last plain tick.
+
+        An extend only ever ADDS: dragging a range over something already
+        ticked and having it disappear is the behaviour every file browser
+        was careful not to have.
+        """
+        if not msgid:
+            return
+        if self._selection is None:
+            self._selection = []
+        msgid = str(msgid)
+        if extend and self._selection_anchor:
+            ids = self._selectableIds()
+            try:
+                first = ids.index(self._selection_anchor)
+                last = ids.index(msgid)
+            except ValueError:
+                first = last = None
+            if first is not None:
+                if first > last:
+                    first, last = last, first
+                added = 0
+                for candidate in ids[first:last + 1]:
+                    if candidate not in self._selection:
+                        self._selection.append(candidate)
+                        added += 1
+                BlinkLogger().log_info('Ticked %d more; %d picture(s) ticked'
+                                       % (added, len(self._selection)))
+                self._applySelection()
+                self._updateSelectionChrome()
+                return
+        if msgid in self._selection:
+            self._selection.remove(msgid)
+        else:
+            self._selection.append(msgid)
+            self._selection_anchor = msgid
+        BlinkLogger().log_info('%d picture(s) ticked' % len(self._selection))
+        self._applySelection()
+        self._updateSelectionChrome()
+
+    @objc.python_method
+    def _isOutgoing(self, msgid):
+        if self.messageListView is None:
+            return False
+        bubble = self.messageListView.viewForMessageId_(self._strip_c(msgid))
+        return str(getattr(bubble, 'direction', '') or '') == 'outgoing'
+
+    @objc.IBAction
+    def deleteSelection_(self, sender):
+        self.deleteSelectedMessages()
+
+    @objc.python_method
+    def deleteSelectedMessages(self):
+        """Delete every ticked picture, once the user has said so out loud.
+
+        One panel for the whole selection rather than one per picture: a
+        wall of photographs is exactly the case where being asked forty
+        times is the same as not being asked at all.
+        """
+        msgids = list(self._selection or [])
+        if not msgids:
+            return
+        outgoing = set(msgid for msgid in msgids if self._isOutgoing(msgid))
+        remote = self._confirmDeleteSelection(len(msgids), len(outgoing))
+        if remote is None:
+            return                      # cancelled
+        delete = getattr(self.delegate, 'delete_message', None)
+        removed = 0
+        for msgid in msgids:
+            # Nothing may go on playing out of a message being removed --
+            # the file underneath it is about to be gone.
+            AudioPlayback().stop_for_key(str(msgid))
+            VideoPlayback().stop_for_key(str(msgid))
+            if delete is None:
+                # No delegate to delete through -- the history viewer. The
+                # tile still goes; the row is not ours to remove.
+                self.removeMessage(msgid)
+                removed += 1
+                continue
+            # Remotely only where it can be. The other end accepts a
+            # removal for a message this account sent and for nothing else,
+            # so a mixed selection takes theirs off this computer and ours
+            # off both, rather than refusing the whole thing.
+            local = not (remote and msgid in outgoing)
+            try:
+                delete(msgid, local=local)
+                removed += 1
+            except TypeError:
+                # A delegate from before the local/remote split. Its delete
+                # sends the removal on, so it is only safe for the answer
+                # the user actually gave.
+                if not local:
+                    delete(msgid)
+                    removed += 1
+                else:
+                    BlinkLogger().log_error('This conversation cannot delete a message '
+                                            'without telling the other side; %s was kept'
+                                            % msgid)
+            except Exception as e:
+                BlinkLogger().log_error('Cannot delete %s: %s' % (msgid, e))
+        BlinkLogger().log_info('Deleted %d of %d ticked message(s)%s'
+                               % (removed, len(msgids),
+                                  ' here and on the other side' if remote
+                                  else ' on this computer'))
+        self.clearSelection()
+        if self.messageListView is not None:
+            self._pruneOrphanDividers()
+            self.messageListView.layoutMessages()
+        self.setNeedsFilterRebuild()
+        self.setNeedsHistoryChrome()
+
+    @objc.python_method
+    def _confirmDeleteSelection(self, count, outgoing):
+        """Ask about the whole selection. None to cancel, or delete remotely.
+
+        The tick is offered for the messages this account sent, and it says
+        how many of them there are: a selection of forty pictures of which
+        three are ours must not read as an offer to clear the other side's
+        transcript.
+        """
+        peer, icon_path = self._peerIdentity()
+        try:
+            alert = NSAlert.alloc().init()
+            try:
+                from Avatars import avatar_image
+                avatar = avatar_image(icon_path, peer, 64.0)
+                if avatar is not None:
+                    alert.setIcon_(avatar)
+            except Exception as e:
+                BlinkLogger().log_debug('No avatar on the delete panel: %s' % e)
+
+            alert.setMessageText_(
+                NSLocalizedString("Delete this message?", "Window title") if count == 1
+                else NSLocalizedString("Delete %d messages?", "Window title") % count)
+            alert.setInformativeText_(
+                NSLocalizedString("They will be removed from your conversation with %s on "
+                                  "this computer. This cannot be undone.", "Label") % peer
+                if peer else
+                NSLocalizedString("They will be removed from this conversation on this "
+                                  "computer. This cannot be undone.", "Label"))
+            alert.addButtonWithTitle_(NSLocalizedString("Delete", "Button"))
+            alert.addButtonWithTitle_(NSLocalizedString("Cancel", "Button"))
+
+            checkbox = None
+            if outgoing:
+                try:
+                    from AppKit import NSSwitchButton
+                except ImportError:
+                    NSSwitchButton = 3
+                if outgoing == count:
+                    title = (NSLocalizedString("Delete them for %s too", "Label") % peer
+                             if peer else
+                             NSLocalizedString("Delete from the other side too", "Label"))
+                else:
+                    title = (NSLocalizedString("Delete the %d you sent for %s too", "Label")
+                             % (outgoing, peer) if peer else
+                             NSLocalizedString("Delete the %d you sent from the other "
+                                               "side too", "Label") % outgoing)
+                checkbox = NSButton.alloc().initWithFrame_(NSMakeRect(0, 0, 340, 18))
+                checkbox.setButtonType_(NSSwitchButton)
+                checkbox.setTitle_(title)
+                checkbox.setState_(0)
+                alert.setAccessoryView_(checkbox)
+
+            if alert.runModal() != 1000:        # NSAlertFirstButtonReturn
+                BlinkLogger().log_debug('Delete of %d ticked message(s) cancelled' % count)
+                return None
+            return bool(checkbox.state()) if checkbox is not None else False
+        except Exception as e:
+            # A panel that cannot be shown is not permission to delete.
+            BlinkLogger().log_error('Cannot ask about deleting %d message(s): %s' % (count, e))
+            return None
 
     @objc.IBAction
     def downloadAllVisible_(self, sender):
@@ -4695,6 +5026,11 @@ class NativeChatViewController(ChatViewController):
             return
         category = self.message_filter
         grid = category in GRID_CATEGORIES
+
+        # A filter change reloads the page, so nothing that was ticked is
+        # still on screen for Delete to act on.
+        if self._selection:
+            self.clearSelection()
 
         # The page is fetched BY the filter where the delegate can do it: a
         # conversation holds far more than the fifty messages on screen, and

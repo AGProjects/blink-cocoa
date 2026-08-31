@@ -278,6 +278,13 @@ VIDEO_WELL_ASPECT = 9.0 / 16.0
 # usual AppKit slop: below it every click on a picture would start a drag,
 # because nobody presses a mouse button without moving it a little.
 DRAG_THRESHOLD = 3.0
+# Shift-click extends a selection across the grid. Looked up rather than
+# imported at the top so that a PyObjC without the modern spelling still
+# gets a working modifier rather than an import error at load time.
+try:
+    from AppKit import NSEventModifierFlagShift as _SHIFT_FLAG
+except ImportError:
+    _SHIFT_FLAG = 1 << 17
 # The Objective-C signature of the one NSDraggingSource method below.
 # Spelled out because PyObjC only infers a signature for methods the
 # superclass declares, and NSView is not a dragging source: left to infer,
@@ -865,6 +872,26 @@ PILL_PAD_X         = 6.0
 PILL_PAD_Y         = 2.0
 COLOR_VIDEO_EDGE   = NSColor.whiteColor().colorWithAlphaComponent_(0.55)
 COLOR_VIDEO_GLYPH  = NSColor.whiteColor()
+# The tick a tile carries while the grid is choosing pictures. An unchosen
+# one gets the same dark scrim and white rim the play badge uses, and for
+# the same reason: it sits on a photograph whose colours are not ours to
+# guess. A chosen one is allowed the transcript's blue, because by then the
+# whole cell is washed with it and the badge is no longer the only thing
+# that has to be read against the picture.
+SELECT_BADGE_SIZE  = 17.0
+SELECT_BADGE_MIN   = 12.0
+SELECT_BADGE_INSET = 6.0
+# The box shrank; the target did not. The slop makes up the difference, so
+# a smaller circle is no harder to hit than the larger one was.
+SELECT_HIT_SLOP    = 7.0
+COLOR_SELECT_WELL  = NSColor.blackColor().colorWithAlphaComponent_(0.35)
+COLOR_SELECT_RIM   = NSColor.whiteColor().colorWithAlphaComponent_(0.9)
+COLOR_SELECT_ON    = _rgb(52, 120, 246)
+COLOR_SELECT_TICK  = NSColor.whiteColor()
+# Over the whole cell once it is chosen. A wash rather than a border: a
+# chosen tile has to read as chosen from across a wall of forty of them,
+# and a hairline around the edge of a thumbnail does not.
+COLOR_SELECT_WASH  = _rgb(52, 120, 246, 0.30)
 # The play key and the Download button. A filled disc in one confident
 # colour, not a tint of the bubble text behind a grey hairline: a pale
 # well inside a thin ring is the shape macOS uses for a control that is
@@ -1612,6 +1639,11 @@ class MessageBubbleView(NSView):
             self.is_month = False
             self.renderer = None
             self.found = False
+            # Ticked in the grid's own checkbox, for the Delete that acts
+            # on everything ticked at once. Only a grid draws a box: a
+            # message in a column carries its own delete affordance in its
+            # header, and one at a time is the right granularity there.
+            self.selected = False
             # Location bubbles keep their parts so a trail tick or a status
             # line can re-render the summary instead of appending to it --
             # the old code grew the bubble by a line every update.
@@ -3698,6 +3730,12 @@ class MessageBubbleView(NSView):
             elif self._showsDownloadButton() and self._button_rect.size.width > 0:
                 self._drawDownloadButton()
 
+            # Last, over everything else the cell drew: the checkbox is
+            # about the cell rather than about the message in it, so
+            # nothing the message says is painted on top of it.
+            if self.grid_mode and self._isSelectable():
+                self._drawSelection()
+
     @objc.python_method
     def _ensureTileImage(self, width=0.0, height=0.0):
         """Resolve the tile's picture in LAYOUT, and keep a reference to it.
@@ -4015,6 +4053,103 @@ class MessageBubbleView(NSView):
         NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(
             pill, height / 2.0, height / 2.0).fill()
         label.drawAtPoint_((pill.origin.x + PILL_PAD_X, pill.origin.y + PILL_PAD_Y))
+
+    @objc.python_method
+    def _isSelectable(self):
+        """Whether a press on this cell means "this one".
+
+        A date rule and a system note are not messages: they cannot be
+        deleted, they head the grid rather than sit in it, and a tick on
+        one would be a tick on something that is about to be pruned
+        anyway once the pictures under it are gone.
+        """
+        return bool(self.msgid) and self.kind not in (self.KIND_DATE, self.KIND_SYSTEM)
+
+    @objc.python_method
+    def _checkRect(self):
+        """Where the tile's checkbox is, or an empty rect for no box.
+
+        Worked out from the cell every time rather than remembered from
+        the last draw: the box is a target as well as a picture, and every
+        affordance bug in this view so far has been one acting on a rect
+        the layout had already moved on from.
+
+        Top right: bottom left is the size pill, the middle is the play
+        badge on a film, and the top right corner of a photograph is the
+        one place nothing else has a claim on.
+        """
+        if not self.grid_mode or not self._isSelectable():
+            return NSZeroRect
+        rect = NSIntersectionRect(self._bubble_rect, self.bounds())
+        if rect.size.width <= 0 or rect.size.height <= 0:
+            return NSZeroRect
+        size = min(SELECT_BADGE_SIZE,
+                   max(min(rect.size.width, rect.size.height) * 0.16,
+                       SELECT_BADGE_MIN))
+        if size + SELECT_BADGE_INSET * 2 > min(rect.size.width, rect.size.height):
+            return NSZeroRect           # a cell too small to mark
+        return NSMakeRect(rect.origin.x + rect.size.width - SELECT_BADGE_INSET - size,
+                          rect.origin.y + SELECT_BADGE_INSET, size, size)
+
+    @objc.python_method
+    def _checkHitRect(self):
+        """The box, plus the slop a pointer is entitled to around it.
+
+        A 22pt disc in the corner of a thumbnail is a small target, and
+        missing it opens the picture -- an answer nobody wants to the
+        gesture "tick this one".
+        """
+        box = self._checkRect()
+        if box.size.width <= 0:
+            return NSZeroRect
+        return NSMakeRect(box.origin.x - SELECT_HIT_SLOP,
+                          box.origin.y - SELECT_HIT_SLOP,
+                          box.size.width + SELECT_HIT_SLOP * 2,
+                          box.size.height + SELECT_HIT_SLOP * 2)
+
+    @objc.python_method
+    def _drawSelection(self):
+        """The checkbox on every tile, and the wash once it is ticked.
+
+        Always drawn, not only inside a mode that has to be found first:
+        the wall IS the place where several pictures are picked at once,
+        and mobile draws its picture grid the same way. A press on the box
+        ticks the cell; a press anywhere else on it still opens the file,
+        so nothing that worked before this is behind a mode now.
+        """
+        box = self._checkRect()
+        if box.size.width <= 0:
+            return
+        if self.selected:
+            COLOR_SELECT_WASH.set()
+            NSBezierPath.bezierPathWithRect_(
+                NSIntersectionRect(self._bubble_rect, self.bounds())).fill()
+        size = box.size.width
+        disc = NSBezierPath.bezierPathWithOvalInRect_(box)
+        (COLOR_SELECT_ON if self.selected else COLOR_SELECT_WELL).set()
+        disc.fill()
+        COLOR_SELECT_RIM.set()
+        # A hairline. Anything heavier and the ring, not the photograph,
+        # is what the eye lands on in every cell of the grid -- which is
+        # backwards for a control that is on screen the whole time.
+        disc.setLineWidth_(1.0)
+        disc.stroke()
+        if not self.selected:
+            return
+        # Struck rather than set in text: the system font's check glyph is
+        # not centred in its own box, and at this size that shows as a tick
+        # sliding off the bottom of the disc.
+        centre_x = box.origin.x + size / 2.0
+        centre_y = box.origin.y + size / 2.0
+        tick = NSBezierPath.bezierPath()
+        tick.moveToPoint_((centre_x - size * 0.22, centre_y))
+        tick.lineToPoint_((centre_x - size * 0.06, centre_y + size * 0.17))
+        tick.lineToPoint_((centre_x + size * 0.24, centre_y - size * 0.16))
+        COLOR_SELECT_TICK.set()
+        tick.setLineWidth_(max(size * 0.10, 1.2))
+        tick.setLineCapStyle_(1)            # NSRoundLineCapStyle
+        tick.setLineJoinStyle_(1)           # NSRoundLineJoinStyle
+        tick.stroke()
 
     @objc.python_method
     def _drawPendingTile(self):
@@ -5184,6 +5319,22 @@ class MessageBubbleView(NSView):
             item = menu.addItemWithTitle_action_keyEquivalent_(
                 NSLocalizedString("Delete\u2026", "Menu item"), "menuDeletePicture:", "")
             item.setTarget_(self)
+            # And the same for everything ticked, so the checkboxes have a
+            # second way to be acted on: the button in the filter row is
+            # the obvious one, and a menu on the picture itself is where
+            # someone who has just ticked twelve of them will look.
+            chosen = 0
+            renderer = self.renderer
+            if hasattr(renderer, 'selectionCount'):
+                try:
+                    chosen = int(renderer.selectionCount())
+                except Exception:
+                    chosen = 0
+            if chosen:
+                item = menu.addItemWithTitle_action_keyEquivalent_(
+                    NSLocalizedString("Delete %d Ticked\u2026", "Menu item") % chosen,
+                    "menuDeleteSelection:", "")
+                item.setTarget_(self)
             return menu
         except Exception as e:
             BlinkLogger().log_error('Cannot build the menu for %s: %s' % (self.msgid, e))
@@ -5202,8 +5353,26 @@ class MessageBubbleView(NSView):
             BlinkLogger().log_debug('Bubble %s: delete from the menu' % self.msgid)
             renderer.bubbleDidRequestDelete(self.msgid)
 
+    def menuDeleteSelection_(self, sender):
+        renderer = self.renderer
+        if renderer is not None and hasattr(renderer, 'deleteSelectedMessages'):
+            BlinkLogger().log_debug('Delete the ticked pictures, from the menu')
+            renderer.deleteSelectedMessages()
+
     def mouseDown_(self, event):
         point = self.convertPoint_fromView_(event.locationInWindow(), None)
+        # The checkbox before every other affordance, and before the drag
+        # is armed: a press on the box ticks the cell, and a press that
+        # lands anywhere else on it goes on meaning what it always meant.
+        if NSPointInRect(point, self._checkHitRect()):
+            renderer = self.renderer
+            if renderer is not None and hasattr(renderer, 'bubbleDidToggleSelection'):
+                extend = bool(event.modifierFlags() & _SHIFT_FLAG)
+                BlinkLogger().log_debug('Bubble %s: %s'
+                                        % (self.msgid,
+                                           'extend the ticks' if extend else 'ticked'))
+                renderer.bubbleDidToggleSelection(self.msgid, extend)
+            return
         renderer = self.renderer
         header = self.kind not in (self.KIND_SYSTEM, self.KIND_DATE) and not self._tileMode()
 
