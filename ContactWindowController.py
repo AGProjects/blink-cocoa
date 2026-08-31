@@ -43,6 +43,17 @@ from AppKit import (NSAccessibilityUnignoredDescendant,
                     NSViewWidthSizable,
                     NSStatusBar)
 
+# Which side a drawer hangs off. The constant moved between PyObjC's AppKit
+# and Foundation over the years, so it is looked up rather than imported and
+# falls back to the NSRectEdge values themselves, which have never changed.
+try:
+    from AppKit import NSMinXEdge, NSMaxXEdge
+except ImportError:  # pragma: no cover -- older PyObjC
+    try:
+        from Foundation import NSMinXEdge, NSMaxXEdge
+    except ImportError:
+        NSMinXEdge, NSMaxXEdge = 0, 2
+
 from Foundation import (NSArray,
                         NSAttributedString,
                         NSBezierPath,
@@ -315,6 +326,14 @@ class ContactWindowController(NSWindowController):
     messagePaneListSide = None
     _message_pane_visible = False
     messagePaneController = None
+    # The drawer is drawn OUTSIDE the window, so the room it needs is screen
+    # space beside the window rather than part of it. With the transcript
+    # open the window can already reach the screen edge, and then the drawer
+    # has nowhere to go. Set while the window is being fitted for it, so the
+    # narrowing done to make room is not mistaken for the user resizing the
+    # transcript and remembered as their preferred width.
+    _fitting_window_for_drawer = False
+    _width_before_audio_drawer = None
 
     searchBox = objc.IBOutlet()
     accountPopUp = objc.IBOutlet()
@@ -3472,6 +3491,9 @@ class ContactWindowController(NSWindowController):
         split = self.messagePaneSplitView
         if split is None or not self._message_pane_visible:
             return
+        if self._fitting_window_for_drawer:
+            # A width the drawer imposed is not a width the user chose.
+            return
         try:
             width = split.frame().size.width - split.listWidth() - split.dividerThickness()
             if width >= 320.0:
@@ -3618,9 +3640,23 @@ class ContactWindowController(NSWindowController):
             screen = window.screen() or NSScreen.mainScreen()
             if screen is not None:
                 visible = screen.visibleFrame()
-                frame.size.width = min(frame.size.width, visible.size.width)
-                if NSMaxX(frame) > NSMaxX(visible):
-                    frame.origin.x = max(NSMinX(visible), NSMaxX(visible) - frame.size.width)
+                # An open drawer is on the screen too. Leave its strip out
+                # of what the window may take, or opening a conversation
+                # during a call pushes the call list off the screen.
+                edge = self.audioDrawerEdge()
+                reserved = self.audioDrawerWidth() if edge is not None else 0.0
+                room = max(self.CONTACT_LIST_MIN_WIDTH, visible.size.width - reserved)
+                frame.size.width = min(frame.size.width, room)
+                if edge == NSMinXEdge:
+                    lower = NSMinX(visible) + reserved
+                    if NSMinX(frame) < lower:
+                        frame.origin.x = lower
+                    if NSMaxX(frame) > NSMaxX(visible):
+                        frame.origin.x = max(lower, NSMaxX(visible) - frame.size.width)
+                else:
+                    upper = NSMaxX(visible) - reserved
+                    if NSMaxX(frame) > upper:
+                        frame.origin.x = max(NSMinX(visible), upper - frame.size.width)
             window.setFrame_display_animate_(frame, True, False)
         except Exception as e:
             BlinkLogger().log_error('Cannot widen the window for the messages pane: %s' % e)
@@ -3722,12 +3758,156 @@ class ContactWindowController(NSWindowController):
         # only reason to keep it open is a call.
         return bool(self.has_audio)
 
+    # 267 is the drawer's content width in MainWindow.xib and its minimum
+    # there too; the margin is the border and shadow AppKit draws around the
+    # content, which are on screen as much as the content is.
+    AUDIO_DRAWER_MIN_WIDTH = 267.0
+    AUDIO_DRAWER_MARGIN = 12.0
+
+    @objc.python_method
+    def audioDrawerWidth(self):
+        """Screen space the open drawer occupies beside the window."""
+        width = self.AUDIO_DRAWER_MIN_WIDTH
+        try:
+            if self.drawer is not None:
+                width = max(width, self.drawer.contentSize().width)
+        except Exception:
+            pass
+        return width + self.AUDIO_DRAWER_MARGIN
+
+    @objc.python_method
+    def visibleScreenFrame(self):
+        try:
+            window = self.window()
+            screen = (window.screen() if window is not None else None) or NSScreen.mainScreen()
+            return screen.visibleFrame() if screen is not None else None
+        except Exception:
+            return None
+
+    @objc.python_method
+    def audioDrawerEdge(self):
+        """Which side the drawer is on, or None when it is shut."""
+        try:
+            if self.drawer is not None and self.drawer.isOpen():
+                return self.drawer.edge()
+        except Exception:
+            pass
+        return None
+
+    @objc.python_method
+    def openAudioDrawerFitted(self):
+        """Open the audio drawer on whichever side of the window it fits.
+
+        Room is found in the cheapest order: the space already beside the
+        window, then sliding the window along the screen, and only then
+        narrowing it. The narrowing is spent by the split view on the
+        transcript, so the contact list keeps the width the user gave it,
+        and the window is put back to its old width when the drawer closes.
+
+        The right edge stays the preference; the left is used only when the
+        right cannot hold the drawer and the left can. Either way the
+        window plus the drawer end up inside the screen.
+        """
+        if self.drawer is None:
+            return
+        window = self.window()
+        if window is None:
+            self.drawer.open()
+            return
+        try:
+            needed = self.audioDrawerWidth()
+            visible = self.visibleScreenFrame()
+            if visible is None:
+                self.drawer.open()
+                return
+
+            frame = window.frame()
+            right = NSMaxX(visible) - NSMaxX(frame)
+            left = NSMinX(frame) - NSMinX(visible)
+
+            if right < needed and left < needed:
+                self._width_before_audio_drawer = frame.size.width
+                slack = visible.size.width - frame.size.width
+                if slack < needed:
+                    # Narrow the window by exactly what is missing, never
+                    # past the point where both panes still fit.
+                    floor = self.contactListMinimumWidth()
+                    frame.size.width = max(floor, frame.size.width - (needed - slack))
+                frame.origin.x = max(NSMinX(visible),
+                                     NSMaxX(visible) - frame.size.width - needed)
+                self._fitting_window_for_drawer = True
+                try:
+                    window.setFrame_display_animate_(frame, True, False)
+                finally:
+                    self._fitting_window_for_drawer = False
+                frame = window.frame()
+                # Both widths: the one to give back, and the one that was
+                # actually applied, so a width the USER chose in the
+                # meantime is left alone when the drawer closes.
+                self._width_before_audio_drawer = (self._width_before_audio_drawer,
+                                                   frame.size.width)
+                right = NSMaxX(visible) - NSMaxX(frame)
+                left = NSMinX(frame) - NSMinX(visible)
+
+            if right >= needed:
+                edge = NSMaxXEdge
+            elif left >= needed:
+                edge = NSMinXEdge
+            else:
+                # A window as wide as the screen with both panes at their
+                # minimum: nothing fits properly, so use the roomier side.
+                edge = NSMaxXEdge if right >= left else NSMinXEdge
+            self.drawer.openOnEdge_(edge)
+            BlinkLogger().log_debug('Audio drawer opened on the %s (%.0f free right, %.0f left)'
+                                    % ('right' if edge == NSMaxXEdge else 'left', right, left))
+        except Exception as e:
+            BlinkLogger().log_error('Cannot fit the audio drawer on screen: %s' % e)
+            try:
+                self.drawer.open()
+            except Exception:
+                pass
+
+    @objc.python_method
+    def restoreWindowWidthAfterAudioDrawer(self):
+        """Give back the width that was borrowed to make room for the drawer."""
+        stored = self._width_before_audio_drawer
+        self._width_before_audio_drawer = None
+        if not stored:
+            return
+        try:
+            width, applied = stored
+        except (TypeError, ValueError):
+            return
+        if not width:
+            return
+        try:
+            window = self.window()
+            visible = self.visibleScreenFrame()
+            if window is None or visible is None:
+                return
+            frame = window.frame()
+            if abs(frame.size.width - applied) > 1.0:
+                # Resized by hand while the call was up -- that is the
+                # width they want now.
+                return
+            if frame.size.width >= width - 1.0:
+                return
+            frame.size.width = min(width, visible.size.width)
+            if NSMaxX(frame) > NSMaxX(visible):
+                frame.origin.x = max(NSMinX(visible), NSMaxX(visible) - frame.size.width)
+            self._fitting_window_for_drawer = True
+            try:
+                window.setFrame_display_animate_(frame, True, False)
+            finally:
+                self._fitting_window_for_drawer = False
+        except Exception as e:
+            BlinkLogger().log_error('Cannot restore the window width after the audio drawer: %s' % e)
+
     @objc.python_method
     def showAudioDrawer(self):
         if not self.drawer.isOpen() and self.has_audio:
-            # self.drawer.setContentSize_(self.window().frame().size)
             self.showWindow_(None)
-            self.drawer.open()
+            self.openAudioDrawerFitted()
 
     @objc.python_method
     def shuffleUpAudioSession(self, audioSessionView):
@@ -5058,6 +5238,7 @@ class ContactWindowController(NSWindowController):
             self.window().zoom_(None)
             self.setCollapsed(True)
         self.setVideoProducer(None)
+        self.restoreWindowWidthAfterAudioDrawer()
 
     @objc.IBAction
     def toggleAudioSessionsDrawer_(self, sender):
@@ -5066,7 +5247,7 @@ class ContactWindowController(NSWindowController):
             return
         if not self.drawer.isOpen():
             self.showWindow_(None)
-            self.drawer.open()
+            self.openAudioDrawerFitted()
 
     @objc.IBAction
     def showDebugWindow_(self, sender):
