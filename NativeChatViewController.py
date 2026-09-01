@@ -105,6 +105,17 @@ GRID_BUBBLE_CATEGORIES = ('location',)
 GRID_COLUMN_CHOICES = (2, 3, 4, 5, 6)
 GRID_COLUMNS_KEY = 'MessageGridColumns'
 
+# The action bar that floats under the grid while pictures are ticked: how
+# tall it is, the air inside its ends, between its controls, and between it
+# and the bottom of the transcript.
+SELECTION_BAR_H      = 30.0
+SELECTION_BAR_PAD    = 12.0
+SELECTION_BAR_GAP    = 8.0
+SELECTION_BAR_BOTTOM = 14.0
+# How many conversations the Forward menu offers before it stops being a
+# menu and starts being the contact list.
+FORWARD_RECENTS      = 12
+
 
 def grid_spacing_for(category):
     """The gap between cells, which depends on what a cell IS."""
@@ -280,7 +291,16 @@ class NativeChatViewController(ChatViewController):
     # class level would be one selection shared by every conversation open.
     _selection = None
     _selection_anchor = None
+    # The action bar that floats under the grid while pictures are ticked,
+    # and what is in it. Deliberately NOT in the filter row above: that row
+    # is how a selection is made -- the chips, the width picker -- and an
+    # action that destroys or forwards has no business sharing a strip with
+    # the controls used to set it up.
+    _selection_bar = None
+    _selection_label = None
+    _forward_button = None
     _delete_selection_button = None
+    _clear_selection_button = None
     # msgid -> (filename, reason) for transfers the server answered 404 for,
     # waiting for the sweep that removes them. Per instance, never shared:
     # replaced with a fresh dict on the first use in each conversation.
@@ -4481,7 +4501,6 @@ class NativeChatViewController(ChatViewController):
         control.setSelectedSegment_(selected)
         self._installGridColumnsControl()
         self._installDownloadAllButton()
-        self._installSelectionControls()
         self._layoutFilterRow(self.message_filter in GRID_CATEGORIES)
         BlinkLogger().log_debug('Filter bar: %s (selected %s)'
                                 % (' | '.join(titles), titles[selected]))
@@ -4562,8 +4581,6 @@ class NativeChatViewController(ChatViewController):
             self._installGridColumnsControl()
         if show_columns and self._download_all_button is None:
             self._installDownloadAllButton()
-        if show_columns and self._delete_selection_button is None:
-            self._installSelectionControls()
         try:
             frame = control.frame()
             width = parent.bounds().size.width
@@ -4606,21 +4623,6 @@ class NativeChatViewController(ChatViewController):
                         frame.origin.y + (frame.size.height - button_frame.size.height) / 2.0,
                         button_frame.size.width, button_frame.size.height))
 
-            # Only once something is ticked. The checkboxes on the tiles
-            # are the affordance; this is what acts on them, and until
-            # there is something for it to act on it is a button whose
-            # scope nobody can see.
-            button = self._delete_selection_button
-            show_delete = show and self.selectionCount() > 0
-            if button is not None:
-                button.setHidden_(not show_delete)
-                if show_delete:
-                    button_frame = button.frame()
-                    right += button_frame.size.width + gap
-                    button.setFrame_(NSMakeRect(
-                        max(width - right + gap, 0.0),
-                        frame.origin.y + (frame.size.height - button_frame.size.height) / 2.0,
-                        button_frame.size.width, button_frame.size.height))
             control.setFrame_(NSMakeRect(frame.origin.x, frame.origin.y,
                                          max(width - frame.origin.x - right, 40.0),
                                          frame.size.height))
@@ -4668,40 +4670,145 @@ class NativeChatViewController(ChatViewController):
 
     @objc.python_method
     def _installSelectionControls(self):
-        """The Delete button for whatever the grid's checkboxes have ticked.
+        """The action bar that floats under the grid: how many, and what to do.
 
-        It is only in the row while something is ticked. A Delete standing
-        over a transcript with nothing chosen is a button whose scope
-        nobody can see, and the ticks on the tiles are what say what it is
-        about to act on.
+        Under the pictures rather than in the filter row, and only while
+        something is ticked. The row above is how a selection is MADE --
+        which type, how many across -- and putting Delete in it mixed the
+        controls that set a thing up with the ones that destroy it. This
+        bar belongs to the selection: it appears with the first tick and
+        goes with the last.
+
+        Floated over the transcript rather than inserted into the layout:
+        the pane's geometry is hand-authored XML shared by three viewers,
+        and a real row added to it is three nibs to edit and a composer to
+        re-place. A bar pinned over the bottom of the scroll view costs
+        none of that and covers nothing anyone is reading -- the newest
+        pictures are at the bottom, but so is the composer the user is
+        about to leave the grid for.
         """
-        if self._delete_selection_button is not None:
+        if self._selection_bar is not None:
             return
-        control = self.messageFilterControl
-        parent = control.superview() if control is not None else None
+        scrollview = self.outputView
+        parent = scrollview.superview() if scrollview is not None else None
         if parent is None:
             return
         try:
-            from AppKit import NSControlSizeSmall
+            from AppKit import NSControlSizeSmall, NSTextField, NSView
         except ImportError:
-            NSControlSizeSmall = 1
+            return
         try:
-            button = NSButton.alloc().initWithFrame_(NSMakeRect(0, 0, 90, 20))
-            button.setBezelStyle_(1)            # NSBezelStyleRounded
-            button.cell().setControlSize_(NSControlSizeSmall)
-            button.setFont_(NSFont.systemFontOfSize_(NSFont.smallSystemFontSize()))
-            button.setTitle_(NSLocalizedString("Delete", "Button"))
-            button.setToolTip_(NSLocalizedString("Delete every ticked picture", "Tooltip"))
-            button.setAutoresizingMask_(NSViewMinXMargin | NSViewMinYMargin)
-            button.setTarget_(self)
-            button.setAction_('deleteSelection:')
-            button.sizeToFit()
-            button.setHidden_(True)
-            parent.addSubview_(button)
-            self._delete_selection_button = button
-            BlinkLogger().log_debug('The ticked-pictures Delete button is installed')
+            bar = NSView.alloc().initWithFrame_(
+                NSMakeRect(0, 0, 240, SELECTION_BAR_H))
+            bar.setWantsLayer_(True)
+            layer = bar.layer()
+            if layer is not None:
+                layer.setCornerRadius_(SELECTION_BAR_H / 2.0)
+                try:
+                    layer.setBackgroundColor_(
+                        NSColor.windowBackgroundColor().colorWithAlphaComponent_(0.97).CGColor())
+                    layer.setBorderColor_(NSColor.separatorColor().CGColor())
+                    layer.setBorderWidth_(1.0)
+                except Exception as e:
+                    BlinkLogger().log_debug('Cannot colour the selection bar: %s' % e)
+            # Centred over the bottom of the transcript, and staying there:
+            # both side margins flexible so it stays centred, the vertical
+            # one fixed to whichever edge the parent counts from.
+            bar.setAutoresizingMask_(NSViewMinXMargin | NSViewMaxXMargin
+                                     | (NSViewMaxYMargin if parent.isFlipped()
+                                        else NSViewMinYMargin))
+            bar.setHidden_(True)
+
+            label = NSTextField.alloc().initWithFrame_(NSMakeRect(0, 0, 90, 16))
+            label.setEditable_(False)
+            label.setSelectable_(False)
+            label.setBordered_(False)
+            label.setBezeled_(False)
+            label.setDrawsBackground_(False)
+            label.setFont_(NSFont.systemFontOfSize_(NSFont.smallSystemFontSize()))
+            label.setTextColor_(NSColor.secondaryLabelColor())
+            label.setStringValue_('')
+            bar.addSubview_(label)
+
+            def build(title, tooltip, action):
+                button = NSButton.alloc().initWithFrame_(NSMakeRect(0, 0, 80, 20))
+                button.setBezelStyle_(1)        # NSBezelStyleRounded
+                button.cell().setControlSize_(NSControlSizeSmall)
+                button.setFont_(NSFont.systemFontOfSize_(NSFont.smallSystemFontSize()))
+                button.setTitle_(title)
+                button.setToolTip_(tooltip)
+                button.setTarget_(self)
+                button.setAction_(action)
+                button.sizeToFit()
+                bar.addSubview_(button)
+                return button
+
+            forward = build(NSLocalizedString("Forward\u2026", "Button"),
+                            NSLocalizedString("Send everything ticked to somebody else",
+                                              "Tooltip"),
+                            'forwardSelection:')
+            delete = build(NSLocalizedString("Delete", "Button"),
+                           NSLocalizedString("Delete everything ticked", "Tooltip"),
+                           'deleteSelection:')
+            clear = build(NSLocalizedString("Done", "Button"),
+                          NSLocalizedString("Untick everything", "Tooltip"),
+                          'clearSelection:')
+
+            parent.addSubview_positioned_relativeTo_(bar, 1, scrollview)   # NSWindowAbove
+            self._selection_bar = bar
+            self._selection_label = label
+            self._forward_button = forward
+            self._delete_selection_button = delete
+            self._clear_selection_button = clear
+            BlinkLogger().log_debug('The selection action bar is installed')
         except Exception as e:
-            BlinkLogger().log_error('Cannot build the Delete button for ticked pictures: %s' % e)
+            BlinkLogger().log_error('Cannot build the selection action bar: %s' % e)
+
+    @objc.python_method
+    def _layoutSelectionBar(self):
+        """Place the bar, centred over the bottom of the transcript."""
+        bar = self._selection_bar
+        scrollview = self.outputView
+        parent = scrollview.superview() if scrollview is not None else None
+        if bar is None or parent is None:
+            return
+        try:
+            label = self._selection_label
+            buttons = [button for button in (self._forward_button,
+                                             self._delete_selection_button,
+                                             self._clear_selection_button)
+                       if button is not None]
+            label.sizeToFit()
+            width = SELECTION_BAR_PAD + label.frame().size.width
+            for button in buttons:
+                width += SELECTION_BAR_GAP + button.frame().size.width
+            width += SELECTION_BAR_PAD
+
+            out = scrollview.frame()
+            x = out.origin.x + max((out.size.width - width) / 2.0, 0.0)
+            if parent.isFlipped():
+                y = out.origin.y + out.size.height - SELECTION_BAR_BOTTOM - SELECTION_BAR_H
+            else:
+                y = out.origin.y + SELECTION_BAR_BOTTOM
+            bar.setFrame_(NSMakeRect(x, y, width, SELECTION_BAR_H))
+
+            # Inside the bar, left to right. The bar is not flipped, so its
+            # own origin is at the bottom left and everything is centred on
+            # half its height.
+            left = SELECTION_BAR_PAD
+            frame = label.frame()
+            label.setFrame_(NSMakeRect(left, (SELECTION_BAR_H - frame.size.height) / 2.0,
+                                       frame.size.width, frame.size.height))
+            left += frame.size.width
+            for button in buttons:
+                frame = button.frame()
+                left += SELECTION_BAR_GAP
+                button.setFrame_(NSMakeRect(left,
+                                            (SELECTION_BAR_H - frame.size.height) / 2.0,
+                                            frame.size.width, frame.size.height))
+                left += frame.size.width
+        except Exception as e:
+            BlinkLogger().log_error('Cannot lay the selection bar out: %s' % e)
 
     @objc.python_method
     def selectionCount(self):
@@ -4732,20 +4839,23 @@ class NativeChatViewController(ChatViewController):
 
     @objc.python_method
     def _updateSelectionChrome(self):
-        """Say what Delete would take, or take the button out of the row.
-
-        The count goes on the button rather than into a label of its own:
-        the row already carries the chips, a width picker and sometimes a
-        Download all, and "Delete 12" answers both questions a label
-        would have.
-        """
+        """Show the action bar and say what it would act on, or hide it."""
         chosen = self.selectionCount()
-        button = self._delete_selection_button
-        if button is not None:
-            button.setTitle_((NSLocalizedString("Delete %d", "Button") % chosen) if chosen
-                             else NSLocalizedString("Delete", "Button"))
-            button.sizeToFit()
-        self._layoutFilterRow(self.message_filter in GRID_CATEGORIES)
+        if chosen and self._selection_bar is None:
+            self._installSelectionControls()
+        bar = self._selection_bar
+        if bar is None:
+            return
+        if chosen:
+            label = self._selection_label
+            if label is not None:
+                label.setStringValue_(
+                    NSLocalizedString("1 selected", "Label") if chosen == 1
+                    else NSLocalizedString("%d selected", "Label") % chosen)
+            self._layoutSelectionBar()
+        if bool(bar.isHidden()) == bool(chosen):
+            bar.setHidden_(not chosen)
+            BlinkLogger().log_debug('Selection bar %s' % ('shown' if chosen else 'hidden'))
 
     @objc.python_method
     def _selectableIds(self):
@@ -4831,8 +4941,220 @@ class NativeChatViewController(ChatViewController):
         return str(getattr(bubble, 'direction', '') or '') == 'outgoing'
 
     @objc.IBAction
+    def clearSelection_(self, sender):
+        self.clearSelection()
+
+    @objc.IBAction
     def deleteSelection_(self, sender):
         self.deleteSelectedMessages()
+
+    @objc.python_method
+    def selectedFileDrag(self):
+        """(paths, images, missing) for every ticked tile, in grid order.
+
+        Grid order rather than the order they were ticked: a stack of eight
+        arrives at the other end in the order the user was looking at.
+
+        Only files that are on this disc. A drag cannot wait for a
+        download, so `missing` counts what stays behind and the caller says
+        so -- carrying five of eight without a word is the one outcome
+        nobody could have predicted from the gesture.
+        """
+        paths, images, missing = [], [], 0
+        if self.messageListView is None or not self._selection:
+            return paths, images, missing
+        chosen = set(self._selection)
+        for view in self.messageListView.subviews():
+            msgid = str(getattr(view, 'msgid', '') or '')
+            if msgid not in chosen or view.isHidden():
+                continue
+            path = getattr(view, 'media_path', None)
+            if not path or not os.path.exists(path):
+                missing += 1
+                continue
+            paths.append(path)
+            try:
+                images.append(view._dragImage())
+            except Exception:
+                images.append(None)
+        return paths, images, missing
+
+    @objc.python_method
+    def noteUndraggedFiles(self, missing):
+        """Say in the transcript what a drag could not carry."""
+        try:
+            self.showSystemMessage(
+                NSLocalizedString("1 file is still on the server and was not "
+                                  "included", "Label") if missing == 1
+                else NSLocalizedString("%d files are still on the server and were "
+                                       "not included", "Label") % missing,
+                ISOTimestamp.now())
+        except Exception as e:
+            BlinkLogger().log_debug('Cannot report the files left behind: %s' % e)
+
+    @objc.python_method
+    def _fetchSelectedFiles(self):
+        """Start fetching every ticked file that is not here yet.
+
+        Forwarding is not a drag: it can afford to go and get what it is
+        about to send. It does not WAIT for them -- the fetches land in
+        their own time and the bubbles fill in -- so what this buys is a
+        second Forward that has everything.
+        """
+        if self.messageListView is None or not self._selection:
+            return 0
+        chosen = set(self._selection)
+        asked = 0
+        for view in self.messageListView.subviews():
+            if str(getattr(view, 'msgid', '') or '') not in chosen:
+                continue
+            path = getattr(view, 'media_path', None)
+            if path and os.path.exists(path):
+                continue
+            if self.fetchMediaForBubble(view, force=True):
+                asked += 1
+        if asked:
+            BlinkLogger().log_info('Forward: fetching %d ticked file(s) that are not '
+                                   'on this computer yet' % asked)
+        return asked
+
+    @objc.python_method
+    def _recentConversations(self, limit=FORWARD_RECENTS):
+        """(uri, name) for the conversations most recently spoken in.
+
+        The people someone forwards to are the people they are already
+        talking to, in the order the contact list already sorts them --
+        which is what makes a menu the right shape for this rather than a
+        contact picker nobody asked to open.
+        """
+        try:
+            from SMSWindowManager import SMSWindowManager
+            times = dict(SMSWindowManager().last_message_times)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot read the recent conversations: %s' % e)
+            return []
+        here = str(getattr(self.delegate, 'remote_uri', '') or '').lower()
+        entries = []
+        for uri, when in times.items():
+            uri = str(uri or '')
+            if not uri or uri.lower() == here:
+                # Not back into the conversation the pictures came out of:
+                # that is the round trip the transcript already refuses on
+                # a drag.
+                continue
+            entries.append((str(when or ''), uri))
+        entries.sort(reverse=True)
+        recents = []
+        for _when, uri in entries[:limit]:
+            recents.append((uri, self._displayNameForURI(uri) or uri))
+        return recents
+
+    @objc.python_method
+    def _displayNameForURI(self, uri):
+        try:
+            from AppKit import NSApp
+            contact = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(uri)
+        except Exception:
+            return None
+        name = getattr(contact, 'name', None) if contact is not None else None
+        return str(name) if name else None
+
+    @objc.IBAction
+    def forwardSelection_(self, sender):
+        """Offer the ticked files to somebody else.
+
+        The menu is built from the conversations rather than from the
+        address book: forwarding goes to a conversation, and a list of
+        everyone this account has ever known is a list to scroll rather
+        than to choose from. Anyone not in it is still reachable by
+        dragging the selection onto their row, which now carries the whole
+        set.
+        """
+        paths, _images, missing = self.selectedFileDrag()
+        if missing:
+            self._fetchSelectedFiles()
+        if not paths:
+            BlinkLogger().log_info('Nothing to forward: none of the %d ticked file(s) '
+                                   'are on this computer' % self.selectionCount())
+            self.noteUndraggedFiles(missing or self.selectionCount())
+            return
+
+        recents = self._recentConversations()
+        if not recents:
+            BlinkLogger().log_info('Nothing to forward to: no other conversation is known')
+            return
+
+        menu = NSMenu.alloc().init()
+        menu.setAutoenablesItems_(False)
+        heading = menu.addItemWithTitle_action_keyEquivalent_(
+            (NSLocalizedString("Forward 1 file to", "Menu item") if len(paths) == 1
+             else NSLocalizedString("Forward %d files to", "Menu item") % len(paths)),
+            "", "")
+        heading.setEnabled_(False)
+        for uri, name in recents:
+            item = menu.addItemWithTitle_action_keyEquivalent_(
+                '%s (%s)' % (name, uri) if name != uri else uri,
+                "forwardSelectionToContact:", "")
+            item.setIndentationLevel_(1)
+            item.setTarget_(self)
+            item.setRepresentedObject_({'uri': uri, 'filenames': paths})
+        if missing:
+            note = menu.addItemWithTitle_action_keyEquivalent_(
+                (NSLocalizedString("1 more is still downloading", "Menu item")
+                 if missing == 1
+                 else NSLocalizedString("%d more are still downloading", "Menu item")
+                 % missing), "", "")
+            note.setEnabled_(False)
+        try:
+            view = sender if hasattr(sender, 'window') else self.messageListView
+            point = view.window().convertScreenToBase_(NSEvent.mouseLocation())
+            event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
+                NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(),
+                view.window().windowNumber(), view.window().graphicsContext(), 0, 1, 0)
+            NSMenu.popUpContextMenu_withEvent_forView_(menu, event, view)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot show the forward menu: %s' % e)
+
+    def forwardSelectionToContact_(self, sender):
+        """Send the ticked files into another conversation.
+
+        Through the contact list's own drop path, deliberately: that is
+        where the account is resolved, where upload and file transfer are
+        chosen between, and where the preview panel lives. Forwarding is a
+        drop onto a contact that the user did not have to aim.
+        """
+        chosen = sender.representedObject()
+        uri = str(chosen.get('uri') or '')
+        filenames = list(chosen.get('filenames') or [])
+        if not uri or not filenames:
+            return
+        try:
+            from AppKit import NSApp
+            from ContactListModel import BonjourBlinkContact
+            from sipsimple.account import BonjourAccount
+            controller = NSApp.delegate().contactsWindowController
+            model = controller.model
+            contact = controller.getFirstContactMatchingURI(uri)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot reach the contact list to forward: %s' % e)
+            return
+        if contact is None:
+            BlinkLogger().log_error('Cannot forward to %s: no contact row for it' % uri)
+            return
+        account = (BonjourAccount() if isinstance(contact, BonjourBlinkContact)
+                   else model.accountForDroppedFiles(contact))
+        if account is None:
+            BlinkLogger().log_error('Cannot forward to %s: no account can reach it' % uri)
+            return
+        BlinkLogger().log_info('Forwarding %d file(s) to %s on %s'
+                               % (len(filenames), uri, account.id))
+        try:
+            model.sendDroppedFiles(self.messageListView, account, contact, filenames)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot forward %d file(s) to %s: %s'
+                                    % (len(filenames), uri, e))
+            return
+        self.clearSelection()
 
     @objc.python_method
     def deleteSelectedMessages(self):

@@ -278,6 +278,13 @@ VIDEO_WELL_ASPECT = 9.0 / 16.0
 # usual AppKit slop: below it every click on a picture would start a drag,
 # because nobody presses a mouse button without moving it a little.
 DRAG_THRESHOLD = 3.0
+# How AppKit arranges several files being dragged at once: a fanned pile
+# with the count on it, which is what the Finder does and what tells the
+# user at a glance that eight things are travelling rather than one.
+try:
+    from AppKit import NSDraggingFormationStack as _DRAG_FORMATION_STACK
+except ImportError:
+    _DRAG_FORMATION_STACK = 4
 # Shift-click extends a selection across the grid. Looked up rather than
 # imported at the top so that a PyObjC without the modern spelling still
 # gets a working modifier rather than an import error at load time.
@@ -425,8 +432,15 @@ GLYPH_DELETE    = chr(10006)
 GLYPH_EDIT      = chr(9998)
 GLYPH_COPY      = chr(10697)
 GLYPH_SAVE      = chr(8615)
+GLYPH_OPEN      = chr(8599)
 GLYPH_COPIED    = chr(10003)
 GLYPH_REPLY     = chr(8617)
+# The document icon a file bubble shows when it has no picture of its own:
+# a PDF, an archive, a spreadsheet. Big enough to be recognised as the icon
+# its application draws and to be taken hold of, small enough that a bubble
+# whose whole content is a filename does not become a poster.
+FILE_ICON_SIZE  = 44.0
+FILE_ICON_GAP   = 6.0
 # how long the copy affordance stays green after it has been used
 COPY_FEEDBACK_SECONDS = 1.4
 
@@ -1589,6 +1603,52 @@ class VideoHostView(NSView):
         return True
 
 
+class BubbleTextField(NSTextField):
+    """The caption inside a bubble.
+
+    Selectable, because a message is text people quote out of. A bubble
+    carrying a FILE is a thing to pick up before it is a thing to select,
+    though -- its caption IS the file's own name -- and this field covers
+    almost the whole of such a bubble. A press the field kept for itself
+    was therefore a drag that could not be started and a file that could
+    not be opened: outside a picture, the only part of a transfer anyone
+    could take hold of was the padding around its name. Those presses go
+    to the bubble; every other message selects as it always did.
+    """
+
+    @objc.python_method
+    def _fileBubble(self):
+        bubble = self.superview()
+        try:
+            return bubble if bubble is not None and bubble.holdsDraggableFile() else None
+        except AttributeError:
+            return None
+
+    def mouseDown_(self, event):
+        bubble = self._fileBubble()
+        if bubble is None:
+            objc.super(BubbleTextField, self).mouseDown_(event)
+            return
+        bubble.mouseDown_(event)
+
+    def mouseDragged_(self, event):
+        # The drag and the release follow the press: AppKit keeps sending
+        # them to whichever view took mouseDown, so handing over the press
+        # alone would arm a drag that nothing ever started.
+        bubble = self._fileBubble()
+        if bubble is None:
+            objc.super(BubbleTextField, self).mouseDragged_(event)
+            return
+        bubble.mouseDragged_(event)
+
+    def mouseUp_(self, event):
+        bubble = self._fileBubble()
+        if bubble is None:
+            objc.super(BubbleTextField, self).mouseUp_(event)
+            return
+        bubble.mouseUp_(event)
+
+
 class MessageBubbleView(NSView):
     KIND_TEXT = 'text'
     KIND_SYSTEM = 'system'
@@ -1697,6 +1757,11 @@ class MessageBubbleView(NSView):
             self.upload_pending = False
             self.media_path = None
             self.media_natural_size = None
+            # The icon the Finder draws for the file on disc, and the path
+            # it was asked for. Cached because it is wanted on every draw
+            # and it is a trip out to Launch Services.
+            self._file_icon = None
+            self._file_icon_path = None
             # A line appended under a file's caption while something is
             # happening to it -- downloading, decrypting, or having failed.
             # The message this one answers: its id, who wrote it, and a
@@ -1792,6 +1857,7 @@ class MessageBubbleView(NSView):
             self._edit_rect = NSZeroRect
             self._copy_rect = NSZeroRect
             self._save_rect = NSZeroRect
+            self._open_rect = NSZeroRect
             self._reply_rect = NSZeroRect
             # True for a moment after copying, so the affordance can say it
             # did something: a click that silently succeeds is
@@ -2013,7 +2079,7 @@ class MessageBubbleView(NSView):
     @objc.python_method
     def _rebuildBody(self):
         if self._body_field is None:
-            field = NSTextField.alloc().initWithFrame_(NSMakeRect(0, 0, 10, 10))
+            field = BubbleTextField.alloc().initWithFrame_(NSMakeRect(0, 0, 10, 10))
             field.setEditable_(False)
             field.setSelectable_(True)
             field.setBordered_(False)
@@ -2208,6 +2274,17 @@ class MessageBubbleView(NSView):
         return self._bubble_rect
 
     @objc.python_method
+    def _dragFrameRect(self):
+        """Where the drag image lifts from.
+
+        The icon when there is one, rather than the whole bubble: the
+        picture following the pointer is a 44pt document icon, and framed
+        against a bubble four times that size it arrives stretched.
+        """
+        icon = self._fileIconRect()
+        return icon if icon.size.width > 0 else self._fileDragRect()
+
+    @objc.python_method
     def _dragImage(self):
         """What follows the pointer: the picture, or the file's own icon.
 
@@ -2298,27 +2375,103 @@ class MessageBubbleView(NSView):
 
     @objc.python_method
     def _beginFileDrag(self, event):
-        """Hand the file on disc to wherever it is dropped.
+        """Hand the file on disc -- or every ticked file -- to the drop.
 
         The FILE travels, not the picture: an NSURL on the pasteboard is
         what the Finder turns into a copy on the desktop, under the name
         it was sent with. Writing the image instead would drop a nameless
         "Picture 1.tiff" -- and for a PDF or a recording, nothing at all.
+
+        The selection rule is the one the Finder and Photos both use: a
+        press on a cell that is PART of the selection drags the whole
+        selection, and a press on one that is not drags that cell alone
+        and leaves the ticks alone. So ticking eight pictures and dragging
+        any one of them carries all eight; dragging a ninth carries the
+        ninth.
         """
+        renderer = self.renderer
+        if self.selected and renderer is not None \
+                and hasattr(renderer, 'selectedFileDrag'):
+            paths, images, missing = renderer.selectedFileDrag()
+            if missing:
+                # A drag cannot wait for a download, so a ticked tile whose
+                # file is still on the server stays behind. Said out loud:
+                # carrying five of eight without a word is the one outcome
+                # nobody could have predicted from the gesture.
+                BlinkLogger().log_info('%d ticked file(s) are not on this computer '
+                                       'and do not travel with the drag' % missing)
+                if hasattr(renderer, 'noteUndraggedFiles'):
+                    renderer.noteUndraggedFiles(missing)
+            if len(paths) > 1:
+                self._dragOutFiles(paths, images, event)
+                return
+            if paths:
+                # One survivor of a bigger selection: an ordinary single
+                # drag, of the file that is actually here.
+                self._dragOutFile(paths[0], images[0] if images else self._dragImage(),
+                                  event, self._dragFrameRect())
+                return
+            if missing:
+                return                  # nothing here to carry
+
         path = self.media_path
         if not path or not os.path.exists(path):
             BlinkLogger().log_info('Nothing to drag from message %s: %s is not here'
                                    % (self.msgid, path))
             return
-        self._dragOutFile(path, self._dragImage(), event)
+        self._dragOutFile(path, self._dragImage(), event, self._dragFrameRect())
 
     @objc.python_method
-    def _dragOutFile(self, path, image, event):
-        """Start the session that carries `path` to wherever it is dropped."""
+    def _dragOutFiles(self, paths, images, event):
+        """Carry several files at once, as one stacked drag.
+
+        One dragging item per file, which is what makes the Finder write
+        eight files rather than one, and what lets Blink's own drop
+        targets -- a contact row, a conversation -- take the whole set:
+        every one of them reads a list of filenames already.
+        """
+        try:
+            base = self._dragFrameRect()
+            items = []
+            for index, path in enumerate(paths):
+                url = NSURL.fileURLWithPath_(str(path))
+                item = NSDraggingItem.alloc().initWithPasteboardWriter_(url)
+                # Fanned by a couple of points each, so the pile reads as a
+                # pile from the first frame instead of snapping into one
+                # once the session takes the drawing over.
+                frame = NSMakeRect(base.origin.x + index * 2.0,
+                                   base.origin.y + index * 2.0,
+                                   base.size.width, base.size.height)
+                image = images[index] if index < len(images) else None
+                if image is not None:
+                    item.setDraggingFrame_contents_(frame, image)
+                else:
+                    item.setDraggingFrame_(frame)
+                items.append(item)
+            session = self.beginDraggingSessionWithItems_event_source_(
+                NSArray.arrayWithArray_(items), event, self)
+            try:
+                session.setDraggingFormation_(_DRAG_FORMATION_STACK)
+            except Exception as e:
+                BlinkLogger().log_debug('Cannot stack the drag: %s' % e)
+            BlinkLogger().log_info('Dragging %d file(s) out of the transcript'
+                                   % len(paths))
+        except Exception as e:
+            BlinkLogger().log_error('Cannot drag %d file(s): %s' % (len(paths), e))
+
+    @objc.python_method
+    def _dragOutFile(self, path, image, event, frame=None):
+        """Start the session that carries `path` to wherever it is dropped.
+
+        `frame` is where the drag image lifts from. It is the caller's to
+        give because only the caller knows what the picture IS: a map
+        snapshot lifts from the map, a document icon from the icon, and
+        framing a 44pt icon against a whole bubble arrives stretched.
+        """
         try:
             url = NSURL.fileURLWithPath_(str(path))
             item = NSDraggingItem.alloc().initWithPasteboardWriter_(url)
-            rect = self._fileDragRect()
+            rect = frame if frame is not None else self._fileDragRect()
             if image is not None:
                 # Framed where the thing sits in the bubble, so it appears
                 # to lift off the transcript rather than materialise under
@@ -2425,10 +2578,119 @@ class MessageBubbleView(NSView):
 
     @objc.python_method
     def _showsSaveAs(self):
-        """A file bubble can always put its file somewhere of the user's
-        choosing -- fetching it first if it is not here yet."""
+        """Fetch this file and put it where the user wants to keep it.
+
+        Only while it is NOT here yet. Once it is, a downward arrow says
+        "still to come down" about something that already has, and the
+        header offers Open in its place -- saving a second copy somewhere
+        else is on the bubble's own menu, which is where a thing wanted
+        once in a hundred times belongs.
+        """
         return (self.transfer_meta is not None
+                and not self.media_path
                 and self.kind not in (self.KIND_SYSTEM, self.KIND_DATE))
+
+    @objc.python_method
+    def _showsOpen(self):
+        """A file that is HERE gets an open affordance in its header."""
+        return (self.transfer_meta is not None
+                and bool(self.media_path)
+                and not self._tileMode()
+                and self.kind not in (self.KIND_SYSTEM, self.KIND_DATE))
+
+    @objc.python_method
+    def holdsDraggableFile(self):
+        """Whether a press on this bubble is a press on a file."""
+        return bool(self.msgid) and bool(self.media_path)
+
+    @objc.python_method
+    def _showsFileIcon(self):
+        """Whether this bubble draws the file's own icon.
+
+        For everything a transfer can be that has no picture to show: a
+        PDF, an archive, a spreadsheet. A photograph draws itself, a movie
+        draws its poster or its well, a recording draws its player, and a
+        map is not a file at all -- so the icon is what is left, and
+        without it such a transfer is a line of text with nothing to look
+        at and nothing to take hold of.
+
+        Drawn whether or not the file has arrived: what KIND of thing is
+        on offer is worth knowing before deciding to fetch it, and the
+        envelope names the type.
+        """
+        return (not self._tileMode()
+                and self.transfer_meta is not None
+                and not self._showsMedia()
+                and not self._showsMap()
+                and not self._showsTransport()
+                and not (self._showsVideo() and self.video_no_poster)
+                and self.kind not in (self.KIND_SYSTEM, self.KIND_DATE))
+
+    @objc.python_method
+    def _fileIcon(self):
+        """The icon the Finder draws for this file, or for its type.
+
+        Asked of Launch Services rather than guessed, so a PDF looks like
+        a PDF and an archive like an archive -- and so the thing dragged
+        out of the transcript looks like the thing that lands on the
+        desktop, which is the same icon. Falls back to the type from the
+        envelope for a file that has not been fetched yet.
+        """
+        path = str(self.media_path or '')
+        key = path or ('type:%s' % (self.transfer_meta or {}).get('filetype', ''))
+        if self._file_icon is not None and self._file_icon_path == key:
+            return self._file_icon
+        icon = None
+        try:
+            workspace = NSWorkspace.sharedWorkspace()
+            if path and os.path.exists(path):
+                icon = workspace.iconForFile_(path)
+            else:
+                meta = self.transfer_meta or {}
+                name = str(meta.get('filename') or '')
+                suffix = os.path.splitext(name)[1].lstrip('.')
+                icon = workspace.iconForFileType_(suffix or 'public.data')
+        except Exception as e:
+            BlinkLogger().log_debug('No icon for the file in %s: %s' % (self.msgid, e))
+            icon = None
+        self._file_icon = icon
+        self._file_icon_path = key
+        return icon
+
+    @objc.python_method
+    def _fileIconRect(self):
+        """The square the icon is drawn in, at the head of its block."""
+        if not self._showsFileIcon():
+            return NSZeroRect
+        rect = self._map_rect
+        if rect.size.width <= 0 or rect.size.height <= 0:
+            return NSZeroRect
+        return NSMakeRect(rect.origin.x, rect.origin.y,
+                          min(FILE_ICON_SIZE, rect.size.width), rect.size.height)
+
+    @objc.python_method
+    def _drawFileIcon(self):
+        _draw_image(self._fileIcon(), self._fileIconRect())
+
+    @objc.python_method
+    def openFile(self):
+        """Hand the file to whatever owns it -- or play it here, if a movie."""
+        path = self.media_path
+        if not path:
+            return
+        if self._showsVideo():
+            # A film plays in its own bubble. Handing it to whatever owns
+            # .mp4 would open a second window over something already on
+            # screen.
+            renderer = self.renderer
+            if renderer is not None and hasattr(renderer, 'bubbleDidRequestPlayPause'):
+                renderer.bubbleDidRequestPlayPause(self.msgid)
+                return
+        try:
+            BlinkLogger().log_info('Opening %s from message %s' % (path, self.msgid))
+            NSWorkspace.sharedWorkspace().openFile_(str(path))
+        except Exception as e:
+            BlinkLogger().log_error('Cannot open %s: %s' % (path, e))
 
     @objc.python_method
     def _layoutSignature(self):
@@ -2448,6 +2710,10 @@ class MessageBubbleView(NSView):
                 self._showsProgress(),
                 self.media_image is not None,
                 self._showsMap(),
+                # The icon block is a block like any other, and it appears
+                # the moment a file lands.
+                self._showsFileIcon(),
+                bool(self.media_path),
                 # A quote arriving late -- the link travels as its own
                 # message and often lands after the reply -- changes the
                 # bubble's height, so it has to invalidate the cache.
@@ -3033,21 +3299,13 @@ class MessageBubbleView(NSView):
                 if kind == 'map' and self.location_maps_url:
                     NSWorkspace.sharedWorkspace().openURL_(
                         NSURL.URLWithString_(str(self.location_maps_url)))
-                elif kind == 'file' and self._showsVideo():
-                    # A movie plays HERE. Handing it to whatever owns .mp4
-                    # was the only thing to do before there was a player in
-                    # the bubble; now it would open a second window over
-                    # the transcript for something already on screen. The
-                    # press-and-drag half of the gesture is untouched, so
-                    # the file still goes to the Finder.
-                    renderer = self.renderer
-                    if renderer is not None \
-                            and hasattr(renderer, 'bubbleDidRequestPlayPause'):
-                        renderer.bubbleDidRequestPlayPause(self.msgid)
-                    elif self.media_path:
-                        NSWorkspace.sharedWorkspace().openFile_(self.media_path)
-                elif kind == 'file' and self.media_path:
-                    NSWorkspace.sharedWorkspace().openFile_(self.media_path)
+                elif kind == 'file':
+                    # One door for opening, shared with the header glyph
+                    # and the menu: a movie plays here, everything else
+                    # goes to whatever owns it. The press-and-drag half of
+                    # the gesture is untouched, so the file still goes to
+                    # the Finder.
+                    self.openFile()
             except Exception as e:
                 BlinkLogger().log_error('Cannot open the %s in message %s: %s'
                                         % (kind, self.msgid, e))
@@ -3208,6 +3466,8 @@ class MessageBubbleView(NSView):
             left += width_of(GLYPH_EDIT, glyph_font) + 6.0
         if self._isCopyable():
             left += width_of(GLYPH_COPY, glyph_font) + 6.0
+        if self._showsOpen():
+            left += width_of(GLYPH_OPEN, glyph_font) + 6.0
         if self._showsSaveAs():
             left += width_of(GLYPH_SAVE, glyph_font) + 6.0
         if self._isRepliable():
@@ -3506,6 +3766,14 @@ class MessageBubbleView(NSView):
             map_w = max(body_w - 2 * inset, 40.0)
             map_h = min(map_w * VIDEO_WELL_ASPECT, self._mediaHeightLimit(map_w))
             map_block = map_h
+        elif self._showsFileIcon():
+            # The file's own icon, at the head of its caption. It takes the
+            # full body width so the block lands at the left of the text
+            # column rather than centred: this is a mark on a line of text,
+            # not a picture in its own right.
+            map_w = max(body_w, FILE_ICON_SIZE)
+            map_h = FILE_ICON_SIZE
+            map_block = map_h + FILE_ICON_GAP
         elif self._tileMode() and self.transfer_meta is not None:
             # A picture that has not arrived yet still holds its cell, so
             # the grid does not reflow under the user as each one lands.
@@ -3712,6 +3980,8 @@ class MessageBubbleView(NSView):
             elif self._tileMode() and self.transfer_meta is not None \
                     and self._map_rect.size.width > 0:
                 self._drawPendingTile()
+            elif self._showsFileIcon() and self._map_rect.size.width > 0:
+                self._drawFileIcon()
 
             if self._tileMode() and self.transfer_meta is not None:
                 # A tile has no caption, so the one thing the wall cannot
@@ -4506,6 +4776,7 @@ class MessageBubbleView(NSView):
         self._edit_rect = NSZeroRect
         self._copy_rect = NSZeroRect
         self._save_rect = NSZeroRect
+        self._open_rect = NSZeroRect
         self._reply_rect = NSZeroRect
 
     @objc.python_method
@@ -4582,10 +4853,18 @@ class MessageBubbleView(NSView):
         else:
             self._copy_rect = NSZeroRect
 
-        # save-as, right of copy. Downloading and saving are two different
-        # things: Download brings the file here so the bubble can show it,
-        # this puts a copy wherever the user wants to keep it -- fetching
-        # first if it is not here yet.
+        # Open, or save-as: the same place in the row, because they are
+        # the same question asked of a file that is here and one that is
+        # not. Downloading and saving are two different things -- Download
+        # brings the file here so the bubble can show it, save-as puts a
+        # copy wherever the user wants to keep it, fetching first -- and
+        # once the file IS here neither is what anyone wants from a header
+        # glyph. Opening it is.
+        if self._showsOpen():
+            self._open_rect = draw_glyph(GLYPH_OPEN, left)
+            left = self._open_rect.origin.x + self._open_rect.size.width + 6.0
+        else:
+            self._open_rect = NSZeroRect
         if self._showsSaveAs():
             self._save_rect = draw_glyph(GLYPH_SAVE, left)
             left = self._save_rect.origin.x + self._save_rect.size.width + 6.0
@@ -5316,6 +5595,21 @@ class MessageBubbleView(NSView):
                 item = menu.addItemWithTitle_action_keyEquivalent_(
                     NSLocalizedString("Copy", "Menu item"), "menuCopyPicture:", "")
                 item.setTarget_(self)
+            if self.media_path:
+                item = menu.addItemWithTitle_action_keyEquivalent_(
+                    NSLocalizedString("Open", "Menu item"), "menuOpenFile:", "")
+                item.setTarget_(self)
+                item = menu.addItemWithTitle_action_keyEquivalent_(
+                    NSLocalizedString("Show in Finder", "Menu item"),
+                    "menuShowInFinder:", "")
+                item.setTarget_(self)
+            if self.transfer_meta is not None:
+                # Save-as leaves the header once the file is here; this is
+                # where it goes. Offered before it arrives too, where it
+                # means "fetch it and put it there".
+                item = menu.addItemWithTitle_action_keyEquivalent_(
+                    NSLocalizedString("Save As\u2026", "Menu item"), "menuSaveAs:", "")
+                item.setTarget_(self)
             item = menu.addItemWithTitle_action_keyEquivalent_(
                 NSLocalizedString("Delete\u2026", "Menu item"), "menuDeletePicture:", "")
             item.setTarget_(self)
@@ -5346,6 +5640,24 @@ class MessageBubbleView(NSView):
         # what gets pasted is the picture that was sent, at the size it was
         # sent at.
         self.copyBodyToPasteboard()
+
+    def menuOpenFile_(self, sender):
+        self.openFile()
+
+    def menuShowInFinder_(self, sender):
+        path = self.media_path
+        if not path:
+            return
+        try:
+            NSWorkspace.sharedWorkspace().selectFile_inFileViewerRootedAtPath_(str(path), '')
+        except Exception as e:
+            BlinkLogger().log_error('Cannot show %s in the Finder: %s' % (path, e))
+
+    def menuSaveAs_(self, sender):
+        renderer = self.renderer
+        if renderer is not None and hasattr(renderer, 'bubbleDidRequestSaveAs'):
+            BlinkLogger().log_debug('Bubble %s: save as, from the menu' % self.msgid)
+            renderer.bubbleDidRequestSaveAs(self.msgid)
 
     def menuDeletePicture_(self, sender):
         renderer = self.renderer
@@ -5399,6 +5711,10 @@ class MessageBubbleView(NSView):
         if self._hits(point, self._copy_rect, header and self._isCopyable()):
             BlinkLogger().log_debug('Bubble %s: copy' % self.msgid)
             self.copyBodyToPasteboard()
+            return
+        if self.msgid and self._hits(point, self._open_rect, header and self._showsOpen()):
+            BlinkLogger().log_debug('Bubble %s: open' % self.msgid)
+            self.openFile()
             return
         if self.msgid and self._hits(point, self._save_rect, header and self._showsSaveAs()):
             if renderer is not None and hasattr(renderer, 'bubbleDidRequestSaveAs'):

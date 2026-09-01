@@ -472,6 +472,12 @@ class MessagePaneController(NSObject):
 
         self.avatarView = AvatarView.alloc().initWithFrame_(
             NSMakeRect(PAD, (HEADER_HEIGHT - AVATAR_SIZE) / 2.0, AVATAR_SIZE, AVATAR_SIZE))
+        # The face is the way to the person. It is the one thing in this
+        # strip that is entirely about WHO the conversation is with, so it
+        # is where a click asking to change what is known about them
+        # belongs -- the place every other client puts it.
+        self.avatarView.setClickHandler(
+            self.editPeerContact, NSLocalizedString("Edit this contact", "Tooltip"))
         header.addSubview_(self.avatarView)
 
         text_x = PAD + AVATAR_SIZE + PAD
@@ -2040,6 +2046,58 @@ class MessagePaneController(NSObject):
             return str(viewer.display_remote_uri())
         except AttributeError:
             return str(viewer.remote_uri)
+
+    @objc.python_method
+    def editPeerContact(self):
+        """Open the other party's contact card, from their face in the header.
+
+        The split is the one the contact list's own menu makes: a contact
+        of ours opens in Blink's editor, one that lives in the system
+        address book opens there, and anything else -- a Bonjour
+        neighbour, an address seen only in this conversation -- is not an
+        edit at all but an add, with the panel already filled in. Doing
+        nothing for an address nobody has named yet would make the face
+        look broken exactly where it is most worth clicking.
+        """
+        viewer = self._selected
+        if viewer is None:
+            return                      # an empty pane; there is nobody to edit
+        uri = str(getattr(viewer, 'remote_uri', '') or '')
+        owner = self._owner
+        if not uri or owner is None:
+            BlinkLogger().log_debug('No address behind the avatar to open a card for')
+            return
+        name = self.contactNameFor(viewer)
+        try:
+            contact = owner.getFirstContactMatchingURI(uri)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot look %s up in the address book: %s' % (uri, e))
+            return
+        try:
+            from ContactListModel import BlinkPresenceContact, SystemAddressBookBlinkContact
+        except Exception as e:
+            BlinkLogger().log_error('Cannot reach the contact model: %s' % e)
+            return
+        try:
+            if isinstance(contact, (BlinkPresenceContact, SystemAddressBookBlinkContact)):
+                BlinkLogger().log_info('Opening the contact card for %s' % uri)
+                owner.model.editContact(contact)
+            else:
+                BlinkLogger().log_info('%s is not in the address book; offering to add it'
+                                       % uri)
+                owner.addContact(uris=[(uri, 'sip')], name=name or None)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot open the contact card for %s: %s' % (uri, e))
+            return
+        # Both panels are modal, and either can have renamed the person or
+        # given them a photograph. The header is showing the old one until
+        # it is asked again.
+        try:
+            self.nameLabel.setStringValue_(self.contactNameFor(viewer))
+            self._loadAvatarFor(viewer)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot refresh the header after editing %s: %s'
+                                    % (uri, e))
 
     @objc.python_method
     def _loadAvatarFor(self, viewer, name=None):

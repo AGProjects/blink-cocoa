@@ -2947,6 +2947,11 @@ class CustomListModel(NSObject):
     """Contacts List Model behaviour, display and drag an drop actions"""
     groupsList = []
     drop_on_contact_index = None
+    # A drop waiting for the run loop to come back round, as
+    # (table, account, item, filenames). One at a time: the preview it
+    # opens is modal, so a second drop cannot land before the first has
+    # been dealt with.
+    _pending_drop = None
 
     @property
     def sessionControllersManager(self):
@@ -3376,6 +3381,122 @@ class CustomListModel(NSObject):
                                     % sourceContact.id)
         self.nc.post_notification("BlinkContactsHaveChanged", sender=group)
 
+    def deliverDroppedFiles_(self, sender):
+        """Send a drop that acceptDrop handed to the next run loop turn."""
+        pending, self._pending_drop = self._pending_drop, None
+        if pending is None:
+            return
+        table, account, item, filenames = pending
+        try:
+            self.sendDroppedFiles(table, account, item, filenames)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot send the dropped files: %s' % e)
+
+    @objc.python_method
+    def previewDroppedFiles(self, table, item, filenames):
+        """Show what is about to be sent. Returns what to send, or [] for no.
+
+        The same window the composer's own attachments go through, so a
+        file dropped on a row in the contact list is looked at -- and can
+        be cropped, shrunk or thought better of -- exactly as one attached
+        to a conversation is. A drop is one gesture that can miss by a row,
+        which is the case this is here for.
+
+        Folders go round it untouched: the preview shows files, and a
+        dropped folder is not one until it has been zipped, which happens
+        further down where both roads meet.
+        """
+        paths = [str(name) for name in (filenames or [])]
+        files = [path for path in paths if os.path.isfile(path)]
+        folders = [path for path in paths if path not in files]
+        if not files:
+            return paths
+        try:
+            from AttachmentPreview import confirm_attachments, prepare_attachments
+        except Exception as e:
+            # A preview that will not import must not cost the drop what it
+            # was added to guard: the files go, as they did before there
+            # was one.
+            BlinkLogger().log_error('Cannot load the attachment preview: %s' % e)
+            return paths
+
+        try:
+            window = table.window() if table is not None else None
+        except Exception:
+            window = None
+        name = getattr(item, 'name', None) or str(getattr(item, 'uri', '') or '')
+        title = (NSLocalizedString("Send to %s", "Label") % name) if name else None
+
+        plan = confirm_attachments(files, window, title)
+        if not plan:
+            BlinkLogger().log_info('The files dropped on %s were not sent' % (name or 'a contact'))
+            return []
+        prepared = prepare_attachments(plan, window)
+        if not prepared:
+            BlinkLogger().log_info('The files dropped on %s were not sent: cancelled while '
+                                   'they were being prepared' % (name or 'a contact'))
+            return []
+        return list(prepared) + folders
+
+    @objc.python_method
+    def accountForDroppedFiles(self, item):
+        """Which account a drop on this contact should go out on.
+
+        The one the conversation with them last used -- not whichever
+        account the chooser happens to be pointing at. The two are not the
+        same thing, and the difference had teeth: the chooser follows the
+        conversation on screen, so dropping a file on a SIP contact while a
+        Bonjour neighbour was selected sent it out on bonjour@local. That
+        account has no upload service, which took the drop down the "no web
+        target" road without a word, offered the file over MSRP, and filed
+        the transfer under bonjour@local -- in a conversation with an
+        address that had seventy-odd messages sitting on another account.
+
+        Bonjour is never the answer for a contact with an address, whatever
+        the default is: it cannot upload, it does not register, and it has
+        nothing to do with reaching them.
+        """
+        addresses = [str(uri.uri) for uri in self.contactAddresses(item)] \
+            or [str(getattr(item, 'uri', '') or '')]
+        try:
+            from SMSWindowManager import SMSWindowManager
+            manager = SMSWindowManager()
+        except Exception as e:
+            BlinkLogger().log_debug('Cannot ask which account this conversation uses: %s' % e)
+            manager = None
+        if manager is not None:
+            for address in addresses:
+                if not address:
+                    continue
+                try:
+                    known = manager.accountForRemoteURI(address)
+                except Exception as e:
+                    BlinkLogger().log_debug('Cannot read the account of the conversation '
+                                            'with %s: %s' % (address, e))
+                    continue
+                if known is not None and known is not BonjourAccount():
+                    return known
+
+        account = AccountManager().default_account
+        if account is not None and account is not BonjourAccount():
+            return account
+        # No conversation to learn from and the default cannot reach a SIP
+        # address. Any enabled account is a better answer than one that
+        # would turn the drop into an MSRP transfer filed under bonjour.
+        fallback = next((candidate for candidate in AccountManager().get_accounts()
+                         if candidate is not BonjourAccount() and candidate.enabled), None)
+        if fallback is None:
+            # Nothing else registered. Bonjour reaches a SIP address badly
+            # -- no proxy, no upload -- but it does reach it, and refusing
+            # the drop outright would be a worse answer than the one that
+            # has been working.
+            return account
+        if account is not None:
+            BlinkLogger().log_info('The default account is %s, which cannot reach a SIP '
+                                   'contact; the drop goes out on %s'
+                                   % (account.id, fallback.id))
+        return fallback
+
     @objc.python_method
     def sendDroppedFiles(self, table, account, item, filenames):
         """Route files dropped on a contact, asking first when it is a choice.
@@ -3398,6 +3519,14 @@ class CustomListModel(NSObject):
         """
         manager = self.sessionControllersManager
 
+        # Before the road is chosen, not after: what is being sent is the
+        # same question whichever way it travels, and asking it once here
+        # keeps the menu below carrying the files the user actually
+        # approved rather than the ones they dropped.
+        filenames = self.previewDroppedFiles(table, item, filenames)
+        if not filenames:
+            return False
+
         if isinstance(item, BonjourBlinkContact):
             # Through the conversation, like an upload, not straight to an
             # MSRP session. The conversation is what builds the file
@@ -3411,6 +3540,9 @@ class CustomListModel(NSObject):
             # A Bonjour neighbour is addressed by instance id: there is no
             # upload target to weigh against, so none of the choosing below
             # applies to them.
+            BlinkLogger().log_info('Files dropped on the Bonjour neighbour %s: '
+                                   'file transfer, the only road bonjour@local has'
+                                   % (item.name or item.id))
             if manager.send_files_to_conversation(account, str(item.uri), filenames,
                                                   instance_id=item.id):
                 return True
@@ -3430,8 +3562,30 @@ class CustomListModel(NSObject):
         # send_files_to_contact has its own say about that; refusing the
         # drop here would only mean deciding it twice, once silently.
         web_target = manager.upload_address(account, strings)
+        pane_open = self.messagesPaneIsOpen()
 
-        if web_target and self.messagesPaneIsOpen():
+        # Said out loud, because until it was, a drop that went out over
+        # MSRP looked identical whether the account had no upload service,
+        # the address had never been messaged, or the user had picked File
+        # Transfer from the menu -- and the difference is the whole
+        # question when a file leaves by the road nobody expected.
+        # upload_address folds the first two into one None, so the reason
+        # is worked out here rather than read off it.
+        if web_target:
+            reason = 'uploading to %s' % web_target
+        elif not manager.account_can_upload(account):
+            reason = '%s has no upload service' % account.id
+        else:
+            reason = 'no messages on record with %s' % ', '.join(strings)
+        BlinkLogger().log_info(
+            'Files dropped on %s: account %s, %s, messages pane %s -> %s'
+            % (getattr(item, 'name', None) or strings[0], account.id, reason,
+               'open' if pane_open else 'closed',
+               'web upload' if (web_target and pane_open)
+               else ('file transfer' if not web_target and len(strings) == 1
+                     else 'the menu')))
+
+        if web_target and pane_open:
             return self._sendDroppedFilesTo(manager, account, web_target,
                                             filenames, route='web')
 
@@ -3727,14 +3881,22 @@ class CustomListModel(NSObject):
             if self.dragCameFromContact(info.draggingSource(), item):
                 return False
             filenames =[unicodedata.normalize('NFC', file) for file in info.draggingPasteboard().propertyListForType_(NSFilenamesPboardType)]
-            account = BonjourAccount() if isinstance(item, BonjourBlinkContact) else AccountManager().default_account
+            account = BonjourAccount() if isinstance(item, BonjourBlinkContact) \
+                else self.accountForDroppedFiles(item)
             # MSRP file transfer being switched off is no longer the end of
             # it: an upload through SylkServer is a different road to the
             # same place and does not need the MSRP media type at all. Only
             # refuse when NEITHER route is open.
             if not filenames or not account:
                 return False
-            return self.sendDroppedFiles(table, account, item, filenames)
+            # Handed to the next turn of the run loop rather than done
+            # here. The preview is a modal window, and opening one while
+            # AppKit still believes a drag is in progress leaves the drag
+            # image on screen and the pointer in a state nobody asked for.
+            # The drop is accepted either way; what follows is the send.
+            self._pending_drop = (table, account, item, filenames)
+            self.performSelector_withObject_afterDelay_('deliverDroppedFiles:', None, 0.0)
+            return True
         elif info.draggingPasteboard().availableTypeFromArray_(["x-blink-audio-session"]):
             source = info.draggingSource()
             if index != NSOutlineViewDropOnItemIndex or not isinstance(item, BlinkContact) or not isinstance(source, AudioSession):

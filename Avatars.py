@@ -27,6 +27,7 @@ import re
 import zlib
 
 from AppKit import (NSCompositeSourceOver,
+                    NSCursor,
                     NSFontAttributeName,
                     NSForegroundColorAttributeName,
                     NSView)
@@ -37,7 +38,8 @@ from Foundation import (NSAttributedString,
                         NSGraphicsContext,
                         NSImage,
                         NSMakeRect,
-                        NSMakeSize)
+                        NSMakeSize,
+                        NSPointInRect)
 
 import objc
 
@@ -246,6 +248,56 @@ class AvatarView(NSView):
     _avatarImage = None
     _avatarName = ''
     _avatarGlyph = False
+    # What a click on the face does, for whoever placed the view and wants
+    # one. Unset everywhere else, so an avatar that is only a picture stays
+    # only a picture and swallows no clicks meant for the view behind it.
+    _onClick = None
+    _pressed = False
+
+    @objc.python_method
+    def setClickHandler(self, handler, tooltip=None):
+        """Make the face clickable, and say so with a cursor and a tooltip.
+
+        A circle that does something and looks exactly like a circle that
+        does not is a feature nobody finds: the pointing hand is what says
+        this one is a way in, before anything has been clicked.
+        """
+        self._onClick = handler
+        if tooltip:
+            self.setToolTip_(tooltip)
+        window = self.window()
+        if window is not None:
+            window.invalidateCursorRectsForView_(self)
+
+    def resetCursorRects(self):
+        if self._onClick is not None:
+            self.addCursorRect_cursor_(self.bounds(), NSCursor.pointingHandCursor())
+
+    def mouseDown_(self, event):
+        if self._onClick is None:
+            objc.super(AvatarView, self).mouseDown_(event)
+            return
+        # Armed, not acted on. A press that slides off the circle before it
+        # is let go is not a click -- which is what every button on the
+        # same strip does, and what the pointer expects of anything round.
+        self._pressed = True
+
+    def mouseUp_(self, event):
+        if self._onClick is None or not self._pressed:
+            objc.super(AvatarView, self).mouseUp_(event)
+            return
+        self._pressed = False
+        point = self.convertPoint_fromView_(event.locationInWindow(), None)
+        if not NSPointInRect(point, self.bounds()):
+            return
+        try:
+            self._onClick()
+        except Exception as e:
+            try:
+                from BlinkLogger import BlinkLogger
+                BlinkLogger().log_error('Cannot act on a click on the avatar: %s' % e)
+            except Exception:
+                pass
 
     @objc.python_method
     def setAvatar(self, image, name, glyph=False):
