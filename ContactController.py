@@ -804,15 +804,21 @@ class AddContactController(NSObject):
 class EditContactController(AddContactController):
     @objc.python_method
     def publicKeyLabelForContact(self, blink_contact):
-        """The 8-character checksum Sylk Mobile shows for the same key.
+        """The OpenPGP key id of the key held for each of this contact's
+        addresses.
 
-        Derived exactly as generateShortChecksum does there, so the two can
-        be read side by side and compared -- which is the only way to tell a
-        genuine key from one that arrived by the wrong route. A contact can
-        hold several addresses, and a key is stored per address, so all of
-        them are listed rather than just the first.
+        The key's own id -- the last 16 hex of its fingerprint -- and not a
+        checksum computed over the armour: it is what Sylk Mobile shows for
+        the same key, what an encrypted message names when it says who it
+        was sealed to, and what GnuPG or any other OpenPGP tool prints. A
+        hash of the armour identified the same key differently depending on
+        how it had been written out. Comparing the id against the other
+        device is the only way to tell a genuine key from one that arrived
+        by the wrong route, so it has to be the one identifier everything
+        agrees on. A contact can hold several addresses, and a key is stored
+        per address, so all of them are listed rather than just the first.
         """
-        from MessageHost import public_key_short_checksum
+        from MessageHost import public_key_id
         from resources import ApplicationData
 
         keys_path = ApplicationData.get('keys')
@@ -828,19 +834,19 @@ class EditContactController(AddContactController):
                 continue
             try:
                 with open(path, 'rb') as key_file:
-                    checksum = public_key_short_checksum(key_file.read())
+                    key_id = public_key_id(key_file.read())
             except Exception as e:
                 BlinkLogger().log_error('Cannot read the public key of %s: %s' % (uri, e))
                 continue
-            if checksum:
-                entries.append((uri, checksum))
+            if key_id:
+                entries.append((uri, key_id))
 
         if not entries:
             return ''
         if len(entries) == 1:
             return NSLocalizedString("Public key: %s", "Label") % entries[0][1]
         return NSLocalizedString("Public keys: %s", "Label") % ', '.join(
-            '%s %s' % (uri, checksum) for uri, checksum in entries)
+            '%s %s' % (uri, key_id) for uri, key_id in entries)
 
     def __init__(self, blink_contact):
         NSBundle.loadNibNamed_owner_("Contact", self)
@@ -853,7 +859,7 @@ class EditContactController(AddContactController):
         self.all_groups = self.selectableGroups()
         self.nameText.setStringValue_(blink_contact.name or "")
         self.publicKey.setStringValue_(self.publicKeyLabelForContact(blink_contact))
-        # so the checksum can be copied out and compared against the phone
+        # so the key id can be copied out and compared against the phone
         self.publicKey.setSelectable_(True)
         self.organizationText.setStringValue_(blink_contact.organization or "")
         # The stand-in is not a photograph: a contact who has never been
