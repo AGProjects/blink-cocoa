@@ -14,7 +14,7 @@ Set BLINK_DATA_DIR to force one directory.
 """
 
 __all__ = ['NotFound', 'data_directories', 'accounts', 'locate', 'keys_directory',
-           'default_account', 'resolve']
+           'default_account', 'resolve', 'account_setting', 'credentials', 'xcap_root']
 
 import os
 import re
@@ -124,6 +124,13 @@ def _explain(account):
 # Matching on the group path rather than on the name alone also means an
 # unrelated `default_account` nested somewhere else cannot answer for it.
 SETTINGS_GROUP = 'SIPSimpleSettings'
+# Accounts live under their own group, one sub-group per account id:
+#
+#     Accounts:
+#       ag@sylk.link:
+#         auth:
+#           password = ...
+ACCOUNTS_GROUP = 'Accounts'
 
 
 def _entries(path):
@@ -167,6 +174,61 @@ def default_account(directory):
         if names == (SETTINGS_GROUP, 'default_account'):
             return value or None                # unset is written as an empty value
     return None
+
+
+def account_setting(directory, account, *names):
+    """One nested setting of one account, or None if it is not written.
+
+    account_setting(directory, 'ag@sylk.link', 'auth', 'password')
+    """
+    wanted = (ACCOUNTS_GROUP, account) + names
+    for found, value in _entries(os.path.join(directory, 'config')):
+        if found == wanted:
+            return value or None
+    return None
+
+
+def credentials(directory, account):
+    """(username, password) for this account's HTTP requests.
+
+    The username is only written when it differs from the address' local part,
+    which is the usual case for a SIP provider -- so the local part is the
+    fallback, matching what Blink itself sends (the Authorization header on its
+    own XCAP requests is 'ag:...' for ag@sylk.link).
+    """
+    username = account_setting(directory, account, 'auth', 'username') \
+        or account.partition('@')[0]
+    return username, account_setting(directory, account, 'auth', 'password')
+
+
+def xcap_root(directory, account):
+    """The account's XCAP root, or None.
+
+    Blink discovers the root over DNS rather than storing it, so on a normal
+    account there is no setting to read. What the config does contain, for any
+    account that has ever published a status icon, is a full XCAP URL -- so the
+    root is taken off the front of one. The account's own URL is preferred; any
+    other is a reasonable fallback, because one deployment serves one root.
+    """
+    explicit = account_setting(directory, account, 'xcap', 'xcap_root')
+    if explicit:
+        return explicit
+    pattern = re.compile(r'https?://[^\s\'"]+?/xcap-root')
+    mine, any_root = None, None
+    try:
+        with open(os.path.join(directory, 'config'), encoding='utf-8', errors='replace') as fd:
+            for line in fd:
+                match = pattern.search(line)
+                if not match:
+                    continue
+                root = match.group(0)
+                any_root = any_root or root
+                # The account's own URL names it: .../users/sip:<account>/...
+                if ('sip:%s/' % account) in line and mine is None:
+                    mine = root
+    except (IOError, OSError):
+        return None
+    return mine or any_root
 
 
 def resolve(account=None):
