@@ -23,6 +23,7 @@ import mimetypes
 import os
 import re
 import shutil
+import time
 import uuid
 from collections import OrderedDict
 from urllib.parse import unquote
@@ -275,6 +276,10 @@ class FileTransferCache(object):
             cls._instance._tile_cost = {}
             cls._instance._tile_bytes = 0
             cls._instance._natural = {}
+            # the account folders in the cache directory, and when that was
+            # last read (see account_folders)
+            cls._instance._folders = None
+            cls._instance._folders_at = 0.0
             cls._instance._tasks = {}
             cls._instance._phase = {}
             cls._instance._directory = None
@@ -316,16 +321,73 @@ class FileTransferCache(object):
                             self._safe(display_name(meta)) or 'file')
 
     def local_file(self, meta, account, peer):
-        """The downloaded file's path, or None if it is not here yet."""
+        """The downloaded file's path, or None if it is not here yet.
+
+        The account folder is where the file WOULD be filed now, and that is
+        not always where it was filed then: a conversation moves between
+        accounts on its own (a message arriving on another account takes it
+        there), and a file downloaded and decrypted before the move sits
+        under the account it arrived on. Looking only under the current one
+        meant downloading it again -- and then failing to open it, because
+        the file belongs to the key of the account it came in on.
+
+        So the current account first, and every other account folder after
+        it. The transfer id makes the path unambiguous, so a hit under
+        another account is the same file and not a name that happens to
+        collide.
+        """
         try:
             path = self.path_for(meta, account, peer)
         except Exception:
             return None
+        found = self._readable(path)
+        if found is not None:
+            return found
+
+        root = self.directory()
+        mine = self._safe(account)
+        for name in self.account_folders():
+            if name == mine:
+                continue
+            try:
+                candidate = os.path.join(root, name, self._safe(peer),
+                                         self._safe(meta.get('transfer_id') or meta.get('filename')),
+                                         self._safe(display_name(meta)) or 'file')
+            except Exception:
+                continue
+            found = self._readable(candidate)
+            if found is not None:
+                BlinkLogger().log_debug('%s was downloaded under another account, using %s'
+                                        % (display_name(meta), found))
+                return found
+        return None
+
+    def account_folders(self):
+        """The account folders in the cache, memoised for a couple of seconds.
+
+        local_file() asks for these once per file-transfer bubble, and a page
+        of history can carry hundreds of them. The list changes only when a
+        download is filed, which invalidates it on the spot.
+        """
+        if self._folders is not None and (time.monotonic() - self._folders_at) < 2.0:
+            return self._folders
+        try:
+            root = self.directory()
+            names = [name for name in os.listdir(root)
+                     if os.path.isdir(os.path.join(root, name))]
+        except OSError:
+            names = []
+        self._folders = names
+        self._folders_at = time.monotonic()
+        return names
+
+    def _readable(self, path):
+        """`path` if there is a non-empty file there, else None."""
         try:
             if os.path.exists(path) and os.path.getsize(path) > 0:
                 return path
         except OSError:
-            return None
+            pass
         return None
 
     def purge_peer(self, peer):
@@ -518,6 +580,7 @@ class FileTransferCache(object):
                     pass
                 raise
             BlinkLogger().log_info('Filed %s under %s' % (display_name(meta), target))
+            self._folders = None
             return target
         except (OSError, shutil.Error) as e:
             BlinkLogger().log_error('Cannot copy %s to %s: %s' % (source, target, e))
@@ -885,6 +948,7 @@ class FileTransferCache(object):
                 except OSError:
                     pass
                 raise
+            self._folders = None
             return target, None, None
         except Exception as e:
             return None, str(e), kind

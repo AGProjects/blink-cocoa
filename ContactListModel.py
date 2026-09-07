@@ -108,12 +108,17 @@ from GroupController import AddGroupController
 from AudioSession import AudioSession
 from BlinkLogger import BlinkLogger
 from HistoryManager import SessionHistory, ChatHistory
+from HistoryManager import calls_group_startup_check
+from HistoryManager import ensure_call_contact
+from HistoryManager import backfill_call_contacts
+from HistoryManager import BLOCKED_GROUP_KIND, BLOCKED_GROUP_NAME, is_blocked_party
 from SIPManager import MWIData
 from MergeContactController import MergeContactController
 from VirtualGroups import VirtualGroupsManager, VirtualGroup
 from PresencePublisher import on_the_phone_activity
 from resources import ApplicationData, Resources
 from util import allocate_autorelease_pool, format_date, format_uri_type, is_anonymous, log_gui_exception, sipuri_components_from_string, sip_prefix_pattern, strip_addressbook_special_characters, run_in_gui_thread, utc_to_local, call_later
+from util import pstn_uri_spellings_for_accounts
 
 status_localized = {
     'busy':      NSLocalizedString("busy", "Label"),
@@ -1089,24 +1094,11 @@ class BlinkPresenceContact(BlinkContact):
         return pidfs
 
     def _get_favorite(self):
-        addressbook_manager = AddressbookManager()
-        try:
-            group = addressbook_manager.get_group('favorites')
-        except KeyError:
-            return False
-        else:
-            return self.contact.id in group.contacts
+        group = favorites_group()
+        return group is not None and self.contact.id in group.contacts
 
     def _set_favorite(self, value):
-        addressbook_manager = AddressbookManager()
-        try:
-            group = addressbook_manager.get_group('favorites')
-        except KeyError:
-            group = Group(id='favorites')
-            group.name = 'Favorites'
-            group.expanded = True
-            group.position = None
-            group.save()
+        group = favorites_group(create=True)
         operation = group.contacts.add if value else group.contacts.remove
         try:
             operation(self.contact)
@@ -1516,7 +1508,16 @@ class BlinkPresenceContact(BlinkContact):
                             'caps'        : caps,
                             'icon'        : icon,
                             'aor'         : [aor],
-                            'timestamp'   : service.timestamp if hasattr(service, 'timestamp') and service.timestamp is not None else None
+                            # .value, not the element itself. ServiceTimestamp
+                            # is an XMLDateTimeElement and defines no ordering,
+                            # so the max() at the end of handle_pidfs raised
+                            # "'>' not supported between instances of
+                            # 'ServiceTimestamp'" and took the whole presence
+                            # update down with it -- for every device, not just
+                            # the one that reported a time. The winning-service
+                            # comparison above already reads .value; so does
+                            # this now.
+                            'timestamp'   : service.timestamp.value if getattr(service, 'timestamp', None) is not None else None
                             }
                     else:
                         device['aor'].append(aor)
@@ -1674,7 +1675,15 @@ class BlinkPresenceContact(BlinkContact):
         # The newest time any device reported, as a real timestamp rather
         # than text baked into a note.
         stamps = [device['timestamp'] for device in devices.values() if device.get('timestamp')]
-        self.presence_timestamp = max(stamps) if stamps else None
+        try:
+            self.presence_timestamp = max(stamps) if stamps else None
+        except TypeError:
+            # Belt, because the cost of getting this wrong is out of all
+            # proportion to the value: one device reporting something that
+            # cannot be ordered must not abort the presence update for every
+            # other device on the account.
+            BlinkLogger().log_error('Cannot order the presence timestamps %r' % (stamps,))
+            self.presence_timestamp = None
 
         self.logPresenceUpdate(status, devices)
 
@@ -2204,6 +2213,72 @@ class BlinkGroupAttribute(object):
 
 
 MESSAGES_GROUP_ID = '_messages'
+# Favourites. The container is the software's, the membership is the user's --
+# which is why it gets an identity like the rest of the automatic groups even
+# though nothing about WHO is in it is automatic.
+#
+# Two ids: '_favorites' is what a new one is created with, 'favorites' is what
+# every account created before the convention still carries. Both are accepted
+# for as long as the second exists anywhere, which is forever on an account
+# nobody migrates -- an id cannot be changed in place.
+FAVORITES_GROUP_ID = '_favorites'
+FAVORITES_GROUP_LEGACY_ID = 'favorites'
+FAVORITES_GROUP_NAME = 'Favorites'
+FAVORITES_GROUP_KIND = 'favorites'
+
+
+def is_favorites_group(group):
+    """Whether this addressbook group is Favourites.
+
+    kind first -- the only identity that survives a rename and the one both
+    clients agree on -- then either id, then the name. The same order every
+    other group resolution uses here, and the reason renaming the group in the
+    UI can no longer detach the star from the group the star sets.
+    """
+    if group is None:
+        return False
+    if str(getattr(group, 'kind', '') or '').strip().lower() == FAVORITES_GROUP_KIND:
+        return True
+    if getattr(group, 'id', None) in (FAVORITES_GROUP_ID, FAVORITES_GROUP_LEGACY_ID):
+        return True
+    return str(getattr(group, 'name', '') or '').strip().lower() == FAVORITES_GROUP_NAME.lower()
+
+
+def favorites_group(create=False):
+    """The Favourites group, created under the RESERVED id when asked for.
+
+    Creation used to pin the legacy 'favorites' literal. It still resolves --
+    every account made before the convention carries it, and an id cannot be
+    changed in place -- but nothing new is written with it.
+    """
+    for group in AddressbookManager().get_groups():
+        if is_favorites_group(group):
+            return group
+    if not create:
+        return None
+    group = Group(FAVORITES_GROUP_ID)
+    group.name = FAVORITES_GROUP_NAME
+    group.kind = FAVORITES_GROUP_KIND
+    group.expanded = True
+    group.position = None
+    group.save()
+    return group
+# The Calls group: one contact per party we have had an audio call with,
+# ordered by when that call happened. Same reserved-id idiom -- the id is the
+# identity, the visible name is only a label, so renaming it in the UI cannot
+# break anything. See docs/PSTN-CALLS-GROUP.md.
+CALLS_GROUP_ID = '_calls'
+# ...but the NAME is the real identity: the group is replicated through the
+# XCAP addressbook that sylk-mobile also writes, and mobile identifies a group
+# by its canonical Capitalized name. The id is the server's, not ours.
+CALLS_GROUP_NAME = 'Calls'
+# ...and the identity that survives even a rename: BlinkGroupExtension.kind,
+# a SharedSetting in the group's XCAP attribute bag.
+CALLS_GROUP_KIND = 'calls'
+# How long to wait after an XCAP reload before creating anything. Long enough
+# for AddressbookManager's own handler for the same notification to have run
+# and for its transaction to have been pushed -- see _NH_XCAPManagerDidReloadData.
+XCAP_SETTLE_DELAY = 15
 # The Deleted group: conversations that have been removed but not purged.
 # Every row in one of them is a tombstone (chat_messages.deleted = 1), so
 # the history is still there, the downloaded files are still on disc, and
@@ -2266,11 +2341,49 @@ class BlinkGroup(NSObject):
         return getattr(self.group, 'id', None) == MESSAGES_GROUP_ID
 
     @objc.python_method
+    def isFavoritesGroup(self):
+        return is_favorites_group(self.group)
+
+    @objc.python_method
+    def isAppOrderedGroup(self):
+        """Whether this group is ordered by recency rather than by name.
+
+        Messages by its last message, Calls by its last call. Everything that
+        re-sorts or renders a time against a row asks this, so adding a third
+        such group later is one line here rather than a hunt through the file.
+        """
+        return self.isMessagesGroup() or self.isCallsGroup()
+
+    @objc.python_method
+    def isCallsGroup(self):
+        # kind first: it is the only identity that survives a rename and that
+        # both clients can agree on (BlinkGroupExtension.kind, carried in the
+        # XCAP attribute bag). Name second, for every group created before the
+        # attribute existed. The reserved id last, for a group Blink made
+        # before any sync -- the replicated one has a server id, so matching
+        # on that alone would miss it entirely.
+        if str(getattr(self.group, 'kind', '') or '').strip().lower() == CALLS_GROUP_KIND:
+            return True
+        if str(getattr(self.group, 'name', '') or '').strip().lower() == CALLS_GROUP_NAME.lower():
+            return True
+        return getattr(self.group, 'id', None) == CALLS_GROUP_ID
+
+    @objc.python_method
     def isDeletedGroup(self):
         return getattr(self.group, 'id', None) == DELETED_GROUP_ID
 
     @objc.python_method
     def sortContacts(self):
+        if self.isCallsGroup():
+            # Same stable two-pass as the Messages group: alphabetical first,
+            # then by recency, so contacts that share a timestamp -- and the
+            # whole tail that has none -- keep A..Z order underneath instead
+            # of shuffling on every redraw.
+            self.contacts.sort(key=lambda item: str(getattr(item, 'name', '')).lower())
+            self.contacts.sort(
+                key=lambda item: self.lastCallTimeForContact(item) or NO_MESSAGES,
+                reverse=True)
+            return
         if self.isMessagesGroup():
             # Two passes, relying on sort being stable: alphabetical first,
             # then by recency. Contacts that share a timestamp -- and the
@@ -2282,6 +2395,36 @@ class BlinkGroup(NSObject):
                 reverse=True)
             return
         self.contacts.sort(key=lambda item: str(getattr(item, 'name')).lower())
+
+    @objc.python_method
+    def lastCallTimeForContact(self, contact):
+        """When this contact was last on a call, or None.
+
+        The call equivalent of lastMessageTimeForContact, reading the manager's
+        separate call map: chat_messages holds both, but a message must not
+        reorder the Calls group and a call must not reorder Messages.
+        """
+        try:
+            from SMSWindowManager import SMSWindowManager
+            manager = SMSWindowManager()
+        except Exception:
+            return None
+
+        newest = None
+        try:
+            for uri in getattr(contact, 'uris', ()):
+                # A number's calls are filed under the wire form the account
+                # used, with that account's domain; the contact stores bare
+                # E.164. Same expansion the conversation query uses, or the
+                # Calls group shows a row with no time against it -- which is
+                # exactly what a freshly filed PSTN contact did.
+                for spelling in pstn_uri_spellings_for_accounts(str(uri.uri)):
+                    stamp = manager.lastCallTimeForURI(spelling)
+                    if stamp is not None and (newest is None or stamp > newest):
+                        newest = stamp
+        except Exception:
+            return None
+        return newest
 
     @objc.python_method
     def lastMessageTimeForContact(self, contact):
@@ -2304,9 +2447,10 @@ class BlinkGroup(NSObject):
         newest = None
         try:
             for uri in getattr(contact, 'uris', ()):
-                stamp = manager.lastMessageTimeForURI(str(uri.uri))
-                if stamp is not None and (newest is None or stamp > newest):
-                    newest = stamp
+                for spelling in pstn_uri_spellings_for_accounts(str(uri.uri)):
+                    stamp = manager.lastMessageTimeForURI(spelling)
+                    if stamp is not None and (newest is None or stamp > newest):
+                        newest = stamp
         except Exception:
             return None
         return newest
@@ -2952,6 +3096,11 @@ class CustomListModel(NSObject):
     # opens is modal, so a second drop cannot land before the first has
     # been dealt with.
     _pending_drop = None
+    # What the last logged file-drag highlight was, as
+    # (drag sequence, row, highlighted, reason). See logFileDragHighlight:
+    # validateDrop is asked over and over while the pointer moves, and only
+    # the changes are worth a line.
+    _drag_highlight = None
 
     @property
     def sessionControllersManager(self):
@@ -3171,7 +3320,8 @@ class CustomListModel(NSObject):
     def _NH_BlinkConversationOrderChanged(self, notification):
         """Float the conversation that just moved back to the top.
 
-        Only the Messages group is reordered, and the user's selection is
+        Only the groups this app orders itself are touched -- Messages by its
+        last message, Calls by its last call -- and the user's selection is
         put back afterwards: without that, a message arriving while they
         read a conversation would slide a different row under the selection
         and switch the pane out from under them.
@@ -3184,7 +3334,7 @@ class CustomListModel(NSObject):
                 selected = outline.itemAtRow_(row)
 
         for group in getattr(self, 'groupsList', ()):
-            if not isinstance(group, BlinkGroup) or not group.isMessagesGroup():
+            if not isinstance(group, BlinkGroup) or not group.isAppOrderedGroup():
                 continue
             before = list(group.contacts)
             group.sortContacts()
@@ -3199,14 +3349,24 @@ class CustomListModel(NSObject):
 
     @objc.python_method
     def lastMessageTimeForRow(self, outline, item):
-        """The conversation time to show against a row, or None."""
+        """The time to show against a row, or None.
+
+        Which time depends on what the group is about: the Messages group
+        shows when they last wrote, the Calls group when they last called.
+        Showing a message time in the Calls group would be answering a
+        question nobody asked there.
+        """
         if not isinstance(item, BlinkContact):
             return None
         try:
             group = outline.parentForItem_(item)
-            if not isinstance(group, BlinkGroup) or not group.isMessagesGroup():
+            if not isinstance(group, BlinkGroup):
                 return None
-            return group.lastMessageTimeForContact(item)
+            if group.isCallsGroup():
+                return group.lastCallTimeForContact(item)
+            if group.isMessagesGroup():
+                return group.lastMessageTimeForContact(item)
+            return None
         except Exception:
             return None
 
@@ -3741,21 +3901,67 @@ class CustomListModel(NSObject):
         addresses = [item.uri] + [uri.uri for uri in getattr(item, 'uris', ())]
         return any(bare(address) == origin for address in addresses)
 
+    @objc.python_method
+    def logFileDragHighlight(self, info, item, highlighted, reason=None):
+        """Log the blue highlight a file drag draws on a contact row.
+
+        AppKit asks validateDrop again for every few points the pointer
+        moves, and the answer is what paints the row: one hover across the
+        list would otherwise write a hundred identical lines. So only the
+        changes are logged -- the row the highlight lands on, the row it
+        leaves, and a row that stays under the pointer but turns from a
+        drop target into a refusal.
+
+        Keyed on the drag's sequence number as well as the row, so the
+        next drag over the same contact is a new line rather than a
+        repeat swallowed by the one before it.
+        """
+        try:
+            sequence = info.draggingSequenceNumber()
+        except Exception:
+            sequence = None
+        key = (sequence, id(item) if item is not None else None,
+               bool(highlighted), reason)
+        if key == self._drag_highlight:
+            return
+        self._drag_highlight = key
+
+        name = None
+        if item is not None:
+            name = getattr(item, 'name', None) or str(getattr(item, 'uri', '') or '')
+        if highlighted:
+            BlinkLogger().log_info('Drag: %s is highlighted, the files would be '
+                                   'sent there' % (name or 'a contact'))
+        elif name:
+            BlinkLogger().log_info('Drag: %s is not highlighted: %s'
+                                   % (name, reason or 'it cannot take the files'))
+        else:
+            BlinkLogger().log_debug('Drag: nothing is highlighted: %s'
+                                    % (reason or 'not over a contact'))
+
     # drag and drop
     def outlineView_validateDrop_proposedItem_proposedChildIndex_(self, table, info, proposed_item, index):
         self.drop_on_contact_index = None
         if info.draggingPasteboard().availableTypeFromArray_([NSFilenamesPboardType]):
             if index != NSOutlineViewDropOnItemIndex or not isinstance(proposed_item, (BlinkPresenceContact, BonjourBlinkContact, SearchResultContact)):
+                self.logFileDragHighlight(info, None, False,
+                                          'not over a contact that can be sent files')
                 return NSDragOperationNone
             fnames = info.draggingPasteboard().propertyListForType_(NSFilenamesPboardType)
             if not all(os.path.isfile(f) or os.path.isdir(f) for f in fnames):
+                self.logFileDragHighlight(info, proposed_item, False,
+                                          'what is being dragged is not a file on disc')
                 return NSDragOperationNone
             if self.dragCameFromContact(info.draggingSource(), proposed_item):
                 # Dragged out of this contact's own conversation and let go
                 # on the contact again. Sending someone back the file they
                 # just sent you is never what a hand slipping means, and
                 # without this it goes out as a second transfer.
+                self.logFileDragHighlight(info, proposed_item, False,
+                                          'the file was dragged out of this '
+                                          'contact\'s own conversation')
                 return NSDragOperationNone
+            self.logFileDragHighlight(info, proposed_item, True)
             return NSDragOperationCopy
         elif info.draggingPasteboard().availableTypeFromArray_(["x-blink-audio-session"]):
             source = info.draggingSource()
@@ -3841,7 +4047,7 @@ class CustomListModel(NSObject):
                         # Contacts coming from the system AddressBook are copied
                         return NSDragOperationCopy
 
-                    if targetGroup.group is not None and targetGroup.group.id == 'favorites':
+                    if is_favorites_group(targetGroup.group):
                         return NSDragOperationCopy
                     return NSDragOperationMove
                 else:
@@ -3974,7 +4180,7 @@ class CustomListModel(NSObject):
                         targetGroup.group.save()
                         self.nc.post_notification("BlinkContactsHaveChanged", sender=targetGroup)
 
-                        if targetGroup.group.id != 'favorites' and sourceGroup.remove_contact_allowed:
+                        if not is_favorites_group(targetGroup.group) and sourceGroup.remove_contact_allowed:
                             sourceGroup.group.contacts.remove(sourceContact.contact)
                             sourceContact.contact.destroy()
                             sourceGroup.group.save()
@@ -4162,6 +4368,10 @@ class ContactListModel(CustomListModel):
         self.nc.add_observer(self, name="AddressbookContactWasDeleted")
         self.nc.add_observer(self, name="AddressbookContactDidChange")
         self.nc.add_observer(self, name="AddressbookGroupWasCreated")
+        # The moment the addressbook can be trusted to reflect the server,
+        # and so the only moment at which "there is no Calls group" is a
+        # fact rather than a race. See calls_group_startup_check.
+        self.nc.add_observer(self, name="XCAPManagerDidReloadData")
         self.nc.add_observer(self, name="AddressbookGroupWasActivated")
         self.nc.add_observer(self, name="AddressbookGroupWasDeleted")
         self.nc.add_observer(self, name="AddressbookGroupDidChange")
@@ -5126,6 +5336,12 @@ class ContactListModel(CustomListModel):
         # addressbook certainly is not, so asking now reports an empty world.
         call_later(5, self.logContactsForOwnAccounts)
 
+        # Calls group: log the groups and give them their `kind`, once, a
+        # little later than the contacts log -- the addressbook is populated
+        # from XCAP after startup, and stamping before it arrives would find
+        # nothing to stamp. Idempotent, so a later sync changes nothing.
+        call_later(20, calls_group_startup_check)
+
         # Load virtual groups
         self.all_contacts_group.load_group()
         self.no_group.load_group()
@@ -5160,9 +5376,69 @@ class ContactListModel(CustomListModel):
         self.contact_backup_timer = None
 
     @objc.python_method
+    def _NH_XCAPManagerDidReloadData(self, notification):
+        """Create nothing here -- only after the reload has settled.
+
+        This notification is handled by AddressbookManager too, and the order
+        of observers is arbitrary. Its handler ends by deleting every local
+        contact and group the document it just fetched does not contain
+        (sipsimple addressbook.py:1330-1335). Anything created from inside
+        this notification is therefore liable to be deleted moments later by
+        the very same event -- which is what happened on the first run: three
+        contacts created here were deleted by the reload, leaving objects that
+        still owned their ids, and the next reload (by then the server DID
+        have them) raised DuplicateIDError six times.
+
+        So the work is deferred. By the time it runs, sipsimple's handler has
+        finished, the transaction has been pushed, and a contact created is an
+        ordinary local write that goes to the server and comes back -- the same
+        path a contact added by hand takes.
+        """
+        try:
+            account = notification.sender.account
+        except AttributeError:
+            account = None
+        call_later(XCAP_SETTLE_DELAY, self._callsGroupAfterReload, account)
+
+    @objc.python_method
+    def _callsGroupAfterReload(self, account):
+        calls_group_startup_check(xcap_loaded=True)
+        if account is not None:
+            backfill_call_contacts(account)
+
+    @objc.python_method
     def _NH_AudioCallLoggedToHistory(self, notification):
         if not NSApp.delegate().history_enabled:
             return
+
+        # Calls group: file the other party. Every audio call, live or replayed
+        # from the server history, arrives here -- which is why this is the one
+        # hook rather than the nine write sites.
+        try:
+            account = None
+            local_party = getattr(notification.data, 'local_party', None)
+            if local_party and local_party != 'bonjour@local':
+                try:
+                    account = AccountManager().get_account(local_party)
+                except KeyError:
+                    account = None
+            ensure_call_contact(notification.data.remote_party, account)
+        except Exception as e:
+            BlinkLogger().log_error('[calls-group] cannot file the caller: %s' % e)
+
+        # And note when they were last on a call, so the group reorders as
+        # calls happen rather than only at the next restart. In-memory only.
+        try:
+            from SMSWindowManager import SMSWindowManager
+            manager = SMSWindowManager()
+            manager.noteCallTime(notification.data.remote_party,
+                                 datetime.datetime.utcnow())
+            # Not BlinkContactsHaveChanged: that redraws, it does not reorder.
+            # This is the same signal a new message sends, and the handler now
+            # re-sorts the Calls group as well as Messages.
+            manager._postConversationOrderChanged(None)
+        except Exception as e:
+            BlinkLogger().log_error('[calls-group] cannot note the call time: %s' % e)
 
         settings = SIPSimpleSettings()
         if notification.data.direction == 'incoming':
@@ -5588,15 +5864,64 @@ class ContactListModel(CustomListModel):
                 self.renderPendingWatchersGroupIfNecessary()
 
     @objc.python_method
+    def isBlockedAddressbookGroup(self, group):
+        """Whether a raw addressbook Group is the Blocked one.
+
+        Same kind-then-name rule the rest of this work uses, so a renamed
+        Blocked group is still recognised.
+        """
+        try:
+            if str(getattr(group, 'kind', '') or '').strip().lower() == BLOCKED_GROUP_KIND:
+                return True
+            return str(getattr(group, 'name', '') or '').strip().lower() == BLOCKED_GROUP_NAME.lower()
+        except Exception:
+            return False
+
+    @objc.python_method
+    def setContactBlockedInAllContacts(self, contact, blocked):
+        """Keep a blocked contact out of All Contacts, and put it back after.
+
+        All Contacts and Blocked are mutually exclusive in the UI: somebody you
+        have blocked should not still be sitting in the list of everybody you
+        know. This is presentation only -- the contact is untouched, and
+        unblocking restores the row.
+        """
+        try:
+            existing = next((blink_contact for blink_contact in self.all_contacts_group.contacts
+                             if blink_contact.contact == contact), None)
+            if blocked:
+                if existing is None:
+                    return
+                self.all_contacts_group.contacts.remove(existing)
+                existing.destroy()
+            else:
+                if existing is not None:
+                    return
+                self.all_contacts_group.contacts.append(
+                    AllContactsBlinkGroupBlinkPresenceContact(contact, log_presence_transitions=True))
+            self.all_contacts_group.sortContacts()
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=self.all_contacts_group)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot update All Contacts for a blocked contact: %s' % e)
+
+    @objc.python_method
     def _NH_AddressbookContactWasActivated(self, notification):
         contact = notification.sender
 
         blink_contact = BlinkPresenceContact(contact, log_presence_transitions = True)
         all_blink_contact = AllContactsBlinkGroupBlinkPresenceContact(contact, log_presence_transitions = True)
 
-        self.all_contacts_group.contacts.append(all_blink_contact)
-        self.all_contacts_group.sortContacts()
-        self.nc.post_notification("BlinkContactsHaveChanged", sender=self.all_contacts_group)
+        # All Contacts and Blocked are mutually exclusive in the UI.
+        blocked = False
+        try:
+            blocked = is_blocked_party(contact.uris[0].uri) if len(contact.uris) else False
+        except Exception:
+            blocked = False
+
+        if not blocked:
+            self.all_contacts_group.contacts.append(all_blink_contact)
+            self.all_contacts_group.sortContacts()
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=self.all_contacts_group)
         if not self.getBlinkGroupsForBlinkContact(blink_contact):
             blink_contact = BlinkPresenceContact(contact)
             self.no_group.contacts.append(blink_contact)
@@ -5950,6 +6275,15 @@ class ContactListModel(CustomListModel):
                         blink_contact.destroy()
             blink_group.sortContacts()
             self.no_group.sortContacts()
+
+            # Blocked and All Contacts are mutually exclusive in the UI, so a
+            # contact joining or leaving Blocked leaves or rejoins All
+            # Contacts with it.
+            if self.isBlockedAddressbookGroup(group):
+                for contact in added:
+                    self.setContactBlockedInAllContacts(contact, True)
+                for contact in removed:
+                    self.setContactBlockedInAllContacts(contact, False)
 
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
         self.nc.post_notification("BlinkGroupsHaveChanged", sender=self)

@@ -918,12 +918,12 @@ class MessagePaneController(NSObject):
 
     @objc.python_method
     def _publicKeyForViewer(self, viewer):
-        """(armoured public key, 8-character key ID) for the peer, or (None, None).
+        """(armoured public key, OpenPGP key id) for the peer, or (None, None).
 
-        The key ID is the checksum Sylk Mobile prints and the one the Edit
-        Contact panel shows -- public_key_short_checksum, the single
-        derivation all three read from, because an ID computed a second way
-        would compare equal to nothing.
+        The key id is the key's own -- the last 16 hex of its fingerprint --
+        which is what Sylk Mobile prints, what the Edit Contact panel shows
+        and what the key says about itself. One derivation everywhere,
+        because an id computed a second way compares equal to nothing.
         """
         if viewer is None:
             return (None, None)
@@ -932,7 +932,7 @@ class MessagePaneController(NSObject):
             return (None, None)
         try:
             from resources import ApplicationData
-            from MessageHost import public_key_short_checksum
+            from MessageHost import public_key_id
             path = os.path.join(ApplicationData.get('keys'), '%s.pubkey' % uri)
             if not os.path.exists(path):
                 return (None, None)
@@ -943,7 +943,7 @@ class MessagePaneController(NSObject):
             return (None, None)
         if not data:
             return (None, None)
-        return (data.decode('utf-8', 'replace'), public_key_short_checksum(data))
+        return (data.decode('utf-8', 'replace'), public_key_id(data))
 
     @objc.IBAction
     def showPublicKey_(self, sender):
@@ -955,7 +955,7 @@ class MessagePaneController(NSObject):
         anything, and that is done out of band, by a human.
         """
         viewer = self._selected
-        key_text, checksum = self._publicKeyForViewer(viewer)
+        key_text, key_id = self._publicKeyForViewer(viewer)
         if not key_text:
             return
         name = viewer.display_name or viewer.remote_uri
@@ -963,7 +963,7 @@ class MessagePaneController(NSObject):
         while True:
             alert = NSAlert.alloc().init()
             alert.setMessageText_(
-                NSLocalizedString("PGP key ID %s", "Window title") % (checksum or '?'))
+                NSLocalizedString("PGP key ID %s", "Window title") % (key_id or '?'))
             alert.setInformativeText_(
                 NSLocalizedString("Copied to the clipboard.", "Label") if copied else
                 NSLocalizedString("The public key of %s. The key ID above is the one "
@@ -1167,12 +1167,12 @@ class MessagePaneController(NSObject):
             if self._pgpActive(viewer):
                 self._encryptionItem(
                     menu, NSLocalizedString("PGP encryption active", "Menu item"), 9, enabled=False)
-            checksum = self._publicKeyForViewer(viewer)[1]
-            if checksum:
+            key_id = self._publicKeyForViewer(viewer)[1]
+            if key_id:
                 # Its own action rather than a tag: this one opens a panel
                 # here instead of asking the conversation to do something.
                 item = menu.addItemWithTitle_action_keyEquivalent_(
-                    NSLocalizedString("PGP key ID %s", "Menu item") % checksum,
+                    NSLocalizedString("PGP key ID %s", "Menu item") % key_id,
                     'showPublicKey:', '')
                 item.setTarget_(self)
                 item.setEnabled_(True)
@@ -1444,6 +1444,16 @@ class MessagePaneController(NSObject):
                 target.send_location_once(coords)
             except Exception as e:
                 BlinkLogger().log_error('Cannot send a location to %s: %s' % (uri, e))
+
+        # Asked before the fix rather than after it: send_location_once
+        # would ask too, but by then the transcript already says the
+        # location is on its way, and cancelling would leave that note
+        # standing over nothing.
+        try:
+            if not viewer.confirmOutgoingAccount():
+                return
+        except Exception as e:
+            BlinkLogger().log_error('Cannot settle the account for %s: %s' % (uri, e))
 
         self._noteInConversation(
             target, NSLocalizedString("\U0001F4CD Getting your location\u2026", "Label"))
@@ -1807,8 +1817,9 @@ class MessagePaneController(NSObject):
             self.updateLocationButton(None)
             self.updateCallButton(None)
             self._setInfoLine(None)
-            BlinkLogger().log_info('Message pane: %s -> nothing selected'
-                                   % self._conversationLabel(previous))
+            BlinkLogger().log_info('Message pane: nothing selected%s'
+                                   % ('' if previous is None else
+                                      ' (was showing %s)' % self._conversationLabel(previous)))
             return
 
         from MessageHost import load_trace_tick, load_trace_bucket
@@ -1866,16 +1877,23 @@ class MessagePaneController(NSObject):
         load_trace_bucket('- info line', _t)
 
         # One line per switch, saying what the pane is showing now and how
-        # much of it: which conversation went, which came, the key its rows
-        # are actually filed under, the account it is on, and the number of
-        # messages the transcript is holding. A conversation that comes up
-        # empty, or one whose key is not the one the history was written
-        # under, is otherwise indistinguishable from one that has nothing
-        # in it -- and the two need different answers.
-        BlinkLogger().log_info('Message pane: %s -> %s, %s'
-                               % (self._conversationLabel(previous),
-                                  self._conversationLabel(viewer, name),
-                                  self._messagesInViewSummary(viewer)))
+        # much of it: the key its rows are actually filed under, the account
+        # it is on, and the number of messages the transcript is holding. A
+        # conversation that comes up empty, or one whose key is not the one
+        # the history was written under, is otherwise indistinguishable from
+        # one that has nothing in it -- and the two need different answers.
+        #
+        # The conversation that LEFT goes last, in parentheses. It used to be
+        # first, either side of an arrow, and that line was misread twice as
+        # one conversation being redirected to another address -- two names,
+        # two addresses and an account on one line, with nothing saying which
+        # half was which. Two conversations on one line need labelling, not
+        # punctuation.
+        BlinkLogger().log_info('Message pane: showing %s, %s%s'
+                               % (self._conversationLabel(viewer, name),
+                                  self._messagesInViewSummary(viewer),
+                                  '' if previous is None else
+                                  ' (was showing %s)' % self._conversationLabel(previous)))
 
         if self.isConversationVisible(viewer):
             self.conversationBecameVisible(viewer)

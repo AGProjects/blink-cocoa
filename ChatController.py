@@ -85,6 +85,7 @@ from ContactListModel import BlinkPresenceContact
 from ContactListModel import encode_icon, decode_icon
 from FileTransferWindowController import openFileTransferSelectionDialog
 from HistoryManager import ChatHistory
+from HistoryManager import CONVERSATION_MEDIA_TYPES
 from MediaStream import MediaStream, STATE_IDLE, STREAM_IDLE, STREAM_FAILED, STREAM_CONNECTED, STREAM_PROPOSING, STREAM_WAITING_DNS_LOOKUP, STREAM_INCOMING, STREAM_CONNECTING, STREAM_RINGING, STREAM_DISCONNECTING, STREAM_CANCELLING
 from MediaStream import STATE_IDLE
 from PhotoPicker import PhotoPicker
@@ -711,9 +712,9 @@ class ChatController(MediaStream):
                 self.zoom_period_label = NSLocalizedString("Displaying all messages", "Label")
                 self.chatViewController.setHandleScrolling_(False)
 
-            results = self.history.get_messages(remote_uri=remote_uris, media_type=('chat', 'sms'), after_date=after_date, count=200, search_text=self.chatViewController.search_text)
+            results = self.history.get_messages(remote_uri=remote_uris, media_type=CONVERSATION_MEDIA_TYPES, after_date=after_date, count=200, search_text=self.chatViewController.search_text)
         else:
-            results = self.history.get_messages(remote_uri=remote_uris, media_type=('chat', 'sms'), count=self.showHistoryEntries, search_text=self.chatViewController.search_text)
+            results = self.history.get_messages(remote_uri=remote_uris, media_type=CONVERSATION_MEDIA_TYPES, count=self.showHistoryEntries, search_text=self.chatViewController.search_text)
 
         # build a list of previously failed messages
         last_failed_messages=[]

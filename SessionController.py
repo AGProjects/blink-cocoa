@@ -73,6 +73,8 @@ from FileTransferController import FileTransferController
 from FileTransferSession import OutgoingPushFileTransferHandler
 from HistoryManager import ChatHistory, SessionHistory
 from HistoryManager import SessionHistoryReplicator
+from HistoryManager import preview_call
+from HistoryManager import is_blocked_party
 from MediaStream import STATE_IDLE, STATE_CONNECTED, STATE_CONNECTING, STATE_DNS_LOOKUP, STATE_DNS_FAILED, STATE_FINISHED, STATE_FAILED
 from MediaStream import STREAM_IDLE, STREAM_FAILED, STREAM_CONNECTED, STREAM_CANCELLING
 from SessionRinger import Ringer
@@ -340,6 +342,11 @@ class SessionControllersManager(object, metaclass=Singleton):
         return self.isMediaTypeSupported('chat') and settings.chat.enable_msrp_chat
 
     def log_incoming_session_missed(self, controller, data):
+        # Calls group step 1: proof the hook fired at all, before any
+        # media-type guard. The detailed preview follows further down,
+        # but only for audio sessions.
+        BlinkLogger().log_info('[calls-group] hook %s %s streams=%s' %
+                               ('incoming', 'missed', ','.join(getattr(data, 'streams', ()) or ('-',))))
         account = controller.account
         media_type = ",".join(data.streams)
         participants = ",".join(data.participants)
@@ -364,11 +371,22 @@ class SessionControllersManager(object, metaclass=Singleton):
             cpim_to = local_uri
             timestamp = str(ISOTimestamp.now())
 
-            self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
+            # Read-only Calls group preview -- logs only, writes nothing.
+            # See docs/PSTN-CALLS-GROUP.md; preview_call lives in HistoryManager.
+            preview_call('live', 'incoming', 'missed', account=account,
+                         local_uri=local_uri, remote_uri=remote_uri,
+                         call_id=call_id, history_id=controller.history_id,
+                         media_type=media_type, summary="Missed Incoming Call")
+            self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, call_id=call_id)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='incoming', missed=True, history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour@local', check_contact=True))
         NotificationCenter().post_notification('SIPSessionLoggedToHistory', sender=self)
 
     def log_incoming_session_voicemail(self, controller, data):
+        # Calls group step 1: proof the hook fired at all, before any
+        # media-type guard. The detailed preview follows further down,
+        # but only for audio sessions.
+        BlinkLogger().log_info('[calls-group] hook %s %s streams=%s' %
+                               ('incoming', 'voicemail', ','.join(getattr(data, 'streams', ()) or ('-',))))
         account = controller.account
         media_type = ",".join(data.streams)
         participants = ",".join(data.participants)
@@ -392,11 +410,22 @@ class SessionControllersManager(object, metaclass=Singleton):
             cpim_to = local_uri
             timestamp = str(ISOTimestamp.now())
 
-            self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
+            # Read-only Calls group preview -- logs only, writes nothing.
+            # See docs/PSTN-CALLS-GROUP.md; preview_call lives in HistoryManager.
+            preview_call('live', 'incoming', 'voicemail', account=account,
+                         local_uri=local_uri, remote_uri=remote_uri,
+                         call_id=call_id, history_id=controller.history_id,
+                         media_type=media_type, summary="Missed Incoming Call (voicemail)")
+            self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, call_id=call_id)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='incoming', missed=True, history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour@local', check_contact=True))
         NotificationCenter().post_notification('SIPSessionLoggedToHistory', sender=self)
 
     def log_incoming_session_ended(self, controller, data):
+        # Calls group step 1: proof the hook fired at all, before any
+        # media-type guard. The detailed preview follows further down,
+        # but only for audio sessions.
+        BlinkLogger().log_info('[calls-group] hook %s %s streams=%s' %
+                               ('incoming', 'completed', ','.join(getattr(data, 'streams', ()) or ('-',))))
         account = controller.account
         session = controller.session
         media_type = ",".join(data.streams)
@@ -456,12 +485,25 @@ class SessionControllersManager(object, metaclass=Singleton):
         cpim_to = format_identity_to_string(account)
         timestamp = str(ISOTimestamp.now())
 
-        self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
+        # Read-only Calls group preview -- logs only, writes nothing.
+        # See docs/PSTN-CALLS-GROUP.md; preview_call lives in HistoryManager.
+        preview_call('live', 'incoming', 'completed', account=account,
+                     local_uri=local_uri, remote_uri=remote_uri,
+                     call_id=call_id, history_id=controller.history_id,
+                     media_type=media_type, summary="Incoming Call",
+                     # locals(): duration is only bound on some branches above
+                     duration=locals().get('duration'))
+        self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, call_id=call_id)
         NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='incoming', missed=False, history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour@local', check_contact=True))
 
         NotificationCenter().post_notification('SIPSessionLoggedToHistory', sender=self)
 
     def log_incoming_session_answered_elsewhere(self, controller, data):
+        # Calls group step 1: proof the hook fired at all, before any
+        # media-type guard. The detailed preview follows further down,
+        # but only for audio sessions.
+        BlinkLogger().log_info('[calls-group] hook %s %s streams=%s' %
+                               ('incoming', 'answered-elsewhere', ','.join(getattr(data, 'streams', ()) or ('-',))))
         account = controller.account
         media_type = ",".join(data.streams)
         participants = ",".join(data.participants)
@@ -488,11 +530,22 @@ class SessionControllersManager(object, metaclass=Singleton):
             cpim_to = local_uri
             timestamp = str(ISOTimestamp.now())
 
-            self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
+            # Read-only Calls group preview -- logs only, writes nothing.
+            # See docs/PSTN-CALLS-GROUP.md; preview_call lives in HistoryManager.
+            preview_call('live', 'incoming', 'answered-elsewhere', account=account,
+                         local_uri=local_uri, remote_uri=remote_uri,
+                         call_id=call_id, history_id=controller.history_id,
+                         media_type=media_type, summary="Incoming Audio Call - answered elsewhere")
+            self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, call_id=call_id)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='incoming', missed=False, history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour@local', check_contact=True))
         NotificationCenter().post_notification('SIPSessionLoggedToHistory', sender=self)
 
     def log_outgoing_session_failed(self, controller, data):
+        # Calls group step 1: proof the hook fired at all, before any
+        # media-type guard. The detailed preview follows further down,
+        # but only for audio sessions.
+        BlinkLogger().log_info('[calls-group] hook %s %s streams=%s' %
+                               ('outgoing', 'failed', ','.join(getattr(data, 'streams', ()) or ('-',))))
         account = controller.account
         media_type = ",".join(data.streams)
         participants = ",".join(data.participants)
@@ -514,17 +567,33 @@ class SessionControllersManager(object, metaclass=Singleton):
             media_type = 'audio'
             local_uri = local_uri
             remote_uri = remote_uri
-            direction = 'incoming'
+            # This call was placed from here. It used to be logged as
+            # 'incoming' -- so every outgoing call in every conversation
+            # read as one received, and the session row and the chat row
+            # disagreed with each other about the same call.
+            direction = 'outgoing'
             status = 'delivered'
-            cpim_from = data.target_uri
-            cpim_to = local_uri
+            # From me, to them: the other way round for an outgoing call.
+            cpim_from = local_uri
+            cpim_to = data.target_uri
             timestamp = str(ISOTimestamp.now())
 
-            self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
+            # Read-only Calls group preview -- logs only, writes nothing.
+            # See docs/PSTN-CALLS-GROUP.md; preview_call lives in HistoryManager.
+            preview_call('live', 'outgoing', 'failed', account=account,
+                         local_uri=local_uri, remote_uri=remote_uri,
+                         call_id=call_id, history_id=controller.history_id,
+                         media_type=media_type, summary='Failed Outgoing Call: %s (%s)' % (data.reason or data.failure_reason, data.code))
+            self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, call_id=call_id)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='outgoing', missed=False, history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour@local', check_contact=True))
         NotificationCenter().post_notification('SIPSessionLoggedToHistory', sender=self)
 
     def log_outgoing_session_cancelled(self, controller, data):
+        # Calls group step 1: proof the hook fired at all, before any
+        # media-type guard. The detailed preview follows further down,
+        # but only for audio sessions.
+        BlinkLogger().log_info('[calls-group] hook %s %s streams=%s' %
+                               ('outgoing', 'cancelled', ','.join(getattr(data, 'streams', ()) or ('-',))))
         account = controller.account
         self.redial_uri = controller.target_uri
         media_type = ",".join(data.streams)
@@ -544,17 +613,33 @@ class SessionControllersManager(object, metaclass=Singleton):
             message= '<h3>Cancelled Outgoing Call</h3>'
             #message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
             media_type = 'audio'
-            direction = 'incoming'
+            # This call was placed from here. It used to be logged as
+            # 'incoming' -- so every outgoing call in every conversation
+            # read as one received, and the session row and the chat row
+            # disagreed with each other about the same call.
+            direction = 'outgoing'
             status = 'delivered'
-            cpim_from = data.target_uri
-            cpim_to = local_uri
+            # From me, to them: the other way round for an outgoing call.
+            cpim_from = local_uri
+            cpim_to = data.target_uri
             timestamp = str(ISOTimestamp.now())
 
-            self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
+            # Read-only Calls group preview -- logs only, writes nothing.
+            # See docs/PSTN-CALLS-GROUP.md; preview_call lives in HistoryManager.
+            preview_call('live', 'outgoing', 'cancelled', account=account,
+                         local_uri=local_uri, remote_uri=remote_uri,
+                         call_id=call_id, history_id=controller.history_id,
+                         media_type=media_type, summary="Cancelled Outgoing Call")
+            self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, call_id=call_id)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='outgoing', missed=False, history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour@local', check_contact=True))
         NotificationCenter().post_notification('SIPSessionLoggedToHistory', sender=self)
 
     def log_outgoing_session_ended(self, controller, data):
+        # Calls group step 1: proof the hook fired at all, before any
+        # media-type guard. The detailed preview follows further down,
+        # but only for audio sessions.
+        BlinkLogger().log_info('[calls-group] hook %s %s streams=%s' %
+                               ('outgoing', 'completed', ','.join(getattr(data, 'streams', ()) or ('-',))))
         if not controller.session:
             return
 
@@ -566,7 +651,11 @@ class SessionControllersManager(object, metaclass=Singleton):
         local_uri = 'bonjour@local' if account is BonjourAccount() else format_identity_to_string(account)
         remote_uri = format_identity_to_string(controller.target_uri).lower() if account is not BonjourAccount() else controller.device_id
         self.redial_uri = format_identity_to_string(controller.target_uri, check_contact=True, format='full')
-        direction = 'incoming'
+        # This call was placed from here. It used to be logged as
+        # 'incoming' -- so every outgoing call in every conversation
+        # read as one received, and the session row and the chat row
+        # disagreed with each other about the same call.
+        direction = 'outgoing'
         status = 'delivered'
         failure_reason = ''
         call_id = data.call_id if data.call_id is not None else str(uuid.uuid1())
@@ -616,11 +705,20 @@ class SessionControllersManager(object, metaclass=Singleton):
                 message += '</ul>'
             
             media_type = 'audio'
-            cpim_from = data.target_uri
-            cpim_to = local_uri
+            # From me, to them: the other way round for an outgoing call.
+            cpim_from = local_uri
+            cpim_to = data.target_uri
             timestamp = str(ISOTimestamp.now())
 
-            self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
+            # Read-only Calls group preview -- logs only, writes nothing.
+            # See docs/PSTN-CALLS-GROUP.md; preview_call lives in HistoryManager.
+            preview_call('live', 'outgoing', 'completed', account=account,
+                         local_uri=local_uri, remote_uri=remote_uri,
+                         call_id=call_id, history_id=controller.history_id,
+                         media_type=media_type, summary="Outgoing Call",
+                         # locals(): duration is only bound on some branches above
+                         duration=locals().get('duration'))
+            self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, call_id=call_id)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='outgoing', missed=False, history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour@local', check_contact=True))
         NotificationCenter().post_notification('SIPSessionLoggedToHistory', sender=self)
 
@@ -640,8 +738,14 @@ class SessionControllersManager(object, metaclass=Singleton):
     def add_to_session_history(self, id, media_type, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants, call_id, from_tag, to_tag, answering_machine_filename, encryption='', display_name='', device_id='', remote_full_uri=''):
         return SessionHistory().add_entry(id, media_type, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants, call_id, from_tag, to_tag, answering_machine_filename, encryption, display_name, device_id, remote_full_uri)
 
-    def add_to_chat_history(self, id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status):
-        return ChatHistory().add_message(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, "html", "0", status)
+    def add_to_chat_history(self, id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, call_id=''):
+        # call_id lands in chat_messages.sip_callid, a column that has existed
+        # and been indexed all along and was never written for a call. Without
+        # it a call's chat row cannot be joined back to its session row, which
+        # is why correcting the direction of stored calls had to match on the
+        # body text (_fix_outgoing_call_direction) and why deduplicating a
+        # call that arrives twice has nothing to key on.
+        return ChatHistory().add_message(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, "html", "0", status, call_id=call_id)
 
     @run_in_green_thread
     def get_redial_uri_from_history(self):
@@ -1003,8 +1107,21 @@ class SessionControllersManager(object, metaclass=Singleton):
             # Handle initial INVITE with no SDP, offer audio
             streams = [AudioStream()]
 
-        if match_contact is not None and isinstance(match_contact, BlinkPresenceContact) and match_contact.contact.presence.policy == 'deny':
-            BlinkLogger().log_info("Blocked contact rejected")
+        # A blocked party never rings. Before any account setting, and for
+        # every media type -- somebody you have blocked should not be able to
+        # reach you by starting a chat either.
+        #
+        # "Blocked" is membership of the Blocked group, which is how sylk
+        # mobile blocks and now replicates here carrying kind='blocked'.
+        #
+        # This used to test `presence.policy == 'deny'` instead. A presence
+        # policy answers "may they see whether I am available"; it must not
+        # answer "may they ring me". The two are separate lists that happen to
+        # share the word "blocked", and conflating them meant you could not
+        # take a call from somebody whose availability you had chosen not to
+        # publish.
+        if is_blocked_party(session.remote_identity.uri):
+            BlinkLogger().log_info("Rejecting session from blocked contact %s" % caller_name)
             try:
                 session.reject(603)
             except IllegalStateError as e:
@@ -1013,6 +1130,17 @@ class SessionControllersManager(object, metaclass=Singleton):
             nc_body = 'Call from %s refused' % caller_name
             NSApp.delegate().gui_notify(nc_title, nc_body, subtitle=caller_name)
             return
+
+        # Somebody blocked the old way -- a presence policy of 'deny' -- is no
+        # longer rejected by it. Say so rather than letting the call through in
+        # silence: to this user they are blocked, and they are about to ring.
+        # The fix is to put them in the Blocked group, and this names them.
+        if (match_contact is not None and isinstance(match_contact, BlinkPresenceContact)
+                and str(getattr(match_contact.contact.presence, 'policy', '') or '') == 'deny'):
+            BlinkLogger().log_info(
+                "%s has presence policy 'deny' but is not in the Blocked group, so the call "
+                "is being allowed. A presence policy no longer rejects calls -- add them to "
+                "the Blocked group to stop them calling." % caller_name)
 
         if self.dndSessions:
             nc_title = 'Call Rejected'
@@ -1059,22 +1187,22 @@ class SessionControllersManager(object, metaclass=Singleton):
                         BlinkLogger().log_error(e)
                     return
 
+            # "Unauthorized" means not in the address book, and nothing else.
+            #
+            # This used to reject a caller who WAS a contact whenever their
+            # presence policy was not 'allow'. A presence policy answers "may
+            # they see whether I am available"; it has no business answering
+            # "may they ring me". Taking calls from somebody you do not share
+            # your availability with is an ordinary thing to want, and it was
+            # impossible with this setting on.
+            #
+            # Somebody you do not want to hear from at all is blocked, which is
+            # its own list and its own check above.
             if session.account.audio.reject_unauthorized_contacts:
-                if match_contact is not None and isinstance(match_contact, BlinkPresenceContact):
-                    if match_contact.contact.presence.policy != 'allow':
-                        nc_title = 'Unauthorized Caller Rejected'
-                        nc_body = 'Call from %s refused' % caller_name
-                        NSApp.delegate().gui_notify(nc_title, nc_body, subtitle=caller_name)
-                        BlinkLogger().log_info("Rejecting audio call from unauthorized contact")
-                        try:
-                            session.reject(603)
-                        except IllegalStateError as e:
-                            BlinkLogger().log_error(e)
-                        return
-                else:
-                    BlinkLogger().log_info("Rejecting audio call from unauthorized contact")
+                if match_contact is None:
+                    BlinkLogger().log_info("Rejecting audio call from %s: not in the address book" % caller_name)
                     nc_title = 'Unauthorized Caller Rejected'
-                    nc_body = 'Call refused from blocked contact'
+                    nc_body = 'Call refused: not in your contacts'
                     NSApp.delegate().gui_notify(nc_title, nc_body, subtitle=caller_name)
                     try:
                         session.reject(603)

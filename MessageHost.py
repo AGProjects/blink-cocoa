@@ -64,11 +64,14 @@ __all__ = ['USE_MESSAGE_PANEL',
            'reply_metadata', 'reply_envelope', 'REPLY_ACTION', 'quote_digest',
            'recording_title', 'peaks_metadata', 'peaks_envelope',
            'PEAKS_ACTION',
-           'is_renderable_content_type',
+           'is_renderable_content_type', 'LOCAL_STATUS_MEDIA_TYPES',
            'file_transfer_envelope',
            'HOST_PROTOCOL', 'missing_host_protocol_methods', 'assert_conforms',
            'pgp_plaintext', 'pgp_plaintext_bytes',
            'pgp_key_id', 'pgp_message_key_ids',
+           'private_keys_directory', 'load_private_keys',
+           'private_key_ids', 'private_key_for_message',
+           'private_key_accounts', 'public_key_id',
            'install_pgpy_privkey_cache',
            'TRACE_MESSAGE_LOAD', 'load_trace_now', 'load_trace_key',
            'load_trace_start', 'load_trace_mark', 'load_trace_note',
@@ -76,7 +79,7 @@ __all__ = ['USE_MESSAGE_PANEL',
            'load_trace_finish', 'load_trace_cancel',
            'load_trace_buckets_to', 'load_trace_tick', 'load_trace_bucket',
            'load_trace_bucket_span',
-           'location_summary', 'public_key_short_checksum',
+           'location_summary',
            'file_transfer_category', 'CALL_RECORDING_ACTION',
            'call_recording_envelope', 'call_recording_metadata',
            'MESSAGE_CATEGORIES']
@@ -341,7 +344,16 @@ def reply_metadata(body):
             'metadata_id': str(envelope.get('metadataId') or '')}
 
 
-def is_renderable_content_type(content_type, location_types=()):
+# Blink writes its own status entries -- a call, a call recording, a file
+# transfer, a presence change -- with the legacy content type 'html' and a
+# media type of their own. Nothing off the network can claim one: a remote
+# message is media_type 'sms' and carries a real MIME type, so a peer cannot
+# reach this branch by setting Content-Type to a bare 'html'.
+LOCAL_STATUS_MEDIA_TYPES = ('audio', 'missed-call', 'audio-recording',
+                            'file-transfer', 'availability')
+
+
+def is_renderable_content_type(content_type, location_types=(), media_type=None):
     """Whether a stored row is something the transcript knows how to draw.
 
     An ALLOW-list, deliberately, and the counterpart to storing every
@@ -352,11 +364,21 @@ def is_renderable_content_type(content_type, location_types=()):
 
     `location_types` is passed in rather than imported to keep this
     module free of the location layer.
+
+    `media_type` is what admits Blink's own call entries. They are stored
+    as 'html', which is not a MIME type and so fails every other test
+    here -- which is why widening CONVERSATION_MEDIA_TYPES to carry calls
+    into the transcript changed nothing on screen: the rows were fetched
+    and then dropped one line into the render loop, with only a debug
+    line to say so. The allow-list stays an allow-list: 'html' is
+    renderable exactly for the media types Blink writes itself.
     """
     content_type = str(content_type or '')
     if content_type in location_types:
         return True
     if content_type in FILE_TRANSFER_CONTENT_TYPES:
+        return True
+    if content_type == 'html' and media_type in LOCAL_STATUS_MEDIA_TYPES:
         return True
     # 'text' is the legacy spelling of text/plain in older rows.
     return content_type == 'text' or content_type.startswith('text/')
@@ -717,6 +739,259 @@ install_pgpy_privkey_cache()
 
 
 # ---------------------------------------------------------------------------
+# Which private key opens a message
+#
+# Blink holds one PGP key per account, in <ApplicationData>/keys/<account>.privkey.
+# Which of them opens a given message is a property of the MESSAGE -- the
+# session-key packets name the key ids it was sealed to, in the clear -- and
+# NOT of whichever account the conversation happens to be on at the time.
+#
+# Those two were the same thing for as long as a conversation had one account,
+# and stopped being it the moment a second one entered: a message arriving on
+# another account moves the whole conversation there
+# (SMSWindowManager.adoptAccount -> SMSViewController.setAccount, which
+# reloads the viewer's key), and from then on every file and every stored
+# message that arrived on the account it left was opened with the wrong key.
+# The symptom is a decryption failure indistinguishable from a corrupt
+# download or a truncated body.
+#
+# So: every private key this device holds, indexed by every key id that can
+# name it -- the primary's and each subkey's, because encryption normally goes
+# to a subkey and it is the subkey's id that appears in the encrypter list.
+# ---------------------------------------------------------------------------
+
+# path -> ((mtime, size), key or None); None records a file that will not parse,
+# so a broken key is not re-read on every lookup.
+_private_keys = {}
+_private_keys_by_id = {}
+# keyid -> the account whose file it came from, for the log lines: a key id on
+# its own says nothing to anyone reading a log about which account it is.
+_private_key_accounts = {}
+# the (fallback keyid, chosen keyid) pairs already reported, so a page of
+# history opened with another account's key says so once and not per row
+_reported_key_choices = set()
+# How often the keys directory is re-read. Keys appear when an account is
+# created, imported or escrow-restored -- rare, and never in a loop -- so a
+# stale answer costs at most one decrypt that the next attempt gets right.
+_PRIVATE_KEY_RESCAN = 5.0
+_private_keys_scanned = None
+
+
+def private_keys_directory():
+    """Where the per-account PGP keys live, or None if that cannot be asked."""
+    try:
+        from resources import ApplicationData
+        return ApplicationData.get('keys')
+    except Exception:
+        return None
+
+
+def private_key_ids(key):
+    """Every key id a message can name to mean this key.
+
+    The primary's, plus one per subkey: PGPy's own decrypt() looks in both
+    (pgp.py, PGPKey.decrypt), so an index that held only the primary would
+    miss every message sealed the ordinary way.
+    """
+    ids = []
+    if key is None:
+        return ids
+    try:
+        ids.append(str(key.fingerprint.keyid))
+    except Exception:
+        pass
+    try:
+        ids.extend(str(keyid) for keyid in key.subkeys)
+    except Exception:
+        pass
+    return ids
+
+
+def public_key_id(armored_key):
+    """The OpenPGP long key id of an armoured key, or None.
+
+    Native to the key rather than computed by us: the last 16 hex of the
+    fingerprint, which is a SHA-1 over the key packet itself and not over
+    the armour around it. That is what an encrypted message names in its
+    session-key packets, what every other OpenPGP tool displays, and what
+    survives a key being re-armoured -- a hash of the armour survives none
+    of those, which is why one is the identity and the other was only ever
+    a string two of our own apps agreed on.
+    """
+    if armored_key is None:
+        return None
+    if isinstance(armored_key, bytes):
+        armored_key = armored_key.decode('utf-8', 'replace')
+    try:
+        import pgpy
+        key, _ = pgpy.PGPKey.from_blob(armored_key)
+    except Exception:
+        return None
+    return pgp_key_id(key)
+
+
+def load_private_keys(force=False):
+    """Every private key on this device, as {keyid: key}.
+
+    Cheap to call: the directory is re-read at most every few seconds and a
+    key file is parsed again only when its mtime or size changed.
+    """
+    global _private_keys_scanned
+    import os, time
+
+    now = time.monotonic()
+    if (not force and _private_keys_scanned is not None
+            and (now - _private_keys_scanned) < _PRIVATE_KEY_RESCAN):
+        return _private_keys_by_id
+
+    directory = private_keys_directory()
+    if not directory:
+        return _private_keys_by_id
+    try:
+        names = [name for name in os.listdir(directory) if name.endswith('.privkey')]
+    except OSError:
+        return _private_keys_by_id
+    _private_keys_scanned = now
+
+    seen = set()
+    changed = False
+    for name in names:
+        path = os.path.join(directory, name)
+        try:
+            info = os.stat(path)
+        except OSError:
+            continue
+        seen.add(path)
+        stamp = (info.st_mtime, info.st_size)
+        cached = _private_keys.get(path)
+        if cached is not None and cached[0] == stamp:
+            continue
+        key = None
+        try:
+            import pgpy
+            key, _ = pgpy.PGPKey.from_file(path)
+        except Exception as e:
+            _private_key_log('Cannot import the PGP private key %s: %s' % (path, e))
+        _private_keys[path] = (stamp, key)
+        changed = True
+
+    for path in list(_private_keys):
+        if path not in seen:
+            del _private_keys[path]
+            changed = True
+
+    if changed:
+        _private_keys_by_id.clear()
+        _private_key_accounts.clear()
+        for path, (stamp, key) in _private_keys.items():
+            account = os.path.basename(path)[:-len('.privkey')]
+            for keyid in private_key_ids(key):
+                _private_keys_by_id.setdefault(keyid, key)
+                _private_key_accounts.setdefault(keyid, account)
+        # One line, only when the set actually changed: what this device can
+        # open, and under which account each key was filed. Everything else
+        # about keys in the log is a key id, and this is where a key id
+        # becomes a name. One entry per key, named by its primary id -- the
+        # subkeys are in the index because messages name them, and listing
+        # them here would say four things about two keys.
+        held = sorted('%s (%s)' % (os.path.basename(path)[:-len('.privkey')],
+                                   private_key_ids(key)[0])
+                      for path, (stamp, key) in _private_keys.items()
+                      if key is not None and private_key_ids(key))
+        _private_key_log_info('PGP: %d private key(s) held: %s'
+                              % (len(held), ', '.join(held) or 'none'))
+
+    return _private_keys_by_id
+
+
+def private_key_accounts():
+    """{keyid: account} for the keys this device holds, for logging."""
+    load_private_keys()
+    return dict(_private_key_accounts)
+
+
+def private_key_for_message(blob, fallback=None):
+    """The private key `blob` was sealed to, or `fallback` when unknown.
+
+    `blob` is armour, bytes or an already-parsed PGPMessage. `fallback` is
+    the key the caller would have used anyway -- the conversation's own --
+    and it is both tried first (it is the right key for almost every
+    message, and matching it costs no directory work) and returned when the
+    message names no key we hold, so the caller still fails the way it
+    always did rather than differently.
+    """
+    keyids = pgp_message_key_ids(blob)
+    if not keyids:
+        return fallback
+
+    wanted = set(keyids)
+    if fallback is not None and wanted.intersection(private_key_ids(fallback)):
+        return fallback
+
+    scanned = _private_keys_scanned
+    keys = load_private_keys()
+    for keyid in keyids:
+        key = keys.get(keyid)
+        if key is not None:
+            _report_key_choice(keyid, fallback)
+            return key
+
+    # A key can have been imported since the last scan -- an account added,
+    # or one restored from escrow while this conversation was open. Skipped
+    # when the call above just read the directory, so a page of messages we
+    # hold no key for does not scan it twice per message.
+    if _private_keys_scanned == scanned:
+        keys = load_private_keys(force=True)
+        for keyid in keyids:
+            key = keys.get(keyid)
+            if key is not None:
+                _report_key_choice(keyid, fallback)
+                return key
+
+    return fallback
+
+
+def _report_key_choice(keyid, fallback):
+    """Say, once, that a message needed a key other than the caller's own.
+
+    This is the line that names the bug it was written for: a conversation
+    holding one account's key while its files and its history belong to
+    another's. Silent when the caller's own key is the right one, which is
+    almost always, and reported once per pair of keys rather than once per
+    message -- a page of history is one fact, not a hundred.
+    """
+    held = private_key_ids(fallback)
+    if held and keyid in held:
+        return
+    pair = (held[0] if held else None, keyid)
+    if pair in _reported_key_choices:
+        return
+    _reported_key_choices.add(pair)
+    accounts = _private_key_accounts
+    _private_key_log_info(
+        'PGP: opening with the key of %s (%s) rather than %s'
+        % (accounts.get(keyid) or 'another account', keyid,
+           ('the conversation\'s own key %s' % pair[0]) if pair[0]
+           else 'none -- the conversation has no key of its own'))
+
+
+def _private_key_log(text):
+    try:
+        from BlinkLogger import BlinkLogger
+        BlinkLogger().log_error(text)
+    except Exception:
+        pass
+
+
+def _private_key_log_info(text):
+    try:
+        from BlinkLogger import BlinkLogger
+        BlinkLogger().log_info(text)
+    except Exception:
+        pass
+
+
+# ---------------------------------------------------------------------------
 # Conversation load trace
 #
 # One line in activity.txt per conversation the user opens, breaking the wait
@@ -989,29 +1264,6 @@ def location_summary(latitude, longitude, accuracy=None, maps_url=None,
     if status_text:
         lines.append(str(status_text))
     return '\n'.join(lines)
-
-
-def public_key_short_checksum(armored_key):
-    """The 8-character key checksum Sylk Mobile shows, or None.
-
-    Deliberately byte-identical to generateShortChecksum in the mobile app's
-    EditContactModal.js -- SHA-256 over the armoured key with line endings
-    normalised and the ends trimmed, first 8 hex characters, upper case.
-    The whole point is that a user can read it off two devices and compare,
-    so any difference in how it is derived defeats it.
-    """
-    import hashlib
-    if armored_key is None:
-        return None
-    if isinstance(armored_key, bytes):
-        try:
-            armored_key = armored_key.decode('utf-8')
-        except UnicodeDecodeError:
-            armored_key = armored_key.decode('utf-8', 'replace')
-    normalized = armored_key.replace('\r\n', '\n').strip()
-    if not normalized:
-        return None
-    return hashlib.sha256(normalized.encode('utf-8')).hexdigest()[:8].upper()
 
 
 # The content-type filters, in the order and with the names Sylk Mobile uses

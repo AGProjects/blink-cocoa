@@ -2007,6 +2007,9 @@ PreferenceOptionTypes = {
 # told the account's other devices that it joined. Showing it invites the
 # user to re-announce, or to silence an announcement that has not happened.
 "sms.activation_announced": HiddenOption,
+# Same: it records that the Calls group backfill has run, and offering it
+# invites a user to re-run a pass that has nothing left to do.
+"gui.calls_group_backfill_generation": HiddenOption,
 # Learned from the first transfer that arrives, and derived from history_url
 # until then. Offering it as a field invites a hand-typed value that the next
 # received transfer overwrites anyway.
@@ -2196,6 +2199,7 @@ SettingDescription = {
                       'presence.enable_on_the_phone': NSLocalizedString("Enable On The Phone", "Label"),
                       'presence.homepage': NSLocalizedString("Web Page", "Label"),
                       'pstn.idd_prefix': NSLocalizedString("Replace Starting +", "Label"),
+                      'pstn.replace_leading_zero': NSLocalizedString("Replace Leading 0", "Label"),
                       'pstn.prefix': NSLocalizedString("External Line Prefix", "Label"),
                       'pstn.dial_plan': NSLocalizedString("Dial Plan", "Label"),
                       'pstn.strip_digits': NSLocalizedString("Strip Digits", "Label"),
@@ -2225,7 +2229,10 @@ SettingDescription = {
                       'sip.udp_port': NSLocalizedString("UDP port", "Label"),
                       'sms.disable_replication': NSLocalizedString("Disable Replication", "Label"),
                       'sms.enable_replication': NSLocalizedString("Enable History Server", "Label"),
-                      'sms.public_key_checksum': NSLocalizedString("Key Id", "Label"),
+                      # Not a key id: a SHA-1 over the stored armour, kept to
+                      # notice that a key changed. The key's own id is what the
+                      # contact panel and the log show.
+                      'sms.public_key_checksum': NSLocalizedString("Public Key Checksum", "Label"),
                       'sounds.audio_inbound': NSLocalizedString("Inbound Ringtone", "Label"),
                       'sounds.audio_outbound': NSLocalizedString("Outbound Ringtone", "Label"),
                       'sounds.message_received': NSLocalizedString("Message Received", "Label"),
@@ -2261,6 +2268,7 @@ SettingDescription = {
 Placeholders = {
                  'nat_traversal.msrp_relay': 'relay.example.com:2855;transport=tls',
                  'pstn.idd_prefix': '00',
+                 'pstn.replace_leading_zero': '0031',
                  'pstn.prefix': '9',
                  'pstn.dial_plan': '0049 0031',
                  'pstn.asserted_identity': 'For testing only, depends on operator',
@@ -2321,7 +2329,7 @@ AccountSettingsOrder = {
                        'audio': ['do_not_disturb', 'call_waiting', 'auto_transfer', 'auto_recording', 'reject_anonymous', 'reject_unauthorized_contacts', 'auto_accept', 'answer_delay'],
                        'nat_traversal': ['use_ice', 'use_msrp_relay_for_outbound'],
                        'ldap': ['enabled', 'hostname', 'transport', 'port', 'username', 'password', 'dn', 'extra_fields'],
-                       'pstn': ['dial_plan', 'idd_prefix', 'strip_digits', 'prefix', 'asserted_identity'],
+                       'pstn': ['dial_plan', 'idd_prefix', 'replace_leading_zero', 'strip_digits', 'prefix', 'asserted_identity'],
                        'sip': ['register', 'always_use_my_proxy', 'primary_proxy', 'alternative_proxy', 'register_interval', 'subscribe_interval', 'publish_interval', 'do_not_disturb_code'],
                        'rtp': ['encryption_type', 'inband_dtmf', 'hangup_on_timeout', 'audio_codec_list', 'video_codec_list'],
                        'presence': ['enabled', 'enable_on_the_phone', 'disable_location', 'disable_timezone']
@@ -2353,7 +2361,9 @@ ToolTips = {
              'nat_traversal.msrp_relay': NSLocalizedString("If empty, it is automatically discovered using DNS lookup for SRV record of _msrps._tcp.domain", "Label"),
              'nat_traversal.use_ice': NSLocalizedString("Negotiate an optimal RTP media path between SIP end-points by trying to avoid intermediate RTP media relays", "Label"),
              'nat_traversal.use_msrp_relay_for_outbound': NSLocalizedString("Normally, the MSRP relay is used only for incoming sessions, this setting also forces the outbound sessions through the MSRP relay", "Label"),
+             'audio.reject_unauthorized_contacts': NSLocalizedString("Reject incoming calls from anyone who is not in your contacts. Contacts are allowed to call regardless of whether they may see your availability: that is a presence setting and does not decide who may ring you. To stop a particular person from calling, put them in the Blocked group", "Label"),
              'pstn.idd_prefix': NSLocalizedString("You may replace the starting + from telephone numbers with 00 or other numeric prefix required by your SIP service provider", "Label"),
+             'pstn.replace_leading_zero': NSLocalizedString("Replace the single leading 0 of a national telephone number with this prefix, normally the international access code followed by your country code (e.g. 0031). Numbers already starting with 00 or + are left alone. It also tells Blink which country you are in, so a trunk 0 left after your own country code is removed", "Label"),
              'pstn.prefix': NSLocalizedString("Always add a numeric prefix when dialing telephone numbers, typically required by a PBX to obtain an outside line", "Label"),
              'pstn.dial_plan': NSLocalizedString("List of numeric prefixes separated by spaces that auto-selects this account for outgoing calls to telephone numbers starting with any such prefix (e.g. +31 0031)", "Label"),
              'web_alert.alert_url': NSLocalizedString("URL that is opened when an incoming call is received. $caller_username, $caller_party and $called_party are replaced with the username part of the SIP address of the caller, the full SIP address of the caller and called SIP account respectively. Example: http://example.com/p.phtml?caller=$caller_party&called=$called_party&user=$caller_username", "Label"),

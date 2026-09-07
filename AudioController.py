@@ -486,6 +486,14 @@ class AudioController(MediaStream):
 
         self.notification_center.post_notification("ActiveAudioSessionChanged", sender=self)
 
+        # Clicking a call says which conversation the user is in. If the
+        # messages pane is already open it follows the call; it is never opened
+        # by this.
+        try:
+            NSApp.delegate().contactsWindowController.switchMessagePaneToSession(self.sessionController)
+        except Exception:
+            pass
+
     @objc.python_method
     def sessionBoxDidDeactivate(self, sender):
         if self.isConferencing:
@@ -1350,13 +1358,31 @@ class AudioController(MediaStream):
         media_type = 'audio-recording'
         local_uri = format_identity_to_string(self.sessionController.account)
         remote_uri = format_identity_to_string(self.sessionController.target_uri)
-        direction = 'incoming'
+
+        # A recording belongs to a call, so it is filed the way that call was.
+        # This used to be hardcoded 'incoming', and addressed from the remote
+        # party TO the remote party -- which is nobody's conversation. Now
+        # that recordings render in the timeline alongside the messages, both
+        # were about to become visible.
+        try:
+            direction = self.sessionController.session.direction or 'incoming'
+        except AttributeError:
+            direction = 'incoming'
         status = 'delivered'
-        cpim_from = format_identity_to_string(self.sessionController.target_uri)
-        cpim_to = format_identity_to_string(self.sessionController.target_uri)
+        if direction == 'outgoing':
+            cpim_from = local_uri
+            cpim_to = remote_uri
+        else:
+            cpim_from = remote_uri
+            cpim_to = local_uri
         timestamp = str(ISOTimestamp.now())
 
-        self.add_to_history(media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
+        try:
+            call_id = self.sessionController.session.call_id or ''
+        except AttributeError:
+            call_id = ''
+
+        self.add_to_history(media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, call_id=call_id)
 
     @objc.python_method
     def shareRecordingWithOwnDevices(self, filename):
@@ -1492,8 +1518,12 @@ class AudioController(MediaStream):
         self.updateAudioStatusWithSessionState(msg)
 
     @objc.python_method
-    def add_to_history(self,media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status):
-        return ChatHistory().add_message(str(uuid.uuid1()), media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, "html", "0", status)
+    def add_to_history(self, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, call_id=''):
+        # Carries the call id so a recording row can be joined to the call it
+        # belongs to -- which is also what would let the direction of stored
+        # recordings be recovered, the one thing the version 16 migration
+        # could not do.
+        return ChatHistory().add_message(str(uuid.uuid1()), media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, "html", "0", status, call_id=call_id)
 
     @objc.python_method
     @run_in_gui_thread

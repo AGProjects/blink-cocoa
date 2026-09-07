@@ -173,6 +173,8 @@ from VideoMirrorController import VideoMirrorController
 from configuration.datatypes import UserIcon
 from resources import ApplicationData, Resources
 from util import allocate_autorelease_pool, format_date, format_identity_to_string, format_uri_type, is_anonymous, is_sip_aor_format, normalize_sip_uri_for_outgoing_session
+from util import pstn_uri_spellings_for_accounts
+from HistoryManager import block_party, block_caller, is_blocked_party
 from util import log_gui_exception, run_in_gui_thread, sip_prefix_pattern, sipuri_components_from_string, translate_alpha2digit, AccountInfo, utc_to_local
 
 
@@ -877,6 +879,23 @@ class ContactWindowController(NSWindowController):
         # BlinkLogger().log_info('startup: refreshContactsList enter')
         if sender is None:
             sender = self.model
+        # An outline view keeps the selected ROW across a reload, not the
+        # selected ITEM. That was harmless while every group was ordered
+        # alphabetically and changed only when the user changed it; it is
+        # not harmless now that Calls re-sorts itself by timestamp and
+        # gains contacts on its own. A call landing while a conversation is
+        # open shifts the rows under a fixed index, and whichever contact
+        # slides into that index becomes the selection -- the message pane
+        # switches to someone the user never clicked on. Remember the item,
+        # put it back.
+        selected = None
+        try:
+            row = self.contactOutline.selectedRow()
+            if row >= 0:
+                selected = self.contactOutline.itemAtRow_(row)
+        except Exception:
+            selected = None
+
         if sender is self.model:
             self.contactOutline.reloadData()
             for group in self.model.groupsList:
@@ -884,6 +903,15 @@ class ContactWindowController(NSWindowController):
                     self.contactOutline.expandItem_expandChildren_(group, False)
         else:
             self.contactOutline.reloadItem_reloadChildren_(sender, True)
+
+        if selected is not None:
+            try:
+                row = self.contactOutline.rowForItem_(selected)
+                if row >= 0 and row != self.contactOutline.selectedRow():
+                    self.contactOutline.selectRowIndexes_byExtendingSelection_(
+                        NSIndexSet.indexSetWithIndex_(row), False)
+            except Exception:
+                pass                # the item is gone; leave the selection alone
         # BlinkLogger().log_info('startup: refreshContactsList exit')
 
     @objc.python_method
@@ -1713,6 +1741,37 @@ class ContactWindowController(NSWindowController):
             self.recalculateDrawerSplitter()
 
     @objc.python_method
+    def groupForContact(self, item):
+        """The group a contact row belongs to, whichever list it came from.
+
+        The contacts outline knows this structurally, through parentForItem_.
+        The search outline does not: searchContacts builds a FLAT list, so a row
+        there has no parent at all and parentForItem_ answers None -- for the
+        contacts outline as well, because the row was never in it.
+
+        That asymmetry is why Delete never appeared on a search result. The menu
+        asked the contacts outline about a row it had never seen, got None, and
+        silently dropped every item that depends on knowing the group. Nothing
+        logged it, and the row looked undeletable rather than mislocated.
+
+        The search list holds the SAME contact objects as the groups it was
+        built from (searchContacts iterates model.groupsList), so a scan finds
+        the real group and the Delete that follows acts on the real thing.
+        """
+        if item is None or isinstance(item, BlinkGroup):
+            return None
+        group = self.contactOutline.parentForItem_(item)
+        if group is not None:
+            return group
+        for group in self.model.groupsList:
+            try:
+                if item in group.contacts:
+                    return group
+            except Exception:
+                continue
+        return None
+
+    @objc.python_method
     def updateContactContextMenu(self):
         settings = SIPSimpleSettings()
         if self.mainTabView.selectedTabViewItem().identifier() == "contacts":
@@ -2254,6 +2313,21 @@ class ContactWindowController(NSWindowController):
                         mitem.setRepresentedObject_(item.uri)
                         mitem.setEnabled_(self.contactSupportsMedia("screen-sharing-client", item, item.uri))
 
+            if isinstance(item, BlinkPresenceContact):
+                # Blocking somebody you already have. Without this the only way
+                # to block a contact was the "Add Blocked Contact..." dialog and
+                # retyping their address, which is why the Calls group could
+                # fill up with people there was no convenient way to stop.
+                self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+                if is_blocked_party(item.uri):
+                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(
+                        NSLocalizedString("Blocked Caller", "Menu item"), "", "")
+                    mitem.setEnabled_(False)
+                else:
+                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(
+                        NSLocalizedString("Block Caller", "Menu item"), "blockCaller:", "")
+                    mitem.setRepresentedObject_(item)
+
             if isinstance(item, BlinkPresenceContact) or isinstance(item, BonjourBlinkContact):
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                 history_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("History...", "Menu item"), "viewHistory:", "")
@@ -2263,6 +2337,14 @@ class ContactWindowController(NSWindowController):
                 all_uris = []
                 for uri in sorted(item.uris, key=lambda uri: uri.position if uri.position is not None else sys.maxsize):
                     all_uris.append(str(uri.uri))
+                # get_recordings matches the filename's user@host against these
+                # by exact string, and a recording is named after the URI that
+                # was dialled -- not after the E.164 a contact stores. Same
+                # expansion the conversation queries use.
+                for uri in list(all_uris):
+                    for spelling in pstn_uri_spellings_for_accounts(uri):
+                        if spelling not in all_uris:
+                            all_uris.append(spelling)
                 recordings = self.backend.get_recordings(all_uris)[-10:]
 
                 if recordings:
@@ -2392,8 +2474,14 @@ class ContactWindowController(NSWindowController):
                         mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Add %s to", "Menu item") % item.uri, "", "")
                         self.contactContextMenu.setSubmenu_forItem_(name_submenu, mitem)
 
-            group = self.contactOutline.parentForItem_(item)
-            if group and group.delete_contact_allowed:
+            group = self.groupForContact(item)
+            # A contact in NO group is still deletable. deleteContact works on
+            # the addressbook entry itself, and delete_contact_allowed is a
+            # per-group POLICY -- Messages and Deleted refuse it -- not a
+            # requirement that a group exist at all. Without this allowance an
+            # ungrouped contact, which is what a half-finished write leaves
+            # behind, could not be removed from the interface by any means.
+            if group is None or group.delete_contact_allowed:
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Delete", "Menu item"), "deleteItem:", "")
                 lastItem.setEnabled_(item.deletable)
                 lastItem.setRepresentedObject_(item)
@@ -3687,6 +3775,96 @@ class ContactWindowController(NSWindowController):
                 NSUserDefaults.standardUserDefaults().setFloat_forKey_(list_width, 'ContactListWidth')
         except Exception:
             pass
+
+    @objc.python_method
+    def switchMessagePaneToSession(self, session_controller):
+        """Point the open conversation pane at the party of a call.
+
+        Clicking a call is the user saying which conversation they are in. If
+        the pane is already open beside the contact list, it follows -- one
+        person's transcript sitting next to another person's call is how a
+        message gets sent to the wrong person.
+
+        Only ever SWITCHES, never reveals: the same rule
+        switchMessagePaneToSelectedContact follows. Answering a call must not
+        make a transcript appear over whatever the user was doing, and a call
+        arriving is not a request to read anything.
+        """
+        if session_controller is None or not self.isMessagesPaneVisible():
+            return
+        pane = self.messagePane()
+        if pane is None:
+            return
+
+        target = getattr(session_controller, 'target_uri', None)
+        if target is None:
+            return
+
+        # The call's own target is the conversation key: calling one of a
+        # contact's numbers and then reading the transcript of a different
+        # address of theirs is the same wrong-person mistake this method
+        # exists to prevent.
+        contact = None
+        try:
+            contact = self.getFirstContactMatchingURI(target, exact_match=True)
+        except Exception:
+            contact = None
+
+        display_name = None
+        if contact is not None:
+            display_name = contact.name
+        if not display_name:
+            try:
+                display_name = session_controller.remoteIdentity.display_name
+            except Exception:
+                display_name = None
+
+        # Same account resolution the contact path uses: whichever account
+        # last carried a message either way owns the conversation, and the
+        # call's account is only the fallback. Bonjour is filtered out --
+        # a conversation opened there can never resolve a route.
+        account = None
+        try:
+            account = SMSWindowManager.SMSWindowManager().accountForRemoteURI(target)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot tell which account %s uses: %s' % (target, e))
+        if account is None:
+            account = getattr(session_controller, 'account', None)
+        try:
+            account = self.messagingAccountFor(account, contact)
+        except Exception:
+            pass
+        if account is None:
+            return
+
+        # A neighbour is addressed by instance id, not by address; without one
+        # viewerForTarget rightly refuses to build a conversation that could
+        # never resolve a route.
+        instance_id = None
+        if account is BonjourAccount():
+            try:
+                if contact is not None and contact in self.model.bonjour_group.contacts:
+                    instance_id = contact.id
+            except Exception:
+                instance_id = None
+            if instance_id is None:
+                return
+
+        try:
+            manager = SMSWindowManager.SMSWindowManager()
+            viewer = manager.openViewerForURI(str(target)) if instance_id is None else None
+            if viewer is None:
+                viewer = manager.viewerForTarget(target, display_name, account,
+                                                 instance_id=instance_id,
+                                                 selected_contact=contact)
+            if viewer is None:
+                return
+            # Attached without focus: the call is what the user clicked, and
+            # stealing first responder would take the keyboard away from it.
+            manager.presentViewer(viewer, focus=False, note_new_message=False)
+            pane.selectViewer(viewer)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot switch the messages pane to %s: %s' % (target, e))
 
     @objc.python_method
     def isMessagesPaneVisible(self):
@@ -5654,10 +5832,24 @@ class ContactWindowController(NSWindowController):
             self.refreshContactsList()
             self.searchContacts()
         else:
-            group = self.contactOutline.parentForItem_(item)
-            if group and group.delete_contact_allowed:
+            # Same lookup the menu used to offer the item: a row selected in the
+            # search tab has no parent in the contacts outline, and asking for
+            # one there is how this quietly did nothing.
+            group = self.groupForContact(item)
+            if group is None or group.delete_contact_allowed:
+                # Noted before the confirmation dialog, so the decision is made
+                # on the tab the user actually acted from.
+                searching = self.mainTabView.selectedTabViewItem().identifier() == "search"
                 self.model.deleteContact(item)
                 self.refreshContactsList()
+                if searching:
+                    # The result list is an answer to a question whose subject
+                    # has just been deleted. Re-running the same search leaves
+                    # the query in the box and the row's neighbours on screen,
+                    # which reads as though the delete half-worked. Clearing the
+                    # box is enough on its own: searchContacts() treats an empty
+                    # query as "go back to the contact list".
+                    self.resetWidgets()
                 self.searchContacts()
 
     @objc.IBAction
@@ -5989,18 +6181,66 @@ class ContactWindowController(NSWindowController):
         self.resetWidgets()
 
     @objc.IBAction
+    def blockCaller_(self, sender):
+        """Block a contact from calling, and take them out of the other groups.
+
+        The two facts a block is, as everywhere else: the Blocked group, which
+        is what rejects the call and what replicates to the phone, and the
+        presence policy, because nobody blocking a caller means "and do keep
+        publishing my availability to them".
+
+        Then the tidy-up: somebody blocked should stop appearing in the Calls
+        group they were just blocked out of. That part is lossy -- unblocking
+        cannot put them back into Family or Friends, because nothing records
+        that they were there -- so block_caller names every group it removed
+        them from in the log.
+        """
+        item = sender.representedObject()
+        if item is None:
+            return
+
+        try:
+            contact = item.contact
+        except AttributeError:
+            contact = None
+
+        if contact is not None:
+            try:
+                contact.presence.policy = 'block'
+                contact.dialog.policy = 'block'
+                contact.save()
+            except Exception as e:
+                BlinkLogger().log_error('Cannot set the presence policy for %s: %s' % (item.uri, e))
+
+        block_caller(item.uri, name=getattr(item, 'name', None), account=self.activeAccount())
+
+    @objc.IBAction
     def blockContact_(self, sender):
         controller = BlockedContact()
         contact = controller.runModal()
         if not contact:
             return
 
+        # Blocking somebody is two facts, and the user asserting one means
+        # both: stop telling them whether I am available, and stop them
+        # ringing me. They are separate lists on purpose -- a presence policy
+        # must never decide whether a call is accepted (see
+        # docs/PSTN-CALLS-GROUP.md section 21) -- but this one action writes
+        # to both, because nobody blocking a caller means "and do keep
+        # publishing my availability to them".
+
+        # 1. presence and dialog: the policy, as it has always been.
         policy_contact = Policy()
         policy_contact.name = contact['name']
         policy_contact.uri = contact['address']
         policy_contact.presence.policy = 'block'
         policy_contact.dialog.policy = 'block'
         policy_contact.save()
+
+        # 2. calls: membership of the Blocked group, which is what
+        #    SessionController actually rejects on, and what replicates to
+        #    sylk mobile so the block travels with the account.
+        block_party(contact['address'], name=contact['name'], account=self.activeAccount())
 
     @objc.IBAction
     def addGroup_(self, sender):

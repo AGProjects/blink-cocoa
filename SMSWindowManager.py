@@ -118,7 +118,7 @@ def _describe_payload_value(value):
 from MessageHost import (FILE_TRANSFER_CONTENT_TYPE, FILE_TRANSFER_CONTENT_TYPES,
                          call_recording_metadata, file_transfer_envelope,
                          pgp_plaintext,
-                         pgp_plaintext_bytes, public_key_short_checksum)
+                         pgp_plaintext_bytes)
 from SylkLocation import (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE,
                           envelope_summary, is_notable_action,
                           bubble_id as location_bubble_id, location_payload,
@@ -737,6 +737,12 @@ class SMSWindowManagerClass(NSObject):
     # know about. Seeded once from history, kept current by every path that
     # stores a message. The Messages group is ordered by this.
     last_message_times = {}
+    # Same, for audio calls: canonical remote uri -> naive UTC datetime of the
+    # newest call row. Kept separate from last_message_times on purpose --
+    # last_message_times is MESSAGES only (see ChatHistory.last_message_times),
+    # so a call must not move a conversation up the Messages group, and a
+    # message must not move a contact up the Calls group.
+    last_call_times = {}
     _order_changed_during_bulk = False
     _unread_changed_during_bulk = set()
     # Resolved SIP routes, shared by every conversation. Keyed by the actual
@@ -841,6 +847,7 @@ class SMSWindowManagerClass(NSObject):
             # rather than alphabetically until the first message arrives,
             # and put back the badges for whatever was left unread.
             self.loadLastMessageTimes()
+            self.loadLastCallTimes()
             self.loadUnreadCounts()
             # Which conversations are currently hidden, so the first
             # message that arrives for one of them can bring it back.
@@ -2524,7 +2531,7 @@ class SMSWindowManagerClass(NSObject):
 
     @objc.python_method
     def _describe_public_key(self, public_key):
-        """(names_itself_as, fingerprint) for a key blob, or (None, None).
+        """(names_itself_as, OpenPGP key id) for a key blob, or (None, None).
 
         The user ids are what make a mismatch warning actionable: without
         them the log says a key looks wrong but not whose it is, which is
@@ -2538,10 +2545,10 @@ class SMSWindowManagerClass(NSObject):
         try:
             names = [str(uid).strip() for uid in key.userids]
             names = [name for name in names if name] or ['(no user id)']
-            fingerprint = str(key.fingerprint).replace(' ', '')[-16:]
+            key_id = str(key.fingerprint).replace(' ', '')[-16:]
         except Exception:
             return None, None
-        return names, fingerprint
+        return names, key_id
 
     @objc.python_method
     def _warn_if_key_mismatched(self, public_key, uri):
@@ -2552,16 +2559,14 @@ class SMSWindowManagerClass(NSObject):
         signal that a key is heading for the wrong contact, and that bug
         destroys the real key silently.
         """
-        names, fingerprint = self._describe_public_key(public_key)
-        checksum = public_key_short_checksum(public_key)
+        names, key_id = self._describe_public_key(public_key)
         if names is None:
-            BlinkLogger().log_info('Public key stored for %s, checksum %s (unreadable key)'
-                                   % (uri, checksum))
+            BlinkLogger().log_info('Public key stored for %s (unreadable key)' % uri)
             return
 
         BlinkLogger().log_info(
-            'Public key stored for %s: checksum %s, fingerprint %s, identifies as %s'
-            % (uri, checksum, fingerprint, ', '.join(names)))
+            'Public key stored for %s: key id %s, identifies as %s'
+            % (uri, key_id, ', '.join(names)))
 
         target = self._canonical_uri(uri)
         if not target or any(target in name.lower() for name in names):
@@ -2572,9 +2577,9 @@ class SMSWindowManagerClass(NSObject):
             return
         BlinkLogger().log_warning(
             'The public key being saved for %s identifies itself as %s '
-            '(checksum %s). Saving anyway -- a key can legitimately name a '
+            '(key id %s). Saving anyway -- a key can legitimately name a '
             'different address, but if that is not this contact then it is '
-            'the wrong key.' % (uri, ', '.join(names), checksum))
+            'the wrong key.' % (uri, ', '.join(names), key_id))
 
     @objc.python_method
     def _isUserRenamedContact(self, contact):
@@ -2857,6 +2862,39 @@ class SMSWindowManagerClass(NSObject):
 
     @objc.python_method
     @run_in_green_thread
+    def loadLastCallTimes(self):
+        """Seed the Calls group order from history, off the GUI thread.
+
+        Green for the same reason as loadLastMessageTimes: ChatHistory hands
+        its results back through block_on, an eventlib primitive that only
+        works from a green thread.
+
+        The media types are the two an audio call is stored under -- 'audio'
+        for a call that happened and 'missed-call' for one that did not.
+        """
+        try:
+            stored = self.history.last_message_times(media_type=('audio', 'missed-call'),
+                                                     local_uri=active_account_uris())
+        except Exception as e:
+            BlinkLogger().log_error('Cannot read the last call times: %s' % e)
+            return
+        loaded = 0
+        for uri, stamp in stored.items():
+            key = self._canonical_uri(uri)
+            when = self._normalized_timestamp(stamp)
+            if not key or when is None:
+                continue
+            if self.last_call_times.get(key) is None or when > self.last_call_times[key]:
+                self.last_call_times[key] = when
+                loaded += 1
+        BlinkLogger().log_info('[calls-group] call order seeded from %d contact(s) with calls'
+                               % loaded)
+        # The Calls group was built and sorted before this map existed, so it
+        # is sitting in alphabetical order right now. Ask for a reorder.
+        self._postConversationOrderChanged(None)
+
+    @objc.python_method
+    @run_in_green_thread
     def loadLastMessageTimes(self):
         """Seed the conversation order from history, off the GUI thread.
 
@@ -2901,6 +2939,91 @@ class SMSWindowManagerClass(NSObject):
                                    % len(accounts))
         if loaded:
             self._postConversationOrderChanged(None)
+
+        # `stored` is every conversation the history holds, which is the only
+        # complete answer to who belongs in the Messages group -- so the audit
+        # rides on the read that already has it rather than making its own.
+        self.auditMessagesGroupAgainstHistory(stored)
+
+    @objc.python_method
+    @run_in_gui_thread
+    def auditMessagesGroupAgainstHistory(self, stored):
+        """Make the Messages group match what the history actually holds.
+
+        Membership is maintained by EVENTS -- a message arrives, a journal
+        sync lands, a conversation is opened -- and every one of those can be
+        missed after the fact. A contact removed from the group by hand is
+        never put back; a group deleted on another device takes all of them
+        at once and the reload leaves the members behind; a contact created
+        before the group existed was filed by whichever path made it.
+
+        The one audit that did run at launch is inside
+        _applyRestoredUnreadCounts, and it walks the conversations with
+        UNREAD messages. A conversation that has been read is invisible to
+        it -- permanently, because nothing will ever make it unread again.
+        That is the hole this closes: mi@sylk.link had a contact, in four
+        other groups, with a read conversation behind it, and no row under
+        Messages.
+
+        The history is the record of who has been talked to, so anything in
+        it belongs in the group; contacts are created when absent, exactly as
+        the live path does. Removed conversations are NOT resurrected --
+        last_message_times filters the tombstoned rows out in SQL, and the
+        in-memory removal set is checked again here in case that seed has not
+        landed yet.
+
+        On the GUI thread because address book and AppKit work has to be, for
+        the same reason _applyRestoredUnreadCounts is.
+        """
+        if not stored:
+            return
+
+        # Canonical key -> the address as history spells it. The key
+        # de-duplicates (two spellings of one address are one conversation);
+        # the raw uri is what a created contact has to carry.
+        wanted = {}
+        for uri in stored:
+            key = self._canonical_uri(uri)
+            if not key or key in wanted:
+                continue
+            if key in self.deleted_conversations:
+                continue
+            if not self.isFileableAddress(uri):
+                continue
+            wanted[key] = uri
+        if not wanted:
+            return
+
+        from ContactListModel import MESSAGES_GROUP_ID
+        group = self._conversationGroup(MESSAGES_GROUP_ID, create=False)
+        present = set()
+        if group is not None:
+            for contact in group.contacts:
+                try:
+                    for u in contact.uris:
+                        key = self._canonical_uri(u.uri)
+                        if key:
+                            present.add(key)
+                except Exception:
+                    continue
+
+        missing = [uri for key, uri in wanted.items() if key not in present]
+        if not missing:
+            BlinkLogger().log_debug('Messages group audit: all %d conversation(s) filed'
+                                    % len(wanted))
+            return
+
+        BlinkLogger().log_info('Messages group audit: %d of %d conversation(s) in the '
+                               'history are not filed under Messages'
+                               % (len(missing), len(wanted)))
+        filed = 0
+        for uri in missing:
+            if self.ensureMessagesGroupContains(uri) is not None:
+                filed += 1
+            else:
+                BlinkLogger().log_debug('Messages group audit: cannot file %s' % uri)
+        if filed:
+            self.addContactsToMessagesGroup()
 
     @objc.python_method
     @run_in_green_thread
@@ -2951,6 +3074,7 @@ class SMSWindowManagerClass(NSObject):
         had_unread = [key for key, count in self.unread_counts.items() if count]
         self.unread_counts.clear()
         self.last_message_times.clear()
+        self.last_call_times.clear()
         self.message_accounts.clear()
 
         for key in had_unread:
@@ -2958,6 +3082,7 @@ class SMSWindowManagerClass(NSObject):
         self._postConversationOrderChanged(None)
 
         self.loadLastMessageTimes()
+        self.loadLastCallTimes()
         self.loadUnreadCounts()
 
     @objc.python_method
@@ -3006,6 +3131,22 @@ class SMSWindowManagerClass(NSObject):
     @objc.python_method
     def lastMessageTimeForURI(self, remote_uri):
         return self.last_message_times.get(self._canonical_uri(remote_uri))
+
+    @objc.python_method
+    def lastCallTimeForURI(self, remote_uri):
+        return self.last_call_times.get(self._canonical_uri(remote_uri))
+
+    @objc.python_method
+    def noteCallTime(self, remote_uri, when):
+        """Record a call that just happened, so the Calls group reorders
+        without waiting for a restart. Merges upward only."""
+        key = self._canonical_uri(remote_uri)
+        when = self._normalized_timestamp(when)
+        if not key or when is None:
+            return
+        known = self.last_call_times.get(key)
+        if known is None or when > known:
+            self.last_call_times[key] = when
 
     @objc.python_method
     def _postConversationOrderChanged(self, key):
@@ -3237,6 +3378,7 @@ class SMSWindowManagerClass(NSObject):
         # The restored rows carry their own times and unread marks; the
         # in-memory maps are rebuilt from them rather than guessed at here.
         self.loadLastMessageTimes()
+        self.loadLastCallTimes()
         self.loadUnreadCounts()
 
     @objc.python_method

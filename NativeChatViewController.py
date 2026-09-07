@@ -528,6 +528,9 @@ class NativeChatViewController(ChatViewController):
         """
         self._installComposerButtons()
         self._layoutComposerRow()
+        # The bar is placed against the transcript's frame, and the pane
+        # re-frames that on every show and every resize.
+        self._layoutSelectionBar()
 
     @objc.python_method
     def _installComposerButtons(self):
@@ -3361,18 +3364,30 @@ class NativeChatViewController(ChatViewController):
         """A callable that turns downloaded ciphertext into the real file.
 
         Handed to the cache rather than the cache reaching for keys itself:
-        the private key belongs to the conversation, and a cache shared by
-        every conversation has no business holding one.
+        the cache is shared by every conversation and has no business
+        holding keys.
+
+        The key is chosen per file, from the key ids the file was actually
+        sealed to -- not from whichever account this conversation is on when
+        the download happens. A conversation moves between accounts on its
+        own (a message arriving on another account takes it there, see
+        SMSWindowManager.adoptAccount), and files that arrived on the
+        account it left were then being opened with the key of the account
+        it moved to: a failure indistinguishable from a corrupt download.
+        The conversation's own key is still tried first and is still the
+        fallback for a file whose encrypters cannot be read at all.
         """
+        from MessageHost import load_private_keys
         private_key = getattr(self.delegate, 'private_key', None)
-        if private_key is None:
+        if private_key is None and not load_private_keys():
             return None
 
         def decrypt(payload):
             blob = payload
+            key = private_key
             try:
                 import pgpy
-                from MessageHost import pgp_plaintext_bytes
+                from MessageHost import pgp_plaintext_bytes, private_key_for_message
                 # A .asc file is ASCII armour: text that pgpy parses
                 # directly. Binary OpenPGP has to be handed over as bytes
                 # instead, because pgpy's armour detection decodes as UTF-8
@@ -3384,7 +3399,10 @@ class NativeChatViewController(ChatViewController):
                 if text is not None and 'BEGIN PGP' in text:
                     blob = text
                 message = pgpy.PGPMessage.from_blob(blob)
-                return pgp_plaintext_bytes(private_key.decrypt(message))
+                key = private_key_for_message(message, private_key)
+                if key is None:
+                    raise ValueError('no private key on this device opens it')
+                return pgp_plaintext_bytes(key.decrypt(message))
             except Exception as e:
                 # The first bytes say what actually arrived: armour starts
                 # '2d2d2d2d2d' ("-----"), a JPEG 'ffd8ff'. Without them a
@@ -3395,19 +3413,22 @@ class NativeChatViewController(ChatViewController):
                     head = binascii.hexlify(bytes(payload[:12])).decode()
                 except Exception:
                     pass
-                # Which key it was sealed to, and which one we hold. A file
-                # encrypted to a key this device no longer has fails exactly
-                # like a corrupt download, and the two need different answers.
+                # Which key it was sealed to, which one was tried, and what
+                # this device holds. A file encrypted to a key that is not
+                # here fails exactly like a corrupt download, and the two
+                # need different answers.
                 try:
-                    from MessageHost import pgp_key_id, pgp_message_key_ids
+                    from MessageHost import (pgp_key_id, pgp_message_key_ids,
+                                             load_private_keys)
                     sealed_to = ', '.join(pgp_message_key_ids(blob)) or 'unknown'
-                    held = pgp_key_id(private_key) or 'unknown'
+                    tried = pgp_key_id(key) or 'none'
+                    held = ', '.join(sorted(load_private_keys())) or 'none'
                 except Exception:
-                    sealed_to = held = 'unknown'
+                    sealed_to = tried = held = 'unknown'
                 BlinkLogger().log_error(
                     'Cannot decrypt a downloaded file (%d bytes, starts %s): %s. '
-                    'Encrypted to key(s) %s; this conversation holds private key %s'
-                    % (len(payload or b''), head or '?', e, sealed_to, held))
+                    'Encrypted to key(s) %s; tried private key %s; this device holds %s'
+                    % (len(payload or b''), head or '?', e, sealed_to, tried, held))
                 return None
         return decrypt
 
@@ -4714,9 +4735,13 @@ class NativeChatViewController(ChatViewController):
             # Centred over the bottom of the transcript, and staying there:
             # both side margins flexible so it stays centred, the vertical
             # one fixed to whichever edge the parent counts from.
+            # The flexible margins are the ones named. Both sides free
+            # horizontally keeps it centred; vertically the margin on the
+            # side AWAY from the bottom is the free one, and which side
+            # that is depends on where the parent counts from.
             bar.setAutoresizingMask_(NSViewMinXMargin | NSViewMaxXMargin
-                                     | (NSViewMaxYMargin if parent.isFlipped()
-                                        else NSViewMinYMargin))
+                                     | (NSViewMinYMargin if parent.isFlipped()
+                                        else NSViewMaxYMargin))
             bar.setHidden_(True)
 
             label = NSTextField.alloc().initWithFrame_(NSMakeRect(0, 0, 90, 16))
@@ -5106,6 +5131,8 @@ class NativeChatViewController(ChatViewController):
                  % missing), "", "")
             note.setEnabled_(False)
         try:
+            from AppKit import NSEvent, NSLeftMouseUp
+            from Foundation import NSDate
             view = sender if hasattr(sender, 'window') else self.messageListView
             point = view.window().convertScreenToBase_(NSEvent.mouseLocation())
             event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(

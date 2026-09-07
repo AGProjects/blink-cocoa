@@ -68,6 +68,7 @@ from pgpy.constants import PubKeyAlgorithm, KeyFlags, HashAlgorithm, SymmetricKe
 from BlinkLogger import BlinkLogger
 from ChatViewController import MSG_STATE_SENDING, MSG_STATE_SENT, MSG_STATE_DELIVERED, MSG_STATE_FAILED, MSG_STATE_DISPLAYED, MSG_STATE_FAILED_LOCAL, MSG_STATE_DEFERRED
 from HistoryManager import ChatHistory
+from HistoryManager import CONVERSATION_MEDIA_TYPES
 from MessageHost import (FILE_TRANSFER_CONTENT_TYPE,
                          call_recording_envelope,
                          is_renderable_content_type, peaks_metadata,
@@ -85,6 +86,7 @@ from SylkLocation import (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE,
                           row_metadata, session_bubble_ids, storable_envelope,
                           system_note)
 from util import active_account_uris, format_identity_to_string, html2txt, otr_enabled_for_account, pgp_enabled_for_account, sipuri_components_from_string, run_in_gui_thread
+from util import pstn_uri_spellings_for_accounts
 from ChatOTR import ChatOtrSmp
 import SMSWindowManager
 
@@ -366,6 +368,17 @@ class SMSViewController(NSObject):
     # than the render waiting for a full table scan.
     total_history_messages = -1
     remoteTypingTimer = None
+    # The loading spinner's own state: when it started, why, and the timer
+    # that ends it if the history page never comes back. None means the
+    # spinner is not running -- the widget itself cannot be asked, and a
+    # stop logged against a spinner that was never started says nothing.
+    loading_started = None
+    loading_reason = None
+    loading_watchdog = None
+    # How long a page may take before the spinner is called off. Generous,
+    # because a busy db thread has been seen to take 90s to answer -- but
+    # finite, because a spinner with no end is what a user reads as a hang.
+    LOADING_WATCHDOG_SECONDS = 20.0
     handle_scrolling = True
     scrollingTimer = None
     scrolling_back = False
@@ -379,6 +392,10 @@ class SMSViewController(NSObject):
     paused = False
 
     account = None
+    # Whether the local identity of this conversation has been settled.
+    # False only for an outgoing conversation with an address nothing is
+    # known about yet; see confirmOutgoingAccount.
+    account_confirmed = False
     target_uri = None
     routes = None
     
@@ -705,6 +722,11 @@ class SMSViewController(NSObject):
     def dealloc(self):
         if self.remoteTypingTimer:
             self.remoteTypingTimer.invalidate()
+
+        # Targets self, so it holds a retain on a conversation that is
+        # going away -- and a live timer at dealloc is how PyObjC ends up
+        # releasing a half-dead instance inside CFRunLoop.
+        self.cancelLoadingWatchdog()
 
         # A popover still on screen when the conversation it belongs to
         # goes away is a panel anchored to a view that no longer exists.
@@ -1043,6 +1065,138 @@ class SMSViewController(NSObject):
         self.log_debug('Inserted the smiley %s' % text)
 
     @objc.python_method
+    def confirmOutgoingAccount(self):
+        """Settle which account this conversation talks from, once.
+
+        Returns True when the caller may go ahead, False when the user
+        cancelled -- in which case nothing at all must be sent, not even
+        the key exchange or the typing notice that ordinarily precede a
+        message, because each of those is itself a message from a local
+        identity the user has not agreed to use.
+
+        Asked at the first outgoing thing the user does rather than when
+        the conversation is created: selecting a contact in the list
+        creates one, and a panel on every click of the list would be
+        unusable. By the time somebody types, the question is real.
+
+        Nothing is asked when there is nothing to choose:
+
+        - one enabled SIP account, so the answer is already on screen;
+        - a Bonjour conversation, which is addressed by instance id on
+          the link local account and cannot run on any other;
+        - an address this application has already talked to, either way:
+          that conversation has an account, and starting over on a
+          different one would answer from an address the peer never
+          wrote to;
+        - one of our own addresses, where the account that owns it is
+          the only one holding its keys;
+        - an address on a domain one of our accounts is on, which names
+          that account: the recipient is a full SIP address by the time a
+          conversation exists, so there is nothing to guess and nothing
+          the user could usefully be asked.
+        """
+        if self.account_confirmed:
+            return True
+
+        if self.account is BonjourAccount() or self.instance_id is not None:
+            self.account_confirmed = True
+            return True
+
+        # A transcript with something in it is not a new contact, whatever
+        # the account map says. It is asked here as well because that map
+        # is seeded from history on a green thread at startup, and a reply
+        # typed in the first seconds of a launch would otherwise be asked
+        # about a conversation plainly already on screen.
+        if self.total_history_messages > 0 or self.message_count_from_history > 0:
+            self.account_confirmed = True
+            return True
+
+        import MessageAccountPicker
+        accounts = MessageAccountPicker.messaging_accounts()
+        if len(accounts) < 2:
+            self.account_confirmed = True
+            return True
+
+        manager = SMSWindowManager.SMSWindowManager()
+
+        try:
+            remembered = manager.accountForRemoteURI(self.remote_uri)
+        except Exception as e:
+            self.log_error('Cannot tell which account %s uses: %s' % (self.remote_uri, e))
+            remembered = None
+        if remembered is not None:
+            # Known conversation. The account it already runs on wins, and
+            # the header pill remains the way to move it.
+            self.account_confirmed = True
+            return True
+
+        try:
+            own = NSApp.delegate().contactsWindowController.accountForOwnURI(self.remote_uri)
+        except Exception as e:
+            self.log_error('Cannot tell whether %s is one of our accounts: %s'
+                           % (self.remote_uri, e))
+            own = None
+        if own is not None:
+            self.account_confirmed = True
+            return True
+
+        # The domain settles it whenever we are on that domain ourselves.
+        # Sending to alice@example.com from an account somewhere else would
+        # reach her from an address her server has no reason to accept, so
+        # there is no choice here to put to the user -- only a move to make,
+        # if the conversation was created on whatever the toolbar happened
+        # to be showing.
+        try:
+            local = MessageAccountPicker.account_for_domain(self.remote_uri, accounts)
+        except Exception as e:
+            self.log_error('Cannot tell whether %s is on one of our domains: %s'
+                           % (self.remote_uri, e))
+            local = None
+        if local is not None:
+            if local is not self.account:
+                self.log_info('%s is on our own domain, talking from %s'
+                              % (self.remote_uri, local.id))
+                self.setAccount(local)
+            try:
+                manager.noteMessageAccount(self.account, self.remote_uri)
+            except Exception as e:
+                self.log_error('Cannot record the account of %s: %s' % (self.remote_uri, e))
+            self.account_confirmed = True
+            return True
+
+        try:
+            chosen = MessageAccountPicker.pick_account(self.remote_uri, self.display_name,
+                                                       preselected=self.account)
+        except Exception as e:
+            # A panel that cannot be shown must not be a conversation that
+            # cannot be had. The account stays whatever it already was --
+            # which is the behaviour this asks about, not a worse one --
+            # and it is not asked again for this conversation.
+            self.log_error('Cannot ask which account to send to %s from: %s'
+                           % (self.remote_uri, e))
+            self.account_confirmed = True
+            return True
+
+        if chosen is None:
+            return False
+
+        if chosen is not self.account:
+            self.setAccount(chosen)
+
+        # Remembered here rather than after the send: the user has decided
+        # which identity this conversation has, and a message that fails
+        # to go out does not undecide it.
+        try:
+            manager.noteMessageAccount(self.account, self.remote_uri)
+        except Exception as e:
+            self.log_error('Cannot record the account for %s: %s' % (self.remote_uri, e))
+
+        self.account_confirmed = True
+        self.log_info('Conversation with %s will be sent from %s'
+                      % (self.remote_uri, self.local_uri))
+        return True
+
+    @objc.python_method
     def setAccount(self, account):
         """Send from a different local account from this point on.
 
@@ -1269,13 +1423,21 @@ class SMSViewController(NSObject):
             text_content = content.decode().strip()
             
             if text_content.startswith('-----BEGIN PGP MESSAGE-----') and text_content.endswith('-----END PGP MESSAGE-----'):
-                if not self.private_key:
+                from MessageHost import private_key_for_message, load_private_keys
+                if not self.private_key and not load_private_keys():
                     self.chatViewController.showSystemMessage("No PGP private key available", ISOTimestamp.now(), is_error=True)
                     return
                 else:
                     try:
+                        # Sealed to whichever of our accounts it was addressed
+                        # to, which is not always the one this conversation is
+                        # on: replicated history and a peer writing to another
+                        # of our addresses both arrive here.
                         pgpMessage = pgpy.PGPMessage.from_blob(text_content)
-                        decrypted_message = self.private_key.decrypt(pgpMessage)
+                        private_key = private_key_for_message(pgpMessage, self.private_key)
+                        if private_key is None:
+                            raise pgpy.errors.PGPError('no private key on this device opens it')
+                        decrypted_message = private_key.decrypt(pgpMessage)
                     except (pgpy.errors.PGPDecryptionError, pgpy.errors.PGPError) as e:
                         if self.pgp_encrypted:
                             self.pgp_encrypted = False
@@ -1447,19 +1609,27 @@ class SMSViewController(NSObject):
 
     @objc.python_method
     def _decrypt_location_blob(self, blob):
-        """Decrypt a PGP-armoured location body with this account's key.
+        """Decrypt a PGP-armoured location body.
+
+        The key is the one the blob was sealed to -- this conversation's
+        account for a live share, another of ours for a trail replayed from
+        history that was recorded before the conversation moved account.
 
         Returns the plaintext, or None when there is no key or the blob
         was encrypted to a key we don't hold. In v2 the blob is the
         coordinates alone; in the legacy metadata format it is the whole
         envelope.
         """
-        if not self.private_key:
+        from MessageHost import private_key_for_message, load_private_keys
+        if not self.private_key and not load_private_keys():
             self.log_debug('Cannot decrypt location payload: no PGP private key available')
             return None
         try:
             pgpMessage = pgpy.PGPMessage.from_blob(blob)
-            decrypted_message = self.private_key.decrypt(pgpMessage)
+            private_key = private_key_for_message(pgpMessage, self.private_key)
+            if private_key is None:
+                raise pgpy.errors.PGPError('no private key on this device opens it')
+            decrypted_message = private_key.decrypt(pgpMessage)
         except (pgpy.errors.PGPDecryptionError, pgpy.errors.PGPError) as e:
             self.log_debug('Cannot decrypt location payload: %s' % str(e))
             return None
@@ -1497,6 +1667,8 @@ class SMSViewController(NSObject):
         message to this account's OTHER devices, not to the one that sent
         it, so nothing would ever arrive to draw.
         """
+        if not self.confirmOutgoingAccount():
+            return None
         msgid = str(uuid.uuid4())
         body = one_shot_envelope(coords, msgid, now=datetime.datetime.now())
         if body is None:
@@ -1518,6 +1690,8 @@ class SMSViewController(NSObject):
         one-shot carrying `requestId` pointing back at it, which is how a
         reply is matched to the ask that prompted it.
         """
+        if not self.confirmOutgoingAccount():
+            return None
         msgid = str(uuid.uuid4())
         body = location_request_envelope(msgid, now=datetime.datetime.now())
         self.log_info('Requesting the location of %s as %s' % (self.remote_uri, msgid))
@@ -2135,6 +2309,8 @@ class SMSViewController(NSObject):
     @objc.python_method
     def sendFiles(self, paths):
         """Send one or more files, in the order they were given."""
+        if paths and not self.confirmOutgoingAccount():
+            return 0
         sent = 0
         for path in paths:
             if self.sendFile(path):
@@ -2350,6 +2526,8 @@ class SMSViewController(NSObject):
         made -- so the composer knows whether its temporary file is still
         load-bearing. None if nothing was sent.
         """
+        if not self.confirmOutgoingAccount():
+            return None
         transfer_id = self.sendFile(path, duration=duration)
         if transfer_id is None:
             return None
@@ -3914,6 +4092,16 @@ class SMSViewController(NSObject):
 
         if selector == "insertNewline:":
             content = str(textView.string())
+
+            # Asked before anything at all goes out, and before the
+            # composer is cleared. The key exchange below is a message
+            # from this account like any other, so a conversation whose
+            # account is still an open question must not reach it -- and
+            # a cancelled question has to leave the typed text where the
+            # user left it, not consumed by a send that did not happen.
+            if content and not self.confirmOutgoingAccount():
+                return True
+
             textView.setString_("")
             textView.didChangeText()
 
@@ -3970,6 +4158,89 @@ class SMSViewController(NSObject):
         self.splitView.setText_(NSLocalizedString("%i chars left", "Label") % chars_left)
 
     @objc.python_method
+    @run_in_gui_thread
+    def startLoadingSpinner(self, reason, note=None):
+        """Spin, say why, and arm the watchdog that will end it.
+
+        Every start goes through here so that a spinner on screen can be
+        matched against a line in the log: what asked for it, when, and --
+        on the stop line -- what ended it. A spinner is the only thing an
+        empty conversation shows, and until this was written the log said
+        nothing about it at all.
+        """
+        try:
+            if note is not None:
+                self.chatViewController.loadingTextIndicator.setStringValue_(note)
+            self.chatViewController.loadingProgressIndicator.startAnimation_(None)
+        except AttributeError:
+            return                      # a renderer with no spinner
+        self.loading_started = time.time()
+        self.loading_reason = reason
+        self.log_info('Loading spinner started: %s' % reason)
+        self.armLoadingWatchdog()
+
+    @objc.python_method
+    @run_in_gui_thread
+    def stopLoadingSpinner(self, reason, note=""):
+        """End the spinner and say what ended it.
+
+        The reason is the whole point of the line: a page that came back,
+        a query that failed, or the watchdog deciding neither is going to
+        happen. Which of the three it was is not otherwise recoverable
+        from the log.
+        """
+        self.cancelLoadingWatchdog()
+        started = self.loading_started
+        if started is None:
+            # Not spinning. Says which answer arrived after the spinner had
+            # already been called off, which is the interesting case once a
+            # watchdog exists -- and the note still has to be written, or
+            # the watchdog's "still loading" sentence outlives the page it
+            # was waiting for.
+            try:
+                self.chatViewController.loadingTextIndicator.setStringValue_(note)
+            except AttributeError:
+                pass
+            self.log_info('Loading spinner was already stopped: %s' % reason)
+            return
+        self.loading_started = None
+        self.loading_reason = None
+        try:
+            self.chatViewController.loadingProgressIndicator.stopAnimation_(None)
+            self.chatViewController.loadingTextIndicator.setStringValue_(note)
+        except AttributeError:
+            pass
+        self.log_info('Loading spinner stopped after %.2fs: %s'
+                      % (time.time() - started, reason))
+
+    @objc.python_method
+    def armLoadingWatchdog(self):
+        self.cancelLoadingWatchdog()
+        self.loading_watchdog = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
+            self.LOADING_WATCHDOG_SECONDS, self, "loadingWatchdogTimer:", None, False)
+
+    @objc.python_method
+    def cancelLoadingWatchdog(self):
+        if self.loading_watchdog is not None:
+            self.loading_watchdog.invalidate()
+            self.loading_watchdog = None
+
+    def loadingWatchdogTimer_(self, timer):
+        """The page has not come back. Stop spinning and say so.
+
+        The query is not cancelled -- it cannot be, it is parked on the
+        single db thread behind whatever is in front of it -- and if it
+        does land later the transcript still draws. This only ends the
+        part the user is looking at, and leaves a sentence in its place
+        rather than a spinner that says nothing for as long as it runs.
+        """
+        self.loading_watchdog = None
+        self.stopLoadingSpinner(
+            'watchdog timer after %.0fs; the history page has not come back'
+            % self.LOADING_WATCHDOG_SECONDS,
+            note=NSLocalizedString("Messages are still loading...", "Label"))
+
+    @objc.python_method
     def getContentView(self):
         return self.chatViewController.view
 
@@ -3990,12 +4261,16 @@ class SMSViewController(NSObject):
 
     def chatViewDidLoad_(self, chatView):
          load_trace_mark(self.trace_key, 'view ready')
-         self.chatViewController.loadingTextIndicator.setStringValue_(NSLocalizedString("Loading previous messages...", "Label"))
-         self.chatViewController.loadingProgressIndicator.startAnimation_(None)
+         self.startLoadingSpinner('conversation opened',
+                                  NSLocalizedString("Loading previous messages...", "Label"))
          self.replay_history()
 
     @objc.python_method
     def scroll_back_in_time(self):
+         # The renderer has already started the spinner and written its own
+         # scroll note by the time this is reached; this logs the start and
+         # arms the watchdog over it, and leaves the note alone.
+         self.startLoadingSpinner('scrolled back for older messages')
          self.replay_history()
 
     @objc.python_method
@@ -4030,6 +4305,23 @@ class SMSViewController(NSObject):
             remote_uris = [format_identity_to_string(self.target_uri, format='aor')]
         else:
             remote_uris = list(str(uri.uri) for uri in blink_contact.uris)
+
+        # A phone number is filed under whatever spelling the dial plan
+        # produced at the time, which is not the spelling the contact stores.
+        # History is never rewritten, so the lookup carries the alternatives.
+        # See util.pstn_uri_spellings.
+        if self.account is not BonjourAccount():
+            # Across every account, not just the one this conversation is
+            # sitting on. A bare number has no account of its own, so the
+            # conversation opens on the default one while the rows were
+            # written with whichever provider placed the call and carry that
+            # provider's domain.
+            expanded = []
+            for uri in remote_uris:
+                for spelling in pstn_uri_spellings_for_accounts(uri):
+                    if spelling not in expanded:
+                        expanded.append(spelling)
+            remote_uris = expanded
 
         if self.instance_id is not None and self.instance_id not in remote_uris:
             remote_uris.append(self.instance_id)
@@ -4123,7 +4415,7 @@ class SMSViewController(NSObject):
         try:
             rows = self.history.get_daily_entries(remote_uri=self.history_remote_uris(),
                                                   local_uri=self.history_local_uris(),
-                                                  media_type=('chat', 'sms'))
+                                                  media_type=CONVERSATION_MEDIA_TYPES)
             days = sorted({str(row[0]) for row in rows if row and row[0]}, reverse=True)
         except Exception as e:
             self.log_error('Cannot read the history date index: %s' % e)
@@ -4203,8 +4495,7 @@ class SMSViewController(NSObject):
         self.audio_metadata = {}
         self.chatViewController.clear()
         self.chatViewController.setHandleScrolling_(True)
-        self.chatViewController.loadingTextIndicator.setStringValue_(note)
-        self.chatViewController.loadingProgressIndicator.startAnimation_(None)
+        self.startLoadingSpinner('transcript reloaded (%s)' % note, note)
         self.replay_history()
 
     @objc.python_method
@@ -4212,6 +4503,7 @@ class SMSViewController(NSObject):
     def replay_history(self):
         #BlinkLogger().log_info("Replay message history for %s" % str(self.target_uri))
         try:
+            replay_started = time.time()
             remote_uris = self.history_remote_uris()
             local_uris = self.history_local_uris()
 
@@ -4224,13 +4516,14 @@ class SMSViewController(NSObject):
             category = self.active_category()
             page_start = self.history.renderable_cutoff(
                 remote_uri=remote_uris, local_uri=local_uris,
-                media_type=('chat', 'sms'),
+                media_type=CONVERSATION_MEDIA_TYPES,
                 count=self.showHistoryEntries,
                 search_text=self.chatViewController.search_text,
                 before_date=self.oldest_timestamp or self.history_before_date,
                 exclude_related_actions=LOCATION_TICK_ACTIONS,
                 category=category)
             load_trace_mark(self.trace_key, 'probe')
+            probe_seconds = time.time() - replay_started
             # With a cutoff the page is bounded by TIME, and the count is only
             # a safety valve. Without one the conversation holds fewer bubbles
             # than a page, so the valve is what bounds it -- and it must stay
@@ -4249,6 +4542,7 @@ class SMSViewController(NSObject):
                              ('every account' if local_uris is None else 'no enabled account')))
             after_date = None
 
+            fetch_started = time.time()
             if zoom_factor:
                 period_array = {
                     1: datetime.datetime.now()-datetime.timedelta(days=2),
@@ -4278,14 +4572,26 @@ class SMSViewController(NSObject):
                     self.zoom_period_label = NSLocalizedString("Displaying all messages", "Label")
                     self.chatViewController.setHandleScrolling_(False)
                 
-                results = self.history.get_messages(remote_uri=remote_uris, local_uri=local_uris, media_type=('chat', 'sms'), after_date=after_date or page_start, before_date=self.oldest_timestamp or self.history_before_date, count=page_count, search_text=self.chatViewController.search_text, exclude_related_actions=LOCATION_TICK_ACTIONS, category=category)
+                results = self.history.get_messages(remote_uri=remote_uris, local_uri=local_uris, media_type=CONVERSATION_MEDIA_TYPES, after_date=after_date or page_start, before_date=self.oldest_timestamp or self.history_before_date, count=page_count, search_text=self.chatViewController.search_text, exclude_related_actions=LOCATION_TICK_ACTIONS, category=category)
             else:
-                results = self.history.get_messages(remote_uri=remote_uris, local_uri=local_uris, media_type=('chat', 'sms'), after_date=page_start, count=page_count, search_text=self.chatViewController.search_text, exclude_related_actions=LOCATION_TICK_ACTIONS, category=category)
+                results = self.history.get_messages(remote_uri=remote_uris, local_uri=local_uris, media_type=CONVERSATION_MEDIA_TYPES, after_date=page_start, count=page_count, search_text=self.chatViewController.search_text, exclude_related_actions=LOCATION_TICK_ACTIONS, category=category)
 
+            page_rows = len(results)
             results = self._withRelatedRows(results, category)
             messages = [row for row in reversed(results)]
             load_trace_mark(self.trace_key, 'query')
             load_trace_note(self.trace_key, '%d rows' % len(messages))
+            # What the page query answered, and what the answer cost. The
+            # transcript's spinner runs until this returns, so a conversation
+            # that sits spinning is explained on this line: no rows in 0.02s
+            # is an empty conversation, no rows in 90s is a page that spent
+            # the time queued behind other work on the single db thread --
+            # and no line at all means the query has not come back yet.
+            self.log_info('History page: %d row(s) in %.2fs (probe %.2fs, %d rows with '
+                          'their related rows)%s'
+                          % (page_rows, time.time() - fetch_started, probe_seconds,
+                             len(messages),
+                             '' if not category else ', filtered by %s' % category))
         except Exception as e:
             # Printed AND logged: on stderr alone this is invisible to
             # anyone reading activity.txt, and what it looks like from the
@@ -4316,7 +4622,7 @@ class SMSViewController(NSObject):
             # the user waited on before seeing anything; behind it, it runs
             # on the database thread while the transcript draws.
             try:
-                total = self.history.count_messages(remote_uri=remote_uris, local_uri=local_uris, media_type=('chat', 'sms'))
+                total = self.history.count_messages(remote_uri=remote_uris, local_uri=local_uris, media_type=CONVERSATION_MEDIA_TYPES)
             except Exception as e:
                 self.log_info('Cannot count stored messages: %s' % e)
                 total = -1
@@ -4335,7 +4641,7 @@ class SMSViewController(NSObject):
             try:
                 older = self.history.renderable_cutoff(
                     remote_uri=remote_uris, local_uri=local_uris,
-                    media_type=('chat', 'sms'), count=1,
+                    media_type=CONVERSATION_MEDIA_TYPES, count=1,
                     before_date=self.oldest_timestamp or self.history_before_date,
                     search_text=self.chatViewController.search_text,
                     exclude_related_actions=LOCATION_TICK_ACTIONS, category=category)
@@ -4354,7 +4660,7 @@ class SMSViewController(NSObject):
             try:
                 categories = self.history.present_categories(
                     remote_uri=remote_uris, local_uri=local_uris,
-                    media_type=('chat', 'sms'))
+                    media_type=CONVERSATION_MEDIA_TYPES)
             except Exception as e:
                 self.log_info('Cannot read the categories present: %s' % e)
             else:
@@ -4363,9 +4669,8 @@ class SMSViewController(NSObject):
     @objc.python_method
     @run_in_gui_thread
     def _noteReplayFailed(self, reason):
+        self.stopLoadingSpinner('the history query failed: %s' % reason)
         try:
-            self.chatViewController.loadingProgressIndicator.stopAnimation_(None)
-            self.chatViewController.loadingTextIndicator.setStringValue_("")
             self.chatViewController.setHistoryNote(
                 NSLocalizedString("Messages could not be loaded", "Label"))
         except AttributeError:
@@ -4530,8 +4835,17 @@ class SMSViewController(NSObject):
         message was successfully decrypted and ``None`` otherwise (in which case
         ``text`` holds a placeholder so the GUI does not try to decrypt again).
         """
+        from MessageHost import private_key_for_message, load_private_keys
+
         decrypted_bodies = {}
-        private_key = self.private_key
+        # Which key opens a row is a property of the ROW, not of the account
+        # this conversation is on now: a conversation moves account on its own
+        # (a message arriving on another one takes it there), and the history
+        # written before the move is sealed to the key of the account it was
+        # written on. The conversation's own key is still tried first -- it is
+        # the right one for almost every row, and matching it costs nothing.
+        default_key = self.private_key
+        have_a_key = bool(default_key) or bool(load_private_keys())
         # Reported once per conversation load, not once per message: a page
         # of history that we hold no key for is one fact, not a hundred.
         reported_missing = False
@@ -4548,7 +4862,7 @@ class SMSViewController(NSObject):
             if not (stripped.startswith('-----BEGIN PGP MESSAGE-----') and stripped.endswith('-----END PGP MESSAGE-----')):
                 continue
 
-            if not private_key:
+            if not have_a_key:
                 if not reported_missing:
                     reported_missing = True
                     self.log_info('No PGP private key loaded for account %s: %s has stored '
@@ -4558,8 +4872,15 @@ class SMSViewController(NSObject):
                     'Encrypted message: no private key is loaded for %s' % self.account.id, None)
                 continue
 
+            # Both are read in the except below, and a body that will not
+            # even parse must not turn a decryption failure into a NameError.
+            private_key = default_key
+            pgpMessage = None
             try:
                 pgpMessage = pgpy.PGPMessage.from_blob(stripped)
+                private_key = private_key_for_message(pgpMessage, default_key)
+                if private_key is None:
+                    raise pgpy.errors.PGPError('no private key on this device opens it')
                 decrypted_message = private_key.decrypt(pgpMessage)
             except (pgpy.errors.PGPDecryptionError, pgpy.errors.PGPError) as e:
                 # A key we HOLD that cannot open the message is a different
@@ -4571,17 +4892,17 @@ class SMSViewController(NSObject):
                 if not reported_mismatch:
                     reported_mismatch = True
                     self.log_error('Cannot decrypt stored message %s from %s: %s. '
-                                   'Encrypted to key(s) %s; this conversation holds private key %s '
-                                   'for account %s'
+                                   'Encrypted to key(s) %s; tried private key %s; '
+                                   'this device holds %s'
                                    % (message.msgid, self.remote_uri, e,
                                       ', '.join(self._pgp_key_ids(pgpMessage)) or 'unknown',
-                                      self._pgp_key_id(private_key) or 'unknown',
-                                      self.account.id))
+                                      self._pgp_key_id(private_key) or 'none',
+                                      ', '.join(sorted(load_private_keys())) or 'none'))
                 for keyid in (self._pgp_key_ids(pgpMessage) or ['unknown']):
                     # one entry per key the message was sealed to
                     unopened_keys[keyid] = unopened_keys.get(keyid, 0) + 1
                 decrypted_bodies[message.msgid] = (
-                    'Encrypted message: the private key of %s cannot open it' % self.account.id, None)
+                    'Encrypted message: no private key on this device can open it', None)
                 continue
 
             text = pgp_plaintext(decrypted_message)
@@ -4601,9 +4922,9 @@ class SMSViewController(NSObject):
             # The whole page in one sentence: how many opened, and which keys
             # the rest were sealed to. A conversation that is half readable is
             # not a broken key, it is two keys -- and this says so.
-            self.log_info('Encrypted history for %s: %d opened with our key %s; %s'
+            self.log_info('Encrypted history for %s: %d opened with the keys we hold (%s); %s'
                           % (self.remote_uri, opened,
-                             self._pgp_key_id(private_key) or 'unknown',
+                             ', '.join(sorted(load_private_keys())) or 'none',
                              ', '.join('%d sealed to %s' % (n, keyid)
                                        for keyid, n in sorted(unopened_keys.items(),
                                                               key=lambda kv: -kv[1]))))
@@ -4722,7 +5043,8 @@ class SMSViewController(NSObject):
                 # and be drawn to the user as raw JSON.
                 if not is_renderable_content_type(
                         message.content_type,
-                        (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE)):
+                        (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE),
+                        message.media_type):
                     self.log_debug('Not rendering %s message %s: no renderer for it'
                                    % (message.content_type, message.msgid))
                     continue
@@ -4997,8 +5319,8 @@ class SMSViewController(NSObject):
         notes = max(loaded - in_view, 0)
         self.log_info('Render history completed: %d message(s) in view%s'
                       % (in_view, '' if not notes else ', %d system note(s)' % notes))
-        self.chatViewController.loadingProgressIndicator.stopAnimation_(None)
-        self.chatViewController.loadingTextIndicator.setStringValue_("")
+        self.stopLoadingSpinner('the history page came back with %d row(s), %d in view'
+                                % (self.message_count_from_history, in_view))
 
         # Bubbles exist but have not been measured yet: the transcript is only
         # on screen after the coalesced layout pass, so that is what ends the

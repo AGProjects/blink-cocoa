@@ -531,20 +531,27 @@ class HistoryViewer(NSWindowController):
                 try:
                     private_key, _ = pgpy.PGPKey.from_file(private_key_path)
                 except Exception as e:
+                    # Not fatal on its own: the row names the account it was
+                    # written on, but the key that opens it is named by the
+                    # message, and another account's key may well be it.
                     BlinkLogger().log_error('Cannot import PGP private key from %s: %s' % (private_key_path, str(e)))
+                    private_key = None
                     self.private_keys[message.local_uri] = None
-                    decrypted_bodies[message.msgid] = ('Encrypted message for which we have no private key', None)
-                    continue
                 else:
                     BlinkLogger().log_info('PGP private key imported from %s' % private_key_path)
                     self.private_keys[message.local_uri] = private_key
 
-            if not private_key:
-                decrypted_bodies[message.msgid] = ('Encrypted message for which we have no private key', None)
-                continue
-
             try:
                 pgpMessage = pgpy.PGPMessage.from_blob(body.strip())
+                # The row's own account names the key that should open it, and
+                # normally does. When it does not -- a conversation that moved
+                # account, an address that was renamed -- the key ids in the
+                # message itself are the authority, and every key this device
+                # holds is a candidate.
+                from MessageHost import private_key_for_message
+                private_key = private_key_for_message(pgpMessage, private_key)
+                if private_key is None:
+                    raise pgpy.errors.PGPError('no private key on this device opens it')
                 decrypted_message = private_key.decrypt(pgpMessage)
             except (pgpy.errors.PGPDecryptionError, pgpy.errors.PGPError):
                 decrypted_bodies[message.msgid] = ('Encrypted message for which we have no private key', None)

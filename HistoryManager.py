@@ -23,7 +23,7 @@ import urllib.parse
 import urllib.request, urllib.parse, urllib.error
 import pytz
 
-from datetime import datetime, timezone as timezone2
+from datetime import datetime, timedelta, timezone as timezone2
 from uuid import uuid1
 from pytz import timezone
 
@@ -44,6 +44,8 @@ from twisted.python.threadpool import ThreadPool
 from BlinkLogger import BlinkLogger
 from resources import ApplicationData
 from util import allocate_autorelease_pool, format_identity_to_string, sipuri_components_from_string, run_in_gui_thread
+# Calls group preview (end of this file)
+from util import canonical_pstn_uri, pstn_e164, is_conference_uri, sip_prefix_pattern
 
 from dateutil.parser._parser import ParserError as DateParserError
 import dateutil.parser
@@ -526,6 +528,51 @@ class SessionHistory(object, metaclass=Singleton):
 # under the address they concern but are not messages with it.
 MESSAGE_MEDIA_TYPES = ('chat', 'sms')
 
+# What a CONVERSATION shows, as opposed to what counts as a message.
+#
+# The two are not the same question and must not share a constant. A call is
+# something that happened between these two people at a point in time, and a
+# transcript that omits it has a hole in it where a three-minute call was --
+# so the panel renders calls and their recordings interleaved with the
+# messages. But a call must still not reorder the Messages group or set a
+# conversation's preview line, which is what MESSAGE_MEDIA_TYPES above is for.
+#
+# 'audio' covers video calls too: every logger writes the chat row as 'audio'
+# whatever the streams were. 'video-recording' is listed by the History
+# Viewer's filter but nothing writes it today.
+CONVERSATION_MEDIA_TYPES = MESSAGE_MEDIA_TYPES + ('audio', 'missed-call', 'audio-recording')
+
+
+# The CDR gives a failure as a bare SIP response code. A three-digit number on
+# its own in a chat bubble says nothing, so it is shown the way the live path
+# already shows one -- "Request Timeout (408)" -- for the codes a call actually
+# ends on. Anything else is printed as given rather than guessed at.
+_SIP_STATUS_PHRASES = {
+    '400': 'Bad Request',        '403': 'Forbidden',
+    '404': 'Not Found',          '406': 'Not Acceptable',
+    '407': 'Proxy Authentication Required',
+    '408': 'Request Timeout',    '410': 'Gone',
+    '415': 'Unsupported Media Type',
+    '480': 'Temporarily Unavailable',
+    '481': 'Call Does Not Exist', '484': 'Address Incomplete',
+    '486': 'Busy Here',          '487': 'Request Terminated',
+    '488': 'Not Acceptable Here',
+    '500': 'Server Internal Error', '502': 'Bad Gateway',
+    '503': 'Service Unavailable', '504': 'Server Time-out',
+    '600': 'Busy Everywhere',    '603': 'Decline',
+    '604': 'Does Not Exist Anywhere',
+    '606': 'Not Acceptable',
+}
+
+
+def _sip_status_phrase(status):
+    """A CDR status code as something a person can read."""
+    status = str(status or '').strip()
+    if not status:
+        return 'unknown'
+    phrase = _SIP_STATUS_PHRASES.get(status)
+    return '%s (%s)' % (phrase, status) if phrase else status
+
 # What the link-local account calls itself, and so what every Bonjour row is
 # filed under. Two migrations exist to fold the older spellings -- 'bonjour'
 # and 'bonjour.local' -- into this one, so anything reading Bonjour history
@@ -712,7 +759,7 @@ NOT_DELETED_SQL = "(deleted is null or deleted = 0)"
 
 
 class ChatHistory(object, metaclass=Singleton):
-    __version__ = 15
+    __version__ = 17
 
     def __init__(self):
         path = ApplicationData.get('history')
@@ -976,6 +1023,18 @@ class ChatHistory(object, metaclass=Singleton):
                     if not str(e).startswith('duplicate column name'):
                         BlinkLogger().log_error("Error adding column %s to table %s: %s"
                                                 % (column, ChatMessage.sqlmeta.table, e))
+
+        if next_upgrade_version < 16:
+            # Every outgoing call ever logged was stored as an incoming one.
+            # Invisible while call rows never reached the message panel; now
+            # that they do, every outgoing call in every conversation draws
+            # the wrong way round until this runs.
+            self._fix_outgoing_call_direction()
+
+        if next_upgrade_version < 17:
+            # Failed calls imported from the server history all read
+            # "Reason: delivered". Same story: a body nobody could see.
+            self._fix_failed_call_reason()
 
         TableVersions().set_table_version(ChatMessage.sqlmeta.table, self.__version__)
 
@@ -1438,6 +1497,144 @@ class ChatHistory(object, metaclass=Singleton):
     def get_daily_entries(self, local_uri=None, remote_uri=None, media_type=None, search_text=None, order_text=None, after_date=None, before_date=None):
         return block_on(self._get_daily_entries(local_uri, remote_uri, media_type, search_text, order_text, after_date, before_date))
 
+    @allocate_autorelease_pool
+    def _fix_outgoing_call_direction(self):
+        """Store calls this account placed as outgoing, not incoming.
+
+        Caller is in the db thread. Corrects rows written by the four loggers
+        that hardcoded `direction = 'incoming'` for an outgoing call, and the
+        addressing that went with it -- `cpim_from` was the remote party and
+        `cpim_to` the account, the reverse of what a placed call is.
+
+        The chat row carries no `sip_callid`, so it cannot be joined back to
+        `sessions` to recover the truth. What it does carry is the body, which
+        is a generated string and says so outright: 'Outgoing Call', 'Failed
+        Outgoing Call', 'Cancelled Outgoing Call', 'Outgoing Audio Call'.
+        Matching on it is exact enough because nothing else writes those
+        headings.
+
+        Recordings are deliberately left alone. An 'audio-recording' row says
+        only 'Audio Call Recorded' -- there is no direction in it, and pairing
+        each one to a call by remote party and timestamp would be guessing at
+        history. They keep what they were written with; only recordings made
+        from here on are filed correctly.
+        """
+        started = time.time()
+        where = ("media_type = 'audio' and direction = 'incoming'"
+                 " and body like '%Outgoing%Call%'")
+        try:
+            rows = list(self.db.queryAll("select count(*) from chat_messages where %s" % where))
+            total = rows[0][0] if rows else 0
+        except Exception as e:
+            BlinkLogger().log_error("Error counting mis-filed outgoing calls: %s" % e)
+            return
+
+        if not total:
+            BlinkLogger().log_info("No mis-filed outgoing calls to correct")
+            return
+
+        # cpim_from/cpim_to are set from the row's own local_uri/remote_uri
+        # rather than swapped, so a row already half-corrected by hand still
+        # lands in the same shape.
+        try:
+            self.db.queryAll(
+                "update chat_messages set direction = 'outgoing',"
+                " cpim_from = local_uri, cpim_to = remote_uri"
+                " where %s" % where)
+        except Exception as e:
+            BlinkLogger().log_error("Error correcting outgoing call direction: %s" % e)
+            return
+
+        BlinkLogger().log_info("Corrected %d outgoing call(s) stored as incoming in %.2fs"
+                               % (total, time.time() - started))
+
+        try:
+            left = list(self.db.queryAll(
+                "select count(*) from chat_messages"
+                " where media_type = 'audio-recording' and direction = 'incoming'"))
+            if left and left[0][0]:
+                BlinkLogger().log_info(
+                    "%d stored recording(s) keep the direction they were written with: "
+                    "an 'audio-recording' row carries no direction to read" % left[0][0])
+        except Exception:
+            pass
+
+    @allocate_autorelease_pool
+    def _fix_failed_call_reason(self):
+        """Put the real SIP status back into imported failed-call rows.
+
+        Caller is in the db thread. The server-history import overwrote
+        `status` -- which held the CDR's response code -- with the chat row's
+        delivery state, 'delivered', three lines before using it as the
+        failure reason. So every failed call it ever imported reads:
+
+            Failed Outgoing Audio Call
+            Reason: delivered
+
+        The truth is recoverable. That import writes the SAME uuid to both
+        tables, so `sessions.session_id = chat_messages.msgid` joins the row
+        back to the call it was made from, and `sessions.failure_reason`
+        holds the code -- 480, 408, 486. Rows that cannot be joined keep the
+        body they have rather than being given a guessed reason; there is no
+        second source for them.
+        """
+        started = time.time()
+        marker = "Reason: delivered"
+        try:
+            rows = list(self.db.queryAll(
+                "select m.msgid, s.failure_reason from chat_messages m"
+                " join sessions s on s.session_id = m.msgid"
+                " where m.body like %s"
+                % ChatMessage.sqlrepr('%' + marker + '%')))
+        except Exception as e:
+            BlinkLogger().log_error("Error reading mis-worded failed calls: %s" % e)
+            return
+
+        if not rows:
+            return
+
+        # Grouped by reason: a handful of distinct codes across any number of
+        # rows, so this is a few statements rather than one per call.
+        by_reason = {}
+        for msgid, reason in rows:
+            by_reason.setdefault(str(reason or '').strip(), []).append(msgid)
+
+        fixed = 0
+        for reason, msgids in by_reason.items():
+            if not reason:
+                continue
+            phrase = _sip_status_phrase(reason)
+            for start in range(0, len(msgids), 500):
+                chunk = msgids[start:start + 500]
+                ids = ','.join(ChatMessage.sqlrepr(m) for m in chunk)
+                try:
+                    self.db.queryAll(
+                        "update chat_messages set body = replace(body, %s, %s)"
+                        " where msgid in (%s)"
+                        % (ChatMessage.sqlrepr(marker),
+                           ChatMessage.sqlrepr('Reason: %s' % phrase), ids))
+                    fixed += len(chunk)
+                except Exception as e:
+                    BlinkLogger().log_error("Error correcting a failed-call reason: %s" % e)
+
+        # Counted separately: rows the join did not reach are not in `rows`
+        # at all, so "how many were there" and "how many were joinable" are
+        # different numbers and a silent shortfall would look like success.
+        total = len(rows)
+        try:
+            counted = list(self.db.queryAll(
+                "select count(*) from chat_messages where body like %s"
+                % ChatMessage.sqlrepr('%' + marker + '%')))
+            total = counted[0][0] if counted else total
+        except Exception:
+            pass
+
+        left = total - fixed
+        BlinkLogger().log_info(
+            "Corrected the reason on %d imported failed call(s) in %.2fs%s"
+            % (fixed, time.time() - started,
+               ", %d left as they are (no call row to read a status from)" % left if left else ""))
+
     def _reclassify_locations(self):
         """Set the category of every location row to what the envelope says.
 
@@ -1686,11 +1883,20 @@ class ChatHistory(object, metaclass=Singleton):
     # Only ever used to decide HOW FAR BACK a page reaches. The page itself
     # is then fetched without any content-type condition, so the sidecars
     # still arrive with the messages they belong to.
+    #
+    # The 'html' arm is Blink's own status entries -- a call, a recording, a
+    # file transfer -- which are stored as 'html' and are bubbles like any
+    # other now that calls belong in the transcript. Gated on media_type for
+    # the same reason the renderer's copy is: 'html' is not a MIME type, so
+    # only rows Blink wrote itself can carry it.
     RENDERABLE_SQL = ("((content_type = 'text' or content_type like 'text/%')"
                       " and content_type not in ('text/pgp-public-key', 'text/pgp-private-key')"
                       " or content_type in ('application/sylk-file-transfer',"
                       " 'application/vnd.gsma.rcs-ft-http+xml',"
-                      " 'application/sylk-location-sharing'))")
+                      " 'application/sylk-location-sharing')"
+                      " or (content_type = 'html' and media_type in"
+                      " ('audio', 'missed-call', 'audio-recording',"
+                      " 'file-transfer', 'availability')))")
 
     @run_in_db_thread
     def _renderable_cutoff(self, local_uri, remote_uri, media_type, after_date, before_date, search_text, count, exclude_related_actions=None, category=None):
@@ -2593,6 +2799,9 @@ class SessionHistoryReplicator(object):
     @run_in_gui_thread
     def get_last_calls(self, account):
         if not account.server.settings_url:
+            BlinkLogger().log_info('%s no server history for %s: '
+                                   'Server Settings URL is not set on the account'
+                                   % (_PREFIX, account.id))
             return
         query_string = "action=get_history&realm=%s" % account.id.domain
         url = urllib.parse.urlunparse(account.server.settings_url[:4] + (query_string,) + account.server.settings_url[5:])
@@ -2699,6 +2908,24 @@ class SessionHistoryReplicator(object):
         received_synced = 0
         placed_synced = 0
 
+        # Calls group step 1: say what the server sent, unconditionally. The
+        # per-call previews below only fire for calls the local history does
+        # not have yet, so without this line a sync that had nothing new to
+        # add is indistinguishable from the hook not running at all.
+        try:
+            BlinkLogger().log_info('%s server history for %s: %d received, %d placed'
+                                   % (_PREFIX, account.id,
+                                      len(calls.get('received') or []),
+                                      len(calls.get('placed') or [])))
+        except Exception:
+            pass
+
+        # [remaining previews, skipped count]. A busy account replays dozens of
+        # already-stored calls every five minutes; previewing them all would
+        # bury everything else. A handful is enough to see whether the
+        # spellings agree, and the rest are counted.
+        preview_budget = [PREVIEW_STORED_CALL_LIMIT, 0]
+
         notification_center = NotificationCenter()
         try:
             if calls['received']:
@@ -2706,6 +2933,11 @@ class SessionHistoryReplicator(object):
                 for call in calls['received']:
                     direction = 'incoming'
                     local_entry = SessionHistory().get_entries(direction=direction, count=1, call_id=call['sessionId'], from_tag=call['fromTag'])
+                    if len(local_entry):
+                        # Calls group step 1: the sync has nothing to insert for
+                        # this one, but preview it anyway -- see
+                        # preview_server_history_call.
+                        preview_server_history_call('incoming', account, call, local_entry, preview_budget)
                     if not len(local_entry):
                         id=str(uuid1())
                         participants = ""
@@ -2773,7 +3005,16 @@ class SessionHistoryReplicator(object):
                                 message += '<p>Call duration: %s' % duration
                                 #message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
                                 media_type = 'audio'
-                            self.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
+                            # Read-only Calls group preview -- logs only, writes nothing.
+                            # Only reached for calls the local history does not have yet;
+                            # the ones it already has are skipped by the guard above.
+                            preview_call('server-history', 'incoming', success, account=account,
+                                         local_uri=local_uri, remote_uri=remote_uri,
+                                         call_id=call_id, history_id=id, media_type=media_type,
+                                         summary=('Missed Incoming Audio Call' if media_type == 'missed-call'
+                                                  else 'Incoming Audio Call - answered elsewhere'),
+                                         duration=locals().get('duration'))
+                            self.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, call_id=call_id)
                             notification_center.post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction=direction, history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True, missed=bool(media_type =='missed-call')))
 
                         if 'audio' in call['media'] and success == 'missed':
@@ -2800,6 +3041,11 @@ class SessionHistoryReplicator(object):
                 for call in calls['placed']:
                     direction = 'outgoing'
                     local_entry = SessionHistory().get_entries(direction=direction, count=1, call_id=call['sessionId'], from_tag=call['fromTag'])
+                    if len(local_entry):
+                        # Calls group step 1: the sync has nothing to insert for
+                        # this one, but preview it anyway -- see
+                        # preview_server_history_call.
+                        preview_server_history_call('outgoing', account, call, local_entry, preview_budget)
                     if not len(local_entry):
                         id=str(uuid1())
                         participants = ""
@@ -2847,26 +3093,48 @@ class SessionHistoryReplicator(object):
                         placed_synced += 1
                         self.sessionControllersManager.add_to_session_history(id, media_type, direction, success, status, start_time, end_time, duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag, '', '')
                         if 'audio' in media:
-                            local_uri = local_uri
-                            remote_uri = remote_uri
-                            direction = 'incoming'
+                            # A placed call, logged as placed. This branch used
+                            # to write 'incoming' and address the row from the
+                            # remote party, so a call this account made came
+                            # back from the server's own history as one it
+                            # received.
+                            direction = 'outgoing'
+                            # The CDR's SIP response code, kept before `status`
+                            # is reused for the chat row's DELIVERY state three
+                            # lines down. It is the entire content of "why did
+                            # this call fail", and it was being read after the
+                            # overwrite: every failed placed call imported from
+                            # the server read "Reason: delivered". Invisible
+                            # until calls became bubbles, and present in the
+                            # shipped build too.
+                            sip_status = str(status or '').strip()
                             status = 'delivered'
-                            cpim_from = remote_uri
-                            cpim_to = local_uri
+                            cpim_from = local_uri
+                            cpim_to = remote_uri
                             # See the received-call branch above: the call's
                             # own start time, not the moment of the import.
                             timestamp = str(ISOTimestamp(start_time))
                             media_type = 'audio'
                             if success == 'failed':
                                 message = '<h3>Failed Outgoing Audio Call</h3>'
-                                message += '<p>Reason: %s' % status
+                                message += '<p>Reason: %s' % _sip_status_phrase(sip_status)
                             elif success == 'cancelled':
                                 message= '<h3>Cancelled Outgoing Audio Call</h3>'
                             else:
                                 duration = self.sessionControllersManager.get_printed_duration(start_time, end_time)
                                 message= '<h3>Outgoing Audio Call</h3>'
                                 message += '<p>Call duration: %s' % duration
-                            self.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status)
+                            # Read-only Calls group preview -- logs only, writes nothing.
+                            # NB the true direction is outgoing here; the row itself is written
+                            # with direction='incoming', which is a pre-existing oddity.
+                            preview_call('server-history', 'outgoing', success, account=account,
+                                         local_uri=local_uri, remote_uri=remote_uri,
+                                         call_id=call_id, history_id=id, media_type=media_type,
+                                         summary=('Failed Outgoing Audio Call: %s' % _sip_status_phrase(sip_status) if success == 'failed'
+                                                  else 'Cancelled Outgoing Audio Call' if success == 'cancelled'
+                                                  else 'Outgoing Audio Call'),
+                                         duration=locals().get('duration'))
+                            self.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, call_id=call_id)
                             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='outgoing', history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True, missed=False))
         except Exception as e:
             BlinkLogger().log_error("Error: %s" % e)
@@ -2878,6 +3146,10 @@ class SessionHistoryReplicator(object):
 
         if received_synced:
             BlinkLogger().log_info("%d received calls synced from server history of %s" % (received_synced, account))
+
+        if preview_budget[1]:
+            BlinkLogger().log_info('%s and %d more call(s) already stored locally, not previewed'
+                                   % (_PREFIX, preview_budget[1]))
 
     # NSURLConnection delegate method
     def connection_didReceiveAuthenticationChallenge_(self, connection, challenge):
@@ -2901,3 +3173,1394 @@ class SessionHistoryReplicator(object):
                     challenge.sender().useCredential_forAuthenticationChallenge_(credential, challenge)
                 else:
                     BlinkLogger().log_error("Error: invalid web authentication when retrieving call history of %s" % key)
+
+
+# ---------------------------------------------------------------------------
+# Calls group -- read-only preview
+#
+# Step 1 of docs/PSTN-CALLS-GROUP.md. Nothing below writes: no contact is
+# created, no group is created or modified, no history row is inserted. Every
+# audio call -- live or replayed from the server call history -- logs what
+# WOULD happen, so the plan can be checked against real traffic before any of
+# it is built.
+#
+#     grep '\[calls-group\]' ~/Library/Application\ Support/Blink/logs/*.log
+#
+# Three questions are answered per call:
+#
+#   1. What does the remote party canonicalise to? A phone number should come
+#      out as bare E.164 (+31201234567, no domain); anything else keeps its
+#      aor. Where the raw and canonical forms differ is exactly what today
+#      lets one call be stored twice -- once by the live path, once by the
+#      server history sync -- because the unique index over this table is
+#      (msgid, local_uri, remote_uri), not msgid alone.
+#
+#   2. Would a contact be created, or does one already exist, and is it in the
+#      Calls group? Every audio call gets one, not only PSTN calls; being a
+#      phone number decides only the shape of the stored URI.
+#
+#   3. What message row would be inserted, under which msgid? Today that is a
+#      fresh uuid per session; the proposal is the call id, so a call arriving
+#      twice collapses into one row.
+#
+# It lives here rather than in a module of its own because every Python file
+# has to be registered in Blink.xcodeproj to reach the app bundle's Resources,
+# and an unregistered module fails to import at launch.
+# ---------------------------------------------------------------------------
+
+# The Calls group is identified by its NAME, not by a reserved id.
+#
+# That is the opposite of 'favorites' / '_messages' / '_deleted', and the
+# reason is that this group is not Blink's alone: it is replicated through the
+# XCAP addressbook (urn:ag-projects:xml:ns:addressbook) that sylk-mobile also
+# writes, and mobile identifies a group by its canonical Capitalized name
+# (_abTagToGroupName / _abCapitalizeGroup in app.js). Its ids are the server's.
+#
+# Inventing an id here would not find the replicated group and would create a
+# SECOND one, which mobile would then show alongside the first. The reserved
+# id is kept only as a fallback for a group Blink created before any sync.
+CALLS_GROUP_NAME = 'Calls'
+CALLS_GROUP_ID = '_calls'
+
+# Mirroring sylk-mobile: a PSTN destination is tagged 'tel' as well as 'calls'
+# (app.js addHistoryEntry), and the tags map to groups "Tel" and "Calls"
+# (_abTagToGroupName). So a phone number joins both; a SIP peer joins Calls
+# only. Confirmed against a real account: the replicated Tel group already
+# holds 16 numbers in E.164.
+TEL_GROUP_NAME = 'Tel'
+
+# The rename-proof identity, carried in the group's XCAP attribute bag. See
+# BlinkGroupExtension.kind in configuration/contact.py.
+CALLS_GROUP_KIND = 'calls'
+TEL_GROUP_KIND = 'tel'
+# Reserved ids, pinned at creation for the same reason '_messages' is: a
+# group the software files by itself is not the user's group to name.
+TEL_GROUP_ID = '_tel'
+
+# Mobile's Blocked group, replicated here. Blink has its own, unrelated notion
+# of blocked -- a virtual group built from Policy objects whose presence policy
+# is 'block' (ContactListModel._NH_AddressbookPolicyWasActivated) -- so the
+# name collides and the meaning does not, exactly as Missed and Conference do.
+# is_blocked_party() below honours both.
+#
+# 'blocked', not '_blocked': the kind values already on the wire and round
+# tripped with mobile are 'calls' and 'tel', lowercase words with no prefix.
+# The leading underscore belongs to Blink's reserved GROUP IDS ('_messages',
+# '_deleted'), which is a different namespace.
+BLOCKED_GROUP_NAME = 'Blocked'
+BLOCKED_GROUP_KIND = 'blocked'
+BLOCKED_GROUP_ID = '_blocked'
+
+# Conference rooms are contacts too -- they are just not people, so they go in
+# their own group instead of the call log. Mobile does exactly this: its
+# _abContactQualifiesForTag refuses the 'calls' tag to a conference URI, and
+# its synthetic Conference group collects them all. The replicated Conference
+# group is already here with 7 members.
+CONFERENCE_GROUP_NAME = 'Conference'
+CONFERENCE_GROUP_KIND = 'conference'
+CONFERENCE_GROUP_ID = '_conference'
+# Favourites is stamped for the same reason the others are: the container is
+# the software's even though the membership is entirely the user's, and a star
+# that stops working because somebody renamed the group is a bug. The reserved
+# id here is what a NEW one is created with -- the legacy 'favorites' literal
+# is resolved by name, which is how the group already in the wild is found.
+FAVORITES_GROUP_NAME = 'Favorites'
+FAVORITES_GROUP_KIND = 'favorites'
+FAVORITES_GROUP_ID = '_favorites'
+
+_PREFIX = '[calls-group]'
+
+
+def _log(line):
+    BlinkLogger().log_info('%s %s' % (_PREFIX, line))
+
+
+def _quote(value):
+    if value is None:
+        return 'None'
+    return "'%s'" % value
+
+
+def _lookup_contact(uri):
+    """The first contact matching a URI, or None. Pure lookup, no writes."""
+    try:
+        from AppKit import NSApp
+        return NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(uri)
+    except Exception:
+        return None
+
+
+def _find_group(kind, name, reserved_id=None):
+    """Resolve a group by kind, then name, then a reserved id.
+
+    Kind first, because it is the only identity that survives a rename and is
+    shared across clients (BlinkGroupExtension.kind). Name second, for groups
+    created before the attribute existed -- which is every group in the wild
+    today. The reserved id is last and exists only for a group Blink made
+    before any sync.
+    """
+    try:
+        from sipsimple.addressbook import AddressbookManager
+        groups = list(AddressbookManager().get_groups())
+    except Exception:
+        return None
+
+    wanted_name = name.strip().lower()
+    by_name = None
+    by_id = None
+    for group in groups:
+        try:
+            if kind and str(getattr(group, 'kind', '') or '').strip().lower() == kind:
+                return group
+            if by_name is None and str(getattr(group, 'name', '') or '').strip().lower() == wanted_name:
+                by_name = group
+            if reserved_id and by_id is None and getattr(group, 'id', None) == reserved_id:
+                by_id = group
+        except Exception:
+            continue
+    return by_name or by_id
+
+
+def _calls_group():
+    return _find_group(CALLS_GROUP_KIND, CALLS_GROUP_NAME, CALLS_GROUP_ID)
+
+
+def _tel_group():
+    return _find_group(TEL_GROUP_KIND, TEL_GROUP_NAME)
+
+
+def _blocked_group():
+    return _find_group(BLOCKED_GROUP_KIND, BLOCKED_GROUP_NAME)
+
+
+def is_blocked_party(uri):
+    """Whether this party is blocked from calling.
+
+    Membership of the replicated "Blocked" group, and nothing else.
+
+    NOT a presence policy of 'block'. Those are two different things wearing
+    one word: a presence block says "do not tell them whether I am available",
+    a call block says "do not let them ring me". Blink's own BlockedGroup is
+    the first kind -- a virtual group built from Policy objects
+    (ContactListModel._NH_AddressbookPolicyWasActivated) -- and reading it as
+    the second would silently start rejecting calls from everybody the user
+    had merely hidden their availability from.
+
+    Contact matching is getFirstContactMatchingURI's, so a party blocked as
+    '+31201234567' is still recognised when the call arrives as
+    '0031201234567@gateway'.
+
+    Never raises: this gates whether a call rings, and an exception here must
+    not be able to reject one.
+    """
+    try:
+        group = _blocked_group()
+        if group is None:
+            return False
+        blink_contact = _lookup_contact(uri)
+        contact = getattr(blink_contact, 'contact', None) if blink_contact is not None else None
+        if contact is None:
+            return False
+        return contact.id in group.contacts
+    except Exception:
+        return False
+
+
+
+
+_groups_dumped = [False]
+
+# Kill switches for the two writes this work performs so far. See §13 of
+# docs/PSTN-CALLS-GROUP.md; everything else here is still read-only.
+STAMP_GROUP_KINDS = True
+CREATE_GROUPS = True
+# Whether an audio call puts the other party in the Calls group. The feature
+# itself; everything else here exists to make it safe.
+CREATE_CALL_CONTACTS = True
+# One-shot: file the parties of calls ALREADY in the local history. Runs once
+# per account, guarded by a setting, and never repeats.
+BACKFILL_CALL_CONTACTS = True
+# How far back to go. Everything, by default -- the group is a call log and a
+# call log that starts today is not much of one. Set a number of days to bound
+# it on an account with a very long history.
+BACKFILL_CALL_CONTACTS_DAYS = None
+# How many parties to file per XCAP transaction. Without batching the backfill
+# is one PUT per contact and another per group membership -- hundreds of round
+# trips to the server for one pass. sipsimple's transaction level is
+# reference-counted (XCAPManager.start_transaction / commit_transaction), so
+# the per-contact transactions inside ensure_call_contact nest harmlessly
+# inside this one and the document is pushed once per batch. Batched rather
+# than one transaction for the lot so a failure costs 25 contacts, not all of
+# them.
+BACKFILL_BATCH = 25
+# Raise this to make the pass run again on machines that have already had it.
+# 1: the first pass, which ran inside the XCAP reload and had its writes
+#    reverted by the same notification (see ContactListModel
+#    _NH_XCAPManagerDidReloadData).
+# 2: the same pass, deferred until the reload has settled.
+BACKFILL_GENERATION = 2
+
+
+def _dump_groups_once(force=False):
+    """List the addressbook groups, once per run.
+
+    Which group is "the" Calls group is the open question -- ids come from
+    whichever client created the group, names can be renamed. Seeing the real
+    set, with ids, is what settles it for a given account. Read-only.
+    """
+    if _groups_dumped[0] and not force:
+        return
+    _groups_dumped[0] = True
+    try:
+        from sipsimple.addressbook import AddressbookManager
+        groups = list(AddressbookManager().get_groups())
+    except Exception as e:
+        _log('cannot list the addressbook groups: %s' % e)
+        return
+    _log('addressbook has %d group(s):' % len(groups))
+    for group in groups:
+        try:
+            _log('    id=%-28s name=%-24s kind=%-10s members=%d'
+                 % (_quote(getattr(group, 'id', '?')),
+                    _quote(getattr(group, 'name', '?')),
+                    _quote(getattr(group, 'kind', None) or ''),
+                    len(group.contacts)))
+        except Exception:
+            continue
+    _log("    kind is BlinkGroupExtension.kind, a SharedSetting in the XCAP "
+         "attribute bag: the identity that survives a rename. Empty on every "
+         "group that predates it, which is why name matching stays as a "
+         "fallback.")
+
+
+def dump_group_members(label=''):
+    """List what is actually IN the Calls and Tel groups, with the URIs.
+
+    The group dump above says how many members a group has; it does not say
+    who they are, and "the contact was created" and "the contact is in the
+    group" are different facts -- a contact whose save landed but whose
+    group membership did not looks identical from the outside. This is the
+    line that tells them apart, and it prints the stored URI of each member
+    so the spelling (bare E.164 for a number, user@host for a SIP peer) can
+    be read off directly rather than inferred.
+    """
+    for kind, name, reserved in ((CALLS_GROUP_KIND, CALLS_GROUP_NAME, CALLS_GROUP_ID),
+                                 (TEL_GROUP_KIND, TEL_GROUP_NAME, None)):
+        try:
+            group = _find_group(kind, name, reserved)
+        except Exception as e:
+            _log('cannot resolve the %s group: %s' % (kind, e))
+            continue
+        if group is None:
+            _log('%s%s group: does not exist' % (label and label + ' ', kind))
+            continue
+        try:
+            contacts = list(group.contacts)
+        except Exception as e:
+            _log('%s%s: cannot read the members: %s' % (label and label + ' ', _describe_group(group), e))
+            continue
+        _log('%s%s holds %d contact(s):'
+             % (label and label + ' ', _describe_group(group), len(contacts)))
+        for contact in contacts:
+            try:
+                uris = ', '.join(str(u.uri) for u in contact.uris) or '-'
+            except Exception:
+                uris = '?'
+            _log('    %-28s [%s]' % (_quote(getattr(contact, 'name', '') or ''), uris))
+
+
+def _describe_group(group):
+    if group is None:
+        return 'no Calls group exists yet'
+    try:
+        members = len(group.contacts)
+    except Exception:
+        members = '?'
+    return "'%s' (id=%s, %s member(s))" % (getattr(group, 'name', '?'),
+                                           getattr(group, 'id', '?'), members)
+
+
+def _describe_contact(blink_contact):
+    if blink_contact is None:
+        return None
+    name = getattr(blink_contact, 'name', None) or ''
+    uris = []
+    try:
+        uris = [str(u.uri) for u in getattr(blink_contact, 'uris', ())]
+    except Exception:
+        pass
+    return '%s [%s] (%s)' % (_quote(name),
+                             ', '.join(uris) or '-',
+                             type(blink_contact).__name__)
+
+
+def _group_action(group, label, contact):
+    """What would happen to one target group, as a phrase."""
+    if group is None:
+        return 'CREATE group %s and ADD' % _quote(label)
+    if contact is not None:
+        try:
+            if contact.id in group.contacts:
+                return 'already in %s' % _describe_group(group)
+        except Exception:
+            pass
+    return 'ADD to %s' % _describe_group(group)
+
+
+def _contact_verdict(canonical_remote, raw_remote, is_pstn):
+    """What the contact step would do, as a single log line."""
+    existing = _lookup_contact(canonical_remote)
+
+    # Does the raw wire form resolve somewhere else? If it does, the two
+    # spellings are not interchangeable and the canonicalisation is doing
+    # real work rather than being a no-op.
+    other = None
+    if raw_remote and raw_remote != canonical_remote:
+        other = _lookup_contact(raw_remote)
+
+    # Every audio call gets a contact, not only PSTN ones. Being a phone
+    # number decides two things: the shape of the stored URI (bare E.164 vs
+    # the plain aor), and whether the contact also joins Tel -- which is how
+    # sylk mobile does it, tagging a PSTN destination 'tel' as well as 'calls'.
+    shape = 'bare E.164' if is_pstn else 'sip aor'
+
+    contact = getattr(existing, 'contact', None) if existing is not None else None
+    targets = [(CALLS_GROUP_NAME, _calls_group())]
+    if is_pstn:
+        targets.append((TEL_GROUP_NAME, _tel_group()))
+    groups = ', '.join(_group_action(group, label, contact) for label, group in targets)
+
+    if existing is None:
+        verdict = 'CREATE contact uri=%s (%s) -> %s' % (_quote(canonical_remote), shape, groups)
+        if other is not None:
+            verdict += '  [!] raw form matches a different contact: %s' % _describe_contact(other)
+        return verdict
+
+    return '%s existing contact %s -> %s' % (
+        'KEEP' if 'ADD' not in groups and 'CREATE' not in groups else 'UPDATE',
+        _describe_contact(existing), groups)
+
+
+def preview_call(source, direction, status, account=None,
+                 local_uri=None, remote_uri=None, call_id=None,
+                 history_id=None, media_type='audio', summary=None,
+                 duration=None, stored_remote_uri=None, stored_local_uri=None):
+    """Log what the Calls group work would do for one audio call.
+
+    source      'live' or 'server-history'
+    direction   'incoming' / 'outgoing'
+    status      'completed' / 'missed' / 'failed' / 'cancelled' / ...
+    account     the Account, for its pstn.* dialing rules
+    local_uri   as the caller would write it to history today
+    remote_uri  as the caller would write it to history today
+    call_id     the SIP Call-ID (proposed msgid)
+    history_id  the uuid used as msgid today
+    summary     one-line description of the message body the caller builds
+    duration    formatted duration, when the caller has one
+
+    Never raises: a preview must not be able to break a call.
+    """
+    try:
+        _dump_groups_once()
+        e164 = pstn_e164(remote_uri, account)
+        is_pstn = e164 is not None
+        canonical_remote = canonical_pstn_uri(remote_uri, account)
+        canonical_local = canonical_pstn_uri(local_uri, account)
+
+        head = '%s %s %s' % (source, direction, status)
+        if duration:
+            head += ' duration=%s' % duration
+        _log('--- %s  call_id=%s' % (head, _quote(call_id)))
+
+        remote_line = '    remote : %s -> %s' % (_quote(remote_uri), _quote(canonical_remote))
+        remote_line += '  PSTN (E.164)' if is_pstn else '  not a phone number (aor kept)'
+        if is_pstn and remote_uri and canonical_remote != str(remote_uri).lower():
+            remote_line += '  [!] differs from what is stored today'
+        _log(remote_line)
+
+        if canonical_local != (str(local_uri).lower() if local_uri else ''):
+            _log('    local  : %s -> %s  [!] differs from what is stored today'
+                 % (_quote(local_uri), _quote(canonical_local)))
+        else:
+            _log('    local  : %s' % _quote(canonical_local))
+
+        if account is not None:
+            pstn = getattr(account, 'pstn', None)
+            if pstn is not None and is_pstn:
+                _log('    rules  : idd_prefix=%s replace_leading_zero=%s prefix=%s strip_digits=%s'
+                     % (_quote(getattr(pstn, 'idd_prefix', None)),
+                        _quote(getattr(pstn, 'replace_leading_zero', None)),
+                        _quote(getattr(pstn, 'prefix', None)),
+                        _quote(getattr(pstn, 'strip_digits', None))))
+
+        _log('    contact: %s' % _contact_verdict(canonical_remote, remote_uri, is_pstn))
+
+        proposed_msgid = call_id or history_id
+        already_stored = stored_remote_uri is not None or stored_local_uri is not None
+        msg = '    message: %s msgid=%s' % ('SKIP  ' if already_stored else 'INSERT',
+                                            _quote(proposed_msgid))
+        if history_id and call_id and history_id != call_id:
+            msg += ' (today: %s)' % _quote(history_id)
+        elif not call_id:
+            msg += ' [!] no call id - would fall back to the uuid and cannot dedup'
+        msg += ' dir=%s type=%s' % (direction, media_type)
+        if summary:
+            msg += ' body=%s' % _quote(summary)
+        _log(msg)
+
+        _log('    dedup  : key would be (%s, %s, %s)'
+             % (_quote(proposed_msgid), _quote(canonical_local), _quote(canonical_remote)))
+
+        # When the local history already holds this call, say whether the two
+        # spellings agree. This is the whole dedup question, answered against
+        # real data: the unique index is (msgid, local_uri, remote_uri), so
+        # two spellings of one number means one call stored twice.
+        if already_stored:
+            _log('    stored : local history has remote=%s local=%s'
+                 % (_quote(stored_remote_uri), _quote(stored_local_uri)))
+            same_remote = (stored_remote_uri or '').strip().lower() == canonical_remote
+            same_local = (stored_local_uri or '').strip().lower() == canonical_local
+            if same_remote and same_local:
+                _log('    verdict: spellings AGREE - the call id alone would collapse these')
+            else:
+                _log('    verdict: spellings DIFFER (remote %s, local %s)'
+                     ' - canonicalising both is what makes the call id dedup work'
+                     % ('same' if same_remote else 'different',
+                        'same' if same_local else 'different'))
+    except Exception as e:
+        try:
+            BlinkLogger().log_error('%s preview failed: %s' % (_PREFIX, e))
+        except Exception:
+            pass
+
+
+PREVIEW_STORED_CALL_LIMIT = 5
+
+
+def preview_server_history_call(direction, account, call, local_entry, budget=None):
+    """Preview a server-history call the local history ALREADY holds.
+
+    The sync itself skips these -- there is nothing to insert -- but they are
+    exactly where the interesting question lives: does the row stored by the
+    live path spell the remote party the same way the server does? Previewing
+    only the new ones would answer that for no call at all on an account that
+    has been running for a while.
+    """
+    try:
+        if 'audio' not in (call.get('media') or []):
+            return
+        if budget is not None:
+            if budget[0] <= 0:
+                budget[1] += 1
+                return
+            budget[0] -= 1
+        remote_uri, _display_name, _full_uri, _fancy_uri = \
+            sipuri_components_from_string(call.get('remoteParty') or '')
+        duration = call.get('duration') or 0
+        try:
+            printed_duration = '%02d:%02d' % (int(duration) // 60, int(duration) % 60)
+        except (TypeError, ValueError):
+            printed_duration = str(duration)
+        if direction == 'incoming':
+            status = 'completed' if duration > 0 else 'missed'
+        else:
+            status = 'completed' if duration > 0 else 'cancelled/failed'
+        row = local_entry[0]
+        preview_call('server-history (already stored)', direction, status,
+                     account=account,
+                     local_uri=str(account.id),
+                     remote_uri=remote_uri,
+                     call_id=call.get('sessionId'),
+                     history_id=getattr(row, 'session_id', None),
+                     media_type='audio',
+                     summary='already in the local history',
+                     duration=printed_duration,
+                     stored_remote_uri=getattr(row, 'remote_uri', None),
+                     stored_local_uri=getattr(row, 'local_uri', None))
+    except Exception as e:
+        try:
+            BlinkLogger().log_error('%s preview of a stored server call failed: %s' % (_PREFIX, e))
+        except Exception:
+            pass
+
+
+def _stamp_one_group(kind, name, reserved_id=None):
+    """Give one group its `kind`, if it has none. Returns True if written."""
+    group = _find_group(kind, name, reserved_id)
+    if group is None:
+        _log("no %s group to stamp - nothing is created here" % _quote(name))
+        return False
+
+    current = str(getattr(group, 'kind', '') or '').strip()
+    if current == kind:
+        _log('%s already stamped kind=%s' % (_describe_group(group), _quote(kind)))
+        return False
+    if current:
+        # Somebody else's value. Never overwrite one: this is a shared
+        # document, and a kind we did not write is a fact about another
+        # client's intent, not a slot to claim.
+        _log('[!] %s carries kind=%s already, leaving it alone (wanted %s)'
+             % (_describe_group(group), _quote(current), _quote(kind)))
+        return False
+
+    try:
+        group.kind = kind
+        group.save()
+    except Exception as e:
+        _log('[!] cannot stamp %s: %s' % (_describe_group(group), e))
+        return False
+
+    _log('STAMPED %s with kind=%s' % (_describe_group(group), _quote(kind)))
+    return True
+
+
+def stamp_group_kinds():
+    """Write kind=\'calls\'/\'tel\' onto the groups that already exist.
+
+    The first and smallest XCAP write of this work, and the one everything
+    later depends on: a group\'s id belongs to whichever client made it and its
+    name can be renamed, so `kind` is the only identity two clients can agree
+    on that survives both.
+
+    What it does NOT do, deliberately:
+
+      - create a group. If there is no Calls group here, nothing happens.
+      - touch membership. sipsimple sends only the modified keys
+        (`Group._internal_save` -> `__xcapgroup__.get_modified(modified_settings)`
+        -> `xcap_manager.update_group(group, attributes)`), and adds or removes
+        members only when \'contacts\' is among them. So this puts one attribute
+        on the wire and nothing else.
+      - overwrite a kind somebody else wrote.
+
+    Idempotent: a second run logs \'already stamped\' and writes nothing.
+    """
+    if not STAMP_GROUP_KINDS:
+        _log('kind stamping is switched off (STAMP_GROUP_KINDS)')
+        return
+
+    try:
+        from sipsimple.addressbook import AddressbookManager
+        groups = list(AddressbookManager().get_groups())
+    except Exception as e:
+        _log('cannot stamp group kinds, the addressbook is not readable: %s' % e)
+        return
+
+    if not groups:
+        # Almost certainly "not loaded yet" rather than "no groups". Writing
+        # nothing is the right answer either way.
+        _log('no groups in the addressbook yet, not stamping')
+        return
+
+    written = _stamp_one_group(CALLS_GROUP_KIND, CALLS_GROUP_NAME, CALLS_GROUP_ID)
+    written |= _stamp_one_group(TEL_GROUP_KIND, TEL_GROUP_NAME, TEL_GROUP_ID)
+    # Blocked is stamped for the same reason as the others: a rule that
+    # rejects calls must not stop working because somebody renamed a group.
+    written |= _stamp_one_group(BLOCKED_GROUP_KIND, BLOCKED_GROUP_NAME, BLOCKED_GROUP_ID)
+    written |= _stamp_one_group(CONFERENCE_GROUP_KIND, CONFERENCE_GROUP_NAME, CONFERENCE_GROUP_ID)
+    written |= _stamp_one_group(FAVORITES_GROUP_KIND, FAVORITES_GROUP_NAME, FAVORITES_GROUP_ID)
+    return written
+
+
+_startup_checked = [False]
+
+
+def backfill_accounts_without_xcap():
+    """Backfill the accounts that will never get an XCAP reload.
+
+    The backfill normally runs on XCAPManagerDidReloadData, because on an
+    account whose groups come from a server the local view has to be the
+    server's before anything is filed -- otherwise the pass is what creates
+    the duplicate Calls group.
+
+    An account with no XCAP has no such problem and no such notification.
+    Its contacts are ordinary local contacts: XCAP replicates an address
+    book, it does not host one, and a call on a provider that offers no XCAP
+    still deserves its entry in the call log. Without this the calls of such
+    an account -- which for a PSTN trunk is most of the interesting ones --
+    were silently never filed.
+    """
+    try:
+        from sipsimple.account import AccountManager, BonjourAccount
+        accounts = list(AccountManager().get_accounts())
+    except Exception:
+        return
+    for account in accounts:
+        try:
+            if account is BonjourAccount() or not getattr(account, 'enabled', False):
+                continue
+            if getattr(account.xcap, 'discovered', False):
+                continue        # it will be backfilled on its reload instead
+            backfill_call_contacts(account)
+        except Exception as e:
+            _log('[!] cannot backfill %s: %s' % (getattr(account, 'id', '?'), e))
+
+
+def calls_group_startup_check(xcap_loaded=False):
+    """Log the groups, stamp their kinds, make sure the Calls group exists.
+
+    Called twice over: once a few seconds after startup, so the state is
+    visible without having to place a call, and again on the first
+    XCAPManagerDidReloadData -- which is the moment the addressbook can be
+    trusted to reflect the server, and therefore the only moment at which
+    "there is no Calls group" is a fact rather than a race.
+
+    The dump and the stamp happen once. Creation is attempted on both passes
+    but refuses to act until the addressbook has arrived.
+    """
+    try:
+        if not _startup_checked[0]:
+            _startup_checked[0] = True
+            _dump_groups_once(force=True)
+            if stamp_group_kinds():
+                _log('after stamping:')
+                _dump_groups_once(force=True)
+
+        existed = _find_group(CALLS_GROUP_KIND, CALLS_GROUP_NAME, CALLS_GROUP_ID) is not None
+        if ensure_calls_group(xcap_loaded=xcap_loaded) is not None and not existed:
+            _log('after creating:')
+            _dump_groups_once(force=True)
+
+        # The accounts that will never see an XCAP reload get their backfill
+        # from here instead. Once each, like the others.
+        backfill_accounts_without_xcap()
+
+        # Rooms stored under the client-local 'videoconference.' domain, which
+        # this client cannot dial. Only once the addressbook reflects the
+        # server: rewriting a uri against a half-loaded document would write
+        # back whatever the reload is about to replace.
+        if xcap_loaded:
+            repair_contact_addresses()
+            file_contacts_into_kind_groups()
+
+        # Last, and on every pass: who is actually in the two groups. The
+        # startup pass shows what was loaded, the post-reload pass shows what
+        # the server had, and the difference between them is the answer to
+        # "why is that number not in Calls".
+        dump_group_members('startup:' if not xcap_loaded else 'after reload:')
+    except Exception as e:
+        try:
+            BlinkLogger().log_error('%s startup check failed: %s' % (_PREFIX, e))
+        except Exception:
+            pass
+
+
+_conference_uris_repaired = [False]
+
+
+def server_conference_uri(uri):
+    """The domain a conference room is STORED under, from any spelling of it.
+
+    'videoconference.X' is a CLIENT-LOCAL view of a bridge -- sylk mobile shows
+    and joins rooms under it, and swaps it back to 'conference.X' on the way to
+    the server (_abMangleConferenceDomainToServer). When that swap does not
+    happen the room reaches the shared document under the local domain, and
+    Blink cannot dial it at all: the address does not resolve, and nothing on
+    screen says why. Five rooms on this addressbook arrived that way.
+
+    Rewritten by prefix, so it does not depend on knowing which bridge this
+    account uses -- the case that produced the bad rows in the first place was
+    precisely the one where that was not known yet.
+
+    Returns the uri unchanged when there is nothing to do.
+    """
+    if not uri:
+        return uri
+    text = uri.decode() if isinstance(uri, bytes) else str(uri)
+    stripped = sip_prefix_pattern.sub("", text.strip())
+    if '@' not in stripped:
+        return text
+    user, _, domain = stripped.partition('@')
+    if not domain.lower().startswith('videoconference.'):
+        return text
+    return '%s@conference.%s' % (user, domain[len('videoconference.'):])
+
+
+def echoed_name_replacement(contact):
+    """The name this contact should have, when its name is only its address.
+
+    A contact called '+31618853125@sylk.link' whose address is '+31618853125'
+    is not named -- it is wearing an old spelling of its own address, and once
+    the address is canonical the name is the last place the old one survives.
+    On screen it then reads as a different number from the one that will be
+    dialled.
+
+    Matched by stripping the domain off the NAME and looking for the result
+    among the contact's addresses, which is exact: a real name has no domain to
+    strip and matches nothing. 'Nissan Rustman' is safe by construction, and so
+    is any name that merely contains a number.
+
+    A room is named by its room number, the way the correctly-filed rooms here
+    already are. Returns None when there is nothing to change.
+    """
+    name = str(getattr(contact, 'name', '') or '').strip()
+    if not name:
+        return None
+    try:
+        uris = [str(uri.uri).strip() for uri in contact.uris if str(uri.uri).strip()]
+    except Exception:
+        return None
+    if not uris:
+        return None
+
+    lowered = {uri.lower(): uri for uri in uris}
+    lowered_name = name.lower()
+
+    def replacement(address):
+        if is_conference_uri(address):
+            room = address.partition('@')[0]
+            return room if room and room != name else None
+        return address if address != name else None
+
+    # The name IS one of the addresses. Only a room changes here: its number.
+    if lowered_name in lowered:
+        return replacement(lowered[lowered_name])
+
+    # Otherwise the name only counts as an address if it LOOKS like one. An '@'
+    # is the whole test: a real name has none, so 'Nissan Rustman' and 'Mama'
+    # never reach the comparison below whatever their addresses happen to be.
+    if '@' not in lowered_name:
+        return None
+    local_part = lowered_name.partition('@')[0]
+    if not local_part:
+        return None
+
+    # The address is stored bare, as PSTN numbers are: name '+3161...@sylk.link'
+    # against address '+3161...'.
+    if local_part in lowered:
+        return replacement(lowered[local_part])
+
+    # The address kept a domain of its own, as rooms do, and the name is the
+    # same party under a domain that has since been repaired: name
+    # '338318@videoconference.sip2sip.info' against '338318@conference...'.
+    # Matching on the local part is what sees through the rewrite -- comparing
+    # whole addresses cannot, because by this point the old spelling is gone.
+    for lowered_uri, address in lowered.items():
+        if lowered_uri.partition('@')[0] == local_part:
+            return replacement(address)
+
+    return None
+
+
+def repair_contact_addresses():
+    """Put conference rooms back on the bridge domain. Once per run.
+
+    The mobile does this from its side too, and the two are idempotent with
+    respect to each other: whichever runs first, the other finds nothing.
+    Neither creates or deletes anything -- a room's identity is its address,
+    and this is the same address spelled the way the document should hold it.
+
+    A name that was only an echo of the old address follows it, and a room's
+    name is its room number, which is how every correctly-filed room here is
+    already named. A real name is never touched.
+    """
+    if _conference_uris_repaired[0]:
+        return
+    _conference_uris_repaired[0] = True
+
+    try:
+        from sipsimple.addressbook import AddressbookManager
+        manager = AddressbookManager()
+        contacts = list(manager.get_contacts())
+    except Exception as e:
+        _log('[!] cannot read the addressbook to repair conference uris: %s' % e)
+        return
+
+    # The dial plan that decides what a number's canonical form IS. The default
+    # account's, because that is the plan the user dials with -- a number stored
+    # on this machine is spelled the way this machine would call it.
+    try:
+        from sipsimple.account import AccountManager
+        default_account = AccountManager().default_account
+    except Exception:
+        default_account = None
+
+    repaired = 0
+    for contact in contacts:
+        try:
+            moved = []
+            for uri in list(contact.uris):
+                current = str(uri.uri)
+                wanted = server_conference_uri(current)
+                if wanted == current:
+                    # Not a room: try the number. Only when pstn_e164 actually
+                    # resolves one -- canonical_pstn_uri lowercases anything it
+                    # does not recognise, and running every address through it
+                    # would rewrite the whole addressbook to make a point about
+                    # case.
+                    e164 = pstn_e164(current, default_account)
+                    if e164:
+                        wanted = e164
+                if wanted != current:
+                    moved.append((uri, current, wanted))
+            was = str(getattr(contact, 'name', '') or '')
+            # The name is judged AFTER the addresses move, so a name echoing the
+            # old spelling is caught by the same pass rather than the next one.
+            for uri, _current, wanted in moved:
+                uri.uri = wanted
+            renamed = echoed_name_replacement(contact)
+            if not moved and not renamed:
+                continue
+            with manager.transaction():
+                for _uri, current, wanted in moved:
+                    _log('address %s -> %s' % (_quote(current), _quote(wanted)))
+                if renamed:
+                    contact.name = renamed
+                    _log('name %s -> %s (the name was the address, not a name)'
+                         % (_quote(was), _quote(renamed)))
+                contact.save()
+            repaired += 1
+        except Exception as e:
+            _log('[!] cannot repair %s: %s' % (_quote(str(getattr(contact, 'name', '?'))), e))
+
+    if repaired:
+        _log('repaired %d contact address(es)/name(s)' % repaired)
+
+
+_kind_groups_filed = [False]
+
+
+def file_contacts_into_kind_groups():
+    """Every phone number in Tel, every conference room in Conference.
+
+    Membership of a kinded group is a statement about WHAT a contact is, so it
+    does not depend on which client is looking, and a contact that qualifies but
+    is not filed is a fact the other clients cannot see. sylk mobile does the
+    same from its side; the two are idempotent with respect to each other.
+
+    Only ever adds. "Does it still belong" is a different question from "is it
+    missing", and this pass answers the second one.
+    """
+    if _kind_groups_filed[0]:
+        return
+    _kind_groups_filed[0] = True
+
+    try:
+        from sipsimple.account import AccountManager
+        from sipsimple.addressbook import AddressbookManager
+        manager = AddressbookManager()
+        contacts = list(manager.get_contacts())
+        default_account = AccountManager().default_account
+    except Exception as e:
+        _log('[!] cannot read the addressbook to file contacts: %s' % e)
+        return
+
+    def addresses(contact):
+        try:
+            return [str(uri.uri) for uri in contact.uris]
+        except Exception:
+            return []
+
+    wanted = (
+        (TEL_GROUP_KIND, TEL_GROUP_NAME, TEL_GROUP_ID,
+         [c for c in contacts if any(pstn_e164(a, default_account) for a in addresses(c))]),
+        (CONFERENCE_GROUP_KIND, CONFERENCE_GROUP_NAME, CONFERENCE_GROUP_ID,
+         [c for c in contacts if any(is_conference_uri(a) for a in addresses(c))]),
+    )
+
+    for kind, name, reserved_id, members in wanted:
+        if not members:
+            continue
+        group = ensure_group(kind, name, reserved_id, xcap_loaded=True)
+        if group is None:
+            continue
+        try:
+            missing = [c for c in members if c.id not in group.contacts]
+        except Exception:
+            continue
+        if not missing:
+            continue
+        _log('filing %d contact(s) into %s: %s'
+             % (len(missing), _describe_group(group),
+                ', '.join(_quote(str(getattr(c, 'name', '') or c.id)) for c in missing)))
+        try:
+            with AddressbookManager().transaction():
+                for contact in missing:
+                    group.contacts.add(contact)
+                group.save()
+        except Exception as e:
+            _log('[!] cannot file into %s: %s' % (_quote(name), e))
+
+
+def _xcap_is_expected():
+    """Whether the addressbook is going to be filled from a server.
+
+    It decides whether "no Calls group here" means "there is none" or only
+    "it has not arrived yet" -- and creating a group on the second reading is
+    how an account ends up with two of them.
+    """
+    try:
+        from sipsimple.account import AccountManager, BonjourAccount
+        for account in AccountManager().get_accounts():
+            if account is BonjourAccount():
+                continue
+            if getattr(account, 'enabled', False) and getattr(account.xcap, 'discovered', False):
+                return True
+    except Exception:
+        # The cautious answer is the one that waits.
+        return True
+    return False
+
+
+def ensure_group(kind, name, reserved_id=None, xcap_loaded=False):
+    """The group for this kind, created if it is genuinely missing.
+
+    Resolution is kind -> name -> reserved id (_find_group), so a group that
+    already exists under any of those is adopted rather than duplicated. A
+    group found without a kind is stamped on the way past.
+
+    The creation is gated on the addressbook actually reflecting the server.
+    An empty addressbook a few seconds after launch does not mean there is no
+    Calls group -- it usually means XCAP has not answered yet -- and creating
+    one on that reading is exactly how an account ends up with two Calls
+    groups, on every device.
+    """
+    group = _find_group(kind, name, reserved_id)
+
+    if group is not None:
+        if not str(getattr(group, 'kind', '') or '').strip():
+            _stamp_one_group(kind, name, reserved_id)
+        return group
+
+    if not CREATE_GROUPS:
+        _log('no %s group, and creating groups is switched off (CREATE_GROUPS)' % _quote(name))
+        return None
+
+    if not xcap_loaded and _xcap_is_expected():
+        _log('no %s group yet - waiting for the addressbook to arrive from the '
+             'server before creating one' % _quote(name))
+        return None
+
+    try:
+        from sipsimple.addressbook import Group
+        # Pinned to the reserved id when we have one.
+        #
+        # This used to mint a server-style id deliberately, because sylk mobile
+        # created every group with one of its own and a pinned '_calls' would
+        # simply lose the race -- the Calls group on this account carries a
+        # 25-digit mobile id for exactly that reason. Mobile pins the same
+        # reserved ids now, so whichever client creates the group first
+        # produces the same one, and a group the software files by itself stops
+        # depending on anybody's spelling of its name. '_messages' has worked
+        # this way all along.
+        #
+        # Groups already in the wild keep their arbitrary ids: an id cannot be
+        # changed, only deleted and re-created, which drops the membership on
+        # every device. That is what `kind` is for, and why _find_group still
+        # resolves kind -> name -> id rather than trusting the id alone.
+        group = Group(reserved_id) if reserved_id else Group()
+        group.name = name
+        group.kind = kind
+        group.expanded = True
+        group.position = None
+        group.save()
+    except Exception as e:
+        _log('[!] cannot create the %s group: %s' % (_quote(name), e))
+        return None
+
+    _log('CREATED group %s with kind=%s' % (_describe_group(group), _quote(kind)))
+    return group
+
+
+def ensure_calls_group(xcap_loaded=False):
+    return ensure_group(CALLS_GROUP_KIND, CALLS_GROUP_NAME, CALLS_GROUP_ID,
+                        xcap_loaded=xcap_loaded)
+
+
+def ensure_tel_group(xcap_loaded=False):
+    """Not called yet, on purpose.
+
+    Tel means "these are phone numbers", so an empty one says nothing and
+    would still replicate to every device. The mobile creates it only when a
+    contact is tagged 'tel'; step 6 does the same here, at the moment the
+    first PSTN contact needs it.
+    """
+    return ensure_group(TEL_GROUP_KIND, TEL_GROUP_NAME, TEL_GROUP_ID,
+                        xcap_loaded=xcap_loaded)
+
+
+def block_party(uri, name=None, account=None, exclusive=False):
+    """Put a party in the Blocked group, so they cannot call.
+
+    What "Block" has to do now that a presence policy no longer rejects calls
+    (see docs/PSTN-CALLS-GROUP.md section 21). Creates only what it must: the
+    contact if the address book does not already hold one, and the Blocked
+    group if it does not exist yet.
+
+    A phone number is stored canonically -- blocking '0031201234567' has to
+    stop '+31201234567' ringing, and contact matching is by number, not by
+    string.
+
+    Returns True when the party ends up blocked, including when they already
+    were. Never raises.
+    """
+    try:
+        from sipsimple.addressbook import AddressbookManager, Contact, ContactURI
+        from util import canonical_pstn_uri, format_uri_type, pstn_e164
+
+        address = canonical_pstn_uri(uri, account)
+        if not address:
+            _log('[!] refusing to block an empty address')
+            return False
+
+        blink_contact = _lookup_contact(address)
+        contact = getattr(blink_contact, 'contact', None) if blink_contact is not None else None
+
+        group = ensure_group(BLOCKED_GROUP_KIND, BLOCKED_GROUP_NAME, BLOCKED_GROUP_ID,
+                             xcap_loaded=True)
+        if group is None:
+            _log('[!] cannot block %s: no Blocked group and it could not be created'
+                 % _quote(address))
+            return False
+
+        if contact is not None:
+            try:
+                if contact.id in group.contacts:
+                    _log('%s is already in %s' % (_quote(address), _describe_group(group)))
+                    return True
+            except Exception:
+                pass
+        else:
+            contact = Contact()
+            contact.name = name or address
+            uri_type = 'phone' if pstn_e164(address, account) else 'SIP'
+            contact.uris.add(ContactURI(uri=address, type=format_uri_type(uri_type)))
+            contact.save()
+            _publish_contact_for_groups(contact)
+            _log('created contact %s to block' % _quote(address))
+
+        with AddressbookManager().transaction():
+            group.contacts.add(contact)
+            group.save()
+        _log('BLOCKED %s - added to %s' % (_quote(address), _describe_group(group)))
+
+        if exclusive:
+            _remove_from_other_groups(contact, group)
+        return True
+    except Exception as e:
+        try:
+            BlinkLogger().log_error('%s cannot block %s: %s' % (_PREFIX, uri, e))
+        except Exception:
+            pass
+        return False
+
+
+def _adopt_address_book_name(address):
+    """A name for a new contact, from the macOS Address Book if it knows one.
+
+    sylk mobile does the same from the device address book, so a number
+    dialled on either client ends up with the same name rather than a bare
+    number on one and a person on the other. None when nothing matches or the
+    match has no real name -- a contact named after its own address is not a
+    name, it is the address again.
+    """
+    try:
+        from AppKit import NSApp
+        model = NSApp.delegate().contactsWindowController.model
+        group = getattr(model, 'addressbook_group', None)
+        if group is None:
+            return None
+        for candidate in group.contacts:
+            try:
+                if not candidate.matchesURI(address):
+                    continue
+            except Exception:
+                continue
+            name = (getattr(candidate, 'name', '') or '').strip()
+            if name and name != address and not name.startswith(address):
+                return name
+        return None
+    except Exception:
+        return None
+
+
+def _publish_contact_for_groups(contact):
+    """Make a just-created contact safe to put in a group.
+
+    sipsimple builds a group's XCAP form by reading `__xcapcontact__` off every
+    member (`Group.__toxcap__`, addressbook.py:444). That attribute is None on
+    a contact that has not been saved yet, and only `Contact._internal_save`
+    fills it -- on the file-io thread, asynchronously.
+
+    Adding one new contact to a group is therefore safe: its save is queued
+    before the group's and runs first. Adding SEVERAL in a loop is not.
+    `Group._internal_save` reads `self.contacts` when it RUNS, not when it was
+    queued, so by then the group already holds the next contact the loop added,
+    whose own save is still behind it in the queue. The group is serialised
+    with a None member and the file-io thread raises
+
+        AttributeError: 'NoneType' object has no attribute 'id'
+
+    which is exactly what the backfill produced. Blink's own Add Contact never
+    hits it because a person adds one contact at a time.
+
+    Filling the attribute here is what `_internal_save` is about to do anyway,
+    a few milliseconds later, and it overwrites this with the same value.
+    """
+    try:
+        if getattr(contact, '__xcapcontact__', None) is None:
+            contact.__xcapcontact__ = contact.__toxcap__()
+    except Exception as e:
+        _log('[!] cannot prepare %s for its groups: %s' % (_quote(getattr(contact, 'name', '?')), e))
+
+
+def ensure_call_contact(remote_uri, account=None, xcap_loaded=True):
+    """Put the other party of a call in the Calls group.
+
+    Every audio call, not only PSTN: the group is a call log, and being a
+    phone number decides two things only -- the shape of the stored URI (bare
+    E.164 rather than the aor) and whether the contact also joins Tel, which
+    is how mobile files a number.
+
+    Withheld callers collapse onto one contact rather than breeding one per
+    call, and a blocked party is never given one -- though in practice the
+    call was already rejected before anything got here.
+
+    Adopts a name from the macOS Address Book when it knows the number.
+
+    Idempotent, and additive: an existing contact is joined to the groups it
+    is missing and is never renamed, re-addressed or otherwise edited. It is
+    the user's contact; this only files it.
+
+    Returns the contact, or None when nothing was done.
+    """
+    if not CREATE_CALL_CONTACTS:
+        return None
+    try:
+        from sipsimple.addressbook import AddressbookManager, Contact, ContactURI
+        from util import (canonical_pstn_uri, format_uri_type, is_anonymous,
+                          is_conference_uri, pstn_e164)
+
+        conference = is_conference_uri(remote_uri, account)
+
+        address = canonical_pstn_uri(remote_uri, account)
+        if not address or '@' not in address and not pstn_e164(address, account):
+            # Neither an address nor a number we can file. Bonjour device ids
+            # and half-formed URIs land here.
+            _log('not filing %s: it is neither an address nor a number' % _quote(remote_uri))
+            return None
+
+        if is_blocked_party(address):
+            _log('not filing %s: blocked' % _quote(address))
+            return None
+
+        e164 = pstn_e164(address, account)
+
+        blink_contact = _lookup_contact(address)
+        contact = getattr(blink_contact, 'contact', None) if blink_contact is not None else None
+        created = False
+
+        if contact is None:
+            contact = Contact()
+            if conference:
+                # A room is named after itself: the room number, never the
+                # whole URI. Mobile's _abConferenceName does the same.
+                name = address.partition('@')[0]
+            elif is_anonymous(address):
+                name = None
+            else:
+                name = _adopt_address_book_name(address)
+            contact.name = name or address
+            contact.uris.add(ContactURI(uri=address,
+                                        type=format_uri_type('phone' if e164 else 'SIP')))
+            contact.preferred_media = 'audio'
+            contact.save()
+            _publish_contact_for_groups(contact)
+            created = True
+
+        if conference:
+            # Not the call log: a room is a place several people were, not
+            # somebody you called. Mobile refuses a conference URI the 'calls'
+            # tag for the same reason and collects them in Conference.
+            targets = [(CONFERENCE_GROUP_KIND, CONFERENCE_GROUP_NAME, None)]
+        else:
+            targets = [(CALLS_GROUP_KIND, CALLS_GROUP_NAME, CALLS_GROUP_ID)]
+            if e164:
+                # Mirrors mobile tagging a PSTN destination 'tel' as well as 'calls'.
+                targets.append((TEL_GROUP_KIND, TEL_GROUP_NAME, None))
+
+        joined = []
+        for kind, name, reserved_id in targets:
+            group = ensure_group(kind, name, reserved_id, xcap_loaded=xcap_loaded)
+            if group is None:
+                continue
+            try:
+                if contact.id in group.contacts:
+                    continue
+            except Exception:
+                pass
+            with AddressbookManager().transaction():
+                group.contacts.add(contact)
+                group.save()
+            joined.append(name)
+
+        if created or joined:
+            _log('%s contact %s%s' % ('CREATED' if created else 'FILED',
+                                      _quote(contact.name),
+                                      (' -> ' + ', '.join(joined)) if joined else ''))
+        return contact
+    except Exception as e:
+        try:
+            BlinkLogger().log_error('%s cannot file %s: %s' % (_PREFIX, remote_uri, e))
+        except Exception:
+            pass
+        return None
+
+
+_backfilled_accounts = set()
+
+
+@run_in_green_thread
+@allocate_autorelease_pool
+def backfill_call_contacts(account):
+    """File the parties of calls already in the history into the Calls group.
+
+    Without this the group starts empty and fills only as new calls happen,
+    which makes a call log that knows nothing about the calls the database is
+    full of.
+
+    Green, because SessionHistory hands its results back through block_on.
+    Once per account per run, and it records that it has run in the account's
+    own settings so a restart does not do it again -- filing is idempotent,
+    but walking a long history on every launch is not free.
+
+    Every entry goes through ensure_call_contact, so the same rules apply as
+    to a live call: anonymous collapses, blocked is skipped, an existing
+    contact is joined to the groups it is missing and never edited.
+    """
+    if not BACKFILL_CALL_CONTACTS or not CREATE_CALL_CONTACTS:
+        return
+    try:
+        account_id = str(account.id)
+    except Exception:
+        return
+    if account_id in _backfilled_accounts:
+        return
+    _backfilled_accounts.add(account_id)
+
+    try:
+        if int(getattr(account.gui, 'calls_group_backfill_generation', 0) or 0) >= BACKFILL_GENERATION:
+            return
+    except Exception:
+        pass
+
+    started = time.time()
+    after_date = None
+    if BACKFILL_CALL_CONTACTS_DAYS:
+        after_date = (datetime.utcnow()
+                      - timedelta(days=BACKFILL_CALL_CONTACTS_DAYS)).strftime("%Y-%m-%d")
+
+    try:
+        # count=0 means no limit in _get_entries' sql builder; ask for a large
+        # bound instead so a pathological history cannot be walked forever.
+        entries = SessionHistory().get_entries(count=100000, after_date=after_date)
+    except Exception as e:
+        _log('[!] cannot read the call history to backfill: %s' % e)
+        return
+
+    # Distinct parties first, so the pass over the address book is bounded by
+    # how many people were called rather than how many calls were made.
+    seen = set()
+    parties = []
+    skipped = 0
+    for entry in entries:
+        try:
+            if entry is None or not entry.remote_uri:
+                continue
+            if str(getattr(entry, 'local_uri', '')) != account_id:
+                continue
+            media = str(getattr(entry, 'media_types', '') or '')
+            if 'audio' not in media:
+                skipped += 1
+                continue
+            if str(getattr(entry, 'remote_focus', '0')) == '1':
+                # A conference is not a party to be filed as a contact.
+                skipped += 1
+                continue
+            key = canonical_pstn_uri(entry.remote_uri, account)
+            if not key or key in seen:
+                continue
+            seen.add(key)
+            parties.append(entry.remote_uri)
+        except Exception:
+            continue
+
+    _log('backfill for %s: %d call(s) read, %d distinct part%s to consider'
+         % (account_id, len(entries), len(parties), 'y' if len(parties) == 1 else 'ies'))
+
+    from sipsimple.addressbook import AddressbookManager
+    manager = AddressbookManager()
+    filed = 0
+    for start in range(0, len(parties), BACKFILL_BATCH):
+        batch = parties[start:start + BACKFILL_BATCH]
+        try:
+            with manager.transaction():
+                for remote_uri in batch:
+                    try:
+                        if ensure_call_contact(remote_uri, account) is not None:
+                            filed += 1
+                    except Exception:
+                        continue
+        except Exception as e:
+            _log('[!] a backfill batch failed and was skipped: %s' % e)
+
+    _log('backfill for %s finished: %d part%s filed, %d call(s) skipped as non-audio '
+         'or conference, %.1fs'
+         % (account_id, filed, 'y' if filed == 1 else 'ies', skipped, time.time() - started))
+
+    try:
+        account.gui.calls_group_backfill_generation = BACKFILL_GENERATION
+        account.save()
+    except Exception as e:
+        _log('[!] backfill ran but could not be recorded for %s, so it will run '
+             'again next launch: %s' % (account_id, e))
+
+    # The backfill is the pass that fills the groups, so it is the pass whose
+    # result is worth reading back rather than assuming.
+    dump_group_members('after backfill of %s:' % account_id)
+
+
+def _remove_from_other_groups(contact, blocked_group):
+    """Take a blocked contact out of every group but Blocked.
+
+    Blocking somebody and leaving them in Calls, Tel and Favourites is a
+    half-measure: the point of blocking is that they stop appearing.
+
+    Lossy, and deliberately loud about it. Unblocking cannot put them back --
+    nothing records where they were -- so every group they are removed from is
+    named in the log, which is what makes it recoverable by hand.
+    """
+    try:
+        from sipsimple.addressbook import AddressbookManager
+        manager = AddressbookManager()
+        removed = []
+        for group in list(manager.get_groups()):
+            try:
+                if group.id == blocked_group.id:
+                    continue
+                if contact.id not in group.contacts:
+                    continue
+            except Exception:
+                continue
+            try:
+                with manager.transaction():
+                    group.contacts.remove(contact)
+                    group.save()
+                removed.append(str(getattr(group, 'name', '?')))
+            except Exception as e:
+                _log('[!] could not remove %s from %s: %s'
+                     % (_quote(contact.name), _quote(getattr(group, 'name', '?')), e))
+        if removed:
+            _log('removed %s from %s (blocking does not remember these, so putting '
+                 'them back later is by hand)' % (_quote(contact.name), ', '.join(removed)))
+    except Exception as e:
+        _log('[!] could not tidy the groups of %s: %s' % (_quote(getattr(contact, 'name', '?')), e))
+
+
+def block_caller(uri, name=None, account=None):
+    """Block a party and take them out of every group but Blocked.
+
+    What the Block Caller action does: the call-blocking fact, the presence
+    fact is the caller's to write, and then the tidy-up -- somebody blocked
+    should stop appearing in the Calls group they were just blocked from.
+    """
+    return block_party(uri, name=name, account=account, exclusive=True)
