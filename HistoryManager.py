@@ -3401,6 +3401,13 @@ BACKFILL_BATCH = 25
 BACKFILL_GENERATION = 2
 
 
+# The addressbook group roster, once per run: a header, a line per group and
+# a four-line footnote about `kind`. Set it to True when a group-identity
+# question comes up -- which id is "the" Calls group, why a rename did not
+# break it -- and it is the fastest way to see the real set.
+DUMP_GROUPS = False
+
+
 def _dump_groups_once(force=False):
     """List the addressbook groups, once per run.
 

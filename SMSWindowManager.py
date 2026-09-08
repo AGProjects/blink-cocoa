@@ -43,7 +43,6 @@ from Crypto.Protocol.KDF import PBKDF2
 from binascii import unhexlify, hexlify
 from application.notification import IObserver, NotificationCenter, NotificationData
 from application.python import Null
-from application.python.queue import EventQueue
 from application.system import makedirs
 from zope.interface import implementer
 from resources import ApplicationData
@@ -51,21 +50,22 @@ from resources import ApplicationData
 from sipsimple.configuration import DuplicateIDError
 from sipsimple.addressbook import AddressbookManager, Group
 from sipsimple.account import AccountManager, BonjourAccount, Account
-from sipsimple.core import SIPURI, Message, FromHeader, ToHeader, RouteHeader, Route
+from sipsimple.core import SIPURI, Message, FromHeader, ToHeader, RouteHeader, Route, Header
 from sipsimple.lookup import DNSLookup, DNSLookupError
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.payloads import ParserError
 from sipsimple.payloads.iscomposing import IsComposingMessage, IsComposingDocument
 from sipsimple.payloads.imdn import IMDNDocument, DeliveryNotification, DisplayNotification
 from sipsimple.streams.msrp.chat import CPIMPayload, CPIMParserError, ChatIdentity
-from sipsimple.threading import run_in_thread
-from sipsimple.threading.green import run_in_green_thread
+from sipsimple.threading import run_in_thread, run_in_twisted_thread
+from sipsimple.threading.green import run_in_green_thread, Command
 from sipsimple.util import ISOTimestamp
 
 from twisted.internet import reactor
 
 from ChatViewController import MSG_STATE_SENT, MSG_STATE_DELIVERED, MSG_STATE_DISPLAYED, MSG_STATE_FAILED
 
+import AddressbookNotify
 from BlinkLogger import BlinkLogger
 from KeyEscrow import (escrow_is_missing, install_keypair, log_self_contact,
                        restore_from_own_contact, write_self_keys)
@@ -827,11 +827,24 @@ class SMSWindowManagerClass(NSObject):
             self.notification_center.add_observer(self, name="SIPAccountRegistrationDidSucceed")
             self.notification_center.add_observer(self, name="MessageSaved")
             self.notification_center.add_observer(self, name="XCAPManagerDidReloadData")
+            # application/sylk-addressbook-update: every local write to the
+            # server addressbook, so one tick per burst can tell our other
+            # devices to refetch it. NOTE the two group-member notifications
+            # are spelled "XCAPManage..." in sipsimple, not "XCAPManager..." --
+            # observing the corrected spelling silently observes nothing.
+            for _xcap_notification in ('XCAPManagerDidAddContact',
+                                       'XCAPManagerDidUpdateContact',
+                                       'XCAPManagerDidRemoveContact',
+                                       'XCAPManagerDidAddGroup',
+                                       'XCAPManagerDidUpdateGroup',
+                                       'XCAPManagerDidRemoveGroup',
+                                       'XCAPManageDidAddGroupMember',
+                                       'XCAPManageDidRemoveGroupMember',
+                                       'XCAPManagerDidChangeState'):
+                self.notification_center.add_observer(self, name=_xcap_notification)
             self.keys_path = ApplicationData.get('keys')
             makedirs(self.keys_path)
             self.history = ChatHistory()
-            self.contacts_queue = EventQueue(self.handle_contacts_queue)
-            self.contacts_queue.start()
 
             # The heartbeat lives on the manager rather than on a window so
             # that every live conversation keeps retrying failed messages and
@@ -922,6 +935,247 @@ class SMSWindowManagerClass(NSObject):
         except ValueError:
             pass
 
+    # ===== application/sylk-addressbook-update =============================
+    #
+    # After WE change the server addressbook, one message to our own account
+    # tells every other device to refetch it; when another device tells US, we
+    # refetch. The tick carries no contact data -- XCAP is the source of truth
+    # and the message only says where to look. Never journalled, never stored,
+    # never rendered. Spec: sylk-mobile docs/messages/sylk-addressbook-update.md
+    #
+    # Per account, because a manager runs per account and one account's burst
+    # says nothing about another's.
+    _ab_notify = {}
+
+    @objc.python_method
+    def _abNotifyState(self, account):
+        key = str(account.id)
+        state = self._ab_notify.get(key)
+        if state is None:
+            state = {'throttle': AddressbookNotify.SendThrottle(),
+                     'scheduler': AddressbookNotify.FetchScheduler(),
+                     'send_armed': False,
+                     'fetch_armed': False,
+                     'contacts': set(),
+                     'groups': set(),
+                     'full': False}
+            self._ab_notify[key] = state
+        return state
+
+    @objc.python_method
+    def _abManagerSettled(self, manager):
+        """Is anything of ours still on its way to the server?
+
+        Both directions ask this. We must not announce a change the server has
+        not taken yet, and we must not apply a fetched document on top of our
+        own unflushed journal -- that is how an update ends up re-pushing rows
+        we were half way through replacing.
+        """
+        try:
+            return manager.state == 'insync' and not manager.journal
+        except AttributeError:
+            return True
+
+    @objc.python_method
+    def _abAccountForManager(self, manager):
+        account = getattr(manager, 'account', None)
+        return account if account is not None and not isinstance(account, BonjourAccount) else None
+
+    @objc.python_method
+    def _abNoteXCAPChange(self, manager, kind, id):
+        account = self._abAccountForManager(manager)
+        if account is None:
+            return
+        state = self._abNotifyState(account)
+        if not state['throttle'].note(kind, id):
+            return          # suppressed: we are applying what the server told us
+        self._abArmNotify(manager)
+
+    @objc.python_method
+    def _abArmNotify(self, manager):
+        account = self._abAccountForManager(manager)
+        if account is None:
+            return
+        state = self._abNotifyState(account)
+        if state['send_armed'] or not state['throttle'].pending:
+            return
+        delay = state['throttle'].delay()
+        if delay is None:
+            return
+        state['send_armed'] = True
+        # call_later has no handle to cancel, so nothing here ever cancels: an
+        # early wakeup finds the burst not due yet, sends nothing, and re-arms
+        # with the new delay. Every path stays correct as long as an armed
+        # timer fires exactly once, which the send_armed flag guarantees.
+        call_later(max(delay, 0.1), self._abFlushNotify, manager)
+
+    @objc.python_method
+    def _abFlushNotify(self, manager):
+        account = self._abAccountForManager(manager)
+        if account is None:
+            return
+        state = self._abNotifyState(account)
+        state['send_armed'] = False
+        tick = state['throttle'].take(self._abManagerSettled(manager))
+        if tick is None:
+            # Not due, not settled, or the fuse is blown. The ids are still
+            # held, so nothing is lost -- it is only late. A blown fuse is
+            # polled slowly: by definition it takes five minutes to drain.
+            delay = state['throttle'].delay()
+            if delay is not None:
+                state['send_armed'] = True
+                call_later(max(delay, 30.0 if state['throttle'].fuse_blown else 1.0),
+                           self._abFlushNotify, manager)
+            return
+        contact_ids, group_ids, truncated = tick
+        settings = SIPSimpleSettings()
+        content = AddressbookNotify.build_tick(settings.instance_id, contact_ids, group_ids, truncated)
+        BlinkLogger().log_info('Addressbook changed, telling the other devices of %s: '
+                               '%d contact(s), %d group(s)%s'
+                               % (account.id, len(contact_ids), len(group_ids),
+                                  ' (truncated)' if truncated else ''))
+        # X-Sylk-Skip-Journal: the server must not store this. An offline device
+        # does not need a stale "refetch" replayed at it -- it refetches the
+        # addressbook when it registers anyway. sip_handlers.py checks for the
+        # header's PRESENCE, and sends 'yes' when it sets it itself.
+        self.sendMessage(account, content, AddressbookNotify.CONTENT_TYPE,
+                         extra_headers=[Header(AddressbookNotify.SKIP_JOURNAL_HEADER, 'yes')])
+        self._abArmNotify(manager)
+
+    @objc.python_method
+    def handleAddressbookNotify(self, account, content, sender_uri=None):
+        """A tick from one of our own devices: arm a jittered refetch."""
+        # Self only. Nobody else gets to make us re-read our addressbook: the
+        # type is defined as account-to-own-account, and honouring it from a
+        # stranger would hand any sender a way to keep this client fetching.
+        if sender_uri is not None:
+            sender = str(sender_uri).split(':', 1)[-1].split(';', 1)[0]
+            if sender != str(account.id):
+                BlinkLogger().log_warning('Ignoring an addressbook tick for %s sent by %s'
+                                          % (account.id, sender))
+                return
+        tick = AddressbookNotify.parse_tick(content)
+        if tick is None:
+            return
+        if tick['origin'] and tick['origin'] == str(SIPSimpleSettings().instance_id):
+            return          # our own message, forked back to us
+        # Freshness is judged HERE, on arrival, and never again when the jitter
+        # expires: a 30s delay on a 110s-old tick must not discard a fetch that
+        # is still wanted.
+        if not AddressbookNotify.is_fresh(tick['timestamp']):
+            BlinkLogger().log_debug('Ignoring a stale addressbook tick for %s' % account.id)
+            return
+        state = self._abNotifyState(account)
+        if tick['truncated'] or tick['contact_ids'] is None:
+            state['full'] = True
+        state['contacts'].update(tick['contact_ids'] or ())
+        state['groups'].update(tick['group_ids'] or ())
+        delay = state['scheduler'].schedule()
+        if delay is None:
+            BlinkLogger().log_debug('Addressbook tick merged into the fetch already coming for %s'
+                                    % account.id)
+            return
+        BlinkLogger().log_info('The addressbook of %s changed on another device; fetching in %ds'
+                               % (account.id, round(delay)))
+        state['fetch_armed'] = True
+        call_later(delay, self._abFireNotifyFetch, account)
+
+    @objc.python_method
+    def _abFireNotifyFetch(self, account):
+        state = self._abNotifyState(account)
+        state['fetch_armed'] = False
+        manager = getattr(account, 'xcap_manager', None)
+        if manager is None:
+            return
+        fetch, retry_in, backed_off = state['scheduler'].fire(self._abManagerSettled(manager))
+        if not fetch:
+            if backed_off:
+                BlinkLogger().log_warning('Too many addressbook fetches for %s -- backing off'
+                                          % account.id)
+            if retry_in is not None:
+                state['fetch_armed'] = True
+                call_later(retry_in, self._abFireNotifyFetch, account)
+            return
+        if state['full']:
+            BlinkLogger().log_info('Fetching the addressbook of %s (the sender could not say what changed)'
+                                   % account.id)
+        else:
+            BlinkLogger().log_info('Fetching the addressbook of %s (%d contact(s), %d group(s) changed)'
+                                   % (account.id, len(state['contacts']), len(state['groups'])))
+        # The ids scope the log, never the fetch: XCAP has no way to ask for
+        # part of a document, so this is always the whole resource-lists. Only
+        # that document -- pres-rules and dialog-rules are out of scope and are
+        # never pulled by a tick.
+        state['contacts'].clear()
+        state['groups'].clear()
+        state['full'] = False
+        self._abSendFetchCommand(manager)
+
+    @objc.python_method
+    @run_in_twisted_thread
+    def _abSendFetchCommand(self, manager):
+        # The command channel is a green queue read by the manager's own
+        # greenlet; sipsimple schedules onto it from the twisted thread and so
+        # do we. A conditional GET: an unchanged etag returns the manager to
+        # insync and nothing else happens.
+        try:
+            manager.command_channel.send(Command('fetch', documents=set(AddressbookNotify.FETCH_DOCUMENTS)))
+        except Exception as e:
+            BlinkLogger().log_error('Could not ask for an addressbook fetch: %s' % e)
+
+    @objc.python_method
+    def _NH_XCAPManagerDidAddContact(self, sender, data):
+        self._abNoteXCAPChange(sender, 'contact', getattr(data.contact, 'id', None))
+
+    @objc.python_method
+    def _NH_XCAPManagerDidUpdateContact(self, sender, data):
+        self._abNoteXCAPChange(sender, 'contact', getattr(data.contact, 'id', None))
+
+    @objc.python_method
+    def _NH_XCAPManagerDidRemoveContact(self, sender, data):
+        self._abNoteXCAPChange(sender, 'contact', getattr(data.contact, 'id', None))
+
+    @objc.python_method
+    def _NH_XCAPManagerDidAddGroup(self, sender, data):
+        self._abNoteXCAPChange(sender, 'group', getattr(data.group, 'id', None))
+
+    @objc.python_method
+    def _NH_XCAPManagerDidUpdateGroup(self, sender, data):
+        self._abNoteXCAPChange(sender, 'group', getattr(data.group, 'id', None))
+
+    @objc.python_method
+    def _NH_XCAPManagerDidRemoveGroup(self, sender, data):
+        self._abNoteXCAPChange(sender, 'group', getattr(data.group, 'id', None))
+
+    @objc.python_method
+    def _NH_XCAPManageDidAddGroupMember(self, sender, data):
+        self._abNoteXCAPChange(sender, 'group', getattr(data.group, 'id', None))
+
+    @objc.python_method
+    def _NH_XCAPManageDidRemoveGroupMember(self, sender, data):
+        self._abNoteXCAPChange(sender, 'group', getattr(data.group, 'id', None))
+
+    @objc.python_method
+    def _NH_XCAPManagerDidChangeState(self, sender, data):
+        """insync is the moment our journal reached the server.
+
+        Announcing before that would send the other devices to fetch a document
+        we have not finished writing -- and the manager passes through insync
+        between the batches of a long edit, which is why the debounce sits on
+        top of this rather than instead of it.
+        """
+        if data.state != 'insync':
+            return
+        account = self._abAccountForManager(sender)
+        if account is None:
+            return
+        state = self._abNotifyState(account)
+        following = state['scheduler'].done()
+        if following is not None and not state['fetch_armed']:
+            state['fetch_armed'] = True
+            call_later(following, self._abFireNotifyFetch, account)
+        self._abArmNotify(sender)
+
     @objc.python_method
     def _NH_XCAPManagerDidReloadData(self, sender, data):
         # Step 1 of the cross-client key escrow work: read-only. Every time
@@ -936,6 +1190,21 @@ class SMSWindowManagerClass(NSObject):
         # The addressbook has now answered for this account, so a generate
         # prompt held back waiting for it can go ahead.
         self.key_escrow_checked.add(account.id)
+
+        # Nothing this handler writes announces itself. A restore or an escrow
+        # repair is this device catching up with the document it has just been
+        # handed, and every other device reaches the same place from the same
+        # document on its own load. Announcing it would mean device A's write
+        # wakes device B, whose repair writes back, which wakes A.
+        throttle = self._abNotifyState(account)['throttle']
+        throttle.suppress()
+        try:
+            self._applyReloadedAddressbook(account)
+        finally:
+            throttle.resume()
+
+    @objc.python_method
+    def _applyReloadedAddressbook(self, account):
 
         # Restore BEFORE reporting. The report describes the state of the
         # account, and a restore in the same pass changes it: reporting first
@@ -1213,7 +1482,7 @@ class SMSWindowManagerClass(NSObject):
 
     @objc.python_method
     @run_in_green_thread
-    def sendMessage(self, account, content, content_type, recipient=None):
+    def sendMessage(self, account, content, content_type, recipient=None, extra_headers=None):
         # tls_name must be carried into the lookup: without it the route is
         # verified against the DNS-resolved name rather than the account's
         # configured TLS name, so an account whose proxy answers under a
@@ -1237,8 +1506,8 @@ class SMSWindowManagerClass(NSObject):
         settings = SIPSimpleSettings()
         lookup = DNSLookup()
 
-        BlinkLogger().log_info('Token request for %s: uri=%s account.sip.tls_name=%r using tls_name=%r'
-                              % (account.id, uri, account.sip.tls_name, tls_name))
+        BlinkLogger().log_info('Sending %s for %s: uri=%s account.sip.tls_name=%r using tls_name=%r'
+                              % (content_type, account.id, uri, account.sip.tls_name, tls_name))
 
         try:
            routes = lookup.lookup_sip_proxy(uri, settings.sip.transport_list, tls_name=tls_name).wait()
@@ -1257,51 +1526,9 @@ class SMSWindowManagerClass(NSObject):
             else:
                 to_uri = SIPURI.parse('sip:%s' % account.id)
 
-            message_request = Message(FromHeader(from_uri), ToHeader(to_uri), RouteHeader(route.uri), content_type, content.encode(), credentials=account.credentials)
+            message_request = Message(FromHeader(from_uri), ToHeader(to_uri), RouteHeader(route.uri), content_type, content.encode(), credentials=account.credentials, extra_headers=extra_headers or [])
 
             message_request.send()
-
-    @objc.python_method
-    @run_in_thread('contact_sync')
-    def handle_contacts_queue(self, payload):
-        content = payload['data']
-        account = payload['account']
-        if content.startswith('-----BEGIN PGP MESSAGE-----') and content.endswith('-----END PGP MESSAGE-----'):
-            try:
-                private_key = self.private_keys[account]
-            except KeyError:
-                private_key_path = "%s/%s.privkey" % (self.keys_path, account)
-            
-                try:
-                    private_key, _ = pgpy.PGPKey.from_file(private_key_path)
-                except Exception as e:
-                    BlinkLogger().log_error('Cannot import PGP private key from %s: %s' % (private_key_path, str(e)))
-                    return
-                else:
-                    BlinkLogger().log_info('PGP private key imported from %s' % private_key_path)
-                    self.private_keys[account] = private_key
-
-            if private_key:
-                try:
-                    pgpMessage = pgpy.PGPMessage.from_blob(content.strip())
-                    decrypted_message = private_key.decrypt(pgpMessage)
-                except (pgpy.errors.PGPDecryptionError, pgpy.errors.PGPError) as e:
-                    BlinkLogger().log_info('PGP decryption failed for contact update')
-                    return
-                else:
-                    content = pgp_plaintext(decrypted_message) or ''
-
-        try:
-            contact_data = json.loads(content)
-            uri = contact_data['uri']
-            try:
-                display_name = contact_data['name']
-            except KeyError:
-                display_name = uri
-            organization = contact_data['organization']
-            self.saveContact(uri, {'name': display_name or uri, 'organization': organization})
-        except (TypeError, KeyError, json.decoder.JSONDecodeError) as e:
-            BlinkLogger().log_error('Failed to update contact %s: %s' % (content, str(e)))
 
     @objc.python_method
     @run_in_thread('sms_sync')
@@ -1517,16 +1744,12 @@ class SMSWindowManagerClass(NSObject):
         all_contacts = set()
         all_incoming = {}
 
-        # One pause for the whole run: EventQueue.pause/unpause is not a
-        # counter, so pausing per page and unpausing once would be unbalanced.
-        self.contacts_queue.pause()
         self._journal_bulk = True
         try:
             self._applyJournalFiles(account, directory, names, all_contacts, all_incoming,
                                     first_sync=first_sync)
         finally:
             self._journal_bulk = False
-            self.contacts_queue.unpause()
 
         self._finishJournalApply(account, all_contacts, all_incoming)
 
@@ -1688,7 +1911,16 @@ class SMSWindowManagerClass(NSObject):
                         self.pendingSaveMessage[imdn_message_id] = True
                         self.history.update_message_status(imdn_message_id, status)
                 elif content_type == 'application/sylk-contact-update':
-                    self.contacts_queue.put({'account': str(account.id), 'data': msg['content']})
+                    # Retired type. Entries written before the cut stay in the
+                    # server journal for ever, so the branch stays for ever
+                    # too -- it just does nothing now. The addressbook itself
+                    # carries what these used to replicate.
+                    pass
+                elif content_type == AddressbookNotify.CONTENT_TYPE:
+                    # Sent with X-Sylk-Skip-Journal, so this should not exist at
+                    # all; a replayed one is a stale "refetch now" that would
+                    # fire a pointless fetch on every launch.
+                    pass
                 elif content_type == 'application/sylk-conversation-read':
                     # Replayed in order with the messages themselves, so a
                     # conversation read elsewhere after its last message ends
@@ -2043,7 +2275,7 @@ class SMSWindowManagerClass(NSObject):
         """Log what a journal sync actually delivered, per contact.
 
         Counts every journal entry, control types included (imdn,
-        sylk-contact-update, pgp keys ...), because "why did this sync move
+        imdn, pgp keys ...), because "why did this sync move
         last_message_id but show me nothing" is usually answered by seeing
         that the burst was all IMDN receipts.
         """
@@ -2708,8 +2940,7 @@ class SMSWindowManagerClass(NSObject):
 
         Returns the decoded plaintext on success, ``None`` if there is
         no key or decryption fails. Reuses the per-account ``private_keys``
-        cache that handle_contacts_queue already populates so we don't
-        re-read the key file on every journal entry.
+        cache so the key file is not re-read on every journal entry.
         """
         try:
             private_key = self.private_keys[account_id]
@@ -5582,7 +5813,12 @@ class SMSWindowManagerClass(NSObject):
             return
 
         elif content_type == 'application/sylk-contact-update':
-            self.contacts_queue.put({'account': account.id, 'data': content.decode()})
+            # Retired: accepted and ignored, so a device still running the old
+            # build is not answered with an error. See the addressbook-update
+            # spec, section 10.
+            return
+        elif content_type == AddressbookNotify.CONTENT_TYPE:
+            self.handleAddressbookNotify(account, content, data.from_header.uri)
             return
         elif content_type == 'text/pgp-private-key':
             BlinkLogger().log_info('PGP private key from %s to %s received' % (data.from_header.uri, account.id))
