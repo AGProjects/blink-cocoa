@@ -3118,7 +3118,7 @@ class SMSWindowManagerClass(NSObject):
             if self.last_call_times.get(key) is None or when > self.last_call_times[key]:
                 self.last_call_times[key] = when
                 loaded += 1
-        BlinkLogger().log_info('[calls-group] call order seeded from %d contact(s) with calls'
+        BlinkLogger().log_info('[cdr] call order seeded from %d contact(s) with calls'
                                % loaded)
         # The Calls group was built and sorted before this map existed, so it
         # is sitting in alphabetical order right now. Ask for a reorder.

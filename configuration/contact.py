@@ -73,6 +73,29 @@ class BlinkContactExtension(ContactExtension):
 class BlinkGroupExtension(GroupExtension):
     position = Setting(type=int, nillable=True)
     expanded = Setting(type=bool, default=True)
+    # What this group IS, as opposed to what it is called.
+    #
+    # A group's id belongs to whichever client created it -- sylk mobile mints
+    # its own (app.js _abGenerateServerId, 'id' + digits) -- and its name is a
+    # label the user may rename at any time. Neither is usable as an identity
+    # that two clients can agree on, which is how Blink came to look for a
+    # Calls group by a name and find nothing when it was renamed.
+    #
+    # So the identity goes in the XCAP attribute bag, where the addressbook
+    # spec already guarantees it survives: "Preserve the attributes bag
+    # verbatim ... Do not drop attributes you don't recognize"
+    # (sylk-mobile docs/addressbook/addressbook.md, chapter 16.4).
+    #
+    # Shared, and it works: sipsimple registers an attributes extension on the
+    # XCAP group element exactly as it does on contacts
+    # (payloads/addressbook.py, Group.register_extension('attributes', ...)),
+    # Group.__toxcap__ serialises every SharedSetting into it, and the reverse
+    # path applies incoming attributes back onto the settings. With the
+    # namespace switch above, they land in the bag the mobile reads.
+    #
+    # Values are lowercase machine words, never display text: 'calls', 'tel'.
+    # Empty means an ordinary user group.
+    kind = SharedSetting(type=str, default='')
 
 
 class BlinkContactURIExtension(ContactURIExtension):

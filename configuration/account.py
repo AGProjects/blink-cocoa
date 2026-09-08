@@ -105,6 +105,17 @@ class PSTNSettings(SettingsGroup):
     idd_prefix = Setting(type=Digits, default=None, nillable=True)
     strip_digits = Setting(type=NonNegativeInteger, default=0, nillable=True)
     prefix = Setting(type=Digits, default=None, nillable=True)
+    # "Replace Leading 0": a numeric local number starting with a SINGLE 0
+    # (06..., not 00...) has that 0 replaced by this value before the
+    # '+' -> idd_prefix rewrite. Sylk-mobile calls the same rule
+    # pstn.replaceLeadingZero and stores the same shape of value:
+    # <international access code><home country code>, e.g. '0031'.
+    # Empty/None disables the rule.
+    #
+    # It also names the account's home country for the trunk-zero repair
+    # (util.pstn_strip_trunk_zero): peel the access code off the front and
+    # what remains is the home country code.
+    replace_leading_zero = Setting(type=Digits, default=None, nillable=True)
     dial_plan = Setting(type=str, default='', nillable=True)
     asserted_identity = Setting(type=str, default='', nillable=True)
     anonymous_to_answering_machine = Setting(type=bool, default=False)
@@ -153,6 +164,15 @@ class BonjourConferenceSettings(SettingsGroup):
 class GUISettings(SettingsGroup):
     account_label = Setting(type=str, default='', nillable=True)
     sync_with_icloud = Setting(type=bool, default=True)
+    # Which generation of the one-shot that files the parties of already-stored
+    # calls into the Calls group has run for this account. Local, not shared:
+    # it records what this machine has done, not anything about the account.
+    #
+    # A number rather than a flag so a corrected pass can be made to run again
+    # by raising HistoryManager.BACKFILL_GENERATION, without anybody having to
+    # hand-edit a config file. The first pass raced the XCAP reload, which is
+    # exactly the situation this is for.
+    calls_group_backfill_generation = Setting(type=NonNegativeInteger, default=0)
 
 
 class WebAlertSettings(SettingsGroup):

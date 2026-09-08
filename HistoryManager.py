@@ -573,6 +573,52 @@ def _sip_status_phrase(status):
     phrase = _SIP_STATUS_PHRASES.get(status)
     return '%s (%s)' % (phrase, status) if phrase else status
 
+
+# The server's `outcome` mapped onto the status vocabulary the sessions
+# table stores. 'rejected' is direction-dependent and handled below.
+_CDR_OUTCOMES = {
+    'completed':          'completed',
+    'missed':             'missed',
+    'cancelled':          'cancelled',
+    'failed':             'failed',
+    'voicemail':          'missed',
+    'answered_elsewhere': 'completed',
+}
+
+
+def _server_call_outcome(call, direction, duration, status):
+    """(outcome, session status). Falls back to the old derivation for a
+    server that does not send `outcome`, or sends an unknown one."""
+    outcome = str(call.get('outcome') or '').strip()
+
+    if outcome == 'rejected':
+        return outcome, ('failed' if direction == 'outgoing' else 'missed')
+    if outcome in _CDR_OUTCOMES:
+        return outcome, _CDR_OUTCOMES[outcome]
+
+    try:
+        duration = int(duration or 0)
+    except (TypeError, ValueError):
+        duration = 0
+
+    if duration > 0:
+        derived = 'completed'
+    elif direction == 'outgoing':
+        derived = 'cancelled' if str(status).strip() == '487' else 'failed'
+    else:
+        derived = 'missed'
+    return derived, derived
+
+
+def _server_direction_check(call, direction, call_id):
+    # Reports only: the list a record arrives in is authoritative.
+    reported = str(call.get('direction') or '').strip()
+    if reported and reported != direction:
+        BlinkLogger().log_warning(
+            'Server history call %s is in the %s list but reports direction=%s'
+            % (call_id, direction, reported))
+
+
 # What the link-local account calls itself, and so what every Bonjour row is
 # filed under. Two migrations exist to fold the older spellings -- 'bonjour'
 # and 'bonjour.local' -- into this one, so anything reading Bonjour history
@@ -2926,6 +2972,9 @@ class SessionHistoryReplicator(object):
         # spellings agree, and the rest are counted.
         preview_budget = [PREVIEW_STORED_CALL_LIMIT, 0]
 
+        # Says whether this account's server sends the standardised record.
+        server_outcomes = [0]
+
         notification_center = NotificationCenter()
         try:
             if calls['received']:
@@ -2976,7 +3025,10 @@ class SessionHistoryReplicator(object):
                         start_time = _timezone.localize(start_time).astimezone(pytz.utc)
                         end_time = _timezone.localize(end_time).astimezone(pytz.utc)
 
-                        success = 'completed' if duration > 0 else 'missed'
+                        outcome, success = _server_call_outcome(call, 'incoming', duration, status)
+                        if call.get('outcome'):
+                            server_outcomes[0] += 1
+                        _server_direction_check(call, 'incoming', call_id)
 
                         BlinkLogger().log_debug("Adding incoming %s call %s at %s from %s from server history" % (success, call_id, start_time, remote_uri))
                         received_synced += 1
@@ -2995,24 +3047,27 @@ class SessionHistoryReplicator(object):
                             # sync ran. start_time is already UTC here.
                             timestamp = str(ISOTimestamp(start_time))
                             if success == 'missed':
-                                message = '<h3>Missed Incoming Audio Call</h3>'
-                                #message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
+                                message = ('<h3>Rejected Incoming Audio Call</h3>' if outcome == 'rejected'
+                                           else '<h3>Voicemail</h3>' if outcome == 'voicemail'
+                                           else '<h3>Missed Incoming Audio Call</h3>')
                                 media_type = 'missed-call'
                             else:
                                 duration = self.sessionControllersManager.get_printed_duration(start_time, end_time)
                                 message = '<h3>Incoming Audio Call</h3>'
-                                message += '<p>The call has been answered elsewhere'
+                                # Was unconditional: every completed incoming
+                                # call claimed it was taken on another device.
+                                if outcome == 'answered_elsewhere':
+                                    message += '<p>The call has been answered elsewhere'
                                 message += '<p>Call duration: %s' % duration
-                                #message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
                                 media_type = 'audio'
                             # Read-only Calls group preview -- logs only, writes nothing.
                             # Only reached for calls the local history does not have yet;
                             # the ones it already has are skipped by the guard above.
-                            preview_call('server-history', 'incoming', success, account=account,
+                            preview_call('cdr', 'incoming', success, account=account,
                                          local_uri=local_uri, remote_uri=remote_uri,
                                          call_id=call_id, history_id=id, media_type=media_type,
-                                         summary=('Missed Incoming Audio Call' if media_type == 'missed-call'
-                                                  else 'Incoming Audio Call - answered elsewhere'),
+                                         summary=('Missed Incoming Audio Call (%s)' % outcome if media_type == 'missed-call'
+                                                  else 'Incoming Audio Call (%s)' % outcome),
                                          duration=locals().get('duration'))
                             self.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, call_id=call_id)
                             notification_center.post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction=direction, history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True, missed=bool(media_type =='missed-call')))
@@ -3084,10 +3139,10 @@ class SessionHistoryReplicator(object):
                         start_time = _timezone.localize(start_time).astimezone(pytz.utc)
                         end_time = _timezone.localize(end_time).astimezone(pytz.utc)
 
-                        if duration > 0:
-                            success = 'completed'
-                        else:
-                            success = 'cancelled' if status == "487" else 'failed'
+                        outcome, success = _server_call_outcome(call, 'outgoing', duration, status)
+                        if call.get('outcome'):
+                            server_outcomes[0] += 1
+                        _server_direction_check(call, 'outgoing', call_id)
 
                         BlinkLogger().log_debug("Adding outgoing %s call %s at %s to %s from server history" % (success, call_id, start_time, remote_uri))
                         placed_synced += 1
@@ -3116,7 +3171,8 @@ class SessionHistoryReplicator(object):
                             timestamp = str(ISOTimestamp(start_time))
                             media_type = 'audio'
                             if success == 'failed':
-                                message = '<h3>Failed Outgoing Audio Call</h3>'
+                                message = ('<h3>Rejected Outgoing Audio Call</h3>' if outcome == 'rejected'
+                                           else '<h3>Failed Outgoing Audio Call</h3>')
                                 message += '<p>Reason: %s' % _sip_status_phrase(sip_status)
                             elif success == 'cancelled':
                                 message= '<h3>Cancelled Outgoing Audio Call</h3>'
@@ -3127,12 +3183,11 @@ class SessionHistoryReplicator(object):
                             # Read-only Calls group preview -- logs only, writes nothing.
                             # NB the true direction is outgoing here; the row itself is written
                             # with direction='incoming', which is a pre-existing oddity.
-                            preview_call('server-history', 'outgoing', success, account=account,
+                            preview_call('cdr', 'outgoing', success, account=account,
                                          local_uri=local_uri, remote_uri=remote_uri,
                                          call_id=call_id, history_id=id, media_type=media_type,
-                                         summary=('Failed Outgoing Audio Call: %s' % _sip_status_phrase(sip_status) if success == 'failed'
-                                                  else 'Cancelled Outgoing Audio Call' if success == 'cancelled'
-                                                  else 'Outgoing Audio Call'),
+                                         summary=('Outgoing Audio Call (%s): %s' % (outcome, _sip_status_phrase(sip_status)) if success == 'failed'
+                                                  else 'Outgoing Audio Call (%s)' % outcome),
                                          duration=locals().get('duration'))
                             self.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, call_id=call_id)
                             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='outgoing', history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True, missed=False))
@@ -3146,6 +3201,11 @@ class SessionHistoryReplicator(object):
 
         if received_synced:
             BlinkLogger().log_info("%d received calls synced from server history of %s" % (received_synced, account))
+
+        synced = placed_synced + received_synced
+        if synced:
+            BlinkLogger().log_info("%d of %d synced calls carried a server outcome for %s"
+                                   % (server_outcomes[0], synced, account))
 
         if preview_budget[1]:
             BlinkLogger().log_info('%s and %d more call(s) already stored locally, not previewed'
@@ -3184,7 +3244,7 @@ class SessionHistoryReplicator(object):
 # WOULD happen, so the plan can be checked against real traffic before any of
 # it is built.
 #
-#     grep '\[calls-group\]' ~/Library/Application\ Support/Blink/logs/*.log
+#     grep '\[cdr\]' ~/Library/Application\ Support/Blink/logs/*.log
 #
 # Three questions are answered per call:
 #
@@ -3268,7 +3328,7 @@ FAVORITES_GROUP_NAME = 'Favorites'
 FAVORITES_GROUP_KIND = 'favorites'
 FAVORITES_GROUP_ID = '_favorites'
 
-_PREFIX = '[calls-group]'
+_PREFIX = '[cdr]'
 
 
 def _log(line):
@@ -3415,6 +3475,8 @@ def _dump_groups_once(force=False):
     whichever client created the group, names can be renamed. Seeing the real
     set, with ids, is what settles it for a given account. Read-only.
     """
+    if not DUMP_GROUPS:
+        return
     if _groups_dumped[0] and not force:
         return
     _groups_dumped[0] = True
@@ -3440,6 +3502,12 @@ def _dump_groups_once(force=False):
          "fallback.")
 
 
+# One line per member of the Calls and Tel groups, on every reload -- ~54
+# lines a time, which buries everything else. Set it to True to get the
+# roster back when a membership question comes up.
+DUMP_GROUP_MEMBERS = False
+
+
 def dump_group_members(label=''):
     """List what is actually IN the Calls and Tel groups, with the URIs.
 
@@ -3451,6 +3519,9 @@ def dump_group_members(label=''):
     so the spelling (bare E.164 for a number, user@host for a SIP peer) can
     be read off directly rather than inferred.
     """
+    if not DUMP_GROUP_MEMBERS:
+        return
+
     for kind, name, reserved in ((CALLS_GROUP_KIND, CALLS_GROUP_NAME, CALLS_GROUP_ID),
                                  (TEL_GROUP_KIND, TEL_GROUP_NAME, None)):
         try:
@@ -3554,7 +3625,7 @@ def preview_call(source, direction, status, account=None,
                  duration=None, stored_remote_uri=None, stored_local_uri=None):
     """Log what the Calls group work would do for one audio call.
 
-    source      'live' or 'server-history'
+    source      'live' or 'cdr'
     direction   'incoming' / 'outgoing'
     status      'completed' / 'missed' / 'failed' / 'cancelled' / ...
     account     the Account, for its pstn.* dialing rules
@@ -3641,7 +3712,14 @@ def preview_call(source, direction, status, account=None,
             pass
 
 
-PREVIEW_STORED_CALL_LIMIT = 5
+PREVIEW_STORED_CALL_LIMIT = 50
+
+# Previews of calls the local history ALREADY holds. Nothing is inserted for
+# them, so every one of these blocks reports a no-op -- 50 of them a sync,
+# against the two or three that describe a real write. Off by default; set it
+# to True to re-measure the spelling question (the `verdict:` lines), which is
+# the only thing these blocks answer that the insert path cannot.
+PREVIEW_STORED_CALLS = False
 
 
 def preview_server_history_call(direction, account, call, local_entry, budget=None):
@@ -3653,6 +3731,8 @@ def preview_server_history_call(direction, account, call, local_entry, budget=No
     only the new ones would answer that for no call at all on an account that
     has been running for a while.
     """
+    if not PREVIEW_STORED_CALLS:
+        return
     try:
         if 'audio' not in (call.get('media') or []):
             return
@@ -3668,12 +3748,10 @@ def preview_server_history_call(direction, account, call, local_entry, budget=No
             printed_duration = '%02d:%02d' % (int(duration) // 60, int(duration) % 60)
         except (TypeError, ValueError):
             printed_duration = str(duration)
-        if direction == 'incoming':
-            status = 'completed' if duration > 0 else 'missed'
-        else:
-            status = 'completed' if duration > 0 else 'cancelled/failed'
+        _outcome, status = _server_call_outcome(call, direction, duration,
+                                                call.get('status'))
         row = local_entry[0]
-        preview_call('server-history (already stored)', direction, status,
+        preview_call('cdr (already stored)', direction, status,
                      account=account,
                      local_uri=str(account.id),
                      remote_uri=remote_uri,

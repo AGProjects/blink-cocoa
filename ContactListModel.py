@@ -5424,7 +5424,7 @@ class ContactListModel(CustomListModel):
                     account = None
             ensure_call_contact(notification.data.remote_party, account)
         except Exception as e:
-            BlinkLogger().log_error('[calls-group] cannot file the caller: %s' % e)
+            BlinkLogger().log_error('[cdr] cannot file the caller: %s' % e)
 
         # And note when they were last on a call, so the group reorders as
         # calls happen rather than only at the next restart. In-memory only.
@@ -5438,7 +5438,7 @@ class ContactListModel(CustomListModel):
             # re-sorts the Calls group as well as Messages.
             manager._postConversationOrderChanged(None)
         except Exception as e:
-            BlinkLogger().log_error('[calls-group] cannot note the call time: %s' % e)
+            BlinkLogger().log_error('[cdr] cannot note the call time: %s' % e)
 
         settings = SIPSimpleSettings()
         if notification.data.direction == 'incoming':
