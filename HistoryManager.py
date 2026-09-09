@@ -45,7 +45,7 @@ from BlinkLogger import BlinkLogger
 from resources import ApplicationData
 from util import allocate_autorelease_pool, format_identity_to_string, sipuri_components_from_string, run_in_gui_thread
 # Calls group preview (end of this file)
-from util import canonical_pstn_uri, pstn_e164, is_conference_uri, sip_prefix_pattern
+from util import canonical_pstn_uri, pstn_e164, is_conference_uri, sip_prefix_pattern, same_phone_number
 
 from dateutil.parser._parser import ParserError as DateParserError
 import dateutil.parser
@@ -4303,6 +4303,11 @@ def echoed_name_replacement(contact):
     strip and matches nothing. 'Nissan Rustman' is safe by construction, and so
     is any name that merely contains a number.
 
+    A name that is the number in a different spelling ('0034913336701' on a
+    contact addressed '+34913336701') is matched too, by phone-number value
+    rather than by string, but only when the address is genuinely a PSTN number
+    -- see the comment on that block.
+
     A room is named by its room number, the way the correctly-filed rooms here
     already are. Returns None when there is nothing to change.
     """
@@ -4339,6 +4344,26 @@ def echoed_name_replacement(contact):
     # The name IS one of the addresses. Only a room changes here: its number.
     if lowered_name in lowered:
         return replacement(lowered[lowered_name])
+
+    # The name is the number in ANOTHER SPELLING: '0034913336701' against the
+    # address '+34913336701'. String equality against the address list cannot
+    # see that, and the '@' test below throws it out before anything else looks
+    # at it, so a name like this survived every pass -- and this client kept
+    # republishing the wire form into the shared document, where the other
+    # clients adopted it, repaired it, and had it pushed back. That is the loop.
+    #
+    # Restricted to addresses that really ARE phone numbers. pstn_e164 returns
+    # None for everything else, extensions included, and the restriction is
+    # load-bearing rather than defensive: without it a contact legitimately
+    # NAMED '1233' at 1233@sylk.link matches its own address as a "number" and
+    # gets renamed to '1233@sylk.link', trading a readable name for a raw
+    # address. A name has to be no worse after this function than before it.
+    if any(char.isdigit() for char in lowered_name):
+        for address in lowered.values():
+            if not pstn_e164(address):
+                continue
+            if same_phone_number(lowered_name, address):
+                return replacement(address)
 
     # Otherwise the name only counts as an address if it LOOKS like one. An '@'
     # is the whole test: a real name has none, so 'Nissan Rustman' and 'Mama'
