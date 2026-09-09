@@ -158,6 +158,7 @@ from ContactCell import ContactCell  # this is used from the UI
 from ContactListModel import presence_status_for_contact, BlinkContact, BlinkBlockedPresenceContact, BonjourBlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup, AllContactsBlinkGroupBlinkPresenceContact
 from ContactListModel import BlinkPendingWatcher, LdapSearchResultContact, HistoryBlinkContact, VoicemailBlinkContact, SearchResultContact, SystemAddressBookBlinkContact, Avatar
 from ContactListModel import DefaultUserAvatar, DefaultMultiUserAvatar, ICON_SIZE, HistoryBlinkGroup, MissedCallsBlinkGroup, IncomingCallsBlinkGroup, OutgoingCallsBlinkGroup, OnlineGroup
+from ContactListModel import bonjour_offline_uri
 from MediaStream import STREAM_CONNECTED, STREAM_RINGING, STREAM_PROPOSING
 from EnrollmentController import EnrollmentController
 from FileTransferWindowController import openFileTransferSelectionDialog, FileTransferWindowController
@@ -588,6 +589,7 @@ class ContactWindowController(NSWindowController):
         nc.add_observer(self, name="AddressbookGroupWasActivated")
         nc.add_observer(self, name="AddressbookGroupWasDeleted")
         nc.add_observer(self, name="AddressbookGroupDidChange")
+        nc.add_observer(self, name="BonjourAccountDidAddNeighbour")
         nc.add_observer(self, name="BonjourGroupWasActivated")
         nc.add_observer(self, name="BonjourGroupWasDeactivated")
         nc.add_observer(self, name="VirtualGroupWasActivated")
@@ -4737,10 +4739,11 @@ class ContactWindowController(NSWindowController):
                 try:
                     contact = next((contact for contact in self.model.bonjour_group.contacts if contact.id == target))
                 except StopIteration:
-                    new_target = 'sip:' + ''.join(random.sample(string.ascii_letters+string.digits, 8)) + '@127.0.0.1:5060'
-                    _uri = SIPURI.parse(new_target)
+                    # Addressed by the instance id, never by the ephemeral
+                    # sip:user@host:port the neighbour last answered on.
+                    _uri = bonjour_offline_uri(target)
                     selected_contact = BonjourBlinkContact(_uri, None, target, name=display_name)
-                    target = new_target
+                    target = str(_uri)
                 else:
                     account = BonjourAccount()
                     display_name = contact.name
@@ -4945,8 +4948,8 @@ class ContactWindowController(NSWindowController):
 
     @objc.python_method
     @run_in_gui_thread
-    def open_last_sms_conversations(self, conversations):
-        if SMSWindowManager.SMSWindowManager().raiseLastWindowFront():
+    def open_last_sms_conversations(self, conversations, raise_window=True):
+        if raise_window and SMSWindowManager.SMSWindowManager().raiseLastWindowFront():
             return
 
         for conversation in conversations:
@@ -4974,15 +4977,23 @@ class ContactWindowController(NSWindowController):
                 # person. The manufactured one carried a loopback address
                 # that went on to appear in the conversation header and in
                 # the history query as though it were somewhere real.
-                found = self.model.getBonjourContactMatchingDeviceId(instance_id)
-                if found is not None:
-                    selected_contact = found
-                    display_name = found.name
-                    target_uri = SIPURI.parse(str(found.uri))
-                else:
-                    new_target = 'sip:' + ''.join(random.sample(string.ascii_letters+string.digits, 8)) + '@127.0.0.1:5060'
-                    target_uri = SIPURI.parse(new_target)
-                    selected_contact = BonjourBlinkContact(target_uri, None, instance_id, name=display_name)
+                # ONLINE only. A Bonjour neighbour who is not on the network
+                # has no address to retry against -- the conversation would sit
+                # there resolving a route that cannot exist, logging "not
+                # found / is offline" on every heartbeat, for as long as the
+                # application runs. Retrying is not a thing to attempt at
+                # startup and hope for; it is a thing to do WHEN THE NEIGHBOUR
+                # COMES BACK, which _NH_BonjourAccountDidAddNeighbour below
+                # does with the same unsent messages.
+                found = self.model.getBonjourContactMatchingDeviceId(instance_id, online_only=True)
+                if found is None:
+                    BlinkLogger().log_info('Not reopening the conversation with Bonjour neighbour %s: '
+                                           'it is not on the network -- its unsent messages wait '
+                                           'until it comes back' % instance_id)
+                    continue
+                selected_contact = found
+                display_name = found.name
+                target_uri = SIPURI.parse(str(found.uri))
 
             # viewerForTarget, not getWindow: this runs ten seconds after
             # launch, unasked, and getWindow puts the conversation on screen.
@@ -7591,6 +7602,39 @@ class ContactWindowController(NSWindowController):
                 account.ldap.dn = "ou=addressbook, dc=sip2sip, dc=info"
                 account.ldap.enabled = True
                 account.save()
+
+    @objc.python_method
+    def _NH_BonjourAccountDidAddNeighbour(self, notification):
+        """A neighbour is back: now the messages we owe them can be retried.
+
+        This is the other half of the startup skip. Reopening at launch for
+        somebody who is not on the network achieves nothing except a route
+        lookup that fails for the life of the process; reopening here happens
+        exactly once, when there is somewhere for the messages to go.
+        """
+        record = getattr(notification.data, 'record', None)
+        device_id = getattr(record, 'id', None)
+        if not device_id:
+            return
+        self.retry_unsent_bonjour_messages(device_id)
+
+    @objc.python_method
+    @run_in_green_thread
+    def retry_unsent_bonjour_messages(self, device_id):
+        try:
+            conversations = [conversation for conversation in SessionHistory().get_last_unsent_messages()
+                             if str(conversation.get('remote_uri') or '') == device_id]
+        except Exception as e:
+            BlinkLogger().log_error('Cannot look for unsent messages to Bonjour neighbour %s: %s'
+                                    % (device_id, e))
+            return
+        if not conversations:
+            return
+        BlinkLogger().log_info('Bonjour neighbour %s is back: reopening %d conversation(s) with '
+                               'unsent messages' % (device_id, len(conversations)))
+        # raise_window=False: the neighbour appearing is not the user asking to
+        # look at the conversation.
+        self.open_last_sms_conversations(conversations, raise_window=False)
 
     @objc.python_method
     def _NH_BonjourGroupWasActivated(self, notification):

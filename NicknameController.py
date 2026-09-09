@@ -57,6 +57,16 @@ class BonjourNickname(NicknameController):
 
     def runModal(self, nickname=''):
         try:
+            # The nib is the conference one, so its title bar says "Conference
+            # Nickname" -- which is what this panel showed while asking for a
+            # neighbour's name. The caption below was reworded and the title was
+            # not; both belong to the borrowed window.
+            if self.window is not None:
+                self.window.setTitle_(NSLocalizedString("Edit Name", "Window title"))
+        except Exception:
+            pass                        # a title that will not set is not
+                                        # a reason to refuse the rename
+        try:
             if self.caption is not None:
                 self.caption.setStringValue_(
                     NSLocalizedString("Name for this Bonjour neighbour:", "Label"))

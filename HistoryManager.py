@@ -540,38 +540,19 @@ MESSAGE_MEDIA_TYPES = ('chat', 'sms')
 # 'audio' covers video calls too: every logger writes the chat row as 'audio'
 # whatever the streams were. 'video-recording' is listed by the History
 # Viewer's filter but nothing writes it today.
-CONVERSATION_MEDIA_TYPES = MESSAGE_MEDIA_TYPES + ('audio', 'missed-call', 'audio-recording')
+# 'missed-call' is not written any more -- it was an outcome in a column that
+# means media -- but it stays in this READ list so calls stored before the
+# change keep appearing in their conversations.
+CONVERSATION_MEDIA_TYPES = MESSAGE_MEDIA_TYPES + ('audio', 'video', 'audio-recording',
+                                                  'missed-call')
 
 
-# The CDR gives a failure as a bare SIP response code. A three-digit number on
-# its own in a chat bubble says nothing, so it is shown the way the live path
-# already shows one -- "Request Timeout (408)" -- for the codes a call actually
-# ends on. Anything else is printed as given rather than guessed at.
-_SIP_STATUS_PHRASES = {
-    '400': 'Bad Request',        '403': 'Forbidden',
-    '404': 'Not Found',          '406': 'Not Acceptable',
-    '407': 'Proxy Authentication Required',
-    '408': 'Request Timeout',    '410': 'Gone',
-    '415': 'Unsupported Media Type',
-    '480': 'Temporarily Unavailable',
-    '481': 'Call Does Not Exist', '484': 'Address Incomplete',
-    '486': 'Busy Here',          '487': 'Request Terminated',
-    '488': 'Not Acceptable Here',
-    '500': 'Server Internal Error', '502': 'Bad Gateway',
-    '503': 'Service Unavailable', '504': 'Server Time-out',
-    '600': 'Busy Everywhere',    '603': 'Decline',
-    '604': 'Does Not Exist Anywhere',
-    '606': 'Not Acceptable',
-}
-
-
-def _sip_status_phrase(status):
-    """A CDR status code as something a person can read."""
-    status = str(status or '').strip()
-    if not status:
-        return 'unknown'
-    phrase = _SIP_STATUS_PHRASES.get(status)
-    return '%s (%s)' % (phrase, status) if phrase else status
+# Both live here now: the renderer needs them and must not import this
+# module. _sip_status_phrase stays as the local spelling its callers use.
+from MessageHost import SIP_STATUS_PHRASES as _SIP_STATUS_PHRASES
+from MessageHost import sip_status_phrase as _sip_status_phrase
+from MessageHost import CALL_CONTENT_TYPE, call_record, call_summary, merge_call_records
+from MessageHost import build_call_record, dominant_media, call_was_missed
 
 
 # The server's `outcome` mapped onto the status vocabulary the sessions
@@ -805,7 +786,7 @@ NOT_DELETED_SQL = "(deleted is null or deleted = 0)"
 
 
 class ChatHistory(object, metaclass=Singleton):
-    __version__ = 17
+    __version__ = 20
 
     def __init__(self):
         path = ApplicationData.get('history')
@@ -1082,6 +1063,24 @@ class ChatHistory(object, metaclass=Singleton):
             # "Reason: delivered". Same story: a body nobody could see.
             self._fix_failed_call_reason()
 
+        if next_upgrade_version < 18:
+            # One contact's calls filed under up to four spellings of the
+            # same number, so a conversation showed some of them and the
+            # rest went missing.
+            self._fix_call_uri_spelling()
+
+        if next_upgrade_version < 19:
+            # media_type held an outcome ('missed-call') on some rows and a
+            # hardcoded 'audio' on the rest, so no video call in the history
+            # was recorded as one.
+            self._fix_call_media_type()
+
+        if next_upgrade_version < 20:
+            # Calls were paragraphs of generated HTML keyed by a throwaway
+            # uuid. Turn them into records keyed by the call id, so a call
+            # known twice is one row.
+            self._fix_call_records()
+
         TableVersions().set_table_version(ChatMessage.sqlmeta.table, self.__version__)
 
     def _backfill_categories(self):
@@ -1334,6 +1333,48 @@ class ChatHistory(object, metaclass=Singleton):
                 category = classify_category(content_type, body, related_action, metadata)
             except Exception as e:
                 BlinkLogger().log_error('Cannot classify message %s: %s' % (msgid, e))
+
+        # A call already known to this conversation. The message id IS the
+        # call id now, so the unique index would catch a second copy -- but
+        # catching it only refreshes the status, and the two copies of a call
+        # are not the same record: the live path knows the encryption and the
+        # streams that were negotiated, the server knows how long the call
+        # actually ran and how it really ended. Merge them instead.
+        if content_type == CALL_CONTENT_TYPE and call_id:
+            try:
+                existing = ChatMessage.selectBy(local_uri=local_uri, sip_callid=call_id)
+                row = existing.getOne(None)
+            except Exception as e:
+                BlinkLogger().log_error('Cannot look up call %s: %s' % (call_id, e))
+                row = None
+            if row is not None:
+                merged = merge_call_records(call_record(row.body, row.metadata),
+                                            call_record(body, metadata))
+                if merged is not None:
+                    summary = call_summary(merged)
+                    row.metadata = json.dumps(merged)
+                    if summary:
+                        row.body = summary
+                    # From the merged record, not from what the caller was
+                    # holding: the point of the merge is that the other view
+                    # knew more. A call this device recorded as missed and
+                    # another device then answered stops being missed here
+                    # too -- including its unread badge, which is the whole
+                    # of "no missed call any more".
+                    row.media_type = dominant_media(
+                        (merged.get('local') or {}).get('streams') or merged.get('media'))
+                    row.direction = merged.get('direction') or direction
+                    if not call_was_missed(merged):
+                        row.read = 1
+                    if status:
+                        row.status = status
+                    NotificationCenter().post_notification(
+                        'MessageSaved',
+                        sender=self,
+                        data=NotificationData(msgid=row.msgid, entry=row, success=True))
+                    BlinkLogger().log_debug('Merged call %s into message %s'
+                                            % (call_id, row.msgid))
+                    return True
 
         try:
             timestamp = dateutil.parser.isoparse(cpim_timestamp)
@@ -1604,6 +1645,283 @@ class ChatHistory(object, metaclass=Singleton):
                     "an 'audio-recording' row carries no direction to read" % left[0][0])
         except Exception:
             pass
+
+    # The four statuses a session row stores, as the record's vocabulary.
+    _SESSION_STATUS_OUTCOMES = {'completed': 'completed', 'missed': 'missed',
+                                'cancelled': 'cancelled', 'failed': 'failed'}
+
+    def _fix_call_records(self):
+        """Turn stored calls into call detail records.
+
+        Caller is in the db thread. Every call before this was a paragraph of
+        generated HTML under a uuid: nothing about it could be read without
+        parsing prose, and two copies of one call had nothing to collide on.
+
+        The record is built from the SESSION row, not from the body. The body
+        is a rendering, and one of its sentences is known to be false -- the
+        server sync wrote "The call has been answered elsewhere" on every
+        completed incoming call it imported, unconditionally. Reading the
+        session row instead drops that claim rather than casting it in JSON,
+        which is why this corrects those rows instead of preserving them.
+        `source` is 'migrated': it was never observed by this build, so
+        anything authoritative may still correct it.
+
+        A row whose session row is gone keeps its HTML -- there is nothing to
+        rebuild it from, and the read filters still render it.
+        """
+        started = time.time()
+        try:
+            rows = list(self.db.queryAll(
+                "select c.id, c.msgid, c.sip_callid, c.local_uri, c.remote_uri,"
+                "       c.direction, c.media_type, c.time,"
+                "       s.sip_callid, s.sip_fromtag, s.sip_totag, s.direction,"
+                "       s.status, s.failure_reason, s.start_time, s.end_time,"
+                "       s.duration, s.media_types"
+                "  from chat_messages c"
+                "  join sessions s"
+                "    on (c.sip_callid <> '' and s.sip_callid = c.sip_callid)"
+                "    or (c.sip_callid = '' and s.session_id = c.msgid)"
+                " where c.content_type = 'html'"
+                "   and c.media_type in ('audio', 'video', 'missed-call')"
+                "   and (c.deleted is null or c.deleted = 0)"
+                "   and (s.media_types like '%audio%' or s.media_types like '%video%')"
+                " order by c.time"))
+        except Exception as e:
+            BlinkLogger().log_error("Cannot read stored calls to convert: %s" % e)
+            return
+
+        converted = collapsed = 0
+        seen = {}
+
+        for row in rows:
+            (row_id, msgid, chat_callid, local_uri, remote_uri, chat_direction,
+             media_type, _time, session_callid, from_tag, to_tag, session_direction,
+             status, failure_reason, start_time, end_time, duration, media_types) = row
+
+            call_id = (chat_callid or '').strip() or (session_callid or '').strip()
+            outcome = self._SESSION_STATUS_OUTCOMES.get(str(status or '').strip())
+            if not call_id or outcome is None:
+                continue
+
+            # The unique index is (msgid, local_uri, remote_uri), so the second
+            # row of a call that was logged twice cannot take the same key.
+            # Marked deleted rather than removed: the row is the evidence that
+            # it happened twice, and every read path already excludes it.
+            key = (call_id, local_uri, remote_uri)
+            if key in seen:
+                try:
+                    self.db.queryAll(
+                        "update chat_messages set deleted = 1, deleted_time = %d"
+                        " where id = %d" % (int(time.time()), row_id))
+                    collapsed += 1
+                except Exception as e:
+                    BlinkLogger().log_error("Cannot collapse duplicate call %s: %s"
+                                            % (call_id, e))
+                continue
+            seen[key] = row_id
+
+            reason = str(failure_reason or '').strip()
+            record = build_call_record(
+                call_id,
+                str(session_direction or chat_direction or 'incoming'),
+                outcome,
+                duration=duration or 0,
+                # failure_reason holds a bare SIP code on rows the server sync
+                # wrote and a rendered phrase on the rest. Neither is worth
+                # guessing at, so each goes in the field it fits.
+                status=reason if reason.isdigit() else None,
+                reason=None if reason.isdigit() else (reason or None),
+                remote_party=remote_uri,
+                start_time=start_time, stop_time=end_time,
+                media=[part.strip() for part in (media_types or '').split(',') if part.strip()],
+                from_tag=from_tag or '', to_tag=to_tag or '',
+                source='migrated')
+
+            body = call_summary(record) or 'Call'
+            try:
+                self.db.queryAll(
+                    "update chat_messages set msgid = %s, sip_callid = %s,"
+                    " content_type = %s, metadata = %s, body = %s,"
+                    " media_type = %s where id = %d"
+                    % (ChatMessage.sqlrepr(call_id), ChatMessage.sqlrepr(call_id),
+                       ChatMessage.sqlrepr(CALL_CONTENT_TYPE),
+                       ChatMessage.sqlrepr(json.dumps(record)),
+                       ChatMessage.sqlrepr(body),
+                       ChatMessage.sqlrepr(dominant_media(media_types)), row_id))
+                converted += 1
+            except Exception as e:
+                BlinkLogger().log_error("Cannot convert call %s to a record: %s"
+                                        % (call_id, e))
+
+        if converted or collapsed:
+            BlinkLogger().log_info(
+                "Converted %d stored call(s) to call detail records in %.2fs"
+                "%s" % (converted, time.time() - started,
+                        ", collapsed %d duplicate(s)" % collapsed if collapsed else ""))
+        else:
+            BlinkLogger().log_info("No stored calls to convert")
+
+        try:
+            left = list(self.db.queryAll(
+                "select count(*) from chat_messages where content_type = 'html'"
+                " and media_type in ('audio', 'video', 'missed-call')"
+                " and (deleted is null or deleted = 0)"))
+            if left and left[0][0]:
+                BlinkLogger().log_info(
+                    "%d stored call(s) keep their HTML: no session row to rebuild "
+                    "a record from" % left[0][0])
+        except Exception:
+            pass
+
+    def _fix_call_media_type(self):
+        """Put the negotiated media back in the media column.
+
+        Caller is in the db thread. Every call was written as 'audio', or as
+        'missed-call' when it was not answered -- an outcome in a column that
+        means media. So a video call is indistinguishable from an audio one
+        in the history, and "was it missed" was answerable only by matching a
+        string in the wrong column.
+
+        The truth is in the session row, whose media_types is the negotiated
+        list, reached by the two ids that pair the tables: sip_callid where
+        the chat row has one, chat_messages.msgid = sessions.session_id where
+        it does not. A row whose session is gone keeps what it has rather
+        than being guessed at.
+
+        Idempotent: a row already holding its session's dominant media
+        produces no update.
+        """
+        started = time.time()
+        try:
+            rows = list(self.db.queryAll(
+                "select c.id, c.media_type, s.media_types"
+                "  from chat_messages c"
+                "  join sessions s"
+                "    on (c.sip_callid <> '' and s.sip_callid = c.sip_callid)"
+                "    or (c.sip_callid = '' and s.session_id = c.msgid)"
+                " where c.media_type in ('audio', 'video', 'missed-call')"
+                # Only a CALL session may retag a call row. A file transfer
+                # sent during a call carries the same SIP Call-ID, so without
+                # this the join reaches the transfer's session row and files
+                # the call itself as a file transfer.
+                "   and (s.media_types like '%audio%' or s.media_types like '%video%')"))
+        except Exception as e:
+            BlinkLogger().log_error("Cannot read call media types: %s" % e)
+            return
+
+        changed = 0
+        for row_id, stored, media_types in rows:
+            wanted = dominant_media(media_types)
+            # A call is audio or video. Anything else means the join found a
+            # session that is not this call's, and the row keeps what it has.
+            if wanted not in ('audio', 'video') or wanted == stored:
+                continue
+            try:
+                self.db.queryAll("update chat_messages set media_type = %s where id = %d"
+                                 % (ChatMessage.sqlrepr(wanted), row_id))
+            except Exception as e:
+                BlinkLogger().log_error("Cannot set media_type on row %s: %s" % (row_id, e))
+                continue
+            changed += 1
+
+        if changed:
+            BlinkLogger().log_info("Corrected the media type of %d call(s) in %.2fs"
+                                   % (changed, time.time() - started))
+        else:
+            BlinkLogger().log_info("No call media types to correct")
+
+        # Rows whose session row is gone cannot be recovered, and a stale
+        # 'missed-call' among them is why the read filters still tolerate it.
+        try:
+            left = list(self.db.queryAll(
+                "select count(*) from chat_messages where media_type = 'missed-call'"))
+            if left and left[0][0]:
+                BlinkLogger().log_info(
+                    "%d call(s) keep media_type 'missed-call': no session row to "
+                    "read the negotiated media from" % left[0][0])
+        except Exception:
+            pass
+
+    def _fix_call_uri_spelling(self):
+        """One spelling per party on stored call rows.
+
+        Caller is in the db thread. The live path stored the remote party as
+        dialled and the server-history sync stored what the CDR reported, so
+        the same number arrived as '+318008185@sylk.link',
+        '00318008185@sylk.link', '0707980022@sip1.budgetphone.nl' and a bare
+        '0031646630425'. A conversation is queried by the contact's URIs, so
+        a call filed under a spelling the contact does not own is in the
+        database and absent from the timeline.
+
+        canonical_pstn_uri is the same function the write path now uses, so
+        this converges old rows on what new ones get. Non-PSTN aors come back
+        lowercased and unchanged; Bonjour rows are skipped outright -- their
+        remote_uri is a device id or NULL, and there is nothing to canonicalise.
+
+        Idempotent: a row already canonical produces no update, which is what
+        makes re-running it free.
+        """
+        started = time.time()
+
+        accounts = {}
+        try:
+            for account in AccountManager().get_accounts():
+                accounts[str(account.id)] = account
+        except Exception as e:
+            BlinkLogger().log_error("Cannot read accounts to canonicalise call URIs: %s" % e)
+            return
+
+        # sessions.media_types is a comma-joined LIST -- 'audio, video' is a
+        # video call and must be included -- while chat_messages.media_type
+        # is one value and carries 'missed-call' as its own type. Two
+        # predicates, not one with a suffix.
+        tables = (('chat_messages', "media_type in ('audio', 'video', 'missed-call')"),
+                  ('sessions', "media_types like '%audio%'"))
+
+        for table, media_predicate in tables:
+            try:
+                rows = list(self.db.queryAll(
+                    "select id, local_uri, remote_uri from %s"
+                    " where %s"
+                    "   and local_uri <> '%s'"
+                    "   and remote_uri is not null" % (
+                        table, media_predicate, BONJOUR_LOCAL_URI)))
+            except Exception as e:
+                BlinkLogger().log_error("Cannot read %s to canonicalise call URIs: %s" % (table, e))
+                continue
+
+            changed = 0
+            for row_id, local_uri, remote_uri in rows:
+                account = accounts.get(str(local_uri or ''))
+                try:
+                    new_local = canonical_pstn_uri(local_uri, account)
+                    new_remote = canonical_pstn_uri(remote_uri, account)
+                except Exception as e:
+                    BlinkLogger().log_error("Cannot canonicalise %s/%s: %s"
+                                            % (local_uri, remote_uri, e))
+                    continue
+                if new_local == local_uri and new_remote == remote_uri:
+                    continue
+                try:
+                    self.db.queryAll(
+                        "update %s set local_uri = %s, remote_uri = %s where id = %d"
+                        % (table, ChatMessage.sqlrepr(new_local),
+                           ChatMessage.sqlrepr(new_remote), row_id))
+                except Exception as e:
+                    # A canonical spelling that collides with a row already
+                    # holding it. The unique index is over the row's own
+                    # uuid as well, so this should not happen; if it does,
+                    # the row is left as it was rather than lost.
+                    BlinkLogger().log_error("Cannot canonicalise %s row %s (%s -> %s): %s"
+                                            % (table, row_id, remote_uri, new_remote, e))
+                    continue
+                changed += 1
+
+            if changed:
+                BlinkLogger().log_info("Canonicalised %d call URI(s) in %s in %.2fs"
+                                       % (changed, table, time.time() - started))
+            else:
+                BlinkLogger().log_info("No call URIs to canonicalise in %s" % table)
 
     @allocate_autorelease_pool
     def _fix_failed_call_reason(self):
@@ -1939,10 +2257,11 @@ class ChatHistory(object, metaclass=Singleton):
                       " and content_type not in ('text/pgp-public-key', 'text/pgp-private-key')"
                       " or content_type in ('application/sylk-file-transfer',"
                       " 'application/vnd.gsma.rcs-ft-http+xml',"
-                      " 'application/sylk-location-sharing')"
+                      " 'application/sylk-location-sharing',"
+                      " 'application/blink-call-detail-record')"
                       " or (content_type = 'html' and media_type in"
-                      " ('audio', 'missed-call', 'audio-recording',"
-                      " 'file-transfer', 'availability')))")
+                      " ('audio', 'video', 'audio-recording',"
+                      " 'file-transfer', 'availability', 'missed-call')))")
 
     @run_in_db_thread
     def _renderable_cutoff(self, local_uri, remote_uri, media_type, after_date, before_date, search_text, count, exclude_related_actions=None, category=None):
@@ -3046,31 +3365,30 @@ class SessionHistoryReplicator(object):
                             # call the same timestamp: the second the history
                             # sync ran. start_time is already UTC here.
                             timestamp = str(ISOTimestamp(start_time))
-                            if success == 'missed':
-                                message = ('<h3>Rejected Incoming Audio Call</h3>' if outcome == 'rejected'
-                                           else '<h3>Voicemail</h3>' if outcome == 'voicemail'
-                                           else '<h3>Missed Incoming Audio Call</h3>')
-                                media_type = 'missed-call'
-                            else:
-                                duration = self.sessionControllersManager.get_printed_duration(start_time, end_time)
-                                message = '<h3>Incoming Audio Call</h3>'
-                                # Was unconditional: every completed incoming
-                                # call claimed it was taken on another device.
-                                if outcome == 'answered_elsewhere':
-                                    message += '<p>The call has been answered elsewhere'
-                                message += '<p>Call duration: %s' % duration
-                                media_type = 'audio'
+                            media_type = dominant_media(media)
+                            record = build_call_record(
+                                call_id, 'incoming', outcome, duration=duration,
+                                status=call.get('status'), remote_party=remote_uri,
+                                display_name=display_name or '',
+                                start_time=start_time, stop_time=end_time,
+                                media=media, from_tag=from_tag, to_tag=to_tag,
+                                proxy_ip=call.get('proxyIP'),
+                                call_timezone=call.get('timezone'),
+                                source='server')
+                            message = call_summary(record) or 'Incoming call'
                             # Read-only Calls group preview -- logs only, writes nothing.
                             # Only reached for calls the local history does not have yet;
                             # the ones it already has are skipped by the guard above.
                             preview_call('cdr', 'incoming', success, account=account,
                                          local_uri=local_uri, remote_uri=remote_uri,
                                          call_id=call_id, history_id=id, media_type=media_type,
-                                         summary=('Missed Incoming Audio Call (%s)' % outcome if media_type == 'missed-call'
-                                                  else 'Incoming Audio Call (%s)' % outcome),
+                                         summary=message,
                                          duration=locals().get('duration'))
-                            self.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, call_id=call_id)
-                            notification_center.post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction=direction, history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True, missed=bool(media_type =='missed-call')))
+                            self.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, call_id=call_id, record=record)
+                            # From the outcome, not from the media column: the
+                            # column says what was negotiated now, and a missed
+                            # video call is still a video call.
+                            notification_center.post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction=direction, history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True, missed=call_was_missed(record)))
 
                         if 'audio' in call['media'] and success == 'missed':
                             elapsed = end_time - start_time
@@ -3169,27 +3487,26 @@ class SessionHistoryReplicator(object):
                             # See the received-call branch above: the call's
                             # own start time, not the moment of the import.
                             timestamp = str(ISOTimestamp(start_time))
-                            media_type = 'audio'
-                            if success == 'failed':
-                                message = ('<h3>Rejected Outgoing Audio Call</h3>' if outcome == 'rejected'
-                                           else '<h3>Failed Outgoing Audio Call</h3>')
-                                message += '<p>Reason: %s' % _sip_status_phrase(sip_status)
-                            elif success == 'cancelled':
-                                message= '<h3>Cancelled Outgoing Audio Call</h3>'
-                            else:
-                                duration = self.sessionControllersManager.get_printed_duration(start_time, end_time)
-                                message= '<h3>Outgoing Audio Call</h3>'
-                                message += '<p>Call duration: %s' % duration
+                            media_type = dominant_media(media)
+                            record = build_call_record(
+                                call_id, 'outgoing', outcome, duration=duration,
+                                status=sip_status, remote_party=remote_uri,
+                                display_name=display_name or '',
+                                start_time=start_time, stop_time=end_time,
+                                media=media, from_tag=from_tag, to_tag=to_tag,
+                                proxy_ip=call.get('proxyIP'),
+                                call_timezone=call.get('timezone'),
+                                source='server')
+                            message = call_summary(record) or 'Outgoing call'
                             # Read-only Calls group preview -- logs only, writes nothing.
                             # NB the true direction is outgoing here; the row itself is written
                             # with direction='incoming', which is a pre-existing oddity.
                             preview_call('cdr', 'outgoing', success, account=account,
                                          local_uri=local_uri, remote_uri=remote_uri,
                                          call_id=call_id, history_id=id, media_type=media_type,
-                                         summary=('Outgoing Audio Call (%s): %s' % (outcome, _sip_status_phrase(sip_status)) if success == 'failed'
-                                                  else 'Outgoing Audio Call (%s)' % outcome),
+                                         summary=message,
                                          duration=locals().get('duration'))
-                            self.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, call_id=call_id)
+                            self.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, call_id=call_id, record=record)
                             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='outgoing', history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True, missed=False))
         except Exception as e:
             BlinkLogger().log_error("Error: %s" % e)
@@ -3333,6 +3650,18 @@ _PREFIX = '[cdr]'
 
 def _log(line):
     BlinkLogger().log_info('%s %s' % (_PREFIX, line))
+
+
+def _log_ab(line):
+    """For a line that CHANGES a contact, not one that merely reports on one.
+
+    Carries the addressbook tag as well as the CDR one, so `grep '[ab]'` shows
+    every write to the shared addressbook whoever made it -- the notify path,
+    the lifecycle, and the normalisation done here. Reading the addressbook's
+    history from the log is otherwise a matter of knowing which subsystem
+    happened to touch it.
+    """
+    BlinkLogger().log_info('%s [ab] %s' % (_PREFIX, line))
 
 
 def _quote(value):
@@ -3994,6 +4323,17 @@ def echoed_name_replacement(contact):
         if is_conference_uri(address):
             room = address.partition('@')[0]
             return room if room and room != name else None
+        # An echoing name is an EMPTY name wearing the address, so this is a
+        # hole, and the macOS Address Book is asked to fill it before the
+        # address is used as a last resort. ensure_call_contact already does
+        # this when it CREATES a contact from a call; a contact that predates
+        # that -- or whose name was left as an old spelling of its own address
+        # -- never got the chance, and stayed a bare number on this client
+        # while the phone showed a person. Filling it here is what makes the
+        # two agree.
+        adopted = _adopt_address_book_name(address)
+        if adopted and adopted != name:
+            return adopted
         return address if address != name else None
 
     # The name IS one of the addresses. Only a room changes here: its number.
@@ -4083,22 +4423,67 @@ def repair_contact_addresses():
             for uri, _current, wanted in moved:
                 uri.uri = wanted
             renamed = echoed_name_replacement(contact)
-            if not moved and not renamed:
+            # Duplicate addresses WITHIN the contact, judged after the rewrites
+            # above -- which is the point: two entries that were different
+            # spellings of one number ('+31646630425@sylk.link' and
+            # '+31646630425') become identical only once both are canonical,
+            # and a pass that deduplicated first would not see them.
+            #
+            # Found in the shared document as four copies of
+            # echo@conference.sip2sip.info on one contact, each with its own id:
+            # four puts, each minting a fresh uri id, each appended instead of
+            # replacing. Chapter 15 says the list is replaced and deduplicated
+            # by URI VALUE for exactly this reason.
+            duplicates = []
+            survivors = {}
+            for uri in list(contact.uris):
+                key = str(uri.uri).strip().lower()
+                if not key:
+                    continue
+                if key in survivors:
+                    duplicates.append((uri, key))
+                else:
+                    survivors[key] = uri
+            if not moved and not renamed and not duplicates:
                 continue
             with manager.transaction():
                 for _uri, current, wanted in moved:
-                    _log('address %s -> %s' % (_quote(current), _quote(wanted)))
+                    _log_ab('address %s -> %s' % (_quote(current), _quote(wanted)))
                 if renamed:
+                    # Say WHERE the name came from. Both outcomes start from the
+                    # same hole -- a name that was only the address -- but one
+                    # ends at a person and the other at a tidier address, and
+                    # only the log can tell them apart afterwards.
+                    _derived = set()
+                    for _u in contact.uris:
+                        _text = str(_u.uri)
+                        _derived.add(_text)
+                        _derived.add(_text.partition('@')[0])
+                    _source = ('the name was the address, not a name'
+                               if renamed in _derived else 'adopted from the address book')
                     contact.name = renamed
-                    _log('name %s -> %s (the name was the address, not a name)'
-                         % (_quote(was), _quote(renamed)))
+                    _log_ab('name %s -> %s (%s)'
+                         % (_quote(was), _quote(renamed), _source))
+                if duplicates:
+                    # The default must survive the cull: it is a reference to
+                    # one of these objects, and dropping the one it points at
+                    # would leave the contact with no default address at all.
+                    default = contact.uris.default
+                    default_id = getattr(default, 'id', None)
+                    for uri, key in duplicates:
+                        if default_id is not None and getattr(uri, 'id', None) == default_id:
+                            contact.uris.default = survivors[key]
+                        contact.uris.remove(uri)
+                        _log_ab('duplicate address %s dropped from %s (kept id %s)'
+                                % (_quote(str(uri.uri)), _quote(str(contact.name)),
+                                   _quote(str(getattr(survivors[key], 'id', '?')))))
                 contact.save()
             repaired += 1
         except Exception as e:
             _log('[!] cannot repair %s: %s' % (_quote(str(getattr(contact, 'name', '?'))), e))
 
     if repaired:
-        _log('repaired %d contact address(es)/name(s)' % repaired)
+        _log_ab('repaired %d contact address(es)/name(s)' % repaired)
 
 
 _kind_groups_filed = [False]
@@ -4311,7 +4696,7 @@ def block_party(uri, name=None, account=None, exclusive=False):
             contact.uris.add(ContactURI(uri=address, type=format_uri_type(uri_type)))
             contact.save()
             _publish_contact_for_groups(contact)
-            _log('created contact %s to block' % _quote(address))
+            _log_ab('created contact %s to block' % _quote(address))
 
         with AddressbookManager().transaction():
             group.contacts.add(contact)
@@ -4479,7 +4864,7 @@ def ensure_call_contact(remote_uri, account=None, xcap_loaded=True):
             joined.append(name)
 
         if created or joined:
-            _log('%s contact %s%s' % ('CREATED' if created else 'FILED',
+            _log_ab('%s contact %s%s' % ('CREATED' if created else 'FILED',
                                       _quote(contact.name),
                                       (' -> ' + ', '.join(joined)) if joined else ''))
         return contact

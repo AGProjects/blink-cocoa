@@ -43,9 +43,9 @@ ID_LIST_CAP = 64                # past this the lists are dropped, truncated set
 # Every device on the account gets the same tick in the same instant, so a
 # fetch is always jittered: without it one edit here becomes a synchronised GET
 # from every device the account owns.
-FETCH_JITTER_MIN = 5.0
-FETCH_JITTER_MAX = 30.0
-FETCH_MIN_INTERVAL = 30.0       # never below FETCH_JITTER_MAX
+FETCH_JITTER_MIN = 2.0
+FETCH_JITTER_MAX = 9.0
+FETCH_MIN_INTERVAL = 15.0       # never below FETCH_JITTER_MAX
 FETCH_FUSE_MAX = 10             # fetches per window before backing off
 FETCH_FUSE_WINDOW = 300.0
 FETCH_BACKOFF = (30.0, 60.0, 120.0, 300.0)

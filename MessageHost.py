@@ -65,6 +65,12 @@ __all__ = ['USE_MESSAGE_PANEL',
            'recording_title', 'peaks_metadata', 'peaks_envelope',
            'PEAKS_ACTION',
            'is_renderable_content_type', 'LOCAL_STATUS_MEDIA_TYPES',
+           'CALL_CONTENT_TYPE', 'call_record', 'call_outcome', 'call_summary',
+           'call_lines', 'CALL_ATTENTION_OUTCOMES', 'call_needs_attention',
+           'build_call_record', 'merge_call_records', 'CALL_RECORD_VERSION',
+           'dominant_media', 'MISSED_CALL_OUTCOMES', 'call_was_missed',
+           'CALL_SOURCE_RANK', 'call_answered_elsewhere', 'this_device_id',
+           'format_call_duration', 'SIP_STATUS_PHRASES', 'sip_status_phrase',
            'file_transfer_envelope',
            'HOST_PROTOCOL', 'missing_host_protocol_methods', 'assert_conforms',
            'pgp_plaintext', 'pgp_plaintext_bytes',
@@ -349,8 +355,58 @@ def reply_metadata(body):
 # media type of their own. Nothing off the network can claim one: a remote
 # message is media_type 'sms' and carries a real MIME type, so a peer cannot
 # reach this branch by setting Content-Type to a bare 'html'.
-LOCAL_STATUS_MEDIA_TYPES = ('audio', 'missed-call', 'audio-recording',
-                            'file-transfer', 'availability')
+# 'missed-call' is NOT a media type -- it is an outcome that was occupying a
+# column meaning media, which is why every video call was recorded as audio
+# and why "was it missed" could only be answered by string-matching. Nothing
+# writes it any more; it stays in the READ lists so rows written before the
+# change keep rendering.
+LOCAL_STATUS_MEDIA_TYPES = ('audio', 'video', 'audio-recording',
+                            'file-transfer', 'availability',
+                            'missed-call')  # legacy, read-only
+
+
+# An incoming call the user did not take. What the unread badge and the
+# Calls group mean by "missed", now that the media column no longer says it.
+# A rejected call counts: it is still an incoming call with no conversation
+# on the end of it, which is how it has always been filed.
+MISSED_CALL_OUTCOMES = ('missed', 'voicemail', 'rejected')
+
+
+def call_was_missed(record):
+    """Whether a call record is one the user did not take."""
+    if not record:
+        return False
+    return (str(record.get('direction') or '') == 'incoming'
+            and call_outcome(record) in MISSED_CALL_OUTCOMES)
+
+
+def dominant_media(streams):
+    """One label for what was negotiated. Video beats audio beats the rest.
+
+    What media_type holds. A call with audio and video is a video call --
+    the record keeps the full list, the column is the coarse filter, and a
+    filter that has to understand 'audio, video' as well as 'audio,video'
+    is a filter that will get one of them wrong.
+    """
+    if isinstance(streams, (str, bytes)):
+        text = streams.decode() if isinstance(streams, bytes) else streams
+        names = [part.strip() for part in text.split(',')]
+    else:
+        names = [str(part).strip() for part in (streams or ())]
+    names = [name for name in names if name]
+
+    for preferred in ('video', 'audio'):
+        if preferred in names:
+            return preferred
+    # Unknown or empty: audio is what every client already assumes a call
+    # with no media information to be.
+    return names[0] if names else 'audio'
+
+# A call, as a structured record rather than a paragraph of generated HTML.
+# See docs/CALL-DETAIL-RECORD.md. The payload rides in the row's `metadata`
+# column and on the wire beside a plain-text body, the same split
+# application/sylk-location-sharing v2 uses.
+CALL_CONTENT_TYPE = 'application/blink-call-detail-record'
 
 
 def is_renderable_content_type(content_type, location_types=(), media_type=None):
@@ -378,10 +434,375 @@ def is_renderable_content_type(content_type, location_types=(), media_type=None)
         return True
     if content_type in FILE_TRANSFER_CONTENT_TYPES:
         return True
+    if content_type == CALL_CONTENT_TYPE:
+        return True
     if content_type == 'html' and media_type in LOCAL_STATUS_MEDIA_TYPES:
         return True
     # 'text' is the legacy spelling of text/plain in older rows.
     return content_type == 'text' or content_type.startswith('text/')
+
+
+# The CDR gives a failure as a bare SIP response code. A three-digit number on
+# its own in a chat bubble says nothing, so it is shown the way the live path
+# already shows one -- "Request Timeout (408)" -- for the codes a call actually
+# ends on. Anything else is printed as given rather than guessed at.
+SIP_STATUS_PHRASES = {
+    '400': 'Bad Request',        '403': 'Forbidden',
+    '404': 'Not Found',          '406': 'Not Acceptable',
+    '407': 'Proxy Authentication Required',
+    '408': 'Request Timeout',    '410': 'Gone',
+    '415': 'Unsupported Media Type',
+    '480': 'Temporarily Unavailable',
+    '481': 'Call Does Not Exist', '484': 'Address Incomplete',
+    '486': 'Busy Here',          '487': 'Request Terminated',
+    '488': 'Not Acceptable Here',
+    '500': 'Server Internal Error', '502': 'Bad Gateway',
+    '503': 'Service Unavailable', '504': 'Server Time-out',
+    '600': 'Busy Everywhere',    '603': 'Decline',
+    '604': 'Does Not Exist Anywhere',
+    '606': 'Not Acceptable',
+}
+
+
+def sip_status_phrase(status):
+    """A CDR status code as something a person can read."""
+    status = str(status or '').strip()
+    if not status:
+        return 'unknown'
+    phrase = SIP_STATUS_PHRASES.get(status)
+    return '%s (%s)' % (phrase, status) if phrase else status
+
+
+CALL_RECORD_VERSION = 1
+
+
+def _call_time(value):
+    """A record timestamp as ISO-8601 UTC, from a datetime or a string.
+
+    ALWAYS qualified with an offset. Every producer here works in UTC --
+    local_to_utc() and the pytz-localised sync times both -- but
+    local_to_utc returns a NAIVE datetime, so isoformat() alone yields
+    "2026-09-08T12:00:00" with nothing to say which zone that is. A reader
+    then takes it for its own local time: moment() on the phone did exactly
+    that, and showed every call at its UTC wall clock. The record crosses
+    devices in different zones, so an unqualified instant is not an instant.
+    """
+    if value is None:
+        return None
+
+    if hasattr(value, 'isoformat'):
+        if getattr(value, 'tzinfo', None) is not None:
+            return value.isoformat()
+        return value.isoformat() + '+00:00'
+
+    text = str(value).strip()
+    if not text:
+        return None
+    # A datetime that came back out of the database as a string, in the
+    # shape SQLObject stores: naive, and UTC by the same argument.
+    if text.endswith('Z') or '+' in text[10:] or text[10:].count('-') > 0:
+        return text
+    return text.replace(' ', 'T', 1) + '+00:00'
+
+
+def build_call_record(session_id, direction, outcome, duration=0, status=None,
+                      reason=None, remote_party='', display_name='',
+                      start_time=None, stop_time=None, media=None,
+                      from_tag='', to_tag='', proxy_ip=None, call_timezone=None,
+                      source='local', local=None, answered_by=None):
+    """A call detail record, per docs/CALL-DETAIL-RECORD.md section 4.2.
+
+    Every producer builds one through here so that a call observed locally
+    and the same call replayed from the server history are the same shape
+    and can be merged. Empty optional fields are left out rather than
+    written as null: a record says what is known about the call, and the
+    reader already treats a missing field as unknown.
+    """
+    record = {
+        'version': CALL_RECORD_VERSION,
+        'sessionId': str(session_id or ''),
+        'direction': str(direction or ''),
+        'outcome': str(outcome or ''),
+        'duration': int(duration or 0),
+        'remoteParty': str(remote_party or ''),
+        'source': str(source or 'local'),
+    }
+    optional = {
+        'displayName': display_name,
+        'status': None if status is None else str(status),
+        'reason': reason,
+        'startTime': _call_time(start_time),
+        'stopTime': _call_time(stop_time),
+        'timezone': call_timezone,
+        'fromTag': from_tag,
+        'toTag': to_tag,
+        'proxyIP': proxy_ip,
+        'answeredBy': answered_by,
+    }
+    for key, value in optional.items():
+        if value:
+            record[key] = value
+    if media:
+        record['media'] = list(media)
+    if local:
+        record['local'] = local
+    return record
+
+
+# Which fields a better-informed view of the call may correct. `local` is
+# not among them: the proxy cannot produce it and another device's copy is
+# not ours, so it is never overwritten by anyone.
+_AUTHORITATIVE_FIELDS = ('duration', 'stopTime', 'status', 'reason', 'proxyIP',
+                         'toTag', 'outcome', 'answeredBy')
+
+# How much of the call each kind of record actually saw, so that a record
+# cannot undo one that saw more. A device that only heard the phone ring
+# knows less than the device that answered, which knows less than the proxy
+# that carried the whole thing; a row rebuilt from old HTML knows least.
+CALL_SOURCE_RANK = {'migrated': 0, 'local': 1, 'device': 2, 'server': 3}
+
+
+def _rank(record):
+    return CALL_SOURCE_RANK.get(str((record or {}).get('source') or 'local'), 1)
+
+
+def merge_call_records(stored, incoming):
+    """One record from two views of the same call.
+
+    Ranked by how much of the call each view saw. A record may correct the
+    authoritative fields only from equal or higher rank, so the device that
+    answered can turn this device's missed row into an answered one and the
+    missed row can never turn it back. Two views of equal rank update
+    normally, which is what lets a second local observation correct its own
+    earlier one.
+
+    `local` is never erased -- it is the encryption and the streams this
+    device negotiated, which no other party can produce -- and the merged
+    record keeps the higher of the two ranks, so a row that has heard from
+    the server does not fall back when something else arrives.
+    """
+    if not stored:
+        return incoming
+    if not incoming:
+        return stored
+
+    merged = dict(stored)
+    stored_rank, incoming_rank = _rank(stored), _rank(incoming)
+    protect = incoming_rank < stored_rank
+
+    for key, value in incoming.items():
+        if key == 'source':
+            continue
+        if key == 'local':
+            if value:
+                merged['local'] = value
+            continue
+        if value in (None, '', [], {}):
+            continue
+        if protect and key in _AUTHORITATIVE_FIELDS:
+            continue
+        merged[key] = value
+
+    if incoming_rank >= stored_rank:
+        merged['source'] = incoming.get('source') or merged.get('source')
+    return merged
+
+
+def this_device_id():
+    """This device's id, in the one spelling records are compared in.
+
+    Bare, never the "urn:uuid:" URN the setting holds -- a device id that
+    appears in two spellings is two devices to anything reading records
+    across them. Returns None when it cannot be read, which makes every
+    call read as an ordinary one rather than as answered elsewhere.
+    """
+    try:
+        from sipsimple.configuration.settings import SIPSimpleSettings
+        from SMSWindowManager import bare_instance_id
+        return bare_instance_id(SIPSimpleSettings().instance_id) or None
+    except Exception:
+        return None
+
+
+def call_answered_elsewhere(record, device_id=None):
+    """Whether this call was answered on one of the user's OTHER devices.
+
+    A record is one fact about the call, the same on every device; which
+    device is reading it is what makes it "elsewhere". Answered by nobody in
+    particular -- an old record, or one published before this field existed
+    -- reads as an ordinary call rather than a guess.
+    """
+    if not record or not device_id:
+        return False
+    answered_by = str(record.get('answeredBy') or '').strip()
+    return bool(answered_by) and answered_by != str(device_id).strip()
+
+
+def call_record(body, metadata=None):
+    """The CDR carried by a call row, or None.
+
+    Two places to look, in the order they can be trusted: the metadata
+    column, where this client and the server put it, and the body, for a
+    producer that puts the JSON on the wire instead. A row whose body is a
+    summary line simply fails to parse and yields None there.
+    """
+    import json
+    for candidate in (metadata, body):
+        if not candidate:
+            continue
+        record = candidate
+        if isinstance(record, bytes):
+            try:
+                record = record.decode()
+            except Exception:
+                continue
+        if isinstance(record, str):
+            try:
+                record = json.loads(record)
+            except (TypeError, ValueError):
+                continue
+        if isinstance(record, dict) and record.get('sessionId'):
+            return record
+    return None
+
+
+def format_call_duration(seconds):
+    """Seconds as M:SS / H:MM:SS, or None for a call that never connected.
+
+    Not get_printed_duration (SessionController.py), whose hour form is
+    "1 hours, 05:03" and which takes two datetimes because the HTML was
+    built where they were still in scope. The record carries an int.
+    """
+    try:
+        seconds = int(seconds or 0)
+    except (TypeError, ValueError):
+        return None
+    if seconds <= 0:
+        return None
+    hours, rest = divmod(seconds, 3600)
+    minutes, secs = divmod(rest, 60)
+    return ('%d:%02d:%02d' % (hours, minutes, secs)) if hours else ('%d:%02d' % (minutes, secs))
+
+
+_CALL_LABELS = {
+    ('incoming', 'completed'):          'Incoming call',
+    ('incoming', 'missed'):             'Missed call',
+    ('incoming', 'rejected'):           'Rejected call',
+    ('incoming', 'voicemail'):          'Voicemail',
+    ('incoming', 'answered_elsewhere'): 'Answered on another device',
+    ('outgoing', 'completed'):          'Outgoing call',
+    ('outgoing', 'cancelled'):          'Cancelled call',
+    ('outgoing', 'failed'):             'Call failed',
+    ('outgoing', 'rejected'):           'Call rejected',
+    ('outgoing', 'missed'):             'No answer',
+}
+
+
+def call_outcome(record):
+    """`outcome`, or the derivation every client did before the field existed."""
+    outcome = str(record.get('outcome') or '').strip()
+    if outcome:
+        return outcome
+    try:
+        duration = int(record.get('duration') or 0)
+    except (TypeError, ValueError):
+        duration = 0
+    if duration > 0:
+        return 'completed'
+    if str(record.get('direction') or '') == 'outgoing':
+        return 'cancelled' if str(record.get('status') or '').strip() == '487' else 'failed'
+    return 'missed'
+
+
+# Outcomes a call bubble draws in the attention colour. Not a value
+# judgement on the call: these are the ones where the interesting thing is
+# that no conversation happened, and where the eye running down a transcript
+# should stop. A cancelled call and one answered on another device are
+# ordinary events and stay in the quiet colour.
+CALL_ATTENTION_OUTCOMES = ('missed', 'voicemail', 'rejected', 'failed')
+
+
+def call_needs_attention(record, device_id=None):
+    """Whether this call is one the reader's eye should stop on."""
+    if not record:
+        return False
+    outcome = call_outcome(record)
+    if outcome == 'completed' and call_answered_elsewhere(record, device_id):
+        return False
+    return outcome in CALL_ATTENTION_OUTCOMES
+
+
+def call_lines(record, device_id=None):
+    """(title, duration, reason): the parts a call is described with.
+
+    One place works out what happened; two shapes say it. A call bubble
+    draws the title at the body size and the rest quietly under it, while
+    call_summary punctuates the same parts into the single line that goes
+    everywhere a line is all there is room for -- a stored body, a
+    notification, the contact list's last-message column.
+
+    None for a record too broken to describe. The caller drops the row
+    rather than draw it, exactly as an undecodable location tick is
+    dropped: raw JSON in a bubble is worse than a hole.
+    """
+    if not record:
+        return None
+    direction = str(record.get('direction') or 'incoming')
+    outcome = call_outcome(record)
+
+    # Answered on another of the user's devices: the same record, read from
+    # a device that did not take the call.
+    if outcome == 'completed' and call_answered_elsewhere(record, device_id):
+        outcome = 'answered_elsewhere'
+
+    label = _CALL_LABELS.get((direction, outcome))
+    if label is None:
+        return None
+
+    # The server reports what the proxy saw; the client knows what was
+    # actually negotiated. The local view wins when both are present.
+    local = record.get('local') if isinstance(record.get('local'), dict) else {}
+    streams = local.get('streams') or record.get('media') or []
+    if 'video' in streams:
+        label = label.replace('call', 'video call')
+
+    duration = format_call_duration(record.get('duration')) or ''
+
+    phrase = ''
+    if outcome in ('failed', 'rejected'):
+        # The code first when it is one we can name, because "Busy Here (486)"
+        # says everything the reason phrase does and the code as well. Falling
+        # back the other way round dropped the code on exactly the calls where
+        # it is worth having.
+        status = str(record.get('status') or '').strip()
+        reason = str(record.get('reason') or '').strip()
+        if status in SIP_STATUS_PHRASES:
+            phrase = sip_status_phrase(status)
+        else:
+            phrase = reason or (sip_status_phrase(status) if status else '')
+        if phrase == 'unknown':
+            phrase = ''
+    return label, duration, phrase
+
+
+def call_summary(record, device_id=None):
+    """The one plain-text line a call says.
+
+    The renderer's authority, not the stored body: computing it here means a
+    row written by an older build -- or by a server that learns a new outcome
+    next year -- says the right thing the moment this build draws it, with
+    nothing to migrate.
+    """
+    lines = call_lines(record, device_id)
+    if lines is None:
+        return None
+    label, duration, phrase = lines
+    parts = [label]
+    if duration:
+        parts.append('(%s)' % duration)
+    if phrase:
+        parts.append('\u2014 %s' % phrase)
+    return ' '.join(parts)
 
 
 PEAKS_ACTION = 'peaks'

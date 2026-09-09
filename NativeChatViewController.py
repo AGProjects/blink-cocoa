@@ -69,6 +69,8 @@ from MessageHost import (location_summary, file_transfer_category,
                          file_transfer_summary, merge_transfer_error,
                          quote_digest, transfer_error_note, MESSAGE_CATEGORIES,
                          load_trace_tick, load_trace_bucket)
+from MessageHost import (call_summary, dominant_media, merge_call_records,
+                         this_device_id)
 
 # distinct from any real sender, including None (outgoing messages pass
 # sender=None, so a None initial value made the first one look grouped)
@@ -306,6 +308,11 @@ class NativeChatViewController(ChatViewController):
     # replaced with a fresh dict on the first use in each conversation.
     _vanished_transfers = None
     _media_fetch_pending = False
+    # This device's id, resolved on first use and kept. A class default as
+    # well as an instance one: every call bubble asks for it, and a
+    # transcript that has not run awakeFromNib yet must not answer with an
+    # AttributeError from inside a draw.
+    _call_device_id = _UNSET
     _history_chrome_pending = False
     # The loaded-range sentence last written above the transcript, so the same
     # one is not logged twice.
@@ -3191,10 +3198,109 @@ class NativeChatViewController(ChatViewController):
             self.messageListView.layoutMessages()
 
     @objc.python_method
-    def _locationBubble(self, msgid):
+    @run_in_gui_thread
+    def showCallMessage(self, call_id, msgid, direction, sender, icon_path, record,
+                        timestamp, state='', is_private=False, history_entry=False,
+                        encryption=None, before=False):
+        """A call, drawn as a call rather than as a sentence about one.
+
+        Built through showMessage so it inherits everything a bubble gets
+        for free -- grouping, the avatar, the header, the date rules it
+        falls between -- and then switched to KIND_CALL, which is what
+        makes the bubble draw the record instead of the line.
+
+        The line is still handed to showMessage and still kept on the
+        bubble: it is what the transcript filter searches, what Copy puts
+        on the pasteboard, and what anything that only has room for one
+        line reads. The bubble draws from the record; everything else
+        reads the line.
+        """
+        summary = call_summary(record, self._callDeviceId())
+        if summary is None:
+            BlinkLogger().log_debug('Call %s has no record we can describe' % msgid)
+            return
+
+        # Already drawn. showMessage would keep the bubble that is up and
+        # drop this copy, which for a call is the wrong half to keep: the
+        # copy is the later view of the same call. Merged instead, so a
+        # replay after the server has corrected a duration does not leave
+        # the transcript saying what was known while it was still ringing.
+        if self.hasRenderedMessage(msgid):
+            self.updateCallMessage(msgid, record)
+            return
+
+        self.showMessage(call_id, msgid, direction, sender, icon_path, summary, timestamp,
+                         is_html=False, state=state, is_private=is_private,
+                         history_entry=history_entry, encryption=encryption, before=before,
+                         media_type=dominant_media(
+                             (record.get('local') or {}).get('streams')
+                             or record.get('media')))
+
+        bubble = self._bubbleFor(msgid)
+        if bubble is not None:
+            bubble.call_device_id = self._callDeviceId()
+            bubble.configure(kind=MessageBubbleView.KIND_CALL,
+                             call_record=record)
+            # It is a call NOW, and it was a text bubble when the filter
+            # last saw it. See _refreshBubbleFilter.
+            self._refreshBubbleFilter(bubble)
+            self.messageListView.layoutMessages()
+
+    @objc.python_method
+    @run_in_gui_thread
+    def updateCallMessage(self, msgid, record):
+        """A better-informed view of a call already on screen.
+
+        The server's copy of a call this device only half saw, or another
+        device's report of one it answered: a call this device recorded as
+        missed and the phone then answered stops being missed while the
+        user is looking at it, instead of on the next replay.
+
+        Merged with merge_call_records, the same function the row itself is
+        merged with, and against the record the bubble is already holding:
+        the transcript and the database then agree about the call without
+        the transcript having to go and read the row back.
+        """
+        bubble = self._bubbleFor(msgid)
+        if bubble is None or getattr(bubble, 'kind', None) != MessageBubbleView.KIND_CALL:
+            return
+        merged = merge_call_records(bubble.call_record, record) or record
+        summary = call_summary(merged, self._callDeviceId())
+        if summary is None:
+            return
+        bubble.configure(call_record=merged, content=summary)
+        self._refreshBubbleFilter(bubble)
+        self.messageListView.layoutMessages()
+
+    @objc.python_method
+    def _callDeviceId(self):
+        """This device's id, read once for the life of the transcript.
+
+        Every call bubble needs it -- it is the whole of the difference
+        between "Incoming call" and "Answered on another device" -- and a
+        history replay draws hundreds of them, so reading the setting per
+        bubble is a cost with nothing to show for it. Cached even when it
+        comes back None, which is a device id we cannot read rather than
+        one we have not looked for.
+        """
+        if self._call_device_id is _UNSET:
+            try:
+                self._call_device_id = this_device_id()
+            except Exception as e:
+                BlinkLogger().log_debug('Cannot read this device id: %s' % e)
+                self._call_device_id = None
+        return self._call_device_id
+
+    @objc.python_method
+    def _bubbleFor(self, msgid):
+        """The bubble drawn under this message id, or None."""
         if self.messageListView is None:
             return None
         return self.messageListView.viewForMessageId_(msgid)
+
+    @objc.python_method
+    def _locationBubble(self, msgid):
+        return self._bubbleFor(msgid)
 
     @objc.python_method
     def _renderLocation(self, bubble):
@@ -4338,6 +4444,12 @@ class NativeChatViewController(ChatViewController):
             return None
         if kind == MessageBubbleView.KIND_LOCATION:
             return 'location'
+        if kind == MessageBubbleView.KIND_CALL:
+            # No chip of its own. A call is part of the thread of the
+            # conversation rather than a kind of attachment, and inventing
+            # a chip here alone would put the same message under different
+            # chips on the desktop and on the phone.
+            return 'text'
         category = file_transfer_category(getattr(bubble, 'content', None))
         if category is not None:
             return category

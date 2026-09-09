@@ -83,6 +83,7 @@ from ChatViewController import ChatViewController, MSG_STATE_FAILED, MSG_STATE_S
 from ChatOTR import ChatOtrSmp
 from ContactListModel import BlinkPresenceContact
 from ContactListModel import encode_icon, decode_icon
+from ContactListModel import bonjour_offline_uri
 from FileTransferWindowController import openFileTransferSelectionDialog
 from HistoryManager import ChatHistory
 from HistoryManager import CONVERSATION_MEDIA_TYPES
@@ -93,6 +94,7 @@ from SIPManager import SIPManager
 from SmileyManager import SmileyManager
 from resources import ApplicationData
 from util import allocate_autorelease_pool, format_identity_to_string, html2txt, image_file_extension_pattern, sipuri_components_from_string, run_in_gui_thread
+from MessageHost import CALL_CONTENT_TYPE, call_record, call_summary, this_device_id
 
 
 # Copied from Carbon.h
@@ -805,6 +807,13 @@ class ChatController(MediaStream):
 
             timestamp=ISOTimestamp(message.cpim_timestamp)
             is_html = message.content_type != 'text'
+            body = message.body
+
+            stored_cdr = None
+            if message.content_type == CALL_CONTENT_TYPE:
+                stored_cdr = call_record(message.body, message.metadata)
+                if call_summary(stored_cdr, this_device_id()) is None:
+                    continue
             private = bool(int(message.private))
 
             if self.chatViewController:
@@ -825,7 +834,17 @@ class ChatController(MediaStream):
                 if match:
                     recipient = match.group('display_name') or match.group('uri')
                     
-                self.chatViewController.showMessage(message.sip_callid, message.msgid, message.direction, sender, icon, message.body, timestamp, is_private=private, recipient=recipient, state=message.status, is_html=is_html, history_entry=True, media_type = message.media_type, encryption=message.encryption)
+                if stored_cdr is not None:
+                    # Drawn from the record rather than from the stored body,
+                    # so a call the server corrects later says the right thing
+                    # the moment it is redrawn.
+                    self.chatViewController.showCallMessage(
+                        message.sip_callid, message.msgid, message.direction,
+                        sender, icon, stored_cdr, timestamp, is_private=private,
+                        state=message.status, history_entry=True,
+                        encryption=message.encryption)
+                else:
+                    self.chatViewController.showMessage(message.sip_callid, message.msgid, message.direction, sender, icon, body, timestamp, is_private=private, recipient=recipient, state=message.status, is_html=is_html, history_entry=True, media_type = message.media_type, encryption=message.encryption)
 
             call_id = message.sip_callid
             last_media_type = 'chat' if message.media_type == 'chat' else 'sms'
@@ -1393,8 +1412,10 @@ class ChatController(MediaStream):
     def _NH_BonjourAccountDidRemoveNeighbour(self, sender, data):
         record = data.record
         if self.remote_uri == record.id:
-            new_target = 'sip:' + ''.join(random.sample(string.ascii_letters+string.digits, 8)) + '@127.0.0.1:5060'
-            self.sessionController.target_uri = SIPURI.parse(new_target)
+            # The neighbour left the network. Fall back to the id-derived
+            # address, not a fresh random one: the session keeps pointing at
+            # the same party it was talking to.
+            self.sessionController.target_uri = bonjour_offline_uri(record.id)
             self.revalidateToolbar()
             BlinkLogger().log_info('Update chat controller %s -> %s' % (self.local_uri, self.remote_uri))
 

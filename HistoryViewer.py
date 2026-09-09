@@ -146,7 +146,11 @@ class HistoryViewer(NSWindowController):
             media_type_formated = NSLocalizedString("File Transfers", "Label")
         elif media_type == 'availability':
             media_type_formated = NSLocalizedString("Availability", "Label")
+        elif media_type == 'video':
+            media_type_formated = NSLocalizedString("Video", "Label")
         elif media_type == 'missed-call':
+            # Legacy: nothing writes this any more. Rows that still carry it
+            # were stored before media_type meant media.
             media_type_formated = NSLocalizedString("Missed Call", "Label")
         elif media_type == 'voicemail':
             media_type_formated = NSLocalizedString("Voicemail", "Label")

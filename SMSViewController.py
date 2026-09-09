@@ -70,6 +70,8 @@ from ChatViewController import MSG_STATE_SENDING, MSG_STATE_SENT, MSG_STATE_DELI
 from HistoryManager import ChatHistory
 from HistoryManager import CONVERSATION_MEDIA_TYPES
 from MessageHost import (FILE_TRANSFER_CONTENT_TYPE,
+                         CALL_CONTENT_TYPE, call_record, call_summary,
+                         this_device_id,
                          call_recording_envelope,
                          is_renderable_content_type, peaks_metadata,
                          pgp_plaintext, pgp_plaintext_bytes,
@@ -145,7 +147,10 @@ OTR_WIRE_PREFIX = '?OTR'
 # not on the network, and a conversation reopened from the last-messages list.
 # They exist to be parsed by code that needs a SIPURI; nothing is filed under
 # them and nothing can be sent to them.
-_PLACEHOLDER_HOSTS = ('127.0.0.1', 'localhost')
+# Hosts that mean "this address exists to be parsed, not dialled".
+# bonjour.local is the current form (sip:<instance id>@bonjour.local); the
+# loopback pair is what older builds wrote and still sits in stored rows.
+_PLACEHOLDER_HOSTS = ('bonjour.local', '127.0.0.1', 'localhost')
 
 
 def is_placeholder_uri(uri):
@@ -1424,9 +1429,24 @@ class SMSViewController(NSObject):
             
             is_html = content_type == 'text/html'
             encrypted = False
+            call_cdr = None
             
             text_content = content.decode().strip()
-            
+
+            if content_type == CALL_CONTENT_TYPE:
+                # A call replicated from another device, or from the server.
+                # The record travels in the metadata side band; the body is a
+                # plain-text cache of the same thing, and the line drawn is
+                # synthesized from the record either way.
+                call_cdr = call_record(text_content, metadata)
+                summary = call_summary(call_cdr, this_device_id())
+                if summary is None:
+                    self.log_debug('Discarding call %s: unreadable record' % id)
+                    return
+                content = summary.encode()
+                text_content = summary
+                is_html = False
+
             if text_content.startswith('-----BEGIN PGP MESSAGE-----') and text_content.endswith('-----END PGP MESSAGE-----'):
                 from MessageHost import private_key_for_message, load_private_keys
                 if not self.private_key and not load_private_keys():
@@ -1580,7 +1600,12 @@ class SMSViewController(NSObject):
             else:
                 encryption = ''
 
-            self.chatViewController.showMessage(call_id, msg_id, direction, sender_name, icon, content, timestamp, is_html=is_html, state=status, media_type='sms', encryption=encryption)
+            if call_cdr is not None:
+                self.chatViewController.showCallMessage(call_id, msg_id, direction, sender_name,
+                                                        icon, call_cdr, timestamp,
+                                                        state=status, encryption=encryption)
+            else:
+                self.chatViewController.showMessage(call_id, msg_id, direction, sender_name, icon, content, timestamp, is_html=is_html, state=status, media_type='sms', encryption=encryption)
 
             self.notification_center.post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(id=msg_id, direction=direction, history_entry=False, status=status, is_replication_message=is_replication_message, remote_party=format_identity_to_string(sender_identity), local_party=format_identity_to_string(self.account) if self.account is not BonjourAccount() else 'bonjour@local', check_contact=True))
 
@@ -2829,6 +2854,49 @@ class SMSViewController(NSObject):
                 # than keeping the clock it waited under. The session's own
                 # progress notifications move it from here.
                 self.chatViewController.setTransferProgress(transfer_id, 0.0)
+
+    @objc.python_method
+    @run_in_gui_thread
+    def noteCallRecord(self, record):
+        """Draw a call another of our devices reported, now, in this transcript.
+
+        The row is already written and merged by the caller; this is the
+        bubble. Without it a call finishing on the phone while its
+        conversation is open on the desktop shows up only when the window
+        is closed and opened again -- and a missed call the phone then
+        answered goes on saying "Missed call" in front of the user.
+
+        Updating one already drawn goes through the transcript's own merge,
+        so it lands on the record the bubble is holding rather than
+        replacing it: another device's copy is better informed about some
+        fields and worse about others.
+        """
+        if self.chatViewController is None:
+            return
+        msgid = str(record.get('sessionId') or '')
+        if not msgid:
+            return
+
+        if self.chatViewController.hasRenderedMessage(msgid):
+            self.chatViewController.updateCallMessage(msgid, record)
+            return
+
+        direction = str(record.get('direction') or 'incoming')
+        if direction == 'outgoing':
+            sender_name = None
+            icon = NSApp.delegate().contactsWindowController.iconPathForSelf()
+        else:
+            sender_name = self.peer_display_name() or self.display_remote_uri()
+            icon = NSApp.delegate().contactsWindowController.iconPathForURI(str(self.remote_uri))
+        try:
+            timestamp = ISOTimestamp(record.get('startTime') or str(ISOTimestamp.now()))
+        except Exception:
+            timestamp = ISOTimestamp.now()
+
+        self.msg_id_list.add(msgid)
+        self.chatViewController.showCallMessage(msgid, msgid, direction, sender_name,
+                                                icon, record, timestamp,
+                                                state=MSG_STATE_DELIVERED)
 
     @objc.python_method
     @run_in_gui_thread
@@ -4266,9 +4334,36 @@ class SMSViewController(NSObject):
 
     def chatViewDidLoad_(self, chatView):
          load_trace_mark(self.trace_key, 'view ready')
-         self.startLoadingSpinner('conversation opened',
-                                  NSLocalizedString("Loading previous messages...", "Label"))
-         self.replay_history()
+         # The view loading is not the user opening the conversation. A
+         # conversation reopened in the background to retry unsent messages
+         # (ContactWindowController, ten seconds after launch) builds its view
+         # too, and replaying there costs a full history page, every image
+         # decoded and a video poster generated -- for something nobody is
+         # looking at, on the launch path, where it is most expensive.
+         #
+         # Deferred until something actually shows it: presentViewer for a
+         # window, selectViewer for the messages pane. Both call
+         # replayHistoryIfNeeded.
+         self.history_replay_pending = True
+         self.replayHistoryIfNeeded()
+
+    @objc.python_method
+    def replayHistoryIfNeeded(self):
+        """Replay the history once, when the conversation is first shown."""
+        if not getattr(self, 'history_replay_pending', False):
+            return
+        import SMSWindowManager as _SMSWindowManager
+        try:
+            shown = _SMSWindowManager.SMSWindowManager().windowForViewer(self) is not None
+        except Exception:
+            shown = True        # cannot tell: behave as before rather than show an empty pane
+        if not shown:
+            self.log_debug('History replay deferred: nothing is showing this conversation yet')
+            return
+        self.history_replay_pending = False
+        self.startLoadingSpinner('conversation opened',
+                                 NSLocalizedString("Loading previous messages...", "Label"))
+        self.replay_history()
 
     @objc.python_method
     def scroll_back_in_time(self):
@@ -5122,6 +5217,13 @@ class SMSViewController(NSObject):
                     self.log_error('Failed to parse timestamp %s for message id %s: %s' % (message.cpim_timestamp, message.id, str(e)))
                     timestamp = ISOTimestamp.now()
                 
+                # NB an else-branch, not an allow-list: text/plain lands on
+                # is_html=True and so gets tag-stripped and entity-unescaped
+                # by display_text. Correcting that changes how 12k stored
+                # messages draw, so it is left for a deliberate change of its
+                # own. The call branch below sets is_html=False explicitly --
+                # a record carries a displayName straight off the network and
+                # must never reach the HTML renderer.
                 is_html = False if message.content_type == 'text' else True
                 
                 components = sipuri_components_from_string(message.cpim_from)
@@ -5162,6 +5264,25 @@ class SMSViewController(NSObject):
                         sender = self.normalizeSender(sender)
                     self.msg_id_list.add(message.msgid)
                     status = MSG_STATE_DEFERRED if (message.status == MSG_STATE_FAILED_LOCAL and message.direction == 'outgoing') else message.status
+
+                    if message.content_type == CALL_CONTENT_TYPE:
+                        # A call is drawn from its record, never from the
+                        # stored body -- so wording improvements and outcomes
+                        # this build learns later reach old rows with no
+                        # migration.
+                        stored_cdr = call_record(message.body, message.metadata)
+                        if call_summary(stored_cdr, this_device_id()) is None:
+                            self.log_debug('Not rendering call %s: unreadable record'
+                                           % message.msgid)
+                            continue
+                        self.chatViewController.showCallMessage(
+                            message.sip_callid, message.msgid, message.direction,
+                            sender, icon, stored_cdr, timestamp, state=status,
+                            history_entry=True,
+                            encryption=encryption or message.encryption, before=before)
+                        call_id = message.sip_callid
+                        last_media_type = 'sms'
+                        continue
 
                     if message.content_type in (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE):
                         # Rows are persisted exactly as they arrived --

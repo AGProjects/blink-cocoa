@@ -92,6 +92,11 @@ from AudioPlayback import (AUDIO_CHANNELS, channel_peaks, has_spectrum,
                            level_at, spectrum_frame)
 from MessageHost import (file_transfer_category, file_transfer_summary,
                          load_trace_tick, load_trace_bucket)
+# A call bubble says what MessageHost says a call is. The words, the
+# outcome and which of them deserve the eye are worked out once, for every
+# surface that describes a call -- this bubble, the stored body, the
+# notification -- so none of them can drift from the others.
+from MessageHost import call_lines, call_needs_attention
 # The same "1.2 MB" the caption is built from, so a tile and a bubble
 # never disagree about how big the same file is.
 from MessageHost import _format_size as format_file_size
@@ -435,6 +440,12 @@ GLYPH_SAVE      = chr(8615)
 GLYPH_OPEN      = chr(8599)
 GLYPH_COPIED    = chr(10003)
 GLYPH_REPLY     = chr(8617)
+# Which way the call went. Direction is the arrow's whole job: whether it
+# was answered is carried by the colour and said outright in the words, so
+# a missed call is the same arrow in the attention colour rather than a
+# second glyph nobody has to learn.
+GLYPH_CALL_OUT  = chr(8599)
+GLYPH_CALL_IN   = chr(8601)
 # The document icon a file bubble shows when it has no picture of its own:
 # a PDF, an archive, a spreadsheet. Big enough to be recognised as the icon
 # its application draws and to be taken hold of, small enough that a bubble
@@ -835,6 +846,10 @@ COLOR_SYSTEM       = _rgb(71, 210, 158)
 COLOR_SYSTEM_LIGHT = _rgb(21, 115, 82)
 COLOR_SYSTEM_ERROR = _rgb(176, 42, 42)
 COLOR_SYSTEM_ERROR_DARK = _rgb(255, 120, 110)
+# A connected call, on a pale fill and on the deep blue incoming one. Same
+# problem the error red has: one green cannot sit on both.
+COLOR_CALL_OK      = _rgb(30, 142, 78)
+COLOR_CALL_OK_DARK = _rgb(93, 214, 152)
 COLOR_META         = NSColor.secondaryLabelColor()
 COLOR_TICK         = _rgb(39, 174, 96)
 COLOR_DATE_RULE    = NSColor.separatorColor()
@@ -1049,6 +1064,19 @@ def bubble_error_color(state, is_private, direction=None):
     except Exception:
         on_deep = False
     return COLOR_SYSTEM_ERROR_DARK if on_deep else COLOR_SYSTEM_ERROR
+
+
+def bubble_success_color(state, is_private, direction=None):
+    """Green that stays legible on THIS bubble's fill.
+
+    The counterpart of bubble_error_color, and chosen the same way: by the
+    fill rather than by the system appearance.
+    """
+    try:
+        on_deep = bubble_text_color(state, is_private, direction) is COLOR_TEXT_ON_DEEP
+    except Exception:
+        on_deep = False
+    return COLOR_CALL_OK_DARK if on_deep else COLOR_CALL_OK
 
 
 def bubble_meta_color(state, is_private, direction=None):
@@ -1653,6 +1681,7 @@ class MessageBubbleView(NSView):
     KIND_TEXT = 'text'
     KIND_SYSTEM = 'system'
     KIND_LOCATION = 'location'
+    KIND_CALL = 'call'
     KIND_DATE = 'date'
 
     # An undecided press: (point, kind), kind being 'file' or 'map'. See
@@ -1735,6 +1764,17 @@ class MessageBubbleView(NSView):
             self.location_ended = False
             self._track_slider = None
             self._track_rect = NSZeroRect
+            # The call detail record a KIND_CALL bubble draws. Held rather
+            # than only its rendered line, because the line is derived: a
+            # record corrected by the server -- a duration that arrives
+            # after the call, an outcome this build learns to name -- is
+            # merged and redrawn from the record it now is.
+            self.call_record = None
+            # This device's id, as the renderer read it once, so that
+            # "answered on another device" can be told from "answered
+            # here". Left None on a bubble nobody set it on, which makes
+            # every call read as an ordinary one rather than as a guess.
+            self.call_device_id = None
             # An inline image for a file transfer: the decoded picture once
             # it is on disc, and the flag that says one is on its way.
             self.media_image = None
@@ -1985,6 +2025,68 @@ class MessageBubbleView(NSView):
         return body
 
     @objc.python_method
+    def _callCaption(self):
+        """A call bubble's caption: what happened, then its particulars.
+
+        The first line is the event -- "Missed call", "Outgoing video call"
+        -- led by an arrow saying which way it went, and it is the only
+        part drawn at the body size. Underneath it, quietly, whatever else
+        is known: how long it lasted, why it did not connect.
+
+        Built from the RECORD every time, never from the stored body. That
+        is what lets a call the server corrects later, or one whose outcome
+        a future build learns to name, say the right thing the moment it is
+        redrawn, with nothing to migrate and no row to rewrite.
+        """
+        lines = call_lines(self.call_record, self.call_device_id)
+        if lines is None:
+            # A record we cannot describe. The renderers drop such a row
+            # before it ever gets here; a bubble that reached this point
+            # anyway falls back to whatever line it was configured with
+            # rather than drawing an empty box.
+            return attributed_body(self.content, self.is_html, self.expand_smileys,
+                                   self.font_size, self.textColor())
+        title, duration, phrase = lines
+
+        attention = call_needs_attention(self.call_record, self.call_device_id)
+        glyph = (GLYPH_CALL_OUT if self.direction == 'outgoing' else GLYPH_CALL_IN)
+        if attention:
+            accent = self.errorTextColor()
+        elif duration:
+            accent = bubble_success_color(self.state, self.is_private, self.direction)
+        else:
+            # Cancelled, or answered on another device: an ordinary thing
+            # that happened, and nothing for the eye to stop on.
+            accent = self.metaColor()
+
+        wrap = NSMutableParagraphStyle.alloc().init()
+        wrap.setLineBreakMode_(NSLineBreakByWordWrapping)
+
+        body = NSMutableAttributedString.alloc().initWithString_attributes_(
+            glyph + '  ',
+            {NSFontAttributeName: NSFont.systemFontOfSize_(self.font_size),
+             NSForegroundColorAttributeName: accent,
+             NSParagraphStyleAttributeName: wrap})
+        body.appendAttributedString_(
+            NSAttributedString.alloc().initWithString_attributes_(
+                title,
+                {NSFontAttributeName: NSFont.systemFontOfSize_(self.font_size),
+                 NSForegroundColorAttributeName: (accent if attention
+                                                  else self.textColor()),
+                 NSParagraphStyleAttributeName: wrap}))
+
+        detail = ' \u2014 '.join(part for part in (duration, phrase) if part)
+        if detail:
+            body.appendAttributedString_(
+                NSAttributedString.alloc().initWithString_attributes_(
+                    '\n' + detail,
+                    {NSFontAttributeName: NSFont.systemFontOfSize_(
+                         meta_font_size(self.font_size)),
+                     NSForegroundColorAttributeName: self.metaColor(),
+                     NSParagraphStyleAttributeName: wrap}))
+        return body
+
+    @objc.python_method
     def _transferCaption(self):
         """A file bubble's caption: the name, then everything else quieter.
 
@@ -2134,6 +2236,9 @@ class MessageBubbleView(NSView):
                 # status left a one-shot pin reading at the body size while
                 # a live share's read as a caption.
                 self._body_field.setAttributedStringValue_(self._locationCaption())
+                return
+            if self.kind == self.KIND_CALL:
+                self._body_field.setAttributedStringValue_(self._callCaption())
                 return
             _t = load_trace_tick()
             body = attributed_body(self.content, self.is_html, self.expand_smileys,
@@ -2516,11 +2621,14 @@ class MessageBubbleView(NSView):
         Both directions, unlike edit: quoting your own message back is how
         you add to something you already sent. Dividers and system notes
         are nobody's words, and a bubble with no id cannot be referred to
-        -- the link travels as that id and nothing else.
+        -- the link travels as that id and nothing else. Neither is a call:
+        it is an event the two ends took part in, not a thing either of
+        them said, and there is nothing in it to quote.
         """
         return (bool(self.msgid)
                 and not self._tileMode()
-                and self.kind not in (self.KIND_DATE, self.KIND_SYSTEM))
+                and self.kind not in (self.KIND_DATE, self.KIND_SYSTEM,
+                                      self.KIND_CALL))
 
     @objc.python_method
     def _deliveryGlyphs(self):
@@ -2728,10 +2836,22 @@ class MessageBubbleView(NSView):
                 # message's encryption state.
                 bool(self.lockIconPath()),
                 self._showsTransport(),
+                # A call's line comes out of its record, and the record is
+                # corrected in place: a duration arriving from the server
+                # after the call turns one line into two, which is a
+                # different height for the same bubble.
+                self._callSignature(),
                 # A call recording carries both sides and stacks two
                 # strips, and a spectrogram adds a row of its own, so the
                 # player's height depends on what the envelope brought.
                 self._audioHeight())
+
+    @objc.python_method
+    def _callSignature(self):
+        """What a call bubble draws, reduced to what changes its height."""
+        if self.kind != self.KIND_CALL:
+            return None
+        return call_lines(self.call_record, self.call_device_id)
 
     @objc.python_method
     def _showsDownloadButton(self):
@@ -3429,10 +3549,12 @@ class MessageBubbleView(NSView):
     def _hasVariableWidth(self):
         """Whether this bubble should shrink to its contents.
 
-        Only text does. A picture or a map is drawn to the width it is
+        Text does, and so does a call -- "Missed call" is two words, and a
+        bubble stretched to a third of the pane to hold them reads as an
+        empty message. A picture or a map is drawn to the width it is
         given and has nothing to give back, and a tile owns its cell.
         """
-        return (self.kind == self.KIND_TEXT
+        return (self.kind in (self.KIND_TEXT, self.KIND_CALL)
                 and not self._tileMode()
                 and not self._showsMedia()
                 and not self._showsMap())

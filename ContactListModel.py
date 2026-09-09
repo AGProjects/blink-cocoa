@@ -118,7 +118,7 @@ from VirtualGroups import VirtualGroupsManager, VirtualGroup
 from PresencePublisher import on_the_phone_activity
 from resources import ApplicationData, Resources
 from util import allocate_autorelease_pool, format_date, format_uri_type, is_anonymous, log_gui_exception, sipuri_components_from_string, sip_prefix_pattern, strip_addressbook_special_characters, run_in_gui_thread, utc_to_local, call_later
-from util import pstn_uri_spellings_for_accounts
+from util import pstn_uri_spellings_for_accounts, canonical_pstn_uri, pstn_e164
 
 status_localized = {
     'busy':      NSLocalizedString("busy", "Label"),
@@ -158,6 +158,11 @@ presence_status_icons = {'away': NSImage.imageNamed_("away"),
                          }
 
 
+# The host for an offline Bonjour row. Not a real domain and not routable:
+# it carries the instance id and nothing else.
+BONJOUR_OFFLINE_DOMAIN = 'bonjour.local'
+
+
 def bonjour_offline_uri(key):
     """A parseable address for a neighbour who is not on the network.
 
@@ -174,16 +179,26 @@ def bonjour_offline_uri(key):
     never be matched to a device again, which is why they exist to be read
     and deleted.
 
-    Otherwise the loopback placeholder, the same one used when a
-    conversation is reopened from history elsewhere in the application. It
+    Otherwise the address is DERIVED FROM THE INSTANCE ID: sip:<id>@bonjour.local.
+
+    A Bonjour neighbour's identity is the instance id, a long-term uuid. The
+    sip:user@host:port they answer on is ephemeral -- a link-local address on
+    whatever network they were seen from, valid for that session and no longer
+    -- and it must never be what a stored contact is. This used to mint
+    sip:<8 random characters>@127.0.0.1:5060 instead, which was worse than
+    useless: a different address every launch, so the row could not be matched
+    to itself between runs, and a loopback host that looks dialable to anything
+    that does not know better.
+
+    Deriving it from the id gives a row that is stable across launches, matches
+    the conversation it belongs to, and is obviously not somewhere real. It
     exists to be parsed and never to be dialled -- the conversation is
     addressed by instance id, and getBonjourContact(online_only=True) is
     what keeps it away from anything building a route.
     """
     if key and '@' in key:
         return SIPURI.parse(str('sip:%s' % key))
-    return SIPURI.parse(str('sip:%s@127.0.0.1:5060'
-                            % ''.join(random.sample(string.ascii_letters + string.digits, 8))))
+    return SIPURI.parse(str('sip:%s@%s' % (key or 'unknown', BONJOUR_OFFLINE_DOMAIN)))
 
 
 def bonjour_preferred_transport():
@@ -2275,6 +2290,13 @@ CALLS_GROUP_NAME = 'Calls'
 # ...and the identity that survives even a rename: BlinkGroupExtension.kind,
 # a SharedSetting in the group's XCAP attribute bag.
 CALLS_GROUP_KIND = 'calls'
+# The Tel group: the PSTN numbers among them. Same three identities in the same
+# order of authority (kind, then name, then reserved id), and the same clock --
+# a Tel row IS a number you called, so ordering it by anything but the last call
+# puts the number you rang a minute ago below one from last year.
+TEL_GROUP_ID = '_tel'
+TEL_GROUP_NAME = 'Tel'
+TEL_GROUP_KIND = 'tel'
 # How long to wait after an XCAP reload before creating anything. Long enough
 # for AddressbookManager's own handler for the same notification to have run
 # and for its transaction to have been pushed -- see _NH_XCAPManagerDidReloadData.
@@ -2348,11 +2370,12 @@ class BlinkGroup(NSObject):
     def isAppOrderedGroup(self):
         """Whether this group is ordered by recency rather than by name.
 
-        Messages by its last message, Calls by its last call. Everything that
-        re-sorts or renders a time against a row asks this, so adding a third
-        such group later is one line here rather than a hunt through the file.
+        Messages by its last message, Calls and Tel by their last call.
+        Everything that re-sorts or renders a time against a row asks this, so
+        adding a fourth such group later is one line here rather than a hunt
+        through the file.
         """
-        return self.isMessagesGroup() or self.isCallsGroup()
+        return self.isMessagesGroup() or self.isCallsGroup() or self.isTelGroup()
 
     @objc.python_method
     def isCallsGroup(self):
@@ -2369,16 +2392,29 @@ class BlinkGroup(NSObject):
         return getattr(self.group, 'id', None) == CALLS_GROUP_ID
 
     @objc.python_method
+    def isTelGroup(self):
+        # Same order of authority as isCallsGroup: kind survives a rename and
+        # is what both clients agree on, the name covers a group created before
+        # the attribute existed, and the reserved id covers one Blink made
+        # before any sync.
+        if str(getattr(self.group, 'kind', '') or '').strip().lower() == TEL_GROUP_KIND:
+            return True
+        if str(getattr(self.group, 'name', '') or '').strip().lower() == TEL_GROUP_NAME.lower():
+            return True
+        return getattr(self.group, 'id', None) == TEL_GROUP_ID
+
+    @objc.python_method
     def isDeletedGroup(self):
         return getattr(self.group, 'id', None) == DELETED_GROUP_ID
 
     @objc.python_method
     def sortContacts(self):
-        if self.isCallsGroup():
+        if self.isCallsGroup() or self.isTelGroup():
             # Same stable two-pass as the Messages group: alphabetical first,
             # then by recency, so contacts that share a timestamp -- and the
             # whole tail that has none -- keep A..Z order underneath instead
-            # of shuffling on every redraw.
+            # of shuffling on every redraw. Tel rides the same clock as Calls:
+            # its members are the PSTN subset of them.
             self.contacts.sort(key=lambda item: str(getattr(item, 'name', '')).lower())
             self.contacts.sort(
                 key=lambda item: self.lastCallTimeForContact(item) or NO_MESSAGES,
@@ -3352,7 +3388,7 @@ class CustomListModel(NSObject):
         """The time to show against a row, or None.
 
         Which time depends on what the group is about: the Messages group
-        shows when they last wrote, the Calls group when they last called.
+        shows when they last wrote, Calls and Tel when they last called.
         Showing a message time in the Calls group would be answering a
         question nobody asked there.
         """
@@ -3362,7 +3398,7 @@ class CustomListModel(NSObject):
             group = outline.parentForItem_(item)
             if not isinstance(group, BlinkGroup):
                 return None
-            if group.isCallsGroup():
+            if group.isCallsGroup() or group.isTelGroup():
                 return group.lastCallTimeForContact(item)
             if group.isMessagesGroup():
                 return group.lastMessageTimeForContact(item)
@@ -4585,9 +4621,22 @@ class ContactListModel(CustomListModel):
 
     @objc.python_method
     def addContactForUri(self, uri, displayName=None):
+        # Store a phone number BARE, in E.164, with type 'tel'.
+        #
+        # This is the auto-create the messaging path uses, and it was writing
+        # the conversation key verbatim -- so an inbound message from
+        # +3180081867@sylk.link created a contact at that address, while the
+        # phone (and Blink's own call filing, HistoryManager.ensure_call_contact)
+        # store the same number as "+3180081867". Two spellings, two contacts,
+        # both pushed to the shared XCAP addressbook. canonical_pstn_uri returns
+        # E.164 for a PSTN URI and leaves everything else alone, so a SIP
+        # address is unaffected.
+        account = AccountManager().default_account
+        stored = canonical_pstn_uri(uri, account) or uri
+        uri_type = 'tel' if pstn_e164(stored, account) else 'SIP'
         contact = Contact()
-        contact.uris.add(ContactURI(uri=uri, type='SIP'))
-        contact.name = displayName or uri
+        contact.uris.add(ContactURI(uri=stored, type=uri_type))
+        contact.name = displayName or stored
         contact.preferred_media = 'messages'
         contact.save()
         return contact
@@ -5402,9 +5451,33 @@ class ContactListModel(CustomListModel):
 
     @objc.python_method
     def _callsGroupAfterReload(self, account):
-        calls_group_startup_check(xcap_loaded=True)
-        if account is not None:
-            backfill_call_contacts(account)
+        # Everything below is this device reconciling itself with the document
+        # the server just handed it -- repair_contact_addresses rewriting a
+        # stale spelling, the kind-groups being filed, calls being backfilled.
+        # None of it is news to the other devices: they run the same pass
+        # against the same document. Announcing it (application/sylk-addressbook-update)
+        # made every launch tell every device the addressbook had changed.
+        try:
+            from SMSWindowManager import SMSWindowManager
+            _sms = SMSWindowManager()
+        except Exception:
+            _sms = None
+        if _sms is not None:
+            _sms.suppressAddressbookNotifications()
+        _started = time.time()
+        BlinkLogger().log_info('[ab] [lifecycle] Addressbook: post-reload pass starting %ds after the '
+                               'document was applied (the repairs inside it are once per run)'
+                               % XCAP_SETTLE_DELAY)
+        try:
+            calls_group_startup_check(xcap_loaded=True)
+            if account is not None:
+                backfill_call_contacts(account)
+        finally:
+            if _sms is not None:
+                _sms.resumeAddressbookNotifications()
+            BlinkLogger().log_info('[ab] [lifecycle] Addressbook: post-reload pass finished in %.1fs -- '
+                                   'from here a contact change is a user edit and IS announced'
+                                   % (time.time() - _started))
 
     @objc.python_method
     def _NH_AudioCallLoggedToHistory(self, notification):

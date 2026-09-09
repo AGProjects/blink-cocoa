@@ -74,6 +74,8 @@ from FileTransferSession import OutgoingPushFileTransferHandler
 from HistoryManager import ChatHistory, SessionHistory
 from HistoryManager import SessionHistoryReplicator
 from HistoryManager import preview_call
+from MessageHost import CALL_CONTENT_TYPE, build_call_record, call_summary, dominant_media
+from MessageHost import this_device_id
 from HistoryManager import is_blocked_party
 from MediaStream import STATE_IDLE, STATE_CONNECTED, STATE_CONNECTING, STATE_DNS_LOOKUP, STATE_DNS_FAILED, STATE_FINISHED, STATE_FAILED
 from MediaStream import STREAM_IDLE, STREAM_FAILED, STREAM_CONNECTED, STREAM_CANCELLING
@@ -82,7 +84,7 @@ from SessionInfoController import SessionInfoController
 from SIPManager import SIPManager
 from VideoController import VideoController
 from interfaces.itunes import MusicApplications
-from util import format_identity_to_string, normalize_sip_uri_for_outgoing_session, sip_prefix_pattern, sipuri_components_from_string, run_in_gui_thread, checkValidPhoneNumber, local_to_utc, osx_version
+from util import format_identity_to_string, normalize_sip_uri_for_outgoing_session, sip_prefix_pattern, sipuri_components_from_string, run_in_gui_thread, checkValidPhoneNumber, local_to_utc, osx_version, canonical_pstn_uri
 
 
 SessionIdentifierSerial = 0
@@ -362,9 +364,17 @@ class SessionControllersManager(object, metaclass=Singleton):
         self.add_to_session_history(controller.history_id, media_type, 'incoming', 'missed', failure_reason, local_to_utc(data.timestamp), local_to_utc(data.timestamp), duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, json.dumps(controller.encryption), controller.display_name or '', controller.device_id or '', str(controller.target_uri))
 
         if 'audio' in data.streams:
-            message = '<h3>Missed Incoming Call</h3>'
-            #message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
-            media_type = 'missed-call'
+            message = 'Missed call'
+            record = build_call_record(call_id, 'incoming', 'missed', duration=0,
+                                       remote_party=remote_uri,
+                                       display_name=controller.display_name or '',
+                                       start_time=local_to_utc(data.timestamp),
+                                       stop_time=local_to_utc(data.timestamp),
+                                       media=data.streams, from_tag=from_tag, to_tag=to_tag,
+                                       local=self.call_local_block(controller, data.streams))
+            # The media that was negotiated. Whether it was missed is the
+            # record's outcome and the notification's missed flag, not this.
+            media_type = dominant_media(data.streams)
             direction = 'incoming'
             status = 'delivered'
             cpim_from = data.target_uri
@@ -377,7 +387,7 @@ class SessionControllersManager(object, metaclass=Singleton):
                          local_uri=local_uri, remote_uri=remote_uri,
                          call_id=call_id, history_id=controller.history_id,
                          media_type=media_type, summary="Missed Incoming Call")
-            self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, call_id=call_id)
+            self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, call_id=call_id, record=record)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='incoming', missed=True, history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour@local', check_contact=True))
         NotificationCenter().post_notification('SIPSessionLoggedToHistory', sender=self)
 
@@ -402,8 +412,17 @@ class SessionControllersManager(object, metaclass=Singleton):
         self.add_to_session_history(controller.history_id, media_type, 'incoming', 'missed', failure_reason, local_to_utc(data.timestamp), local_to_utc(data.timestamp), duration, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, json.dumps(controller.encryption), controller.display_name or '', controller.device_id or '', str(controller.target_uri))
 
         if 'audio' in data.streams:
-            message = '<h3>Missed Incoming Call</h3>'
-            media_type = 'missed-call'
+            message = 'Voicemail'
+            record = build_call_record(call_id, 'incoming', 'voicemail', duration=0,
+                                       remote_party=remote_uri,
+                                       display_name=controller.display_name or '',
+                                       start_time=local_to_utc(data.timestamp),
+                                       stop_time=local_to_utc(data.timestamp),
+                                       media=data.streams, from_tag=from_tag, to_tag=to_tag,
+                                       local=self.call_local_block(controller, data.streams))
+            # The media that was negotiated. Whether it was missed is the
+            # record's outcome and the notification's missed flag, not this.
+            media_type = dominant_media(data.streams)
             direction = 'incoming'
             status = 'delivered'
             cpim_from = data.target_uri
@@ -416,7 +435,7 @@ class SessionControllersManager(object, metaclass=Singleton):
                          local_uri=local_uri, remote_uri=remote_uri,
                          call_id=call_id, history_id=controller.history_id,
                          media_type=media_type, summary="Missed Incoming Call (voicemail)")
-            self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, call_id=call_id)
+            self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, call_id=call_id, record=record)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='incoming', missed=True, history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour@local', check_contact=True))
         NotificationCenter().post_notification('SIPSessionLoggedToHistory', sender=self)
 
@@ -455,30 +474,20 @@ class SessionControllersManager(object, metaclass=Singleton):
 
         if 'audio' in data.streams:
             duration = self.get_printed_duration(session.start_time, session.end_time)
-        message = '<h3>Incoming Call</h3>'
-        message += '<p>Call duration: %s' % duration
-        message += '<p>Media: %s' % ', '.join(data.streams)
-        enc_keys = list(controller.encryption.keys())
-        if enc_keys:
-            message += '<h4>Encryption</h4>'
-            message += '<ul>'
-            for key in enc_keys:
-                try:
-                    type = controller.encryption[key]['type']
-                    message += '<li>%s: %s' % (key, type)
-                    try:
-                        verified = controller.encryption[key]['verified']
-                        if verified == 'yes':
-                            message += ', verified'
-                        else:
-                            message += ', not verified'
-                    except KeyError:
-                        pass
-                
-                except KeyError:
-                    continue
-            message += '</ul>'
-        media_type = 'audio'
+        message = 'Incoming call'
+        record = build_call_record(call_id, 'incoming', 'completed', duration=seconds,
+                                   remote_party=remote_uri,
+                                   display_name=controller.display_name or '',
+                                   start_time=local_to_utc(session.start_time),
+                                   stop_time=local_to_utc(session.end_time),
+                                   media=data.streams, from_tag=from_tag, to_tag=to_tag,
+                                   # This device took the call. Every other
+                                   # device of this account rang and did not,
+                                   # and reads the same record as answered
+                                   # elsewhere because of this field.
+                                   answered_by=this_device_id(),
+                                   local=self.call_local_block(controller, data.streams))
+        media_type = dominant_media(data.streams)
         direction = 'incoming'
         status = 'delivered'
         cpim_from = data.target_uri
@@ -493,7 +502,8 @@ class SessionControllersManager(object, metaclass=Singleton):
                      media_type=media_type, summary="Incoming Call",
                      # locals(): duration is only bound on some branches above
                      duration=locals().get('duration'))
-        self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, call_id=call_id)
+        self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, call_id=call_id, record=record)
+        self.publish_call_record(account, record)
         NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='incoming', missed=False, history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour@local', check_contact=True))
 
         NotificationCenter().post_notification('SIPSessionLoggedToHistory', sender=self)
@@ -518,10 +528,21 @@ class SessionControllersManager(object, metaclass=Singleton):
         self.add_to_session_history(controller.history_id, media_type, 'incoming', 'completed', failure_reason, local_to_utc(data.timestamp), local_to_utc(data.timestamp), 0, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, json.dumps(controller.encryption), controller.display_name or '', controller.device_id or '', str(controller.target_uri))
 
         if 'audio' in data.streams:
-            message= '<h3>Incoming Audio Call</h3>'
-            message += '<p>The call has been answered elsewhere'
-            #message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
-            media_type = 'audio'
+            # A missed call, not an answered-elsewhere one. This device knows
+            # only that it stopped ringing -- not the duration, and not which
+            # device took it, if any did. The device that answered publishes
+            # the record that says so, and it merges onto this row and turns
+            # it into "Answered on another device (2:17)". Claiming it here
+            # would be a row with no duration that can never gain one.
+            message = 'Missed call'
+            record = build_call_record(call_id, 'incoming', 'missed', duration=0,
+                                       remote_party=remote_uri,
+                                       display_name=controller.display_name or '',
+                                       start_time=local_to_utc(data.timestamp),
+                                       stop_time=local_to_utc(data.timestamp),
+                                       media=data.streams, from_tag=from_tag, to_tag=to_tag,
+                                       local=self.call_local_block(controller, data.streams))
+            media_type = dominant_media(data.streams)
             local_uri = local_uri
             remote_uri = remote_uri
             direction = 'incoming'
@@ -536,7 +557,7 @@ class SessionControllersManager(object, metaclass=Singleton):
                          local_uri=local_uri, remote_uri=remote_uri,
                          call_id=call_id, history_id=controller.history_id,
                          media_type=media_type, summary="Incoming Audio Call - answered elsewhere")
-            self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, call_id=call_id)
+            self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, call_id=call_id, record=record)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='incoming', missed=False, history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour@local', check_contact=True))
         NotificationCenter().post_notification('SIPSessionLoggedToHistory', sender=self)
 
@@ -561,10 +582,17 @@ class SessionControllersManager(object, metaclass=Singleton):
         self.add_to_session_history(controller.history_id, media_type, 'outgoing', 'failed', failure_reason, local_to_utc(data.timestamp), local_to_utc(data.timestamp), 0, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, json.dumps(controller.encryption), controller.display_name or '', controller.device_id or '', str(controller.target_uri))
 
         if 'audio' in data.streams:
-            message = '<h3>Failed Outgoing Call</h3>'
-            message += '<p>Reason: %s (%s)' % (data.reason or data.failure_reason, data.code)
-            #message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
-            media_type = 'audio'
+            message = 'Call failed'
+            record = build_call_record(call_id, 'outgoing', 'failed', duration=0,
+                                       status=data.code,
+                                       reason=data.reason or data.failure_reason,
+                                       remote_party=remote_uri,
+                                       display_name=controller.display_name or '',
+                                       start_time=local_to_utc(data.timestamp),
+                                       stop_time=local_to_utc(data.timestamp),
+                                       media=data.streams, from_tag=from_tag, to_tag=to_tag,
+                                       local=self.call_local_block(controller, data.streams))
+            media_type = dominant_media(data.streams)
             local_uri = local_uri
             remote_uri = remote_uri
             # This call was placed from here. It used to be logged as
@@ -584,7 +612,8 @@ class SessionControllersManager(object, metaclass=Singleton):
                          local_uri=local_uri, remote_uri=remote_uri,
                          call_id=call_id, history_id=controller.history_id,
                          media_type=media_type, summary='Failed Outgoing Call: %s (%s)' % (data.reason or data.failure_reason, data.code))
-            self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, call_id=call_id)
+            self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, call_id=call_id, record=record)
+            self.publish_call_record(account, record)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='outgoing', missed=False, history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour@local', check_contact=True))
         NotificationCenter().post_notification('SIPSessionLoggedToHistory', sender=self)
 
@@ -610,9 +639,16 @@ class SessionControllersManager(object, metaclass=Singleton):
         self.add_to_session_history(controller.history_id, media_type, 'outgoing', 'cancelled', failure_reason, local_to_utc(data.timestamp), local_to_utc(data.timestamp), 0, local_uri, remote_uri, focus, participants, call_id, from_tag, to_tag, controller.answering_machine_filename, json.dumps(controller.encryption), controller.display_name or '', controller.device_id or '', str(controller.target_uri))
 
         if 'audio' in data.streams:
-            message= '<h3>Cancelled Outgoing Call</h3>'
-            #message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
-            media_type = 'audio'
+            message = 'Cancelled call'
+            record = build_call_record(call_id, 'outgoing', 'cancelled', duration=0,
+                                       status=getattr(data, 'code', None),
+                                       remote_party=remote_uri,
+                                       display_name=controller.display_name or '',
+                                       start_time=local_to_utc(data.timestamp),
+                                       stop_time=local_to_utc(data.timestamp),
+                                       media=data.streams, from_tag=from_tag, to_tag=to_tag,
+                                       local=self.call_local_block(controller, data.streams))
+            media_type = dominant_media(data.streams)
             # This call was placed from here. It used to be logged as
             # 'incoming' -- so every outgoing call in every conversation
             # read as one received, and the session row and the chat row
@@ -630,7 +666,8 @@ class SessionControllersManager(object, metaclass=Singleton):
                          local_uri=local_uri, remote_uri=remote_uri,
                          call_id=call_id, history_id=controller.history_id,
                          media_type=media_type, summary="Cancelled Outgoing Call")
-            self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, call_id=call_id)
+            self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, call_id=call_id, record=record)
+            self.publish_call_record(account, record)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='outgoing', missed=False, history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour@local', check_contact=True))
         NotificationCenter().post_notification('SIPSessionLoggedToHistory', sender=self)
 
@@ -679,32 +716,15 @@ class SessionControllersManager(object, metaclass=Singleton):
 
         if 'audio' in data.streams:
             duration = self.get_printed_duration(session.start_time, session.end_time)
-            message = '<h3>Outgoing Call</h3>'
-            message += '<p>Media: %s' % ', '.join(data.streams)
-            message += '<p>Call duration: %s' % duration
-            #message += '<h4>Technicall Information</h4><table class=table_session_info><tr><td class=td_session_info>Call Id</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>From Tag</td><td class=td_session_info>%s</td></tr><tr><td class=td_session_info>To Tag</td><td class=td_session_info>%s</td></tr></table>' % (call_id, from_tag, to_tag)
-            enc_keys = list(controller.encryption.keys())
-            if enc_keys:
-                message += '<h4>Encryption</h4>'
-                message += '<ul>'
-                for key in enc_keys:
-                    try:
-                        type = controller.encryption[key]['type']
-                        message += '<li>%s: %s' % (key, type)
-                        try:
-                            verified = controller.encryption[key]['verified']
-                            if verified == 'yes':
-                                message += ', verified'
-                            else:
-                                message += ', not verified'
-                        except KeyError:
-                            pass
-                    
-                    except KeyError:
-                        continue
-                message += '</ul>'
-            
-            media_type = 'audio'
+            message = 'Outgoing call'
+            record = build_call_record(call_id, 'outgoing', 'completed', duration=seconds,
+                                       remote_party=remote_uri,
+                                       display_name=controller.display_name or '',
+                                       start_time=local_to_utc(session.start_time),
+                                       stop_time=local_to_utc(session.end_time),
+                                       media=data.streams, from_tag=from_tag, to_tag=to_tag,
+                                       local=self.call_local_block(controller, data.streams))
+            media_type = dominant_media(data.streams)
             # From me, to them: the other way round for an outgoing call.
             cpim_from = local_uri
             cpim_to = data.target_uri
@@ -718,9 +738,94 @@ class SessionControllersManager(object, metaclass=Singleton):
                          media_type=media_type, summary="Outgoing Call",
                          # locals(): duration is only bound on some branches above
                          duration=locals().get('duration'))
-            self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, call_id=call_id)
+            self.add_to_chat_history(controller.history_id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, call_id=call_id, record=record)
+            self.publish_call_record(account, record)
             NotificationCenter().post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction='outgoing', missed=False, history_entry=False, remote_party=format_identity_to_string(controller.target_uri), local_party=local_uri if account is not BonjourAccount() else 'bonjour@local', check_contact=True))
         NotificationCenter().post_notification('SIPSessionLoggedToHistory', sender=self)
+
+    def publish_call_record(self, account, record):
+        """Tell this account's other devices about a call.
+
+        Sent to our own address, so it reaches every device registered for
+        it and the server journals it for the ones that are offline. The
+        record travels as the message body: the wire has no side band for
+        metadata, and the reader parses a JSON body for exactly this.
+
+        WHAT is published follows from who knows what. An outgoing call is
+        published whatever became of it -- no other device knows it happened
+        at all, so even a call that failed is news. An incoming call is
+        published only when THIS device answered it: a device that merely
+        heard the phone ring knows nothing the others do not, and the
+        missed calls it would report are the server's to report later.
+
+        Bonjour is excluded: link-local has no account to send to.
+        """
+        if account is None or account is BonjourAccount():
+            return
+        if not record or not record.get('sessionId'):
+            return
+
+        direction = str(record.get('direction') or '')
+        if direction == 'incoming' and not (record.get('duration') or 0) > 0:
+            return
+        if direction not in ('incoming', 'outgoing'):
+            return
+
+        try:
+            from SMSWindowManager import SMSWindowManager
+            SMSWindowManager().sendMessage(account, json.dumps(record), CALL_CONTENT_TYPE)
+            BlinkLogger().log_info('[cdr] published %s %s call %s to the other '
+                                   'devices of %s'
+                                   % (direction, record.get('outcome'),
+                                      record.get('sessionId'), account.id))
+        except Exception as e:
+            # A call that is stored but not replicated is a smaller problem
+            # than a call that is neither, so this never propagates.
+            BlinkLogger().log_error('[cdr] cannot publish call %s: %s'
+                                    % (record.get('sessionId'), e))
+
+    def call_local_block(self, controller, streams):
+        """The `local` half of a record: what this device knows and the proxy
+        does not -- the streams actually negotiated and how each was secured.
+        """
+        encryption = {}
+        try:
+            for key, value in (controller.encryption or {}).items():
+                try:
+                    entry = {'type': value['type']}
+                except (KeyError, TypeError):
+                    continue
+                try:
+                    entry['verified'] = value['verified'] == 'yes'
+                except (KeyError, TypeError):
+                    pass
+                encryption[key] = entry
+        except Exception:
+            encryption = {}
+
+        local = {'streams': list(streams or ())}
+        if encryption:
+            local['encryption'] = encryption
+
+        # THIS device, not the far end. controller.device_id is the contact's
+        # id -- for a Bonjour neighbour it is literally what gets stored as
+        # remote_uri -- so putting it here labelled the far end as the device
+        # that took the call. What the field means is "which of my devices
+        # was this", which is settings.instance_id: the same value the
+        # addressbook tick uses to tell our own devices apart.
+        # bare_instance_id, not the raw setting: it is a "urn:uuid:<uuid>"
+        # URN, and a device id that appears in two spellings is two devices
+        # to anything comparing records across them. Imported here rather
+        # than at module scope -- SMSWindowManager reaches back into this
+        # module, and this is called once per call.
+        try:
+            from SMSWindowManager import bare_instance_id
+            instance_id = bare_instance_id(SIPSimpleSettings().instance_id)
+        except Exception:
+            instance_id = None
+        if instance_id:
+            local['deviceId'] = instance_id
+        return local
 
     def get_printed_duration(self, start_time, end_time):
         duration = end_time - start_time
@@ -735,17 +840,93 @@ class SessionControllersManager(object, metaclass=Singleton):
 
         return duration_print
 
+    # Bonjour rows carry no SIP identity: local_uri is the link-local
+    # constant and remote_uri is a device id, or None. Canonicalising either
+    # would turn a None into '' and rewrite a uuid, so they are left alone.
+    BONJOUR_LOCAL_URI = 'bonjour@local'
+
+    def canonical_call_uris(self, local_uri, remote_uri):
+        """(local, remote) as they should be WRITTEN to history.
+
+        One spelling per party, so that a call recorded live and the same
+        call replayed from the server history produce the same row key. The
+        live path used to store what was dialled ('00318008185@sylk.link')
+        and the server path what the CDR reported ('+318008185@sylk.link' or
+        a bare '0031646630425'), which filed one contact's calls under up to
+        four different remote_uri values.
+        """
+        if local_uri == self.BONJOUR_LOCAL_URI or remote_uri is None:
+            return local_uri, remote_uri
+
+        account = None
+        try:
+            if local_uri and AccountManager().has_account(local_uri):
+                account = AccountManager().get_account(local_uri)
+        except Exception:
+            account = None
+
+        try:
+            return canonical_pstn_uri(local_uri, account), canonical_pstn_uri(remote_uri, account)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot canonicalise %s/%s: %s' % (local_uri, remote_uri, e))
+            return local_uri, remote_uri
+
     def add_to_session_history(self, id, media_type, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants, call_id, from_tag, to_tag, answering_machine_filename, encryption='', display_name='', device_id='', remote_full_uri=''):
+        local_uri, remote_uri = self.canonical_call_uris(local_uri, remote_uri)
         return SessionHistory().add_entry(id, media_type, direction, status, failure_reason, start_time, end_time, duration, local_uri, remote_uri, remote_focus, participants, call_id, from_tag, to_tag, answering_machine_filename, encryption, display_name, device_id, remote_full_uri)
 
-    def add_to_chat_history(self, id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, call_id=''):
-        # call_id lands in chat_messages.sip_callid, a column that has existed
-        # and been indexed all along and was never written for a call. Without
-        # it a call's chat row cannot be joined back to its session row, which
-        # is why correcting the direction of stored calls had to match on the
-        # body text (_fix_outgoing_call_direction) and why deduplicating a
-        # call that arrives twice has nothing to key on.
-        return ChatHistory().add_message(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, "html", "0", status, call_id=call_id)
+    def add_to_chat_history(self, id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, call_id='', record=None):
+        """Write a call to the conversation.
+
+        With a `record` the row is a call detail record: the message id is
+        the call's own id, so the same call observed here and replayed from
+        the server history is one row that the two views merge into, and the
+        body is a plain-text line synthesized from the record rather than a
+        paragraph of generated HTML.
+
+        Without one it is the legacy shape -- a recording, a transfer, a
+        presence note -- stored as 'html' under a uuid, exactly as before.
+        """
+        local_uri, remote_uri = self.canonical_call_uris(local_uri, remote_uri)
+
+        if record is None:
+            return ChatHistory().add_message(id, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, "html", "0", status, call_id=call_id)
+
+        # The record's remote party is the row's, canonicalised: the two are
+        # read together and a record naming a spelling the column does not
+        # hold is the fork this whole change exists to close.
+        if remote_uri:
+            record = dict(record, remoteParty=remote_uri)
+
+        # The call id, or the uuid when there is none to key on -- a call
+        # without one cannot be deduplicated and must not collide with the
+        # next one that also has none.
+        msgid = record.get('sessionId') or call_id or id
+        body = call_summary(record) or message
+        stored = ChatHistory().add_message(msgid, media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, body, CALL_CONTENT_TYPE, "0", status, call_id=call_id, metadata=json.dumps(record))
+        self.draw_call_in_conversation(local_uri, remote_uri, record)
+        return stored
+
+    def draw_call_in_conversation(self, local_uri, remote_uri, record):
+        """Put a call we just observed into its conversation, if it is open.
+
+        Nothing else does: the loggers write the row and stop, so a call
+        the user had just finished was missing from the transcript in front
+        of them until the window was closed and opened again. Best effort
+        by design -- the row is the record of the call, and a view that
+        cannot be reached is not a reason to fail the write above.
+        """
+        try:
+            account = (AccountManager().get_account(local_uri)
+                       if local_uri and AccountManager().has_account(local_uri)
+                       else None)
+            if account is None:
+                return
+            from SMSWindowManager import SMSWindowManager
+            SMSWindowManager().drawCallRecord(account, remote_uri, record)
+        except Exception as e:
+            BlinkLogger().log_debug('Cannot draw call %s in its conversation: %s'
+                                    % (record.get('sessionId'), e))
 
     @run_in_green_thread
     def get_redial_uri_from_history(self):

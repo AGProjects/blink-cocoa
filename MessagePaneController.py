@@ -1828,6 +1828,12 @@ class MessagePaneController(NSObject):
         if content is not None:
             content.setFrame_(self.conversationContainer.bounds())
             content.setHidden_(False)
+        # Selecting IS opening: a conversation whose view was built in the
+        # background deferred its history, and this is the moment it is due.
+        try:
+            viewer.replayHistoryIfNeeded()
+        except AttributeError:
+            pass
             # The view was framed while it was hidden, possibly against a
             # container that had no size yet. Anything the conversation
             # placed by hand has to be re-asserted now that it does.

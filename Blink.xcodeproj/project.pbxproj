@@ -680,9 +680,9 @@
 		AD00000000000000004E0001 /* NativeChatViewController.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004E0000 /* NativeChatViewController.py */; };
 		AD00000000000000004E0003 /* NativeChatViewController.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004E0000 /* NativeChatViewController.py */; };
 		AD00000000000000004F0001 /* MessagePaneController.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004F0000 /* MessagePaneController.py */; };
+		AD00000000000000004F0003 /* MessagePaneController.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004F0000 /* MessagePaneController.py */; };
 		AD0000000000000000500001 /* MessageAccountPicker.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000500000 /* MessageAccountPicker.py */; };
 		AD0000000000000000500003 /* MessageAccountPicker.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000500000 /* MessageAccountPicker.py */; };
-		AD00000000000000004F0003 /* MessagePaneController.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004F0000 /* MessagePaneController.py */; };
 		AD00000000000000005A0001 /* SylkLocation.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005A0000 /* SylkLocation.py */; };
 		AD00000000000000005A0003 /* SylkLocation.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005A0000 /* SylkLocation.py */; };
 		AD00000000000000005B0001 /* Base in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005B0000 /* Base */; };
@@ -703,6 +703,8 @@
 		AD0000000000000000720003 /* SmileyPicker.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000720000 /* SmileyPicker.py */; };
 		AD0000000000000000730001 /* VideoPlayback.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000730000 /* VideoPlayback.py */; };
 		AD0000000000000000730003 /* VideoPlayback.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000730000 /* VideoPlayback.py */; };
+		AD0000000000000000AB0001 /* AddressbookNotify.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000AB0000 /* AddressbookNotify.py */; };
+		AD0000000000000000AB0003 /* AddressbookNotify.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000AB0000 /* AddressbookNotify.py */; };
 		AD00000000000000740001 /* AttachmentPreview.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000740000 /* AttachmentPreview.py */; };
 		AD00000000000000740003 /* AttachmentPreview.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000740000 /* AttachmentPreview.py */; };
 		AD00000000000000750001 /* CameraCapture.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000750000 /* CameraCapture.py */; };
@@ -1530,6 +1532,7 @@
 		AD0000000000000000710000 /* AudioRecorderView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AudioRecorderView.py; sourceTree = "<group>"; };
 		AD0000000000000000720000 /* SmileyPicker.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SmileyPicker.py; sourceTree = "<group>"; };
 		AD0000000000000000730000 /* VideoPlayback.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoPlayback.py; sourceTree = "<group>"; };
+		AD0000000000000000AB0000 /* AddressbookNotify.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AddressbookNotify.py; sourceTree = "<group>"; };
 		AD00000000000000740000 /* AttachmentPreview.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AttachmentPreview.py; sourceTree = "<group>"; };
 		AD00000000000000750000 /* CameraCapture.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = CameraCapture.py; sourceTree = "<group>"; };
 		AD00000000000000760000 /* Avatars.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = Avatars.py; sourceTree = "<group>"; };
@@ -1880,6 +1883,7 @@
 				AD00000000000000004E0000 /* NativeChatViewController.py */,
 				AD00000000000000005B0000 /* Base */,
 				AD00000000000000005A0000 /* SylkLocation.py */,
+				AD0000000000000000AB0000 /* AddressbookNotify.py */,
 				AD00000000000000004D0000 /* MessageHost.py */,
 				2B0CE72910CD824400325F30 /* SMSSession.xib */,
 			);
@@ -2616,6 +2620,7 @@
 				AD00000000000000004E0001 /* NativeChatViewController.py in Resources */,
 				AD00000000000000005B0001 /* Base in Resources */,
 				AD00000000000000005A0001 /* SylkLocation.py in Resources */,
+				AD0000000000000000AB0001 /* AddressbookNotify.py in Resources */,
 				AD00000000000000004D0001 /* MessageHost.py in Resources */,
 				1F22731812B554F50010A8B2 /* PresenceOfflineWindow.xib in Resources */,
 				1F22731A12B554F50010A8B2 /* 200901@login.zipdx.com.tiff in Resources */,
@@ -2927,6 +2932,7 @@
 				AD00000000000000004E0003 /* NativeChatViewController.py in Resources */,
 				AD00000000000000005B0003 /* Base in Resources */,
 				AD00000000000000005A0003 /* SylkLocation.py in Resources */,
+				AD0000000000000000AB0003 /* AddressbookNotify.py in Resources */,
 				AD00000000000000004D0003 /* MessageHost.py in Resources */,
 				2B29EF3811382F65009DA9B0 /* PresenceOfflineWindow.xib in Resources */,
 				1F3218B511639E4300ADBDCD /* 200901@login.zipdx.com.tiff in Resources */,
@@ -3912,7 +3918,7 @@
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 953;
+				CURRENT_PROJECT_VERSION = 954;
 				DEVELOPMENT_TEAM = 4DFEFUDLKZ;
 				ENABLE_HARDENED_RUNTIME = YES;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
@@ -3939,7 +3945,7 @@
 					"$(PROJECT_DIR)/Distribution/Frameworks/libs",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 9.7.2;
+				MARKETING_VERSION = 9.7.3;
 				ONLY_ACTIVE_ARCH = NO;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				OTHER_CODE_SIGN_FLAGS = "";
@@ -3963,7 +3969,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 953;
+				CURRENT_PROJECT_VERSION = 954;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 4DFEFUDLKZ;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -3989,7 +3995,7 @@
 					"$(PROJECT_DIR)/Distribution/Frameworks/libs",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 9.7.2;
+				MARKETING_VERSION = 9.7.3;
 				ONLY_ACTIVE_ARCH = NO;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				OTHER_CODE_SIGN_FLAGS = "";

@@ -47,12 +47,13 @@ import sys
 from application.notification import NotificationCenter, IObserver
 from application.python import Null
 from operator import attrgetter
+from sipsimple.account import AccountManager
 from sipsimple.addressbook import ContactURI
 from sipsimple.core import SIPCoreError, SIPURI
 from zope.interface import implementer
 
 from VirtualGroups import VirtualGroup
-from util import checkValidPhoneNumber, format_uri_type, log_gui_exception, run_in_gui_thread
+from util import checkValidPhoneNumber, format_uri_type, log_gui_exception, run_in_gui_thread, canonical_pstn_uri, pstn_e164
 
 
 # PNG, spelled out rather than imported: AppKit renamed the file-type
@@ -291,8 +292,20 @@ class AddContactController(NSObject):
         self.default_uri = None
         self.preferred_media = 'audio'
         self.uris = []
+        # Every "Add to contacts" entry point (a call, a chat, a conference
+        # participant, a message banner) hands over the address the session was
+        # started with -- for a PSTN call that is the post-dial-plan wire form,
+        # <number>@<account domain>. Stored verbatim it becomes a second,
+        # domain-qualified contact for a number the addressbook already holds
+        # bare. Canonicalise on the way in; a SIP address is returned unchanged.
+        _account = AccountManager().default_account
         for (uri, type) in uris:
-            self.uris.append(ContactURI(uri=uri.strip(), type=format_uri_type(type)))
+            _uri = uri.strip()
+            _e164 = pstn_e164(_uri, _account)
+            if _e164:
+                self.uris.append(ContactURI(uri=_e164, type='tel'))
+            else:
+                self.uris.append(ContactURI(uri=_uri, type=format_uri_type(type)))
 
         self.update_default_uri()
         self.subscriptions = {'presence': {'subscribe': True, 'policy': 'allow'},  'dialog': {'subscribe': False, 'policy': 'block'}}
@@ -750,8 +763,18 @@ class AddContactController(NSObject):
                     NSRunAlertPanel(NSLocalizedString("Invalid Address", "Window title"), NSLocalizedString("Please enter an address containing alpha numeric characters", "Label"),
                                     NSLocalizedString("OK", "Button title"), None, None)
                     return
+                # A phone number is stored bare, in E.164, whatever the user
+                # typed -- "+31 800 818 67", "0031800818 67" or a number pasted
+                # with the account domain already on it all end up as one
+                # address, which is the only way this contact can match the one
+                # the phone writes into the shared addressbook.
+                _e164 = pstn_e164(uri, AccountManager().default_account)
+                if _e164:
+                    uri = _e164
                 contact_uri.uri = uri
-                if uri.startswith(('https:', 'http:')):
+                if _e164:
+                    contact_uri.type = 'tel'
+                elif uri.startswith(('https:', 'http:')):
                     contact_uri.type = 'URL'
 
                 elif '@' in uri:

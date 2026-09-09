@@ -116,6 +116,8 @@ def _describe_payload_value(value):
         return '<%d chars: %s...>' % (len(value), value[:60])
     return repr(value)
 from MessageHost import (FILE_TRANSFER_CONTENT_TYPE, FILE_TRANSFER_CONTENT_TYPES,
+                         CALL_CONTENT_TYPE, call_record, call_summary,
+                         dominant_media, this_device_id,
                          call_recording_metadata, file_transfer_envelope,
                          pgp_plaintext,
                          pgp_plaintext_bytes)
@@ -124,7 +126,7 @@ from SylkLocation import (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE,
                           bubble_id as location_bubble_id, location_payload,
                           merge_location_bodies, storable_envelope)
 from FileTransferCache import FILE_TRANSFER_PATH, base_url_from_transfer
-from util import active_account_uris, format_identity_to_string, run_in_gui_thread, call_later
+from util import active_account_uris, format_identity_to_string, run_in_gui_thread, call_later, canonical_pstn_uri, pstn_e164
 
 # Requests addressed to SylkServer, not to a person. The server answers each
 # of them on its own content type -- a key lookup comes back as
@@ -947,6 +949,38 @@ class SMSWindowManagerClass(NSObject):
     # says nothing about another's.
     _ab_notify = {}
 
+    # Set while a reload-driven repair is running, for EVERY account. A clock
+    # cannot do this job: the repairs do not all live here (ContactListModel
+    # defers calls_group_startup_check -> repair_contact_addresses by its own
+    # XCAP_SETTLE_DELAY), and a timed window gets it wrong in both directions --
+    # it drops a user's edit that happens to land inside it, and it lets a
+    # repair through on whichever account's window has already expired. Seen on
+    # 2026-09-08: one repair pass rewrote four contacts and announced exactly
+    # one of them, on one of two accounts, purely on timer alignment.
+    #
+    # A counter, not a flag: reloads for two accounts overlap.
+    _ab_notify_suppress_all = [0]
+
+    # When each account's XCAP manager first started, so the lifecycle lines can
+    # say how long the addressbook took rather than only when it arrived.
+    _ab_lifecycle_started = {}
+
+    @objc.python_method
+    def suppressAddressbookNotifications(self):
+        """Announce nothing until resumed -- for every account.
+
+        Wrapped around work that is this device catching up with the document
+        it has just been handed. Every other device reaches the same place from
+        the same document on its own load, so announcing it would mean device
+        A's repair wakes device B, whose repair writes back, which wakes A.
+        """
+        self._ab_notify_suppress_all[0] += 1
+
+    @objc.python_method
+    def resumeAddressbookNotifications(self):
+        if self._ab_notify_suppress_all[0] > 0:
+            self._ab_notify_suppress_all[0] -= 1
+
     @objc.python_method
     def _abNotifyState(self, account):
         key = str(account.id)
@@ -958,7 +992,10 @@ class SMSWindowManagerClass(NSObject):
                      'fetch_armed': False,
                      'contacts': set(),
                      'groups': set(),
-                     'full': False}
+                     'full': False,
+                     'awaiting_reload': False,
+                     'retried': False,
+                     'announced_ready': False}
             self._ab_notify[key] = state
         return state
 
@@ -983,6 +1020,21 @@ class SMSWindowManagerClass(NSObject):
 
     @objc.python_method
     def _abNoteXCAPChange(self, manager, kind, id):
+        if self._ab_notify_suppress_all[0]:
+            return          # a repair, not an edit -- see suppressAddressbookNotifications
+        # Nor is copying a document we just fetched. Applying ONE account's
+        # addressbook writes the same contacts into every OTHER account's xcap
+        # manager (sipsimple addressbook.py, the propagation loop in
+        # _internal_save), through the same mutators a user edit goes through
+        # -- so without this every reload announced the whole document to every
+        # device, on both accounts, twice per launch. Which is the loop: their
+        # apply becomes our announcement becomes their fetch.
+        try:
+            from sipsimple.addressbook import AddressbookManager
+            if getattr(AddressbookManager(), 'applying_remote_data', 0):
+                return
+        except Exception:
+            pass            # an older sipsimple without the counter: as before
         account = self._abAccountForManager(manager)
         if account is None:
             return
@@ -1030,7 +1082,7 @@ class SMSWindowManagerClass(NSObject):
         contact_ids, group_ids, truncated = tick
         settings = SIPSimpleSettings()
         content = AddressbookNotify.build_tick(settings.instance_id, contact_ids, group_ids, truncated)
-        BlinkLogger().log_info('Addressbook changed, telling the other devices of %s: '
+        BlinkLogger().log_info('[ab] [notify] Addressbook changed, telling the other devices of %s: '
                                '%d contact(s), %d group(s)%s'
                                % (account.id, len(contact_ids), len(group_ids),
                                   ' (truncated)' if truncated else ''))
@@ -1043,6 +1095,92 @@ class SMSWindowManagerClass(NSObject):
         self._abArmNotify(manager)
 
     @objc.python_method
+    def handleCallRecord(self, account, content, sender_uri=None, metadata=None):
+        """A call detail record from one of our own devices.
+
+        The device that placed a call, or the one that answered an incoming
+        one, tells the others. This device may never have known the call
+        happened -- an outgoing call from the phone -- or may hold it as a
+        missed call it heard ring. Either way the record is written under the
+        call's own id, so ChatHistory.add_message merges it onto whatever is
+        already there rather than adding a second row.
+        """
+        # Self only. A record filed by anyone else would be a stranger
+        # writing into this user's call history, which is not a thing the
+        # protocol allows: the type is account-to-own-account.
+        if sender_uri is not None:
+            sender = str(sender_uri).split(':', 1)[-1].split(';', 1)[0]
+            if sender != str(account.id):
+                BlinkLogger().log_warning('[cdr] ignoring a call record for %s sent by %s'
+                                          % (account.id, sender))
+                return
+
+        record = call_record(content, metadata)
+        if record is None or not record.get('sessionId'):
+            BlinkLogger().log_debug('[cdr] ignoring an unreadable call record for %s'
+                                    % account.id)
+            return
+
+        # Our own message, forked back to us. Harmless -- merging a record
+        # onto itself changes nothing -- but there is no reason to write.
+        origin = str((record.get('local') or {}).get('deviceId') or '')
+        if origin and origin == str(this_device_id() or ''):
+            return
+
+        # It reached us from another device, so it saw a leg of the call this
+        # one did not. `source` says how far to trust it against what is
+        # already stored; see merge_call_records.
+        record = dict(record, source='device')
+
+        direction = str(record.get('direction') or 'incoming')
+        remote_uri = canonical_pstn_uri(record.get('remoteParty') or '', account)
+        local_uri = str(account.id)
+        if not remote_uri:
+            return
+
+        summary = call_summary(record, this_device_id()) or 'Call'
+        media_type = dominant_media((record.get('local') or {}).get('streams')
+                                    or record.get('media'))
+        timestamp = record.get('startTime') or str(ISOTimestamp.now())
+
+        BlinkLogger().log_info('[cdr] %s %s call %s from another device of %s'
+                               % (direction, record.get('outcome'),
+                                  record['sessionId'], account.id))
+
+        ChatHistory().add_message(
+            record['sessionId'], media_type, local_uri, remote_uri, direction,
+            remote_uri if direction == 'incoming' else local_uri,
+            local_uri if direction == 'incoming' else remote_uri,
+            timestamp, summary, CALL_CONTENT_TYPE, "0", MSG_STATE_DELIVERED,
+            call_id=record['sessionId'], metadata=json.dumps(record))
+
+        self.drawCallRecord(account, remote_uri, record)
+
+    @objc.python_method
+    @run_in_gui_thread
+    def drawCallRecord(self, account, remote_uri, record):
+        """Draw a call into its conversation, if that conversation is open.
+
+        Called by the device that observed the call and by the sync that
+        receives another device's report of one. The row is already written
+        either way; this is only the view catching up, so a call finishing
+        while its transcript is in front of the user appears there instead
+        of waiting for the window to be closed and opened again.
+
+        On the GUI thread: the callers are the SIP notification thread and
+        the session controller's own, and the conversations it looks
+        through are AppKit views the main thread owns.
+        """
+        try:
+            viewer = self._viewerForContact(account, remote_uri)
+        except Exception as e:
+            BlinkLogger().log_debug('[cdr] cannot find the conversation for %s: %s'
+                                    % (remote_uri, e))
+            return
+        if viewer is not None:
+            viewer.noteCallRecord(record)
+
+    @objc.python_method
     def handleAddressbookNotify(self, account, content, sender_uri=None):
         """A tick from one of our own devices: arm a jittered refetch."""
         # Self only. Nobody else gets to make us re-read our addressbook: the
@@ -1051,7 +1189,7 @@ class SMSWindowManagerClass(NSObject):
         if sender_uri is not None:
             sender = str(sender_uri).split(':', 1)[-1].split(';', 1)[0]
             if sender != str(account.id):
-                BlinkLogger().log_warning('Ignoring an addressbook tick for %s sent by %s'
+                BlinkLogger().log_warning('[ab] [notify] Ignoring an addressbook tick for %s sent by %s'
                                           % (account.id, sender))
                 return
         tick = AddressbookNotify.parse_tick(content)
@@ -1063,7 +1201,7 @@ class SMSWindowManagerClass(NSObject):
         # expires: a 30s delay on a 110s-old tick must not discard a fetch that
         # is still wanted.
         if not AddressbookNotify.is_fresh(tick['timestamp']):
-            BlinkLogger().log_debug('Ignoring a stale addressbook tick for %s' % account.id)
+            BlinkLogger().log_debug('[ab] [notify] Ignoring a stale addressbook tick for %s' % account.id)
             return
         state = self._abNotifyState(account)
         if tick['truncated'] or tick['contact_ids'] is None:
@@ -1072,10 +1210,10 @@ class SMSWindowManagerClass(NSObject):
         state['groups'].update(tick['group_ids'] or ())
         delay = state['scheduler'].schedule()
         if delay is None:
-            BlinkLogger().log_debug('Addressbook tick merged into the fetch already coming for %s'
+            BlinkLogger().log_debug('[ab] [notify] Addressbook tick merged into the fetch already coming for %s'
                                     % account.id)
             return
-        BlinkLogger().log_info('The addressbook of %s changed on another device; fetching in %ds'
+        BlinkLogger().log_info('[ab] [notify] The addressbook of %s changed on another device; fetching in %ds'
                                % (account.id, round(delay)))
         state['fetch_armed'] = True
         call_later(delay, self._abFireNotifyFetch, account)
@@ -1090,17 +1228,17 @@ class SMSWindowManagerClass(NSObject):
         fetch, retry_in, backed_off = state['scheduler'].fire(self._abManagerSettled(manager))
         if not fetch:
             if backed_off:
-                BlinkLogger().log_warning('Too many addressbook fetches for %s -- backing off'
+                BlinkLogger().log_warning('[ab] [notify] Too many addressbook fetches for %s -- backing off'
                                           % account.id)
             if retry_in is not None:
                 state['fetch_armed'] = True
                 call_later(retry_in, self._abFireNotifyFetch, account)
             return
         if state['full']:
-            BlinkLogger().log_info('Fetching the addressbook of %s (the sender could not say what changed)'
+            BlinkLogger().log_info('[ab] [notify] Fetching the addressbook of %s (the sender could not say what changed)'
                                    % account.id)
         else:
-            BlinkLogger().log_info('Fetching the addressbook of %s (%d contact(s), %d group(s) changed)'
+            BlinkLogger().log_info('[ab] [notify] Fetching the addressbook of %s (%d contact(s), %d group(s) changed)'
                                    % (account.id, len(state['contacts']), len(state['groups'])))
         # The ids scope the log, never the fetch: XCAP has no way to ask for
         # part of a document, so this is always the whole resource-lists. Only
@@ -1109,19 +1247,84 @@ class SMSWindowManagerClass(NSObject):
         state['contacts'].clear()
         state['groups'].clear()
         state['full'] = False
+        state['awaiting_reload'] = True
         self._abSendFetchCommand(manager)
+        # Say so if the fetch brings nothing back. Checked late because a real
+        # change reaches insync BEFORE _load_data runs (see _CH_update), so an
+        # immediate test would call every successful fetch a failure.
+        call_later(20.0, self._abReportFetchOutcome, account)
 
     @objc.python_method
     @run_in_twisted_thread
     def _abSendFetchCommand(self, manager):
+        # UNCONDITIONAL. Document.fetch() always sends If-None-Match with the
+        # cached etag, and a 304 takes _CH_fetch's early return: straight back
+        # to insync, no _load_data, no XCAPManagerDidReloadData -- the change is
+        # silently dropped. That is the right behaviour for the periodic poll it
+        # was written for, and the wrong one here: a tick is another device
+        # asserting that the document HAS changed, which is better information
+        # than an etag the server may not have bumped for the write. Observed on
+        # 2026-09-08: a display name edited on the phone, the tick delivered and
+        # acted on, and the GET answered 304 twenty seconds later.
+        #
+        # Dropping the etag is safe at exactly this point and no other: we only
+        # get here settled (insync, empty journal), so no update() is waiting to
+        # PUT with If-Match, and _CH_fetch stores the fresh etag before the
+        # normalize pass can write anything.
+        try:
+            document = manager.resource_lists
+            if document.etag is not None:
+                BlinkLogger().log_debug('[ab] [notify] Asking for the addressbook without the cached etag %s: '
+                                        'another device says it changed' % document.etag)
+                document.etag = None
+        except (AttributeError, ReferenceError):
+            pass
         # The command channel is a green queue read by the manager's own
         # greenlet; sipsimple schedules onto it from the twisted thread and so
-        # do we. A conditional GET: an unchanged etag returns the manager to
-        # insync and nothing else happens.
+        # do we.
         try:
             manager.command_channel.send(Command('fetch', documents=set(AddressbookNotify.FETCH_DOCUMENTS)))
         except Exception as e:
-            BlinkLogger().log_error('Could not ask for an addressbook fetch: %s' % e)
+            BlinkLogger().log_error('[ab] [notify] Could not ask for an addressbook fetch: %s' % e)
+
+    @objc.python_method
+    def _abReportFetchOutcome(self, account):
+        """Did the fetch we asked for actually deliver a new addressbook?
+
+        It has to be asked, because a failed fetch is not retried by anything
+        below us. _CH_fetch does have a 60-second retry, but it hangs off an
+        XCAPError propagating out of _fetch_documents, and _fetch_one_document
+        deliberately swallows that (a network blip mid-fetch is ordinary and
+        the periodic poll would come round again). For a fetch WE asked for
+        there is no poll coming round: the tick was the only prompt, it has
+        been consumed, and a document that failed to parse -- seen for real on
+        2026-09-08, transient corruption that was gone minutes later -- would
+        otherwise freeze this account's addressbook until something unrelated
+        happened to trigger another fetch.
+
+        So: one retry, then say so. Once, not a loop -- if the second attempt
+        also brings nothing back the problem is not going to be solved by
+        asking a third time, and the fetch scheduler's own floor and fuse still
+        apply to both.
+        """
+        state = self._abNotifyState(account)
+        if not state['awaiting_reload']:
+            state['retried'] = False
+            return
+        manager = getattr(account, 'xcap_manager', None)
+        if manager is not None and not state['retried']:
+            state['retried'] = True
+            BlinkLogger().log_info('[ab] [notify] The addressbook of %s did not arrive -- asking once more'
+                                   % account.id)
+            self._abSendFetchCommand(manager)
+            call_later(20.0, self._abReportFetchOutcome, account)
+            return
+        state['awaiting_reload'] = False
+        state['retried'] = False
+        BlinkLogger().log_warning('[ab] [notify] The addressbook of %s was fetched twice because another device '
+                                  'said it changed, and neither attempt returned a document this '
+                                  'client could use -- check the XCAP trace for a parse error or a '
+                                  'failed GET' % account.id)
 
     @objc.python_method
     def _NH_XCAPManagerDidAddContact(self, sender, data):
@@ -1156,6 +1359,11 @@ class SMSWindowManagerClass(NSObject):
         self._abNoteXCAPChange(sender, 'group', getattr(data.group, 'id', None))
 
     @objc.python_method
+    def _abLifecycleElapsed(self, account):
+        started = self._ab_lifecycle_started.get(str(account.id))
+        return '' if started is None else ' (%.1fs since the manager started)' % (time.time() - started)
+
+    @objc.python_method
     def _NH_XCAPManagerDidChangeState(self, sender, data):
         """insync is the moment our journal reached the server.
 
@@ -1164,11 +1372,25 @@ class SMSWindowManagerClass(NSObject):
         between the batches of a long edit, which is why the debounce sits on
         top of this rather than instead of it.
         """
-        if data.state != 'insync':
-            return
         account = self._abAccountForManager(sender)
         if account is None:
             return
+        key = str(account.id)
+        if key not in self._ab_lifecycle_started:
+            self._ab_lifecycle_started[key] = time.time()
+        # SIPManager already logs every state transition; what is missing is the
+        # FIRST insync -- until then no write of ours has reached the server and
+        # the document we hold is whatever the cache had.
+        if data.state != 'insync':
+            return
+        if not self._ab_notify.get(key, {}).get('announced_ready'):
+            self._abNotifyState(account)['announced_ready'] = True
+            manager = getattr(account, 'xcap_manager', None)
+            BlinkLogger().log_info('[ab] [lifecycle] Addressbook of %s is in sync and open for writes%s'
+                                   % (account.id, self._abLifecycleElapsed(account)))
+            if manager is not None and manager.journal:
+                BlinkLogger().log_info('[ab] [lifecycle] Addressbook of %s still has %d queued operation(s)'
+                                       % (account.id, len(manager.journal)))
         state = self._abNotifyState(account)
         following = state['scheduler'].done()
         if following is not None and not state['fetch_armed']:
@@ -1191,17 +1413,25 @@ class SMSWindowManagerClass(NSObject):
         # prompt held back waiting for it can go ahead.
         self.key_escrow_checked.add(account.id)
 
+        _notify_state = self._abNotifyState(account)
+        BlinkLogger().log_info('[ab] [lifecycle] Addressbook of %s: a new document arrived, applying it%s'
+                               % (account.id, self._abLifecycleElapsed(account)))
+        if _notify_state['awaiting_reload']:
+            _notify_state['awaiting_reload'] = False
+            _notify_state['retried'] = False
+            BlinkLogger().log_info('[ab] [notify] The addressbook of %s reloaded after another device changed it'
+                                   % account.id)
+
         # Nothing this handler writes announces itself. A restore or an escrow
         # repair is this device catching up with the document it has just been
         # handed, and every other device reaches the same place from the same
         # document on its own load. Announcing it would mean device A's write
         # wakes device B, whose repair writes back, which wakes A.
-        throttle = self._abNotifyState(account)['throttle']
-        throttle.suppress()
+        self.suppressAddressbookNotifications()
         try:
             self._applyReloadedAddressbook(account)
         finally:
-            throttle.resume()
+            self.resumeAddressbookNotifications()
 
     @objc.python_method
     def _applyReloadedAddressbook(self, account):
@@ -1916,6 +2146,15 @@ class SMSWindowManagerClass(NSObject):
                     # too -- it just does nothing now. The addressbook itself
                     # carries what these used to replicate.
                     pass
+                elif content_type == CALL_CONTENT_TYPE:
+                    # A call one of our own devices published while this one
+                    # was offline. Deliberately NOT skip-journal, unlike the
+                    # addressbook tick below: a device that was away is
+                    # exactly the device that needs to be told about a call
+                    # it never saw.
+                    self.handleCallRecord(account, msg['content'],
+                                          sender_uri=None,
+                                          metadata=msg.get('metadata'))
                 elif content_type == AddressbookNotify.CONTENT_TYPE:
                     # Sent with X-Sylk-Skip-Journal, so this should not exist at
                     # all; a replayed one is a stale "refetch now" that would
@@ -2532,9 +2771,15 @@ class SMSWindowManagerClass(NSObject):
         key = str(uri or '').strip()
         if not key:
             return False
-        if '@' not in key:
+        if '@' not in key and not pstn_e164(key, AccountManager().default_account):
             # An instance id, or anything else that is not an address at
             # all. Nothing to write to, so nothing to file.
+            #
+            # A bare phone number IS an address: that is how the addressbook
+            # stores one (E.164, no domain) and how the phone writes it. This
+            # test used to refuse them outright, which forced every contact the
+            # messaging path created to carry a domain -- the opposite of what
+            # the shared document wants.
             BlinkLogger().log_debug('Not filing %s under Messages: not an address' % key)
             return False
         if is_placeholder_uri(key):
@@ -2759,7 +3004,15 @@ class SMSWindowManagerClass(NSObject):
         # strip headers (anything after '?')
         if '?' in s:
             s = s.split('?', 1)[0]
-        return s.lower().strip()
+        s = s.lower().strip()
+        # A phone number is ONE party however it is spelled. The addressbook
+        # stores it bare (+3180081867) and the wire delivers it as
+        # +3180081867@domain; leaving those as two keys is what made them two
+        # conversations, and what stopped _findContactByCanonicalURI seeing the
+        # contact that already existed before it created a second one.
+        # canonical_pstn_uri returns E.164 for a PSTN URI and lowercases
+        # anything else, so a SIP address keeps its user@host[:port] shape.
+        return canonical_pstn_uri(s, AccountManager().default_account) or s
 
     @objc.python_method
     def _describe_public_key(self, public_key):
@@ -3100,11 +3353,14 @@ class SMSWindowManagerClass(NSObject):
         its results back through block_on, an eventlib primitive that only
         works from a green thread.
 
-        The media types are the two an audio call is stored under -- 'audio'
-        for a call that happened and 'missed-call' for one that did not.
+        The media types a call is stored under. 'audio' and 'video' are what
+        is written now -- the column says what was negotiated -- and
+        'missed-call' is the legacy spelling, kept so calls stored before
+        that change still order the group.
         """
         try:
-            stored = self.history.last_message_times(media_type=('audio', 'missed-call'),
+            stored = self.history.last_message_times(media_type=('audio', 'video',
+                                                                 'missed-call'),
                                                      local_uri=active_account_uris())
         except Exception as e:
             BlinkLogger().log_error('Cannot read the last call times: %s' % e)
@@ -5222,6 +5478,13 @@ class SMSWindowManagerClass(NSObject):
             self.viewer_hosts[viewer] = host
             host.addViewer(viewer, focusTab=focus)
 
+        # It is on screen now, so the history it did not replay when its view
+        # loaded is due.
+        try:
+            viewer.replayHistoryIfNeeded()
+        except AttributeError:
+            pass
+
         if note_new_message:
             BlinkLogger().log_info("Conversation with %s presented (focus=%s)" % (viewer.target_uri, focus))
             if hasattr(host, 'bringToFront'):
@@ -5816,6 +6079,9 @@ class SMSWindowManagerClass(NSObject):
             # Retired: accepted and ignored, so a device still running the old
             # build is not answered with an error. See the addressbook-update
             # spec, section 10.
+            return
+        elif content_type == CALL_CONTENT_TYPE:
+            self.handleCallRecord(account, content, data.from_header.uri)
             return
         elif content_type == AddressbookNotify.CONTENT_TYPE:
             self.handleAddressbookNotify(account, content, data.from_header.uri)
