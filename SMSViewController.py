@@ -1344,7 +1344,7 @@ class SMSViewController(NSObject):
         return contact
 
     @objc.python_method
-    def gotMessage(self, sender_identity, id, call_id, direction, content, content_type, is_replication_message=False, window=None,  cpim_imdn_events=None, imdn_timestamp=None, account=None, imdn_message_id=None, from_journal=False, status=None, metadata=None):
+    def gotMessage(self, sender_identity, id, call_id, direction, content, content_type, is_replication_message=False, window=None,  cpim_imdn_events=None, imdn_timestamp=None, account=None, imdn_message_id=None, from_journal=False, status=None, metadata=None, counts_as_unread=False):
     
         self.is_replication_message = is_replication_message
 
@@ -1356,13 +1356,13 @@ class SMSViewController(NSObject):
             self.log_info('Discard message %s that looped back to myself' % id)
             return
 
-        message_tuple = (sender_identity, id, call_id, direction, content, content_type, is_replication_message, window, cpim_imdn_events, imdn_timestamp, account, imdn_message_id, status, metadata)
+        message_tuple = (sender_identity, id, call_id, direction, content, content_type, is_replication_message, window, cpim_imdn_events, imdn_timestamp, account, imdn_message_id, status, metadata, counts_as_unread)
 
         self.incoming_queue.put(message_tuple)
 
     @objc.python_method
     def _receive_message(self, message_tuple):
-        (sender_identity, id, call_id, direction, content, content_type, is_replication_message, window, cpim_imdn_events, imdn_timestamp, account, imdn_message_id, status, metadata) = message_tuple
+        (sender_identity, id, call_id, direction, content, content_type, is_replication_message, window, cpim_imdn_events, imdn_timestamp, account, imdn_message_id, status, metadata, counts_as_unread) = message_tuple
 
         if content_type in ('text/pgp-public-key', 'text/pgp-private-key'):
             return
@@ -1625,7 +1625,17 @@ class SMSViewController(NSObject):
             # would carry there is the time of THIS run, not of the
             # message, and doing that for a whole replayed journal is
             # what makes every row show one identical time.
-            self.add_to_history(mInfo, stamps_conversation_time=not timestamp_is_fabricated)
+            # Unread in the table on the same terms the badge was bumped:
+            # the manager counted it (noteNewMessageForSession_) because the
+            # conversation was not in front of the user. Stored as read, the
+            # badge was right for this run and gone after a restart, since
+            # the counters are rebuilt from read = 0 rows. Opening the
+            # conversation marks the rows read again (_clearUnread).
+            unread = (counts_as_unread and direction == 'incoming'
+                      and not is_replication_message and not on_screen
+                      and status != 'displayed')
+            self.add_to_history(mInfo, stamps_conversation_time=not timestamp_is_fabricated,
+                                unread=unread)
 
             if require_displayed_notification:
                 self.not_read_queue.put(msg_id)
@@ -3261,7 +3271,7 @@ class SMSViewController(NSObject):
         self.chatViewController.startTransferProgressTimer()
 
     @objc.python_method
-    def add_to_history(self, message, stamps_conversation_time=True):
+    def add_to_history(self, message, stamps_conversation_time=True, unread=False):
         #self.log_info('%s %s message %s saved with status %s' % (message.direction.title(), message.content_type, message.id, message.status))
         # writes the record to the sql database
         cpim_to = format_identity_to_string(message.recipient, format='full') if message.recipient else ''
@@ -3271,7 +3281,8 @@ class SMSViewController(NSObject):
         remote_uri = self.conversation_peer_uri()
         self.msg_id_list.add(message.id)
 
-        self.history.add_message(message.id, 'sms', self.local_uri, remote_uri, message.direction, cpim_from, cpim_to, cpim_timestamp, message.content.decode(), message.content_type, "0", message.status, call_id=message.call_id, encryption=message.encryption)
+        self.history.add_message(message.id, 'sms', self.local_uri, remote_uri, message.direction, cpim_from, cpim_to, cpim_timestamp, message.content.decode(), message.content_type, "0", message.status, call_id=message.call_id, encryption=message.encryption,
+                                 read=0 if (unread and message.direction == 'incoming') else 1)
 
         if stamps_conversation_time:
             try:

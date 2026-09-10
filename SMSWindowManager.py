@@ -6542,7 +6542,7 @@ class SMSWindowManagerClass(NSObject):
         status = MSG_STATE_DELIVERED if direction == 'incoming' else MSG_STATE_SENT
 
         window = self.windowForViewer(viewer).window()
-        viewer.gotMessage(sender_identity, imdn_id, call_id, direction, content, content_type, is_replication_message=is_replication_message, window=window, cpim_imdn_events=cpim_imdn_events, imdn_timestamp=imdn_timestamp, account=account, status=status, metadata=metadata)
+        viewer.gotMessage(sender_identity, imdn_id, call_id, direction, content, content_type, is_replication_message=is_replication_message, window=window, cpim_imdn_events=cpim_imdn_events, imdn_timestamp=imdn_timestamp, account=account, status=status, metadata=metadata, counts_as_unread=note_new_message)
         
         self.noteViewer_isComposing_(viewer, False)
 

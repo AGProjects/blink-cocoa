@@ -364,14 +364,21 @@ class BlinkAppDelegate(NSObject):
         if self.application_will_end:
             return
 
-        if self._postUserNotification(title, body, subtitle, uri, icon):
+        posted = self._postUserNotification(title, body, subtitle, uri, icon)
+        if posted == 'held':
+            # Not on screen yet: it goes out, or is dropped, when the
+            # permission answer arrives, and that is logged there.
+            self._logNotification('Notification Center', title, body, subtitle, uri,
+                                  verb='Holding a banner for')
+            return
+        if posted:
             self._logNotification('Notification Center', title, body, subtitle, uri)
             return
         self._postLegacyNotification(title, body, subtitle, uri, icon)
         self._logNotification('legacy Notification Center', title, body, subtitle, uri)
 
     @objc.python_method
-    def _logNotification(self, road, title, body, subtitle, uri):
+    def _logNotification(self, road, title, body, subtitle, uri, verb='Posted a banner to'):
         """Say what was just put on screen, and by which road.
 
         Every banner in the application comes through gui_notify, so this
@@ -392,7 +399,7 @@ class BlinkAppDelegate(NSObject):
         parts.append('body=%r' % one_line(body))
         if uri:
             parts.append('for %s' % uri)
-        BlinkLogger().log_info('Posted a banner to %s: %s' % (road, ', '.join(parts)))
+        BlinkLogger().log_info('%s %s: %s' % (verb, road, ', '.join(parts)))
 
     @objc.python_method
     def _postLegacyNotification(self, title, body, subtitle=None, uri=None, icon=None):
@@ -548,15 +555,18 @@ class BlinkAppDelegate(NSObject):
         queued, self.un_queued = (self.un_queued or []), []
         if not queued:
             return
-        BlinkLogger().log_info('Posting %d notification(s) held while permission '
-                               'was being decided' % len(queued))
         for title, body, subtitle, uri, icon in queued:
-            if allowed:
-                self._deliverUserNotification(title, body, subtitle, uri, icon)
+            if not allowed:
+                self._logNotification('Notification Center', title, body, subtitle, uri,
+                                      verb='Dropped a held banner, notifications are not allowed, for')
+            elif self._deliverUserNotification(title, body, subtitle, uri, icon):
+                self._logNotification('Notification Center', title, body, subtitle, uri,
+                                      verb='Posted a held banner to')
 
     @objc.python_method
     def _postUserNotification(self, title, body, subtitle=None, uri=None, icon=None):
-        """True when the banner was handed to Notification Center.
+        """True when the banner was handed to Notification Center, 'held'
+        when it is waiting for the permission answer, False otherwise.
 
         A notification that arrives before the system has answered the
         permission prompt is held rather than posted: posting it there and
@@ -572,8 +582,7 @@ class BlinkAppDelegate(NSObject):
             if self.un_queued is None:
                 self.un_queued = []
             self.un_queued.append((title, body, subtitle, uri, icon))
-            BlinkLogger().log_info('Holding a notification until permission is decided')
-            return True
+            return 'held'
         if self.un_authorized is False:
             return False
 

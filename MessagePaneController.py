@@ -1724,7 +1724,12 @@ class MessagePaneController(NSObject):
         self._unread[session] = self._unread.get(session, 0) + 1
         try:
             from SMSWindowManager import SMSWindowManager
-            SMSWindowManager().noteUnreadMessage(session.remote_uri)
+            manager = SMSWindowManager()
+            # The conversation key, not the address: a Bonjour neighbour's
+            # badge is filed under their instance id, and remote_uri is the
+            # link-local address they happen to answer on -- counting against
+            # it bumped a key no contact row reads.
+            manager.noteUnreadMessage(manager.conversationKeyFor(session))
         except Exception as e:
             BlinkLogger().log_error('Cannot bump unread for %s: %s' % (session, e))
 
