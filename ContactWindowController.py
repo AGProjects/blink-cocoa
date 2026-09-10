@@ -204,6 +204,9 @@ session_status_localized = {
 }
 
 
+REGISTER_TRANSIENT_CODES = frozenset((408, 423, 503))
+
+
 class PhotoView(NSImageView):
     """My own avatar, at the top of the main window.
 
@@ -807,8 +810,8 @@ class ContactWindowController(NSWindowController):
                 image.setSize_(NSMakeSize(12, 12))
                 item.setImage_(image)
                 if account_info.account.enabled and not account_info.register_state == 'succeeded':
-                    if account_info.register_failure_reason:
-                        name = '%s (%s)' % (label, account_info.register_failure_reason)
+                    if account_info.register_terminal_reason:
+                        name = '%s (%s)' % (label, account_info.register_terminal_reason)
                     else:
                         name = label
                     title = NSAttributedString.alloc().initWithString_attributes_(name, grayAttrs)
@@ -816,8 +819,9 @@ class ContactWindowController(NSWindowController):
             else:
                 if not account_info.register_state == 'succeeded':
                     if account_info.account.sip.register:
-                        if account_info.register_failure_reason:
-                            name = '%s (%s)' % (label, account_info.register_failure_reason)
+                        # only terminal failures (final SIP responses needing user action), see _NH_SIPAccountRegistrationGotAnswer
+                        if account_info.register_terminal_reason:
+                            name = '%s (%s)' % (label, account_info.register_terminal_reason)
                         else:
                             name = label
                     else:
@@ -7749,9 +7753,17 @@ class ContactWindowController(NSWindowController):
             self.accounts[position].route = None
             self.accounts[position].register_failure_code = notification.data.code
             self.accounts[position].register_failure_reason = NSLocalizedString("Connection failed", "Label") if reason == 'Unknown error 61' else reason
+            # Terminal = a final response from the registrar that retrying will not fix.
+            # 408 and 503 are also what PJSIP synthesizes locally for transaction timeouts and
+            # transport errors (e.g. ECONNREFUSED, EOF), and 423 is retried by the Registrar itself.
+            if notification.data.code >= 300 and notification.data.code not in REGISTER_TRANSIENT_CODES:
+                self.accounts[position].register_terminal_reason = '%s %s' % (notification.data.code, reason)
+            else:
+                self.accounts[position].register_terminal_reason = None
         else:
             self.accounts[position].register_failure_code = None
             self.accounts[position].register_failure_reason = None
+            self.accounts[position].register_terminal_reason = None
 
     @objc.python_method
     def _NH_SIPAccountRegistrationDidFail(self, notification):

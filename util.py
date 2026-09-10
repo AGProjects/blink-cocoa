@@ -1152,6 +1152,7 @@ class AccountInfo(object):
         self.register_state = None
         self.register_failure_code = None
         self.register_failure_reason = None
+        self.register_terminal_reason = None  # shown in the account menu, set only for terminal registration failures
 
     @property
     def name(self):
