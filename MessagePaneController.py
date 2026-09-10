@@ -35,6 +35,7 @@ from AppKit import (NSRoundedBezelStyle,
                     NSFont,
                     NSFontAttributeName,
                     NSForegroundColorAttributeName,
+                    NSImage,
                     NSImageOnly,
                     NSNoImage,
                     NSLineBreakByTruncatingTail,
@@ -118,7 +119,17 @@ LOCATION_GLYPH = chr(128205)
 CALL_BUTTON_W = 22.0
 CALL_GLYPH = chr(128222)
 CALL_GLYPH_SIZE = FONT_BUTTON_LARGE - 4.0
-# Stop whatever is playing, immediately left of the handset. Only there
+# Video, immediately left of the handset: the same camera artwork as the
+# video segment at the bottom of the contacts window, so the two controls
+# that start a video call look like one. The artwork is large; it is drawn
+# at a size matched by eye to the glyphs beside it. The glyph is only the
+# fallback for a bundle without the image.
+VIDEO_BUTTON_W = 22.0
+VIDEO_IMAGE_NAME = 'video'
+VIDEO_IMAGE_SIZE = 16.0
+VIDEO_GLYPH = chr(128249)
+VIDEO_GLYPH_SIZE = CALL_GLYPH_SIZE
+# Stop whatever is playing, immediately left of the camera. Only there
 # while something IS playing: one player serves the whole application, and
 # once the user has clicked another contact the bubble that started the
 # clip is no longer on screen to stop it. This is the control that is.
@@ -531,7 +542,8 @@ class MessagePaneController(NSObject):
         history_x = small_x - 8.0 - HISTORY_BUTTON_W
         location_x = history_x - 8.0 - LOCATION_BUTTON_W
         call_x = location_x - 8.0 - CALL_BUTTON_W
-        stop_x = call_x - 8.0 - STOP_BUTTON_W
+        video_x = call_x - 8.0 - VIDEO_BUTTON_W
+        stop_x = video_x - 8.0 - STOP_BUTTON_W
         self.fontSmallerButton = self._fontButton(
             NSMakeRect(small_x, button_y, FONT_BUTTON_W, FONT_BUTTON_H),
             FONT_BUTTON_SMALL, 'decreaseFontSize:',
@@ -571,6 +583,23 @@ class MessagePaneController(NSObject):
         # pin is: a button that does nothing is worse than no button.
         self.callButton.setHidden_(True)
         header.addSubview_(self.callButton)
+
+        self.videoCallButton = self._fontButton(
+            NSMakeRect(video_x, button_y, VIDEO_BUTTON_W, FONT_BUTTON_H),
+            VIDEO_GLYPH_SIZE, 'startVideoCall:',
+            NSLocalizedString("Start a video call", "Tooltip"),
+            title=VIDEO_GLYPH)
+        # A copy: imageNamed_ hands out the shared instance, and resizing
+        # it would shrink the camera in the contacts window as well.
+        camera = NSImage.imageNamed_(VIDEO_IMAGE_NAME)
+        if camera is not None:
+            camera = camera.copy()
+            camera.setSize_(NSMakeSize(VIDEO_IMAGE_SIZE, VIDEO_IMAGE_SIZE))
+            self.videoCallButton.setTitle_('')
+            self.videoCallButton.setImage_(camera)
+            self.videoCallButton.setImagePosition_(NSImageOnly)
+        self.videoCallButton.setHidden_(True)
+        header.addSubview_(self.videoCallButton)
 
         self.stopPlaybackButton = PlaybackStopButton.alloc().initWithFrame_(
             NSMakeRect(stop_x, button_y, STOP_BUTTON_W, FONT_BUTTON_H))
@@ -622,6 +651,7 @@ class MessagePaneController(NSObject):
                       ('historyButton', 'HISTORY_BUTTON_W', 8.0),
                       ('locationButton', 'LOCATION_BUTTON_W', 8.0),
                       ('callButton', 'CALL_BUTTON_W', 8.0),
+                      ('videoCallButton', 'VIDEO_BUTTON_W', 8.0),
                       ('stopPlaybackButton', 'STOP_BUTTON_W', 8.0))
 
     @objc.python_method
@@ -1291,12 +1321,27 @@ class MessagePaneController(NSObject):
 
     @objc.python_method
     def updateCallButton(self, viewer):
-        """Show the handset only while a conversation is on screen."""
+        """Show the handset and the camera only while a conversation is on screen.
+
+        The camera also needs video to be available at all: with it
+        disabled the call would be refused, and the button would be the
+        dead kind this row does not keep.
+        """
         button = getattr(self, 'callButton', None)
-        if button is None:
-            return
-        button.setHidden_(viewer is None)
+        if button is not None:
+            button.setHidden_(viewer is None)
+        video = getattr(self, 'videoCallButton', None)
+        if video is not None:
+            video.setHidden_(viewer is None or not self._videoSupported())
         self._layoutHeaderButtons()
+
+    @objc.python_method
+    def _videoSupported(self):
+        try:
+            manager = NSApp.delegate().contactsWindowController.sessionControllersManager
+            return bool(manager.isMediaTypeSupported('video'))
+        except Exception:
+            return False
 
     @objc.python_method
     def updateStopPlaybackButton(self):
@@ -1319,6 +1364,14 @@ class MessagePaneController(NSObject):
 
     @objc.IBAction
     def startAudioCall_(self, sender):
+        self._startCall('audio')
+
+    @objc.IBAction
+    def startVideoCall_(self, sender):
+        self._startCall('video')
+
+    @objc.python_method
+    def _startCall(self, media_type):
         """Call whoever is on screen, from the account they were reached on.
 
         The conversation's own account rather than the active one: this
@@ -1342,12 +1395,12 @@ class MessagePaneController(NSObject):
 
         try:
             NSApp.delegate().contactsWindowController.startSessionWithTarget(
-                target, media_type='audio',
+                target, media_type=media_type,
                 local_uri=str(account.id) if account is not None else None,
                 selected_contact=getattr(viewer, 'contact', None),
                 display_name=getattr(viewer, 'display_name', '') or '')
         except Exception as e:
-            BlinkLogger().log_error('Cannot start an audio call to %s: %s' % (target, e))
+            BlinkLogger().log_error('Cannot start a %s call to %s: %s' % (media_type, target, e))
 
     @objc.IBAction
     def showLocationMenu_(self, sender):

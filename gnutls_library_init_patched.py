@@ -134,9 +134,11 @@ def _load_library(abi_versions):
             continue
         resolved = _resolve_loaded_path(library)
         if resolved == library:
-            _log("loaded libgnutls from %s" % library)
+            pass
+            #_log("loaded libgnutls from %s" % library)
         else:
-            _log("loaded libgnutls from %s (resolved to %s)" % (library, resolved))
+            pass
+            #_log("loaded libgnutls from %s (resolved to %s)" % (library, resolved))
         if tried:
             _log("  (%d earlier candidate(s) failed:)" % len(tried))
             for path, err in tried:

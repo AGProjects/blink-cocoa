@@ -1614,36 +1614,6 @@ class BlinkPresenceContact(BlinkContact):
                         log_line = 'Presence note of %s changed from %s to %s' % (self.name, self.old_presence_note, self.presence_note)
                         BlinkLogger().log_info(log_line)
 
-                    message= '<h3>Availability Information</h3>'
-                    message += '<p>%s' % log_line
-                    media_type = 'availability'
-                    try:
-                        account = next((account for account in AccountManager().iter_accounts() if not isinstance(account, BonjourAccount) and self.account_has_pidfs_for_uris(account.id, all_uris)))
-                    except StopIteration:
-                        # The fallback, not the search, is what filed presence
-                        # notes under bonjour@local: the search above excludes
-                        # Bonjour, but default_account IS whatever the toolbar
-                        # popup says, and with Bonjour selected every note
-                        # about every contact was written against the
-                        # link-local account. Bonjour publishes its own
-                        # presence over the LAN and subscribes to nobody, so
-                        # it is never the account a PIDF was received for.
-                        account = AccountManager().default_account
-                        if isinstance(account, BonjourAccount):
-                            account = next((item for item in AccountManager().iter_accounts()
-                                            if not isinstance(item, BonjourAccount) and item.enabled),
-                                           None)
-
-                    if account is not None:
-                        local_uri = str(account.id)
-                        remote_uri = self.uri
-                        cpim_from = remote_uri
-                        cpim_to = local_uri
-                        timestamp = str(ISOTimestamp.now())
-                        id=str(uuid.uuid1())
-
-                        NSApp.delegate().contactsWindowController.sessionControllersManager.add_to_chat_history(id, media_type, local_uri, remote_uri, 'incoming', cpim_from, cpim_to, timestamp, message, 'delivered')
-
                     if status in ('available', 'offline') and self.name:
                         notify = True
                         now = int(time.time())

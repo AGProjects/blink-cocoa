@@ -347,7 +347,7 @@ class SessionControllersManager(object, metaclass=Singleton):
         # Calls group step 1: proof the hook fired at all, before any
         # media-type guard. The detailed preview follows further down,
         # but only for audio sessions.
-        BlinkLogger().log_info('[cdr] hook %s %s streams=%s' %
+        BlinkLogger().log_debug('[cdr] hook %s %s streams=%s' %
                                ('incoming', 'missed', ','.join(getattr(data, 'streams', ()) or ('-',))))
         account = controller.account
         media_type = ",".join(data.streams)
@@ -395,7 +395,7 @@ class SessionControllersManager(object, metaclass=Singleton):
         # Calls group step 1: proof the hook fired at all, before any
         # media-type guard. The detailed preview follows further down,
         # but only for audio sessions.
-        BlinkLogger().log_info('[cdr] hook %s %s streams=%s' %
+        BlinkLogger().log_debug('[cdr] hook %s %s streams=%s' %
                                ('incoming', 'voicemail', ','.join(getattr(data, 'streams', ()) or ('-',))))
         account = controller.account
         media_type = ",".join(data.streams)
@@ -443,7 +443,7 @@ class SessionControllersManager(object, metaclass=Singleton):
         # Calls group step 1: proof the hook fired at all, before any
         # media-type guard. The detailed preview follows further down,
         # but only for audio sessions.
-        BlinkLogger().log_info('[cdr] hook %s %s streams=%s' %
+        BlinkLogger().log_debug('[cdr] hook %s %s streams=%s' %
                                ('incoming', 'completed', ','.join(getattr(data, 'streams', ()) or ('-',))))
         account = controller.account
         session = controller.session
@@ -512,7 +512,7 @@ class SessionControllersManager(object, metaclass=Singleton):
         # Calls group step 1: proof the hook fired at all, before any
         # media-type guard. The detailed preview follows further down,
         # but only for audio sessions.
-        BlinkLogger().log_info('[cdr] hook %s %s streams=%s' %
+        BlinkLogger().log_debug('[cdr] hook %s %s streams=%s' %
                                ('incoming', 'answered-elsewhere', ','.join(getattr(data, 'streams', ()) or ('-',))))
         account = controller.account
         media_type = ",".join(data.streams)
@@ -565,7 +565,7 @@ class SessionControllersManager(object, metaclass=Singleton):
         # Calls group step 1: proof the hook fired at all, before any
         # media-type guard. The detailed preview follows further down,
         # but only for audio sessions.
-        BlinkLogger().log_info('[cdr] hook %s %s streams=%s' %
+        BlinkLogger().log_debug('[cdr] hook %s %s streams=%s' %
                                ('outgoing', 'failed', ','.join(getattr(data, 'streams', ()) or ('-',))))
         account = controller.account
         media_type = ",".join(data.streams)
@@ -621,7 +621,7 @@ class SessionControllersManager(object, metaclass=Singleton):
         # Calls group step 1: proof the hook fired at all, before any
         # media-type guard. The detailed preview follows further down,
         # but only for audio sessions.
-        BlinkLogger().log_info('[cdr] hook %s %s streams=%s' %
+        BlinkLogger().log_debug('[cdr] hook %s %s streams=%s' %
                                ('outgoing', 'cancelled', ','.join(getattr(data, 'streams', ()) or ('-',))))
         account = controller.account
         self.redial_uri = controller.target_uri
@@ -675,7 +675,7 @@ class SessionControllersManager(object, metaclass=Singleton):
         # Calls group step 1: proof the hook fired at all, before any
         # media-type guard. The detailed preview follows further down,
         # but only for audio sessions.
-        BlinkLogger().log_info('[cdr] hook %s %s streams=%s' %
+        BlinkLogger().log_debug('[cdr] hook %s %s streams=%s' %
                                ('outgoing', 'completed', ','.join(getattr(data, 'streams', ()) or ('-',))))
         if not controller.session:
             return

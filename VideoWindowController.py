@@ -16,6 +16,7 @@ from AppKit import (NSAnimationContext,
                     NSOnState,
                     NSOffState,
                     NSMenu,
+                    NSCursor,
                     NSMenuItem,
                     NSWindowController,
                     NSEventTrackingRunLoopMode,
@@ -42,7 +43,19 @@ from AppKit import (NSAnimationContext,
                     NSViewMinXMargin,
                     NSViewMinYMargin,
                     NSViewWidthSizable,
-                    NSWindowDocumentIconButton
+                    NSWindowDocumentIconButton,
+                    NSButton,
+                    NSColorSpace,
+                    NSFont,
+                    NSFontAttributeName,
+                    NSFontWeightMedium,
+                    NSForegroundColorAttributeName,
+                    NSImageSymbolConfiguration,
+                    NSImageView,
+                    NSImageScaleProportionallyUpOrDown,
+                    NSImageAlignCenter,
+                    NSTrackingInVisibleRect,
+                    NSWindowAbove
                     )
 
 from Foundation import (NSAttributedString,
@@ -73,6 +86,7 @@ from Foundation import (NSAttributedString,
                         NSTask,
                         NSTaskDidTerminateNotification,
                         NSMakePoint,
+                        NSInsetRect,
                         NSWidth,
                         NSHeight,
                         NSDownloadsDirectory,
@@ -87,9 +101,10 @@ import datetime
 import os
 import objc
 import time
+import traceback
 import unicodedata
 
-from math import floor
+from math import ceil, floor
 from dateutil.tz import tzlocal
 
 
@@ -110,7 +125,7 @@ from Quartz import (CGImageCreate,
                     kCGImageAlphaNoneSkipFirst,
                     kCGRenderingIntentDefault,
                     kCAGravityResizeAspect,
-                    CGAffineTransformMakeScale,
+                    CGAffineTransformMake,
                     CGAffineTransformIdentity)
 
 # Metal renderer: CAMetalLayer + a tiny vertex/fragment shader that samples
@@ -260,13 +275,6 @@ objc.loadBundleFunctions(bundle, globals(), [('CGEventSourceSecondsSinceLastEven
 
 IDLE_TIME = 5
 
-
-RecordingImages = []
-def loadRecordingImages():
-    if not RecordingImages:
-        RecordingImages.append(NSImage.imageNamed_("recording1"))
-        RecordingImages.append(NSImage.imageNamed_("recording2"))
-        RecordingImages.append(NSImage.imageNamed_("recording3"))
 
 
 class VideoWidget(NSView):
@@ -521,22 +529,38 @@ class VideoWidget(NSView):
 
     @objc.python_method
     def _apply_self_view_mirror(self):
-        # Applies (or removes) a horizontal flip on the backing layer so the
-        # user sees themselves the way a mirror would. Called from both
-        # setProducer (when we learn which producer we have) and from
+        # The user sees themselves the way a mirror would. Called from
+        # setProducer (when we learn which producer we have), from
         # _setup_video_layer (in case the layer was created after
-        # setProducer ran). Safe to call repeatedly.
+        # setProducer ran) and on every resize. Safe to call repeatedly.
+        #
+        # The Metal path mirrors the PIXELS, in the vertex shader (see
+        # _render_metal_frame), and leaves the layer alone. Scaling the
+        # layer itself by -1 is what threw the thumbnail out of the window:
+        # a layer-backed view's layer is anchored at its bottom-left
+        # corner, so the flip swings the whole picture one width to the
+        # left of where the view is -- off the window entirely in a left
+        # corner. The CGImage fallback has no shader, so there the flip is
+        # kept and translated back by the width, which is why it has to be
+        # redone whenever the size changes.
         layer = self.layer()
         if layer is None:
             return
         try:
-            if getattr(self, '_is_self_view', False):
-                layer.setAffineTransform_(CGAffineTransformMakeScale(-1.0, 1.0))
+            mirrored = getattr(self, '_is_self_view', False)
+            if mirrored and getattr(self, '_renderer_kind', 'cg') != 'metal':
+                width = self.bounds().size.width
+                layer.setAffineTransform_(CGAffineTransformMake(-1.0, 0.0, 0.0, 1.0, width, 0.0))
             else:
                 layer.setAffineTransform_(CGAffineTransformIdentity)
         except Exception as e:
             BlinkLogger().log_info(
                 "VideoWidget mirror toggle failed: %s" % e)
+
+    def setFrameSize_(self, size):
+        objc.super(VideoWidget, self).setFrameSize_(size)
+        if getattr(self, '_is_self_view', False):
+            self._apply_self_view_mirror()
 
     def close(self):
         BlinkLogger().log_debug("Close %s" % self)
@@ -740,6 +764,8 @@ class VideoWidget(NSView):
         enc.setRenderPipelineState_(pipeline)
         enc.setFragmentTexture_atIndex_(self._metal_texture, 0)
 
+        if getattr(self, '_is_self_view', False):
+            qx = -qx        # mirror the self view; the layer is not flipped
         uniforms = _struct.pack('ff', qx, qy)
         enc.setVertexBytes_length_atIndex_(uniforms, len(uniforms), 0)
 
@@ -857,21 +883,25 @@ class remoteVideoWidget(VideoWidget):
             return True
         return False
 
-class myVideoWidget(VideoWidget):
-    initialLocation = None
-    initialOrigin = None
-    auto_rotate_menu_enabled = True
+# The local camera thumbnail over the remote picture.
+MY_VIDEO_CORNER_KEY = "MyVideoCorner"
+MY_VIDEO_SCALE_KEY = "MyVideoScale"
+MY_VIDEO_MARGIN = 10.0
+# Width as a fraction of the window's, until the user drags it to another.
+MY_VIDEO_DEFAULT_SCALE = 0.22
+MY_VIDEO_MIN_W = 96.0
+# Never more than this share of the window in either direction.
+MY_VIDEO_MAX_FRACTION = 0.5
+MY_VIDEO_RESIZE_GRIP = 18.0
+# Frame shapes a real camera produces; anything else is start-up noise.
+MY_VIDEO_MIN_ASPECT = 0.5
+MY_VIDEO_MAX_ASPECT = 2.5
 
-    start_origin = None
-    final_origin = None
-    temp_origin = None
+
+class myVideoWidget(VideoWidget):
+    auto_rotate_menu_enabled = True
     is_dragging = False
     allow_drag = True
-
-    # Reference width for the corner thumbnail. The thumbnail's height
-    # is computed from this width + the camera's actual aspect ratio,
-    # so a 4:3 camera shows as ~150x113 and a 16:9 camera as ~150x84.
-    _thumbnail_width = 150.0
 
     @objc.python_method
     def _setup_video_layer(self):
@@ -892,31 +922,196 @@ class myVideoWidget(VideoWidget):
             BlinkLogger().log_debug(
                 "myVideoWidget decoration setup failed: %s" % e)
 
+    # What the camera last reported, width over height. Until the first frame
+    # the thumbnail is laid out as 16:9.
+    camera_aspect = 16.0 / 9.0
+    # None, 'move' or 'resize' while the mouse is down on the thumbnail.
+    drag_mode = None
+    drag_start_point = None
+    drag_start_frame = None
+
     @objc.python_method
     def _on_aspect_ratio_detected(self, width, height):
-        # The corner thumbnail must not poke the call window's
-        # init_aspect_ratio (that's reserved for the *remote* video
-        # stream). Instead, resize ourselves so the thumbnail's outer
-        # bounds match the local camera aspect, then re-snap to the
-        # corner we're currently anchored to.
-        if width <= 0 or height <= 0:
+        """Re-shape the thumbnail to the local camera.
+
+        Never the call window's init_aspect_ratio: that belongs to the
+        remote picture. A camera switch reports a few frames of whatever
+        the device is doing while it starts, and a thumbnail sized off a
+        1x1 or a 2000x10 frame is how it used to end up off screen, so
+        anything implausible is ignored and the next real frame decides.
+        """
+        if width < 16 or height < 16:
             return
         aspect = float(width) / float(height)
-        target_w = float(self._thumbnail_width)
-        target_h = max(40.0, target_w / aspect)
-        cur = self.frame()
-        if abs(cur.size.width - target_w) < 0.5 and \
-                abs(cur.size.height - target_h) < 0.5:
+        if not (MY_VIDEO_MIN_ASPECT <= aspect <= MY_VIDEO_MAX_ASPECT):
             return
-        # Keep the current top-left anchor consistent — snapToCorner
-        # will fix the position below based on the chosen corner.
-        new_frame = ((cur.origin.x, cur.origin.y), (target_w, target_h))
-        self.setFrame_(new_frame)
+        self.camera_aspect = aspect
+        self.layoutInSuperview()
+
+    # -- placement -----------------------------------------------------------
+    #
+    # The thumbnail has no position of its own. It is always derived from
+    # three things -- the corner the user chose, the size they chose (as a
+    # fraction of the window's width) and the camera's shape -- and laid
+    # out again whenever any of them or the window changes. The old way
+    # kept an origin and nudged it towards four placeholder views; every
+    # path that moved it without re-deriving (a camera switch, a click
+    # without a drag, full screen) could leave it outside the window.
+
+    @objc.python_method
+    def corner(self):
+        corner = NSUserDefaults.standardUserDefaults().stringForKey_(MY_VIDEO_CORNER_KEY)
+        return corner if corner in ('TL', 'TR', 'BL', 'BR') else 'TR'
+
+    @objc.python_method
+    def scale(self):
+        value = NSUserDefaults.standardUserDefaults().floatForKey_(MY_VIDEO_SCALE_KEY)
+        return value if value > 0 else MY_VIDEO_DEFAULT_SCALE
+
+    @objc.python_method
+    def targetFrame(self, corner=None, scale=None):
+        container = self.superview()
+        if container is None:
+            return self.frame()
+        bounds = container.bounds()
+        W, H = bounds.size.width, bounds.size.height
+        corner = corner or self.corner()
+        scale = scale if scale is not None else self.scale()
+        aspect = self.camera_aspect or (16.0 / 9.0)
+
+        w = min(max(W * scale, MY_VIDEO_MIN_W), W * MY_VIDEO_MAX_FRACTION)
+        h = w / aspect
+        if h > H * MY_VIDEO_MAX_FRACTION:
+            h = H * MY_VIDEO_MAX_FRACTION
+            w = h * aspect
+
+        delegate = self.window().delegate() if self.window() else None
+        top = MY_VIDEO_MARGIN
+        if delegate is not None and hasattr(delegate, 'myVideoTopInset'):
+            top = delegate.myVideoTopInset()
+
+        x = MY_VIDEO_MARGIN if corner[1] == 'L' else W - w - MY_VIDEO_MARGIN
+        if corner[0] == 'T':
+            y = H - h - top
+        else:
+            y = MY_VIDEO_MARGIN
+            if delegate is not None and hasattr(delegate, 'myVideoBottomInset'):
+                y = delegate.myVideoBottomInset(x, w)
+        # Whatever the insets asked for, the thumbnail stays inside.
+        x = min(max(x, 0.0), max(W - w, 0.0))
+        y = min(max(y, 0.0), max(H - h, 0.0))
+        return NSMakeRect(floor(x), floor(y), floor(w), floor(h))
+
+    @objc.python_method
+    def layoutInSuperview(self, animate=False):
+        if self.drag_mode is not None:
+            return          # the mouse owns the frame until it lets go
+        frame = self.targetFrame()
+        if animate:
+            NSAnimationContext.beginGrouping()
+            try:
+                NSAnimationContext.currentContext().setDuration_(0.18)
+                self.animator().setFrame_(frame)
+            finally:
+                NSAnimationContext.endGrouping()
+        else:
+            self.setFrame_(frame)
+
+    def resizeWithOldSuperviewSize_(self, old_size):
+        # Scales and re-anchors with the window, full screen included.
+        self.layoutInSuperview()
+
+    # -- moving and resizing -------------------------------------------------
+
+    @objc.python_method
+    def _gripRect(self):
+        """The corner that points into the picture: drag it to resize."""
+        bounds = self.bounds()
+        g = MY_VIDEO_RESIZE_GRIP
+        corner = self.corner()
+        # Opposite the anchored corner. Not flipped: y grows upwards.
+        x = bounds.size.width - g if corner[1] == 'L' else 0.0
+        y = 0.0 if corner[0] == 'T' else bounds.size.height - g
+        return NSMakeRect(x, y, g, g)
+
+    def resetCursorRects(self):
         try:
-            self.snapToCorner()
-        except Exception as e:
-            BlinkLogger().log_debug(
-                "myVideoWidget snapToCorner after resize failed: %s" % e)
+            self.addCursorRect_cursor_(self._gripRect(), NSCursor.crosshairCursor())
+        except Exception:
+            pass
+
+    def mouseDown_(self, event):
+        if not self.allow_drag:
+            return
+        container = self.superview()
+        if container is None:
+            return
+        local = self.convertPoint_fromView_(event.locationInWindow(), None)
+        grip = self._gripRect()
+        in_grip = (grip.origin.x <= local.x <= grip.origin.x + grip.size.width
+                   and grip.origin.y <= local.y <= grip.origin.y + grip.size.height)
+        self.drag_mode = 'resize' if in_grip else 'move'
+        self.drag_start_point = container.convertPoint_fromView_(event.locationInWindow(), None)
+        self.drag_start_frame = self.frame()
+        self.is_dragging = False
+
+    def mouseDragged_(self, event):
+        container = self.superview()
+        if self.drag_mode is None or container is None:
+            return
+        self.is_dragging = True
+        point = container.convertPoint_fromView_(event.locationInWindow(), None)
+        start = self.drag_start_frame
+        bounds = container.bounds()
+
+        if self.drag_mode == 'move':
+            x = start.origin.x + (point.x - self.drag_start_point.x)
+            y = start.origin.y + (point.y - self.drag_start_point.y)
+            x = min(max(x, 0.0), max(bounds.size.width - start.size.width, 0.0))
+            y = min(max(y, 0.0), max(bounds.size.height - start.size.height, 0.0))
+            self.setFrameOrigin_(NSMakePoint(x, y))
+            return
+
+        # Resize about the anchored corner: the one in the window's corner.
+        corner = self.corner()
+        anchor_x = start.origin.x if corner[1] == 'L' else start.origin.x + start.size.width
+        anchor_y = start.origin.y if corner[0] == 'B' else start.origin.y + start.size.height
+        aspect = self.camera_aspect or (16.0 / 9.0)
+        wanted = max(abs(point.x - anchor_x), abs(point.y - anchor_y) * aspect)
+        width = bounds.size.width or 1.0
+        self.setFrame_(self.targetFrame(corner=corner, scale=wanted / width))
+
+    def mouseUp_(self, event):
+        self.endDrag()
+
+    @objc.python_method
+    def endDrag(self):
+        """Settle the thumbnail after the mouse lets go.
+
+        A move lands in whichever corner the thumbnail's centre is nearest;
+        a resize keeps its size as a fraction of the window. A click that
+        never dragged changes nothing -- it used to send the thumbnail to
+        an origin that had never been set.
+        """
+        mode, dragged = self.drag_mode, self.is_dragging
+        self.drag_mode = None
+        self.is_dragging = False
+        container = self.superview()
+        if not dragged or container is None:
+            return
+        defaults = NSUserDefaults.standardUserDefaults()
+        bounds = container.bounds()
+        frame = self.frame()
+        if mode == 'move':
+            cx = frame.origin.x + frame.size.width / 2.0
+            cy = frame.origin.y + frame.size.height / 2.0
+            corner = ('B' if cy < bounds.size.height / 2.0 else 'T') + \
+                     ('L' if cx < bounds.size.width / 2.0 else 'R')
+            defaults.setValue_forKey_(corner, MY_VIDEO_CORNER_KEY)
+        elif mode == 'resize' and bounds.size.width > 0:
+            defaults.setFloat_forKey_(frame.size.width / bounds.size.width, MY_VIDEO_SCALE_KEY)
+        self.window().invalidateCursorRectsForView_(self)
+        self.layoutInSuperview(animate=True)
 
     def rightMouseDown_(self, event):
         if self.isHidden():
@@ -960,123 +1155,468 @@ class myVideoWidget(VideoWidget):
         settings.video.device = sender.representedObject()
         settings.save()
 
-    def mouseDown_(self, event):
-        if not self.allow_drag:
-            return
 
-        self.initialLocation = event.locationInWindow()
-        self.initialOrigin = self.frame().origin
-        self.final_origin = None
+# The call bar floating over the video: one translucent capsule split into
+# segments, each an icon over a short label -- the same row of call controls
+# the contacts window has at its foot, but drawn to sit on top of a picture
+# rather than on window chrome.
+#
+# Built in code, not in the xib. Its buttons come and go with what the call
+# can do (chat with the MSRP setting, hold never for video), and a segmented
+# row with a hole where a hidden button was is exactly what fixed xib frames
+# produce. The bar re-packs itself whenever a segment is shown or hidden,
+# and drops the labels when the window is too narrow to carry them.
+#
+# The icons are SF Symbols drawn white, so they read against any picture;
+# a segment is tinted only when its colour means something -- muted, held,
+# recording -- and hanging up is the one segment with a red fill.
+CALL_BAR_BOTTOM = 20.0
+CALL_BAR_HEIGHT = 50.0
+CALL_BAR_COMPACT_HEIGHT = 38.0
+CALL_BAR_PADDING = 4.0
+CALL_BAR_RADIUS = 14.0
+CALL_BAR_SEGMENT_MIN_W = 58.0
+CALL_BAR_SEGMENT_COMPACT_W = 40.0
+CALL_BAR_ICON_PT = 16.0
+CALL_BAR_LABEL_PT = 10.5
+# Whatever else is in the window keeps this much air from the bar's ends
+# before the bar gives up its labels.
+CALL_BAR_MARGIN = 24.0
 
-    def mouseUp_(self, event):
-        if not self.allow_drag:
-            return
 
-        self.is_dragging = False
-        self.goToFinalOrigin()
+def _call_bar_white(alpha):
+    return NSColor.colorWithCalibratedWhite_alpha_(1.0, alpha)
+
+
+_call_bar_symbol_cache = {}
+
+# The box an icon is fitted into, whatever size the symbol comes out at.
+CALL_BAR_ICON_BOX_W = 24.0
+CALL_BAR_ICON_BOX_H = 18.0
+CALL_BAR_ICON_GAP = 2.0
+
+
+def call_bar_symbol(name):
+    """The SF Symbol as a template image, or None if there is no such symbol.
+
+    Left a template on purpose and coloured by the NSImageView that shows
+    it (contentTintColor). Rendering the colour into the image by hand came
+    out as a speck on the bar; the image view is the path AppKit itself
+    uses for tinted symbols.
+    """
+    if name in _call_bar_symbol_cache:
+        return _call_bar_symbol_cache[name]
+    image = None
+    try:
+        image = NSImage.imageWithSystemSymbolName_accessibilityDescription_(name, None)
+        if image is None:
+            BlinkLogger().log_info('Call bar: there is no SF Symbol named %s' % name)
+        else:
+            config = NSImageSymbolConfiguration.configurationWithPointSize_weight_(
+                CALL_BAR_ICON_PT, NSFontWeightMedium)
+            image = image.imageWithSymbolConfiguration_(config) or image
+            image.setTemplate_(True)
+    except Exception as e:
+        BlinkLogger().log_info('Call bar: cannot load symbol %s: %s' % (name, e))
+        image = None
+    _call_bar_symbol_cache[name] = image
+    return image
+
+
+class VideoCallBarSegment(NSButton):
+    """One control on the call bar: an icon over a label.
+
+    The well (hover, press, the red of End) and the label are drawn here;
+    the icon is an NSImageView subview, which is what tints a symbol
+    reliably. The cell's own rendering has no idea what a translucent bar
+    looks like and would put a light bezel on a dark video.
+    """
+    symbol_name = None
+    label = ''
+    tint = None
+    destructive = False
+    hovering = False
+    hover_area = None
+    iconView = None
 
     @objc.python_method
-    def goToFinalOrigin(self):
-        if not self.allow_drag:
-            return
-
-        self.setFrameOrigin_(self.final_origin)
-        self.start_origin = None
-        self.final_origin = None
-
-    def performDrag(self):
-        if not self.allow_drag:
-            return
-        
-        if not self.currentLocation:
-            return
-
-        newOrigin = self.frame().origin
-        offset_x =  self.initialLocation.x - self.initialOrigin.x
-        offset_y =  self.initialLocation.y - self.initialOrigin.y
-        newOrigin.x = self.currentLocation.x - offset_x
-        newOrigin.y = self.currentLocation.y - offset_y
-
-        if newOrigin.x < 10:
-            newOrigin.x = 10
-
-        if newOrigin.y < 10:
-            newOrigin.y = 10
-
-        if self.window().delegate().full_screen:
-            parentFrame = NSScreen.mainScreen().visibleFrame()
-        else:
-            parentFrame = self.window().frame()
-
-        if newOrigin.x > parentFrame.size.width - 10 - self.frame().size.width:
-            newOrigin.x = parentFrame.size.width - 10 - self.frame().size.width
-
-        if newOrigin.y > parentFrame.size.height - 30 - self.frame().size.height:
-            newOrigin.y = parentFrame.size.height - 30 - self.frame().size.height
-
-        if ((newOrigin.y + self.frame().size.height) > (parentFrame.origin.y + parentFrame.size.height)):
-            newOrigin.y = parentFrame.origin.y + (parentFrame.size.height - self.frame().size.height)
-
-        if abs(newOrigin.x - self.window().delegate().myVideoViewTL.frame().origin.x) > abs(newOrigin.x - self.window().delegate().myVideoViewTR.frame().origin.x):
-            letter2 = "R"
-        else:
-            letter2 = "L"
-
-        if abs(newOrigin.y - self.window().delegate().myVideoViewTL.frame().origin.y) > abs(newOrigin.y - self.window().delegate().myVideoViewBL.frame().origin.y):
-            letter1 = "B"
-        else:
-            letter1 = "T"
-
-        finalFrame = "myVideoView" + letter1 + letter2
-        self.start_origin = newOrigin
-        self.final_origin = getattr(self.window().delegate(), finalFrame).frame().origin
-        NSUserDefaults.standardUserDefaults().setValue_forKey_(letter1 + letter2, "MyVideoCorner")
-        self.setFrameOrigin_(newOrigin)
+    def configure(self, symbol_name, label, tint=None):
+        """Change what the segment shows. The bar re-packs if the width moved."""
+        changed = (label or '') != self.label
+        self.symbol_name = symbol_name
+        self.label = label or ''
+        self.tint = tint
+        self.setAccessibilityLabel_(self.label)
+        if self.iconView is not None:
+            self.iconView.setImage_(call_bar_symbol(symbol_name) if symbol_name else None)
+        self._applyTint()
+        self.layoutContent()
+        self.setNeedsDisplay_(True)
+        if changed:
+            self._retile()
 
     @objc.python_method
-    def snapToCorner(self):
-        delegate = self.window().delegate() if self.window() else None
-        if delegate is None:
+    def _applyTint(self):
+        if self.iconView is None:
             return
+        alpha = 1.0 if self.isEnabled() else 0.35
+        self.iconView.setContentTintColor_(
+            (self.tint or NSColor.whiteColor()).colorWithAlphaComponent_(alpha))
 
-        newOrigin = self.frame().origin
-        if abs(newOrigin.x - delegate.myVideoViewTL.frame().origin.x) > abs(newOrigin.x - delegate.myVideoViewTR.frame().origin.x):
-            letter2 = "R"
+    @objc.python_method
+    def _compact(self):
+        bar = self.superview()
+        return isinstance(bar, VideoCallBar) and bar.compact
+
+    @objc.python_method
+    def _labelFont(self):
+        return NSFont.systemFontOfSize_weight_(CALL_BAR_LABEL_PT, NSFontWeightMedium)
+
+    @objc.python_method
+    def _labelHeight(self):
+        font = self._labelFont()
+        return float(ceil(font.ascender() - font.descender()))
+
+    @objc.python_method
+    def _geometry(self):
+        """(icon frame, label baseline-box y) for the current bounds.
+
+        Icon on top, label under it, the pair centred. NSButton is a flipped
+        view -- y grows DOWN -- so which end is "top" is asked, not assumed.
+        """
+        bounds = self.bounds()
+        width, height = bounds.size.width, bounds.size.height
+        icon_x = floor((width - CALL_BAR_ICON_BOX_W) / 2.0)
+        if self._compact():
+            icon_y = floor((height - CALL_BAR_ICON_BOX_H) / 2.0)
+            return NSMakeRect(icon_x, icon_y, CALL_BAR_ICON_BOX_W, CALL_BAR_ICON_BOX_H), None
+        label_h = self._labelHeight()
+        block = CALL_BAR_ICON_BOX_H + CALL_BAR_ICON_GAP + label_h
+        margin = floor((height - block) / 2.0)
+        if self.isFlipped():
+            icon_y = margin
+            label_y = margin + CALL_BAR_ICON_BOX_H + CALL_BAR_ICON_GAP
         else:
-            letter2 = "L"
+            label_y = margin
+            icon_y = margin + label_h + CALL_BAR_ICON_GAP
+        return NSMakeRect(icon_x, icon_y, CALL_BAR_ICON_BOX_W, CALL_BAR_ICON_BOX_H), label_y
 
-        if abs(newOrigin.y - delegate.myVideoViewTL.frame().origin.y) > abs(newOrigin.y - delegate.myVideoViewBL.frame().origin.y):
-            letter1 = "B"
+    @objc.python_method
+    def layoutContent(self):
+        if self.iconView is not None:
+            self.iconView.setFrame_(self._geometry()[0])
+
+    @objc.python_method
+    def preferredWidth(self, compact):
+        if compact:
+            return CALL_BAR_SEGMENT_COMPACT_W
+        text = NSAttributedString.alloc().initWithString_attributes_(
+            self.label, {NSFontAttributeName: self._labelFont()})
+        return max(CALL_BAR_SEGMENT_MIN_W, floor(text.size().width) + 18.0)
+
+    @objc.python_method
+    def _retile(self):
+        bar = self.superview()
+        if isinstance(bar, VideoCallBar):
+            bar.tile()
+
+    def setFrameSize_(self, size):
+        objc.super(VideoCallBarSegment, self).setFrameSize_(size)
+        self.layoutContent()
+
+    def setHidden_(self, flag):
+        was = bool(self.isHidden())
+        objc.super(VideoCallBarSegment, self).setHidden_(flag)
+        if was != bool(flag):
+            self._retile()
+
+    def setEnabled_(self, flag):
+        objc.super(VideoCallBarSegment, self).setEnabled_(flag)
+        self._applyTint()
+        self.setNeedsDisplay_(True)
+
+    def hitTest_(self, point):
+        # The icon view must not take the click: the whole segment is the button.
+        hit = objc.super(VideoCallBarSegment, self).hitTest_(point)
+        return self if hit is not None else None
+
+    def mouseDownCanMoveWindow(self):
+        return False
+
+    def acceptsFirstMouse_(self, event):
+        return True
+
+    def updateTrackingAreas(self):
+        if self.hover_area is not None:
+            self.removeTrackingArea_(self.hover_area)
+        self.hover_area = NSTrackingArea.alloc().initWithRect_options_owner_userInfo_(
+            NSZeroRect, NSTrackingMouseEnteredAndExited | NSTrackingActiveAlways | NSTrackingInVisibleRect,
+            self, None)
+        self.addTrackingArea_(self.hover_area)
+        objc.super(VideoCallBarSegment, self).updateTrackingAreas()
+
+    def mouseEntered_(self, event):
+        self.hovering = True
+        self.setNeedsDisplay_(True)
+
+    def mouseExited_(self, event):
+        self.hovering = False
+        self.setNeedsDisplay_(True)
+
+    def drawRect_(self, rect):
+        bounds = self.bounds()
+        enabled = bool(self.isEnabled())
+        pressed = enabled and bool(self.isHighlighted())
+
+        well = NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(
+            NSInsetRect(bounds, 2.0, 2.0), CALL_BAR_RADIUS - 5.0, CALL_BAR_RADIUS - 5.0)
+        if self.destructive:
+            red = NSColor.systemRedColor()
+            red.colorWithAlphaComponent_(0.65 if pressed else (0.95 if self.hovering else 0.85)).setFill()
+            well.fill()
+        elif pressed:
+            _call_bar_white(0.22).setFill()
+            well.fill()
+        elif self.hovering and enabled:
+            _call_bar_white(0.10).setFill()
+            well.fill()
+
+        _icon_frame, label_y = self._geometry()
+        if label_y is None:
+            return
+        alpha = 1.0 if enabled else 0.35
+        label_color = (self.tint or _call_bar_white(0.92)).colorWithAlphaComponent_(0.92 * alpha)
+        text = NSAttributedString.alloc().initWithString_attributes_(
+            self.label, {NSFontAttributeName: self._labelFont(),
+                         NSForegroundColorAttributeName: label_color})
+        text_w = text.size().width
+        text.drawAtPoint_(NSMakePoint(floor((bounds.size.width - text_w) / 2.0), label_y))
+
+
+def make_call_bar_segment(symbol_name, label, action, target, destructive=False):
+    segment = VideoCallBarSegment.alloc().initWithFrame_(
+        NSMakeRect(0, 0, CALL_BAR_SEGMENT_MIN_W, CALL_BAR_HEIGHT))
+    segment.setBordered_(False)
+    segment.setTitle_('')
+    segment.setImagePosition_(0)        # NSNoImage: the icon view shows the icon
+    # Clicking the bar must not take focus off the video view.
+    segment.setRefusesFirstResponder_(True)
+    segment.setTarget_(target)
+    segment.setAction_(action)
+    segment.setToolTip_(label)
+    segment.destructive = destructive
+    icon = NSImageView.alloc().initWithFrame_(
+        NSMakeRect(0, 0, CALL_BAR_ICON_BOX_W, CALL_BAR_ICON_BOX_H))
+    icon.setImageScaling_(NSImageScaleProportionallyUpOrDown)
+    icon.setImageAlignment_(NSImageAlignCenter)
+    icon.setEditable_(False)
+    segment.addSubview_(icon)
+    segment.iconView = icon
+    segment.configure(symbol_name, label)
+    return segment
+
+
+class VideoCallBar(NSView):
+    """The translucent capsule the segments sit in, centred at the bottom."""
+    segments = ()
+    compact = False
+
+    def initWithFrame_(self, frame):
+        self = objc.super(VideoCallBar, self).initWithFrame_(frame)
+        if self is None:
+            return None
+        self.segments = []
+        self.setWantsLayer_(True)
+        self.setAutoresizingMask_(NSViewMinXMargin | NSViewMaxXMargin | NSViewMaxYMargin)
+        return self
+
+    @objc.python_method
+    def addSegment(self, segment):
+        self.segments.append(segment)
+        self.addSubview_(segment)
+        self.tile()
+        return segment
+
+    @objc.python_method
+    def _visible(self):
+        return [segment for segment in self.segments if not segment.isHidden()]
+
+    @objc.python_method
+    def widthFor(self, compact):
+        visible = self._visible()
+        return (2 * CALL_BAR_PADDING
+                + sum(segment.preferredWidth(compact) for segment in visible))
+
+    @objc.python_method
+    def minimumWindowWidth(self):
+        """Narrower than this and not even the icons fit: hide the bar."""
+        return self.widthFor(True) + CALL_BAR_MARGIN
+
+    @objc.python_method
+    def tile(self):
+        container = self.superview()
+        available = NSWidth(container.bounds()) if container is not None else None
+        self.compact = bool(available is not None
+                            and self.widthFor(False) + CALL_BAR_MARGIN > available)
+        height = CALL_BAR_COMPACT_HEIGHT if self.compact else CALL_BAR_HEIGHT
+        x = CALL_BAR_PADDING
+        for segment in self._visible():
+            width = segment.preferredWidth(self.compact)
+            segment.setFrame_(NSMakeRect(x, CALL_BAR_PADDING, width, height - 2 * CALL_BAR_PADDING))
+            segment.layoutContent()
+            segment.setNeedsDisplay_(True)
+            x += width
+        width = x + CALL_BAR_PADDING
+        origin_x = self.frame().origin.x
+        if available is not None:
+            origin_x = floor((available - width) / 2.0)
+        self.setFrame_(NSMakeRect(origin_x, CALL_BAR_BOTTOM, width, height))
+        self.setNeedsDisplay_(True)
+
+    def resizeWithOldSuperviewSize_(self, old_size):
+        # Every window resize, including the ones windowDidResize_ returns
+        # early from: re-centre, and trade labels for room when narrow.
+        self.tile()
+
+    def mouseDownCanMoveWindow(self):
+        return False
+
+    def hitTest_(self, point):
+        # Faded out is gone: a click where the invisible bar sits belongs to
+        # the video underneath, which is what brings the bar back.
+        if self.isHidden() or self.alphaValue() < 0.05:
+            return None
+        return objc.super(VideoCallBar, self).hitTest_(point)
+
+    def drawRect_(self, rect):
+        bounds = self.bounds()
+        capsule = NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(
+            NSInsetRect(bounds, 0.5, 0.5), CALL_BAR_RADIUS, CALL_BAR_RADIUS)
+        NSColor.colorWithCalibratedWhite_alpha_(0.0, 0.45).setFill()
+        capsule.fill()
+        _call_bar_white(0.16).setStroke()
+        capsule.setLineWidth_(1.0)
+        capsule.stroke()
+
+        # Hairlines between neighbours, the segmented-control look -- but not
+        # against the red segment, whose own fill already separates it.
+        _call_bar_white(0.14).setFill()
+        visible = self._visible()
+        inset = 10.0 if not self.compact else 8.0
+        for left, right in zip(visible, visible[1:]):
+            if left.destructive or right.destructive:
+                continue
+            x = floor(right.frame().origin.x)
+            NSRectFill(NSMakeRect(x, inset, 1.0, bounds.size.height - 2 * inset))
+
+# A short note over the video that something happened -- "Screenshot saved" --
+# with at most one thing to do about it. Sits just above the call bar, in the
+# same translucent style, and goes away on its own.
+TOAST_HEIGHT = 30.0
+TOAST_PADDING = 14.0
+TOAST_GAP = 12.0
+TOAST_SECONDS = 6.0
+
+
+class VideoToast(NSView):
+    label = None
+    actionButton = None
+    callback = None
+
+    def initWithFrame_(self, frame):
+        self = objc.super(VideoToast, self).initWithFrame_(frame)
+        if self is None:
+            return None
+        self.setWantsLayer_(True)
+        self.setAutoresizingMask_(NSViewMinXMargin | NSViewMaxXMargin | NSViewMaxYMargin)
+
+        label = NSTextField.labelWithString_('')
+        label.setFont_(NSFont.systemFontOfSize_weight_(12.0, NSFontWeightMedium))
+        label.setTextColor_(NSColor.whiteColor())
+        label.setLineBreakMode_(5)          # NSLineBreakByTruncatingMiddle
+        self.addSubview_(label)
+        self.label = label
+
+        button = NSButton.alloc().initWithFrame_(NSMakeRect(0, 0, 10, 10))
+        button.setBordered_(False)
+        button.setRefusesFirstResponder_(True)
+        button.setTarget_(self)
+        button.setAction_('actionClicked:')
+        self.addSubview_(button)
+        self.actionButton = button
+        return self
+
+    @objc.python_method
+    def configure(self, text, action_title=None, callback=None):
+        self.label.setStringValue_(text)
+        self.callback = callback
+        if action_title:
+            link = NSColor.colorWithCalibratedRed_green_blue_alpha_(0.55, 0.78, 1.0, 1.0)
+            self.actionButton.setAttributedTitle_(NSAttributedString.alloc().initWithString_attributes_(
+                action_title, {NSFontAttributeName: NSFont.systemFontOfSize_weight_(12.0, NSFontWeightMedium),
+                               NSForegroundColorAttributeName: link}))
+            self.actionButton.setHidden_(False)
         else:
-            letter1 = "T"
+            self.actionButton.setHidden_(True)
+        self.tile()
 
-        # The four corner placeholder views in the xib are sized for the
-        # default 150x84 thumbnail. If the thumbnail has been resized to
-        # match the local camera's aspect ratio (Phase 1 follow-up), snap
-        # by the *outer* edge of the placeholder that corresponds to the
-        # window corner, so the thumb still hugs the window edge instead
-        # of slipping inward or overshooting.
-        placeholder = getattr(delegate, "myVideoView" + letter1 + letter2)
-        placeholder_frame = placeholder.frame()
-        size = self.frame().size
+    @objc.python_method
+    def tile(self):
+        label_size = self.label.fittingSize()
+        width = TOAST_PADDING + label_size.width
+        button_size = None
+        if not self.actionButton.isHidden():
+            button_size = self.actionButton.fittingSize()
+            width += TOAST_GAP + button_size.width
+        width += TOAST_PADDING
 
-        if letter2 == "L":
-            new_x = placeholder_frame.origin.x
-        else:  # right side: align right edges
-            new_x = placeholder_frame.origin.x + placeholder_frame.size.width - size.width
+        container = self.superview()
+        if container is not None:
+            available = NSWidth(container.bounds()) - 2 * CALL_BAR_MARGIN
+            width = min(width, max(available, 120.0))
+            bar = getattr(self.window().delegate(), 'buttonsView', None) if self.window() else None
+            bottom = CALL_BAR_BOTTOM + CALL_BAR_HEIGHT + 10.0
+            if bar is not None:
+                bottom = bar.frame().origin.y + bar.frame().size.height + 10.0
+            x = floor((NSWidth(container.bounds()) - width) / 2.0)
+            self.setFrame_(NSMakeRect(x, bottom, width, TOAST_HEIGHT))
 
-        if letter1 == "B":
-            new_y = placeholder_frame.origin.y
-        else:  # top side: align top edges
-            new_y = placeholder_frame.origin.y + placeholder_frame.size.height - size.height
+        label_w = width - 2 * TOAST_PADDING
+        if button_size is not None:
+            label_w -= TOAST_GAP + button_size.width
+        self.label.setFrame_(NSMakeRect(TOAST_PADDING, floor((TOAST_HEIGHT - label_size.height) / 2.0),
+                                        max(label_w, 0.0), label_size.height))
+        if button_size is not None:
+            self.actionButton.setFrame_(NSMakeRect(TOAST_PADDING + label_w + TOAST_GAP,
+                                                   floor((TOAST_HEIGHT - button_size.height) / 2.0),
+                                                   button_size.width, button_size.height))
+        self.setNeedsDisplay_(True)
 
-        self.setFrameOrigin_((new_x, new_y))
-        NSUserDefaults.standardUserDefaults().setValue_forKey_(letter1 + letter2, "MyVideoCorner")
+    def actionClicked_(self, sender):
+        if self.callback is not None:
+            self.callback()
 
-    def mouseDragged_(self, event):
-        self.is_dragging = True
-        self.currentLocation = event.locationInWindow()
-        self.performDrag()
+    def resizeWithOldSuperviewSize_(self, old_size):
+        self.tile()
+
+    def mouseDownCanMoveWindow(self):
+        return False
+
+    def hitTest_(self, point):
+        if self.isHidden() or self.alphaValue() < 0.05:
+            return None
+        return objc.super(VideoToast, self).hitTest_(point)
+
+    def drawRect_(self, rect):
+        bounds = self.bounds()
+        radius = bounds.size.height / 2.0
+        capsule = NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(
+            NSInsetRect(bounds, 0.5, 0.5), radius, radius)
+        NSColor.colorWithCalibratedWhite_alpha_(0.0, 0.6).setFill()
+        capsule.fill()
+        _call_bar_white(0.16).setStroke()
+        capsule.setLineWidth_(1.0)
+        capsule.stroke()
 
 
 @implementer(IObserver)
@@ -1109,6 +1649,9 @@ class VideoWindowController(NSWindowController):
     local_video_hidden = False
 
     holdButton = objc.IBOutlet()
+    cameraButton = None
+    video_swapped = False
+    remote_widget_aspect = None
     hangupButton = objc.IBOutlet()
     chatButton = objc.IBOutlet()
     infoButton = objc.IBOutlet()
@@ -1130,6 +1673,9 @@ class VideoWindowController(NSWindowController):
     last_label = None
     screenshot_task = None
     screencapture_file = None
+    toastView = None
+    toast_timer = None
+    close_after_exit_full_screen = False
 
     recordingImage = 0
     recording_timer = 0
@@ -1156,7 +1702,6 @@ class VideoWindowController(NSWindowController):
         
         self.notification_center = NotificationCenter()
 
-        loadRecordingImages()
 
     @objc.python_method
     def initLocalVideoWindow(self):
@@ -1178,7 +1723,15 @@ class VideoWindowController(NSWindowController):
 
     @objc.python_method
     def _NH_VideoDeviceDidChangeCamera(self, sender, data):
-        self.myVideoView.setProducer(data.new_camera)
+        # Whichever view is showing the local camera -- the thumbnail, or
+        # the main view once the pictures have been swapped.
+        view = self.videoView if self.video_swapped else self.myVideoView
+        view.setProducer(data.new_camera)
+        if not self.video_swapped:
+            # Whatever the new camera's shape, the thumbnail is re-derived
+            # from its corner when the first real frame reports it.
+            self.myVideoView.aspect_ratio = None
+
 
     @property
     def media_received(self):
@@ -1186,26 +1739,23 @@ class VideoWindowController(NSWindowController):
     
     @objc.python_method
     def updateMuteButton(self):
-        self.muteButton.setImage_(NSImage.imageNamed_("muted" if SIPManager().is_muted() else "mute-white"))
+        muted = SIPManager().is_muted()
+        if muted:
+            self.muteButton.configure('mic.slash.fill', NSLocalizedString("Unmute", "Video call bar"),
+                                      tint=NSColor.systemRedColor())
+        else:
+            self.muteButton.configure('mic.fill', NSLocalizedString("Mute", "Video call bar"))
 
     @objc.python_method
     def updateHoldButton(self):
         audio_stream = self.sessionController.streamHandlerOfType("audio")
-        if audio_stream:
-            if audio_stream.status == STREAM_CONNECTED:
-                if audio_stream.holdByLocal:
-                    self.holdButton.setToolTip_(NSLocalizedString("Unhold", "Label"))
-                else:
-                    self.holdButton.setToolTip_(NSLocalizedString("Hold", "Label"))
-
-                if audio_stream.holdByLocal or audio_stream.holdByRemote:
-                    self.holdButton.setImage_(NSImage.imageNamed_("paused-red"))
-                else:
-                    self.holdButton.setImage_(NSImage.imageNamed_("pause-white"))
-            else:
-                self.holdButton.setImage_(NSImage.imageNamed_("pause-white"))
-        else:
-            self.holdButton.setImage_(NSImage.imageNamed_("pause-white"))
+        connected = bool(audio_stream and audio_stream.status == STREAM_CONNECTED)
+        held_here = connected and bool(audio_stream.holdByLocal)
+        held = held_here or (connected and bool(audio_stream.holdByRemote))
+        label = NSLocalizedString("Unhold", "Label") if held_here else NSLocalizedString("Hold", "Label")
+        self.holdButton.setToolTip_(label)
+        self.holdButton.configure('pause.fill', label,
+                                  tint=NSColor.systemRedColor() if held else None)
 
     @objc.python_method
     @run_in_gui_thread
@@ -1219,11 +1769,12 @@ class VideoWindowController(NSWindowController):
         self.notification_center.add_observer(self, name='BlinkAudioStreamChangedHoldState')
         self.notification_center.add_observer(self, name='VideoDeviceDidChangeCamera')
 
+        self._buildCallBar()
+
         self.hangupButton.setToolTip_(NSLocalizedString("Hangup", "Label"))
         self.chatButton.setToolTip_(NSLocalizedString("Chat", "Label"))
         self.infoButton.setToolTip_(NSLocalizedString("Show Session Information", "Label"))
         self.muteButton.setToolTip_(NSLocalizedString("Mute", "Label"))
-        self.aspectButton.setToolTip_(NSLocalizedString("Aspect", "Label"))
         self.screenshotButton.setToolTip_(NSLocalizedString("Screenshot", "Label"))
         self.recordButton.setToolTip_(NSLocalizedString("Start Recording", "Label"))
         self.fullScreenButton.setToolTip_(NSLocalizedString("Full Screen", "Label"))
@@ -1259,6 +1810,193 @@ class VideoWindowController(NSWindowController):
             self.stats_overlay_timer, NSRunLoopCommonModes)
         NSRunLoop.currentRunLoop().addTimer_forMode_(
             self.stats_overlay_timer, NSEventTrackingRunLoopMode)
+
+    @objc.python_method
+    def availableCameras(self):
+        """The cameras the user can pick, as the Devices menu lists them."""
+        try:
+            return [device for device in NSApp.delegate().video_devices
+                    if device not in (None, 'system_default')]
+        except Exception:
+            return []
+
+    @objc.IBAction
+    def userClickedCameraButton_(self, sender):
+        """The camera segment's menu: what the video does, then which camera.
+
+        Offered with a single camera too -- only the device list at the
+        bottom depends on how many there are. Picking a camera sends the
+        contacts window's selectVideoDevice:, the very action Devices >
+        Video Camera sends, so both places change it the same way. There is
+        no None entry: turning the camera off mid-call is Stop Video.
+        """
+        connected = bool(self.flipped and self.streamController is not None
+                         and self.streamController.stream is not None)
+        menu = NSMenu.alloc().init()
+        menu.setAutoenablesItems_(False)
+
+        def add(title, action, target=self, enabled=True, state=NSOffState):
+            item = menu.addItemWithTitle_action_keyEquivalent_(title, action, '')
+            item.setTarget_(target)
+            item.setEnabled_(bool(enabled))
+            item.setState_(state)
+            return item
+
+        add(NSLocalizedString("Show Preview", "Menu item") if self.local_video_hidden
+            else NSLocalizedString("Hide Preview", "Menu item"),
+            'userClickedLocalVideo:', enabled=connected)
+        add(NSLocalizedString("Swap Video", "Menu item"), 'userClickedSwapVideo:',
+            enabled=connected, state=NSOnState if self.video_swapped else NSOffState)
+        add(NSLocalizedString("Stop Video", "Menu item"), 'removeVideo:',
+            enabled=self.sessionController is not None)
+
+        ratios = [ratio for ratio in self.valid_aspect_ratios if ratio is not None]
+        aspect_item = add(NSLocalizedString("Aspect Ratio", "Menu item"), None,
+                          enabled=bool(ratios))
+        submenu = NSMenu.alloc().init()
+        submenu.setAutoenablesItems_(False)
+        for ratio in ratios:
+            title = self.aspect_ratio_descriptions.get(ratio, "%.2f" % ratio)
+            item = submenu.addItemWithTitle_action_keyEquivalent_(title, 'userSelectedAspectRatio:', '')
+            item.setTarget_(self)
+            item.setRepresentedObject_(ratio)
+            current = self.aspect_ratio is not None and abs(ratio - self.aspect_ratio) < 0.005
+            item.setState_(NSOnState if current else NSOffState)
+        aspect_item.setSubmenu_(submenu)
+
+        menu.addItem_(NSMenuItem.separatorItem())
+        cameras = self.availableCameras()
+        try:
+            current = SIPApplication.video_device.real_name
+        except AttributeError:
+            current = None
+        if not cameras:
+            add(NSLocalizedString("No Camera", "Menu item"), None, enabled=False)
+        devices = NSApp.delegate().contactsWindowController
+        for camera in sorted(cameras, key=lambda name: name.lower()):
+            item = add(camera, 'selectVideoDevice:', target=devices,
+                       state=NSOnState if camera == current else NSOffState)
+            item.setRepresentedObject_(camera)
+
+        # Under the segment; AppKit moves it up if that would leave the screen.
+        bounds = sender.bounds()
+        below = bounds.size.height if sender.isFlipped() else 0.0
+        menu.popUpMenuPositioningItem_atLocation_inView_(None, NSMakePoint(0.0, below), sender)
+
+    @objc.IBAction
+    def userSelectedAspectRatio_(self, sender):
+        ratio = sender.representedObject()
+        if ratio is None:
+            return
+        self.aspect_ratio = float(ratio)
+        self.sessionController.log_info(
+            "Aspect ratio set to %s" % self.aspect_ratio_descriptions.get(self.aspect_ratio, "%.2f" % self.aspect_ratio))
+        self.updateAspectRatio()
+
+    @objc.IBAction
+    def userClickedSwapVideo_(self, sender):
+        """Put the local camera in the main view and the remote in the thumbnail, or back.
+
+        Both views are detached first and attached again after the run loop
+        has drained, the same two-step show() uses on connect: switching a
+        widget's producer in place races pjsip's converter thread.
+
+        The main view's shape normally comes from the remote picture and
+        resizes the window; while swapped the local camera must not do
+        that, and on the way back the remote's known shape is put back
+        rather than re-detected, which would also re-centre the window.
+        """
+        stream = self.streamController.stream if self.streamController is not None else None
+        if not self.flipped or stream is None:
+            return
+        try:
+            local = SIPApplication.video_device.producer
+        except AttributeError:
+            return
+        remote = stream.producer
+        swapping = not self.video_swapped
+        if swapping:
+            self.remote_widget_aspect = self.videoView.aspect_ratio
+        main, thumb = (local, remote) if swapping else (remote, local)
+        self.video_swapped = swapping
+        self.sessionController.log_info('Video %s' % ('swapped: local camera in the main view'
+                                                      if swapping else 'restored: remote in the main view'))
+        for view in (self.videoView, self.myVideoView):
+            try:
+                view.setProducer(None)
+            except Exception:
+                pass
+
+        from util import call_later
+
+        def attach():
+            if self.closed or self.will_close:
+                return
+            try:
+                self.videoView.aspect_ratio = None if swapping else self.remote_widget_aspect
+                self.myVideoView.aspect_ratio = None
+                self.videoView.setProducer(main)
+                self.myVideoView.setProducer(thumb)
+            except Exception as exc:
+                BlinkLogger().log_info("Swapping video failed: %s" % exc)
+        call_later(0.25, attach)
+
+    @objc.python_method
+    def _buildCallBar(self):
+        """Put the call bar where the xib's row of loose buttons was.
+
+        The outlets are pointed at the new segments, so everything that
+        already drives them -- hiding, enabling, tooltips -- goes on working
+        against the bar. Left to right: what changes the call, what the
+        window does, and hanging up last and in red.
+        """
+        old = self.buttonsView
+        content = old.superview() if old is not None else None
+        if content is None:
+            content = self.window().contentView()
+        bar = VideoCallBar.alloc().initWithFrame_(
+            NSMakeRect(0, CALL_BAR_BOTTOM, 0, CALL_BAR_HEIGHT))
+        if old is not None and old.superview() is not None:
+            content.addSubview_positioned_relativeTo_(bar, NSWindowAbove, old)
+            old.removeFromSuperview()
+        else:
+            content.addSubview_(bar)
+        self.buttonsView = bar
+
+        def add(symbol, label, action, destructive=False):
+            return bar.addSegment(make_call_bar_segment(symbol, label, action, self, destructive))
+
+        self.muteButton = add('mic.fill', NSLocalizedString("Mute", "Video call bar"),
+                              'userClickedMuteButton:')
+        self.cameraButton = add('camera', NSLocalizedString("Camera", "Video call bar"),
+                                'userClickedCameraButton:')
+        self.cameraButton.setToolTip_(NSLocalizedString("Video and camera", "Label"))
+        self.holdButton = add('pause.fill', NSLocalizedString("Hold", "Video call bar"),
+                              'userClickedHoldButton:')
+        self.chatButton = add('message.fill', NSLocalizedString("Chat", "Video call bar"),
+                              'userClickedChatButton:')
+        self.screenshotButton = add('camera.viewfinder', NSLocalizedString("Screenshot", "Video call bar"),
+                                    'userClickedScreenshotButton:')
+        self.recordButton = add('record.circle', NSLocalizedString("Record", "Video call bar"),
+                                'userClickedRecordButton:')
+        # Hidden, not removed: the recording timer still drives it, and
+        # showButtons() leaves it out of the segments it brings back.
+        self.recordButton.setHidden_(True)
+        self.fullScreenButton = add('arrow.up.left.and.arrow.down.right',
+                                    NSLocalizedString("Full", "Video call bar"),
+                                    'userClickedFullScreenButton:')
+        self.infoButton = add('info.circle', NSLocalizedString("Info", "Video call bar"),
+                              'userClickedInfoButton:')
+        self.hangupButton = add('phone.down.fill', NSLocalizedString("End", "Video call bar"),
+                                'userClickedHangupButton:', destructive=True)
+
+        # The status pill sat just above the old, shorter row; keep it clear
+        # of the bar.
+        status = self.disconnectLabel.superview() if self.disconnectLabel is not None else None
+        if status is not None:
+            origin = status.frame().origin
+            origin.y = CALL_BAR_BOTTOM + CALL_BAR_HEIGHT + 8.0
+            status.setFrameOrigin_(origin)
 
     @objc.python_method
     def _setupStatsOverlay(self):
@@ -1471,6 +2209,8 @@ class VideoWindowController(NSWindowController):
 
     @objc.python_method
     def init_aspect_ratio(self, width, height):
+        if self.video_swapped:
+            return      # the main view is showing the local camera
         self.sessionController.log_info('Remote video stream at %0.fx%0.f resolution' % (width, height))
         self.aspect_ratio = floor((float(width) / height) * 100)/100
         self.sessionController.log_info('Remote aspect ratio is %s' % self.aspect_ratio)
@@ -1657,8 +2397,8 @@ class VideoWindowController(NSWindowController):
         if self.streamController.ended:
             return
 
-        if self.myVideoView and self.myVideoView.is_dragging:
-            self.myVideoView.goToFinalOrigin()
+        if self.myVideoView and self.myVideoView.drag_mode is not None:
+            self.myVideoView.endDrag()
 
     def mouseDragged_(self, event):
         if self.closed:
@@ -1666,7 +2406,7 @@ class VideoWindowController(NSWindowController):
         if self.streamController.ended:
             return
 
-        if self.myVideoView and self.myVideoView.is_dragging:
+        if self.myVideoView and self.myVideoView.drag_mode is not None:
             self.myVideoView.mouseDragged_(event)
 
     def mouseDraggedView_(self, event):
@@ -1925,7 +2665,7 @@ class VideoWindowController(NSWindowController):
                     # set the way we want. Don't re-call setProducer
                     # (no-op anyway, but safer not to touch pjsip).
                     self.myVideoView.setAlphaValue_(1.0)
-                    self.myVideoView.setHidden_(False)
+                    self.myVideoView.setHidden_(self.local_video_hidden)
                 self.flipped = True
             else:
                 # Preview layout (used during outgoing call setup): the
@@ -1959,6 +2699,8 @@ class VideoWindowController(NSWindowController):
         appearance isn't a hard pop."""
         # Position the thumb in the user's chosen corner with alpha 0
         # so it can fade up cleanly.
+        if self.local_video_hidden:
+            return
         try:
             self.myVideoView.setHidden_(False)
             self.myVideoView.setAlphaValue_(0.0)
@@ -1978,25 +2720,48 @@ class VideoWindowController(NSWindowController):
 
     @objc.python_method
     def repositionMyVideo(self):
-        userdef = NSUserDefaults.standardUserDefaults()
-        last_corner = userdef.stringForKey_("MyVideoCorner")
-        if last_corner == "TL":
-            self.moveMyVideoView(self.myVideoViewTL)
-        elif last_corner == "TR":
-            self.moveMyVideoView(self.myVideoViewTR)
-        elif last_corner == "BR":
-            self.moveMyVideoView(self.myVideoViewBR)
-        elif last_corner == "BL":
-            self.moveMyVideoView(self.myVideoViewBL)
+        if self.closed or self.myVideoView is None:
+            return
+        self.myVideoView.layoutInSuperview()
 
     @objc.python_method
-    def moveMyVideoView(self, view):
-        if self.closed:
-            return
+    def myVideoTopInset(self):
+        """How far below the top edge the thumbnail keeps.
 
-        self.myVideoView.setFrame_(view.frame())
-        self.myVideoView.setAutoresizingMask_(view.autoresizingMask())
-        self.myVideoView.setFrameOrigin_(view.frame().origin)
+        In full screen the menu bar and the title bar slide down over the
+        top of the picture when the pointer reaches it, and a thumbnail
+        parked in a top corner disappears under them; the notch takes a
+        strip as well. Windowed, the title bar is outside the content.
+        """
+        if not self.full_screen or self.window() is None:
+            return MY_VIDEO_MARGIN
+        titlebar = 28.0
+        try:
+            probe = NSMakeRect(0, 0, 100, 100)
+            titlebar = NSWindow.frameRectForContentRect_styleMask_(probe, 1).size.height - 100.0
+        except Exception:
+            pass
+        menubar = 24.0
+        try:
+            menubar = max(menubar, NSApp.mainMenu().menuBarHeight())
+        except Exception:
+            pass
+        try:
+            menubar = max(menubar, self.window().screen().safeAreaInsets().top)
+        except Exception:
+            pass
+        return MY_VIDEO_MARGIN + titlebar + menubar
+
+    @objc.python_method
+    def myVideoBottomInset(self, x, width):
+        """Keep a bottom-corner thumbnail clear of the call bar it would cover."""
+        bar = self.buttonsView
+        if bar is None or bar.isHidden():
+            return MY_VIDEO_MARGIN
+        frame = bar.frame()
+        if x + width <= frame.origin.x or x >= frame.origin.x + frame.size.width:
+            return MY_VIDEO_MARGIN
+        return frame.origin.y + frame.size.height + MY_VIDEO_MARGIN
 
     def windowWillResize_toSize_(self, window, frameSize):
         if self.closed:
@@ -2008,16 +2773,10 @@ class VideoWindowController(NSWindowController):
         scaledSize = frameSize
         scaledSize.width = frameSize.width
         scaledSize.height = scaledSize.width / self.aspect_ratio or 1.77
-        if self.myVideoView:
-            self.myVideoView.snapToCorner()
         
-        # Width threshold below which the buttons row + PIP get
-        # auto-hidden because they no longer fit inside the window
-        # without overlapping each other. The button bar itself is
-        # 279 px wide (see VideoWindow.xib buttonsView frame); pick
-        # a threshold just above that so the bar isn't crammed
-        # edge-to-edge but the user can still shrink the window
-        # quite small before the chrome disappears.
+        # Width below which the call bar + PIP get auto-hidden because
+        # they no longer fit. The bar drops its labels first (see
+        # VideoCallBar.tile); only when not even its icons fit does it go.
         #
         # Previous value 665 was the old fixed-size minimum, and
         # combined with the auto-hide it produced the "I shrank the
@@ -2028,7 +2787,7 @@ class VideoWindowController(NSWindowController):
         # range, and even when it does auto-hide the on-mouseDown
         # showButtons() fallback in mouseDown_ at least gives a
         # visible toggle.
-        if scaledSize.width < 290:
+        if scaledSize.width < self.buttonsView.minimumWindowWidth():
             self.window_too_small = True
             self.hideButtons()
             self.myVideoView.hide()
@@ -2051,10 +2810,8 @@ class VideoWindowController(NSWindowController):
 
         self.updateTrackingAreas()
 
-        origin = self.buttonsView.frame().origin
-        origin.x = (NSWidth(self.buttonsView.superview().bounds()) - NSWidth(self.buttonsView.frame())) / 2
-        self.buttonsView.setFrameOrigin_(origin)
-        self.buttonsView.setAutoresizingMask_(NSViewMinXMargin | NSViewMaxXMargin)
+        # Re-centres the bar, and trades its labels for room when narrow.
+        self.buttonsView.tile()
 
         # Keep the status-label pill horizontally centered on resize but
         # let the xib's anchor-to-bottom autoresizing keep it just above
@@ -2127,14 +2884,21 @@ class VideoWindowController(NSWindowController):
         sc = self.sessionController
         if sc is not None:
             sc.log_debug('windowDidEnterFullScreen_ %s' % self)
-        if self.streamController is None or self.streamController.ended:
-            self.window().orderOut_(self)
+        if self.closed or self.streamController is None or self.streamController.ended:
+            self.full_screen = True
+            self.full_screen_in_progress = False
+            self.close_after_exit_full_screen = False
+            if self.closed:
+                self._closeWindow()     # leaves full screen first, then closes
+            else:
+                self.window().orderOut_(self)
             return
 
         self.full_screen_in_progress = False
         self.full_screen = True
         self.stopMouseOutTimer()
-        self.fullScreenButton.setImage_(NSImage.imageNamed_("restore"))
+        self.fullScreenButton.configure('arrow.down.right.and.arrow.up.left',
+                                        NSLocalizedString("Exit", "Video call bar"))
 
         self.repositionMyVideo()
 
@@ -2147,10 +2911,20 @@ class VideoWindowController(NSWindowController):
         sc = self.sessionController
         if sc is not None:
             sc.log_debug('windowDidExitFullScreen %s' % self)
-        self.fullScreenButton.setImage_(NSImage.imageNamed_("fullscreen"))
+        if self.closed:
+            # The call ended while in full screen: the close was waiting for this.
+            self.full_screen = False
+            self.full_screen_in_progress = False
+            self.close_after_exit_full_screen = False
+            self._closeWindow()
+            return
+        self.fullScreenButton.configure('arrow.up.left.and.arrow.down.right',
+                                        NSLocalizedString("Full", "Video call bar"))
 
         self.full_screen_in_progress = False
         self.full_screen = False
+        # The top inset for the menu and title bars no longer applies.
+        self.repositionMyVideo()
 
         self.recordButton.setEnabled_(False)
 
@@ -2173,6 +2947,16 @@ class VideoWindowController(NSWindowController):
         self.updateAspectRatio()
 
     def windowWillClose_(self, sender):
+        # A raise in here aborts -[NSWindow close] and leaves the window on
+        # screen, and every later attempt to close it raises again -- a
+        # window nobody can get rid of. Whatever goes wrong is logged instead.
+        try:
+            self._windowWillClose()
+        except Exception:
+            BlinkLogger().log_error('Video window windowWillClose failed: %s' % traceback.format_exc())
+
+    @objc.python_method
+    def _windowWillClose(self):
         # `self.sessionController` is now a property that legitimately
         # returns None once the underlying VideoController has been
         # ObjC-deallocated (e.g. at app exit, after the call ended and
@@ -2218,65 +3002,110 @@ class VideoWindowController(NSWindowController):
     @objc.python_method
     @run_in_gui_thread
     def close(self):
+        """Tear the window down at the end of the video stream.
+
+        Every step is on its own: one that raises is logged with its
+        traceback and the rest still run, and the window is always taken
+        off screen at the end. A single raise in here used to leave a
+        window that was marked closed -- so every handler ignored input --
+        but was still showing, and could not be closed by hand either.
+        """
         if self.closed:
+            # Torn down already. If the window is somehow still up, take it away.
+            self._closeWindow()
             return
-
-        self.sessionController.log_debug('Close remote %s' % self)
         self.closed = True
-        self.notification_center.discard_observer(self, sender=self.streamController.videoRecorder)
-        self.notification_center.discard_observer(self, name='BlinkMuteChangedState')
-        self.notification_center.discard_observer(self, name='BlinkAudioStreamChangedHoldState')
-        self.notification_center.discard_observer(self, name='VideoDeviceDidChangeCamera')
-        self.notification_center = None
 
-        # Release BOTH video views' producers before anything else can
-        # raise. Any exception here would leave the AVCaptureSession (and
-        # the camera LED) running until the next call. We release the PiP
-        # thumbnail's local-camera consumer first, then the main view's
-        # consumer (which may be the remote stream's producer when the
-        # call was connected, or the local camera when we were still in
-        # preview mode), each wrapped in its own try/except so a failure
-        # in one path cannot prevent the other from running.
-        if self.myVideoView:
+        sc = self.sessionController
+        if sc is not None:
+            sc.log_debug('Close remote %s' % self)
+
+        def step(name, function):
             try:
-                self.myVideoView.setProducer(None)
-            except Exception as e:
-                BlinkLogger().log_debug(
-                    "myVideoView.setProducer(None) during cleanup ignored: %s" % e)
-            try:
-                self.myVideoView.close()
-            except Exception as e:
-                BlinkLogger().log_debug(
-                    "myVideoView.close() during cleanup ignored: %s" % e)
+                function()
+            except Exception:
+                BlinkLogger().log_error('Video window close: %s failed: %s' % (name, traceback.format_exc()))
 
-        if self.videoView:
-            try:
-                self.videoView.setProducer(None)
-            except Exception as e:
-                BlinkLogger().log_debug(
-                    "videoView.setProducer(None) during cleanup ignored: %s" % e)
-            try:
-                self.videoView.close()
-            except Exception as e:
-                BlinkLogger().log_debug(
-                    "videoView.close() during cleanup ignored: %s" % e)
+        def discard_observers():
+            nc = self.notification_center
+            self.notification_center = None
+            if nc is None:
+                return
+            recorder = self.streamController.videoRecorder if self.streamController is not None else None
+            if recorder is not None:
+                nc.discard_observer(self, sender=recorder)
+            for name in ('BlinkMuteChangedState', 'BlinkAudioStreamChangedHoldState',
+                         'VideoDeviceDidChangeCamera'):
+                nc.discard_observer(self, name=name)
 
-        if self.zrtp_controller:
-            self.zrtp_controller.close()
-            self.zrtp_controller = None
+        # The camera first: anything that goes wrong later must not leave
+        # the AVCaptureSession, and the camera LED, running.
+        for view in (self.myVideoView, self.videoView):
+            if view:
+                step('releasing a video producer', lambda view=view: view.setProducer(None))
+                step('closing a video view', lambda view=view: view.close())
+        step('discarding observers', discard_observers)
 
-        self.hideButtons()
-        self.stopRecordingTimer()
-        self.stopStatsOverlayTimer()
-        self.goToWindowMode()
-        self.stopIdleTimer()
-        self.stopMouseOutTimer()
-        self.closeTrackingAreas()
-        if self.localVideoWindow:
-            self.localVideoWindow.close()
+        def close_zrtp():
+            if self.zrtp_controller:
+                self.zrtp_controller.close()
+                self.zrtp_controller = None
+        step('closing ZRTP', close_zrtp)
 
-        if self.window():
-            self.window().close()
+        step('hiding the call bar', self.hideButtons)
+        step('stopping the recording timer', self.stopRecordingTimer)
+        step('stopping the stats timer', self.stopStatsOverlayTimer)
+        step('hiding the note', lambda: self.hideToast(animate=False))
+        step('stopping the idle timer', self.stopIdleTimer)
+        step('stopping the mouse timer', self.stopMouseOutTimer)
+        step('removing tracking areas', self.closeTrackingAreas)
+
+        def close_local_window():
+            if self.localVideoWindow:
+                self.localVideoWindow.close()
+        step('closing the local video window', close_local_window)
+
+        self._closeWindow()
+
+    @objc.python_method
+    def _closeWindow(self):
+        """Take the window off screen and close it, full screen or not.
+
+        Closing a window while it is in, or on its way out of, full screen
+        leaves a frozen window behind; in that case the close is finished by
+        windowDidExitFullScreen_, with a timer in case that never comes.
+        """
+        window = self.window()
+        if window is None:
+            return
+        if self.full_screen or self.full_screen_in_progress:
+            if not self.close_after_exit_full_screen:
+                self.close_after_exit_full_screen = True
+                if self.full_screen and not self.full_screen_in_progress:
+                    try:
+                        window.toggleFullScreen_(None)
+                    except Exception:
+                        BlinkLogger().log_error('Video window close: leaving full screen failed: %s'
+                                                % traceback.format_exc())
+                NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
+                    3.0, self, "forceCloseWindow:", None, False)
+            return
+        try:
+            window.orderOut_(None)
+        except Exception:
+            BlinkLogger().log_error('Video window close: orderOut failed: %s' % traceback.format_exc())
+        try:
+            window.close()
+        except Exception:
+            BlinkLogger().log_error('Video window close: close failed: %s' % traceback.format_exc())
+
+    def forceCloseWindow_(self, timer):
+        if not self.close_after_exit_full_screen:
+            return
+        self.close_after_exit_full_screen = False
+        self.full_screen = False
+        self.full_screen_in_progress = False
+        self._closeWindow()
 
     def dealloc(self):
         # sessionController property can legitimately be None at app
@@ -2361,7 +3190,7 @@ class VideoWindowController(NSWindowController):
     @objc.IBAction
     def userClickedMuteButton_(self, sender):
         SIPManager().mute(not SIPManager().is_muted())
-        self.muteButton.setImage_(NSImage.imageNamed_("muted" if SIPManager().is_muted() else "mute-white"))
+        self.updateMuteButton()
 
     @objc.IBAction
     def userClickedRecordButton_(self, sender):
@@ -2437,13 +3266,100 @@ class VideoWindowController(NSWindowController):
 
     @objc.IBAction
     def userClickedScreenshotButton_(self, sender):
+        """Take a screenshot, and say so where the user is looking.
+
+        The sound and the log line were all the feedback there was, and
+        neither says where the file went. The note appears once screencapture
+        has actually finished, with a way to the file.
+        """
+        if self.screenshot_task is not None:
+            return          # one at a time: the previous one is still being written
         filename = self.screenshot_filename()
-        screenshot_task = NSTask.alloc().init()
-        screenshot_task.setLaunchPath_('/usr/sbin/screencapture')
-        screenshot_task.setArguments_(['-tpng', filename])
-        screenshot_task.launch()
-        NSSound.soundNamed_("Grab").play()
-        self.sessionController.log_info("Screenshot saved in %s" % filename)
+        self.screencapture_file = filename
+        self.screenshot_task = NSTask.alloc().init()
+        self.screenshot_task.setLaunchPath_('/usr/sbin/screencapture')
+        self.screenshot_task.setArguments_(['-tpng', filename])
+        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(
+            self, "localScreenshotDidFinish:", NSTaskDidTerminateNotification, self.screenshot_task)
+        self.screenshot_task.launch()
+
+    def localScreenshotDidFinish_(self, notification):
+        task = notification.object()
+        NSNotificationCenter.defaultCenter().removeObserver_name_object_(self, NSTaskDidTerminateNotification, task)
+        filename = self.screencapture_file
+        self.screenshot_task = None
+        self.screencapture_file = None
+        if self.closed:
+            return
+        if task.terminationStatus() == 0 and filename and os.path.exists(filename):
+            NSSound.soundNamed_("Grab").play()
+            if self.sessionController:
+                self.sessionController.log_info("Screenshot saved in %s" % filename)
+            self.showToast(NSLocalizedString("Screenshot saved", "Video window note"),
+                           NSLocalizedString("Show in Finder", "Button title"),
+                           lambda: self.revealInFinder(filename))
+        else:
+            if self.sessionController:
+                self.sessionController.log_info("Screenshot failed (status %d)" % task.terminationStatus())
+            self.showToast(NSLocalizedString("Screenshot failed", "Video window note"))
+
+    @objc.python_method
+    def revealInFinder(self, filename):
+        if os.path.exists(filename):
+            NSWorkspace.sharedWorkspace().activateFileViewerSelectingURLs_([NSURL.fileURLWithPath_(filename)])
+        else:
+            NSWorkspace.sharedWorkspace().openFile_(os.path.dirname(filename))
+
+    @objc.python_method
+    def showToast(self, text, action_title=None, callback=None, seconds=TOAST_SECONDS):
+        window = self.window()
+        if window is None:
+            return
+        content = window.contentView()
+        if self.toastView is None:
+            self.toastView = VideoToast.alloc().initWithFrame_(NSMakeRect(0, 0, 200, TOAST_HEIGHT))
+            if self.buttonsView is not None and self.buttonsView.superview() is content:
+                content.addSubview_positioned_relativeTo_(self.toastView, NSWindowAbove, self.buttonsView)
+            else:
+                content.addSubview_(self.toastView)
+        toast = self.toastView
+        toast.configure(text, action_title, callback)
+        toast.setHidden_(False)
+        toast.setAlphaValue_(0.0)
+        NSAnimationContext.beginGrouping()
+        try:
+            NSAnimationContext.currentContext().setDuration_(0.18)
+            toast.animator().setAlphaValue_(1.0)
+        finally:
+            NSAnimationContext.endGrouping()
+
+        if self.toast_timer is not None and self.toast_timer.isValid():
+            self.toast_timer.invalidate()
+        self.toast_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(
+            seconds, self, "toastTimerFired:", None, False)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.toast_timer, NSRunLoopCommonModes)
+
+    def toastTimerFired_(self, timer):
+        self.toast_timer = None
+        self.hideToast()
+
+    @objc.python_method
+    def hideToast(self, animate=True):
+        if self.toast_timer is not None and self.toast_timer.isValid():
+            self.toast_timer.invalidate()
+        self.toast_timer = None
+        toast = self.toastView
+        if toast is None:
+            return
+        if not animate:
+            toast.setAlphaValue_(0.0)
+            return
+        NSAnimationContext.beginGrouping()
+        try:
+            NSAnimationContext.currentContext().setDuration_(0.25)
+            toast.animator().setAlphaValue_(0.0)
+        finally:
+            NSAnimationContext.endGrouping()
 
     @objc.python_method
     def screenshot_filename(self, for_remote=False):
@@ -2462,6 +3378,8 @@ class VideoWindowController(NSWindowController):
 
     @objc.IBAction
     def userClickedSendScreenshotButton_(self, sender):
+        if self.screenshot_task is not None:
+            return          # shares the task slot with Screenshot; one at a time
         filename = self.screenshot_filename(True)
         self.screencapture_file = filename
         self.screenshot_task = NSTask.alloc().init()
@@ -2475,11 +3393,21 @@ class VideoWindowController(NSWindowController):
 
     def checkScreenshotTaskStatus_(self, notification):
         status = notification.object().terminationStatus()
-        if status == 0 and self.sessionController and os.path.exists(self.screencapture_file):
-            self.sendFiles([str(self.screencapture_file)])
+        filename = self.screencapture_file
+        sent = False
+        if status == 0 and self.sessionController and filename and os.path.exists(filename):
+            sent = self.sendFiles([str(filename)])
         NSNotificationCenter.defaultCenter().removeObserver_name_object_(self, NSTaskDidTerminateNotification, self.screenshot_task)
         self.screenshot_task = None
         self.screencapture_file = None
+        if self.closed:
+            return
+        if sent:
+            self.showToast(NSLocalizedString("Screenshot sent", "Video window note"),
+                           NSLocalizedString("Show in Finder", "Button title"),
+                           lambda: self.revealInFinder(filename))
+        else:
+            self.showToast(NSLocalizedString("Screenshot could not be sent", "Video window note"))
 
     @objc.python_method
     def sendFiles(self, fnames):
@@ -2518,21 +3446,12 @@ class VideoWindowController(NSWindowController):
             return
 
         # Smooth ~250 ms fade-out via Core Animation, instead of an
-        # abrupt hidden-flag flip. The recording indicator stays at
-        # full opacity if we're currently recording, so the user always
-        # has a visible "REC" cue.
-        recording = bool(self.streamController
-                         and self.streamController.videoRecorder
-                         and self.streamController.videoRecorder.isRecording())
-
+        # abrupt hidden-flag flip. A faded bar stops taking clicks
+        # (VideoCallBar.hitTest_), so they reach the video and bring it back.
         NSAnimationContext.beginGrouping()
         try:
             NSAnimationContext.currentContext().setDuration_(0.25)
             self.buttonsView.animator().setAlphaValue_(0.0)
-            if self.fullScreenButton is not None:
-                self.fullScreenButton.animator().setAlphaValue_(0.0)
-            if recording and self.recordButton is not None:
-                self.recordButton.animator().setAlphaValue_(1.0)
         finally:
             NSAnimationContext.endGrouping()
 
@@ -2583,8 +3502,7 @@ class VideoWindowController(NSWindowController):
             for btn in (self.fullScreenButton,
                         self.hangupButton, self.chatButton,
                         self.infoButton, self.muteButton,
-                        self.aspectButton, self.screenshotButton,
-                        self.recordButton):
+                        self.cameraButton, self.screenshotButton):
                 if btn is not None:
                     btn.setHidden_(False)
             if self.holdButton is not None:
@@ -2601,8 +3519,6 @@ class VideoWindowController(NSWindowController):
         try:
             NSAnimationContext.currentContext().setDuration_(0.18)
             self.buttonsView.animator().setAlphaValue_(1.0)
-            if self.fullScreenButton is not None:
-                self.fullScreenButton.animator().setAlphaValue_(1.0)
         finally:
             NSAnimationContext.endGrouping()
 
@@ -2615,13 +3531,14 @@ class VideoWindowController(NSWindowController):
 
         if self.streamController.videoRecorder.isRecording():
             self.recordButton.setToolTip_(NSLocalizedString("Stop Recording", "Label"))
-            self.recordingImage += 1
-            if self.recordingImage >= len(RecordingImages):
-                self.recordingImage = 0
-            self.recordButton.setImage_(RecordingImages[self.recordingImage])
+            # Blinks red on the timer's half-second beat.
+            self.recordingImage = (self.recordingImage + 1) % 2
+            tint = NSColor.systemRedColor() if self.recordingImage == 0 else _call_bar_white(0.5)
+            self.recordButton.configure('record.circle.fill',
+                                        NSLocalizedString("Stop", "Video call bar"), tint=tint)
         else:
             self.recordButton.setToolTip_(NSLocalizedString("Start Recording", "Label"))
-            self.recordButton.setImage_(RecordingImages[0])
+            self.recordButton.configure('record.circle', NSLocalizedString("Record", "Video call bar"))
 
     @objc.python_method
     def update_encryption_icon(self):

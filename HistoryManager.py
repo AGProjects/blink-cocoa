@@ -552,6 +552,7 @@ CONVERSATION_MEDIA_TYPES = MESSAGE_MEDIA_TYPES + ('audio', 'video', 'audio-recor
 from MessageHost import SIP_STATUS_PHRASES as _SIP_STATUS_PHRASES
 from MessageHost import sip_status_phrase as _sip_status_phrase
 from MessageHost import CALL_CONTENT_TYPE, call_record, call_summary, merge_call_records
+from MessageHost import FILE_TRANSFER_CONTENT_TYPES
 from MessageHost import build_call_record, dominant_media, call_was_missed
 
 
@@ -786,7 +787,7 @@ NOT_DELETED_SQL = "(deleted is null or deleted = 0)"
 
 
 class ChatHistory(object, metaclass=Singleton):
-    __version__ = 20
+    __version__ = 21
 
     def __init__(self):
         path = ApplicationData.get('history')
@@ -1081,6 +1082,18 @@ class ChatHistory(object, metaclass=Singleton):
             # known twice is one row.
             self._fix_call_records()
 
+        if next_upgrade_version < 21:
+            # Presence changes are no longer history. Every availability
+            # flip of every contact was written here as an 'Availability
+            # Information' row; nothing writes them any more and nothing
+            # renders them, so the ones already stored go.
+            query = ("delete from chat_messages "
+                     "where content_type = 'html' and media_type = 'availability'")
+            try:
+                self.db.queryAll(query)
+            except Exception as e:
+                BlinkLogger().log_error("Error pruning availability rows: %s" % e)
+
         TableVersions().set_table_version(ChatMessage.sqlmeta.table, self.__version__)
 
     def _backfill_categories(self):
@@ -1334,6 +1347,37 @@ class ChatHistory(object, metaclass=Singleton):
             except Exception as e:
                 BlinkLogger().log_error('Cannot classify message %s: %s' % (msgid, e))
 
+        # The server's copy of a file transfer this account sent to ITSELF
+        # -- a call recording -- when the same transfer is already filed
+        # under another conversation of this account. The unique index is
+        # (msgid, local_uri, remote_uri), so it cannot see these as one
+        # message, and taking it in draws the recording a second time in
+        # the conversation with ourselves.
+        #
+        # Checked here, on the database thread, because it is the one place
+        # every road goes through in order: the journal can hand the
+        # transfer over before the note that would redirect it (the note
+        # reaches the server after the upload does), the in-memory list of
+        # our own uploads is empty after a restart, and a move queued by the
+        # note can run before an insert queued from the GUI thread. A
+        # tombstoned copy counts: deleting the recording must not bring it
+        # back in the chat with ourselves.
+        if (content_type in FILE_TRANSFER_CONTENT_TYPES and msgid
+                and str(local_uri) == str(remote_uri)):
+            try:
+                elsewhere = list(self.db.queryAll(
+                    "select remote_uri from %s where msgid=%s and local_uri=%s and remote_uri!=%s limit 1"
+                    % (ChatMessage.sqlmeta.table, ChatMessage.sqlrepr(msgid),
+                       ChatMessage.sqlrepr(str(local_uri)), ChatMessage.sqlrepr(str(remote_uri)))))
+            except Exception as e:
+                BlinkLogger().log_error('Cannot look for other copies of transfer %s: %s' % (msgid, e))
+                elsewhere = []
+            if elsewhere:
+                BlinkLogger().log_info('Dropped the echo of our own transfer %s: already filed '
+                                       'in the conversation with %s' % (msgid, elsewhere[0][0]))
+                NotificationCenter().post_notification('MessageSaved', sender=self, data=NotificationData(msgid=msgid, success=True))
+                return False
+
         # A call already known to this conversation. The message id IS the
         # call id now, so the unique index would catch a second copy -- but
         # catching it only refreshes the status, and the two copies of a call
@@ -1452,6 +1496,41 @@ class ChatHistory(object, metaclass=Singleton):
 
         NotificationCenter().post_notification('MessageSaved', sender=self, data=NotificationData(msgid=msgid, success=False))
         return False
+
+    @run_in_db_thread
+    def set_call_sip_trace_url(self, local_uri, call_id, url):
+        """Give a call row that already exists the server's SIP trace link.
+
+        For calls the live path wrote before the server had them. The sync
+        skips those (there is nothing to insert), so without this only calls
+        first learnt from the server would ever carry the link. Only
+        sipTraceUrl is touched: body, status, read and the rest of the
+        record stay what they are.
+
+        Returns (record, remote_uri) when the row changed, None otherwise.
+        """
+        if not call_id or not url:
+            return None
+        try:
+            rows = ChatMessage.selectBy(local_uri=local_uri, sip_callid=call_id,
+                                        content_type=CALL_CONTENT_TYPE)
+            row = rows.getOne(None)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot look up call %s: %s' % (call_id, e))
+            return None
+        if row is None or getattr(row, 'deleted', 0):
+            return None
+        record = call_record(row.body, row.metadata)
+        if record is None or record.get('sipTraceUrl') == url:
+            return None
+        record = dict(record, sipTraceUrl=url)
+        try:
+            row.metadata = json.dumps(record)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot store SIP trace link of call %s: %s' % (call_id, e))
+            return None
+        BlinkLogger().log_debug('SIP trace link added to call %s' % call_id)
+        return record, row.remote_uri
 
     @run_in_db_thread
     def _get_contacts(self, remote_uri, media_type, search_text, after_date, before_date):
@@ -2261,7 +2340,7 @@ class ChatHistory(object, metaclass=Singleton):
                       " 'application/blink-call-detail-record')"
                       " or (content_type = 'html' and media_type in"
                       " ('audio', 'video', 'audio-recording',"
-                      " 'file-transfer', 'availability', 'missed-call')))")
+                      " 'file-transfer', 'missed-call')))")
 
     @run_in_db_thread
     def _renderable_cutoff(self, local_uri, remote_uri, media_type, after_date, before_date, search_text, count, exclude_related_actions=None, category=None):
@@ -3265,6 +3344,40 @@ class SessionHistoryReplicator(object):
             return
         BlinkLogger().log_error("Failed to retrieve calls history for %s from %s: %s" % (key, self.last_calls_connections[key]['url'], error.userInfo()['NSLocalizedDescription']))
 
+    def attach_sip_trace_url(self, account, call):
+        """Backfill sipTraceUrl on a call the local history already holds.
+
+        Writes only when the row lacks the link or has a different one, so a
+        sync replaying the same calls every five minutes costs a lookup each.
+        A bubble already on screen is updated in place; one that is not is
+        left alone and picks the link up from the row when it is drawn.
+        """
+        url = call.get('sipTraceUrl')
+        call_id = call.get('sessionId')
+        if not url or not call_id:
+            return
+        try:
+            remote_uri = sipuri_components_from_string(call.get('remoteParty') or '')[0]
+            local_uri, remote_uri = self.sessionControllersManager.canonical_call_uris(
+                str(account.id), remote_uri)
+        except Exception:
+            local_uri = str(account.id)
+
+        def refresh(result):
+            if not result:
+                return
+            record, row_remote_uri = result
+            try:
+                from SMSWindowManager import SMSWindowManager
+                SMSWindowManager().refreshCallRecord(account, row_remote_uri, record)
+            except Exception as e:
+                BlinkLogger().log_debug('Cannot refresh call %s on screen: %s' % (call_id, e))
+
+        try:
+            ChatHistory().set_call_sip_trace_url(local_uri, call_id, url).addCallback(refresh)
+        except Exception as e:
+            BlinkLogger().log_debug('Cannot attach SIP trace link to call %s: %s' % (call_id, e))
+
     @run_in_green_thread
     @allocate_autorelease_pool
     def syncServerHistoryWithLocalHistory(self, account, calls):
@@ -3306,6 +3419,7 @@ class SessionHistoryReplicator(object):
                         # this one, but preview it anyway -- see
                         # preview_server_history_call.
                         preview_server_history_call('incoming', account, call, local_entry, preview_budget)
+                        self.attach_sip_trace_url(account, call)
                     if not len(local_entry):
                         id=str(uuid1())
                         participants = ""
@@ -3374,6 +3488,7 @@ class SessionHistoryReplicator(object):
                                 media=media, from_tag=from_tag, to_tag=to_tag,
                                 proxy_ip=call.get('proxyIP'),
                                 call_timezone=call.get('timezone'),
+                                sip_trace_url=call.get('sipTraceUrl'),
                                 source='server')
                             message = call_summary(record) or 'Incoming call'
                             # Read-only Calls group preview -- logs only, writes nothing.
@@ -3419,6 +3534,7 @@ class SessionHistoryReplicator(object):
                         # this one, but preview it anyway -- see
                         # preview_server_history_call.
                         preview_server_history_call('outgoing', account, call, local_entry, preview_budget)
+                        self.attach_sip_trace_url(account, call)
                     if not len(local_entry):
                         id=str(uuid1())
                         participants = ""
@@ -3496,6 +3612,7 @@ class SessionHistoryReplicator(object):
                                 media=media, from_tag=from_tag, to_tag=to_tag,
                                 proxy_ip=call.get('proxyIP'),
                                 call_timezone=call.get('timezone'),
+                                sip_trace_url=call.get('sipTraceUrl'),
                                 source='server')
                             message = call_summary(record) or 'Outgoing call'
                             # Read-only Calls group preview -- logs only, writes nothing.
@@ -3650,6 +3767,10 @@ _PREFIX = '[cdr]'
 
 def _log(line):
     BlinkLogger().log_info('%s %s' % (_PREFIX, line))
+
+
+def _log_debug(line):
+    BlinkLogger().log_debug('%s %s' % (_PREFIX, line))
 
 
 def _log_ab(line):
@@ -3977,30 +4098,30 @@ def preview_call(source, direction, status, account=None,
         head = '%s %s %s' % (source, direction, status)
         if duration:
             head += ' duration=%s' % duration
-        _log('--- %s  call_id=%s' % (head, _quote(call_id)))
+        _log_debug('--- %s  call_id=%s' % (head, _quote(call_id)))
 
         remote_line = '    remote : %s -> %s' % (_quote(remote_uri), _quote(canonical_remote))
         remote_line += '  PSTN (E.164)' if is_pstn else '  not a phone number (aor kept)'
         if is_pstn and remote_uri and canonical_remote != str(remote_uri).lower():
             remote_line += '  [!] differs from what is stored today'
-        _log(remote_line)
+        _log_debug(remote_line)
 
         if canonical_local != (str(local_uri).lower() if local_uri else ''):
-            _log('    local  : %s -> %s  [!] differs from what is stored today'
+            _log_debug('    local  : %s -> %s  [!] differs from what is stored today'
                  % (_quote(local_uri), _quote(canonical_local)))
         else:
-            _log('    local  : %s' % _quote(canonical_local))
+            _log_debug('    local  : %s' % _quote(canonical_local))
 
         if account is not None:
             pstn = getattr(account, 'pstn', None)
             if pstn is not None and is_pstn:
-                _log('    rules  : idd_prefix=%s replace_leading_zero=%s prefix=%s strip_digits=%s'
+                _log_debug('    rules  : idd_prefix=%s replace_leading_zero=%s prefix=%s strip_digits=%s'
                      % (_quote(getattr(pstn, 'idd_prefix', None)),
                         _quote(getattr(pstn, 'replace_leading_zero', None)),
                         _quote(getattr(pstn, 'prefix', None)),
                         _quote(getattr(pstn, 'strip_digits', None))))
 
-        _log('    contact: %s' % _contact_verdict(canonical_remote, remote_uri, is_pstn))
+        _log_debug('    contact: %s' % _contact_verdict(canonical_remote, remote_uri, is_pstn))
 
         proposed_msgid = call_id or history_id
         already_stored = stored_remote_uri is not None or stored_local_uri is not None
@@ -4013,9 +4134,9 @@ def preview_call(source, direction, status, account=None,
         msg += ' dir=%s type=%s' % (direction, media_type)
         if summary:
             msg += ' body=%s' % _quote(summary)
-        _log(msg)
+        _log_debug(msg)
 
-        _log('    dedup  : key would be (%s, %s, %s)'
+        _log_debug('    dedup  : key would be (%s, %s, %s)'
              % (_quote(proposed_msgid), _quote(canonical_local), _quote(canonical_remote)))
 
         # When the local history already holds this call, say whether the two
@@ -4023,14 +4144,14 @@ def preview_call(source, direction, status, account=None,
         # real data: the unique index is (msgid, local_uri, remote_uri), so
         # two spellings of one number means one call stored twice.
         if already_stored:
-            _log('    stored : local history has remote=%s local=%s'
+            _log_debug('    stored : local history has remote=%s local=%s'
                  % (_quote(stored_remote_uri), _quote(stored_local_uri)))
             same_remote = (stored_remote_uri or '').strip().lower() == canonical_remote
             same_local = (stored_local_uri or '').strip().lower() == canonical_local
             if same_remote and same_local:
-                _log('    verdict: spellings AGREE - the call id alone would collapse these')
+                _log_debug('    verdict: spellings AGREE - the call id alone would collapse these')
             else:
-                _log('    verdict: spellings DIFFER (remote %s, local %s)'
+                _log_debug('    verdict: spellings DIFFER (remote %s, local %s)'
                      ' - canonicalising both is what makes the call id dedup work'
                      % ('same' if same_remote else 'different',
                         'same' if same_local else 'different'))

@@ -3,6 +3,7 @@
 
 from AppKit import (NSApp,
                     NSArray,
+                    NSBeep,
                     NSIndexSet,
                     NSNotFound,
                     NSOutlineView,
@@ -27,6 +28,23 @@ class ContactOutlineView(NSOutlineView):
         if key == "\r":
             self.target().performSelector_withObject_(self.doubleAction(), self)
             return
+
+        # Delete (backspace), and forward delete, on a selected row is a
+        # request to delete that row. It must reach the same confirmation the
+        # context menu's Delete opens. Below, anything that is not navigation
+        # is handed to the search box as the start of a query, which is how
+        # Delete used to land the focus in the search bar and do nothing else.
+        # With no row selected there is nothing to delete, so the key keeps
+        # its old meaning and edits the query.
+        if key and key[0] in ("\x7f", "\x08", "\uf728"):
+            row = self.selectedRow()
+            if row >= 0:
+                item = self.itemAtRow_(row)
+                if item is None or not getattr(item, "deletable", False):
+                    NSBeep()
+                else:
+                    self.target().deleteItem_(self)
+                return
 
         # Arrows, page up/down, home/end and the function keys all live in
         # the Unicode private-use block AppKit reserves for them. They are

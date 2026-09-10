@@ -440,6 +440,8 @@ GLYPH_SAVE      = chr(8615)
 GLYPH_OPEN      = chr(8599)
 GLYPH_COPIED    = chr(10003)
 GLYPH_REPLY     = chr(8617)
+# Opens the server's SIP trace of a call, from the record's sipTraceUrl.
+GLYPH_TRACE     = chr(9432)
 # Which way the call went. Direction is the arrow's whole job: whether it
 # was answered is carried by the colour and said outright in the words, so
 # a missed call is the same arrow in the attention colour rather than a
@@ -1899,6 +1901,7 @@ class MessageBubbleView(NSView):
             self._save_rect = NSZeroRect
             self._open_rect = NSZeroRect
             self._reply_rect = NSZeroRect
+            self._trace_rect = NSZeroRect
             # True for a moment after copying, so the affordance can say it
             # did something: a click that silently succeeds is
             # indistinguishable from one that silently failed.
@@ -2699,6 +2702,39 @@ class MessageBubbleView(NSView):
                 and self.kind not in (self.KIND_SYSTEM, self.KIND_DATE))
 
     @objc.python_method
+    def _sipTraceUrl(self):
+        """The server's SIP trace link for this call, or None.
+
+        http(s) only: the record is synced between the user's devices and
+        a link that opens anything else is not one to hand to the Workspace.
+        """
+        if self.kind != self.KIND_CALL or not self.call_record:
+            return None
+        url = str(self.call_record.get('sipTraceUrl') or '').strip()
+        if not url.lower().startswith(('https://', 'http://')):
+            return None
+        return url
+
+    @objc.python_method
+    def _showsSipTrace(self):
+        """A call the server history gave a trace link gets a header glyph."""
+        return (bool(self.msgid)
+                and not self._tileMode()
+                and self._sipTraceUrl() is not None)
+
+    @objc.python_method
+    def openSipTrace(self):
+        url = self._sipTraceUrl()
+        if url is None:
+            return
+        nsurl = NSURL.URLWithString_(url)
+        if nsurl is None:
+            BlinkLogger().log_error('Bubble %s: invalid SIP trace link %s' % (self.msgid, url))
+            return
+        BlinkLogger().log_info('Bubble %s: open SIP trace %s' % (self.msgid, url))
+        NSWorkspace.sharedWorkspace().openURL_(nsurl)
+
+    @objc.python_method
     def _showsOpen(self):
         """A file that is HERE gets an open affordance in its header."""
         return (self.transfer_meta is not None
@@ -2841,6 +2877,9 @@ class MessageBubbleView(NSView):
                 # after the call turns one line into two, which is a
                 # different height for the same bubble.
                 self._callSignature(),
+                # The trace glyph widens the header's floor when a link
+                # arrives on a call already drawn.
+                self._showsSipTrace(),
                 # A call recording carries both sides and stacks two
                 # strips, and a spectrogram adds a row of its own, so the
                 # player's height depends on what the envelope brought.
@@ -3594,6 +3633,8 @@ class MessageBubbleView(NSView):
             left += width_of(GLYPH_SAVE, glyph_font) + 6.0
         if self._isRepliable():
             left += width_of(GLYPH_REPLY, glyph_font) + 6.0
+        if self._showsSipTrace():
+            left += width_of(GLYPH_TRACE, glyph_font) + 6.0
 
         right = width_of(GLYPH_DELETE, glyph_font) + 4.0
         ticks = self._deliveryGlyphs()
@@ -4900,6 +4941,7 @@ class MessageBubbleView(NSView):
         self._save_rect = NSZeroRect
         self._open_rect = NSZeroRect
         self._reply_rect = NSZeroRect
+        self._trace_rect = NSZeroRect
 
     @objc.python_method
     def _drawHeader(self, bubble):
@@ -5001,6 +5043,13 @@ class MessageBubbleView(NSView):
             left = self._reply_rect.origin.x + self._reply_rect.size.width + 6.0
         else:
             self._reply_rect = NSZeroRect
+
+        # SIP trace of a call, when the server history supplied a link.
+        if self._showsSipTrace():
+            self._trace_rect = draw_glyph(GLYPH_TRACE, left)
+            left = self._trace_rect.origin.x + self._trace_rect.size.width + 6.0
+        else:
+            self._trace_rect = NSZeroRect
 
         # delivery ticks
         ticks = self._deliveryGlyphs()
@@ -5847,6 +5896,12 @@ class MessageBubbleView(NSView):
             if renderer is not None and hasattr(renderer, 'bubbleDidRequestReply'):
                 BlinkLogger().log_debug('Bubble %s: reply' % self.msgid)
                 renderer.bubbleDidRequestReply(self.msgid)
+            return
+        if self.msgid and self._hits(point, self._trace_rect, header and self._showsSipTrace()):
+            try:
+                self.openSipTrace()
+            except Exception as e:
+                BlinkLogger().log_error('Cannot open the SIP trace of %s: %s' % (self.msgid, e))
             return
         # The quote is checked before the body: it sits inside the bubble,
         # and a click on it means "show me the message this answers", not

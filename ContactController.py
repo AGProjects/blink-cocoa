@@ -496,16 +496,18 @@ class AddContactController(NSObject):
 
     @objc.python_method
     def isReadOnlyGroup(self, group):
-        """The Messages group is not the user's to file people into.
+        """Messages, Calls and Tel are not the user's to file people into.
 
-        It is a record of who they have messages with, written by
-        SMSWindowManager as messages arrive. Putting somebody in it by
-        hand would state something untrue, and taking somebody out would
-        be undone by their next message -- so it is shown, and shown
-        ticked, but never offered as a choice.
+        Messages is a record of who they have messages with, written by
+        SMSWindowManager as messages arrive; Calls and Tel are the same
+        record for calls, Tel being the PSTN subset. Putting somebody in
+        one by hand would state something untrue, and taking somebody out
+        would be undone by their next message or call -- so each is
+        shown, and shown ticked, but never offered as a choice.
         """
         try:
-            return bool(group.isMessagesGroup())
+            return bool(group.isMessagesGroup() or group.isCallsGroup()
+                        or group.isTelGroup())
         except AttributeError:
             return False
 
@@ -514,10 +516,10 @@ class AddContactController(NSObject):
         """The groups the popup lists.
 
         add_contact_allowed is what makes a group a place the user can
-        file somebody, and it is the filter. The Messages group is the
-        one exception worth listing anyway: the contact IS in it and the
-        contact list shows them in it, so a popup that silently left it
-        out would look like the group had been lost.
+        file somebody, and it is the filter. The read-only groups
+        (Messages, Calls, Tel) are the exception worth listing anyway: the
+        contact IS in them and the contact list shows them there, so a
+        popup that silently left one out would look like it had been lost.
         """
         return [g for g in self.groupsList
                 if g.group is not None and not isinstance(g.group, VirtualGroup)
@@ -530,7 +532,7 @@ class AddContactController(NSObject):
 
         self.groupPopUp.removeAllItems()
         # Enabling is ours to decide, not the responder chain's: the
-        # Messages group is listed but never selectable.
+        # Messages, Calls and Tel groups are listed but never selectable.
         self.groupPopUp.menu().setAutoenablesItems_(False)
         nr_groups = len(self.belonging_groups)
         if nr_groups == 0:

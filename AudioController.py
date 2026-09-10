@@ -1352,6 +1352,24 @@ class AudioController(MediaStream):
 
     @objc.python_method
     def addRecordingToHistory(self, filename):
+        entry = self._recordingHistoryEntry(filename)
+        if entry is not None:
+            self._writeRecordingHistoryEntry(entry)
+
+    @objc.python_method
+    def _writeRecordingHistoryEntry(self, entry):
+        args, kwargs = entry
+        self.sessionController.log_info('Recording filed as a legacy history entry: '
+                                        'it did not reach the conversation as a transfer')
+        self.add_to_history(*args, **kwargs)
+
+    @objc.python_method
+    def _recordingHistoryEntry(self, filename):
+        """The legacy recording row, captured while the session is still here.
+
+        Captured at stop time and written later, if at all: the transfer path
+        decides seconds afterwards, when the session may be gone.
+        """
         message = "<h3>Audio Call Recorded</h3>"
         message += "<p>%s" % filename
         message += "<p><audio src='%s' controls='controls'>" %  urllib.parse.quote(filename)
@@ -1382,17 +1400,25 @@ class AudioController(MediaStream):
         except AttributeError:
             call_id = ''
 
-        self.add_to_history(media_type, local_uri, remote_uri, direction, cpim_from, cpim_to, timestamp, message, status, call_id=call_id)
+        return ((media_type, local_uri, remote_uri, direction, cpim_from, cpim_to,
+                 timestamp, message, status), {'call_id': call_id})
 
     @objc.python_method
     def shareRecordingWithOwnDevices(self, filename):
         """Put a finished call recording in the conversation as a transfer.
 
-        Addressed to this account, not to the person on the call: the
-        recording goes up so that the rest of MY devices can play it, and
-        the other party -- who was there -- is sent nothing. The bubble is
-        filed in the conversation with them all the same, because that is
-        where anyone would look for the recording of a call with them.
+        Addressed to this account, not to the person on the call: where the
+        account can carry it, the recording goes up so that the rest of MY
+        devices can play it, and the other party -- who was there -- is sent
+        nothing. The bubble is filed in the conversation with them all the
+        same, because that is where anyone would look for the recording of a
+        call with them.
+
+        Where the account CANNOT carry it -- a PSTN gateway, a plain SIP
+        proxy, no API token yet -- the recording is filed on this device and
+        nowhere else, and the bubble says so by simply being there. Still no
+        upload, still nothing sent to the other party; see
+        SMSViewController.fileCallRecordingLocally.
 
         This half only decides WHETHER to, because it runs on the GUI
         thread with the call still tearing down. The file is not touched
@@ -1401,32 +1427,45 @@ class AudioController(MediaStream):
         try:
             if not filename:
                 return
+            # The row the History Viewer lists, held back: written only if the
+            # recording does not end up as a bubble in the conversation.
+            fallback = None
+            try:
+                fallback = self._recordingHistoryEntry(filename)
+            except Exception as e:
+                self.sessionController.log_error('Cannot describe the recording: %s' % e)
             account = self.sessionController.account
             if account is None or isinstance(account, BonjourAccount):
+                if fallback is not None:
+                    self._writeRecordingHistoryEntry(fallback)
                 return
 
-            from SMSWindowManager import SMSWindowManager
-            if not SMSWindowManager().fileTransferBaseURL(account):
-                # A plain SIP proxy with no transfer service. There is
-                # nowhere to put the file, and offering it to the other
-                # party over MSRP -- which is what sendFile falls back to
-                # -- would send them the recording, which is the one thing
-                # this must not do.
-                self.sessionController.log_info(
-                    'Not sharing the recording: %s has no file transfer service'
-                    % account.id)
-                return
-
+            # An account with no transfer service is NOT a reason to stop
+            # here. It used to be, and the result was that a recorded PSTN
+            # call left a call bubble, a file on disc, and nothing joining
+            # them: the recording existed only as a path in the log.
+            #
+            # The hazard that guard was protecting against is real but
+            # narrower than the guard was -- sendFile's fallback for a
+            # serviceless account is to offer the file to the OTHER PARTY
+            # over MSRP, and they were on the call; sending them the
+            # recording is the one thing this must never do. So the
+            # decision moved to where the roads actually fork:
+            # sendCallRecording files the recording locally instead, and
+            # never reaches sendFile at all. Nothing is offered to anybody.
             display_name = format_identity_to_string(self.sessionController.remoteIdentity,
                                                      check_contact=True, format='compact')
             self._prepareRecordingForSharing(filename, account,
-                                             self.sessionController.target_uri, display_name)
+                                             self.sessionController.target_uri, display_name,
+                                             fallback=fallback)
         except Exception as e:
             self.sessionController.log_error('Cannot share the recording: %s' % e)
+            if fallback is not None:
+                self._writeRecordingHistoryEntry(fallback)
 
     @objc.python_method
     @run_in_green_thread
-    def _prepareRecordingForSharing(self, filename, account, target, display_name):
+    def _prepareRecordingForSharing(self, filename, account, target, display_name, fallback=None):
         """Wait for the file, then make it the shape a voice note is.
 
         Both halves are why this is not done in the notification handler.
@@ -1461,6 +1500,8 @@ class AudioController(MediaStream):
             if recording is None:
                 self.sessionController.log_error(
                     'Not sharing %s: it is not a recording this can read' % filename)
+                if fallback is not None:
+                    self._writeRecordingHistoryEntry(fallback)
                 return
             duration = wave_duration(recording)
             # Measured from the PCM, before the conversion: it is the same
@@ -1480,27 +1521,35 @@ class AudioController(MediaStream):
                 repaired = None
             self._shareRecording(converted or recording, duration, peaks, account,
                                  target, display_name,
-                                 temporary=converted or repaired)
+                                 temporary=converted or repaired, fallback=fallback)
         except Exception as e:
             self.sessionController.log_error('Cannot prepare the recording: %s' % e)
+            if fallback is not None:
+                self._writeRecordingHistoryEntry(fallback)
 
     @objc.python_method
     @run_in_gui_thread
     def _shareRecording(self, path, duration, peaks, account, target, display_name,
-                        temporary=None):
+                        temporary=None, fallback=None):
         """Hand the finished file to the conversation with that contact."""
         viewer = None
         try:
             from SMSWindowManager import SMSWindowManager
             viewer = SMSWindowManager().viewerForTarget(target, display_name, account)
             if viewer is None:
+                if fallback is not None:
+                    self._writeRecordingHistoryEntry(fallback)
                 return
             transfer_id = viewer.sendCallRecording(path, duration=duration, peaks=peaks)
             self.sessionController.log_info(
                 'Recording of the call with %s shared with this account as %s'
                 % (target, transfer_id or 'nothing'))
+            if not transfer_id and fallback is not None:
+                self._writeRecordingHistoryEntry(fallback)
         except Exception as e:
             self.sessionController.log_error('Cannot share the recording: %s' % e)
+            if fallback is not None:
+                self._writeRecordingHistoryEntry(fallback)
             return
         finally:
             # The converted copy was only ever a way to hand the bytes
@@ -1585,7 +1634,9 @@ class AudioController(MediaStream):
         self.sessionController.log_info('Stop recording audio to %s\n' % data.filename)
         self.segmentedButtons.setImage_forSegment_(NSImage.imageNamed_("record"), self.record_segment)
         self.segmentedConferenceButtons.setImage_forSegment_(NSImage.imageNamed_("record"), self.conference_record_segment)
-        self.addRecordingToHistory(data.filename)
+        # The legacy 'audio-recording' row is written only when the recording
+        # does NOT reach the conversation as a transfer bubble -- both at once
+        # drew the same recording twice. See shareRecordingWithOwnDevices.
         self.shareRecordingWithOwnDevices(data.filename)
 
         nc_title = NSLocalizedString("Audio Call Recorded", "System notification title")

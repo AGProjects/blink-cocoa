@@ -22,6 +22,7 @@ from VideoWindowController import VideoWindowController
 from VideoRecorder import VideoRecorder
 from util import run_in_gui_thread, beautify_video_codec
 import objc
+import traceback
 
 
 # For voice over IP over Ethernet, an RTP packet contains 54 bytes (or 432 bits) header. These 54 bytes consist of 14 bytes Ethernet header, 20 bytes IP header, 8 bytes UDP header and 12 bytes RTP header.
@@ -381,9 +382,18 @@ class VideoController(MediaStream):
 
         self.removeFromSession()
 
-        self.videoRecorder.stop()
+        # Whatever else fails on the way out, the window must go: a raise
+        # from the recorder used to skip close() and leave a dead video
+        # window on screen for the rest of the session.
+        try:
+            self.videoRecorder.stop()
+        except Exception:
+            self.sessionController.log_info('Cannot stop the video recorder: %s' % traceback.format_exc())
 
-        self.videoWindowController.close()
+        try:
+            self.videoWindowController.close()
+        except Exception:
+            self.sessionController.log_info('Cannot close the video window: %s' % traceback.format_exc())
 
         self.notification_center.remove_observer(self, sender=self.sessionController, name='VideoRemovedByRemoteParty')
 

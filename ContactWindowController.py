@@ -1082,10 +1082,30 @@ class ContactWindowController(NSWindowController):
                 lastItem.setImage_(icon)
 
         menu.addItem_(NSMenuItem.separatorItem())
+        # Where the video window's Screenshot button saves. Rebuilt with the
+        # rest of the dynamic part of this menu, so it is always the last
+        # item before Clear History.
+        lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Screenshots Folder", "Menu item"), "openScreenshotsFolder:", "")
+        lastItem.setTarget_(self)
+        lastItem.setEnabled_(True)
         lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Clear History", "Menu item"), "historyClicked:", "")
         lastItem.setEnabled_(True if entries['incoming'] or entries['outgoing'] or entries['missed'] else False)
         lastItem.setTag_(444)
         lastItem.setTarget_(self)
+
+    @objc.IBAction
+    def openScreenshotsFolder_(self, sender):
+        # Created if there is none yet, with the same permissions the video
+        # window uses: opening an empty folder is an answer, a Finder error
+        # about a missing one is not.
+        folder = ApplicationData.get('screenshots')
+        try:
+            if not os.path.exists(folder):
+                os.mkdir(folder, 0o700)
+        except OSError as e:
+            BlinkLogger().log_error('Cannot create the screenshots folder %s: %s' % (folder, e))
+            return
+        NSWorkspace.sharedWorkspace().openURL_(NSURL.fileURLWithPath_(folder))
 
     @objc.python_method
     def showHelp(self, append_url=''):
@@ -5829,14 +5849,25 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def deleteItem_(self, sender):
-        item = sender.representedObject()
+        # Reached from the context menu (the item rides on the menu item), from
+        # the Contacts menu (no item: act on the selection), and from the Delete
+        # key in either list, where the sender is the list itself. The
+        # selection has to be read from the list the user is looking at: the
+        # contacts outline has no idea what is selected in the search results.
+        item = sender.representedObject() if sender.respondsToSelector_("representedObject") else None
         if not item:
-            row = self.contactOutline.selectedRow()
+            if sender == self.contactOutline or sender == self.searchOutline:
+                outline = sender
+            elif self.mainTabView.selectedTabViewItem().identifier() == "search":
+                outline = self.searchOutline
+            else:
+                outline = self.contactOutline
+            row = outline.selectedRow()
             if row >= 0:
-                item = self.contactOutline.itemAtRow_(row)
+                item = outline.itemAtRow_(row)
             else:
                 return
-        if not item.deletable:
+        if item is None or not getattr(item, "deletable", False):
             return
         if isinstance(item, BlinkGroup):
             self.model.deleteGroup(item)

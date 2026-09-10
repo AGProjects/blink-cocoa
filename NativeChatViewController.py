@@ -2250,6 +2250,31 @@ class NativeChatViewController(ChatViewController):
         return str(name or ''), icon
 
     @objc.python_method
+    def _isConversationWithSelf(self):
+        """Whether the other side of this conversation is our own account.
+
+        There is no remote party to delete anything for: a message to
+        ourselves already goes to every device of the account, and the
+        "for the other side too" tick would name ourselves.
+        """
+        delegate = self.delegate
+
+        def bare(uri):
+            text = str(uri or '').strip().lower()
+            if text.startswith('sip:') or text.startswith('sips:'):
+                text = text.split(':', 1)[1]
+            return text.split(';', 1)[0]
+
+        remote = bare(getattr(delegate, 'remote_uri', None))
+        if not remote:
+            return False
+        local = bare(getattr(delegate, 'local_uri', None))
+        if not local:
+            account = getattr(delegate, 'account', None)
+            local = bare(getattr(account, 'id', None))
+        return bool(local) and remote == local
+
+    @objc.python_method
     def _confirmDelete(self, msgid):
         """Ask before deleting. None to cancel, or whether to delete remotely.
 
@@ -2261,6 +2286,8 @@ class NativeChatViewController(ChatViewController):
         if self.messageListView is not None:
             bubble = self.messageListView.viewForMessageId_(self._strip_c(msgid))
         outgoing = str(getattr(bubble, 'direction', '') or '') == 'outgoing'
+        # No remote copy to delete in a conversation with ourselves.
+        offer_remote = outgoing and not self._isConversationWithSelf()
         name = None
         meta = getattr(bubble, 'transfer_meta', None)
         if isinstance(meta, dict):
@@ -2299,7 +2326,7 @@ class NativeChatViewController(ChatViewController):
             alert.addButtonWithTitle_(NSLocalizedString("Cancel", "Button"))
 
             checkbox = None
-            if outgoing:
+            if offer_remote:
                 try:
                     from AppKit import NSSwitchButton
                 except ImportError:
@@ -5388,7 +5415,8 @@ class NativeChatViewController(ChatViewController):
             alert.addButtonWithTitle_(NSLocalizedString("Cancel", "Button"))
 
             checkbox = None
-            if outgoing:
+            # No remote copy to delete in a conversation with ourselves.
+            if outgoing and not self._isConversationWithSelf():
                 try:
                     from AppKit import NSSwitchButton
                 except ImportError:

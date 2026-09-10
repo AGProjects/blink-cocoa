@@ -351,7 +351,7 @@ def reply_metadata(body):
 
 
 # Blink writes its own status entries -- a call, a call recording, a file
-# transfer, a presence change -- with the legacy content type 'html' and a
+# transfer -- with the legacy content type 'html' and a
 # media type of their own. Nothing off the network can claim one: a remote
 # message is media_type 'sms' and carries a real MIME type, so a peer cannot
 # reach this branch by setting Content-Type to a bare 'html'.
@@ -361,7 +361,7 @@ def reply_metadata(body):
 # writes it any more; it stays in the READ lists so rows written before the
 # change keep rendering.
 LOCAL_STATUS_MEDIA_TYPES = ('audio', 'video', 'audio-recording',
-                            'file-transfer', 'availability',
+                            'file-transfer',
                             'missed-call')  # legacy, read-only
 
 
@@ -509,7 +509,8 @@ def build_call_record(session_id, direction, outcome, duration=0, status=None,
                       reason=None, remote_party='', display_name='',
                       start_time=None, stop_time=None, media=None,
                       from_tag='', to_tag='', proxy_ip=None, call_timezone=None,
-                      source='local', local=None, answered_by=None):
+                      source='local', local=None, answered_by=None,
+                      sip_trace_url=None):
     """A call detail record, per docs/CALL-DETAIL-RECORD.md section 4.2.
 
     Every producer builds one through here so that a call observed locally
@@ -538,6 +539,7 @@ def build_call_record(session_id, direction, outcome, duration=0, status=None,
         'toTag': to_tag,
         'proxyIP': proxy_ip,
         'answeredBy': answered_by,
+        'sipTraceUrl': sip_trace_url,
     }
     for key, value in optional.items():
         if value:
@@ -553,7 +555,7 @@ def build_call_record(session_id, direction, outcome, duration=0, status=None,
 # not among them: the proxy cannot produce it and another device's copy is
 # not ours, so it is never overwritten by anyone.
 _AUTHORITATIVE_FIELDS = ('duration', 'stopTime', 'status', 'reason', 'proxyIP',
-                         'toTag', 'outcome', 'answeredBy')
+                         'toTag', 'outcome', 'answeredBy', 'sipTraceUrl')
 
 # How much of the call each kind of record actually saw, so that a record
 # cannot undo one that saw more. A device that only heard the phone ring

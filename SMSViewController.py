@@ -606,7 +606,6 @@ class SMSViewController(NSObject):
             for name in ('BlinkFileTransferDidEnd', 'BlinkFileTransferDidStart',
                          'BlinkFileTransferUpdate', 'BlinkFileTransferProgress'):
                 self.notification_center.add_observer(self, name=name)
-            self.notification_center.add_observer(self, name='BlinkContactPresenceHasChanged')
             self.notification_center.add_observer(self, name='SIPAccountRegistrationDidSucceed', sender=self.account)
             self.notification_center.add_observer(self, name='PGPPublicKeyReceived', sender=self.account)
 
@@ -1915,12 +1914,6 @@ class SMSViewController(NSObject):
         if known == recording:
             return False
         self.audio_metadata[transfer_id] = recording
-        left = len(recording['peaks'].get('l') or [])
-        right = len(recording['peaks'].get('r') or [])
-        spectrum = recording.get('spectrum')
-        self.log_info('Recording metadata for transfer %s: peaks l=%d r=%d spectrum=%s'
-                      % (transfer_id, left, right,
-                         ('%s frames' % spectrum.get('count')) if spectrum else 'none'))
         if render:
             try:
                 self.chatViewController.applyAudioMetadata(transfer_id, recording)
@@ -2174,46 +2167,6 @@ class SMSViewController(NSObject):
             self.log_error('Cannot show the typing state of %s: %s' % (self.remote_uri, e))
 
     @objc.python_method
-    def _NH_BlinkContactPresenceHasChanged(self, sender, data):
-        """Note a status or note change from the person this pane is about.
-
-        A breadcrumb, not a message: it is drawn like the location lifecycle
-        notes and is not persisted, so scrolling back through history does
-        not replay every status this contact has ever had.
-
-        Only for THIS conversation, and only for a change worth reading. The
-        notification fires for every contact on every PIDF, and presence is
-        chatty -- a device going offline and back while a laptop sleeps must
-        not fill a chat with paragraphs about it.
-        """
-        uris = [uri.lower() for uri in getattr(data, 'uris', ()) or ()]
-        if not self.remote_uri or self.remote_uri.lower() not in uris:
-            return
-
-        lines = []
-        status = getattr(data, 'status', None)
-        previous_status = getattr(data, 'previous_status', None)
-        if status != previous_status and previous_status is not None:
-            # previous_status None means this is the first reading of this
-            # contact since launch, not a transition the user watched happen.
-            lines.append(NSLocalizedString("%s is now %s", "System message")
-                         % (self.display_name or self.remote_uri, status))
-
-        note = getattr(data, 'note', None)
-        previous_note = getattr(data, 'previous_note', None)
-        if note != previous_note:
-            if note:
-                lines.append(NSLocalizedString("%s changed their note to: %s", "System message")
-                             % (self.display_name or self.remote_uri, note))
-            elif previous_note:
-                lines.append(NSLocalizedString("%s removed their note", "System message")
-                             % (self.display_name or self.remote_uri))
-
-        for line in lines:
-            self.chatViewController.showSystemMessage(line, getattr(data, 'timestamp', None)
-                                                      or ISOTimestamp.now())
-
-    @objc.python_method
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
@@ -2392,13 +2345,13 @@ class SMSViewController(NSObject):
         # asked to send.
         from SMSWindowManager import SMSWindowManager
         if not SMSWindowManager().fileTransferBaseURL(self.account):
-            self.log_info('Not sharing the recording: %s has no file transfer service'
-                          % self.account.id)
-            return None
+            self.log_info('%s has no file transfer service: filing the recording '
+                          'on this device only' % self.account.id)
+            return self.fileCallRecordingLocally(path, duration=duration, peaks=peaks)
         if not self._apiToken():
-            self.log_info('Not sharing the recording: %s holds no API token yet'
-                          % self.account.id)
-            return None
+            self.log_info('%s holds no API token yet: filing the recording '
+                          'on this device only' % self.account.id)
+            return self.fileCallRecordingLocally(path, duration=duration, peaks=peaks)
         try:
             size = os.path.getsize(path)
         except OSError:
@@ -2436,6 +2389,94 @@ class SMSViewController(NSObject):
                              transfer_id=transfer_id,
                              filename='audio-recording-%d%s' % (stamp, extension),
                              extra={'call_recording': True})
+
+    @objc.python_method
+    def fileCallRecordingLocally(self, path, duration=None, peaks=None):
+        """Put a recording in the conversation without sending it anywhere.
+
+        The road for an account that cannot upload: a PSTN gateway, a plain
+        SIP proxy, an account whose token has not been issued yet. A call
+        through one of those was recorded, the file was written, and the
+        conversation showed a call bubble and nothing else -- the recording
+        existed only as a path in the log, which is indistinguishable from
+        the feature not working.
+
+        Nothing is sent. Not to the other party, who was on the call and is
+        not a recipient of it, and not to our own devices, because there is
+        no service here to carry it. This is the local half of
+        sendCallRecording and only the local half: the same envelope, the
+        same cache copy, the same bubble.
+
+        No `url`, deliberately -- nothing was uploaded, so the copy in the
+        transfer cache IS the file, and that is what the renderer reaches for
+        first anyway. Same shape _sendFileOverMSRP files a neighbour's file
+        under, minus the offering.
+
+        The status is DELIVERED rather than SENDING because this transfer is
+        finished the moment it is filed. SENDING would leave a progress bar
+        creeping toward an upload that is never going to happen, and
+        FAILED_LOCAL would mark a recording that is safely on disc as lost.
+        """
+        from FileTransferCache import (FileTransferCache, guess_filetype,
+                                       new_transfer_id)
+        path = str(path)
+        if not os.path.isfile(path):
+            self.log_error('Cannot file the recording: %s is not a file' % path)
+            return None
+        try:
+            size = os.path.getsize(path)
+        except OSError as e:
+            self.log_error('Cannot read the recording %s: %s' % (path, e))
+            return None
+
+        transfer_id = str(new_transfer_id())
+        stamp = int(time.time() * 1000)
+        extension = os.path.splitext(path)[1] or '.wav'
+        filename = 'audio-recording-%d%s' % (stamp, extension)
+        peer = str(self.conversation_peer_uri())
+        meta = {
+            'filename': filename,
+            'filesize': size,
+            'filetype': guess_filetype(path),
+            'transfer_id': transfer_id,
+            'sender': {'uri': str(self.account.id)},
+            # Addressed to us, as an uploaded one is: the recording is ours,
+            # and the bubble is drawn outgoing. It is FILED under the peer,
+            # which is where anyone would look for the recording of a call
+            # with them -- the two are different questions and the cache
+            # answers the second one.
+            'receiver': {'uri': str(self.account.id)},
+            'direction': 'outgoing',
+            'call_recording': True,
+        }
+        if duration:
+            meta['duration'] = round(float(duration), 2)
+
+        timestamp = ISOTimestamp.now()
+        stored = FileTransferCache().store(meta, self.local_uri, peer, path)
+        self.last_transfer_source = stored
+        self.last_transfer_route = 'local'
+        self.log_info('Recording %s (%s bytes) filed in the conversation with %s '
+                      'as %s -- this device only, %s cannot carry it'
+                      % (filename, size, peer, transfer_id, self.account.id))
+        self._showOutgoingTransfer(meta, timestamp, stored, status=MSG_STATE_DELIVERED)
+        # Nothing is in flight, so no progress bar: showing the bubble starts
+        # one, and for a file that is already where it is going it would sit
+        # at nought claiming to be uploading.
+        self.chatViewController.clearTransferProgress(transfer_id)
+        self._persistOutgoingTransfer(meta, timestamp, status=MSG_STATE_DELIVERED)
+        # The waveform is measured, so keep it: noted locally exactly as
+        # _sendCallRecordingPeaks does, minus the send. Without this the
+        # strip is re-derived from the file on every launch.
+        if peaks and (peaks.get('l') or peaks.get('r')):
+            try:
+                self.note_audio_metadata({'transfer_id': transfer_id,
+                                          'peaks': {'l': list(peaks.get('l') or []),
+                                                    'r': list(peaks.get('r') or [])},
+                                          'spectrum': None})
+            except Exception as e:
+                self.log_error('Cannot note the waveform of %s: %s' % (transfer_id, e))
+        return transfer_id
 
     @objc.python_method
     def _sealToSelf(self, text):

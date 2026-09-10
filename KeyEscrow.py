@@ -796,5 +796,9 @@ def log_self_contact(account, accounts=None, force=False):
         logger.log_debug('Key escrow: unchanged for %s since the last addressbook reload' % key)
         return
     _last_report[key] = lines
+    # A state report, not an event: debug only. A line that says something
+    # is wrong -- a shared contact, a refused write -- still reaches the log.
+    alarming = any(line.startswith('WARNING') or 'REFUSED' in line for line in lines)
+    log = logger.log_info if alarming else logger.log_debug
     for line in lines:
-        logger.log_info('Key escrow: %s' % line)
+        log('Key escrow: %s' % line)

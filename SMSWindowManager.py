@@ -842,7 +842,12 @@ class SMSWindowManagerClass(NSObject):
                                        'XCAPManagerDidRemoveGroup',
                                        'XCAPManageDidAddGroupMember',
                                        'XCAPManageDidRemoveGroupMember',
-                                       'XCAPManagerDidChangeState'):
+                                       'XCAPManagerDidChangeState',
+                                       # Not writes themselves: they carry WHAT
+                                       # changed, which the XCAP notifications
+                                       # above do not, for the tick's log.
+                                       'AddressbookContactDidChange',
+                                       'AddressbookGroupDidChange'):
                 self.notification_center.add_observer(self, name=_xcap_notification)
             self.keys_path = ApplicationData.get('keys')
             makedirs(self.keys_path)
@@ -965,6 +970,12 @@ class SMSWindowManagerClass(NSObject):
     # say how long the addressbook took rather than only when it arrived.
     _ab_lifecycle_started = {}
 
+    # Addressbook object id -> (when, 'what changed'), from the Addressbook*DidChange
+    # notifications. sipsimple posts those right after the XCAP write they caused,
+    # and the XCAP notification alone cannot say which attribute moved.
+    _ab_last_modified = {}
+    AB_REASONS_CAP = 100
+
     @objc.python_method
     def suppressAddressbookNotifications(self):
         """Announce nothing until resumed -- for every account.
@@ -991,6 +1002,9 @@ class SMSWindowManagerClass(NSObject):
                      'send_armed': False,
                      'fetch_armed': False,
                      'contacts': set(),
+                     # What the pending tick is about, for the log: one entry
+                     # per (op, kind, id, member), in the order they happened.
+                     'reasons': [],
                      'groups': set(),
                      'full': False,
                      'awaiting_reload': False,
@@ -1019,7 +1033,7 @@ class SMSWindowManagerClass(NSObject):
         return account if account is not None and not isinstance(account, BonjourAccount) else None
 
     @objc.python_method
-    def _abNoteXCAPChange(self, manager, kind, id):
+    def _abNoteXCAPChange(self, manager, kind, id, op=None, data=None):
         if self._ab_notify_suppress_all[0]:
             return          # a repair, not an edit -- see suppressAddressbookNotifications
         # Nor is copying a document we just fetched. Applying ONE account's
@@ -1041,7 +1055,112 @@ class SMSWindowManagerClass(NSObject):
         state = self._abNotifyState(account)
         if not state['throttle'].note(kind, id):
             return          # suppressed: we are applying what the server told us
+        try:
+            self._abNoteReason(state, kind, id, op, data)
+        except Exception as e:
+            BlinkLogger().log_debug('[ab] [notify] cannot describe a change: %s' % e)
         self._abArmNotify(manager)
+
+    @staticmethod
+    def _abDescribeContact(contact):
+        if contact is None:
+            return '?'
+        uris = []
+        try:
+            for item in (getattr(contact, 'uris', None) or []):
+                uri = getattr(item, 'uri', None) or item
+                if uri:
+                    uris.append(str(uri))
+        except Exception:
+            pass
+        return '%s %r%s' % (getattr(contact, 'id', None), getattr(contact, 'name', None),
+                            (' <%s>' % ', '.join(uris[:3]) + (' +%d' % (len(uris) - 3) if len(uris) > 3 else ''))
+                            if uris else '')
+
+    @staticmethod
+    def _abDescribeGroup(group):
+        if group is None:
+            return '?'
+        try:
+            members = len(getattr(group, 'contacts', None) or [])
+        except Exception:
+            members = '?'
+        return '%s %r (%s member(s))' % (getattr(group, 'id', None), getattr(group, 'name', None), members)
+
+    @objc.python_method
+    def _abNoteReason(self, state, kind, id, op, data):
+        member = None
+        if kind == 'group':
+            subject = self._abDescribeGroup(getattr(data, 'group', None))
+            if op in ('add-member', 'remove-member'):
+                member = getattr(getattr(data, 'contact', None), 'id', None)
+                subject = '%s, member %s' % (subject, self._abDescribeContact(getattr(data, 'contact', None)))
+        else:
+            subject = self._abDescribeContact(getattr(data, 'contact', None))
+        key = (op, kind, str(id), member)
+        reasons = state['reasons']
+        if any(entry[0] == key for entry in reasons):
+            return
+        if len(reasons) >= self.AB_REASONS_CAP:
+            return
+        reasons.append((key, time.time(), subject))
+
+    @objc.python_method
+    def _abLogReasons(self, account, state):
+        reasons, state['reasons'] = state['reasons'], []
+        if not reasons:
+            BlinkLogger().log_info('[ab] [notify]   (no recorded writes -- ids only)')
+            return
+        for (op, kind, id, member), when, subject in reasons:
+            line = '[ab] [notify]   %s %s %s at %s' % (op or 'change', kind, subject,
+                                                     time.strftime('%H:%M:%S', time.localtime(when)))
+            changed = self._ab_last_modified.get(str(id))
+            if changed is not None and abs(changed[0] - when) < 5.0:
+                line += ' -- modified: %s' % changed[1]
+            BlinkLogger().log_info(line)
+        if len(reasons) >= self.AB_REASONS_CAP:
+            BlinkLogger().log_info('[ab] [notify]   ... more not listed (cap %d)' % self.AB_REASONS_CAP)
+
+    @staticmethod
+    def _abDescribeModified(modified):
+        parts = []
+        for name in sorted(modified or {}):
+            value = modified[name]
+            try:
+                if hasattr(value, 'added') and hasattr(value, 'removed'):
+                    def ids(items):
+                        return ','.join(str(getattr(item, 'id', item)) for item in list(items)[:5])
+                    text = '%s +%d[%s] -%d[%s]' % (name, len(value.added), ids(value.added),
+                                                   len(value.removed), ids(value.removed))
+                elif hasattr(value, 'old') and hasattr(value, 'new'):
+                    old, new = repr(value.old), repr(value.new)
+                    text = '%s %s -> %s' % (name, old[:80], new[:80])
+                else:
+                    text = name
+            except Exception:
+                text = name
+            parts.append(text)
+        return '; '.join(parts) or '(nothing)'
+
+    @objc.python_method
+    def _abRecordModified(self, sender, data):
+        try:
+            self._ab_last_modified[str(getattr(sender, 'id', ''))] = (
+                time.time(), self._abDescribeModified(getattr(data, 'modified', None)))
+            if len(self._ab_last_modified) > 500:
+                oldest = sorted(self._ab_last_modified.items(), key=lambda item: item[1][0])[:250]
+                for key, _ in oldest:
+                    self._ab_last_modified.pop(key, None)
+        except Exception as e:
+            BlinkLogger().log_debug('[ab] [notify] cannot record what changed: %s' % e)
+
+    @objc.python_method
+    def _NH_AddressbookContactDidChange(self, sender, data):
+        self._abRecordModified(sender, data)
+
+    @objc.python_method
+    def _NH_AddressbookGroupDidChange(self, sender, data):
+        self._abRecordModified(sender, data)
 
     @objc.python_method
     def _abArmNotify(self, manager):
@@ -1086,6 +1205,7 @@ class SMSWindowManagerClass(NSObject):
                                '%d contact(s), %d group(s)%s'
                                % (account.id, len(contact_ids), len(group_ids),
                                   ' (truncated)' if truncated else ''))
+        self._abLogReasons(account, state)
         # X-Sylk-Skip-Journal: the server must not store this. An offline device
         # does not need a stale "refetch" replayed at it -- it refetches the
         # addressbook when it registers anyway. sip_handlers.py checks for the
@@ -1179,6 +1299,28 @@ class SMSWindowManagerClass(NSObject):
             return
         if viewer is not None:
             viewer.noteCallRecord(record)
+
+    @objc.python_method
+    @run_in_gui_thread
+    def refreshCallRecord(self, account, remote_uri, record):
+        """Update a call bubble already on screen; never draw a new one.
+
+        For corrections to an old call -- a SIP trace link the server
+        history adds to a row written long ago. drawCallRecord would append
+        such a call to the end of an open transcript when it is not there.
+        """
+        msgid = str((record or {}).get('sessionId') or '')
+        if not msgid:
+            return
+        try:
+            viewer = self._viewerForContact(account, remote_uri)
+        except Exception as e:
+            BlinkLogger().log_debug('[cdr] cannot find the conversation for %s: %s'
+                                    % (remote_uri, e))
+            return
+        chat = getattr(viewer, 'chatViewController', None) if viewer is not None else None
+        if chat is not None and chat.hasRenderedMessage(msgid):
+            chat.updateCallMessage(msgid, record)
 
     @objc.python_method
     def handleAddressbookNotify(self, account, content, sender_uri=None):
@@ -1328,35 +1470,35 @@ class SMSWindowManagerClass(NSObject):
 
     @objc.python_method
     def _NH_XCAPManagerDidAddContact(self, sender, data):
-        self._abNoteXCAPChange(sender, 'contact', getattr(data.contact, 'id', None))
+        self._abNoteXCAPChange(sender, 'contact', getattr(data.contact, 'id', None), op='add', data=data)
 
     @objc.python_method
     def _NH_XCAPManagerDidUpdateContact(self, sender, data):
-        self._abNoteXCAPChange(sender, 'contact', getattr(data.contact, 'id', None))
+        self._abNoteXCAPChange(sender, 'contact', getattr(data.contact, 'id', None), op='update', data=data)
 
     @objc.python_method
     def _NH_XCAPManagerDidRemoveContact(self, sender, data):
-        self._abNoteXCAPChange(sender, 'contact', getattr(data.contact, 'id', None))
+        self._abNoteXCAPChange(sender, 'contact', getattr(data.contact, 'id', None), op='remove', data=data)
 
     @objc.python_method
     def _NH_XCAPManagerDidAddGroup(self, sender, data):
-        self._abNoteXCAPChange(sender, 'group', getattr(data.group, 'id', None))
+        self._abNoteXCAPChange(sender, 'group', getattr(data.group, 'id', None), op='add', data=data)
 
     @objc.python_method
     def _NH_XCAPManagerDidUpdateGroup(self, sender, data):
-        self._abNoteXCAPChange(sender, 'group', getattr(data.group, 'id', None))
+        self._abNoteXCAPChange(sender, 'group', getattr(data.group, 'id', None), op='update', data=data)
 
     @objc.python_method
     def _NH_XCAPManagerDidRemoveGroup(self, sender, data):
-        self._abNoteXCAPChange(sender, 'group', getattr(data.group, 'id', None))
+        self._abNoteXCAPChange(sender, 'group', getattr(data.group, 'id', None), op='remove', data=data)
 
     @objc.python_method
     def _NH_XCAPManageDidAddGroupMember(self, sender, data):
-        self._abNoteXCAPChange(sender, 'group', getattr(data.group, 'id', None))
+        self._abNoteXCAPChange(sender, 'group', getattr(data.group, 'id', None), op='add-member', data=data)
 
     @objc.python_method
     def _NH_XCAPManageDidRemoveGroupMember(self, sender, data):
-        self._abNoteXCAPChange(sender, 'group', getattr(data.group, 'id', None))
+        self._abNoteXCAPChange(sender, 'group', getattr(data.group, 'id', None), op='remove-member', data=data)
 
     @objc.python_method
     def _abLifecycleElapsed(self, account):
@@ -4975,12 +5117,40 @@ class SMSWindowManagerClass(NSObject):
             BlinkLogger().log_error('Cannot place a recording: %s' % e)
 
     @objc.python_method
+    def _isJournalEchoOfOwnTransfer(self, account, msg):
+        """A journalled copy of a transfer THIS device uploaded to its own account.
+
+        The journal path's counterpart of the check the live path makes
+        ("Swallowed the echo of our own transfer"). Without it the journal
+        filed the server's copy under our own address -- the note that
+        would redirect it reaches the server after the upload, so it comes
+        second -- and a conversation with ourselves that happened to be
+        open drew it straight away. In memory, so it covers this run only;
+        ChatHistory.add_message refuses the row after a restart too.
+        """
+        try:
+            if msg.get('content_type') not in FILE_TRANSFER_CONTENT_TYPES:
+                return False
+            if str(msg.get('contact') or '') != str(account.id):
+                return False
+            transfer_id = str(msg.get('message_id') or '')
+            if transfer_id not in self.ownSelfTransfers:
+                return False
+            BlinkLogger().log_info('Swallowed the journal echo of our own transfer %s' % transfer_id)
+            return True
+        except Exception as e:
+            BlinkLogger().log_error('Cannot check for the echo of our own transfer: %s' % e)
+            return False
+
+    @objc.python_method
     def syncIncomingMessage(self, account, msg, last_id=None):
         if msg.get('content_type') == LEGACY_LOCATION_CONTENT_TYPE \
                 and self.noteCallRecording(account, msg.get('content')):
             # A note about a recording, not a message: it places a bubble
             # and is never one itself.
             pass
+        if self._isJournalEchoOfOwnTransfer(account, msg):
+            return
         self._redirectToRecordingParty(msg)
         direction = 'incoming'
         BlinkLogger().log_debug(self._describe_journal_message(msg, direction))
@@ -5292,6 +5462,8 @@ class SMSWindowManagerClass(NSObject):
         if msg.get('content_type') == LEGACY_LOCATION_CONTENT_TYPE \
                 and self.noteCallRecording(account, msg.get('content')):
             pass
+        if self._isJournalEchoOfOwnTransfer(account, msg):
+            return
         self._redirectToRecordingParty(msg)
         direction = 'outgoing'
         BlinkLogger().log_debug(self._describe_journal_message(msg, direction))
