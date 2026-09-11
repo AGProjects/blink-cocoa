@@ -2689,10 +2689,6 @@ class SessionController(NSObject):
         for contact in self.invited_participants:
             self.session.conference.add_participant(contact.uri)
 
-        if self.hasStreamOfType("audio"):
-            audioStream = self.streamHandlerOfType("audio")
-            audioStream.stream.mixer.reset_ec()
-
         self.notification_center.post_notification("BlinkSessionDidStart", sender=self)
 
     @objc.python_method

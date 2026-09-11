@@ -85,6 +85,9 @@ def loadImages():
 
 
 STATISTICS_INTERVAL = 1.0
+# Echo canceller statistics are sampled every N statistics ticks while the
+# call is connected (see updateEchoCancellerStatistics).
+EC_STATISTICS_INTERVAL = 10
 
 # Minimum horizontal space kept between the audio status label and the
 # session control buttons on the right side of the audio tile
@@ -122,6 +125,8 @@ class AudioController(MediaStream):
     audioEndTime = None
     timer = None
     last_stats = None
+    ec_stats_last = None
+    ec_stats_counter = 0
     transfer_timer = None
     user_hanged_up = False
     transferred = False
@@ -761,6 +766,11 @@ class AudioController(MediaStream):
         self.status = new_status
         status = self.status
 
+        if status in (STREAM_DISCONNECTING, STREAM_IDLE, STREAM_FAILED) and self.ec_stats_last is not None:
+            self.sessionController.log_info("Echo canceller at end of call: %s" % (self.ec_stats_last.get('info') or self.ec_stats_last))
+            self.ec_stats_last = None
+            self.ec_stats_counter = 0
+
         if status == STREAM_WAITING_DNS_LOOKUP:
             self.updateAudioStatusWithSessionState(NSLocalizedString("Finding Destination...", "Audio status label"))
         elif status == STREAM_RINGING:
@@ -916,6 +926,30 @@ class AudioController(MediaStream):
             self.previous_tx_packets = stats['tx']['packets']
 
         self.last_stats = stats
+        self.updateEchoCancellerStatistics()
+
+    @objc.python_method
+    def updateEchoCancellerStatistics(self):
+        # Sample the software echo canceller every EC_STATISTICS_INTERVAL
+        # seconds while connected and log it (debug log, plus one line at the
+        # end of the call). Uses sipsimple AudioMixer.ec_statistics; full data
+        # needs pjsip patch 09_aec. Older sipsimple builds lack the property.
+        if self.status != STREAM_CONNECTED or not self.stream:
+            return
+        self.ec_stats_counter += 1
+        if self.ec_stats_counter % EC_STATISTICS_INTERVAL:
+            return
+        try:
+            ec_stats = self.stream.mixer.ec_statistics
+        except AttributeError:
+            return
+        except Exception as e:
+            self.sessionController.log_debug("Could not read echo canceller statistics: %s" % e)
+            return
+        if not ec_stats:
+            return
+        self.ec_stats_last = ec_stats
+        self.sessionController.log_debug("Echo canceller: %s" % (ec_stats.get('info') or ec_stats))
 
     @objc.python_method
     def updateDuration(self):
