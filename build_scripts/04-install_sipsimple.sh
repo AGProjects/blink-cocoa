@@ -7,6 +7,52 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# PJSIP version selection (non-interactive, default 2.17).
+#   ./04-install_sipsimple.sh                 -> 2.17
+#   ./04-install_sipsimple.sh --2.12          -> 2.12 (legacy)
+#   ./04-install_sipsimple.sh --version 2.12  (also --version=2.12)
+#   PJSIP_VERSION=2.12 ./04-install_sipsimple.sh
+#   ./04-install_sipsimple.sh 2.12            (legacy positional form)
+# Precedence: command line switch > PJSIP_VERSION env var > default.
+usage() {
+    cat <<USAGE
+Usage: $(basename "$0") [--2.12 | --version VERSION] [-h]
+
+Build python3-sipsimple against PJSIP 2.17 (default).
+  --2.12, --legacy        build against the legacy PJSIP 2.12 patch series
+  --version VERSION       2.17 or 2.12 (also --version=VERSION)
+  -h, --help              show this help
+USAGE
+}
+
+arg_version=""
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --2.12|--legacy)  arg_version="2.12"; shift ;;
+        --2.17)           arg_version="2.17"; shift ;;
+        --version)
+            if [ -z "${2:-}" ]; then
+                echo "Error: --version requires a value (2.17 or 2.12)." >&2
+                exit 2
+            fi
+            arg_version="$2"; shift 2 ;;
+        --version=*)      arg_version="${1#--version=}"; shift ;;
+        -h|--help)        usage; exit 0 ;;
+        2.12|2.17)        arg_version="$1"; shift ;;
+        *)
+            echo "Error: unknown argument '$1'." >&2
+            usage >&2
+            exit 2 ;;
+    esac
+done
+
+PJSIP_VERSION="${arg_version:-${PJSIP_VERSION:-2.17}}"
+case "$PJSIP_VERSION" in
+    2.12|2.17) ;;
+    *) echo "Unsupported PJSIP_VERSION='$PJSIP_VERSION' (allowed: 2.12, 2.17)." >&2
+       exit 1 ;;
+esac
+
 # Allow override via env var; default to ../../python3-sipsimple
 SIPSIMPLE_DIR="${SIPSIMPLE_DIR:-$(cd "$SCRIPT_DIR/../../python3-sipsimple" 2>/dev/null && pwd)}"
 
@@ -23,38 +69,6 @@ cd "$SCRIPT_DIR"
 source activate_venv.sh
 
 cd "$SIPSIMPLE_DIR"
-
-# PJSIP version selection.
-#   - PJSIP_VERSION env var wins (CI / non-interactive runs)
-#   - $1 (positional) honored as a fallback — e.g. `./04-install_sipsimple.sh 2.12`
-#   - otherwise prompt interactively; default 2.17
-#   - if stdin isn't a tty (piped, redirected), use the default silently
-# Supported: 2.17 (current default) and 2.12 (legacy, opt-in via parameter).
-PJSIP_VERSION="${PJSIP_VERSION:-${1:-}}"
-if [ -z "$PJSIP_VERSION" ]; then
-    if [ -t 0 ]; then
-        echo
-        echo "Select PJSIP version to build against:"
-        echo "  1) 2.17  (current default — see PJSIP_217_MIGRATION.md)"
-        echo "  2) 2.12  (legacy, stable — fully patched)"
-        echo
-        read -r -p "Choice [1]: " choice
-        case "${choice:-1}" in
-            1|2.17)  PJSIP_VERSION="2.17" ;;
-            2|2.12)  PJSIP_VERSION="2.12" ;;
-            *)       echo "Unrecognized choice '${choice}', defaulting to 2.17."
-                     PJSIP_VERSION="2.17" ;;
-        esac
-    else
-        PJSIP_VERSION="2.17"
-    fi
-fi
-
-case "$PJSIP_VERSION" in
-    2.12|2.17) ;;
-    *) echo "Unsupported PJSIP_VERSION='$PJSIP_VERSION' (allowed: 2.12, 2.17)." >&2
-       exit 1 ;;
-esac
 
 echo "Building SIP SIMPLE SDK from $SIPSIMPLE_DIR against PJSIP $PJSIP_VERSION ..."
 
