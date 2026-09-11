@@ -184,6 +184,9 @@ class DebugWindow(NSObject):
         notification_center.add_observer(self, name="SIPSessionDidRenegotiateStreams")
         notification_center.add_observer(self, name="AudioSessionHasQualityIssues")
         notification_center.add_observer(self, name="AudioSessionQualityRestored")
+        # Software echo canceller statistics, posted by AudioController every
+        # 10 s while a call is connected and once at the end of the call.
+        notification_center.add_observer(self, name="BlinkAudioEchoCancellerStatistics")
         notification_center.add_observer(self, name="RTPStreamICENegotiationDidSucceed")
         notification_center.add_observer(self, name="RTPStreamICENegotiationDidFail")
         notification_center.add_observer(self, name="RTPStreamICENegotiationStateDidChange")
@@ -1250,6 +1253,37 @@ class DebugWindow(NSObject):
         self.rtpTextView.textStorage().appendAttributedString_(astring)
         if self.autoScrollCheckbox.state() == NSOnState:
             self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
+
+    # Heuristic used to highlight a statistics line in red: little
+    # speaker-to-mic isolation (low ERL) and little echo removed by the
+    # linear filter (low ERLE) after the canceller had time to converge.
+    # Values come from the offline AEC harness (docs/EchoCancellation.txt in
+    # python3-sipsimple): converged calls show 20-45 dB ERLE.
+    EC_SUSPECT_ERL_DB = 12
+    EC_SUSPECT_ERLE_DB = 10
+    EC_SUSPECT_MIN_DURATION = 5
+
+    @objc.python_method
+    def _NH_BlinkAudioEchoCancellerStatistics(self, notification):
+        stats = notification.data.statistics or {}
+        final = getattr(notification.data, 'final', False)
+        try:
+            target = notification.sender.sessionController.target_uri
+        except AttributeError:
+            target = None
+        summary = stats.get('info') or ', '.join('%s=%s' % item for item in sorted(stats.items()))
+        text = '%s Audio echo canceller%s%s: %s' % (notification.datetime,
+                                                    ' at end of call' if final else '',
+                                                    (' to %s' % target) if target else '',
+                                                    summary)
+        erl, erle, duration = stats.get('erl'), stats.get('erle'), stats.get('duration')
+        suspect = (erl is not None and erle is not None and duration is not None and
+                   duration >= self.EC_SUSPECT_MIN_DURATION and
+                   erl < self.EC_SUSPECT_ERL_DB and erle < self.EC_SUSPECT_ERLE_DB)
+        if suspect:
+            self.append_error_line(self.rtpTextView, text + '  <- echo may be audible (low ERL and ERLE)')
+        else:
+            self.append_line(self.rtpTextView, text)
 
     @objc.python_method
     def _NH_AudioSessionQualityRestored(self, notification):

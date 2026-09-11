@@ -127,6 +127,7 @@ class AudioController(MediaStream):
     last_stats = None
     ec_stats_last = None
     ec_stats_counter = 0
+    _ec_stats_unavailable_logged = False
     transfer_timer = None
     user_hanged_up = False
     transferred = False
@@ -768,6 +769,8 @@ class AudioController(MediaStream):
 
         if status in (STREAM_DISCONNECTING, STREAM_IDLE, STREAM_FAILED) and self.ec_stats_last is not None:
             self.sessionController.log_info("Echo canceller at end of call: %s" % (self.ec_stats_last.get('info') or self.ec_stats_last))
+            self.notification_center.post_notification("BlinkAudioEchoCancellerStatistics", sender=self,
+                                                       data=NotificationData(statistics=self.ec_stats_last, final=True))
             self.ec_stats_last = None
             self.ec_stats_counter = 0
 
@@ -942,6 +945,11 @@ class AudioController(MediaStream):
         try:
             ec_stats = self.stream.mixer.ec_statistics
         except AttributeError:
+            # sipsimple built without AudioMixer.ec_statistics; say so once
+            # per run instead of silently showing nothing.
+            if not AudioController._ec_stats_unavailable_logged:
+                AudioController._ec_stats_unavailable_logged = True
+                BlinkLogger().log_info("Echo canceller statistics are not available: the bundled sipsimple has no AudioMixer.ec_statistics (rebuild python3-sipsimple)")
             return
         except Exception as e:
             self.sessionController.log_debug("Could not read echo canceller statistics: %s" % e)
@@ -950,6 +958,9 @@ class AudioController(MediaStream):
             return
         self.ec_stats_last = ec_stats
         self.sessionController.log_debug("Echo canceller: %s" % (ec_stats.get('info') or ec_stats))
+        # Rendered in the RTP tab of the debug window (DebugWindow.py).
+        self.notification_center.post_notification("BlinkAudioEchoCancellerStatistics", sender=self,
+                                                   data=NotificationData(statistics=ec_stats, final=False))
 
     @objc.python_method
     def updateDuration(self):
