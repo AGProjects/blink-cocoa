@@ -440,8 +440,8 @@ GLYPH_SAVE      = chr(8615)
 GLYPH_OPEN      = chr(8599)
 GLYPH_COPIED    = chr(10003)
 GLYPH_REPLY     = chr(8617)
-# Opens the server's SIP trace of a call, from the record's sipTraceUrl.
-GLYPH_TRACE     = chr(9432)
+# Opens a call's details panel, which carries the link to its SIP trace.
+GLYPH_INFO      = chr(9432)
 # Which way the call went. Direction is the arrow's whole job: whether it
 # was answered is carried by the colour and said outright in the words, so
 # a missed call is the same arrow in the attention colour rather than a
@@ -877,6 +877,11 @@ COLOR_IN_DARK      = _rgb(59, 110, 165)
 COLOR_OUT_DARK     = _rgb(255, 255, 255)
 COLOR_TEXT_ON_PALE = _rgb(17, 27, 33)
 COLOR_TEXT_ON_DEEP = _rgb(255, 255, 255)
+# Links, by fill like the body. The system link colour is a light blue in
+# dark mode: 1.9:1 on the blue incoming tile and 2.8:1 on the white outgoing
+# one. These are 4.6:1 on the tile, and 6.8:1 / 5.5:1 on white / pale blue.
+COLOR_LINK_ON_PALE = _rgb(10, 88, 184)
+COLOR_LINK_ON_DEEP = _rgb(224, 242, 255)
 CHAT_BG_LIGHT      = _rgb(236, 229, 221)
 CHAT_BG_DARK       = _rgb(11, 20, 26)
 COLOR_TRACK        = _rgb(52, 120, 246)
@@ -1079,6 +1084,19 @@ def bubble_success_color(state, is_private, direction=None):
     except Exception:
         on_deep = False
     return COLOR_CALL_OK_DARK if on_deep else COLOR_CALL_OK
+
+
+def bubble_link_color(state, is_private, direction=None):
+    """A link's colour on THIS bubble's fill; same rule as the body."""
+    try:
+        body = bubble_text_color(state, is_private, direction)
+    except Exception:
+        return NSColor.linkColor()
+    if body is COLOR_TEXT_ON_DEEP:
+        return COLOR_LINK_ON_DEEP
+    if body is COLOR_TEXT_ON_PALE:
+        return COLOR_LINK_ON_PALE
+    return NSColor.linkColor()
 
 
 def bubble_meta_color(state, is_private, direction=None):
@@ -1447,7 +1465,7 @@ def _rendered_html(content, font_size, text_color=None):
 
 
 def attributed_body(content, is_html=False, expand_smileys=True, font_size=BODY_FONT_SIZE,
-                    text_color=None):
+                    text_color=None, link_color=None):
     """The message as the bubble draws it.
 
     An is_html message is rendered -- bold, lists, headings, quotes and its
@@ -1495,11 +1513,23 @@ def attributed_body(content, is_html=False, expand_smileys=True, font_size=BODY_
             if existing is not None:
                 continue
             result.addAttribute_value_range_('NSLink', url, rng)
-            result.addAttribute_value_range_(NSForegroundColorAttributeName,
-                                             NSColor.linkColor(), rng)
-            result.addAttribute_value_range_(NSUnderlineStyleAttributeName, 1, rng)
         except Exception:
             pass
+
+    # One colour for every link, whether the importer made it from an anchor
+    # or we did from a bare URL: the importer's own is a fixed dark blue that
+    # the deep incoming tile swallows.
+    colour = link_color or NSColor.linkColor()
+    index = 0
+    while index < result.length():
+        try:
+            link, rng = result.attribute_atIndex_effectiveRange_('NSLink', index, None)
+        except Exception:
+            break
+        if link is not None:
+            result.addAttribute_value_range_(NSForegroundColorAttributeName, colour, rng)
+            result.addAttribute_value_range_(NSUnderlineStyleAttributeName, 1, rng)
+        index = max(int(rng[0]) + int(rng[1]), index + 1)
 
     if expand_smileys:
         result = _substitute_smileys(result, font_size)
@@ -1631,6 +1661,30 @@ class VideoHostView(NSView):
 
     def isFlipped(self):
         return True
+
+
+class BubbleTextFieldCell(NSTextFieldCell):
+    """Hands the bubble's link colour to the field editor.
+
+    A selectable field swaps in the window's field editor on the first click,
+    and that text view draws links with its own linkTextAttributes -- the
+    system blue -- whatever the attributed string says. Without this a link
+    that reads fine turns unreadable the moment the user selects in it.
+    """
+
+    def setUpFieldEditorAttributes_(self, textObj):
+        textObj = objc.super(BubbleTextFieldCell, self).setUpFieldEditorAttributes_(textObj)
+        try:
+            bubble = self.controlView().superview()
+            colour = bubble.linkColor() if bubble is not None else None
+            if colour is not None and hasattr(textObj, 'setLinkTextAttributes_'):
+                textObj.setLinkTextAttributes_({
+                    NSForegroundColorAttributeName: colour,
+                    NSUnderlineStyleAttributeName: 1,
+                    NSCursorAttributeName: NSCursor.pointingHandCursor()})
+        except Exception:
+            pass
+        return textObj
 
 
 class BubbleTextField(NSTextField):
@@ -1901,12 +1955,15 @@ class MessageBubbleView(NSView):
             self._save_rect = NSZeroRect
             self._open_rect = NSZeroRect
             self._reply_rect = NSZeroRect
-            self._trace_rect = NSZeroRect
+            self._info_rect = NSZeroRect
             # True for a moment after copying, so the affordance can say it
             # did something: a click that silently succeeds is
             # indistinguishable from one that silently failed.
             self.copied_feedback = False
             self._logged_fill = None
+            # The appearance the body's attributed string was built for.
+            # See viewWillDraw.
+            self._body_dark = None
         return self
 
     def isFlipped(self):
@@ -1925,6 +1982,33 @@ class MessageBubbleView(NSView):
         self._laid_out_width = -1.0
         self._rebuildBody()
         self.setNeedsDisplay_(True)
+
+    @objc.python_method
+    def _bodyAppearanceIsStale(self):
+        return (self._body_field is not None
+                and getattr(self, '_body_dark', None) != _is_dark_appearance())
+
+    def viewWillDraw(self):
+        # The fill is chosen at draw time but the body's colour is baked into
+        # its attributed string. Without this, an appearance switch while the
+        # app runs (Auto at dawn) repaints an incoming bubble light and leaves
+        # its text white on it. Checked here rather than only on the
+        # appearance callback: a switch that happens while the window is
+        # hidden or the Mac asleep reaches the bubble only as a redraw.
+        try:
+            if self._bodyAppearanceIsStale():
+                self._rebuildBody()
+        except Exception as e:
+            BlinkLogger().log_error('Cannot restyle bubble %s: %s' % (self.msgid, e))
+        objc.super(MessageBubbleView, self).viewWillDraw()
+
+    def viewDidChangeEffectiveAppearance(self):
+        try:
+            if self._bodyAppearanceIsStale():
+                self._rebuildBody()
+                self.setNeedsDisplay_(True)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot restyle bubble %s: %s' % (self.msgid, e))
 
     @objc.python_method
     def _trackSlider(self):
@@ -2048,7 +2132,7 @@ class MessageBubbleView(NSView):
             # anyway falls back to whatever line it was configured with
             # rather than drawing an empty box.
             return attributed_body(self.content, self.is_html, self.expand_smileys,
-                                   self.font_size, self.textColor())
+                                   self.font_size, self.textColor(), self.linkColor())
         title, duration, phrase = lines
 
         attention = call_needs_attention(self.call_record, self.call_device_id)
@@ -2177,14 +2261,21 @@ class MessageBubbleView(NSView):
         return bubble_error_color(self.state, self.is_private, self.direction)
 
     @objc.python_method
+    def linkColor(self):
+        """Links in the body, legible on this bubble's fill."""
+        return bubble_link_color(self.state, self.is_private, self.direction)
+
+    @objc.python_method
     def metaColor(self):
         """The quiet colour for this bubble's fill: header, ticks, captions."""
         return bubble_meta_color(self.state, self.is_private, self.direction)
 
     @objc.python_method
     def _rebuildBody(self):
+        self._body_dark = _is_dark_appearance()
         if self._body_field is None:
             field = BubbleTextField.alloc().initWithFrame_(NSMakeRect(0, 0, 10, 10))
+            field.setCell_(BubbleTextFieldCell.alloc().initTextCell_(''))
             field.setEditable_(False)
             field.setSelectable_(True)
             field.setBordered_(False)
@@ -2245,7 +2336,7 @@ class MessageBubbleView(NSView):
                 return
             _t = load_trace_tick()
             body = attributed_body(self.content, self.is_html, self.expand_smileys,
-                                   self.font_size, self.textColor())
+                                   self.font_size, self.textColor(), self.linkColor())
             load_trace_bucket('-- attributed body', _t)
             body = self._colouredWarningLine(body)
             if self.found:
