@@ -5015,6 +5015,59 @@ class SMSWindowManagerClass(NSObject):
         if transfer_id:
             self.ownSelfTransfers.add(str(transfer_id))
 
+    # Conversation-read markers this device has just sent, canonical contact
+    # -> send times, oldest first. The server fans the marker out to every
+    # device of the account, this one included. The payload carries the
+    # sender's device_id, which settles it; the send times are for a marker
+    # without one (a server that rebuilds the body). Each send accounts for
+    # one echo.
+    ownConversationReads = {}
+    OWN_CONVERSATION_READ_TTL = 30
+
+    @objc.python_method
+    def noteOwnConversationRead(self, contact):
+        key = self._canonical_uri(contact)
+        if key:
+            self.ownConversationReads.setdefault(key, []).append(time.monotonic())
+
+    @objc.python_method
+    def _conversationReadDevice(self, content):
+        """The device_id a conversation-read marker was sent from, if any."""
+        text = (content or '').strip()
+        if not text.startswith('{'):
+            return None
+        try:
+            value = json.loads(text).get('device_id')
+        except (TypeError, ValueError, AttributeError):
+            return None
+        return bare_instance_id(value) or None
+
+    @objc.python_method
+    def _isEchoOfOwnConversationRead(self, content):
+        if isinstance(content, bytes):
+            content = content.decode('utf-8', 'replace')
+        device = self._conversationReadDevice(content)
+        key = self._canonical_uri(self._conversationReadContact(content))
+
+        pending = self.ownConversationReads.get(key, []) if key else []
+        if pending:
+            horizon = time.monotonic() - self.OWN_CONVERSATION_READ_TTL
+            pending = [t for t in pending if t >= horizon]
+
+        if device:
+            echo = device == this_device_id()
+        else:
+            echo = bool(pending)
+
+        if echo and pending:
+            pending.pop(0)
+        if key:
+            if pending:
+                self.ownConversationReads[key] = pending
+            else:
+                self.ownConversationReads.pop(key, None)
+        return echo
+
     # transfer id -> the conversation that transfer belongs in, learned
     # from a call_recording note. Held because the note and the transfer
     # are separate messages that can cross: whichever lands first waits
@@ -6167,6 +6220,15 @@ class SMSWindowManagerClass(NSObject):
                 and self._seenMessage(imdn_id)):
             BlinkLogger().log_info('Dropped a second copy of message %s from %s'
                                    % (imdn_id, format_identity_to_string(sender_identity)))
+            return
+
+        # Our own conversation-read marker, fanned back to us by the server.
+        # This device already cleared the badge and sent the receipts;
+        # applying it again is a redundant write at best, and at worst
+        # clears a message that landed between the send and the echo.
+        if (content_type == 'application/sylk-conversation-read'
+                and account is not None and account is not BonjourAccount()
+                and self._isEchoOfOwnConversationRead(content)):
             return
 
         uri = format_identity_to_string(window_tab_identity)
