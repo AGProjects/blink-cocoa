@@ -1534,11 +1534,46 @@ def attributed_body(content, is_html=False, expand_smileys=True, font_size=BODY_
             result.addAttribute_value_range_(NSForegroundColorAttributeName, colour, rng)
             result.addAttribute_value_range_(NSUnderlineStyleAttributeName, 1, rng)
         index = max(int(rng[0]) + int(rng[1]), index + 1)
+    _park_links(result)
 
     if expand_smileys:
         result = _substitute_smileys(result, font_size)
 
     return result
+
+
+# NSTextField draws an NSLink range in the system link colour no matter what
+# foreground the string gives it -- light blue in dark mode, unreadable on the
+# blue incoming tile. So the string a bubble's field holds carries its links
+# under this key instead, already coloured and underlined, and they become
+# real NSLinks only inside the field editor, whose linkTextAttributes can be
+# set (see BubbleTextFieldCell).
+PARKED_LINK_KEY = 'BlinkParkedLink'
+
+
+def _move_attribute(attr_string, source, target):
+    """Rename an attribute over the whole string; True if any was found."""
+    moved = False
+    index = 0
+    try:
+        while index < attr_string.length():
+            value, rng = attr_string.attribute_atIndex_effectiveRange_(source, index, None)
+            if value is not None:
+                attr_string.addAttribute_value_range_(target, value, rng)
+                attr_string.removeAttribute_range_(source, rng)
+                moved = True
+            index = max(int(rng[0]) + int(rng[1]), index + 1)
+    except Exception as e:
+        BlinkLogger().log_error('Cannot move %s to %s: %s' % (source, target, e))
+    return moved
+
+
+def _park_links(attr_string):
+    return _move_attribute(attr_string, 'NSLink', PARKED_LINK_KEY)
+
+
+def _unpark_links(attr_string):
+    return _move_attribute(attr_string, PARKED_LINK_KEY, 'NSLink')
 
 
 def _rect_text(rect):
@@ -1668,13 +1703,38 @@ class VideoHostView(NSView):
 
 
 class BubbleTextFieldCell(NSTextFieldCell):
-    """Hands the bubble's link colour to the field editor.
+    """Links that are clickable without being drawn in the system blue.
 
-    A selectable field swaps in the window's field editor on the first click,
-    and that text view draws links with its own linkTextAttributes -- the
-    system blue -- whatever the attributed string says. Without this a link
-    that reads fine turns unreadable the moment the user selects in it.
+    The field's own string holds its links parked (see PARKED_LINK_KEY), so
+    the field draws them in the bubble's link colour. A click in a selectable
+    field hands the text to the window's field editor, and it is there that
+    they are turned back into NSLinks -- which is what makes them open -- with
+    the editor's linkTextAttributes set to the same colour.
     """
+
+    def selectWithFrame_inView_editor_delegate_start_length_(self, frame, view, editor,
+                                                             delegate, start, length):
+        objc.super(BubbleTextFieldCell, self).selectWithFrame_inView_editor_delegate_start_length_(
+            frame, view, editor, delegate, start, length)
+        self._unparkIn(editor)
+
+    def editWithFrame_inView_editor_delegate_event_(self, frame, view, editor, delegate, event):
+        objc.super(BubbleTextFieldCell, self).editWithFrame_inView_editor_delegate_event_(
+            frame, view, editor, delegate, event)
+        self._unparkIn(editor)
+
+    @objc.python_method
+    def _unparkIn(self, editor):
+        try:
+            storage = editor.textStorage() if editor is not None else None
+            if storage is not None:
+                storage.beginEditing()
+                try:
+                    _unpark_links(storage)
+                finally:
+                    storage.endEditing()
+        except Exception as e:
+            BlinkLogger().log_error('Cannot restore links in the field editor: %s' % e)
 
     def setUpFieldEditorAttributes_(self, textObj):
         textObj = objc.super(BubbleTextFieldCell, self).setUpFieldEditorAttributes_(textObj)
@@ -1703,6 +1763,19 @@ class BubbleTextField(NSTextField):
     could take hold of was the padding around its name. Those presses go
     to the bubble; every other message selects as it always did.
     """
+
+    def textDidEndEditing_(self, notification):
+        # Ending the edit copies the editor's string back into the field,
+        # real NSLinks and all; park them again or the field draws them blue.
+        objc.super(BubbleTextField, self).textDidEndEditing_(notification)
+        try:
+            value = self.attributedStringValue()
+            if value is not None and value.length():
+                value = value.mutableCopy()
+                if _park_links(value):
+                    self.setAttributedStringValue_(value)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot park links after editing: %s' % e)
 
     @objc.python_method
     def _fileBubble(self):
