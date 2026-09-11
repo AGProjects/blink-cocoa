@@ -275,6 +275,12 @@ objc.loadBundleFunctions(bundle, globals(), [('CGEventSourceSecondsSinceLastEven
 
 IDLE_TIME = 5
 
+# NSWindowStyleMaskFullScreen
+FULL_SCREEN_STYLE_MASK = 1 << 14
+# How long a closing window waits for a full screen transition to report
+# back before it is closed anyway.
+FULL_SCREEN_TRANSITION_TIMEOUT = 5.0
+
 
 
 class VideoWidget(NSView):
@@ -1676,6 +1682,8 @@ class VideoWindowController(NSWindowController):
     toastView = None
     toast_timer = None
     close_after_exit_full_screen = False
+    close_timer = None
+    close_attempts = 0
 
     recordingImage = 0
     recording_timer = 0
@@ -2834,7 +2842,8 @@ class VideoWindowController(NSWindowController):
 
         if self.window():
             self.window().orderOut_(self)
-            self.myVideoView.hide()
+            if self.myVideoView:
+                self.myVideoView.hide()
 
         self.hideButtons()
 
@@ -2848,6 +2857,8 @@ class VideoWindowController(NSWindowController):
     @objc.python_method
     @run_in_gui_thread
     def goToFullScreen(self):
+        if self.closed or self.will_close:
+            return
         self.sessionController.log_debug('goToFullScreen %s' % self)
         if not self.full_screen:
             self.window().toggleFullScreen_(None)
@@ -2887,9 +2898,10 @@ class VideoWindowController(NSWindowController):
         if self.closed or self.streamController is None or self.streamController.ended:
             self.full_screen = True
             self.full_screen_in_progress = False
-            self.close_after_exit_full_screen = False
             if self.closed:
-                self._closeWindow()     # leaves full screen first, then closes
+                # Leaves full screen first, then closes -- from the next
+                # run loop pass, not from inside AppKit's transition callback.
+                self._scheduleCloseTimer(0.1)
             else:
                 self.window().orderOut_(self)
             return
@@ -2912,11 +2924,12 @@ class VideoWindowController(NSWindowController):
         if sc is not None:
             sc.log_debug('windowDidExitFullScreen %s' % self)
         if self.closed:
-            # The call ended while in full screen: the close was waiting for this.
+            # The call ended while in full screen: the close was waiting for
+            # this. It is finished from the next run loop pass; closing the
+            # window from inside the transition callback can leave it frozen.
             self.full_screen = False
             self.full_screen_in_progress = False
-            self.close_after_exit_full_screen = False
-            self._closeWindow()
+            self._scheduleCloseTimer(0.1)
             return
         self.fullScreenButton.configure('arrow.up.left.and.arrow.down.right',
                                         NSLocalizedString("Full", "Video call bar"))
@@ -3040,10 +3053,22 @@ class VideoWindowController(NSWindowController):
 
         # The camera first: anything that goes wrong later must not leave
         # the AVCaptureSession, and the camera LED, running.
-        for view in (self.myVideoView, self.videoView):
-            if view:
-                step('releasing a video producer', lambda view=view: view.setProducer(None))
-                step('closing a video view', lambda view=view: view.close())
+        #
+        # The outlets are cleared before the views are closed. An IBOutlet
+        # does not retain: the superview is the only owner, and
+        # VideoWidget.close() takes the view out of it, so once the Python
+        # references below are gone the view is freed and an outlet still
+        # pointing at it is a dangling pointer. The next read of the outlet
+        # then dies in objc_msgSend -- windowWillClose_ does exactly that
+        # when the window close is finished later, by forceCloseWindow_ or
+        # windowDidExitFullScreen_ after a call that ended in full screen.
+        views = [view for view in (self.myVideoView, self.videoView) if view]
+        self.myVideoView = None
+        self.videoView = None
+        for view in views:
+            step('releasing a video producer', lambda view=view: view.setProducer(None))
+            step('closing a video view', lambda view=view: view.close())
+        del views
         step('discarding observers', discard_observers)
 
         def close_zrtp():
@@ -3068,28 +3093,65 @@ class VideoWindowController(NSWindowController):
         self._closeWindow()
 
     @objc.python_method
+    def _windowIsFullScreen(self):
+        window = self.window()
+        try:
+            return window is not None and bool(window.styleMask() & FULL_SCREEN_STYLE_MASK)
+        except Exception:
+            return False
+
+    @objc.python_method
+    def _scheduleCloseTimer(self, interval):
+        # One pending close step at a time: a timer left over from an earlier
+        # transition must not fire in the middle of a later one and close the
+        # window while it is on its way out of full screen.
+        self._stopCloseTimer()
+        self.close_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(
+            interval, self, "forceCloseWindow:", None, False)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.close_timer, NSRunLoopCommonModes)
+
+    @objc.python_method
+    def _stopCloseTimer(self):
+        timer = self.close_timer
+        self.close_timer = None
+        if timer is not None and timer.isValid():
+            timer.invalidate()
+
+    @objc.python_method
     def _closeWindow(self):
         """Take the window off screen and close it, full screen or not.
 
-        Closing a window while it is in, or on its way out of, full screen
-        leaves a frozen window behind; in that case the close is finished by
-        windowDidExitFullScreen_, with a timer in case that never comes.
+        Closing or ordering out a window while it is in, or on its way into
+        or out of, full screen leaves a frozen window behind. In that case
+        the window is first taken out of full screen and the close is
+        finished once the transition reports back (windowDidEnterFullScreen_,
+        windowDidExitFullScreen_, or one of the failure callbacks), with a
+        timer in case none of them comes.
         """
         window = self.window()
         if window is None:
             return
-        if self.full_screen or self.full_screen_in_progress:
-            if not self.close_after_exit_full_screen:
-                self.close_after_exit_full_screen = True
-                if self.full_screen and not self.full_screen_in_progress:
-                    try:
-                        window.toggleFullScreen_(None)
-                    except Exception:
-                        BlinkLogger().log_error('Video window close: leaving full screen failed: %s'
-                                                % traceback.format_exc())
-                NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
-                    3.0, self, "forceCloseWindow:", None, False)
+        sc = self.sessionController
+        in_full_screen = self.full_screen or self._windowIsFullScreen()
+        if self.full_screen_in_progress or in_full_screen:
+            self.close_after_exit_full_screen = True
+            if self.full_screen_in_progress:
+                if sc is not None:
+                    sc.log_info('Video window close: waiting for the full screen transition to finish')
+            else:
+                if sc is not None:
+                    sc.log_info('Video window close: leaving full screen first')
+                self.full_screen_in_progress = True
+                try:
+                    window.toggleFullScreen_(None)
+                except Exception:
+                    self.full_screen_in_progress = False
+                    BlinkLogger().log_error('Video window close: leaving full screen failed: %s'
+                                            % traceback.format_exc())
+            self._scheduleCloseTimer(FULL_SCREEN_TRANSITION_TIMEOUT)
             return
+        self._stopCloseTimer()
+        self.close_after_exit_full_screen = False
         try:
             window.orderOut_(None)
         except Exception:
@@ -3100,12 +3162,51 @@ class VideoWindowController(NSWindowController):
             BlinkLogger().log_error('Video window close: close failed: %s' % traceback.format_exc())
 
     def forceCloseWindow_(self, timer):
-        if not self.close_after_exit_full_screen:
+        self.close_timer = None
+        if not self.closed or self.window() is None:
             return
-        self.close_after_exit_full_screen = False
-        self.full_screen = False
+        self.close_attempts += 1
+        if self.close_attempts > 4:
+            # Full screen never let go. Close it regardless rather than keep
+            # a dead window around forever.
+            sc = self.sessionController
+            if sc is not None:
+                sc.log_info('Video window close: full screen did not end, closing anyway')
+            self.full_screen = False
+            self.full_screen_in_progress = False
+            self._forceWindowOut()
+            return
+        # Either a transition finished and the close continues from here, or
+        # the transition never reported back. In both cases the window's own
+        # style mask says whether it is still in full screen.
         self.full_screen_in_progress = False
+        self.full_screen = self._windowIsFullScreen()
         self._closeWindow()
+
+    @objc.python_method
+    def _forceWindowOut(self):
+        self._stopCloseTimer()
+        self.close_after_exit_full_screen = False
+        window = self.window()
+        if window is None:
+            return
+        try:
+            window.orderOut_(None)
+            window.close()
+        except Exception:
+            BlinkLogger().log_error('Video window close: forced close failed: %s' % traceback.format_exc())
+
+    def windowDidFailToEnterFullScreen_(self, window):
+        self.full_screen_in_progress = False
+        self.full_screen = self._windowIsFullScreen()
+        if self.closed:
+            self._scheduleCloseTimer(0.1)
+
+    def windowDidFailToExitFullScreen_(self, window):
+        self.full_screen_in_progress = False
+        self.full_screen = self._windowIsFullScreen()
+        if self.closed:
+            self._scheduleCloseTimer(0.1)
 
     def dealloc(self):
         # sessionController property can legitimately be None at app
@@ -3169,6 +3270,8 @@ class VideoWindowController(NSWindowController):
 
     @objc.IBAction
     def userClickedLocalVideo_(self, sender):
+        if self.closed or not self.myVideoView:
+            return
         self.local_video_hidden = not self.local_video_hidden
         if self.local_video_hidden:
             self.myVideoView.hide()
@@ -3227,9 +3330,9 @@ class VideoWindowController(NSWindowController):
 
     @objc.IBAction
     def userClickedHangupButton_(self, sender):
-        if self.full_screen:
-            self.toggleFullScreen()
-        else:
+        # Ordering out a window that is in, or entering or leaving, full
+        # screen freezes it; close() takes it out of full screen instead.
+        if not (self.full_screen or self.full_screen_in_progress or self._windowIsFullScreen()):
             self.window().orderOut_(None)
         if self.sessionController:
             self.sessionController.end()

@@ -42,6 +42,9 @@ class VideoController(MediaStream):
     previous_rx_packets = 0
     all_rx_bytes = 0
     statistics_timer = None
+    # Only startOutgoing() creates this timer; an incoming video stream never
+    # does, and end() stops it unconditionally.
+    wait_for_camera_timer = None
     last_stats = None
     initial_full_screen = False
     media_received = False
@@ -243,7 +246,8 @@ class VideoController(MediaStream):
     def hideVideoWindow(self):
         if self.videoWindowController:
             if self.videoWindowController.window():
-                self.videoWindowController.videoView.setProducer(None)
+                if self.videoWindowController.videoView:
+                    self.videoWindowController.videoView.setProducer(None)
                 if self.videoWindowController.full_screen or self.videoWindowController.full_screen_in_progress:
                     self.videoWindowController.must_hide_after_exit_full_screen = True
                     self.videoWindowController.goToWindowMode()
