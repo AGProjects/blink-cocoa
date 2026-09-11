@@ -28,6 +28,8 @@ from html.parser import HTMLParser
 
 from AppKit import (NSAttributedString,
                     NSBackgroundColorAttributeName,
+                    NSCursor,
+                    NSCursorAttributeName,
                     NSMenu,
                     NSBezierPath,
                     NSButton,
@@ -60,6 +62,7 @@ from AppKit import (NSAttributedString,
                     NSStringDrawingUsesLineFragmentOrigin,
                     NSUnderlineStyleAttributeName,
                     NSTextField,
+                    NSTextFieldCell,
                     NSView)
 from Foundation import (NSArray,
                         NSColor,
@@ -97,6 +100,7 @@ from MessageHost import (file_transfer_category, file_transfer_summary,
 # surface that describes a call -- this bubble, the stored body, the
 # notification -- so none of them can drift from the others.
 from MessageHost import call_lines, call_needs_attention
+from CallDetailsPanel import show_call_details
 # The same "1.2 MB" the caption is built from, so a tile and a bubble
 # never disagree about how big the same file is.
 from MessageHost import _format_size as format_file_size
@@ -2793,37 +2797,28 @@ class MessageBubbleView(NSView):
                 and self.kind not in (self.KIND_SYSTEM, self.KIND_DATE))
 
     @objc.python_method
-    def _sipTraceUrl(self):
-        """The server's SIP trace link for this call, or None.
+    def _showsCallInfo(self):
+        """Every call gets a header glyph that opens its details panel.
 
-        http(s) only: the record is synced between the user's devices and
-        a link that opens anything else is not one to hand to the Workspace.
+        Not only a call with a trace link: the panel is the record, and the
+        link is one row of it, shown when the server history supplied one.
         """
-        if self.kind != self.KIND_CALL or not self.call_record:
-            return None
-        url = str(self.call_record.get('sipTraceUrl') or '').strip()
-        if not url.lower().startswith(('https://', 'http://')):
-            return None
-        return url
-
-    @objc.python_method
-    def _showsSipTrace(self):
-        """A call the server history gave a trace link gets a header glyph."""
         return (bool(self.msgid)
                 and not self._tileMode()
-                and self._sipTraceUrl() is not None)
+                and self.kind == self.KIND_CALL
+                and bool(self.call_record))
 
-    @objc.python_method
-    def openSipTrace(self):
-        url = self._sipTraceUrl()
-        if url is None:
+    def showCallDetails_(self, sender):
+        """The details panel, run after the click that asked for it.
+
+        Deferred rather than run from mouseDown_: a modal loop entered in
+        the middle of the press would own the mouse-up, and the list's own
+        handling of the event would resume only when the panel closed.
+        """
+        if not self.call_record:
             return
-        nsurl = NSURL.URLWithString_(url)
-        if nsurl is None:
-            BlinkLogger().log_error('Bubble %s: invalid SIP trace link %s' % (self.msgid, url))
-            return
-        BlinkLogger().log_info('Bubble %s: open SIP trace %s' % (self.msgid, url))
-        NSWorkspace.sharedWorkspace().openURL_(nsurl)
+        BlinkLogger().log_debug('Bubble %s: call details' % self.msgid)
+        show_call_details(dict(self.call_record), self.call_device_id, self.window())
 
     @objc.python_method
     def _showsOpen(self):
@@ -2968,9 +2963,9 @@ class MessageBubbleView(NSView):
                 # after the call turns one line into two, which is a
                 # different height for the same bubble.
                 self._callSignature(),
-                # The trace glyph widens the header's floor when a link
-                # arrives on a call already drawn.
-                self._showsSipTrace(),
+                # The info glyph widens the header's floor once a call
+                # record lands on a bubble already drawn.
+                self._showsCallInfo(),
                 # A call recording carries both sides and stacks two
                 # strips, and a spectrogram adds a row of its own, so the
                 # player's height depends on what the envelope brought.
@@ -3724,8 +3719,8 @@ class MessageBubbleView(NSView):
             left += width_of(GLYPH_SAVE, glyph_font) + 6.0
         if self._isRepliable():
             left += width_of(GLYPH_REPLY, glyph_font) + 6.0
-        if self._showsSipTrace():
-            left += width_of(GLYPH_TRACE, glyph_font) + 6.0
+        if self._showsCallInfo():
+            left += width_of(GLYPH_INFO, glyph_font) + 6.0
 
         right = width_of(GLYPH_DELETE, glyph_font) + 4.0
         ticks = self._deliveryGlyphs()
@@ -5032,7 +5027,7 @@ class MessageBubbleView(NSView):
         self._save_rect = NSZeroRect
         self._open_rect = NSZeroRect
         self._reply_rect = NSZeroRect
-        self._trace_rect = NSZeroRect
+        self._info_rect = NSZeroRect
 
     @objc.python_method
     def _drawHeader(self, bubble):
@@ -5135,12 +5130,12 @@ class MessageBubbleView(NSView):
         else:
             self._reply_rect = NSZeroRect
 
-        # SIP trace of a call, when the server history supplied a link.
-        if self._showsSipTrace():
-            self._trace_rect = draw_glyph(GLYPH_TRACE, left)
-            left = self._trace_rect.origin.x + self._trace_rect.size.width + 6.0
+        # A call's details, the SIP trace link among them.
+        if self._showsCallInfo():
+            self._info_rect = draw_glyph(GLYPH_INFO, left)
+            left = self._info_rect.origin.x + self._info_rect.size.width + 6.0
         else:
-            self._trace_rect = NSZeroRect
+            self._info_rect = NSZeroRect
 
         # delivery ticks
         ticks = self._deliveryGlyphs()
@@ -5988,11 +5983,8 @@ class MessageBubbleView(NSView):
                 BlinkLogger().log_debug('Bubble %s: reply' % self.msgid)
                 renderer.bubbleDidRequestReply(self.msgid)
             return
-        if self.msgid and self._hits(point, self._trace_rect, header and self._showsSipTrace()):
-            try:
-                self.openSipTrace()
-            except Exception as e:
-                BlinkLogger().log_error('Cannot open the SIP trace of %s: %s' % (self.msgid, e))
+        if self.msgid and self._hits(point, self._info_rect, header and self._showsCallInfo()):
+            self.performSelector_withObject_afterDelay_('showCallDetails:', None, 0.0)
             return
         # The quote is checked before the body: it sits inside the bubble,
         # and a click on it means "show me the message this answers", not

@@ -1691,7 +1691,8 @@ def location_summary(latitude, longitude, accuracy=None, maps_url=None,
 
 # The content-type filters, in the order and with the names Sylk Mobile uses
 # (ReadyBox.categoryFilterItems). 'links' is a subset of 'text' rather than a
-# type of its own, which is why it carries no count anywhere.
+# type of its own, which is why it carries no count anywhere. 'call' is
+# Blink's alone: call detail records, kept before the catch-all.
 MESSAGE_CATEGORIES = (
     ('text', 'Text'),
     ('links', 'Links'),
@@ -1699,6 +1700,7 @@ MESSAGE_CATEGORIES = (
     ('image', 'Image'),
     ('video', 'Video'),
     ('location', 'Locations'),
+    ('call', 'Calls'),
     ('other', 'Other'),
 )
 

@@ -519,7 +519,8 @@ class SessionHistory(object, metaclass=Singleton):
 
 # The words Sylk Mobile stores in messages.category
 # (app.js#_classifyMessageCategory), so the same message lands under the same
-# chip on both clients: text, image, audio, video, other, location. NULL is
+# chip on both clients: text, image, audio, video, other, location. Blink adds
+# one of its own, call, for a call detail record. NULL is
 # not a category -- it means "this row is not a bubble": a PGP key, a
 # waveform, a reply link, a trail tick. Every category query excludes it.
 # What a conversation is MADE of. Everything else in chat_messages is a
@@ -638,6 +639,13 @@ def classify_category(content_type, body=None, related_action=None, metadata=Non
         return None
     if content_type in CATEGORY_KEY_TYPES:
         return None                     # a key is not a message
+    if content_type == CALL_CONTENT_TYPE:
+        # Blink's own chip, not one of mobile's: a call is filtered for on
+        # its own -- "when did we last speak" -- rather than hidden among
+        # the texts. Only the record type: a legacy HTML call row whose
+        # session is gone draws as a text bubble, and a chip that paged it
+        # in would hide it again on arrival.
+        return 'call'
     if content_type in CATEGORY_TEXT_TYPES or content_type.startswith('text/'):
         return 'text'
     if content_type in CATEGORY_FILE_TYPES:
@@ -787,7 +795,7 @@ NOT_DELETED_SQL = "(deleted is null or deleted = 0)"
 
 
 class ChatHistory(object, metaclass=Singleton):
-    __version__ = 21
+    __version__ = 22
 
     def __init__(self):
         path = ApplicationData.get('history')
@@ -1093,6 +1101,18 @@ class ChatHistory(object, metaclass=Singleton):
                 self.db.queryAll(query)
             except Exception as e:
                 BlinkLogger().log_error("Error pruning availability rows: %s" % e)
+
+        if next_upgrade_version < 22:
+            # Calls get a filter chip of their own. Every call record was
+            # stored with no category -- classify_category did not know the
+            # type -- so no category page could reach one. Version 20 has
+            # already turned the old HTML calls into records by now.
+            query = ("update chat_messages set category = 'call' where content_type = %s"
+                     % ChatMessage.sqlrepr(CALL_CONTENT_TYPE))
+            try:
+                self.db.queryAll(query)
+            except Exception as e:
+                BlinkLogger().log_error("Error stamping the category of stored calls: %s" % e)
 
         TableVersions().set_table_version(ChatMessage.sqlmeta.table, self.__version__)
 

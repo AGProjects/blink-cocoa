@@ -4472,11 +4472,10 @@ class NativeChatViewController(ChatViewController):
         if kind == MessageBubbleView.KIND_LOCATION:
             return 'location'
         if kind == MessageBubbleView.KIND_CALL:
-            # No chip of its own. A call is part of the thread of the
-            # conversation rather than a kind of attachment, and inventing
-            # a chip here alone would put the same message under different
-            # chips on the desktop and on the phone.
-            return 'text'
+            # Its own chip, the same word classify_category stores for the
+            # row, so the Calls page read from SQL and the bubbles it draws
+            # agree about what belongs on it.
+            return 'call'
         category = file_transfer_category(getattr(bubble, 'content', None))
         if category is not None:
             return category
@@ -4531,10 +4530,11 @@ class NativeChatViewController(ChatViewController):
         instant it was drawn, and the grid came up empty in a conversation
         full of shares.
 
-        Nothing else in the transcript changes category after insertion --
-        a file transfer is classified from its envelope, which the bubble
-        carries before it is inserted -- so this is asked here and nowhere
-        else.
+        A call is born the same way: showCallMessage switches it to
+        KIND_CALL after the insert, so under the Calls filter it would hide
+        itself for the same reason. Nothing else in the transcript changes
+        category after insertion -- a file transfer is classified from its
+        envelope, which the bubble carries before it is inserted.
         """
         if bubble is None or self.messageListView is None:
             return
@@ -4542,9 +4542,9 @@ class NativeChatViewController(ChatViewController):
         if bool(bubble.isHidden()) == hidden:
             return
         bubble.setHidden_(hidden)
-        BlinkLogger().log_debug('Bubble %s %s by the %s filter once it became a map'
+        BlinkLogger().log_debug('Bubble %s %s by the %s filter once it became a %s'
                                 % (bubble.msgid, 'hidden' if hidden else 'shown',
-                                   self.message_filter or 'all'))
+                                   self.message_filter or 'all', bubble.kind))
         self.messageListView.setNeedsMessageLayout()
         self.setNeedsDividerSweep()
 
