@@ -680,6 +680,8 @@
 		AD00000000000000004E0001 /* NativeChatViewController.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004E0000 /* NativeChatViewController.py */; };
 		AD00000000000000004E0003 /* NativeChatViewController.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004E0000 /* NativeChatViewController.py */; };
 		AD00000000000000004F0001 /* MessagePaneController.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004F0000 /* MessagePaneController.py */; };
+		AD0000000000000000600001 /* ContactMangler.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000600000 /* ContactMangler.py */; };
+		AD0000000000000000600003 /* ContactMangler.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000600000 /* ContactMangler.py */; };
 		AD00000000000000004F0003 /* MessagePaneController.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004F0000 /* MessagePaneController.py */; };
 		AD0000000000000000500001 /* MessageAccountPicker.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000500000 /* MessageAccountPicker.py */; };
 		AD0000000000000000500003 /* MessageAccountPicker.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000500000 /* MessageAccountPicker.py */; };
@@ -1523,6 +1525,7 @@
 		AD00000000000000004D0000 /* MessageHost.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MessageHost.py; sourceTree = "<group>"; };
 		AD00000000000000004E0000 /* NativeChatViewController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = NativeChatViewController.py; sourceTree = "<group>"; };
 		AD00000000000000004F0000 /* MessagePaneController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MessagePaneController.py; sourceTree = "<group>"; };
+		AD0000000000000000600000 /* ContactMangler.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ContactMangler.py; sourceTree = "<group>"; };
 		AD0000000000000000500000 /* MessageAccountPicker.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MessageAccountPicker.py; sourceTree = "<group>"; };
 		AD00000000000000005A0000 /* SylkLocation.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SylkLocation.py; sourceTree = "<group>"; };
 		AD00000000000000005B0000 /* Base */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MessageView.xib; sourceTree = "<group>"; };
@@ -1867,6 +1870,7 @@
 				1FDDE5FA10E9851800B03A52 /* SMSWindowManager.py */,
 				2B06A429111CFE74001D41E5 /* SMSViewController.py */,
 				AD00000000000000004F0000 /* MessagePaneController.py */,
+				AD0000000000000000600000 /* ContactMangler.py */,
 				AD0000000000000000500000 /* MessageAccountPicker.py */,
 				AD00000000000000750000 /* CameraCapture.py */,
 				AD00000000000000740000 /* AttachmentPreview.py */,
@@ -2605,6 +2609,7 @@
 				1F22731212B554F50010A8B2 /* audio_small.png in Resources */,
 				1F22731312B554F50010A8B2 /* SMSViewController.py in Resources */,
 				AD00000000000000004F0001 /* MessagePaneController.py in Resources */,
+				AD0000000000000000600001 /* ContactMangler.py in Resources */,
 				AD0000000000000000500001 /* MessageAccountPicker.py in Resources */,
 				AD00000000000000750001 /* CameraCapture.py in Resources */,
 				AD00000000000000740001 /* AttachmentPreview.py in Resources */,
@@ -2918,6 +2923,7 @@
 				2BDAE17311113B8200AC1D7A /* audio_small.png in Resources */,
 				2B06A42A111CFE74001D41E5 /* SMSViewController.py in Resources */,
 				AD00000000000000004F0003 /* MessagePaneController.py in Resources */,
+				AD0000000000000000600003 /* ContactMangler.py in Resources */,
 				AD0000000000000000500003 /* MessageAccountPicker.py in Resources */,
 				AD00000000000000750003 /* CameraCapture.py in Resources */,
 				AD00000000000000740003 /* AttachmentPreview.py in Resources */,
@@ -3726,7 +3732,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 27288;
+				CURRENT_PROJECT_VERSION = 27289;
 				DEVELOPMENT_TEAM = 4DFEFUDLKZ;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = YES;
@@ -3790,7 +3796,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 27288;
+				CURRENT_PROJECT_VERSION = 27289;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 4DFEFUDLKZ;
 				ENABLE_HARDENED_RUNTIME = YES;

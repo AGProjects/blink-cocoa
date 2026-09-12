@@ -237,7 +237,7 @@ class StatusItem(NSObject):
             self.statusItem.setImage_(image)
             self.statusItem.setMenu_(self.menu)
         self.items.append(item)
-        mitem = self.menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("%s - Waiting", "Menu item") % item.sessionController.titleLong,  "activateItem:", "")
+        mitem = self.menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("%s - Waiting", "Menu item") % item.sessionController.displayTitleLong,  "activateItem:", "")
         mitem.setTag_(item.sessionController.identifier)
         mitem.setTarget_(self)
 
@@ -264,7 +264,7 @@ class StatusItem(NSObject):
         if self.menu:
             mitem = self.menu.itemWithTag_(item.sessionController.identifier)
             if mitem:
-                name = item.sessionController.titleShort
+                name = item.sessionController.displayTitleShort
                 if state == STREAM_CONNECTED:
                     mitem.setTitle_(NSLocalizedString("Disconnect %s", "Menu item") % name)
                     mitem.setEnabled_(True)
@@ -313,7 +313,7 @@ class ScreenSharingController(MediaStream):
             self.sessionController.log_info("Offering local screen...")
             NSBundle.loadNibNamed_owner_("ScreenServerWindow", self)
             self.statusProgress.startAnimation_(None)
-            self.statusWindow.setTitle_(NSLocalizedString("Screen Sharing with %s", "Window title") % self.sessionController.titleShort)
+            self.statusWindow.setTitle_(NSLocalizedString("Screen Sharing with %s", "Window title") % self.sessionController.displayTitleShort)
             settings = SIPSimpleSettings()
             if not settings.logs.trace_msrp:
                 settings.logs.trace_msrp = True
@@ -338,7 +338,7 @@ class ScreenSharingController(MediaStream):
             NSBundle.loadNibNamed_owner_("ScreenServerWindow", self)
             self.loaded = True
             self.statusProgress.startAnimation_(None)
-            self.statusWindow.setTitle_(NSLocalizedString("Screen Sharing with %s", "Window title") % self.sessionController.titleShort)
+            self.statusWindow.setTitle_(NSLocalizedString("Screen Sharing with %s", "Window title") % self.sessionController.displayTitleShort)
             settings = SIPSimpleSettings()
             if not settings.logs.trace_msrp:
                 settings.logs.trace_msrp = True
@@ -422,7 +422,7 @@ class ScreenSharingController(MediaStream):
             #self.statusItem.update(self, newstate)
             if self.statusWindow:
                 if newstate == STREAM_CONNECTED:
-                    _t = self.sessionController.titleShort
+                    _t = self.sessionController.displayTitleShort
                     label = NSLocalizedString("%s requests your screen. Please confirm when asked.", "Label") % _t
                     self.statusProgress.setHidden_(True)
                 elif newstate == STREAM_DISCONNECTING:
@@ -534,7 +534,7 @@ class ScreenSharingController(MediaStream):
             self.exhanged_bytes += len(data.data)
             if self.exhanged_bytes > 10000:
                 if self.statusWindow:
-                    _t = self.sessionController.titleShort
+                    _t = self.sessionController.displayTitleShort
                     label = NSLocalizedString("%s is watching the screen", "Label") % _t
                     self.statusLabel.setStringValue_(label)
                     self.statusProgress.setHidden_(True)

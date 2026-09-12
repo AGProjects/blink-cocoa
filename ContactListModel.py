@@ -3140,7 +3140,15 @@ class CustomListModel(NSObject):
 
     def outlineView_objectValueForTableColumn_byItem_(self, outline, column, item):
         try:
-            return item and item.name
+            if item is None:
+                return None
+            # The first line of a row, and the last place a contact's real
+            # name exists before it is drawn. Groups keep their names: a
+            # group is not a person.
+            if isinstance(item, BlinkContact):
+                from ContactMangler import mangled_name
+                return mangled_name(item.name, uri=getattr(item, 'uri', None))
+            return item.name
         except Exception:
             log_gui_exception('the contact list data source (%s)' % type(item).__name__)
             return None
@@ -3412,7 +3420,8 @@ class CustomListModel(NSObject):
 
     def outlineView_toolTipForCell_rect_tableColumn_item_mouseLocation_(self, ov, cell, rect, tc, item, mouse):
         if isinstance(item, BlinkContact):
-            return (item.uri, rect)
+            from ContactMangler import mangled_uri
+            return (mangled_uri(item.uri), rect)
         else:
             return (None, rect)
 
@@ -3816,8 +3825,9 @@ class CustomListModel(NSObject):
 
         def address_item(into, uri, route, indent):
             """One address, on the MSRP road -- the only one that asks."""
+            from ContactMangler import mangled_uri
             entry = into.addItemWithTitle_action_keyEquivalent_(
-                '%s (%s)' % (uri.uri, uri.type), "userDropedFileOnContact:", "")
+                '%s (%s)' % (mangled_uri(uri.uri), uri.type), "userDropedFileOnContact:", "")
             entry.setIndentationLevel_(indent)
             entry.setTarget_(self)
             entry.setRepresentedObject_({'account': account, 'uri': str(uri.uri),
@@ -4128,8 +4138,9 @@ class CustomListModel(NSObject):
                 transfer_menu = NSMenu.alloc().init()
                 titem = transfer_menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Transfer Call To", "Menu item"), "", "")
                 titem.setEnabled_(False)
+                from ContactMangler import mangled_uri
                 for uri in item.uris:
-                    titem = transfer_menu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, uri.type), "userClickedBlindTransferMenuItem:", "")
+                    titem = transfer_menu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (mangled_uri(uri.uri), uri.type), "userClickedBlindTransferMenuItem:", "")
                     titem.setIndentationLevel_(1)
                     titem.setTarget_(self)
                     titem.setRepresentedObject_({'source': source, 'destination': uri.uri})

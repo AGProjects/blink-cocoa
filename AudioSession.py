@@ -323,8 +323,9 @@ class AudioSession(NSView):
                         invite_menu = NSMenu.alloc().init()
                         titem = invite_menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Invite To Conference", "Menu item"), "", "")
                         titem.setEnabled_(False)
+                        from ContactMangler import mangled_uri
                         for uri in sourceContact.uris:
-                            titem = invite_menu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, uri.type), "userClickedInviteToConference:", "")
+                            titem = invite_menu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (mangled_uri(uri.uri), uri.type), "userClickedInviteToConference:", "")
                             titem.setIndentationLevel_(1)
                             titem.setTarget_(self)
                             titem.setRepresentedObject_(str(uri.uri))

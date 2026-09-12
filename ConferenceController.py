@@ -383,8 +383,9 @@ class JoinConferenceWindowController(NSObject):
                     invite_menu = NSMenu.alloc().init()
                     titem = invite_menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Invite To Conference", "Menu item"), "", "")
                     titem.setEnabled_(False)
+                    from ContactMangler import mangled_uri
                     for uri in sourceContact.uris:
-                        titem = invite_menu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, uri.type), "addContactUriToInvitationList:", "")
+                        titem = invite_menu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (mangled_uri(uri.uri), uri.type), "addContactUriToInvitationList:", "")
                         titem.setIndentationLevel_(1)
                         titem.setTarget_(self)
                         titem.setRepresentedObject_(uri.uri)
@@ -658,8 +659,9 @@ class AddParticipantsWindowController(NSObject):
                     invite_menu = NSMenu.alloc().init()
                     titem = invite_menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Invite To Conference", "Menu item"), "", "")
                     titem.setEnabled_(False)
+                    from ContactMangler import mangled_uri
                     for uri in sourceContact.uris:
-                        titem = invite_menu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, uri.type), "addContactUriToInvitationList:", "")
+                        titem = invite_menu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (mangled_uri(uri.uri), uri.type), "addContactUriToInvitationList:", "")
                         titem.setIndentationLevel_(1)
                         titem.setTarget_(self)
                         titem.setRepresentedObject_(uri.uri)

@@ -263,7 +263,8 @@ class AlertPanel(NSObject, object):
             else:
                 base_text = NSLocalizedString("Call from %s", "Label")
 
-            title = base_text % format_identity_to_string(session.remote_identity, check_contact=True, format='compact')
+            from ContactMangler import mangled_text
+            title = base_text % mangled_text(format_identity_to_string(session.remote_identity, check_contact=True, format='compact'))
             self.panel.setTitle_(title)
 
             if settings.sounds.enable_speech_synthesizer:
@@ -419,7 +420,8 @@ class AlertPanel(NSObject, object):
                     BlinkLogger().log_info("Auto answer enabled for this contact")
                     self.enableAutoAnswer(view, session, session.account.audio.answer_delay)
 
-        label = format_identity_to_string(session.remote_identity, check_contact=True, format='full')
+        from ContactMangler import mangled_text
+        label = mangled_text(format_identity_to_string(session.remote_identity, check_contact=True, format='full'))
 
         fromLabel.setStringValue_("%s" % label)
         fromLabel.sizeToFit()
@@ -461,7 +463,8 @@ class AlertPanel(NSObject, object):
             if isinstance(session.account, BonjourAccount):
                 accountLabel.setStringValue_(NSLocalizedString("To Bonjour account", "Label"))
             else:
-                to = format_identity_to_string(session.account)
+                from ContactMangler import mangled_account_label
+                to = mangled_account_label(format_identity_to_string(session.account))
                 accountLabel.setStringValue_(NSLocalizedString("To %s", "Label") % to)
             accountLabel.sizeToFit()
 

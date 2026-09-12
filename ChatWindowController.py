@@ -301,7 +301,7 @@ class ChatWindowController(NSWindowController):
                     self.sessions[newSession.identifier] = newSession
 
                     item.setView_(newSession.streamHandlerOfType("chat").getContentView())
-                    item.setLabel_(newSession.titleShort)
+                    item.setLabel_(newSession.displayTitleShort)
                     self.tabView.selectTabViewItem_(item)
                     item.setIdentifier_(newSession.identifier)
                     ok = True
@@ -313,7 +313,7 @@ class ChatWindowController(NSWindowController):
         tabItem = NSTabViewItem.alloc().initWithIdentifier_(session.identifier)
         self.stream_controllers[tabItem] = session.streamHandlerOfType("chat")
         tabItem.setView_(view)
-        tabItem.setLabel_(session.titleShort)
+        tabItem.setLabel_(session.displayTitleShort)
         self.tabSwitcher.addTabViewItem_(tabItem)
         self.tabSwitcher.selectLastTabViewItem_(None)
 
@@ -405,9 +405,9 @@ class ChatWindowController(NSWindowController):
                     title = "%s" % session.subject
                 else:
                     conf_desc = session.conference_info.conference_description
-                    title = "%s <%s>" % (conf_desc.display_text, format_identity_to_string(session.remoteIdentity)) if conf_desc.display_text else "%s" % session.titleLong
+                    title = "%s <%s>" % (conf_desc.display_text, session.displayTitleLong) if conf_desc.display_text else "%s" % session.displayTitleLong
             else:
-                title = "%s" % session.titleShort if isinstance(session.account, BonjourAccount) else "%s" % session.titleLong
+                title = "%s" % session.displayTitleShort if isinstance(session.account, BonjourAccount) else "%s" % session.displayTitleLong
         return title
 
     def noteSession_isComposing_(self, session, flag):
@@ -1116,7 +1116,7 @@ class ChatWindowController(NSWindowController):
             if selectedSession:
                 chat_stream = selectedSession.streamHandlerOfType("chat")
                 if chat_stream:
-                    display_name = selectedSession.titleShort
+                    display_name = selectedSession.displayTitleShort
                     item = menu.itemWithTag_(1)
                     item.setHidden_(not chat_stream.is_encrypted)
                     if chat_stream.is_encrypted:
@@ -1732,10 +1732,14 @@ class ChatWindowController(NSWindowController):
         if tableView == self.participantsTableView:
             try:
                 if row < len(self.participants):
-                    if type(self.participants[row]) in (str, str):
-                        return self.participants[row]
+                    participant = self.participants[row]
+                    if type(participant) in (str, str):
+                        from ContactMangler import mangled_text
+                        return mangled_text(participant)
                     else:
-                        return self.participants[row].name
+                        from ContactMangler import mangled_name
+                        return mangled_name(participant.name,
+                                            uri=getattr(participant, 'uri', None))
             except:
                 pass
         elif tableView == self.conferenceFilesTableView:
@@ -1811,8 +1815,9 @@ class ChatWindowController(NSWindowController):
                     invite_menu = NSMenu.alloc().init()
                     titem = invite_menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Invite To Conference", "Menu item"), "", "")
                     titem.setEnabled_(False)
+                    from ContactMangler import mangled_uri
                     for uri in sourceContact.uris:
-                        titem = invite_menu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, uri.type), "userClickedInviteToConference:", "")
+                        titem = invite_menu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (mangled_uri(uri.uri), uri.type), "userClickedInviteToConference:", "")
                         titem.setIndentationLevel_(1)
                         titem.setTarget_(self)
                         titem.setRepresentedObject_({'session': session, 'uri': uri.uri, 'contact':sourceContact})

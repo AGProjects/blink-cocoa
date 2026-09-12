@@ -240,7 +240,7 @@ class AudioController(MediaStream):
 
         item = self.view.menu().itemWithTag_(20) # add to contacts
         item.setEnabled_(not self.contact)
-        item.setTitle_(NSLocalizedString("Add %s to Contacts", "Audio contextual menu") % format_identity_to_string(self.sessionController.remoteIdentity))
+        item.setTitle_(NSLocalizedString("Add %s to Contacts", "Audio contextual menu") % self.sessionController.displayTitleShort)
 
         _label = format_identity_to_string(self.sessionController.remoteIdentity)
         self.view.accessibilitySetOverrideValue_forAttribute_(NSLocalizedString("Session to %s", "Accesibility outlet description") % _label, NSAccessibilityTitleAttribute)
@@ -329,7 +329,7 @@ class AudioController(MediaStream):
             self.answeringMachine = AnsweringMachine(self.sessionController.session, self.stream)
             self.answeringMachine.start()
 
-        self.updateSessionLabel(self.sessionController.titleShort)
+        self.updateSessionLabel(self.sessionController.displayTitleShort)
         self.label.setToolTip_(self.sessionController.remoteAOR)
         self.updateTLSIcon()
         NSApp.delegate().contactsWindowController.showAudioSession(self, add_to_conference=add_to_conference)
@@ -340,7 +340,7 @@ class AudioController(MediaStream):
         self.sessionController.log_info("Start outgoing audio session...")
         self.notification_center.add_observer(self, sender=self.stream)
         self.notification_center.add_observer(self, sender=self.sessionController)
-        self.updateSessionLabel(self.sessionController.titleShort)
+        self.updateSessionLabel(self.sessionController.displayTitleShort)
         self.label.setToolTip_(self.sessionController.remoteAOR)
         NSApp.delegate().contactsWindowController.showAudioSession(self)
         self.changeStatus(STREAM_PROPOSING if is_update else STREAM_WAITING_DNS_LOOKUP)
@@ -1106,7 +1106,7 @@ class AudioController(MediaStream):
                 
             if self.isActive:
                 for session_controller in (s for s in self.sessionControllersManager.sessionControllers if s is not self.sessionController and type(self.sessionController.account) == type(s.account) and s.hasStreamOfType("audio") and s.streamHandlerOfType("audio").canTransfer):
-                    item = menu.addItemWithTitle_action_keyEquivalent_(session_controller.titleLong, "userClickedTransferMenuItem:", "")
+                    item = menu.addItemWithTitle_action_keyEquivalent_(session_controller.displayTitleLong, "userClickedTransferMenuItem:", "")
                     item.setIndentationLevel_(1)
                     item.setTarget_(self)
                     item.setRepresentedObject_(session_controller)
@@ -1120,7 +1120,8 @@ class AudioController(MediaStream):
                 if target:
                     parsed_target = normalize_sip_uri_for_outgoing_session(target, self.sessionController.account)
                     if parsed_target:
-                        item = menu.addItemWithTitle_action_keyEquivalent_(format_identity_to_string(parsed_target), "userClickedBlindTransferMenuItem:", "")
+                        from ContactMangler import mangled_text
+                        item = menu.addItemWithTitle_action_keyEquivalent_(mangled_text(format_identity_to_string(parsed_target)), "userClickedBlindTransferMenuItem:", "")
                         item.setIndentationLevel_(1)
                         item.setTarget_(self)
                         item.setRepresentedObject_(parsed_target)
@@ -1178,7 +1179,7 @@ class AudioController(MediaStream):
             d_item.setEnabled_(video_stream and video_stream.status == STREAM_CONNECTED and self.sessionController.video_consumer == "audio")
             d_item.setHidden_(not(video_stream and self.sessionController.video_consumer == "audio"))
 
-            title = self.sessionController.titleShort
+            title = self.sessionController.displayTitleShort
             have_screensharing = self.sessionController.hasStreamOfType("screen-sharing")
             item = menu.itemWithTag_(11) # request remote screen
             item.setTitle_(NSLocalizedString("Request Screen from %s", "Menu item") % title)
@@ -2004,7 +2005,7 @@ class AudioController(MediaStream):
     @objc.python_method
     def _NH_BlinkSessionChangedDisplayName(self, sender, data):
         self.sessionController.log_info('Display name updated')
-        peer_name = self.sessionController.titleShort
+        peer_name = self.sessionController.displayTitleShort
         self.updateSessionLabel(peer_name)
 
     @objc.python_method

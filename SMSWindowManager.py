@@ -221,9 +221,12 @@ class SMSWindowController(NSWindowController):
 
     @property
     def titleLong(self):
+        # Window title, so it is mangled here: nothing else reads it.
+        from ContactMangler import mangled_name, mangled_text
         session = self.selectedSessionController()
         if session:
-            display_name = session.display_name
+            display_name = mangled_name(session.display_name,
+                                        uri=str(getattr(session, 'remote_uri', '') or ''))
             sip_address = '%s@%s' % (session.target_uri.user.decode(), session.target_uri.host.decode())
 
             if session.account is BonjourAccount():
@@ -231,9 +234,9 @@ class SMSWindowController(NSWindowController):
                 title = title + ' (Bonjour)'
             else:
                 if display_name and display_name != sip_address:
-                    title = NSLocalizedString("Short Messages with %s", "Window Title") % display_name +  " <%s>" % format_identity_to_string(session.target_uri)
+                    title = NSLocalizedString("Short Messages with %s", "Window Title") % display_name +  " <%s>" % mangled_text(format_identity_to_string(session.target_uri))
                 else:
-                    title = NSLocalizedString("Short Messages with %s", "Window Title") %  format_identity_to_string(session.target_uri)
+                    title = NSLocalizedString("Short Messages with %s", "Window Title") %  mangled_text(format_identity_to_string(session.target_uri))
         else:
             title = NSLocalizedString("Short Messages", "Window Title")
         return title

@@ -1570,9 +1570,14 @@ class NativeChatViewController(ChatViewController):
         """
         if is_private:
             # a private message names its own counterparty; never cache it
-            return (self._sender_label(sender, recipient, is_private, direction),
-                    self._avatar_name(sender), icon_path)
+            return self._mangled_identity(
+                (self._sender_label(sender, recipient, is_private, direction),
+                 self._avatar_name(sender), icon_path), direction)
 
+        # The cache holds the REAL identity. Mangling is applied on the way
+        # out, so that turning the setting on or off can re-apply it to
+        # bubbles that are already on screen without having to work out
+        # what their real sender was.
         cache = self.__dict__.setdefault('_sender_identities', {})
         entry = cache.get(direction)
         if entry is None:
@@ -1580,7 +1585,70 @@ class NativeChatViewController(ChatViewController):
                      self._avatar_name(sender), icon_path)
             cache[direction] = entry
             self._log_avatar(entry[1], entry[2])
-        return entry
+        return self._mangled_identity(entry, direction)
+
+    @objc.python_method
+    def refreshSenderIdentities(self):
+        """Re-apply the mangling to bubbles already drawn.
+
+        Called when the setting is toggled. The real identity is still in
+        the cache, so every bubble can be re-labelled where it stands --
+        re-rendering the whole transcript would lose the scroll position,
+        which is the one thing a screenshot cannot afford to lose.
+        """
+        from ContactMangler import mangling_enabled
+        view = self.messageListView
+        if view is None:
+            return
+        cache = self.__dict__.get('_sender_identities', {})
+        enabled = mangling_enabled()
+        for bubble in view.subviews():
+            direction = getattr(bubble, 'direction', None)
+            entry = cache.get(direction)
+            if entry is None:
+                continue
+            label, avatar_name, _icon = self._mangled_identity(entry, direction)
+            try:
+                bubble.sender_label = label
+                bubble.avatar_name = avatar_name
+                if enabled and getattr(bubble, 'icon_path', None):
+                    # A photograph outlives the toggle otherwise. Coming
+                    # back is left to the next render: nobody photographs
+                    # the application with the setting off.
+                    bubble.icon_path = None
+                bubble.setNeedsDisplay_(True)
+            except Exception as e:
+                BlinkLogger().log_error('Cannot relabel a message bubble: %s' % e)
+
+    @objc.python_method
+    def _mangled_identity(self, entry, direction):
+        """The identity a bubble is DRAWN with, while mangling is on.
+
+        Applied here rather than inside _sender_label, because that one is
+        also what the log line and the turn-grouping key are built from.
+        Outgoing is me -- my own account, which is on the picture too --
+        and incoming is the other party, keyed by the address the
+        conversation is filed under so the bubble, the header and the
+        contact row all name the same invented person.
+        """
+        from ContactMangler import (mangling_enabled, mangled_text,
+                                    mangled_name, mangled_account_label)
+        if not mangling_enabled():
+            return entry
+        label, avatar_name, icon_path = entry
+        if direction == 'outgoing':
+            return (mangled_account_label(label),
+                    mangled_account_label(avatar_name), icon_path)
+        uri = None
+        for attr in ('remote_uri',):
+            value = getattr(self.delegate, attr, None)
+            if value:
+                uri = str(value)
+                break
+        # The label can be a sentence ("Private message from ..."), the
+        # avatar name never is.
+        return (mangled_text(label, uri=uri, name=avatar_name),
+                mangled_name(avatar_name, uri=uri), icon_path)
 
     @objc.python_method
     def _newBubble(self):
@@ -2969,10 +3037,13 @@ class NativeChatViewController(ChatViewController):
 
     @objc.python_method
     def contactName(self):
+        """The other party's name, for quote blocks. Display only."""
+        from ContactMangler import mangled_name
+        uri = getattr(self.delegate, 'remote_uri', None)
         for attr in ('display_name', 'remote_uri'):
             value = getattr(self.delegate, attr, None)
             if value:
-                return str(value)
+                return str(mangled_name(str(value), uri=str(uri or '') or None))
         return NSLocalizedString("Message", "Label")
 
     @objc.python_method

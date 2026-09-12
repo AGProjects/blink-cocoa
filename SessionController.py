@@ -2469,6 +2469,26 @@ class SessionController(NSObject):
             ret = format_identity_to_string(self.remoteIdentity, format='compact', check_contact=True)
         return ret
 
+    @property
+    def displayTitleLong(self):
+        """titleLong, for the screen only.
+
+        titleLong itself is also what the log lines are built from, and a
+        log that names an invented person is a log nobody can follow, so
+        the mangling lives on a second property and every window title,
+        tab label and menu item is moved onto it instead.
+        """
+        from ContactMangler import mangled_text
+        return mangled_text(self.titleLong,
+                            uri=str(getattr(self, 'remoteAOR', '') or ''))
+
+    @property
+    def displayTitleShort(self):
+        """titleShort, for the screen only. See displayTitleLong."""
+        from ContactMangler import mangled_text
+        return mangled_text(self.titleShort,
+                            uri=str(getattr(self, 'remoteAOR', '') or ''))
+
     @objc.python_method
     @run_in_gui_thread
     def setRoutesFailed(self, msg):

@@ -1703,7 +1703,7 @@ class VideoWindowController(NSWindowController):
     def __init__(self, streamController):
         self.streamController = streamController
         self.sessionController.log_debug('Init %s' % self)
-        self.title = self.sessionController.titleShort
+        self.title = self.sessionController.displayTitleShort
         self.flipWnd = mbFlipWindow.alloc().init()
         self.flipWnd.setFlipRight_(True)
         self.flipWnd.setDuration_(2.4)

@@ -76,9 +76,11 @@ class PresenceInfoController(NSObject):
     def show(self, contact):
         NSApp.activateIgnoringOtherApps_(True)
         self.contact =  contact
-        self.window.setTitle_(NSLocalizedString("Availability Information published by %s", "Window title") % contact.name)
-        self.name.setStringValue_(self.contact.name)
-        self.addresses.setStringValue_(', '.join(uri.uri for uri in self.contact.uris))
+        from ContactMangler import mangled_name
+        self.window.setTitle_(NSLocalizedString("Availability Information published by %s", "Window title") % mangled_name(contact.name, uri=getattr(contact, "uri", None)))
+        from ContactMangler import mangled_name, mangled_uri
+        self.name.setStringValue_(mangled_name(self.contact.name, uri=getattr(self.contact, 'uri', None)))
+        self.addresses.setStringValue_(', '.join(mangled_uri(uri.uri) for uri in self.contact.uris))
         self.window.orderFront_(None)
         self.icon.setImage_(self.contact.avatar.icon)
         self.render_pidf()

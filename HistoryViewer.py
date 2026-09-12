@@ -652,6 +652,12 @@ class HistoryViewer(NSWindowController):
             match = self.cpim_re.match(recipient)
             if match:
                 recipient = match.group('display_name') or match.group('uri')
+
+            # This transcript is read from the history and never written
+            # back to it, so the parties can be renamed on the way in.
+            from ContactMangler import mangled_text
+            sender = mangled_text(sender)
+            recipient = mangled_text(recipient)
                             
             self.chatViewController.showMessage(message.sip_callid, message.msgid, message.direction, sender, icon, content, timestamp, is_private=private, recipient=recipient, state=message.status if message.media_type in ('chat', 'sms', 'message') else '', is_html=is_html, history_entry=True, media_type=message.media_type, encryption=encryption if message.media_type in ('chat', 'message', 'sms') else None)
 
@@ -783,18 +789,23 @@ class HistoryViewer(NSWindowController):
         return 0
 
     def tableView_objectValueForTableColumn_row_(self, table, column, row):
+        from ContactMangler import mangled_name, mangled_text
         try:
             if table == self.indexTable:
                 ident = column.identifier()
                 if ident == 'type':
                     return self.format_media_type(self.dayly_entries[row].objectForKey_(ident))
 
-                return str(self.dayly_entries[row].objectForKey_(ident))
+                # Every other column is text this window only displays --
+                # the parties among them. Dates and durations come back
+                # untouched.
+                return mangled_text(str(self.dayly_entries[row].objectForKey_(ident)))
             elif table == self.contactTable:
-                if type(self.contacts[row]) in (str, str):
-                    return self.contacts[row]
+                contact = self.contacts[row]
+                if type(contact) in (str, str):
+                    return mangled_text(contact)
                 else:
-                    return self.contacts[row].name
+                    return mangled_name(contact.name, uri=getattr(contact, 'uri', None))
         except IndexError:
             return None
         except Exception:

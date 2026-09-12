@@ -129,6 +129,11 @@ class GUISettings(SettingsGroup):
     language = Setting(type=str, default='system_default', nillable=False)
     media_support_detection = Setting(type=bool, default=False)
     close_delay = Setting(type=NonNegativeInteger, default=4)
+    # Replace contact names and addresses with invented ones while drawing
+    # the GUI, so the application can be photographed for the App Store
+    # without publishing anybody's address. Display only and never stored:
+    # see ContactMangler.
+    mangle_contacts = Setting(type=bool, default=False)
 
 
 class RTPSettingsExtension(RTPSettings):

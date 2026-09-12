@@ -800,7 +800,10 @@ class ContactWindowController(NSWindowController):
         account_manager = AccountManager()
 
         for account_info in (account_info for account_info in self.accounts if account_info.account.enabled):
-            label = account_info.account.gui.account_label or account_info.name
+            from ContactMangler import mangled_account_label
+            # My own address is in every screenshot, whatever the contact
+            # list is showing.
+            label = mangled_account_label(account_info.account.gui.account_label or account_info.name)
             self.accountPopUp.addItemWithTitle_(label)
             item = self.accountPopUp.lastItem()
             item.setRepresentedObject_(account_info.account)
@@ -872,7 +875,8 @@ class ContactWindowController(NSWindowController):
 
     @objc.python_method
     def updateNameLabel(self, name):
-        self.nameText.setStringValue_(name)
+        from ContactMangler import mangled_account_label
+        self.nameText.setStringValue_(mangled_account_label(name))
         # My initials are my display name: renaming myself has to reach the
         # avatar beside it.
         try:
@@ -1034,6 +1038,7 @@ class ContactWindowController(NSWindowController):
 
         menu = self.historyMenu
 
+        from ContactMangler import mangled_text
         i = 3 if not NSApp.delegate().history_enabled else 4
         while menu.numberOfItems() > i:
             menu.removeItemAtIndex_(i)
@@ -1041,7 +1046,7 @@ class ContactWindowController(NSWindowController):
         lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Missed Calls", "Menu item"), "", "")
         lastItem.setEnabled_(False)
         for item in entries['missed']:
-            lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(remote_party)s  %(start_time)s" % item, "historyClicked:", "")
+            lastItem = menu.addItemWithTitle_action_keyEquivalent_("%s  %s" % (mangled_text(item['remote_party']), item['start_time']), "historyClicked:", "")
             lastItem.setAttributedTitle_(self.format_history_menu_item(item))
             lastItem.setIndentationLevel_(1)
             lastItem.setTarget_(self)
@@ -1057,7 +1062,7 @@ class ContactWindowController(NSWindowController):
         lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Incoming Calls", "Menu item"), "", "")
         lastItem.setEnabled_(False)
         for item in entries['incoming']:
-            lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(remote_party)s  %(start_time)s" % item, "historyClicked:", "")
+            lastItem = menu.addItemWithTitle_action_keyEquivalent_("%s  %s" % (mangled_text(item['remote_party']), item['start_time']), "historyClicked:", "")
             lastItem.setAttributedTitle_(self.format_history_menu_item(item))
             lastItem.setIndentationLevel_(1)
             lastItem.setTarget_(self)
@@ -1073,7 +1078,7 @@ class ContactWindowController(NSWindowController):
         lastItem = menu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Outgoing Calls", "Menu item"), "", "")
         lastItem.setEnabled_(False)
         for item in entries['outgoing']:
-            lastItem = menu.addItemWithTitle_action_keyEquivalent_("%(remote_party)s  %(start_time)s" % item, "historyClicked:", "")
+            lastItem = menu.addItemWithTitle_action_keyEquivalent_("%s  %s" % (mangled_text(item['remote_party']), item['start_time']), "historyClicked:", "")
             lastItem.setAttributedTitle_(self.format_history_menu_item(item))
             lastItem.setIndentationLevel_(1)
             lastItem.setTarget_(self)
@@ -1223,8 +1228,10 @@ class ContactWindowController(NSWindowController):
 
         # voicemail
         def format_account_item(account, mwi_data, mwi_format_new, mwi_format_no_new):
+            from ContactMangler import mangled_account_label
             a = NSMutableAttributedString.alloc().init()
-            n = NSAttributedString.alloc().initWithString_attributes_("%s    " % account.id, normal_font_color)
+            n = NSAttributedString.alloc().initWithString_attributes_(
+                "%s    " % mangled_account_label(str(account.id)), normal_font_color)
             a.appendAttributedString_(n)
             if mwi_data.get('messages_waiting') and mwi_data.get('new_messages') != 0:
                 text = "%d new messages" % mwi_data['new_messages']
@@ -1241,7 +1248,8 @@ class ContactWindowController(NSWindowController):
 
         if any(account.message_summary.enabled for account in (account for account in AccountManager().iter_accounts() if not isinstance(account, BonjourAccount) and account.enabled)):
             for account in (account for account in AccountManager().iter_accounts() if not isinstance(account, BonjourAccount) and account.enabled and account.message_summary.enabled):
-                lastItem = menu.addItemWithTitle_action_keyEquivalent_(account.id, "historyClicked:", "")
+                from ContactMangler import mangled_account_label
+                lastItem = menu.addItemWithTitle_action_keyEquivalent_(mangled_account_label(str(account.id)), "historyClicked:", "")
                 mwi_data = MWIData.get(account.id)
                 lastItem.setEnabled_(account.voicemail_uri is not None)
                 lastItem.setAttributedTitle_(format_account_item(account, mwi_data or {}, red_font_color, mini_blue))
@@ -1571,9 +1579,10 @@ class ContactWindowController(NSWindowController):
                     entry.setToolTip_(NSLocalizedString("Bonjour accounts have no server to save a key to", "Tooltip"))
             return
 
-        item.setTitle_(NSLocalizedString("Save PGP private key of %s to server", "Menu item") % account.id)
+        from ContactMangler import mangled_account_label
+        item.setTitle_(NSLocalizedString("Save PGP private key of %s to server", "Menu item") % mangled_account_label(str(account.id)))
         if forced is not None:
-            forced.setTitle_(NSLocalizedString("Save PGP private key of %s to server again", "Menu item") % account.id)
+            forced.setTitle_(NSLocalizedString("Save PGP private key of %s to server again", "Menu item") % mangled_account_label(str(account.id)))
 
         try:
             enabled, reason = KeyEscrow.escrow_write_action(account)
@@ -1684,9 +1693,9 @@ class ContactWindowController(NSWindowController):
         if session:
             if session.conference_info is not None:
                 conf_desc = session.conference_info.conference_description
-                title = "%s <%s>" % (conf_desc.display_text, format_identity_to_string(session.remoteIdentity)) if conf_desc.display_text else "%s" % session.titleLong
+                title = "%s <%s>" % (conf_desc.display_text, session.displayTitleLong) if conf_desc.display_text else "%s" % session.displayTitleLong
             else:
-                title = "%s" % session.titleShort if isinstance(session.account, BonjourAccount) else "%s" % session.titleLong
+                title = "%s" % session.displayTitleShort if isinstance(session.account, BonjourAccount) else "%s" % session.displayTitleLong
         return title
 
     @objc.python_method
@@ -1799,6 +1808,7 @@ class ContactWindowController(NSWindowController):
 
     @objc.python_method
     def updateContactContextMenu(self):
+        from ContactMangler import mangled_name, mangled_uri
         settings = SIPSimpleSettings()
         if self.mainTabView.selectedTabViewItem().identifier() == "contacts":
             sel = self.contactOutline.selectedRow()
@@ -1851,7 +1861,7 @@ class ContactWindowController(NSWindowController):
             if blink_contacts_with_same_name:
                 name_submenu = NSMenu.alloc().init()
                 for blink_contact in blink_contacts_with_same_name:
-                    name_item = name_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (blink_contact.name, blink_contact.uri), "mergeContacts:", "")
+                    name_item = name_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (mangled_name(blink_contact.name, uri=blink_contact.uri), mangled_uri(blink_contact.uri)), "mergeContacts:", "")
                     name_item.setRepresentedObject_((item, blink_contact))    # (source, destination)
                 if name_submenu.itemArray():
                     mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Add %s to", "Menu item") % item.uri, "", "")
@@ -1954,7 +1964,7 @@ class ContactWindowController(NSWindowController):
                     if uri.type == 'Bonjour':
                         continue
 
-                    audio_item = audio_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "startAudioToSelected:", "")
+                    audio_item = audio_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (mangled_uri(uri.uri), format_uri_type(uri.type)), "startAudioToSelected:", "")
                     target_uri = uri.uri+';xmpp' if uri.type is not None and uri.type.lower() == 'xmpp' else uri.uri
                     audio_item.setRepresentedObject_(target_uri)
                     if isinstance(item, BlinkPresenceContact):
@@ -2002,7 +2012,7 @@ class ContactWindowController(NSWindowController):
                         if uri.type == 'Bonjour':
                             continue
 
-                        video_item = video_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "startVideoToSelected:", "")
+                        video_item = video_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (mangled_uri(uri.uri), format_uri_type(uri.type)), "startVideoToSelected:", "")
                         target_uri = uri.uri+';xmpp' if uri.type is not None and uri.type.lower() == 'xmpp' else uri.uri
                         video_item.setRepresentedObject_(target_uri)
                         video_item.setEnabled_(self.contactSupportsMedia("video", item, uri.uri) and settings.video.device)
@@ -2053,7 +2063,7 @@ class ContactWindowController(NSWindowController):
                         if uri.type == 'Bonjour':
                             continue
 
-                        sms_item = sms_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "sendMessageToSelected:", "")
+                        sms_item = sms_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (mangled_uri(uri.uri), format_uri_type(uri.type)), "sendMessageToSelected:", "")
                         target_uri = uri.uri+';xmpp' if uri.type is not None and uri.type.lower() == 'xmpp' else uri.uri
                         sms_item.setRepresentedObject_(target_uri)
                         if isinstance(item, BlinkPresenceContact):
@@ -2076,7 +2086,7 @@ class ContactWindowController(NSWindowController):
                         if uri.type == 'Bonjour':
                             continue
 
-                        chat_item = chat_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "startChatToSelected:", "")
+                        chat_item = chat_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (mangled_uri(uri.uri), format_uri_type(uri.type)), "startChatToSelected:", "")
                         target_uri = uri.uri+';xmpp' if uri.type is not None and uri.type.lower() == 'xmpp' else uri.uri
                         chat_item.setRepresentedObject_(target_uri)
                         chat_item.setEnabled_(self.contactSupportsMedia("chat", item, uri.uri))
@@ -2128,7 +2138,7 @@ class ContactWindowController(NSWindowController):
                             if uri.type == 'Bonjour':
                                 continue
 
-                            ft_item = ft_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "sendFile:", "")
+                            ft_item = ft_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (mangled_uri(uri.uri), format_uri_type(uri.type)), "sendFile:", "")
                             target_uri = uri.uri+';xmpp' if uri.type is not None and uri.type.lower() == 'xmpp' else uri.uri
                             ft_item.setRepresentedObject_(target_uri)
                             ft_item.setEnabled_(self.contactSupportsMedia("file-transfer", item, uri.uri))
@@ -2180,7 +2190,7 @@ class ContactWindowController(NSWindowController):
                             if uri.type == 'Bonjour':
                                 continue
 
-                            ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "startScreenSharing:", "")
+                            ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (mangled_uri(uri.uri), format_uri_type(uri.type)), "startScreenSharing:", "")
                             ds_item.setRepresentedObject_(uri.uri)
                             ds_item.setTag_(1)
                             ds_item.setEnabled_(self.contactSupportsMedia("screen-sharing-server", item, uri.uri))
@@ -2231,7 +2241,7 @@ class ContactWindowController(NSWindowController):
                             if uri.type == 'Bonjour':
                                 continue
 
-                            ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (uri.uri, format_uri_type(uri.type)), "startScreenSharing:", "")
+                            ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (mangled_uri(uri.uri), format_uri_type(uri.type)), "startScreenSharing:", "")
                             ds_item.setRepresentedObject_(uri.uri)
                             ds_item.setTag_(2)
                             ds_item.setEnabled_(self.contactSupportsMedia("screen-sharing-client", item, uri.uri))
@@ -4525,7 +4535,14 @@ class ContactWindowController(NSWindowController):
         if contact:
             path = contact.avatar.path
             if path is not None and os.path.isfile(path):
-                return path
+                # A face identifies its owner as well as their address
+                # does, so while mangling the photograph is withheld and
+                # the invented person is drawn as initials instead. The
+                # default path is the answer the callers already know how
+                # to read as "no picture".
+                from ContactMangler import mangling_enabled
+                if not mangling_enabled():
+                    return path
         return DefaultUserAvatar().path if not is_focus else DefaultMultiUserAvatar().path
 
     @objc.python_method
@@ -5211,8 +5228,11 @@ class ContactWindowController(NSWindowController):
 
     @objc.python_method
     def format_history_menu_item(self, item):
+        from ContactMangler import mangled_text
         a = NSMutableAttributedString.alloc().init()
-        n = NSAttributedString.alloc().initWithString_attributes_("%(remote_party)s  " % item, normal_font_color)
+        # The other party's name or address, as this menu draws it.
+        n = NSAttributedString.alloc().initWithString_attributes_(
+            "%s  " % mangled_text(item['remote_party']), normal_font_color)
         a.appendAttributedString_(n)
         text = "%(start_time)s" % item
         if item["duration"].seconds > 0:
@@ -5705,6 +5725,15 @@ class ContactWindowController(NSWindowController):
     @objc.IBAction
     def displayNameChanged_(self, sender):
         name = str(self.nameText.stringValue())
+        # The field is showing an invented name while contacts are
+        # mangled, and committing it would write that name into the
+        # account for good. Put the label back and save nothing.
+        from ContactMangler import mangling_enabled
+        if mangling_enabled():
+            account = self.activeAccount()
+            self.updateNameLabel((account.display_name or '') if account is not None else '')
+            sender.resignFirstResponder()
+            return
         self.activeAccount().display_name = name
         self.activeAccount().save()
         sender.resignFirstResponder()
@@ -6936,7 +6965,8 @@ class ContactWindowController(NSWindowController):
             item = menu.itemWithTag_(25)  # redial
             if self.sessionControllersManager.redial_uri is not None:
                 item.setEnabled_(True)
-                item.setTitle_(NSLocalizedString("Redial %s", "Status bar menu item") % self.sessionControllersManager.redial_uri)
+                from ContactMangler import mangled_text
+                item.setTitle_(NSLocalizedString("Redial %s", "Status bar menu item") % mangled_text(str(self.sessionControllersManager.redial_uri)))
             else:
                 item.setTitle_(NSLocalizedString("Redial", "Status bar menu item"))
                 item.setEnabled_(False)
@@ -6970,11 +7000,13 @@ class ContactWindowController(NSWindowController):
                     aor_supports_screen_sharing_server = True
 
                 item = self.screenShareMenu.itemWithTag_(1)
-                item.setTitle_(NSLocalizedString("Request Screen Sharing from %s", "Menu item") % contact.name)
+                from ContactMangler import mangled_name
+                item.setTitle_(NSLocalizedString("Request Screen Sharing from %s", "Menu item") % mangled_name(contact.name, uri=getattr(contact, "uri", None)))
                 item.setEnabled_(self.sessionControllersManager.isMediaTypeSupported('screen-sharing-client') and aor_supports_screen_sharing_client)
 
                 item = self.screenShareMenu.itemWithTag_(2)
-                item.setTitle_(NSLocalizedString("Share My Screen with %s", "Menu item") % contact.name)
+                from ContactMangler import mangled_name
+                item.setTitle_(NSLocalizedString("Share My Screen with %s", "Menu item") % mangled_name(contact.name, uri=getattr(contact, "uri", None)))
                 item.setEnabled_(self.sessionControllersManager.isMediaTypeSupported('screen-sharing-server') and aor_supports_screen_sharing_server)
 
         elif menu == self.contactsMenu:
@@ -8132,6 +8164,25 @@ class ContactWindowController(NSWindowController):
             else:
                 self.silentButton.setImage_(NSImage.imageNamed_("bellon"))
                 self.silentButton.setState_(NSOffState)
+
+        if "gui.mangle_contacts" in notification.data.modified:
+            # Everything that draws a name or an address, redrawn: the
+            # rows, the account menu and my own label above it, and every
+            # open conversation. Nothing is re-read from disk -- only what
+            # is on the screen changes.
+            try:
+                from ContactMangler import invalidate
+                invalidate()
+                self.refreshAccountList()
+                self.contactOutline.reloadData()
+                try:
+                    self.searchOutline.reloadData()
+                except Exception:
+                    pass            # no search results on screen
+                if self.messagePaneController is not None:
+                    self.messagePaneController.refreshMangling()
+            except Exception as e:
+                BlinkLogger().log_error('Cannot redraw after the contact mangling changed: %s' % e)
 
         if "ldap.enabled" in notification.data.modified:
             self.refreshLdapDirectory()

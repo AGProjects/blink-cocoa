@@ -773,7 +773,11 @@ class MessagePaneController(NSObject):
         frame and a frame sized to the glyphs alone comes back with an
         ellipsis on an address that would have fitted.
         """
+        from ContactMangler import mangled_text
         text = self._infoTextFor(viewer) if viewer is not None else ''
+        # Display only: _infoTextFor is also the address the pane works
+        # with, so the substitution happens here and goes no further.
+        text = mangled_text(text, uri=str(getattr(viewer, 'remote_uri', '') or ''))
         # The dash belongs to the pill, not to the address: it is there to
         # separate the two, and there is nothing to separate without it.
         if text and self._accountPillApplies(viewer):
@@ -854,7 +858,8 @@ class MessagePaneController(NSObject):
         if not show:
             return
 
-        account = str(viewer.account.id)
+        from ContactMangler import mangled_account_label
+        account = mangled_account_label(str(viewer.account.id))
         # "From" inside the pill: on its own an address in a header is
         # read as the person being written to, which is precisely the
         # address sitting next to it. The word is what separates them.
@@ -988,7 +993,7 @@ class MessagePaneController(NSObject):
         key_text, key_id = self._publicKeyForViewer(viewer)
         if not key_text:
             return
-        name = viewer.display_name or viewer.remote_uri
+        name = self.displayNameFor(viewer)
         copied = False
         while True:
             alert = NSAlert.alloc().init()
@@ -1022,7 +1027,7 @@ class MessagePaneController(NSObject):
             # draw.
             try:
                 avatar = avatar_image(self._owner.iconPathForURI(str(viewer.remote_uri)),
-                                      self.contactNameFor(viewer), PANEL_AVATAR_SIZE)
+                                      self.displayNameFor(viewer), PANEL_AVATAR_SIZE)
             except Exception as e:
                 BlinkLogger().log_error('Cannot draw the avatar for the key panel: %s' % e)
                 avatar = None
@@ -1151,7 +1156,7 @@ class MessagePaneController(NSObject):
         empty menu is never reachable.
         """
         otr = viewer.encryption
-        name = viewer.display_name or viewer.remote_uri
+        name = self.displayNameFor(viewer)
         otr_available, pgp_available = self._encryptionAvailability(viewer)
 
         menu = NSMenu.alloc().init()
@@ -1911,7 +1916,7 @@ class MessagePaneController(NSObject):
         name = self.contactNameFor(viewer)
         load_trace_bucket('-- contact name', _t)
         _t = load_trace_tick()
-        self.nameLabel.setStringValue_(name)
+        self.nameLabel.setStringValue_(self.displayNameFor(viewer))
         self._loadAvatarFor(viewer, name)
         load_trace_bucket('- avatar', _t)
         _t = load_trace_tick()
@@ -2066,6 +2071,45 @@ class MessagePaneController(NSObject):
             return uri
 
     @objc.python_method
+    def refreshMangling(self):
+        """Redraw everything the Mangle Contacts setting decides.
+
+        The header is rewritten and every open transcript is relabelled in
+        place; the contact list is reloaded by the window controller,
+        which is what calls this.
+        """
+        from ContactMangler import invalidate
+        invalidate()
+        for viewer in list(self._viewers):
+            controller = getattr(viewer, 'chatViewController', None)
+            if controller is None:
+                continue
+            try:
+                controller.refreshSenderIdentities()
+            except Exception as e:
+                BlinkLogger().log_error('Cannot relabel a transcript: %s' % e)
+        viewer = self._selected
+        if viewer is None:
+            return
+        self.nameLabel.setStringValue_(self.displayNameFor(viewer))
+        self._setInfoLine(viewer)
+        self._loadAvatarFor(viewer)
+
+    @objc.python_method
+    def displayNameFor(self, viewer):
+        """contactNameFor(), for the screen only.
+
+        Kept apart from contactNameFor on purpose. That one's result is
+        written back onto the viewer and stamped on outgoing history rows,
+        so it must stay the real name; this one is what the header, the
+        avatar and the menus draw, and is the only one the mangling may
+        touch.
+        """
+        from ContactMangler import mangled_name
+        name = self.contactNameFor(viewer)
+        return mangled_name(name, uri=str(getattr(viewer, 'remote_uri', '') or ''))
+
+    @objc.python_method
     def refreshContactDetails(self):
         """Re-read every open conversation's contact after an edit.
 
@@ -2086,7 +2130,7 @@ class MessagePaneController(NSObject):
         viewer = self._selected
         if viewer is None:
             return
-        self.nameLabel.setStringValue_(self.contactNameFor(viewer))
+        self.nameLabel.setStringValue_(self.displayNameFor(viewer))
         self._setInfoLine(viewer)
         self._loadAvatarFor(viewer)
 
@@ -2190,8 +2234,10 @@ class MessagePaneController(NSObject):
         clicked to get here shows and what mobile shows.
         """
         from MessageHost import load_trace_tick, load_trace_bucket
+        from ContactMangler import mangled_name
         if name is None:
             name = self.contactNameFor(viewer)
+        name = mangled_name(name, uri=str(getattr(viewer, 'remote_uri', '') or ''))
         try:
             _t = load_trace_tick()
             path = self._owner.iconPathForURI(str(viewer.remote_uri))

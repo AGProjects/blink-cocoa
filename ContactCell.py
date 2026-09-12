@@ -352,7 +352,18 @@ class ContactCell(NSTextFieldCell):
             text = SHARING_LOCATION_TEXT
             attrs = self.secondLineAttributes if not self.isHighlighted() else self.secondLineAttributes_highlighted
         elif self.contact.detail:
-            text = self.contact.detail
+            # The detail line is built by whichever group owns the row --
+            # an address, a presence note, a call with a date on it -- so
+            # there is no one field to swap: the line is swept instead.
+            from ContactMangler import mangled_text
+            # Back to an NSString: the line is drawn with
+            # drawInRect_withAttributes_, which a Python str does not have,
+            # and the mangler hands back a plain str whether or not it
+            # changed anything.
+            text = NSString.stringWithString_(
+                mangled_text(self.contact.detail,
+                             uri=getattr(self.contact, 'uri', None),
+                             name=getattr(self.contact, 'name', None)))
             attrs = self.secondLineAttributes if not self.isHighlighted() else self.secondLineAttributes_highlighted
         else:
             return
@@ -579,11 +590,13 @@ class ContactCell(NSTextFieldCell):
     @objc.python_method
     def avatarName(self):
         """What the initials and the colour are derived from."""
+        from ContactMangler import mangled_name, mangled_uri
         contact = self.contact
+        uri = getattr(contact, 'uri', None)
         name = getattr(contact, 'name', None)
         if name:
-            return str(name)
-        return str(getattr(contact, 'uri', '') or '')
+            return str(mangled_name(name, uri=uri))
+        return str(mangled_uri(uri or '') or '')
 
     @objc.python_method
     def drawAvatar(self):
@@ -603,10 +616,16 @@ class ContactCell(NSTextFieldCell):
         that would lose their outer strokes to a circle, with nothing
         outside the frame to give up in exchange the way a photograph has.
         """
+        from ContactMangler import mangling_enabled
         avatar = self.contact.avatar
         icon = avatar.icon if avatar is not None else None
         filename = os.path.basename(str(getattr(avatar, 'path', None) or ''))
         top = self.frame.origin.y + self.AVATAR_TOP
+        if mangling_enabled() and filename not in GLYPH_AVATARS:
+            # A photograph names somebody as surely as their address does.
+            # Dropping it leaves the invented person their initials, which
+            # is what a contact without a picture already gets.
+            icon = None
         if filename in GLYPH_AVATARS:
             if icon is not None:
                 self.drawIcon(icon, self.AVATAR_LEFT, top,

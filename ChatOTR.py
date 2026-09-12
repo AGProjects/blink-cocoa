@@ -42,7 +42,7 @@ class ChatOtrSmp(NSObject):
         self.controller = controller
         self.statusText.setStringValue_('')
         self.progressBar.startAnimation_(None)
-        self.window.setTitle_(NSLocalizedString("Identity Verification for %s", "Window title") % self.controller.sessionController.titleShort)
+        self.window.setTitle_(NSLocalizedString("Identity Verification for %s", "Window title") % self.controller.sessionController.displayTitleShort)
         self.stream = self.controller.stream
         self.remote_address = self.controller.sessionController.remoteAOR
     

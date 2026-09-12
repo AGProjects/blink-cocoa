@@ -39,12 +39,12 @@ class ZRTPAuthentication(NSObject):
         self.cipherLabel.setStringValue_(NSLocalizedString("Encrypted using %s", "Label") % self.stream.encryption.cipher)
         if self.streamController.sessionController.remote_focus:
             self.peerName.setEnabled_(False)
-            self.peerName.setStringValue_(self.streamController.sessionController.titleShort)
+            self.peerName.setStringValue_(self.streamController.sessionController.displayTitleShort)
         else:
             if self.stream.encryption.zrtp.peer_name:
                 self.peerName.setStringValue_(self.stream.encryption.zrtp.peer_name)
             else:
-                self.peerName.setStringValue_(self.streamController.sessionController.titleShort)
+                self.peerName.setStringValue_(self.streamController.sessionController.displayTitleShort)
         
         self.window.setTitle_(NSLocalizedString("ZRTP with %s", "Label") % self.streamController.sessionController.remoteAOR)
 

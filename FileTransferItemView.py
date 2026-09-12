@@ -69,7 +69,10 @@ class FileTransferItemView(NSView):
             self.updateIcon(NSWorkspace.sharedWorkspace().iconForFile_(self.file_path))
 
             self.nameText.setStringValue_(os.path.basename(self.file_path))
-            self.fromText.setStringValue_('To %s from account %s' % (transferInfo.remote_uri, transferInfo.local_uri) if transferInfo.direction=='outgoing' else 'From %s to account %s' % (transferInfo.remote_uri, transferInfo.local_uri))
+            from ContactMangler import mangled_uri, mangled_account_label
+            remote = mangled_uri(transferInfo.remote_uri)
+            local = mangled_account_label(str(transferInfo.local_uri))
+            self.fromText.setStringValue_('To %s from account %s' % (remote, local) if transferInfo.direction=='outgoing' else 'From %s to account %s' % (remote, local))
             
             self.revealButton.setHidden_(not os.path.exists(self.file_path))
 
@@ -122,9 +125,11 @@ class FileTransferItemView(NSView):
             self.local_uri = self.transfer.ft_info.local_uri
 
             if type(self.transfer) == OutgoingPushFileTransferHandler:
-                self.fromText.setStringValue_("To:  %s" % self.transfer.account.id)
+                from ContactMangler import mangled_account_label
+                self.fromText.setStringValue_("To:  %s" % mangled_account_label(str(self.transfer.account.id)))
             else:
-                self.fromText.setStringValue_("From:  %s" % self.transfer.account.id)
+                from ContactMangler import mangled_account_label
+                self.fromText.setStringValue_("From:  %s" % mangled_account_label(str(self.transfer.account.id)))
             self.revealButton.setHidden_(False)
 
             # XXX: there should be a better way to do this!
@@ -204,7 +209,8 @@ class FileTransferItemView(NSView):
 
     @objc.python_method
     def updateProgressInfo(self):
-        self.fromText.setStringValue_(self.transfer.target_text)
+        from ContactMangler import mangled_text
+        self.fromText.setStringValue_(mangled_text(self.transfer.target_text))
         self.sizeText.setStringValue_(self.transfer.progress_text)
 
     @objc.python_method
@@ -324,7 +330,8 @@ class FileTransferItemView(NSView):
             self.sizeText.setTextColor_(NSColor.blueColor())
             if self.transfer.direction == 'incoming':
                 self.revealButton.setHidden_(False)
-        self.fromText.setStringValue_(self.transfer.target_text)
+        from ContactMangler import mangled_text
+        self.fromText.setStringValue_(mangled_text(self.transfer.target_text))
         self.sizeText.setStringValue_(self.transfer.progress_text)
         self.failed = notification.data.error
         self.done = True
@@ -332,7 +339,8 @@ class FileTransferItemView(NSView):
 
     @objc.python_method
     def _NH_BlinkFileTransferProgress(self, notification):
-        self.fromText.setStringValue_(self.transfer.target_text)
+        from ContactMangler import mangled_text
+        self.fromText.setStringValue_(mangled_text(self.transfer.target_text))
         self.sizeText.setStringValue_(self.transfer.progress_text)
         self.progressBar.setDoubleValue_(notification.data.progress)
 

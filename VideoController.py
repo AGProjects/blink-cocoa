@@ -509,7 +509,7 @@ class VideoController(MediaStream):
     @run_in_gui_thread
     def _NH_BlinkSessionChangedDisplayName(self, sender, data):
         if self.videoWindowController:
-            self.videoWindowController.title = NSLocalizedString("Video with %s", "Window title") % self.sessionController.titleShort
+            self.videoWindowController.title = NSLocalizedString("Video with %s", "Window title") % self.sessionController.displayTitleShort
             if self.videoWindowController.window():
                 self.videoWindowController.window().setTitle_(self.videoWindowController.title)
 
