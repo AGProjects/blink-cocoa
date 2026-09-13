@@ -123,6 +123,46 @@ def formatName(name):
 
 SECURE_OPTIONS=('web_password',)
 
+# Fields that carry somebody's identity in a shape the generic sweep
+# cannot recognise: a bare user part with no domain on it, or a name.
+USERNAME_OPTIONS = ('username',)
+IDENTITY_OPTIONS = ('account_label', 'nickname')
+
+
+def mangled_field_value(option, value):
+    """What a settings field shows while contacts are mangled.
+
+    mangled_text only rewrites what looks like an address or a subscriber
+    number, so a port, a codec list or a path comes back untouched and
+    this can be applied to every text option without a per-setting list.
+    Password fields are left alone: they are secure fields already, and
+    a password is not an address.
+    """
+    if option in SECURE_OPTIONS:
+        return value
+    from ContactMangler import mangled_text, mangled_name, mangled_username
+    if option in IDENTITY_OPTIONS:
+        return mangled_name(value)
+    if option in USERNAME_OPTIONS:
+        return mangled_username(value)
+    return mangled_text(value)
+
+
+def field_is_still_mangled(option, widget_text, value):
+    """True when the field holds what the mangler put there, not an edit.
+
+    The field is editable while mangling is on -- the preferences window
+    has to stay usable, not least to turn the setting back off -- so the
+    guard is on the VALUE: committing a field the user never touched
+    would write the invented address into the account for good, while
+    something they actually typed is theirs and is stored as normal.
+    """
+    from ContactMangler import mangling_enabled
+    if option in SECURE_OPTIONS or not mangling_enabled():
+        return False
+    return str(widget_text) == str(mangled_field_value(option, value) or '')
+
+
 class HiddenOption(object):
     """Marker class to hide options in the preferences panel"""
 
@@ -251,6 +291,8 @@ class StringOption(Option):
         try:
             current = self.get()
             nvalue = str(self.text.stringValue())
+            if field_is_still_mangled(self.option, nvalue, current):
+                return
             if self.emptyIsNone and not nvalue:
                 nvalue = None
             if current != nvalue:
@@ -261,7 +303,7 @@ class StringOption(Option):
 
     @objc.python_method
     def restore(self):
-        value = self.get()
+        value = mangled_field_value(self.option, self.get())
         self.text.setStringValue_(value or "")
 
     @objc.python_method
@@ -311,6 +353,8 @@ class UnicodeOption(Option):
     def _store(self):
         current = self.get()
         nvalue = str(self.text.stringValue())
+        if field_is_still_mangled(self.option, nvalue, current):
+            return
         if self.emptyIsNone and not nvalue:
             nvalue = None
         if current != nvalue:
@@ -318,7 +362,7 @@ class UnicodeOption(Option):
 
     @objc.python_method
     def restore(self):
-        value = self.get()
+        value = mangled_field_value(self.option, self.get())
         self.text.setStringValue_(value and str(value) or '')
 
     @objc.python_method

@@ -733,14 +733,17 @@ class PreferencesController(NSWindowController, object):
 
     @objc.python_method
     def showOptionsForAccount(self, account):
+        from ContactMangler import mangled_account_label
         self.updating = True
         if account.display_name:
-            self.displayNameText.setStringValue_(account.display_name)
+            self.displayNameText.setStringValue_(mangled_account_label(account.display_name))
         else:
             self.displayNameText.setStringValue_("")
 
         if account is not BonjourAccount():
-            self.addressText.setStringValue_(str(account.id))
+            # Read-only field (setEditable_(False) below), so nothing can
+            # carry the invented address back into the account.
+            self.addressText.setStringValue_(mangled_account_label(str(account.id)))
             self.passwordText.setStringValue_(account.auth.password)
 
             userdef = NSUserDefaults.standardUserDefaults()
@@ -788,7 +791,14 @@ class PreferencesController(NSWindowController, object):
         if account_info:
             account = account_info.account
             if notification.object() == self.displayNameText:
-                account.display_name = str(self.displayNameText.stringValue())
+                from ContactMangler import mangling_enabled, mangled_account_label
+                name = str(self.displayNameText.stringValue())
+                # The field is showing an invented name and the user did
+                # not retype it; committing would make the invention
+                # permanent.
+                if mangling_enabled() and name == str(mangled_account_label(account.display_name) or ''):
+                    return
+                account.display_name = name
                 account.save()
             elif notification.object() == self.passwordText:
                 account.auth.password = self.passwordText.stringValue()
@@ -990,6 +1000,18 @@ class PreferencesController(NSWindowController, object):
         sender = notification.sender
 
         settings = SIPSimpleSettings()
+        if sender is settings and 'gui.mangle_contacts' in notification.data.modified:
+            try:
+                from ContactMangler import invalidate
+                invalidate()
+                if self.accountTable:
+                    self.accountTable.reloadData()
+                account_info = self.selectedAccount()
+                if account_info is not None:
+                    self.showOptionsForAccount(account_info.account)
+            except Exception as e:
+                BlinkLogger().log_error('Cannot redraw the accounts pane after the contact mangling changed: %s' % e)
+
         if sender is settings:
             if 'video.resolution' in notification.data.modified:
                 # The preview thumbnail is deliberately NOT resized
@@ -1069,7 +1091,8 @@ class PreferencesController(NSWindowController, object):
             for option in (o for o in notification.data.modified if o in self.settingViews):
                 self.settingViews[option].restore()
             if 'display_name' in notification.data.modified:
-                self.displayNameText.setStringValue_(sender.display_name or '')
+                from ContactMangler import mangled_account_label
+                self.displayNameText.setStringValue_(mangled_account_label(sender.display_name) or '')
 
         if 'logs.trace_pjsip_to_file' in notification.data.modified:
             if settings.logs.trace_pjsip_to_file:
@@ -1291,8 +1314,9 @@ class PreferencesController(NSWindowController, object):
                 account_info = self.getAccountForRow(row)
                 return NSOnState if account_info and account_info.account.enabled else NSOffState
             elif column.identifier() == "name":
+                from ContactMangler import mangled_account_label
                 account_info = self.getAccountForRow(row)
-                return account_info and account_info.name
+                return account_info and mangled_account_label(account_info.name)
         except Exception:
             log_gui_exception('the accounts data source (row %s)' % row)
             return None

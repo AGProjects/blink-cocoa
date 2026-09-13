@@ -30,7 +30,8 @@ retaken next week and still match the ones beside it.
 """
 
 __all__ = ['mangling_enabled', 'invalidate', 'mangled_name', 'mangled_uri',
-           'mangled_text', 'mangled_icon_path', 'mangled_account_label']
+           'mangled_text', 'mangled_icon_path', 'mangled_account_label',
+           'mangled_username']
 
 import re
 import zlib
@@ -396,6 +397,35 @@ def mangled_icon_path(path):
     there is no image -- which is what the invented person should have.
     """
     return None if mangling_enabled() else path
+
+
+def mangled_username(value):
+    """A bare user part, with no domain attached to identify it.
+
+    The authentication username is the one field that carries somebody's
+    address with the '@domain' cut off, so the generic sweep cannot see
+    it for what it is and the caller has to say so.
+    """
+    if value is None:
+        return value
+    if not mangling_enabled():
+        return value
+    text = str(value)
+    if not text.strip():
+        return value
+    stripped = text.strip()
+    with _lock:
+        if stripped in _produced:
+            return value
+        # If an address with this user part has already been mangled --
+        # and it has, because the pane shows the account's own address
+        # above this field -- reuse that person. An account whose
+        # authentication username belonged to somebody else would be a
+        # strange thing to photograph.
+        for key, identity in _identities.items():
+            if '@' in key and key.split('@', 1)[0] == stripped.lower():
+                return _remember(identity.username)
+    return _remember(_identity(name=stripped).username)
 
 
 def mangled_account_label(label):
