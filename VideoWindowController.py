@@ -113,6 +113,8 @@ from resources import ApplicationData
 from sipsimple.application import SIPApplication
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import VideoCamera, Engine, FrameBufferVideoRenderer
+
+import VideoFrameSource
 from sipsimple.threading import run_in_thread
 from util import allocate_autorelease_pool, format_identity_to_string, call_in_gui_thread
 
@@ -286,6 +288,10 @@ FULL_SCREEN_TRANSITION_TIMEOUT = 5.0
 class VideoWidget(NSView):
     _frame = None
     renderer = None
+    # Live VideoFrameSource.Subscription when this widget is showing a
+    # remote stream; None when it is showing the local camera (which
+    # uses the private renderer above) or nothing at all.
+    frame_subscription = None
     aspect_ratio = None
     # FPS tracker: count handle_frame() calls over a rolling 1-second
     # window. current_fps is the value the stats overlay reads.
@@ -472,6 +478,38 @@ class VideoWidget(NSView):
         self._is_self_view = (producer is not None and producer is local_producer)
         self._apply_self_view_mirror()
 
+        # A remote stream is shared through VideoFrameSource rather than
+        # rendered by a renderer this widget owns. sipsimple allows
+        # exactly one consumer on a RemoteVideoStream, so that renderer
+        # has to outlive any single widget: otherwise hiding, closing or
+        # swapping this window takes the call recorder's frame feed down
+        # with it. Local camera producers keep the per-widget renderer
+        # below -- VideoCamera has a video tee, several renderers on it
+        # are fine, and the preferences / mirror widgets rely on closing
+        # their own.
+        released_subscription = False
+        if self.frame_subscription is not None and self.frame_subscription.producer is not producer:
+            self.frame_subscription.release()
+            self.frame_subscription = None
+            released_subscription = True
+
+        if producer is not None and not isinstance(producer, VideoCamera):
+            if self.frame_subscription is not None:
+                return False        # already subscribed to this producer
+            if self.renderer is not None:
+                # Was showing the local camera on its own renderer.
+                try:
+                    self.renderer.close()
+                except Exception as e:
+                    BlinkLogger().log_debug(
+                        "VideoWidget.setProducer close() ignored: %s" % e)
+                self.renderer = None
+            subscription = VideoFrameSource.subscribe(producer, self.handle_frame)
+            if subscription is None:
+                return False
+            self.frame_subscription = subscription
+            return True
+
         if producer is None:
             if self.renderer is not None:
                 # The underlying video device may already be torn down
@@ -486,6 +524,7 @@ class VideoWidget(NSView):
                         "VideoWidget.setProducer close() ignored: %s" % e)
                 self.renderer = None
                 return True
+            return released_subscription
         else:
             if self.renderer is None:
                 try:
@@ -571,6 +610,9 @@ class VideoWidget(NSView):
     def close(self):
         BlinkLogger().log_debug("Close %s" % self)
         self.setProducer(None)
+        if self.frame_subscription is not None:
+            self.frame_subscription.release()
+            self.frame_subscription = None
         if self.renderer is not None:
             self.renderer.close()
             self.renderer = None
@@ -1788,7 +1830,6 @@ class VideoWindowController(NSWindowController):
         self.fullScreenButton.setToolTip_(NSLocalizedString("Full Screen", "Label"))
 
         self.disconnectLabel.superview().hide()
-        self.recordButton.setEnabled_(False)
 
         # TEMPORARILY HIDDEN: the Full Screen / Chat / Info / Record
         # buttons on the video call bar are hidden, not removed.  The
@@ -1797,7 +1838,7 @@ class VideoWindowController(NSWindowController):
         # only flips setHidden_(True) so the buttons stay out of the
         # layout/alpha-fade animation.  Restore by deleting this block.
         for _btn in (self.fullScreenButton, self.chatButton,
-                     self.infoButton, self.recordButton):
+                     self.infoButton):
             if _btn is not None:
                 _btn.setHidden_(True)
 
@@ -1987,9 +2028,6 @@ class VideoWindowController(NSWindowController):
                                     'userClickedScreenshotButton:')
         self.recordButton = add('record.circle', NSLocalizedString("Record", "Video call bar"),
                                 'userClickedRecordButton:')
-        # Hidden, not removed: the recording timer still drives it, and
-        # showButtons() leaves it out of the segments it brings back.
-        self.recordButton.setHidden_(True)
         self.fullScreenButton = add('arrow.up.left.and.arrow.down.right',
                                     NSLocalizedString("Full", "Video call bar"),
                                     'userClickedFullScreenButton:')
@@ -2939,11 +2977,9 @@ class VideoWindowController(NSWindowController):
         # The top inset for the menu and title bars no longer applies.
         self.repositionMyVideo()
 
-        self.recordButton.setEnabled_(False)
-
-        if self.streamController.videoRecorder:
-            if self.streamController.videoRecorder.isRecording():
-                self.streamController.videoRecorder.pause()
+        # Recording is not tied to full screen any more: the recorder
+        # takes decoded frames off the stream, not pixels off the
+        # screen, so leaving full screen is none of its business.
 
         if self.show_window_after_full_screen_ends is not None:
             self.show_window_after_full_screen_ends.makeKeyAndOrderFront_(None)
@@ -3605,7 +3641,8 @@ class VideoWindowController(NSWindowController):
             for btn in (self.fullScreenButton,
                         self.hangupButton, self.chatButton,
                         self.infoButton, self.muteButton,
-                        self.cameraButton, self.screenshotButton):
+                        self.cameraButton, self.screenshotButton,
+                        self.recordButton):
                 if btn is not None:
                     btn.setHidden_(False)
             if self.holdButton is not None:
@@ -3628,8 +3665,7 @@ class VideoWindowController(NSWindowController):
         self.visible_buttons = True
 
     def updateRecordingTimer_(self, timer):
-        self.recordButton.setEnabled_(self.full_screen)
-        if not self.streamController.videoRecorder:
+        if not self.streamController or not self.streamController.videoRecorder:
             return
 
         if self.streamController.videoRecorder.isRecording():

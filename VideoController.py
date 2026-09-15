@@ -19,15 +19,56 @@ from MediaStream import STATE_CONNECTING, STATE_CONNECTED, STATE_FAILED, STATE_D
 from SessionInfoController import ice_candidates
 
 from VideoWindowController import VideoWindowController
-from VideoRecorder import VideoRecorder
+from VideoCallRecorder import VideoCallRecorder
+from BlinkLogger import BlinkLogger
 from util import run_in_gui_thread, beautify_video_codec
 import objc
+import time
 import traceback
+import VideoFrameSource
 
 
 # For voice over IP over Ethernet, an RTP packet contains 54 bytes (or 432 bits) header. These 54 bytes consist of 14 bytes Ethernet header, 20 bytes IP header, 8 bytes UDP header and 12 bytes RTP header.
 RTP_PACKET_OVERHEAD = 54
 STATISTICS_INTERVAL = 1.0
+
+
+class _FrameTap(object):
+    """Counts decoded remote frames arriving off the video stream.
+
+    Subscribed to the stream's producer for the life of the stream, so
+    it keeps counting while the video window is hidden, closed or
+    swapped -- which is the whole point of subscribing to frames rather
+    than to a widget. Logs one line a second at debug level. The call
+    recorder takes this subscription's place.
+
+    __call__ runs on the pjsip video thread and is deliberately trivial:
+    it sits on the render path.
+    """
+
+    def __init__(self, label):
+        self.label = label
+        self.frames = 0
+        self.total = 0
+        self.window_start = 0.0
+        self.size = (0, 0)
+
+    def __call__(self, frame):
+        now = time.time()
+        self.frames += 1
+        self.total += 1
+        self.size = (frame.width, frame.height)
+        if self.window_start == 0.0:
+            self.window_start = now
+            return
+        elapsed = now - self.window_start
+        if elapsed >= 1.0:
+            BlinkLogger().log_debug(
+                "[frametap] %s: %d frames in %.1fs, %dx%d, %d total"
+                % (self.label, self.frames, elapsed,
+                   self.size[0], self.size[1], self.total))
+            self.frames = 0
+            self.window_start = now
 
 
 @implementer(IObserver)
@@ -49,6 +90,7 @@ class VideoController(MediaStream):
     initial_full_screen = False
     media_received = False
     waiting_label = NSLocalizedString("Waiting For Media...", "Audio status label")
+    frame_subscription = None
     
     paused = False
 
@@ -122,7 +164,7 @@ class VideoController(MediaStream):
         self = objc.super(VideoController, self).initWithOwner_stream_(sessionController, stream)
         self.notification_center = NotificationCenter()
         sessionController.log_debug("Init %s" % self)
-        self.videoRecorder = VideoRecorder(self)
+        self.videoRecorder = VideoCallRecorder(self)
         self.videoWindowController = VideoWindowController(self)
 
         self.statistics = {'loss_rx': 0, 'rtt':0 , 'jitter':0 , 'rx_bytes': 0, 'tx_bytes': 0, 'fps': 0}
@@ -346,6 +388,12 @@ class VideoController(MediaStream):
         # autoreleasePoolPop on thread exit at app shutdown.
         # See the trail with thread #59 / #27 / #29 each draining
         # their TLS pool into an over-released OC_PythonUnicode.
+        if self.frame_subscription is not None:
+            try:
+                self.frame_subscription.release()
+            except Exception:
+                pass
+            self.frame_subscription = None
         self.videoWindowController = None
         self.videoRecorder = None
         self.stream = None
@@ -357,12 +405,58 @@ class VideoController(MediaStream):
         self.release()
 
     @objc.python_method
+    def startFrameTap(self):
+        """Subscribe to the remote stream's decoded frames.
+
+        Independent of the video window: VideoFrameSource owns the
+        renderer, so this subscription survives every hide, close and
+        local/remote swap, and is only dropped in end().
+        """
+        if self.frame_subscription is not None:
+            return
+        producer = getattr(self.stream, 'producer', None) if self.stream is not None else None
+        if producer is None:
+            self.sessionController.log_debug("No video producer to tap yet")
+            return
+        label = self.sessionController.remoteAOR
+        self.frame_subscription = VideoFrameSource.subscribe(producer, _FrameTap(label))
+        if self.frame_subscription is None:
+            self.sessionController.log_info("Cannot tap the video stream frames")
+        else:
+            self.sessionController.log_debug("Tapping video stream frames")
+
+    @objc.python_method
+    def stopFrameTap(self):
+        if self.frame_subscription is None:
+            return
+        try:
+            self.frame_subscription.release()
+        except Exception:
+            self.sessionController.log_info(
+                'Cannot release the video frame tap: %s' % traceback.format_exc())
+        self.frame_subscription = None
+
+    @objc.python_method
     def end(self):
         if self.ended:
             return
     
         self.sessionController.log_debug("End %s" % self)
         self.ended = True
+
+        # First, before anything tears a stream down. Stopping the call
+        # recorder stops the SDK's audio recorder with it, and pjmedia
+        # only flushes the last of the WAV and rewrites its header when
+        # the recording port is destroyed -- which RecordingWaveFile
+        # defers to the mixer's async port removal. Do this after
+        # endStream() and that removal never runs: the recording loses
+        # its last second of audio and keeps a header that says it holds
+        # nothing at all.
+        try:
+            self.videoRecorder.stop()
+        except Exception:
+            self.sessionController.log_info('Cannot stop the video recorder: %s'
+                                            % traceback.format_exc())
 
         if self.sessionController.waitingForLocalVideo:
             self.stop_wait_for_camera_timer()
@@ -386,13 +480,9 @@ class VideoController(MediaStream):
 
         self.removeFromSession()
 
-        # Whatever else fails on the way out, the window must go: a raise
-        # from the recorder used to skip close() and leave a dead video
-        # window on screen for the rest of the session.
-        try:
-            self.videoRecorder.stop()
-        except Exception:
-            self.sessionController.log_info('Cannot stop the video recorder: %s' % traceback.format_exc())
+        # Before the window goes: the frame subscription is what keeps
+        # the shared renderer open on this stream.
+        self.stopFrameTap()
 
         try:
             self.videoWindowController.close()
@@ -585,6 +675,8 @@ class VideoController(MediaStream):
 
         self.changeStatus(STREAM_CONNECTED)
         self.sessionController.setVideoConsumer(self.sessionController.video_consumer)
+
+        self.startFrameTap()
 
         self.statistics_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(STATISTICS_INTERVAL, self, "updateStatisticsTimer:", None, True)
         NSRunLoop.currentRunLoop().addTimer_forMode_(self.statistics_timer, NSRunLoopCommonModes)

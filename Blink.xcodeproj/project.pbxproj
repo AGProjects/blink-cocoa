@@ -25,6 +25,8 @@
 		1F0D1102132D599C00614205 /* ConferenceConfigurationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D1101132D599C00614205 /* ConferenceConfigurationPanel.xib */; };
 		1F0D1103132D599C00614205 /* ConferenceConfigurationPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D1101132D599C00614205 /* ConferenceConfigurationPanel.xib */; };
 		1F0D4A3719BF351D002AB989 /* VideoRecorder.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D4A3619BF351D002AB989 /* VideoRecorder.py */; };
+		5A1E000200000000000000F2 /* VideoFrameSource.py in Resources */ = {isa = PBXBuildFile; fileRef = 5A1E000200000000000000F1 /* VideoFrameSource.py */; };
+		5A1E000200000000000000F4 /* VideoCallRecorder.py in Resources */ = {isa = PBXBuildFile; fileRef = 5A1E000200000000000000F3 /* VideoCallRecorder.py */; };
 		1F0D4A3819BF351D002AB989 /* VideoRecorder.py in Resources */ = {isa = PBXBuildFile; fileRef = 1F0D4A3619BF351D002AB989 /* VideoRecorder.py */; };
 		1F14255A1905335300CFEC42 /* aspect_ratio.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1425591905335300CFEC42 /* aspect_ratio.png */; };
 		1F14255B1905335300CFEC42 /* aspect_ratio.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F1425591905335300CFEC42 /* aspect_ratio.png */; };
@@ -977,6 +979,8 @@
 		1F0D0EC1132D231C00614205 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ConferenceConfigurationPanel.xib; sourceTree = "<group>"; };
 		1F0D0EC9132D236200614205 /* ConferenceConfigurationPanel.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ConferenceConfigurationPanel.py; sourceTree = "<group>"; };
 		1F0D4A3619BF351D002AB989 /* VideoRecorder.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoRecorder.py; sourceTree = "<group>"; };
+		5A1E000200000000000000F1 /* VideoFrameSource.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoFrameSource.py; sourceTree = "<group>"; };
+		5A1E000200000000000000F3 /* VideoCallRecorder.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoCallRecorder.py; sourceTree = "<group>"; };
 		1F0E260C1402F097004AED9C /* blink-crypto.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = "blink-crypto.icns"; sourceTree = "<group>"; };
 		1F0F2A9C15456DAD00ECB98E /* AddressBook.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AddressBook.framework; path = System/Library/Frameworks/AddressBook.framework; sourceTree = SDKROOT; };
 		1F0F2AA115456DAD00ECB98E /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -1756,6 +1760,8 @@
 				1F6009CD18F74D22005517FA /* mbFlipWindow.h */,
 				1F6009CE18F74D22005517FA /* mbFlipWindow.m */,
 				1F0D4A3619BF351D002AB989 /* VideoRecorder.py */,
+				5A1E000200000000000000F1 /* VideoFrameSource.py */,
+				5A1E000200000000000000F3 /* VideoCallRecorder.py */,
 				1FAF8C5C12DA18960029857C /* VideoController.py */,
 				1F447E7D18DF3522001EF4C9 /* VideoWindowController.py */,
 				1F4B789819AEAEC200F854CB /* VideoWindow.xib */,
@@ -2786,6 +2792,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5A1E000200000000000000F2 /* VideoFrameSource.py in Resources */,
+				5A1E000200000000000000F4 /* VideoCallRecorder.py in Resources */,
 				5A1E00010000000000000013 /* ShareController.py in Resources */,
 				2B6596C10FCCB75500FC8CF2 /* ContactWindowController.py in Resources */,
 				2BC594750FCCDA910017CB1B /* ContactCell.py in Resources */,

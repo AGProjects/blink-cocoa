@@ -2408,7 +2408,7 @@ class SMSViewController(NSObject):
                              extra={'call_recording': True})
 
     @objc.python_method
-    def fileCallRecordingLocally(self, path, duration=None, peaks=None):
+    def fileCallRecordingLocally(self, path, duration=None, peaks=None, kind='audio'):
         """Put a recording in the conversation without sending it anywhere.
 
         The road for an account that cannot upload: a PSTN gateway, a plain
@@ -2448,8 +2448,15 @@ class SMSViewController(NSObject):
 
         transfer_id = str(new_transfer_id())
         stamp = int(time.time() * 1000)
-        extension = os.path.splitext(path)[1] or '.wav'
-        filename = 'audio-recording-%d%s' % (stamp, extension)
+        if kind == 'video':
+            # Never uploaded, so this name only ever appears on this
+            # device -- but it is what recording_title() reads to put
+            # "Video Call Recording" on the bubble instead of a stamp.
+            extension = os.path.splitext(path)[1] or '.mov'
+            filename = 'sylk-video-recording-%d%s' % (stamp, extension)
+        else:
+            extension = os.path.splitext(path)[1] or '.wav'
+            filename = 'audio-recording-%d%s' % (stamp, extension)
         peer = str(self.conversation_peer_uri())
         meta = {
             'filename': filename,

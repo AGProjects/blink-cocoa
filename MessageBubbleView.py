@@ -2977,18 +2977,22 @@ class MessageBubbleView(NSView):
 
     @objc.python_method
     def openFile(self):
-        """Hand the file to whatever owns it -- or play it here, if a movie."""
+        """Hand the file to whatever owns it.
+
+        Every kind of file, movies included. The open glyph in the header
+        and Open File on the menu say the same thing about a movie as
+        they do about a PDF -- take this out of the transcript and give
+        it to the application that owns it -- and a film is exactly the
+        thing somebody wants full size, scrubbable, on a second screen.
+        Playing it in the bubble instead left both affordances doing
+        something the bubble's own play button already did.
+
+        Clicking the film itself still plays it here; that gesture is
+        handled where it is made.
+        """
         path = self.media_path
         if not path:
             return
-        if self._showsVideo():
-            # A film plays in its own bubble. Handing it to whatever owns
-            # .mp4 would open a second window over something already on
-            # screen.
-            renderer = self.renderer
-            if renderer is not None and hasattr(renderer, 'bubbleDidRequestPlayPause'):
-                renderer.bubbleDidRequestPlayPause(self.msgid)
-                return
         try:
             BlinkLogger().log_info('Opening %s from message %s' % (path, self.msgid))
             NSWorkspace.sharedWorkspace().openFile_(str(path))
@@ -3618,12 +3622,19 @@ class MessageBubbleView(NSView):
                     NSWorkspace.sharedWorkspace().openURL_(
                         NSURL.URLWithString_(str(self.location_maps_url)))
                 elif kind == 'file':
-                    # One door for opening, shared with the header glyph
-                    # and the menu: a movie plays here, everything else
-                    # goes to whatever owns it. The press-and-drag half of
-                    # the gesture is untouched, so the file still goes to
-                    # the Finder.
-                    self.openFile()
+                    # A press on the film plays it in the bubble: it is
+                    # already on screen, and handing it to whatever owns
+                    # .mov would open a second window over it. Everything
+                    # else goes to the application that owns it, as does
+                    # a movie reached through the header's open glyph or
+                    # the menu. The press-and-drag half of the gesture is
+                    # untouched, so the file still goes to the Finder.
+                    renderer = self.renderer
+                    if (self._showsVideo() and renderer is not None
+                            and hasattr(renderer, 'bubbleDidRequestPlayPause')):
+                        renderer.bubbleDidRequestPlayPause(self.msgid)
+                    else:
+                        self.openFile()
             except Exception as e:
                 BlinkLogger().log_error('Cannot open the %s in message %s: %s'
                                         % (kind, self.msgid, e))

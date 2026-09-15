@@ -315,6 +315,13 @@ class SIPManager(object, metaclass=Singleton):
         settings.service_provider.about_url = data['service_provider_about_url']
         settings.save()
 
+    # What counts as a recording in the account's history folder.
+    AUDIO_RECORDING_EXTENSIONS = ('.wav', '.aiff', '.aif', '.m4a', '.mp3')
+    VIDEO_RECORDING_EXTENSIONS = ('.mov', '.mp4', '.m4v')
+    # Suffixes of the intermediate tracks the video call recorder writes
+    # next to its output while muxing.
+    RECORDER_INTERMEDIATE_SUFFIXES = ('.audio.wav', '.video.mov')
+
     def get_recordings_directory(self):
         return ApplicationData.get('history')
 
@@ -336,7 +343,21 @@ class SIPManager(object, metaclass=Singleton):
 
             for file in files:
                 try:
-                    recording_type = "audio" if file.endswith(".wav") else "video"
+                    name = os.path.basename(file)
+                    extension = os.path.splitext(name)[1].lower()
+                    if extension in self.AUDIO_RECORDING_EXTENSIONS:
+                        recording_type = "audio"
+                    elif extension in self.VIDEO_RECORDING_EXTENSIONS:
+                        recording_type = "video"
+                    else:
+                        # Anything else in the account's history folder is
+                        # not a recording and has no business in the menu.
+                        continue
+                    if name.endswith(self.RECORDER_INTERMEDIATE_SUFFIXES):
+                        # The separate tracks the video call recorder muxes
+                        # together. They exist while a recording runs, and
+                        # survive only if one failed.
+                        continue
                     stat = os.stat(file)
                     toks = file.split("/")[-1].split("-", 2)
                     if len(toks) == 3:
@@ -350,14 +371,19 @@ class SIPManager(object, metaclass=Singleton):
                             remote = rest
                         try:
                             identity = SIPURI.parse('sip:'+str(remote))
-                            remote_party = format_identity_to_string(identity, check_contact=True)
+                            # 'aor' (the default) returns user@domain and
+                            # never looks at the address book at all, so
+                            # check_contact had no effect and the menu
+                            # always showed the URI. 'compact' returns the
+                            # contact's name when there is one.
+                            remote_party = format_identity_to_string(identity, check_contact=True, format='compact')
                         except SIPCoreError:
                             remote_party = "%s" % (remote)
 
                     else:
                         try:
                             identity = SIPURI.parse('sip:'+str(file[:-4]))
-                            remote_party = format_identity_to_string(identity, check_contact=True)
+                            remote_party = format_identity_to_string(identity, check_contact=True, format='compact')
                         except SIPCoreError:
                             remote_party = file[:-4]
                         timestamp = datetime.fromtimestamp(int(stat.st_ctime)).strftime("%E %T")
@@ -368,7 +394,12 @@ class SIPManager(object, metaclass=Singleton):
                 except Exception:
                     pass
 
-        sorted(result, key=lambda x: x[0])
+        # sorted() returns a new list and was throwing it away, so the
+        # result kept whatever order os.listdir() happened to produce and
+        # the menu's [-20:] slice showed an arbitrary twenty recordings
+        # rather than the twenty most recent. The timestamps are
+        # YYYY/MM/DD HH:MM, so a plain string sort is chronological.
+        result.sort(key=lambda x: x[0])
         return result
 
     def get_contact_backups(self):

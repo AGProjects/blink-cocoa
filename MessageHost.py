@@ -177,6 +177,11 @@ def _media_label(filename, filetype):
 # timestamp the message already carries, in a format nobody reads.
 _RECORDING_TITLES = (
     ('sylk-call-recording', 'Call Recording'),
+    # A recording of a video call. Local to the device that made it --
+    # the movie is never uploaded -- so unlike the audio prefixes above
+    # this name never reaches a server, but it is still machine-made and
+    # still wants a title rather than its own filename on the bubble.
+    ('sylk-video-recording', 'Video Call Recording'),
     # What a call recording is uploaded as. The NAME is deliberately not
     # "call": it goes to the server, into its logs and into every device's
     # file list, and what a recording is OF is not the filename's
@@ -1852,12 +1857,6 @@ def file_transfer_category(body):
     if meta is None:
         return None
 
-    # A recorder that says so outright is believed before anything else:
-    # Sylk Mobile stamps call_recording on the envelope, and one of those
-    # is audio whatever mime type came with it.
-    if meta.get('call_recording'):
-        return 'audio'
-
     filetype = (meta.get('filetype') or '').lower()
     name = (meta.get('filename') or '').lower()
     if name.endswith('.asc'):
@@ -1878,6 +1877,16 @@ def file_transfer_category(body):
     # voice notes as video/mp4, and classifying those as video is what
     # leaves a recording with no player and no explanation.
     known = by_extension.get(extension)
+
+    # A recorder that says so outright is believed before the mime type:
+    # Sylk Mobile stamps call_recording on the envelope, and one of those
+    # is audio whatever mime type came with it. The extension still gets
+    # a say, because a recording of a VIDEO call is a movie -- calling it
+    # audio hands the bubble an audio player and files it under the wrong
+    # filter.
+    if meta.get('call_recording'):
+        return 'video' if known == 'video' else 'audio'
+
     if known:
         return known
 
