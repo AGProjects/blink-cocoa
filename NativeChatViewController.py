@@ -314,6 +314,15 @@ class NativeChatViewController(ChatViewController):
     # AttributeError from inside a draw.
     _call_device_id = _UNSET
     _history_chrome_pending = False
+    # The vertical geometry of the strip above the transcript, as the nib
+    # drew it: rows of widgets, top down, each with the gap below it, plus
+    # the container height the measurements were taken against. Captured
+    # once, before anything here has moved a row, and used to collapse the
+    # rows that are hidden instead of leaving their space reserved.
+    _chrome_rows = None
+    _chrome_ref_height = None
+    _chrome_output_inset = None
+    _chrome_applied = None
     # The loaded-range sentence last written above the transcript, so the same
     # one is not logged twice.
     _history_chrome_text = ''
@@ -2085,19 +2094,47 @@ class NativeChatViewController(ChatViewController):
 
     @objc.python_method
     def updateHistoryChrome(self):
-        """Show the scroll-back label and the search box only when there is
-        something to scroll back through or search, and say what is loaded.
+        """Say what is loaded, and give the strip only the rows it needs.
 
-        On an empty conversation both are noise: "There are no previous
-        messages" above an empty pane, and a search field over nothing.
+        The range label describes the page on screen, so it goes with the
+        page: over an empty transcript it has nothing to describe. The
+        search field answers a different question -- whether there is
+        anything to search -- and keeps its row while the conversation has
+        stored history, because the transcript a search empties is exactly
+        when the field is needed most.
+
+        A row that hides collapses rather than leaving its space behind it;
+        an empty band over the filter chips is how a conversation with
+        nothing yet to say about its history used to look.
         """
         try:
             has_messages = bool(self.rendered_messages)
         except Exception:
             has_messages = False
-        for widget in (self.lastMessagesLabel, self.searchMessagesBox):
-            if widget is not None:
-                widget.setHidden_(not has_messages)
+        # The search field outlives the messages on screen. A query that
+        # matched nothing empties the transcript, and a field that hides
+        # itself then takes away the only way to clear the query -- the
+        # conversation is stuck showing nothing with no control to say so.
+        # So it stays for as long as there is anything to search: a page on
+        # screen, a query in the box, or a conversation with stored history.
+        try:
+            stored = int(getattr(self.delegate, 'total_history_messages', 0) or 0)
+        except (TypeError, ValueError):
+            stored = 0
+        searchable = has_messages or bool(self.search_text) or stored > 0
+        if self.lastMessagesLabel is not None:
+            self.lastMessagesLabel.setHidden_(not has_messages)
+        if self.searchMessagesBox is not None:
+            self.searchMessagesBox.setHidden_(not searchable)
+        # Whatever just hid or came back, the strip has to be re-stacked:
+        # a hidden row that keeps its space is a band of empty linen over
+        # the filter chips.
+        self._layoutHistoryChrome()
+        control = self.messageFilterControl
+        if control is not None and not control.isHidden():
+            # The width picker and the fetch-everything button are placed
+            # against the chips' own frame, which the re-stack just moved.
+            self._layoutFilterRow(self.message_filter in GRID_CATEGORIES)
 
         if self.lastMessagesLabel is None:
             return
@@ -4487,8 +4524,18 @@ class NativeChatViewController(ChatViewController):
     # -- content-type filter -----------------------------------------------
 
     @objc.python_method
+    @run_in_gui_thread
     def setNeedsHistoryChrome(self):
         """Coalesce the loaded-range label: it reads every bubble.
+
+        On the GUI thread, whoever asks, for the same reason as
+        setNeedsFilterRebuild: the timer attaches to the run loop of the
+        thread that schedules it, and replay_history asks for this from the
+        history thread once the page has been handed over. That armed a
+        timer which could never fire and left the pending flag set, so every
+        later request -- from the GUI thread or not -- was dropped as
+        already pending, and the range label and the search box stayed
+        exactly as the conversation opened them: hidden.
 
         loadedMessageRange() walks the whole transcript to say what is on
         screen, and _insert called it once per message -- O(n^2) over a
@@ -4711,6 +4758,7 @@ class NativeChatViewController(ChatViewController):
                 BlinkLogger().log_debug('Filter bar hidden: the conversation has '
                                         'not said what it holds yet')
             control.setHidden_(True)
+            self._layoutHistoryChrome()
             self._layoutFilterRow(False)
             if self.message_filter is not None:
                 self.message_filter = None
@@ -4732,6 +4780,7 @@ class NativeChatViewController(ChatViewController):
         control.setSelectedSegment_(selected)
         self._installGridColumnsControl()
         self._installDownloadAllButton()
+        self._layoutHistoryChrome()
         self._layoutFilterRow(self.message_filter in GRID_CATEGORIES)
         BlinkLogger().log_debug('Filter bar: %s (selected %s)'
                                 % (' | '.join(titles), titles[selected]))
@@ -4793,6 +4842,135 @@ class NativeChatViewController(ChatViewController):
         except ValueError:
             index = list(GRID_COLUMN_CHOICES).index(GRID_COLUMNS)
         popup.selectItemAtIndex_(index)
+
+    # -- the strip above the transcript ------------------------------------
+
+    @objc.python_method
+    def _chromeWidgets(self):
+        """Everything the nib puts in the strip above the transcript.
+
+        Read off the outlets rather than listed per nib: the viewers share
+        one hand-authored nib each and not all of them carry all of these --
+        the history viewer deliberately has no filter bar.
+        """
+        return [getattr(self, name, None) for name in
+                ('lastMessagesLabel', 'searchMessagesBox',
+                 'messageFilterControl', 'showRelatedMessagesButton')]
+
+    @objc.python_method
+    def _captureChromeGeometry(self):
+        """Measure the strip once, while it is still as the nib drew it.
+
+        Rows are worked out from the frames rather than declared, because
+        the nibs disagree about them: the message pane gives the range
+        label and the search field a row each, the chat nib sits them side
+        by side on one. Widgets whose tops are within a few points of each
+        other are one row, and a row is only collapsed when everything on
+        it is hidden.
+        """
+        if self._chrome_rows is not None:
+            return True
+        output = self.outputView
+        container = output.superview() if output is not None else None
+        if container is None:
+            return False
+        height = container.bounds().size.height
+        if height <= 0:
+            # Framed before the window had a size. The measurements are kept
+            # for the life of the conversation, so taking them off a
+            # zero-height container would be wrong for good.
+            return False
+        output_frame = output.frame()
+        output_top = output_frame.origin.y + output_frame.size.height
+        entries = []
+        for widget in self._chromeWidgets():
+            # Compared with != rather than 'is not': these are bridged
+            # objects, and identity of two proxies for the same view is not
+            # something to rest a layout on.
+            if widget is None or widget.superview() != container:
+                continue
+            frame = widget.frame()
+            if frame.origin.y < output_top:
+                # Not in the strip: the spinner and the "loading" line sit
+                # over the transcript itself.
+                continue
+            entries.append((frame.origin.y + frame.size.height, widget, frame))
+        if not entries:
+            return False
+        entries.sort(key=lambda entry: entry[0], reverse=True)
+
+        rows = []
+        for top, widget, frame in entries:
+            if rows and abs(rows[-1]['top'] - top) <= 6.0:
+                row = rows[-1]
+                row['bottom'] = min(row['bottom'], frame.origin.y)
+                row['widgets'].append((widget, frame.origin.y))
+            else:
+                rows.append({'top': top, 'bottom': frame.origin.y,
+                             'widgets': [(widget, frame.origin.y)]})
+        # What each row costs if it goes: its own height plus the gap under
+        # it, down to the next row or to the transcript.
+        for index, row in enumerate(rows):
+            below = rows[index + 1]['top'] if index + 1 < len(rows) else output_top
+            row['cost'] = max(row['top'] - below, 0.0)
+        self._chrome_rows = rows
+        self._chrome_ref_height = height
+        self._chrome_output_inset = max(height - output_top, 0.0)
+        BlinkLogger().log_debug('Transcript chrome: %d row(s) over a %.0fpt inset'
+                                % (len(rows), self._chrome_output_inset))
+        return True
+
+    @objc.python_method
+    def _layoutHistoryChrome(self):
+        """Give the strip only the rows it is actually using.
+
+        The nib places the range label, the search field and the filter
+        chips at fixed heights with the transcript filling what is left
+        under them, so a row that hides leaves its space behind it -- an
+        empty band over the chips in every conversation with nothing to say
+        about its history yet. Each row whose widgets are all hidden is
+        collapsed here, the rows under it move up into the space, and the
+        transcript grows to take the rest.
+        """
+        if not self._captureChromeGeometry():
+            return
+        output = self.outputView
+        container = output.superview()
+        if container is None:
+            return
+        try:
+            height = container.bounds().size.height
+            if height <= 0:
+                return
+            collapsed = 0.0
+            shown = 0
+            for row in self._chrome_rows:
+                if not [widget for widget, _y in row['widgets']
+                        if not widget.isHidden()]:
+                    collapsed += row['cost']
+                    continue
+                shown += 1
+                for widget, y in row['widgets']:
+                    frame = widget.frame()
+                    widget.setFrame_(NSMakeRect(
+                        frame.origin.x,
+                        y + (height - self._chrome_ref_height) + collapsed,
+                        frame.size.width, frame.size.height))
+
+            # Nothing left up there: the transcript takes the padding over
+            # the first row as well.
+            inset = 0.0 if not shown else max(self._chrome_output_inset - collapsed, 0.0)
+            frame = output.frame()
+            wanted = max(height - inset - frame.origin.y, 1.0)
+            if abs(frame.size.height - wanted) > 0.5:
+                output.setFrame_(NSMakeRect(frame.origin.x, frame.origin.y,
+                                            frame.size.width, wanted))
+            if self._chrome_applied != (collapsed, shown):
+                self._chrome_applied = (collapsed, shown)
+                BlinkLogger().log_debug('Transcript chrome: %d row(s) shown, '
+                                        '%.0fpt collapsed' % (shown, collapsed))
+        except Exception as e:
+            BlinkLogger().log_error('Cannot lay the transcript chrome out: %s' % e)
 
     @objc.python_method
     def _layoutFilterRow(self, show_columns):

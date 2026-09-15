@@ -862,10 +862,17 @@ class SMSViewController(NSObject):
             NSApp.delegate().contactsWindowController.addContact(uris=[(self.target_uri, 'sip')])
 
         self.addContactView.removeFromSuperview()
-        frame = self.chatViewController.outputView.frame()
-        frame.origin.y = 0
-        frame.size = self.outputContainer.frame().size
-        self.chatViewController.outputView.setFrame_(frame)
+        # Re-stacked rather than stretched to the container: the transcript
+        # shares the top of that container with the range label, the search
+        # field and the filter chips, and a frame set to the container's full
+        # height draws over all three.
+        try:
+            self.chatViewController.updateHistoryChrome()
+        except AttributeError:
+            frame = self.chatViewController.outputView.frame()
+            frame.origin.y = 0
+            frame.size = self.outputContainer.frame().size
+            self.chatViewController.outputView.setFrame_(frame)
 
     # msgid currently being edited, or None. Editing is delete-and-resend,
     # the model Sylk Mobile uses (ChatBox.sendEditedMessage): nothing on the
@@ -4904,11 +4911,17 @@ class SMSViewController(NSObject):
             pass                        # a renderer with no history chrome
 
     @objc.python_method
+    @run_in_gui_thread
     def _noteTotalHistoryMessages(self, total):
         """The conversation's stored-message total has arrived.
 
         On the GUI thread because it moves the loaded-range label, and it is
         reached from the history thread once the page has been handed over.
+        The docstring said so before the decorator did: the request it makes
+        arms a timer on the run loop of whichever thread asks, so from the
+        history thread it armed one that could never fire and left the
+        label's pending flag set for good -- and the range label and the
+        search box then stayed hidden for the rest of the conversation.
         """
         self.total_history_messages = total
         self.log_debug('Conversation holds %s stored messages'
