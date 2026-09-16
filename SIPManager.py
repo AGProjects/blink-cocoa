@@ -48,7 +48,15 @@ from configuration.account import AccountExtension, BonjourAccountExtension
 from configuration.contact import BlinkContactExtension, BlinkContactURIExtension, BlinkGroupExtension
 from configuration.settings import SIPSimpleSettingsExtension
 from resources import ApplicationData, Resources
+import AddressbookOrigin
+
 from util import beautify_audio_codec, beautify_video_codec, format_identity_to_string, run_in_gui_thread, trusted_cas
+
+
+def _addressbook_origin_device_id():
+    # Imported late: MessageHost reaches into SMSWindowManager.
+    from MessageHost import this_device_id
+    return this_device_id()
 
 
 @implementer(IObserver)
@@ -137,6 +145,12 @@ class SIPManager(object, metaclass=Singleton):
         Contact.register_extension(BlinkContactExtension)
         Group.register_extension(BlinkGroupExtension)
         ContactURI.register_extension(BlinkContactURIExtension)
+        # Stamp every local contact/group write with this device, its user
+        # agent and the time, so a change can be traced to where it was made.
+        AddressbookOrigin.install(Contact, Group,
+                                  device_id=_addressbook_origin_device_id,
+                                  agent=lambda: SIPSimpleSettings().user_agent,
+                                  log=BlinkLogger().log_info)
         if NSApp.delegate().general_extension:
             SIPSimpleSettings.register_extension(NSApp.delegate().general_extension)
         else:

@@ -52,6 +52,14 @@ class BlinkContactExtension(ContactExtension):
     auto_answer = SharedSetting(type=Boolean, default=False)
     preferred_media = SharedSetting(type=str, default='audio')
     disable_smileys = SharedSetting(type=Boolean, default=False)
+    # Who last changed this entry and when -- see AddressbookOrigin.py. Shared,
+    # so every device reads the same answer; written by AddressbookOrigin's
+    # save() wrapper and never by hand.
+    modified_by = SharedSetting(type=str, default='')
+    modified_agent = SharedSetting(type=str, default='')
+    modified_at = SharedSetting(type=str, default='')
+    modified_reason = SharedSetting(type=str, default='')
+    modified_hash = SharedSetting(type=str, default='')
     disable_chat_history = Setting(type=Boolean, nillable=True)
     # Which language this contact's composer spell checks in.
     #
@@ -96,6 +104,15 @@ class BlinkGroupExtension(GroupExtension):
     # Values are lowercase machine words, never display text: 'calls', 'tel'.
     # Empty means an ordinary user group.
     kind = SharedSetting(type=str, default='')
+
+    # Who last changed this entry and when -- see AddressbookOrigin.py. Shared,
+    # so every device reads the same answer; written by AddressbookOrigin's
+    # save() wrapper and never by hand.
+    modified_by = SharedSetting(type=str, default='')
+    modified_agent = SharedSetting(type=str, default='')
+    modified_at = SharedSetting(type=str, default='')
+    modified_reason = SharedSetting(type=str, default='')
+    modified_hash = SharedSetting(type=str, default='')
 
 
 class BlinkContactURIExtension(ContactURIExtension):

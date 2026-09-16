@@ -42,6 +42,7 @@ from twisted.internet.threads import deferToThreadPool
 from twisted.python.threadpool import ThreadPool
 
 from BlinkLogger import BlinkLogger
+import AddressbookOrigin
 from resources import ApplicationData
 from util import allocate_autorelease_pool, format_identity_to_string, sipuri_components_from_string, run_in_gui_thread
 # Calls group preview (end of this file)
@@ -4269,6 +4270,7 @@ def _stamp_one_group(kind, name, reserved_id=None):
     return True
 
 
+@AddressbookOrigin.with_reason('group-kind')
 def stamp_group_kinds():
     """Write kind=\'calls\'/\'tel\' onto the groups that already exist.
 
@@ -4319,6 +4321,7 @@ def stamp_group_kinds():
 _startup_checked = [False]
 
 
+@AddressbookOrigin.with_reason('backfill')
 def backfill_accounts_without_xcap():
     """Backfill the accounts that will never get an XCAP reload.
 
@@ -4532,6 +4535,7 @@ def echoed_name_replacement(contact):
     return None
 
 
+@AddressbookOrigin.with_reason('repair')
 def repair_contact_addresses():
     """Put conference rooms back on the bridge domain. Once per run.
 
@@ -4655,6 +4659,7 @@ def repair_contact_addresses():
 _kind_groups_filed = [False]
 
 
+@AddressbookOrigin.with_reason('file-into-kind-group')
 def file_contacts_into_kind_groups():
     """Every phone number in Tel, every conference room in Conference.
 
@@ -4737,6 +4742,7 @@ def _xcap_is_expected():
     return False
 
 
+@AddressbookOrigin.with_reason('ensure-group')
 def ensure_group(kind, name, reserved_id=None, xcap_loaded=False):
     """The group for this kind, created if it is genuinely missing.
 
@@ -4814,6 +4820,7 @@ def ensure_tel_group(xcap_loaded=False):
                         xcap_loaded=xcap_loaded)
 
 
+@AddressbookOrigin.with_reason('block')
 def block_party(uri, name=None, account=None, exclusive=False):
     """Put a party in the Blocked group, so they cannot call.
 
@@ -4939,6 +4946,7 @@ def _publish_contact_for_groups(contact):
         _log('[!] cannot prepare %s for its groups: %s' % (_quote(getattr(contact, 'name', '?')), e))
 
 
+@AddressbookOrigin.with_reason('call-history')
 def ensure_call_contact(remote_uri, account=None, xcap_loaded=True):
     """Put the other party of a call in the Calls group.
 
@@ -5047,6 +5055,7 @@ _backfilled_accounts = set()
 
 @run_in_green_thread
 @allocate_autorelease_pool
+@AddressbookOrigin.with_reason('call-history')
 def backfill_call_contacts(account):
     """File the parties of calls already in the history into the Calls group.
 
@@ -5192,6 +5201,7 @@ def _remove_from_other_groups(contact, blocked_group):
         _log('[!] could not tidy the groups of %s: %s' % (_quote(getattr(contact, 'name', '?')), e))
 
 
+@AddressbookOrigin.with_reason('block')
 def block_caller(uri, name=None, account=None):
     """Block a party and take them out of every group but Blocked.
 

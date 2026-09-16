@@ -708,7 +708,9 @@
 		AD0000000000000000730001 /* VideoPlayback.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000730000 /* VideoPlayback.py */; };
 		AD0000000000000000730003 /* VideoPlayback.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000730000 /* VideoPlayback.py */; };
 		AD0000000000000000AB0001 /* AddressbookNotify.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000AB0000 /* AddressbookNotify.py */; };
+		AD0000000000000000AB0011 /* AddressbookOrigin.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000AB0010 /* AddressbookOrigin.py */; };
 		AD0000000000000000AB0003 /* AddressbookNotify.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000AB0000 /* AddressbookNotify.py */; };
+		AD0000000000000000AB0013 /* AddressbookOrigin.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000AB0010 /* AddressbookOrigin.py */; };
 		AD0000000000000000EF0003 /* ScreenPointer.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000EF0000 /* ScreenPointer.py */; };
 		AD0000000000000000EF0103 /* ScreenPointerController.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000EF0100 /* ScreenPointerController.py */; };
 		AD0000000000000000CD0001 /* CallDetailsPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000CD0000 /* CallDetailsPanel.py */; };
@@ -1544,6 +1546,7 @@
 		AD0000000000000000720000 /* SmileyPicker.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SmileyPicker.py; sourceTree = "<group>"; };
 		AD0000000000000000730000 /* VideoPlayback.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoPlayback.py; sourceTree = "<group>"; };
 		AD0000000000000000AB0000 /* AddressbookNotify.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AddressbookNotify.py; sourceTree = "<group>"; };
+		AD0000000000000000AB0010 /* AddressbookOrigin.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AddressbookOrigin.py; sourceTree = "<group>"; };
 		AD0000000000000000EF0000 /* ScreenPointer.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ScreenPointer.py; sourceTree = "<group>"; };
 		AD0000000000000000EF0100 /* ScreenPointerController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ScreenPointerController.py; sourceTree = "<group>"; };
 		AD0000000000000000CD0000 /* CallDetailsPanel.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = CallDetailsPanel.py; sourceTree = "<group>"; };
@@ -1902,6 +1905,7 @@
 				AD00000000000000005B0000 /* Base */,
 				AD00000000000000005A0000 /* SylkLocation.py */,
 				AD0000000000000000AB0000 /* AddressbookNotify.py */,
+				AD0000000000000000AB0010 /* AddressbookOrigin.py */,
 				AD0000000000000000EF0000 /* ScreenPointer.py */,
 				AD0000000000000000EF0100 /* ScreenPointerController.py */,
 				AD00000000000000004D0000 /* MessageHost.py */,
@@ -2643,6 +2647,7 @@
 				AD00000000000000005B0001 /* Base in Resources */,
 				AD00000000000000005A0001 /* SylkLocation.py in Resources */,
 				AD0000000000000000AB0001 /* AddressbookNotify.py in Resources */,
+				AD0000000000000000AB0011 /* AddressbookOrigin.py in Resources */,
 				AD00000000000000004D0001 /* MessageHost.py in Resources */,
 				1F22731812B554F50010A8B2 /* PresenceOfflineWindow.xib in Resources */,
 				1F22731A12B554F50010A8B2 /* 200901@login.zipdx.com.tiff in Resources */,
@@ -2959,6 +2964,7 @@
 				AD00000000000000005B0003 /* Base in Resources */,
 				AD00000000000000005A0003 /* SylkLocation.py in Resources */,
 				AD0000000000000000AB0003 /* AddressbookNotify.py in Resources */,
+				AD0000000000000000AB0013 /* AddressbookOrigin.py in Resources */,
 				AD0000000000000000EF0003 /* ScreenPointer.py in Resources */,
 				AD0000000000000000EF0103 /* ScreenPointerController.py in Resources */,
 				AD00000000000000004D0003 /* MessageHost.py in Resources */,

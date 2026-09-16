@@ -66,6 +66,7 @@ from twisted.internet import reactor
 from ChatViewController import MSG_STATE_SENT, MSG_STATE_DELIVERED, MSG_STATE_DISPLAYED, MSG_STATE_FAILED
 
 import AddressbookNotify
+import AddressbookOrigin
 from BlinkLogger import BlinkLogger
 from KeyEscrow import (escrow_is_missing, install_keypair, log_self_contact,
                        restore_from_own_contact, write_self_keys)
@@ -1561,6 +1562,7 @@ class SMSWindowManagerClass(NSObject):
         _notify_state = self._abNotifyState(account)
         BlinkLogger().log_info('[ab] [lifecycle] Addressbook of %s: a new document arrived, applying it%s'
                                % (account.id, self._abLifecycleElapsed(account)))
+        self._abLogOrigins(account, data)
         if _notify_state['awaiting_reload']:
             _notify_state['awaiting_reload'] = False
             _notify_state['retried'] = False
@@ -1577,6 +1579,40 @@ class SMSWindowManagerClass(NSObject):
             self._applyReloadedAddressbook(account)
         finally:
             self.resumeAddressbookNotifications()
+
+    AB_ORIGIN_CAP = 50
+
+    @objc.python_method
+    def _abLogOrigins(self, account, data):
+        """Say which device changed what, for every document that arrives.
+
+        Compared against the last document seen for this account, kept on
+        disk so that a change made while Blink was not running -- the case
+        that matters most -- is still attributed on the next launch. Read-only
+        with respect to the addressbook.
+        """
+        try:
+            addressbook = getattr(data, 'addressbook', None)
+            if addressbook is None:
+                return
+            path = ApplicationData.get('addressbook_origins/%s.json' % account.id)
+            previous = AddressbookOrigin.load_snapshot(path)
+            changes, snapshot = AddressbookOrigin.diff_document(addressbook, previous, this_device_id())
+            AddressbookOrigin.save_snapshot(path, snapshot)
+            if changes is None:
+                BlinkLogger().log_info('[ab] [origin] Addressbook of %s: baseline of %d contact(s), %d group(s) '
+                                       '-- changes are attributed from the next document on'
+                                       % (account.id, len(snapshot['contacts']), len(snapshot['groups'])))
+                return
+            if not changes:
+                return
+            BlinkLogger().log_info('[ab] [origin] Addressbook of %s: %d change(s) since the last document'
+                                   % (account.id, len(changes)))
+            for line in AddressbookOrigin.format_changes(changes, cap=self.AB_ORIGIN_CAP):
+                BlinkLogger().log_info('[ab] [origin]   %s' % line)
+        except Exception as e:
+            BlinkLogger().log_info('[ab] [origin] cannot attribute the changes in the addressbook of %s: %s'
+                                   % (getattr(account, 'id', '?'), e))
 
     @objc.python_method
     def _applyReloadedAddressbook(self, account):
