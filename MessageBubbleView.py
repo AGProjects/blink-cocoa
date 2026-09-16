@@ -2990,12 +2990,25 @@ class MessageBubbleView(NSView):
         Clicking the film itself still plays it here; that gesture is
         handled where it is made.
         """
-        path = self.media_path
+        path = str(self.media_path or '')
         if not path:
+            BlinkLogger().log_info('Open on message %s: no file on disc' % self.msgid)
+            return
+        if not os.path.exists(path):
+            BlinkLogger().log_error('Cannot open %s from message %s: the file is gone'
+                                    % (path, self.msgid))
             return
         try:
             BlinkLogger().log_info('Opening %s from message %s' % (path, self.msgid))
-            NSWorkspace.sharedWorkspace().openFile_(str(path))
+            workspace = NSWorkspace.sharedWorkspace()
+            # openFile: answers NO rather than raising, and ignoring the
+            # answer made a refusal look like a click that never landed.
+            if workspace.openFile_(path):
+                return
+            if workspace.openURL_(NSURL.fileURLWithPath_(path)):
+                return
+            BlinkLogger().log_error('Launch Services would not open %s from message %s'
+                                    % (path, self.msgid))
         except Exception as e:
             BlinkLogger().log_error('Cannot open %s: %s' % (path, e))
 
@@ -6054,7 +6067,7 @@ class MessageBubbleView(NSView):
             self.copyBodyToPasteboard()
             return
         if self.msgid and self._hits(point, self._open_rect, header and self._showsOpen()):
-            BlinkLogger().log_debug('Bubble %s: open' % self.msgid)
+            BlinkLogger().log_info('Bubble %s: open glyph' % self.msgid)
             self.openFile()
             return
         if self.msgid and self._hits(point, self._save_rect, header and self._showsSaveAs()):
@@ -6070,6 +6083,16 @@ class MessageBubbleView(NSView):
         if self.msgid and self._hits(point, self._info_rect, header and self._showsCallInfo()):
             self.performSelector_withObject_afterDelay_('showCallDetails:', None, 0.0)
             return
+        if header and self.holdsDraggableFile() \
+                and self._bubble_rect.origin.y <= point.y <= self._bubble_rect.origin.y + PAD + HEADER_H:
+            # A press in a file bubble's header that no glyph claimed. Said
+            # at info level with every target, because "the open arrow does
+            # nothing" cannot be told apart from a mis-aimed rect otherwise.
+            BlinkLogger().log_info(
+                'Bubble %s: header press at (%.0f,%.0f) hit nothing: open=%s(%s) copy=%s save=%s reply=%s delete=%s'
+                % (self.msgid, point.x, point.y, _rect_text(self._open_rect), self._showsOpen(),
+                   _rect_text(self._copy_rect), _rect_text(self._save_rect),
+                   _rect_text(self._reply_rect), _rect_text(self._delete_rect)))
         # The quote is checked before the body: it sits inside the bubble,
         # and a click on it means "show me the message this answers", not
         # anything the bubble underneath would do with the same point.
