@@ -329,6 +329,10 @@ class NativeChatViewController(ChatViewController):
     # The strip's visible state as last logged: which widgets show, which
     # the transcript covers, and why. Logged on change only.
     _history_chrome_state = None
+    # Set the first time the USER scrolls up in this conversation. The
+    # "hold up-scrolling" hint is an answer to that gesture; offered before
+    # it, over a transcript nobody has moved, it is noise on every open.
+    _user_scrolled_up = False
     _attach_button = None
     _record_button = None
     _smiley_button = None
@@ -2318,7 +2322,7 @@ class NativeChatViewController(ChatViewController):
         to mention it because a probe did not come back hides something
         that does work.
         """
-        if not self._more_history:
+        if not self._more_history or not self._user_scrolled_up:
             return ''
         _oldest, _newest, count = self.loadedMessageRange()
         if not count:
@@ -5963,7 +5967,37 @@ class NativeChatViewController(ChatViewController):
             origin_y = notification.object().bounds().origin.y
         except Exception:
             return
+        if not self._user_scrolled_up:
+            self._noteUserScroll(origin_y)
         self.isScrolling_(origin_y)
+
+    @objc.python_method
+    def _noteUserScroll(self, origin_y):
+        """Arm the scroll-back hint once the user has scrolled up.
+
+        Only a scroll the user made counts: the clip view also moves when a
+        page lands, when the transcript pins itself to the bottom and when a
+        reply reveals its original, and none of those are the user asking
+        for older messages. A wheel or trackpad event, or a drag on the
+        scroller, that leaves the view off the bottom -- or pulls past the
+        top of a transcript too short to scroll -- is.
+        """
+        try:
+            from AppKit import NSApp
+            event = NSApp.currentEvent()
+            kind = int(event.type()) if event is not None else -1
+        except Exception:
+            return
+        # NSEventTypeScrollWheel = 22, NSEventTypeLeftMouseDragged = 6
+        if kind not in (22, 6):
+            return
+        listview = self.messageListView
+        at_bottom = listview.isScrolledToBottom() if listview is not None else True
+        if at_bottom and origin_y >= 0:
+            return
+        self._user_scrolled_up = True
+        BlinkLogger().log_debug('User scrolled up: the scroll-back hint may show')
+        self.setNeedsHistoryChrome()
 
     @objc.python_method
     def scrollToBottom(self):
