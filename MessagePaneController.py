@@ -1897,15 +1897,29 @@ class MessagePaneController(NSObject):
             viewer.replayHistoryIfNeeded()
         except AttributeError:
             pass
-            # The view was framed while it was hidden, possibly against a
-            # container that had no size yet. Anything the conversation
-            # placed by hand has to be re-asserted now that it does.
+        # The view was framed while it was hidden, possibly against a
+        # container that had no size yet. Anything the conversation placed
+        # by hand has to be re-asserted now that it does -- the composer's
+        # buttons, and the strip above the transcript: autoresizing a
+        # hidden view through a zero-height container clamps the scroll
+        # view's height, and on the way back up it grows over the range
+        # label and the search field. This block used to sit inside the
+        # except above, so it only ran for a viewer with no history replay.
+        controller = getattr(viewer, 'chatViewController', None)
+        if controller is not None:
             try:
-                viewer.chatViewController.ensureAttachButton()
+                controller.ensureAttachButton()
             except AttributeError:
-                pass                    # nothing to stop
+                pass
             except Exception as e:
                 BlinkLogger().log_error('Cannot lay out the composer for %s: %s'
+                                        % (viewer.remote_uri, e))
+            try:
+                controller.updateHistoryChrome()
+            except AttributeError:
+                pass
+            except Exception as e:
+                BlinkLogger().log_error('Cannot lay out the history chrome for %s: %s'
                                         % (viewer.remote_uri, e))
 
         load_trace_bucket('- show content', _t)
@@ -1964,6 +1978,8 @@ class MessagePaneController(NSObject):
                                   '' if previous is None else
                                   ' (was showing %s)' % self._conversationLabel(previous)))
 
+        self._logConversationLoad(viewer)
+
         if self.isConversationVisible(viewer):
             self.conversationBecameVisible(viewer)
         else:
@@ -1976,6 +1992,39 @@ class MessagePaneController(NSObject):
             # the screen in front of them.
             self._unread.pop(viewer, None)
             self._clearUnread(viewer)
+
+    @objc.python_method
+    def _logConversationLoad(self, viewer):
+        """What the conversation just switched to holds, beyond the bubbles.
+
+        The switching line says how many messages are on screen; this says
+        what the transcript was loaded from and what the strip above it is
+        doing: stored total, whether history is still to replay, the filter,
+        the categories on offer, and the chrome state.
+        """
+        controller = getattr(viewer, 'chatViewController', None)
+        if controller is None:
+            return
+        try:
+            stored = getattr(viewer, 'total_history_messages', None)
+            categories = getattr(viewer, 'available_categories', None)
+            BlinkLogger().log_info(
+                'Message pane: %s loaded: stored=%s, from-history=%s, replay-pending=%s, '
+                'more-history=%s, filter=%s, categories=%s, search=%r, note=%r'
+                % (self._conversationLabel(viewer), stored,
+                   getattr(viewer, 'message_count_from_history', None),
+                   bool(getattr(viewer, 'history_replay_pending', False)),
+                   bool(getattr(controller, '_more_history', False)),
+                   getattr(controller, 'message_filter', None) or 'all',
+                   ','.join(str(c) for c in categories) if categories else 'none',
+                   getattr(controller, 'search_text', None),
+                   getattr(controller, 'history_note', '')))
+            BlinkLogger().log_info('Message pane: %s chrome: %s'
+                                   % (self._conversationLabel(viewer),
+                                      controller.historyChromeSummary()))
+        except Exception as e:
+            BlinkLogger().log_error('Cannot describe what %s loaded: %s'
+                                    % (getattr(viewer, 'remote_uri', None), e))
 
     @objc.python_method
     def _conversationLabel(self, viewer, name=None):

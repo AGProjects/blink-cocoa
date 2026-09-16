@@ -326,6 +326,9 @@ class NativeChatViewController(ChatViewController):
     # The loaded-range sentence last written above the transcript, so the same
     # one is not logged twice.
     _history_chrome_text = ''
+    # The strip's visible state as last logged: which widgets show, which
+    # the transcript covers, and why. Logged on change only.
+    _history_chrome_state = None
     _attach_button = None
     _record_button = None
     _smiley_button = None
@@ -2130,6 +2133,7 @@ class NativeChatViewController(ChatViewController):
         # a hidden row that keeps its space is a band of empty linen over
         # the filter chips.
         self._layoutHistoryChrome()
+        self._logHistoryChromeIfChanged(has_messages, stored, searchable)
         control = self.messageFilterControl
         if control is not None and not control.isHidden():
             # The width picker and the fetch-everything button are placed
@@ -2168,6 +2172,72 @@ class NativeChatViewController(ChatViewController):
                 self.delegate.log_info('Showing %s' % text)
             except AttributeError:
                 BlinkLogger().log_info('Showing %s' % text)
+
+    @objc.python_method
+    def historyChromeSummary(self):
+        """One line describing the strip above the transcript as it is now.
+
+        For each widget: hidden or shown, its vertical extent, and whether
+        the transcript's frame overlaps it -- a shown widget under the
+        scroll view is exactly as invisible as a hidden one, and the two
+        need different fixes. Then the geometry the collapse works from.
+        """
+        output = self.outputView
+        container = output.superview() if output is not None else None
+        if container is None:
+            return 'no container'
+        out = output.frame()
+        parts = ['container h=%.0f' % container.bounds().size.height,
+                 'transcript y=%.0f..%.0f' % (out.origin.y, out.origin.y + out.size.height)]
+        for name in ('lastMessagesLabel', 'searchMessagesBox', 'messageFilterControl'):
+            widget = getattr(self, name, None)
+            if widget is None:
+                parts.append('%s=none' % name)
+                continue
+            frame = widget.frame()
+            state = 'hidden' if widget.isHidden() else 'shown'
+            if widget.superview() != container:
+                state += ',elsewhere'
+            elif not widget.isHidden() and NSIntersectsRect(frame, out):
+                state += ',UNDER-TRANSCRIPT'
+            elif frame.origin.y + frame.size.height > container.bounds().size.height + 0.5 \
+                    or frame.origin.y < -0.5:
+                state += ',OUTSIDE'
+            parts.append('%s=%s y=%.0f..%.0f' % (name, state, frame.origin.y,
+                                                  frame.origin.y + frame.size.height))
+        if self._chrome_rows is None:
+            parts.append('rows=not captured')
+        else:
+            parts.append('rows=%d ref_h=%.0f inset=%.0f applied=%s'
+                         % (len(self._chrome_rows), self._chrome_ref_height or 0.0,
+                            self._chrome_output_inset or 0.0, self._chrome_applied))
+        return '; '.join(parts)
+
+    @objc.python_method
+    def _logHistoryChromeIfChanged(self, has_messages, stored, searchable):
+        """Say why the range label and the search field are or are not shown."""
+        try:
+            label = self.lastMessagesLabel
+            search = self.searchMessagesBox
+            state = (bool(label is not None and not label.isHidden()),
+                     bool(search is not None and not search.isHidden()),
+                     bool(has_messages), stored, bool(self.search_text),
+                     self.historyChromeSummary())
+        except Exception as e:
+            BlinkLogger().log_error('Cannot describe the transcript chrome: %s' % e)
+            return
+        if state == self._history_chrome_state:
+            return
+        self._history_chrome_state = state
+        text = ('History chrome: range label %s, search %s (rendered=%d, stored=%s, query=%s) -- %s'
+                % ('shown' if state[0] else 'hidden',
+                   'shown' if state[1] else 'hidden',
+                   len(self.rendered_messages or []), stored,
+                   'yes' if state[4] else 'no', state[5]))
+        try:
+            self.delegate.log_info(text)
+        except AttributeError:
+            BlinkLogger().log_info(text)
 
     @objc.python_method
     def setHistoryNote(self, text):

@@ -1,5 +1,5 @@
 #!/bin/bash
-
+#
 # sudo port install create-dmg
 
 if [ -f dmg/Blink.dmg ]; then rm -rf dmg/Blink.dmg; fi

@@ -5521,8 +5521,13 @@ class SMSViewController(NSObject):
         except Exception:
             in_view = loaded
         notes = max(loaded - in_view, 0)
-        self.log_info('Render history completed: %d message(s) in view%s'
-                      % (in_view, '' if not notes else ', %d system note(s)' % notes))
+        self.log_info('Render history completed: %d message(s) in view%s; '
+                      'page rows=%d, stored=%s, filter=%s, categories=%s'
+                      % (in_view, '' if not notes else ', %d system note(s)' % notes,
+                         self.message_count_from_history, self.total_history_messages,
+                         self.active_category() or 'all',
+                         ','.join(str(c) for c in self.available_categories)
+                         if self.available_categories else 'none'))
         self.stopLoadingSpinner('the history page came back with %d row(s), %d in view'
                                 % (self.message_count_from_history, in_view))
 
