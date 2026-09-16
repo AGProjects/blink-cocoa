@@ -1,0 +1,231 @@
+# Copyright (C) 2026 AG Projects. See LICENSE for details.
+#
+"""Remote pointer on a shared screen -- wire format and geometry.
+
+Interoperates with sylk-mobile (app/components/CallCapabilities.js,
+VideoBox.js _sendPointer, app.js incoming in-call message dispatch). Every
+message is an in-dialog SIP MESSAGE on the call, JSON bodies:
+
+  application/sylk-capabilities       {"version": 1, "capabilities": [...]}
+      Sent once by each side when the call starts. A peer that never sends
+      one supports nothing; unknown tokens are ignored. "pointer" means the
+      sender draws pointers it receives on the screen it shares.
+
+  application/sylk-screen-sharing     {"action": "start" | "stop"}
+      The sender started/stopped sending its screen as video. The request /
+      request_accept / request_reject actions are not implemented here, so
+      Blink does not advertise "screen-request" or "screen-sharing".
+
+  application/sylk-pointer            {"x": 0..1, "y": 0..1, "t": <ms>}
+      The viewer clicked the shared screen. x/y are normalized on the video
+      frame, origin top-left. t identifies the click.
+
+  application/sylk-pointer-ack        {"t": <ms>}
+      The sharer drew click t; the viewer echoes it locally.
+
+  application/sylk-pointer-visibility {"inApp": true | false}
+      The sharer can (not) draw pointers right now (iOS can only draw inside
+      Sylk). Blink draws over the whole screen, so it never sends this.
+
+Nothing here touches Cocoa or sipsimple, so test_screen_pointer.py can run it
+standalone. ScreenPointerController does the notifications, sending, and
+drawing.
+"""
+
+import json
+import re
+import time
+
+__all__ = ['CAPABILITIES_CONTENT_TYPE', 'SCREEN_SHARING_CONTENT_TYPE',
+           'POINTER_CONTENT_TYPE', 'POINTER_ACK_CONTENT_TYPE',
+           'POINTER_VISIBILITY_CONTENT_TYPE', 'CONTENT_TYPES', 'CAP_POINTER',
+           'my_capabilities', 'build_capabilities', 'parse_capabilities',
+           'build_sharing', 'parse_sharing', 'build_pointer', 'parse_pointer',
+           'build_ack', 'parse_ack', 'parse_visibility', 'new_click_id',
+           'screen_index', 'is_screen_device', 'fit_rect', 'view_to_frame',
+           'frame_to_view', 'frame_to_screen']
+
+
+CAPABILITIES_CONTENT_TYPE = 'application/sylk-capabilities'
+SCREEN_SHARING_CONTENT_TYPE = 'application/sylk-screen-sharing'
+POINTER_CONTENT_TYPE = 'application/sylk-pointer'
+POINTER_ACK_CONTENT_TYPE = 'application/sylk-pointer-ack'
+POINTER_VISIBILITY_CONTENT_TYPE = 'application/sylk-pointer-visibility'
+
+CONTENT_TYPES = frozenset([CAPABILITIES_CONTENT_TYPE, SCREEN_SHARING_CONTENT_TYPE,
+                           POINTER_CONTENT_TYPE, POINTER_ACK_CONTENT_TYPE,
+                           POINTER_VISIBILITY_CONTENT_TYPE])
+
+CAPABILITIES_VERSION = 1
+
+# Wire tokens, keep them identical to CallCapabilities.js.
+CAP_POINTER = 'pointer'
+
+# Name of the capture devices python3-sipsimple's avf_dev.m lists for the
+# displays: "My screen" is the main display, "My screen 2" the next one...
+SCREEN_DEVICE_NAME = 'My screen'
+
+_screen_name_re = re.compile(r'^%s(?: (\d+))?$' % re.escape(SCREEN_DEVICE_NAME))
+
+
+def my_capabilities():
+    return [CAP_POINTER]
+
+
+def _loads(content):
+    if isinstance(content, (bytes, bytearray)):
+        content = bytes(content).decode('utf-8')
+    return json.loads(content)
+
+
+def _number(value):
+    return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+
+# --- capabilities -----------------------------------------------------------
+
+def build_capabilities(capabilities=None):
+    if capabilities is None:
+        capabilities = my_capabilities()
+    return json.dumps({'version': CAPABILITIES_VERSION, 'capabilities': list(capabilities)})
+
+
+def parse_capabilities(content):
+    """List of tokens, or None if the payload is unusable."""
+    try:
+        tokens = _loads(content).get('capabilities')
+    except Exception:
+        return None
+    if not isinstance(tokens, list):
+        return None
+    return [token for token in tokens if isinstance(token, str)]
+
+
+# --- screen sharing start / stop -----------------------------------------------
+
+def build_sharing(action):
+    if action not in ('start', 'stop'):
+        raise ValueError('action must be start or stop')
+    return json.dumps({'action': action})
+
+
+def parse_sharing(content):
+    """'start' or 'stop'; None for anything else, including the request
+    handshake actions, which older peers are expected to ignore."""
+    try:
+        action = _loads(content).get('action')
+    except Exception:
+        return None
+    return action if action in ('start', 'stop') else None
+
+
+# --- pointer ------------------------------------------------------------------
+
+def new_click_id():
+    """Milliseconds, like Date.now() on sylk-mobile."""
+    return int(time.time() * 1000)
+
+
+def build_pointer(x, y, t):
+    return json.dumps({'x': round(x, 3), 'y': round(y, 3), 't': t})
+
+
+def parse_pointer(content):
+    """(x, y, t) with x/y in 0..1 and t possibly None, or None."""
+    try:
+        data = _loads(content)
+        x, y = data.get('x'), data.get('y')
+    except Exception:
+        return None
+    if not (_number(x) and _number(y)) or not (0 <= x <= 1 and 0 <= y <= 1):
+        return None
+    t = data.get('t')
+    return x, y, (t if _number(t) else None)
+
+
+def build_ack(t):
+    return json.dumps({'t': t})
+
+
+def parse_ack(content):
+    try:
+        t = _loads(content).get('t')
+    except Exception:
+        return None
+    return t if _number(t) else None
+
+
+def parse_visibility(content):
+    try:
+        in_app = _loads(content).get('inApp')
+    except Exception:
+        return None
+    return in_app if isinstance(in_app, bool) else None
+
+
+# --- capture devices ------------------------------------------------------------
+
+def screen_index(device_name):
+    """0 for "My screen", n-1 for "My screen n", None for a camera."""
+    match = _screen_name_re.match(device_name or '')
+    if match is None:
+        return None
+    number = int(match.group(1)) if match.group(1) else 1
+    return number - 1 if number >= 1 else None
+
+
+def is_screen_device(device_name):
+    return screen_index(device_name) is not None
+
+
+# --- geometry -------------------------------------------------------------------
+#
+# Normalized coordinates are on the video FRAME, origin at the top-left, the
+# way the viewer measures them. View coordinates here are AppKit's, origin at
+# the bottom-left.
+
+def fit_rect(content_w, content_h, box_w, box_h):
+    """(x, y, w, h) of content aspect-fitted and centred in the box."""
+    if content_w <= 0 or content_h <= 0 or box_w <= 0 or box_h <= 0:
+        return 0.0, 0.0, float(box_w), float(box_h)
+    scale = min(float(box_w) / content_w, float(box_h) / content_h)
+    w, h = content_w * scale, content_h * scale
+    return (box_w - w) / 2.0, (box_h - h) / 2.0, w, h
+
+
+def view_to_frame(px, py, view_w, view_h, frame_w, frame_h):
+    """A click in a view showing the frame aspect-fitted -> normalized point
+    on the frame, or None when the click is on the black bars."""
+    x, y, w, h = fit_rect(frame_w, frame_h, view_w, view_h)
+    if w <= 0 or h <= 0:
+        return None
+    nx = (px - x) / w
+    ny = 1.0 - (py - y) / h
+    if not (0 <= nx <= 1 and 0 <= ny <= 1):
+        return None
+    return nx, ny
+
+
+def frame_to_view(nx, ny, view_w, view_h, frame_w, frame_h):
+    x, y, w, h = fit_rect(frame_w, frame_h, view_w, view_h)
+    return x + nx * w, y + (1.0 - ny) * h
+
+
+def frame_to_screen(nx, ny, frame_w, frame_h, screen_w, screen_h, letterboxed):
+    """Point normalized on the frame we send -> normalized on the display.
+
+    When the capture letterboxes (ScreenCaptureKit keeps the aspect ratio on
+    macOS 14 and later) the display sits aspect-fitted inside the frame, and a
+    click on the bars points at nothing: None. Otherwise the display was
+    scaled to the frame and the coordinates are the same.
+    """
+    if not letterboxed or frame_w <= 0 or frame_h <= 0:
+        return nx, ny
+    x, y, w, h = fit_rect(screen_w, screen_h, frame_w, frame_h)
+    if w <= 0 or h <= 0:
+        return None
+    sx = (nx * frame_w - x) / w
+    sy = (ny * frame_h - y) / h
+    if not (0 <= sx <= 1 and 0 <= sy <= 1):
+        return None
+    return sx, sy

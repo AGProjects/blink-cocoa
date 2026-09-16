@@ -174,6 +174,15 @@ class SessionControllersManager(object, metaclass=Singleton):
 
         SessionHistoryReplicator()
 
+        # Remote pointer on shared screens (capabilities, share start/stop and
+        # pointer messages inside calls). Not every target ships it.
+        try:
+            from ScreenPointerController import ScreenPointerManager
+        except ImportError:
+            pass
+        else:
+            ScreenPointerManager()
+
     @property
     def pause_music(self):
         return SIPSimpleSettings().audio.pause_music and NSApp.delegate().pause_music_enabled

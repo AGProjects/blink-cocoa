@@ -86,6 +86,7 @@ from Foundation import (NSAttributedString,
                         NSTask,
                         NSTaskDidTerminateNotification,
                         NSMakePoint,
+                        NSPointInRect,
                         NSInsetRect,
                         NSWidth,
                         NSHeight,
@@ -271,6 +272,17 @@ from application.notification import IObserver, NotificationCenter
 from application.python import Null
 from zope.interface import implementer
 from BlinkLogger import BlinkLogger
+
+try:
+    import ScreenPointer
+    from ScreenPointerController import ScreenPointerManager, PointerEchoView
+except ImportError:     # the remote pointer is not part of every target
+    ScreenPointer = None
+    ScreenPointerManager = None
+    PointerEchoView = None
+
+# How long the viewer's green "the peer drew it" ring stays up.
+POINTER_ECHO_SECONDS = 0.9
 
 bundle = NSBundle.bundleWithPath_(objc.pathForFramework('ApplicationServices.framework'))
 objc.loadBundleFunctions(bundle, globals(), [('CGEventSourceSecondsSinceLastEventType', b'diI')])
@@ -476,6 +488,13 @@ class VideoWidget(NSView):
         except Exception:
             local_producer = None
         self._is_self_view = (producer is not None and producer is local_producer)
+        if self._is_self_view and ScreenPointer is not None:
+            # A shared screen is shown the way it is sent: text must read.
+            try:
+                if ScreenPointer.is_screen_device(SIPApplication.video_device.real_name):
+                    self._is_self_view = False
+            except Exception:
+                pass
         self._apply_self_view_mirror()
 
         # A remote stream is shared through VideoFrameSource rather than
@@ -625,6 +644,15 @@ class VideoWidget(NSView):
     def mouseDown_(self, event):
         if hasattr(self.delegate, "mouseDown_"):
             self.delegate.mouseDown_(event)
+
+    def resetCursorRects(self):
+        # Pointing at the peer's shared screen: say so with the cursor.
+        try:
+            delegate = self.delegate
+        except Exception:
+            delegate = None
+        if getattr(delegate, 'pointer_mode', False) and getattr(delegate, 'videoView', None) is self:
+            self.addCursorRect_cursor_(self.visibleRect(), NSCursor.pointingHandCursor())
 
     @property
     def delegate(self):
@@ -1698,6 +1726,10 @@ class VideoWindowController(NSWindowController):
 
     holdButton = objc.IBOutlet()
     cameraButton = None
+    pointerButton = None
+    pointer_mode = False
+    pointerEchoView = None
+    pointer_echo_timer = None
     video_swapped = False
     remote_widget_aspect = None
     hangupButton = objc.IBOutlet()
@@ -1786,6 +1818,142 @@ class VideoWindowController(NSWindowController):
     @property
     def media_received(self):
         return self.streamController.media_received
+
+    # --- remote pointer on the peer's shared screen ----------------------------------
+
+    @objc.python_method
+    def _pointerSession(self):
+        sc = self.sessionController
+        return sc.session if sc is not None else None
+
+    @objc.python_method
+    def _NH_BlinkScreenPointerDidChange(self, sender, data):
+        if sender is self._pointerSession():
+            self.updatePointerButton()
+
+    @objc.python_method
+    def _NH_BlinkScreenPointerGotAck(self, sender, data):
+        if sender is self._pointerSession():
+            self.showPointerEcho(data.x, data.y)
+
+    @objc.python_method
+    def pointerAvailable(self):
+        if ScreenPointerManager is None or self.closed or self.video_swapped:
+            return False
+        session = self._pointerSession()
+        return session is not None and ScreenPointerManager().can_point(session)
+
+    @objc.python_method
+    def updatePointerButton(self):
+        if self.pointerButton is None:
+            return
+        available = self.pointerAvailable()
+        if not available and self.pointer_mode:
+            self.setPointerMode(False)
+        self.pointerButton.setHidden_(not available)
+        self.pointerButton.configure('hand.point.up.left.fill', NSLocalizedString("Pointer", "Video call bar"),
+                                     tint=NSColor.systemGreenColor() if self.pointer_mode else None)
+
+    @objc.python_method
+    def setPointerMode(self, enabled):
+        enabled = bool(enabled)
+        if enabled == self.pointer_mode:
+            return
+        self.pointer_mode = enabled
+        sc = self.sessionController
+        if sc is not None:
+            sc.log_info('Remote pointer %s' % ('on' if enabled else 'off'))
+        if self.pointerButton is not None:
+            self.pointerButton.configure('hand.point.up.left.fill', NSLocalizedString("Pointer", "Video call bar"),
+                                         tint=NSColor.systemGreenColor() if enabled else None)
+        window = self.window()
+        if window is not None and self.videoView is not None:
+            window.invalidateCursorRectsForView_(self.videoView)
+        if enabled:
+            self.showToast(NSLocalizedString("Click on the shared screen to point", "Label"))
+
+    @objc.IBAction
+    def userClickedPointerButton_(self, sender):
+        if self.pointerAvailable():
+            self.setPointerMode(not self.pointer_mode)
+
+    @objc.python_method
+    def handlePointerClick(self, event):
+        """Send a click on the remote video as a pointer. True when the click
+        was meant for pointing and must not do anything else."""
+        view = self.videoView
+        if view is None or not self.pointerAvailable():
+            return False
+        location = event.locationInWindow()
+        for other in (self.myVideoView, self.buttonsView):
+            if other is None or other.window() is None or other.isHidden() or other.alphaValue() < 0.05:
+                continue
+            if NSPointInRect(other.convertPoint_fromView_(location, None), other.bounds()):
+                return False
+        point = view.convertPoint_fromView_(location, None)
+        bounds = view.bounds()
+        if not NSPointInRect(point, bounds):
+            return False
+        frame = view._frame
+        if frame is None or not frame.width or not frame.height:
+            return True
+        y = bounds.size.height - point.y if view.isFlipped() else point.y
+        normalized = ScreenPointer.view_to_frame(point.x, y, bounds.size.width, bounds.size.height,
+                                                 frame.width, frame.height)
+        if normalized is None:
+            return True     # on the black bars around the picture
+        manager = ScreenPointerManager()
+        session = self._pointerSession()
+        if not manager.peer_in_app(session):
+            self.showToast(NSLocalizedString("%s left Sylk, the pointer cannot be shown right now", "Label") % self.title)
+            return True
+        manager.send_pointer(session, normalized[0], normalized[1])
+        return True
+
+    @objc.python_method
+    def showPointerEcho(self, nx, ny):
+        view = self.videoView
+        if view is None or PointerEchoView is None or not self.pointer_mode:
+            return
+        frame = view._frame
+        container = view.superview()
+        if frame is None or container is None or not frame.width or not frame.height:
+            return
+        echo = self.pointerEchoView
+        if echo is None or echo.superview() is not container:
+            if echo is not None:
+                echo.removeFromSuperview()
+            echo = PointerEchoView.alloc().initWithFrame_(view.frame())
+            container.addSubview_positioned_relativeTo_(echo, NSWindowAbove, view)
+            self.pointerEchoView = echo
+        echo.setFrame_(view.frame())
+        bounds = view.bounds()
+        x, y = ScreenPointer.frame_to_view(nx, ny, bounds.size.width, bounds.size.height, frame.width, frame.height)
+        if view.isFlipped():
+            y = bounds.size.height - y
+        echo.point = (x, y)
+        echo.setHidden_(False)
+        echo.setNeedsDisplay_(True)
+        if self.pointer_echo_timer is not None and self.pointer_echo_timer.isValid():
+            self.pointer_echo_timer.invalidate()
+        self.pointer_echo_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(
+            POINTER_ECHO_SECONDS, self, "pointerEchoTimerFired:", None, False)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.pointer_echo_timer, NSRunLoopCommonModes)
+
+    def pointerEchoTimerFired_(self, timer):
+        self.pointer_echo_timer = None
+        if self.pointerEchoView is not None:
+            self.pointerEchoView.setHidden_(True)
+
+    @objc.python_method
+    def closePointer(self):
+        self.pointer_mode = False
+        if self.pointer_echo_timer is not None and self.pointer_echo_timer.isValid():
+            self.pointer_echo_timer.invalidate()
+        self.pointer_echo_timer = None
+        if self.pointerEchoView is not None:
+            self.pointerEchoView.removeFromSuperview()
+            self.pointerEchoView = None
     
     @objc.python_method
     def updateMuteButton(self):
@@ -1818,8 +1986,12 @@ class VideoWindowController(NSWindowController):
         self.notification_center.add_observer(self, name='BlinkMuteChangedState')
         self.notification_center.add_observer(self, name='BlinkAudioStreamChangedHoldState')
         self.notification_center.add_observer(self, name='VideoDeviceDidChangeCamera')
+        if ScreenPointerManager is not None:
+            self.notification_center.add_observer(self, name='BlinkScreenPointerDidChange')
+            self.notification_center.add_observer(self, name='BlinkScreenPointerGotAck')
 
         self._buildCallBar()
+        self.updatePointerButton()
 
         self.hangupButton.setToolTip_(NSLocalizedString("Hangup", "Label"))
         self.chatButton.setToolTip_(NSLocalizedString("Chat", "Label"))
@@ -1968,6 +2140,7 @@ class VideoWindowController(NSWindowController):
             self.remote_widget_aspect = self.videoView.aspect_ratio
         main, thumb = (local, remote) if swapping else (remote, local)
         self.video_swapped = swapping
+        self.updatePointerButton()
         self.sessionController.log_info('Video %s' % ('swapped: local camera in the main view'
                                                       if swapping else 'restored: remote in the main view'))
         for view in (self.videoView, self.myVideoView):
@@ -2020,6 +2193,13 @@ class VideoWindowController(NSWindowController):
         self.cameraButton = add('camera', NSLocalizedString("Camera", "Video call bar"),
                                 'userClickedCameraButton:')
         self.cameraButton.setToolTip_(NSLocalizedString("Video and camera", "Label"))
+        if ScreenPointerManager is not None:
+            # Only while the peer shares a screen it can draw our pointer on;
+            # updatePointerButton() shows it.
+            self.pointerButton = add('hand.point.up.left.fill', NSLocalizedString("Pointer", "Video call bar"),
+                                     'userClickedPointerButton:')
+            self.pointerButton.setToolTip_(NSLocalizedString("Point at the shared screen", "Label"))
+            self.pointerButton.setHidden_(True)
         self.holdButton = add('pause.fill', NSLocalizedString("Hold", "Video call bar"),
                               'userClickedHoldButton:')
         self.chatButton = add('message.fill', NSLocalizedString("Chat", "Video call bar"),
@@ -2418,6 +2598,9 @@ class VideoWindowController(NSWindowController):
             return
 
         if self.streamController.ended:
+            return
+        if self.pointer_mode and self.handlePointerClick(event):
+            self.initialLocation = None     # a click to point, not a window drag
             return
         self.initialLocation = event.locationInWindow()
         # ANY click on the video window resurrects the chrome.
@@ -3084,7 +3267,8 @@ class VideoWindowController(NSWindowController):
             if recorder is not None:
                 nc.discard_observer(self, sender=recorder)
             for name in ('BlinkMuteChangedState', 'BlinkAudioStreamChangedHoldState',
-                         'VideoDeviceDidChangeCamera'):
+                         'VideoDeviceDidChangeCamera', 'BlinkScreenPointerDidChange',
+                         'BlinkScreenPointerGotAck'):
                 nc.discard_observer(self, name=name)
 
         # The camera first: anything that goes wrong later must not leave
@@ -3117,6 +3301,7 @@ class VideoWindowController(NSWindowController):
         step('stopping the recording timer', self.stopRecordingTimer)
         step('stopping the stats timer', self.stopStatsOverlayTimer)
         step('hiding the note', lambda: self.hideToast(animate=False))
+        step('leaving pointer mode', self.closePointer)
         step('stopping the idle timer', self.stopIdleTimer)
         step('stopping the mouse timer', self.stopMouseOutTimer)
         step('removing tracking areas', self.closeTrackingAreas)
