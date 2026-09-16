@@ -29,6 +29,9 @@ export LDFLAGS="-L/opt/local/lib"
 
 pip3 install --upgrade pip
 pip3 install -r requirements-python.txt
+# python3-application from the local ~/work/python3-application checkout.
+# Must come before requirements-sipsimple.txt (python3-otr's setup.py imports it).
+./03b-install_python3-application.sh || exit 1
 # --no-build-isolation: python3-otr's setup.py imports `application`, which
 # only resolves if the active venv (not pip's ephemeral build env) is in use.
 pip3 install --no-build-isolation -r requirements-sipsimple.txt

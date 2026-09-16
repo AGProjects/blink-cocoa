@@ -1,21 +1,19 @@
 #!/bin/bash
-# Install python3-application from the sibling checkout into Blink's venv,
-# replacing whatever version pip installed from requirements (e.g. the
-# release-3.0.7 GitHub tarball). Assumes the python3-application/ checkout
-# sits next to blink/, i.e. at ../../python3-application relative to this
-# script. Override with PY3APP_DIR.
+# Build and install python3-application from the local checkout at
+# ~/work/python3-application into Blink's venv. This is the only source of
+# python3-application for Blink (it is not in requirements-python.txt);
+# 03-install-python-deps.sh calls this script. Override with PY3APP_DIR.
 
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-PY3APP_DIR="${PY3APP_DIR:-$(cd "$SCRIPT_DIR/../../python3-application" 2>/dev/null && pwd)}"
+PY3APP_DIR="${PY3APP_DIR:-$HOME/work/python3-application}"
 
-if [ -z "$PY3APP_DIR" ] || [ ! -f "$PY3APP_DIR/setup.py" ] || [ ! -d "$PY3APP_DIR/application" ]; then
+if [ -z "$PY3APP_DIR" ] || { [ ! -f "$PY3APP_DIR/pyproject.toml" ] && [ ! -f "$PY3APP_DIR/setup.py" ]; } || [ ! -d "$PY3APP_DIR/application" ]; then
     echo
     echo "Cannot find python3-application checkout."
-    echo "Expected at \$PY3APP_DIR or at ../../python3-application"
-    echo "(relative to $SCRIPT_DIR)."
+    echo "Expected at ${PY3APP_DIR} (override with PY3APP_DIR)."
     echo
     exit 1
 fi
@@ -34,7 +32,7 @@ rm -rf build python3_application.egg-info
 
 pip3 install --force-reinstall --no-deps --no-build-isolation .
 
-# Verify the execute_once fix is the version actually in use.
+# Verify the execute_once and NotificationCenter deadlock fixes are in the version actually in use.
 echo
 echo "Verifying installed application.python.decorator ..."
 cd /  # keep CWD off sys.path so we test the installed copy, not the source tree
@@ -51,16 +49,22 @@ a = A(); a.load(); a.load()
 assert a.load.called is True and A.load.called is True
 with A.load.lock:
     pass
+
+# python3-application#7: NotificationCenter.lock must be reentrant (weakref cleanup under GC)
+from application.notification import NotificationCenter
+lock = NotificationCenter('__build_check__').lock
+with lock:
+    assert lock.acquire(blocking=False), "NotificationCenter.lock is not reentrant (issue #7 fix missing)"
+    lock.release()
+
 print("  package:  %s" % application.__file__)
+print("  version:  %s" % application.__version__)
+print("  notification lock: OK (reentrant)")
 print("  execute_once: OK (lock + called work, %s)" % ("python %d.%d" % sys.version_info[:2]))
 EOF
 
 echo
 echo "python3-application installed into ${VIRTUAL_ENV}."
-echo "NOTE: requirements-python.txt still pins the release-3.0.7 tarball;"
-echo "      re-running 03-install-python-deps.sh will overwrite this install."
-echo "      Re-run this script afterwards, or bump the pin once a new"
-echo "      python3-application release is tagged."
 
 # ---------------------------------------------------------------------------
 # Copy the installed package into the Distribution tree (same destination as

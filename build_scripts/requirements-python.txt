@@ -13,4 +13,5 @@ pytz
 certifi
 cryptography
 pgpy
-python3-application @ https://github.com/AGProjects/python3-application/archive/refs/tags/release-3.0.8.tar.gz
+# python3-application is NOT installed from here: 03-install-python-deps.sh runs
+# 03b-install_python3-application.sh, which builds it from ~/work/python3-application.
