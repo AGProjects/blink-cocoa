@@ -12,9 +12,19 @@ message is an in-dialog SIP MESSAGE on the call, JSON bodies:
       sender draws pointers it receives on the screen it shares.
 
   application/sylk-screen-sharing     {"action": "start" | "stop"}
-      The sender started/stopped sending its screen as video. The request /
-      request_accept / request_reject actions are not implemented here, so
-      Blink does not advertise "screen-request" or "screen-sharing".
+      The sender started/stopped sending its screen as video.
+
+                                      {"action": "request", "id": <uuid>,
+                                       "expires": <ISO 8601>}
+      "Please share your screen". Offered only to a peer that advertised
+      "screen-sharing" (it can send a screen) and "screen-request" (it
+      understands this handshake). A request that arrives expired is dropped
+      without a reply; one left unanswered expires silently on both sides.
+
+                                      {"action": "request_accept" | "request_reject",
+                                       "id": <uuid>}
+      The answer. An accept is followed by an ordinary "start" once the
+      screen is actually on the wire; a peer already sharing accepts at once.
 
   application/sylk-pointer            {"x": 0..1, "y": 0..1, "t": <ms>}
       The viewer clicked the shared screen. x/y are normalized on the video
@@ -32,15 +42,20 @@ standalone. ScreenPointerController does the notifications, sending, and
 drawing.
 """
 
+import datetime
 import json
 import re
 import time
+import uuid
 
 __all__ = ['CAPABILITIES_CONTENT_TYPE', 'SCREEN_SHARING_CONTENT_TYPE',
            'POINTER_CONTENT_TYPE', 'POINTER_ACK_CONTENT_TYPE',
            'POINTER_VISIBILITY_CONTENT_TYPE', 'CONTENT_TYPES', 'CAP_POINTER',
            'my_capabilities', 'build_capabilities', 'parse_capabilities',
-           'build_sharing', 'parse_sharing', 'build_pointer', 'parse_pointer',
+           'CAP_SCREEN_SHARING', 'CAP_SCREEN_REQUEST', 'REQUEST_TTL',
+           'build_sharing', 'parse_sharing', 'parse_sharing_signal',
+           'build_request', 'build_request_reply', 'parse_expires',
+           'build_pointer', 'parse_pointer',
            'build_ack', 'parse_ack', 'parse_visibility', 'new_click_id',
            'screen_index', 'is_screen_device', 'fit_rect', 'view_to_frame',
            'frame_to_view', 'frame_to_screen']
@@ -59,7 +74,12 @@ CONTENT_TYPES = frozenset([CAPABILITIES_CONTENT_TYPE, SCREEN_SHARING_CONTENT_TYP
 CAPABILITIES_VERSION = 1
 
 # Wire tokens, keep them identical to CallCapabilities.js.
+CAP_SCREEN_SHARING = 'screen-sharing'
+CAP_SCREEN_REQUEST = 'screen-request'
 CAP_POINTER = 'pointer'
+
+# Lifetime of a screen request, as sylk-mobile puts on the wire.
+REQUEST_TTL = 60
 
 # Name of the capture devices python3-sipsimple's avf_dev.m lists for the
 # displays: "My screen" is the main display, "My screen 2" the next one...
@@ -68,7 +88,11 @@ SCREEN_DEVICE_NAME = 'My screen'
 _screen_name_re = re.compile(r'^%s(?: (\d+))?$' % re.escape(SCREEN_DEVICE_NAME))
 
 
-def my_capabilities():
+def my_capabilities(can_share_screen=True):
+    """Only claim screen sharing when this build can capture a screen (the
+    "My screen" devices exist): the peer offers "Request screen" on it."""
+    if can_share_screen:
+        return [CAP_SCREEN_SHARING, CAP_SCREEN_REQUEST, CAP_POINTER]
     return [CAP_POINTER]
 
 
@@ -109,14 +133,78 @@ def build_sharing(action):
     return json.dumps({'action': action})
 
 
-def parse_sharing(content):
-    """'start' or 'stop'; None for anything else, including the request
-    handshake actions, which older peers are expected to ignore."""
+SHARING_ACTIONS = ('start', 'stop', 'request', 'request_accept', 'request_reject')
+
+
+def parse_sharing_signal(content):
+    """{'action': ..., 'id': ..., 'expires': ...} or None. The request actions
+    need an id; 'expires' is left as sent (see parse_expires)."""
     try:
-        action = _loads(content).get('action')
+        data = _loads(content)
+        action = data.get('action')
     except Exception:
         return None
-    return action if action in ('start', 'stop') else None
+    if action not in SHARING_ACTIONS:
+        return None
+    request_id = data.get('id')
+    if action.startswith('request'):
+        if not isinstance(request_id, str) or not request_id:
+            return None
+    else:
+        request_id = None
+    return {'action': action, 'id': request_id, 'expires': data.get('expires')}
+
+
+def parse_sharing(content):
+    """'start' or 'stop'; None for anything else."""
+    signal = parse_sharing_signal(content)
+    return signal['action'] if signal and signal['action'] in ('start', 'stop') else None
+
+
+def _iso_utc(timestamp):
+    moment = datetime.datetime.fromtimestamp(timestamp, datetime.timezone.utc)
+    return moment.strftime('%Y-%m-%dT%H:%M:%S.') + '%03dZ' % (moment.microsecond // 1000)
+
+
+def build_request(request_id=None, now=None):
+    """(request_id, body). Expires REQUEST_TTL from now, in the same
+    toISOString() form sylk-mobile writes."""
+    if request_id is None:
+        request_id = str(uuid.uuid4())
+    if now is None:
+        now = time.time()
+    body = json.dumps({'action': 'request', 'id': request_id, 'expires': _iso_utc(now + REQUEST_TTL)})
+    return request_id, body
+
+
+def build_request_reply(action, request_id):
+    if action not in ('request_accept', 'request_reject'):
+        raise ValueError('action must be request_accept or request_reject')
+    return json.dumps({'action': action, 'id': request_id})
+
+
+def parse_expires(value):
+    """Epoch seconds of an ISO 8601 timestamp (or of epoch milliseconds),
+    None when unusable. A timestamp without a zone is taken as UTC."""
+    if _number(value):
+        return value / 1000.0
+    if not isinstance(value, str) or not value:
+        return None
+    text = value.strip()
+    if text.endswith(('Z', 'z')):
+        text = text[:-1] + '+00:00'
+    match = re.match(r'^(.*T\d{2}:\d{2}:\d{2})(\.\d+)?(.*)$', text)
+    if match is not None and match.group(2):
+        # fromisoformat before Python 3.11 wants 3 or 6 fraction digits
+        fraction = (match.group(2)[1:] + '000000')[:6]
+        text = '%s.%s%s' % (match.group(1), fraction, match.group(3))
+    try:
+        moment = datetime.datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    if moment.tzinfo is None:
+        moment = moment.replace(tzinfo=datetime.timezone.utc)
+    return moment.timestamp()
 
 
 # --- pointer ------------------------------------------------------------------

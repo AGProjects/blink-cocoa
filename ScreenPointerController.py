@@ -7,6 +7,10 @@ Wire format and geometry are in ScreenPointer.py. This module:
   * advertises our capabilities when a call starts, and records the peer's;
   * tells the peer when we start/stop sending a screen ("My screen" capture
     device on a call with video) and records when the peer does;
+  * runs the screen request handshake: asks the peer for its screen, and
+    prompts when the peer asks for ours -- accepting switches the video
+    device to the screen and puts the previous camera back when the call or
+    its video ends;
   * as the SHARER, draws the pointers the peer sends over the display being
     captured (PointerOverlay) and acks them;
   * as the VIEWER, sends pointers for VideoWindowController and reports the
@@ -14,11 +18,16 @@ Wire format and geometry are in ScreenPointer.py. This module:
 
 Per-call state lives here, keyed by the sipsimple Session, not in the video
 window, so it survives the window being closed and reopened mid-call.
-VideoWindowController listens for BlinkScreenPointerDidChange and
-BlinkScreenPointerGotAck, both posted with the Session as sender.
+VideoWindowController listens for BlinkScreenPointerDidChange,
+BlinkScreenPointerGotAck, BlinkScreenShareRequestDidResolve (data.result is
+accepted, rejected or timeout) and BlinkScreenPointerNotice (data.text), all
+posted with the Session as sender.
 """
 
-from AppKit import (NSBackingStoreBuffered,
+from AppKit import (NSAlert,
+                    NSAlertFirstButtonReturn,
+                    NSApp,
+                    NSBackingStoreBuffered,
                     NSColor,
                     NSScreen,
                     NSScreenSaverWindowLevel,
@@ -29,7 +38,7 @@ from AppKit import (NSBackingStoreBuffered,
                     NSWindowCollectionBehaviorIgnoresCycle,
                     NSWindowCollectionBehaviorStationary,
                     NSWindowStyleMaskBorderless)
-from Foundation import NSBezierPath, NSMakeRect, NSProcessInfo
+from Foundation import NSBezierPath, NSLocalizedString, NSMakeRect, NSProcessInfo
 from Quartz import (CABasicAnimation,
                     CACurrentMediaTime,
                     CAAnimationGroup,
@@ -47,8 +56,12 @@ from application.notification import IObserver, NotificationCenter, Notification
 from application.python import Null
 from application.python.types import Singleton
 from sipsimple.application import SIPApplication
+from sipsimple.configuration.settings import SIPSimpleSettings
+from sipsimple.core import Engine
 from sipsimple.threading import run_in_thread
 from zope.interface import implementer
+
+import time
 
 import ScreenPointer
 from BlinkLogger import BlinkLogger
@@ -64,6 +77,7 @@ PULSE_SECONDS = 0.38
 PULSES = 2
 FADE_SECONDS = 0.2
 PENDING_CLICK_TTL = 5.0         # seconds a sent click waits for its ack
+NSModalResponseAbort = -1001
 
 
 class _CallState(object):
@@ -75,6 +89,13 @@ class _CallState(object):
         self.sharing_signalled = False      # we told the peer 'start'
         self.pending_clicks = {}            # t -> (nx, ny, sent_at)
         self.last_drawn_click = None
+        # screen request, ours
+        self.request_id = None
+        # screen request, the peer's
+        self.handled_requests = set()
+        self.prompt = None                  # (request_id, alert, parent window)
+        self.awaiting_share = False         # accepted, the screen is not on yet
+        self.device_before_share = None     # settings.video.device to put back
 
 
 def _content_of(data):
@@ -108,6 +129,15 @@ def _local_screen_index():
         return ScreenPointer.screen_index(device.real_name)
     except Exception:
         return None
+
+
+def _screen_devices():
+    try:
+        devices = Engine().video_devices
+    except Exception:
+        return []
+    return sorted((device for device in devices if ScreenPointer.is_screen_device(device)),
+                  key=ScreenPointer.screen_index)
 
 
 def _capture_letterboxes():
@@ -321,6 +351,33 @@ class ScreenPointerManager(object, metaclass=Singleton):
         return bool(state is not None and state.peer_sharing and state.peer_capabilities
                     and ScreenPointer.CAP_POINTER in state.peer_capabilities)
 
+    def can_request_screen(self, session):
+        """The peer can send a screen and understands being asked, the call has
+        video, and neither side is sharing already."""
+        state = self.calls.get(session)
+        capabilities = (state.peer_capabilities or []) if state is not None else []
+        return bool(state is not None
+                    and ScreenPointer.CAP_SCREEN_SHARING in capabilities
+                    and ScreenPointer.CAP_SCREEN_REQUEST in capabilities
+                    and session.state == 'connected' and _video_established(session)
+                    and not state.peer_sharing and not state.sharing_signalled)
+
+    def screen_request_pending(self, session):
+        state = self.calls.get(session)
+        return state is not None and state.request_id is not None
+
+    def send_screen_request(self, session):
+        state = self.calls.get(session)
+        if state is None or state.request_id is not None or not self.can_request_screen(session):
+            return False
+        request_id, body = ScreenPointer.build_request()
+        state.request_id = request_id
+        self._send(session, ScreenPointer.SCREEN_SHARING_CONTENT_TYPE, body)
+        BlinkLogger().log_info('[screen-request] asked %s for the screen (%s)' % (session.remote_identity.uri, request_id))
+        call_later(ScreenPointer.REQUEST_TTL, self._request_expired, session, request_id)
+        self._changed(session)
+        return True
+
     def peer_in_app(self, session):
         state = self.calls.get(session)
         return state is None or state.peer_in_app
@@ -375,6 +432,8 @@ class ScreenPointerManager(object, metaclass=Singleton):
             return
         state.sharing_signalled = sharing
         state.last_drawn_click = None
+        if sharing:
+            state.awaiting_share = False
         self._send(session, ScreenPointer.SCREEN_SHARING_CONTENT_TYPE,
                    ScreenPointer.build_sharing('start' if sharing else 'stop'))
         BlinkLogger().log_info('[pointer] told %s we %s sharing the screen'
@@ -391,11 +450,15 @@ class ScreenPointerManager(object, metaclass=Singleton):
         state = self._state(session)
         if self._eligible(session) and not state.capabilities_sent:
             state.capabilities_sent = True
-            self._send(session, ScreenPointer.CAPABILITIES_CONTENT_TYPE, ScreenPointer.build_capabilities())
+            capabilities = ScreenPointer.my_capabilities(can_share_screen=bool(_screen_devices()))
+            self._send(session, ScreenPointer.CAPABILITIES_CONTENT_TYPE, ScreenPointer.build_capabilities(capabilities))
         self._update_sharing(session)
 
     def _NH_SIPSessionDidEnd(self, session, data):
-        if self.calls.pop(session, None) is not None:
+        state = self.calls.pop(session, None)
+        if state is not None:
+            self._dismiss_prompt(state)
+            self._restore_device(state)
             self._changed(session)
         if not self._anyone_sharing() and self.overlay is not None:
             self.overlay.hide()
@@ -419,10 +482,26 @@ class ScreenPointerManager(object, metaclass=Singleton):
             self._update_sharing(session)
         else:
             state.sharing_signalled = False
+        self._dismiss_prompt(state)
+        self._restore_device(state)
 
     def _NH_VideoDeviceDidChangeCamera(self, sender, data):
-        for session in list(self.calls):
+        on_screen = _local_screen_index() is not None
+        for session, state in list(self.calls.items()):
             self._update_sharing(session)
+            if on_screen:
+                continue
+            if state.awaiting_share:
+                # The capture fell back to a camera, on a first run because
+                # the Screen Recording permission is not granted yet.
+                state.awaiting_share = False
+                BlinkLogger().log_info('[screen-request] the screen could not be captured')
+                self._notice(session, NSLocalizedString(
+                    "Your screen could not be shared. Allow Blink in System Settings > Privacy & Security > Screen Recording, then restart Blink.", "Label"))
+                self._restore_device(state)
+            else:
+                # Back on a camera by hand: nothing left to put back.
+                state.device_before_share = None
 
     def _NH_SIPSessionGotMessage(self, session, data):
         content_type, body = _content_of(data)
@@ -439,13 +518,25 @@ class ScreenPointerManager(object, metaclass=Singleton):
                 self._changed(session)
 
         elif content_type == ScreenPointer.SCREEN_SHARING_CONTENT_TYPE:
-            action = ScreenPointer.parse_sharing(body)
-            if action is not None:
+            signal = ScreenPointer.parse_sharing_signal(body)
+            action = signal['action'] if signal is not None else None
+            if action in ('start', 'stop'):
                 state.peer_sharing = (action == 'start')
                 if state.peer_sharing:
                     state.peer_in_app = True
+                    state.request_id = None     # asked or not, the screen is here
                 BlinkLogger().log_info('[pointer] %s %sed sharing the screen' % (peer, action))
                 self._changed(session)
+            elif action == 'request':
+                self._got_screen_request(session, state, signal)
+            elif action in ('request_accept', 'request_reject'):
+                if signal['id'] == state.request_id:
+                    state.request_id = None
+                    result = 'accepted' if action == 'request_accept' else 'rejected'
+                    BlinkLogger().log_info('[screen-request] %s %s our request' % (peer, result))
+                    self.notification_center.post_notification('BlinkScreenShareRequestDidResolve', sender=session,
+                                                               data=NotificationData(result=result))
+                    self._changed(session)
 
         elif content_type == ScreenPointer.POINTER_CONTENT_TYPE:
             pointer = ScreenPointer.parse_pointer(body)
@@ -469,6 +560,147 @@ class ScreenPointerManager(object, metaclass=Singleton):
             if in_app is not None:
                 state.peer_in_app = in_app
                 self._changed(session)
+
+    # --- screen request -------------------------------------------------------------
+
+    def _notice(self, session, text):
+        self.notification_center.post_notification('BlinkScreenPointerNotice', sender=session,
+                                                   data=NotificationData(text=text))
+
+    def _request_expired(self, session, request_id):
+        state = self.calls.get(session)
+        if state is None or state.request_id != request_id:
+            return
+        state.request_id = None
+        BlinkLogger().log_info('[screen-request] %s did not answer' % session.remote_identity.uri)
+        self.notification_center.post_notification('BlinkScreenShareRequestDidResolve', sender=session,
+                                                   data=NotificationData(result='timeout'))
+        self._changed(session)
+
+    def _reply(self, session, action, request_id):
+        self._send(session, ScreenPointer.SCREEN_SHARING_CONTENT_TYPE,
+                   ScreenPointer.build_request_reply(action, request_id))
+
+    def _got_screen_request(self, session, state, signal):
+        request_id = signal['id']
+        peer = session.remote_identity.uri
+        if request_id in state.handled_requests:
+            return      # the same MESSAGE delivered twice
+        state.handled_requests.add(request_id)
+        expires = ScreenPointer.parse_expires(signal['expires'])
+        if expires is None or time.time() >= expires:
+            BlinkLogger().log_info('[screen-request] dropped a stale request from %s' % peer)
+            return
+        if state.sharing_signalled:
+            self._reply(session, 'request_accept', request_id)
+            return
+        if not _screen_devices() or not self._eligible(session):
+            self._reply(session, 'request_reject', request_id)
+            return
+        BlinkLogger().log_info('[screen-request] %s asks for our screen (%s)' % (peer, request_id))
+        self._dismiss_prompt(state)
+        self._prompt(session, state, request_id, expires)
+
+    def _peer_name(self, session):
+        try:
+            from SessionController import SessionControllersManager
+            controller = SessionControllersManager().sessionControllerForSession(session)
+            name = controller.titleShort if controller is not None else None
+        except Exception:
+            name = None
+        if not name:
+            identity = session.remote_identity
+            name = identity.display_name or '%s@%s' % (identity.uri.user, identity.uri.host)
+        return name
+
+    def _prompt_window(self, session):
+        try:
+            from SessionController import SessionControllersManager
+            controller = SessionControllersManager().sessionControllerForSession(session)
+            video = controller.streamHandlerOfType('video') if controller is not None else None
+            window = video.videoWindowController.window() if video is not None and video.videoWindowController else None
+            if window is not None and window.isVisible() and window.attachedSheet() is None:
+                return window
+        except Exception:
+            pass
+        window = NSApp.delegate().contactsWindowController.window()
+        if window is not None and window.attachedSheet() is None:
+            return window
+        return None
+
+    def _prompt(self, session, state, request_id, expires):
+        alert = NSAlert.alloc().init()
+        alert.setMessageText_(NSLocalizedString("Share your screen", "Window title"))
+        alert.setInformativeText_(NSLocalizedString(
+            "%s would like to see your screen.\n\nIf you accept, everything on your screen, notifications and other applications included, becomes visible until you pick a camera again.", "Label") % self._peer_name(session))
+        alert.addButtonWithTitle_(NSLocalizedString("Accept", "Button title"))
+        alert.addButtonWithTitle_(NSLocalizedString("Reject", "Button title"))
+        parent = self._prompt_window(session)
+        state.prompt = (request_id, alert, parent)
+
+        def answered(code):
+            if state.prompt is None or state.prompt[0] != request_id:
+                return      # expired or dismissed: no reply
+            state.prompt = None
+            self._answer(session, state, request_id, code == NSAlertFirstButtonReturn)
+
+        NSApp.activateIgnoringOtherApps_(True)
+        if parent is not None:
+            parent.makeKeyAndOrderFront_(None)
+            alert.beginSheetModalForWindow_completionHandler_(parent, answered)
+        else:
+            answered(alert.runModal())
+            return
+        call_later(max(0.0, expires - time.time()), self._prompt_expired, state, request_id)
+
+    def _prompt_expired(self, state, request_id):
+        if state.prompt is not None and state.prompt[0] == request_id:
+            BlinkLogger().log_info('[screen-request] request %s expired unanswered' % request_id)
+            self._dismiss_prompt(state)
+
+    def _dismiss_prompt(self, state):
+        prompt, state.prompt = state.prompt, None
+        if prompt is None:
+            return
+        request_id, alert, parent = prompt
+        try:
+            if parent is not None and parent.attachedSheet() is alert.window():
+                parent.endSheet_returnCode_(alert.window(), NSModalResponseAbort)
+        except Exception as e:
+            BlinkLogger().log_info('[screen-request] cannot dismiss the prompt: %s' % e)
+
+    def _answer(self, session, state, request_id, accepted):
+        if self.calls.get(session) is not state:
+            return      # the call is gone
+        if not accepted:
+            BlinkLogger().log_info('[screen-request] rejected the request of %s' % session.remote_identity.uri)
+            self._reply(session, 'request_reject', request_id)
+            return
+        self._reply(session, 'request_accept', request_id)
+        if state.sharing_signalled:
+            return
+        devices = _screen_devices()
+        if not devices:
+            return
+        settings = SIPSimpleSettings()
+        if not ScreenPointer.is_screen_device(settings.video.device):
+            state.device_before_share = settings.video.device
+        state.awaiting_share = True
+        BlinkLogger().log_info('[screen-request] accepted, switching video to %s' % devices[0])
+        settings.video.device = devices[0]
+        settings.save()
+
+    def _restore_device(self, state):
+        previous, state.device_before_share = state.device_before_share, None
+        state.awaiting_share = False
+        if previous is None or self._anyone_sharing():
+            return
+        settings = SIPSimpleSettings()
+        if not ScreenPointer.is_screen_device(settings.video.device):
+            return      # already moved off the screen
+        BlinkLogger().log_info('[screen-request] sharing over, video back to %s' % previous)
+        settings.video.device = previous
+        settings.save()
 
     # --- drawing -----------------------------------------------------------------
 

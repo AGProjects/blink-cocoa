@@ -1837,6 +1837,31 @@ class VideoWindowController(NSWindowController):
             self.showPointerEcho(data.x, data.y)
 
     @objc.python_method
+    def _NH_BlinkScreenShareRequestDidResolve(self, sender, data):
+        if sender is not self._pointerSession():
+            return
+        if data.result == 'accepted':
+            text = NSLocalizedString("%s accepted, waiting for the screen\u2026", "Label")
+        elif data.result == 'rejected':
+            text = NSLocalizedString("%s declined to share the screen", "Label")
+        else:
+            text = NSLocalizedString("%s did not respond to the screen request", "Label")
+        self.showToast(text % self.title)
+
+    @objc.python_method
+    def _NH_BlinkScreenPointerNotice(self, sender, data):
+        if sender is self._pointerSession():
+            self.showToast(data.text, seconds=10.0)
+
+    @objc.IBAction
+    def userClickedRequestScreen_(self, sender):
+        session = self._pointerSession()
+        if ScreenPointerManager is None or session is None:
+            return
+        if ScreenPointerManager().send_screen_request(session):
+            self.showToast(NSLocalizedString("Asked %s to share the screen", "Label") % self.title)
+
+    @objc.python_method
     def pointerAvailable(self):
         if ScreenPointerManager is None or self.closed or self.video_swapped:
             return False
@@ -1989,6 +2014,8 @@ class VideoWindowController(NSWindowController):
         if ScreenPointerManager is not None:
             self.notification_center.add_observer(self, name='BlinkScreenPointerDidChange')
             self.notification_center.add_observer(self, name='BlinkScreenPointerGotAck')
+            self.notification_center.add_observer(self, name='BlinkScreenShareRequestDidResolve')
+            self.notification_center.add_observer(self, name='BlinkScreenPointerNotice')
 
         self._buildCallBar()
         self.updatePointerButton()
@@ -2070,6 +2097,14 @@ class VideoWindowController(NSWindowController):
             enabled=connected, state=NSOnState if self.video_swapped else NSOffState)
         add(NSLocalizedString("Stop Video", "Menu item"), 'removeVideo:',
             enabled=self.sessionController is not None)
+        session = self._pointerSession()
+        if ScreenPointerManager is not None and session is not None:
+            manager = ScreenPointerManager()
+            pending = manager.screen_request_pending(session)
+            if pending or manager.can_request_screen(session):
+                add(NSLocalizedString("Requesting Screen\u2026", "Menu item") if pending
+                    else NSLocalizedString("Request Screen", "Menu item"),
+                    'userClickedRequestScreen:', enabled=connected and not pending)
 
         ratios = [ratio for ratio in self.valid_aspect_ratios if ratio is not None]
         aspect_item = add(NSLocalizedString("Aspect Ratio", "Menu item"), None,
@@ -3268,7 +3303,8 @@ class VideoWindowController(NSWindowController):
                 nc.discard_observer(self, sender=recorder)
             for name in ('BlinkMuteChangedState', 'BlinkAudioStreamChangedHoldState',
                          'VideoDeviceDidChangeCamera', 'BlinkScreenPointerDidChange',
-                         'BlinkScreenPointerGotAck'):
+                         'BlinkScreenPointerGotAck', 'BlinkScreenShareRequestDidResolve',
+                         'BlinkScreenPointerNotice'):
                 nc.discard_observer(self, name=name)
 
         # The camera first: anything that goes wrong later must not leave
