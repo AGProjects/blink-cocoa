@@ -2462,6 +2462,36 @@ class BlinkGroup(NSObject):
         return newest
 
 
+    @objc.python_method
+    def lastMessagePreviewForContact(self, contact):
+        """The text of this contact's newest typed message, or None.
+
+        Across all of the contact's addresses, the newest one wins -- the
+        same fan-out lastMessageTimeForContact does.
+        """
+        try:
+            from SMSWindowManager import SMSWindowManager
+            manager = SMSWindowManager()
+        except Exception:
+            return None
+
+        newest = None
+        try:
+            spellings = []
+            identifier = getattr(contact, 'id', None)
+            if identifier and '@' not in str(identifier):
+                spellings.append(str(identifier))     # Bonjour: keyed by instance id
+            for uri in getattr(contact, 'uris', ()):
+                spellings.extend(pstn_uri_spellings_for_accounts(str(uri.uri)))
+            for spelling in spellings:
+                preview = manager.lastMessagePreviewForURI(spelling)
+                if preview is not None and (newest is None or preview[0] > newest[0]):
+                    newest = preview
+        except Exception:
+            return None
+        return newest[1] if newest else None
+
+
 class VirtualBlinkGroup(BlinkGroup):
     """ Base class for Virtual Groups managed by Blink """
     type = None    # To be defined by a subclass
@@ -3385,6 +3415,44 @@ class CustomListModel(NSObject):
             return None
 
     @objc.python_method
+    def lastMessagePreviewForRow(self, outline, item):
+        """The typed text to quote on a row's second line, or None.
+
+        Messages group only, for the reason the time is: there a row is a
+        conversation. Everywhere else the second line keeps what its group
+        put there -- an address, a presence note, a call.
+        """
+        if not isinstance(item, BlinkContact):
+            return None
+        try:
+            group = outline.parentForItem_(item)
+            if isinstance(group, BlinkGroup) and group.isMessagesGroup():
+                return group.lastMessagePreviewForContact(item)
+        except Exception:
+            pass
+        return None
+
+    @objc.python_method
+    @run_in_gui_thread
+    def _NH_BlinkConversationPreviewChanged(self, notification):
+        """Redraw the rows whose quoted message changed.
+
+        keys None is a full load: every row of the Messages group, still
+        without reloadData, which would lose the scroll position.
+        """
+        keys = getattr(notification.data, 'keys', None)
+        if keys is not None:
+            for key in keys:
+                self._reloadRowsForKey(key)
+            return
+        outline = getattr(self, 'contactOutline', None)
+        if outline is None:
+            return
+        for group in getattr(self, 'groupsList', ()):
+            if isinstance(group, BlinkGroup) and group.isMessagesGroup():
+                outline.reloadItem_reloadChildren_(group, True)
+
+    @objc.python_method
     def _contactMatchesKey(self, contact, key):
         try:
             from SMSWindowManager import SMSWindowManager
@@ -3409,6 +3477,7 @@ class CustomListModel(NSObject):
             # conversation, and stamping every one of them with a chat time
             # turns the address book into something it is not.
             cell.setLastMessageTime_(self.lastMessageTimeForRow(outline, item))
+            cell.setLastMessagePreview_(self.lastMessagePreviewForRow(outline, item))
 
             if isinstance(item, BlinkContact):
                 cell.setContact_(item)
@@ -4376,6 +4445,7 @@ class ContactListModel(CustomListModel):
         self.nc.add_observer(self, name="BlinkComposingStateChanged")
         self.nc.add_observer(self, name="BlinkLocationSharingStateChanged")
         self.nc.add_observer(self, name="BlinkConversationOrderChanged")
+        self.nc.add_observer(self, name="BlinkConversationPreviewChanged")
         self.nc.add_observer(self, name="BlinkOnlineContactMustBeRemoved")
         self.nc.add_observer(self, name="BonjourAccountDidAddNeighbour")
         self.nc.add_observer(self, name="BonjourAccountDidUpdateNeighbour")

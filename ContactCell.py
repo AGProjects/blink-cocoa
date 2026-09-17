@@ -105,6 +105,9 @@ class ContactCell(NSTextFieldCell):
     BADGE_HEIGHT = 12.0
     BADGE_FONT_SIZE = 8.0
     lastMessageTime = None
+    # The newest typed message of the conversation, in the Messages group:
+    # drawn on the second line in place of the detail, as on mobile.
+    lastMessagePreview = None
     # True while the other party of this conversation is typing. Drawn on
     # the second line in place of the contact's detail: it is transient
     # text, not a count, so it has no business in the badge corner.
@@ -174,6 +177,9 @@ class ContactCell(NSTextFieldCell):
 
     def setLastMessageTime_(self, stamp):
         self.lastMessageTime = stamp
+
+    def setLastMessagePreview_(self, text):
+        self.lastMessagePreview = text or None
 
     def setComposing_(self, flag):
         self.composing = bool(flag)
@@ -350,6 +356,15 @@ class ContactCell(NSTextFieldCell):
             # the two and the one the user is about to see the result of,
             # and the share is still there on the line the moment it stops.
             text = SHARING_LOCATION_TEXT
+            attrs = self.secondLineAttributes if not self.isHighlighted() else self.secondLineAttributes_highlighted
+        elif self.lastMessagePreview:
+            # Swept like the detail below: a screenshot with mangling on
+            # must not leak a name or an address through what was said.
+            from ContactMangler import mangled_text
+            text = NSString.stringWithString_(
+                mangled_text(self.lastMessagePreview,
+                             uri=getattr(self.contact, 'uri', None),
+                             name=getattr(self.contact, 'name', None)))
             attrs = self.secondLineAttributes if not self.isHighlighted() else self.secondLineAttributes_highlighted
         elif self.contact.detail:
             # The detail line is built by whichever group owns the row --

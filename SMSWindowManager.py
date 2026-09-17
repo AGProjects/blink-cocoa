@@ -749,6 +749,16 @@ class SMSWindowManagerClass(NSObject):
     # so a call must not move a conversation up the Messages group, and a
     # message must not move a contact up the Calls group.
     last_call_times = {}
+    # canonical remote uri -> (naive UTC datetime, text): the newest thing
+    # somebody TYPED in the conversation, quoted on its row in the Messages
+    # group the way mobile's contact list does. Seeded from history after
+    # the message times, refreshed per conversation whenever one of its
+    # messages is stored or removed. See conversation_preview for what
+    # counts.
+    message_previews = {}
+    # Addresses whose preview went stale during a journal apply, refreshed
+    # together when it ends instead of one query per message.
+    _previews_stale_during_bulk = set()
     # contact id -> (canonical uri, newest message time known across that
     # contact's addresses when it was picked): the address chosen in the
     # conversation header. Held for the session only. It stands until any
@@ -2582,6 +2592,13 @@ class SMSWindowManagerClass(NSObject):
             self._order_changed_during_bulk = False
             self._postConversationOrderChanged(None)
 
+        if self._previews_stale_during_bulk:
+            stale = list(self._previews_stale_during_bulk)
+            self._previews_stale_during_bulk.clear()
+            # A first sync touches every conversation; one full read is
+            # cheaper than an IN list naming all of them.
+            self.loadMessagePreviews(None if len(stale) > 200 else stale)
+
         self._flushUnreadChanged()
 
     @objc.python_method
@@ -3630,6 +3647,8 @@ class SMSWindowManagerClass(NSObject):
         # rides on the read that already has it rather than making its own.
         self.auditMessagesGroupAgainstHistory(stored)
 
+        self.loadMessagePreviews()
+
     @objc.python_method
     @run_in_gui_thread
     def auditMessagesGroupAgainstHistory(self, stored):
@@ -3761,6 +3780,7 @@ class SMSWindowManagerClass(NSObject):
         self.last_message_times.clear()
         self.last_call_times.clear()
         self.message_accounts.clear()
+        self.message_previews.clear()
 
         for key in had_unread:
             self._postUnreadChanged(key, 0)
@@ -3807,11 +3827,133 @@ class SMSWindowManagerClass(NSObject):
         # conversation that has been removed, and the revival rule is about
         # the removal's clock rather than the conversation's.
         self._reviveDeletedConversation(key, when)
+        # Whatever the time says: a message older than the newest one can
+        # still be the newest TEXT, and the refresh re-reads rather than
+        # guesses.
+        self.refreshMessagePreview(remote_uri)
         known = self.last_message_times.get(key)
         if known is not None and when <= known:
             return
         self.last_message_times[key] = when
         self._postConversationOrderChanged(key)
+
+    @objc.python_method
+    def refreshMessagePreview(self, remote_uri):
+        """Re-read one conversation's preview after its messages changed."""
+        if not remote_uri:
+            return
+        if self._journal_bulk:
+            self._previews_stale_during_bulk.add(str(remote_uri))
+            return
+        self.loadMessagePreviews([str(remote_uri)])
+
+    @objc.python_method
+    def loadMessagePreviews(self, remote_uris=None):
+        """Read the preview candidates for some conversations, or all of them.
+
+        Callable from any thread: the query is a Deferred on the database
+        thread, the decryption runs on a worker of its own, and the result
+        lands on the GUI thread.
+        """
+        try:
+            d = self.history.last_text_messages_async(local_uri=active_account_uris(),
+                                                      remote_uri=remote_uris)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot read the message previews: %s' % e)
+            return
+        try:
+            d.addCallback(lambda result: self._buildMessagePreviews(result, remote_uris))
+            d.addErrback(lambda failure: BlinkLogger().log_error(
+                'Cannot read the message previews: %s' % failure.getErrorMessage()))
+        except AttributeError:
+            pass
+
+    @objc.python_method
+    @run_in_thread('message_previews')
+    def _buildMessagePreviews(self, result, remote_uris):
+        """Pick each conversation's preview from its candidates.
+
+        Off the GUI thread because a candidate may be armoured: a message
+        stored while its conversation was closed keeps its ciphertext until
+        somebody opens it. It is decrypted here and the plaintext written
+        back, exactly as opening the conversation would, so the cost is
+        paid once rather than on every launch.
+        """
+        from MessageHost import conversation_preview, is_pgp_armoured
+        try:
+            rows, reaction_ids = result
+        except Exception:
+            return
+        best = {}
+        settled = set()
+        decrypted = 0
+        for row in rows:
+            remote = row['remote_uri']
+            if remote in settled:
+                continue
+            body = row['body']
+            if isinstance(body, bytes):
+                try:
+                    body = body.decode('utf-8')
+                except UnicodeDecodeError:
+                    continue
+            if is_pgp_armoured(body):
+                plain = self._decrypt_pgp_for_account(row['local_uri'], body)
+                if plain is None:
+                    continue
+                body = plain
+                decrypted += 1
+                try:
+                    self.history.update_decrypted_message(row['msgid'], plain)
+                except Exception as e:
+                    BlinkLogger().log_error('Failed to persist decrypted message %s: %s'
+                                            % (row['msgid'], e))
+            text = conversation_preview(body, row['content_type'], row['msgid'], reaction_ids)
+            if text is None:
+                continue
+            settled.add(remote)
+            key = self._canonical_uri(remote)
+            when = self._normalized_timestamp(row['time'])
+            if not key or when is None:
+                continue
+            # Two spellings of one address are one conversation: the newer wins.
+            if key not in best or when > best[key][0]:
+                best[key] = (when, text)
+        if decrypted:
+            BlinkLogger().log_debug('Decrypted %d message(s) for the conversation previews'
+                                    % decrypted)
+        self._applyMessagePreviews(best, remote_uris)
+
+    @objc.python_method
+    @run_in_gui_thread
+    def _applyMessagePreviews(self, best, remote_uris):
+        if remote_uris is None:
+            asked = set(self.message_previews) | set(best)
+        else:
+            asked = set(filter(None, (self._canonical_uri(uri) for uri in remote_uris))) | set(best)
+        changed = []
+        for key in asked:
+            value = best.get(key)
+            if self.message_previews.get(key) == value:
+                continue
+            if value is None:
+                self.message_previews.pop(key, None)
+            else:
+                self.message_previews[key] = value
+            changed.append(key)
+        if not changed:
+            return
+        if remote_uris is None:
+            BlinkLogger().log_info('Conversation previews loaded for %d conversation(s)'
+                                   % len(self.message_previews))
+        self.notification_center.post_notification(
+            'BlinkConversationPreviewChanged', sender=self,
+            data=NotificationData(keys=None if remote_uris is None else changed))
+
+    @objc.python_method
+    def lastMessagePreviewForURI(self, remote_uri):
+        """(naive UTC datetime, text) for the conversation, or None."""
+        return self.message_previews.get(self._canonical_uri(remote_uri))
 
     @objc.python_method
     def lastMessageTimeForURI(self, remote_uri):
@@ -3991,6 +4133,7 @@ class SMSWindowManagerClass(NSObject):
         self.deleted_conversations[key] = when
         self.closeConversationForURI(key)
         self.last_message_times.pop(key, None)
+        self.message_previews.pop(key, None)
         if self.unread_counts.pop(key, None):
             self._postUnreadChanged(key, 0)
         self._postConversationOrderChanged(key)
@@ -4203,6 +4346,7 @@ class SMSWindowManagerClass(NSObject):
 
         for uri in targets:
             self.last_message_times.pop(uri, None)
+            self.message_previews.pop(self._canonical_uri(uri), None)
             if self.unread_counts.pop(uri, None):
                 self._postUnreadChanged(uri, 0)
             self._postConversationOrderChanged(uri)
@@ -5538,6 +5682,8 @@ class SMSWindowManagerClass(NSObject):
         their conversation is filed under.
         """
         self.history.tombstone_message(target_id)
+        if contact:
+            self.refreshMessagePreview(contact)
         if viewer is None and contact:
             viewer = self._viewerForContact(account, contact)
         if viewer is not None:

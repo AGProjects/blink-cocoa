@@ -308,6 +308,116 @@ def quote_digest(body, is_html=False, limit=QUOTE_DIGEST_CHARS):
     return flat
 
 
+# How much of a message the contact list quotes on a conversation's row.
+# Mobile's buildLastMessage cuts at the same length; the row truncates to
+# its own width on top of that, so this only bounds the work.
+CONVERSATION_PREVIEW_CHARS = 100
+
+# Text a client writes on the user's behalf rather than anything they typed
+# -- meeting and live-location lifecycle notes, the share / meet-up / request
+# announcements. Mobile's buildLastMessage keeps these out of the preview by
+# the same patterns, matched on the body because on the receiving side the
+# sender's metadata flags are gone and the text is all there is.
+_PREVIEW_SYNTHETIC_RE = None
+_PREVIEW_ARRIVAL_RE = None
+
+
+def _preview_patterns():
+    global _PREVIEW_SYNTHETIC_RE, _PREVIEW_ARRIVAL_RE
+    if _PREVIEW_SYNTHETIC_RE is None:
+        import re
+        _PREVIEW_SYNTHETIC_RE = re.compile(
+            u'^(?:'
+            u'Meeting (?:request|expired|cancelled|stopped|succeeded)\\b'
+            u'|\U0001F4CD '
+            u'|You met\\b'
+            u'|I want to meet (?:up with you|with you, too!?)'
+            u'|I am sharing the location with you'
+            u'|Could you share your current location'
+            u')')
+        _PREVIEW_ARRIVAL_RE = re.compile(u'arrived at the meeting point\\s*$', re.I)
+    return _PREVIEW_SYNTHETIC_RE, _PREVIEW_ARRIVAL_RE
+
+
+def is_pgp_armoured(body):
+    if not isinstance(body, str):
+        return False
+    stripped = body.strip()
+    return (stripped.startswith('-----BEGIN PGP MESSAGE-----')
+            and stripped.endswith('-----END PGP MESSAGE-----'))
+
+
+def is_pure_emoji(text):
+    """True for a body made of nothing but emoji (and joiners, modifiers,
+    whitespace). Python's re has no \\p{Extended_Pictographic}, so this walks
+    the code points instead."""
+    import unicodedata
+    seen = False
+    for ch in text or '':
+        if ch.isspace():
+            continue
+        cp = ord(ch)
+        if cp in (0x200D, 0xFE0E, 0xFE0F, 0x20E3) or 0x1F3FB <= cp <= 0x1F3FF \
+                or 0xE0020 <= cp <= 0xE007F:
+            continue
+        if cp < 0x80:
+            return False
+        if unicodedata.category(ch) == 'So' or 0x1F000 <= cp <= 0x1FAFF:
+            seen = True
+            continue
+        return False
+    return seen
+
+
+def conversation_preview(body, content_type, msgid=None, reaction_ids=()):
+    """The line a conversation's row quotes for this message, or None.
+
+    None means "not this one, look at an older message": the preview is
+    what somebody TYPED, as on mobile. Only text/* rows qualify -- a file,
+    a location or a call record leaves the previous text in place -- and of
+    those, keys, call-ended and key-received notes, the synthetic location
+    and meeting announcements, and one-tap reactions are passed over.
+
+    A reaction is a pure-emoji body that is itself a reply (its id is in
+    `reaction_ids`, the reply ids of the conversation's reply links): the
+    wire strips the sender's isReaction flag, so this is inferred exactly
+    as mobile infers it.
+
+    The body must already be cleartext; an armoured one returns None.
+    """
+    content_type = str(content_type or '')
+    if not (content_type == 'text' or content_type.startswith('text/')):
+        return None
+    if content_type in ('text/pgp-public-key', 'text/pgp-private-key'):
+        return None
+    if isinstance(body, bytes):
+        try:
+            body = body.decode('utf-8')
+        except UnicodeDecodeError:
+            return None
+    if not isinstance(body, str) or is_pgp_armoured(body):
+        return None
+
+    is_html = content_type == 'text/html'
+    if is_html:
+        from util import html2txt
+        text = html2txt(body)
+    else:
+        text = body
+    stripped = (text or '').strip()
+    if not stripped:
+        return None
+    if ' call ended ' in stripped or 'Public key received' in stripped:
+        return None
+    synthetic, arrival = _preview_patterns()
+    if synthetic.match(stripped) or arrival.search(stripped):
+        return None
+    if msgid and str(msgid) in reaction_ids and len(stripped) <= 24 \
+            and is_pure_emoji(stripped):
+        return None
+    return quote_digest(stripped, is_html=False, limit=CONVERSATION_PREVIEW_CHARS)
+
+
 def reply_metadata(body):
     """The reply link carried by a sylk-message-metadata envelope, or None.
 

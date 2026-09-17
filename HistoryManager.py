@@ -2613,6 +2613,92 @@ class ChatHistory(object, metaclass=Singleton):
         """
         return block_on(self._last_message_accounts(media_type, local_uri))
 
+    # How many of a conversation's newest text rows the preview looks at. The
+    # newest is almost always the answer; the rest cover a newest row that is
+    # a reaction or a synthetic announcement, without reading the whole
+    # conversation to find one that is not.
+    PREVIEW_CANDIDATES = 5
+
+    @run_in_db_thread
+    def _last_text_messages(self, media_type, local_uri, remote_uri):
+        table = ChatMessage.sqlmeta.table
+        where = (self._media_type_sql(media_type)
+                 + " and category = 'text'"
+                 + self._uri_in_sql('local_uri', local_uri)
+                 + self._uri_in_sql('remote_uri', remote_uri))
+        columns = 'remote_uri, local_uri, msgid, time, content_type, body'
+        # category = 'text' is stamped at insert (and backfilled), so this
+        # rides category_time_idx rather than parsing every row's type.
+        query = ('select %(columns)s from (select %(columns)s, row_number() over '
+                 '(partition by remote_uri order by time desc, id desc) as rn '
+                 'from %(table)s%(where)s) where rn <= %(depth)d '
+                 'order by remote_uri, time desc'
+                 % {'columns': columns, 'table': table, 'where': where,
+                    'depth': self.PREVIEW_CANDIDATES})
+        try:
+            rows = self.db.queryAll(query)
+        except Exception as e:
+            # An SQLite without window functions (< 3.25): newest row only.
+            BlinkLogger().log_warning('Preview query fell back to the newest row only: %s' % e)
+            query = ('select m.remote_uri, m.local_uri, m.msgid, m.time, m.content_type, m.body '
+                     'from %(table)s m join (select remote_uri, max(time) as newest '
+                     'from %(table)s%(where)s group by remote_uri) latest '
+                     'on m.remote_uri = latest.remote_uri and m.time = latest.newest '
+                     "where m.category = 'text' and (m.deleted is null or m.deleted = 0)"
+                     % {'table': table, 'where': where})
+            try:
+                rows = self.db.queryAll(query)
+            except Exception as e:
+                BlinkLogger().log_error('Error reading the last text messages: %s' % e)
+                return [], set()
+
+        result = []
+        for row in rows:
+            try:
+                remote, local, msgid, stamp, content_type, body = row
+            except Exception:
+                continue
+            if not remote or not stamp:
+                continue
+            result.append({'remote_uri': str(remote), 'local_uri': str(local or ''),
+                           'msgid': str(msgid or ''), 'time': str(stamp),
+                           'content_type': str(content_type or ''), 'body': body})
+
+        # Reply links, so a one-tap reaction (a pure-emoji reply) can be told
+        # from a typed message. Only the reply ids are kept.
+        reaction_ids = set()
+        if result:
+            from MessageHost import reply_metadata
+            query = ("select body from %s where content_type = 'application/sylk-message-metadata' "
+                     "and %s and body like '%%reply%%'%s%s"
+                     % (table, NOT_DELETED_SQL,
+                        self._uri_in_sql('local_uri', local_uri),
+                        self._uri_in_sql('remote_uri', remote_uri)))
+            try:
+                for (body,) in self.db.queryAll(query):
+                    link = reply_metadata(body)
+                    if link:
+                        reaction_ids.add(link['reply_id'])
+            except Exception as e:
+                BlinkLogger().log_error('Error reading the reply links: %s' % e)
+        return result, reaction_ids
+
+    def last_text_messages_async(self, media_type=MESSAGE_MEDIA_TYPES, local_uri=None,
+                                 remote_uri=None):
+        """A Deferred firing with ([row, ...], reaction_ids).
+
+        The newest few text rows of each conversation, newest first within
+        each remote_uri -- the candidates for the line the contact list
+        quotes under the contact's name. Which of them is quoted is not
+        decided here: an armoured body has to be decrypted first, and that
+        is not the database thread's work.
+
+        Deferred rather than block_on so it can be asked from the GUI
+        thread; the rows are read after any add_message already queued on
+        the single database thread, so a message just stored is included.
+        """
+        return self._last_text_messages(media_type, local_uri, remote_uri)
+
     def last_message_times(self, media_type=MESSAGE_MEDIA_TYPES, local_uri=None):
         """{remote_uri: 'YYYY-MM-DD HH:MM:SS'} for every conversation.
 
