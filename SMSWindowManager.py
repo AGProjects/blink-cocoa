@@ -749,6 +749,13 @@ class SMSWindowManagerClass(NSObject):
     # so a call must not move a conversation up the Messages group, and a
     # message must not move a contact up the Calls group.
     last_call_times = {}
+    # contact id -> (canonical uri, newest message time known across that
+    # contact's addresses when it was picked): the address chosen in the
+    # conversation header. Held for the session only. It stands until any
+    # of the contact's addresses carries a newer message, after which the
+    # last-used rule in messageURIForContact decides again -- a pick is
+    # "talk to them over this one", not a setting that outlives the talk.
+    message_target_picks = {}
     _order_changed_during_bulk = False
     _unread_changed_during_bulk = set()
     # Resolved SIP routes, shared by every conversation. Keyed by the actual
@@ -4344,6 +4351,92 @@ class SMSWindowManagerClass(NSObject):
         except KeyError:
             return None
         return account if account is not None and account.enabled else None
+
+    @objc.python_method
+    def contactMessageURIs(self, contact):
+        """A contact's addresses a conversation could run on, in addressbook order.
+
+        Blanks, duplicates (by canonical form) and web links are left out:
+        an addressbook entry can carry a homepage, and that is not somewhere
+        a message goes.
+        """
+        uris = []
+        seen = set()
+        try:
+            entries = list(getattr(contact, 'uris', None) or [])
+        except Exception:
+            return uris
+        for entry in entries:
+            text = str(getattr(entry, 'uri', '') or '').strip()
+            kind = str(getattr(entry, 'type', '') or '').lower()
+            if not text or '://' in text or kind in ('url', 'bonjour'):
+                continue
+            key = self._canonical_uri(text)
+            if not key or key in seen:
+                continue
+            seen.add(key)
+            uris.append(text)
+        return uris
+
+    @objc.python_method
+    def messageURIForContact(self, contact):
+        """Which of a contact's addresses a conversation with them runs on.
+
+        Not simply the default address. A person with two addresses is
+        talked to over one of them, and the default is a property of the
+        address book entry -- it is what a call dials, it syncs to every
+        device, and it can be changed by any of them. Opening the
+        conversation on it put a reply to a chat held on one address onto
+        the other one, with the merged transcript hiding that anything had
+        changed.
+
+        So, like the account: whichever address last carried a message
+        either way. An address picked in the header wins until a message
+        newer than the pick arrives on any of them. The default is only the
+        answer for a contact nobody has messaged yet.
+        """
+        default = str(getattr(contact, 'uri', '') or '')
+        # By class name: ContactListModel imports this module.
+        if contact is None or type(contact).__name__ == 'BonjourBlinkContact':
+            return default
+        uris = self.contactMessageURIs(contact)
+        if len(uris) < 2:
+            return default
+
+        best, best_when = None, None
+        for uri in uris:
+            when = self.last_message_times.get(self._canonical_uri(uri))
+            if when is not None and (best_when is None or when > best_when):
+                best, best_when = uri, when
+
+        contact_id = getattr(contact, 'id', None)
+        pick = self.message_target_picks.get(contact_id) if contact_id else None
+        if pick is not None:
+            picked, newest_at_pick = pick
+            match = next((uri for uri in uris if self._canonical_uri(uri) == picked), None)
+            # Nothing newer than what was known at the pick: it stands.
+            stands = best_when is None or (newest_at_pick is not None and best_when <= newest_at_pick)
+            if match is not None and stands:
+                return match
+            # The address was removed from the contact, or a message has
+            # moved the conversation on since: the pick is spent.
+            self.message_target_picks.pop(contact_id, None)
+
+        return best or default
+
+    @objc.python_method
+    def pickMessageURIForContact(self, contact, uri):
+        """Remember the address chosen in the header for this contact."""
+        contact_id = getattr(contact, 'id', None)
+        key = self._canonical_uri(uri)
+        if not contact_id or not key:
+            return
+        newest = None
+        for other in self.contactMessageURIs(contact):
+            when = self.last_message_times.get(self._canonical_uri(other))
+            if when is not None and (newest is None or when > newest):
+                newest = when
+        self.message_target_picks[contact_id] = (key, newest)
 
     @objc.python_method
     def adoptAccount(self, viewer, account):

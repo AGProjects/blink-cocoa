@@ -1480,11 +1480,20 @@ class ContactWindowController(NSWindowController):
             target = str(self.searchBox.stringValue()).strip()
             display_name = ''
         else:
-            target = contact.uri
             display_name = contact.name
             if contact in self.model.bonjour_group.contacts:
+                target = contact.uri
                 account = BonjourAccount()
                 instance_id = contact.id
+            elif uri:
+                # One address picked from the contact's Send Message submenu.
+                # It used to be ignored and the message went to the default
+                # address; now it is used, and remembered as the address this
+                # conversation runs on, the same as a pick in the pane header.
+                target = uri
+                SMSWindowManager.SMSWindowManager().pickMessageURIForContact(contact, uri)
+            else:
+                target = SMSWindowManager.SMSWindowManager().messageURIForContact(contact) or contact.uri
 
         if instance_id is None:
             account = self.messagingAccountFor(account, contact)
@@ -3412,7 +3421,14 @@ class ContactWindowController(NSWindowController):
             return None
 
         instance_id = None
-        target = contact.uri
+        # Not contact.uri, which is the default address: for a contact with
+        # more than one, the conversation runs on the one last messaged (or
+        # picked in the pane header). See messageURIForContact.
+        try:
+            target = SMSWindowManager.SMSWindowManager().messageURIForContact(contact) or contact.uri
+        except Exception as e:
+            BlinkLogger().log_error('Cannot tell which address of %s to message: %s' % (contact.name, e))
+            target = contact.uri
         display_name = contact.name
         # A conversation with one of YOUR OWN addresses is not a Bonjour
         # neighbour, even though this machine publishes itself as one and so
@@ -6391,6 +6407,8 @@ class ContactWindowController(NSWindowController):
         else:
             target = contact.uri
             display_name = contact.name
+            if contact not in self.model.bonjour_group.contacts:
+                target = SMSWindowManager.SMSWindowManager().messageURIForContact(contact) or contact.uri
             if contact in self.model.bonjour_group.contacts:
                 account = BonjourAccount()
                 # Carried through, which it was not before: a Bonjour

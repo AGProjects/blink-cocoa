@@ -32,6 +32,7 @@ from AppKit import (NSRoundedBezelStyle,
                     NSButton,
                     NSCenterTextAlignment,
                     NSColor,
+                    NSCursor,
                     NSFont,
                     NSFontAttributeName,
                     NSForegroundColorAttributeName,
@@ -155,6 +156,7 @@ ACCOUNT_PILL_GAP = 6.0
 # ellipsis; the address gives way first because it is the half that
 # truncates gracefully.
 ACCOUNT_PILL_MIN_W = 76.0
+TARGET_CHEVRON = chr(0x25BE)
 MONTH_NAMES = ('January', 'February', 'March', 'April', 'May', 'June', 'July',
                'August', 'September', 'October', 'November', 'December')
 
@@ -164,6 +166,107 @@ MONTH_NAMES = ('January', 'February', 'March', 'April', 'May', 'June', 'July',
 # sensible places instead of letting either side vanish.
 LIST_MIN_WIDTH = 274.0
 PANE_MIN_WIDTH = 320.0
+
+
+def show_public_key_panel(key_text, key_id, name, avatar=None):
+    """A peer's public key, to look at and to copy.
+
+    The same panel Sylk Mobile has: the key ID large enough to read out
+    loud, the armoured key underneath, and a Copy button -- comparing the
+    ID against the other device is what makes the key worth anything, and
+    that is done out of band, by a human. Shared by the message pane's
+    encryption menu and the Edit Contact panel, so a key looks the same
+    wherever it is opened from.
+    """
+    if not key_text:
+        return
+    copied = False
+    while True:
+        alert = NSAlert.alloc().init()
+        alert.setMessageText_(
+            NSLocalizedString("PGP key ID %s", "Window title") % (key_id or '?'))
+        alert.setInformativeText_(
+            NSLocalizedString("Copied to the clipboard.", "Label") if copied else
+            NSLocalizedString("The public key of %s. The key ID above is the one "
+                              "the other device shows for the same key: if they "
+                              "match, it is the same key.", "Label") % name)
+
+        frame = NSMakeRect(0, 0, 460, 240)
+        text = NSTextView.alloc().initWithFrame_(frame)
+        text.setEditable_(False)
+        text.setSelectable_(True)
+        text.setVerticallyResizable_(True)
+        text.setHorizontallyResizable_(False)
+        text.setAutoresizingMask_(NSViewWidthSizable)
+        text.setFont_(NSFont.userFixedPitchFontOfSize_(10.0))
+        text.setString_(key_text)
+
+        scroll = NSScrollView.alloc().initWithFrame_(frame)
+        scroll.setHasVerticalScroller_(True)
+        scroll.setBorderType_(NSBezelBorder)
+        scroll.setDocumentView_(text)
+        alert.setAccessoryView_(scroll)
+
+        if avatar is not None:
+            alert.setIcon_(avatar)
+
+        alert.addButtonWithTitle_(NSLocalizedString("Copy", "Button title"))
+        alert.addButtonWithTitle_(NSLocalizedString("Close", "Button title"))
+        try:
+            response = alert.runModal()
+        except Exception as e:
+            BlinkLogger().log_error('Cannot show the public key of %s: %s' % (name, e))
+            return
+        if response != NSAlertFirstButtonReturn:
+            return
+        # Copy leaves the panel open -- the key ID is what the user is here
+        # to read, and closing it the moment they copy the key would take it
+        # away mid-comparison.
+        try:
+            board = NSPasteboard.generalPasteboard()
+            board.declareTypes_owner_(
+                NSArray.arrayWithObject_(NSStringPboardType), None)
+            board.setString_forType_(key_text, NSStringPboardType)
+            copied = True
+        except Exception as e:
+            BlinkLogger().log_error('Cannot copy the public key: %s' % e)
+            return
+
+
+class AddressLabel(NSTextField):
+    """The peer's address in the header, clickable when there is a choice.
+
+    A plain label for a contact with one address. For a contact with more
+    than one it says which address the conversation is sending to, and a
+    click on it offers the others -- the same place, and the same kind of
+    menu, as the account pill beside it offers the sending side.
+    """
+
+    def initWithFrame_(self, frame):
+        self = objc.super(AddressLabel, self).initWithFrame_(frame)
+        if self:
+            self._onClick = None
+        return self
+
+    @objc.python_method
+    def setClickHandler(self, handler):
+        # ==, not is: a bound method is a new object on every access.
+        if handler == self._onClick:
+            return
+        self._onClick = handler
+        window = self.window()
+        if window is not None:
+            window.invalidateCursorRectsForView_(self)
+
+    def resetCursorRects(self):
+        if self._onClick is not None:
+            self.addCursorRect_cursor_(self.bounds(), NSCursor.pointingHandCursor())
+
+    def mouseDown_(self, event):
+        if self._onClick is None:
+            objc.super(AddressLabel, self).mouseDown_(event)
+            return
+        self._onClick(self)
 
 
 class AccountPill(NSButton):
@@ -498,7 +601,8 @@ class MessagePaneController(NSObject):
         header.addSubview_(self.nameLabel)
 
         self.infoLabel = self._label(NSMakeRect(text_x, HEADER_HEIGHT / 2.0 - 16, 300, 14),
-                                     NSFont.systemFontOfSize_(11), NSColor.secondaryLabelColor())
+                                     NSFont.systemFontOfSize_(11), NSColor.secondaryLabelColor(),
+                                     cls=AddressLabel)
         # Truncated in the MIDDLE, unlike the name above it. This line is an
         # address, and for a Bonjour neighbour an instance id and the
         # computer it runs on -- both ends carry the information and the
@@ -778,6 +882,14 @@ class MessagePaneController(NSObject):
         # Display only: _infoTextFor is also the address the pane works
         # with, so the substitution happens here and goes no further.
         text = mangled_text(text, uri=str(getattr(viewer, 'remote_uri', '') or ''))
+        # A contact with more than one address: the address is a menu, and
+        # the chevron is what says so before anybody clicks.
+        targets = self._targetChoices(viewer) if text else []
+        if len(targets) > 1:
+            text = '%s %s' % (text, TARGET_CHEVRON)
+            self.infoLabel.setClickHandler(self.showTargetMenu_)
+        else:
+            self.infoLabel.setClickHandler(None)
         # The dash belongs to the pill, not to the address: it is there to
         # separate the two, and there is nothing to separate without it.
         if text and self._accountPillApplies(viewer):
@@ -806,7 +918,12 @@ class MessagePaneController(NSObject):
         self.infoLabel.setFrame_(
             NSMakeRect(frame.origin.x, frame.origin.y, width, frame.size.height))
         # What was trimmed is still readable on hover.
-        self.infoLabel.setToolTip_(text or None)
+        tooltip = text or None
+        if len(targets) > 1:
+            tooltip = NSLocalizedString("Messages are sent to %s. Click to send to another address of this contact.",
+                                        "Tooltip") % mangled_text(str(getattr(viewer, 'remote_uri', '') or ''),
+                                                                  uri=str(getattr(viewer, 'remote_uri', '') or ''))
+        self.infoLabel.setToolTip_(tooltip)
 
         self._fitNameLabel()
         self.updateAccountPill(viewer)
@@ -949,6 +1066,193 @@ class MessagePaneController(NSObject):
         self.updateEncryptionWidgets(viewer)
         self.updateLocationButton(viewer)
 
+    # -- target address ------------------------------------------------------
+
+    @objc.python_method
+    def _contactForViewer(self, viewer):
+        """The address book contact this conversation is with, or None.
+
+        The row selected in the list first: one address can belong to more
+        than one contact, and the one the user clicked is the one whose
+        other addresses they mean. Then the contact the conversation was
+        opened with, then the first contact holding the address.
+        """
+        if viewer is None or getattr(viewer, 'account', None) is BonjourAccount():
+            return None
+        remote = str(getattr(viewer, 'remote_uri', '') or '')
+        if not remote:
+            return None
+        try:
+            from SMSWindowManager import SMSWindowManager
+            manager = SMSWindowManager()
+        except Exception:
+            return None
+        key = manager._canonical_uri(remote)
+
+        try:
+            cwc = NSApp.delegate().contactsWindowController
+        except Exception:
+            cwc = None
+
+        def candidates():
+            # Lazily: this runs on every header layout, live resizing
+            # included, and the last one walks the whole contact list.
+            if cwc is not None:
+                try:
+                    yield from cwc.getSelectedContacts()[:1]
+                except Exception:
+                    pass
+            yield getattr(viewer, 'contact', None)
+            if cwc is not None:
+                try:
+                    yield cwc.getFirstContactMatchingURI(remote, exact_match=True)
+                except Exception:
+                    pass
+
+        for contact in candidates():
+            if contact is None or type(contact).__name__ == 'BonjourBlinkContact':
+                continue
+            try:
+                uris = manager.contactMessageURIs(contact)
+            except Exception:
+                continue
+            if any(manager._canonical_uri(uri) == key for uri in uris):
+                return contact
+        return None
+
+    @objc.python_method
+    def _targetChoices(self, viewer):
+        """[(address to send to, address as stored, type)] for the header menu.
+
+        Empty unless the conversation is with a contact of ours; one entry
+        is no choice and the address stays a plain label.
+        """
+        contact = self._contactForViewer(viewer)
+        if contact is None:
+            return []
+        try:
+            from SMSWindowManager import SMSWindowManager
+            manager = SMSWindowManager()
+            usable = set(manager._canonical_uri(uri) for uri in manager.contactMessageURIs(contact))
+            choices = []
+            seen = set()
+            for entry in list(getattr(contact, 'uris', None) or []):
+                stored = str(getattr(entry, 'uri', '') or '').strip()
+                key = manager._canonical_uri(stored)
+                if key not in usable or key in seen:
+                    continue
+                seen.add(key)
+                kind = str(getattr(entry, 'type', '') or 'SIP')
+                target = stored + ';xmpp' if kind.lower() == 'xmpp' and ';xmpp' not in stored else stored
+                choices.append((target, stored, kind))
+            return choices
+        except Exception as e:
+            BlinkLogger().log_error('Cannot list the addresses of %s: %s'
+                                    % (getattr(contact, 'name', '?'), e))
+            return []
+
+    @objc.python_method
+    def showTargetMenu_(self, sender):
+        viewer = self._selected
+        choices = self._targetChoices(viewer)
+        if len(choices) < 2:
+            return
+
+        from ContactMangler import mangled_uri
+        from SMSWindowManager import SMSWindowManager
+        manager = SMSWindowManager()
+        current = manager._canonical_uri(str(getattr(viewer, 'remote_uri', '') or ''))
+        contact = self._contactForViewer(viewer)
+        default = getattr(getattr(contact, 'default_uri', None), 'uri', None)
+        if default is None:
+            default = getattr(getattr(getattr(contact, 'uris', None), 'default', None), 'uri', None)
+        default = manager._canonical_uri(default) if default else None
+
+        menu = NSMenu.alloc().init()
+        menu.setAutoenablesItems_(False)
+        title = menu.addItemWithTitle_action_keyEquivalent_(
+            NSLocalizedString("Send messages to:", "Menu item"), None, '')
+        title.setEnabled_(False)
+
+        for target, stored, kind in choices:
+            key = manager._canonical_uri(stored)
+            label = mangled_uri(stored)
+            if kind.upper() != 'SIP':
+                label = '%s (%s)' % (label, kind)
+            if key == default:
+                label = NSLocalizedString("%s (default)", "Menu item") % label
+            item = menu.addItemWithTitle_action_keyEquivalent_(label, 'targetMenuAction:', '')
+            item.setTarget_(self)
+            item.setRepresentedObject_(target)
+            # As in the account menu: the one in use is ticked, and not
+            # something to click.
+            item.setState_(1 if key == current else 0)
+            item.setEnabled_(key != current)
+
+        try:
+            origin = NSPoint(0, sender.frame().size.height + 2.0)
+            menu.popUpMenuPositioningItem_atLocation_inView_(None, origin, sender)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot show the address menu: %s' % e)
+
+    @objc.IBAction
+    def targetMenuAction_(self, sender):
+        """Continue the conversation on another address of the same contact.
+
+        A conversation is keyed by address, so this is a switch to the
+        conversation with that address -- the open one if there is one --
+        not a rewrite of the one on screen. The transcript is the contact's
+        either way. The account is the one that address was last messaged
+        from, else the one in use here.
+        """
+        viewer = self._selected
+        if viewer is None:
+            return
+        uri = str(sender.representedObject() or '')
+        contact = self._contactForViewer(viewer)
+        if not uri or contact is None:
+            return
+
+        try:
+            from SMSWindowManager import SMSWindowManager
+            from util import normalize_sip_uri_for_outgoing_session
+            manager = SMSWindowManager()
+            cwc = NSApp.delegate().contactsWindowController
+
+            account = manager.accountForRemoteURI(uri) or viewer.account
+            try:
+                account = cwc.messagingAccountFor(account, contact)
+            except Exception:
+                pass
+            if account is None:
+                cwc.reportNoMessagingAccount(getattr(contact, 'name', '') or uri)
+                return
+
+            target = normalize_sip_uri_for_outgoing_session(uri, account)
+            if not target:
+                BlinkLogger().log_error('Cannot send messages to %s: not a valid address' % uri)
+                return
+
+            # Before the switch, so everything that asks which address this
+            # contact is talked to over -- the row being clicked again, a
+            # restart of the pane -- already agrees with the header.
+            manager.pickMessageURIForContact(contact, uri)
+
+            new = manager.openViewerForURI(str(target))
+            if new is None:
+                new = manager.viewerForTarget(target, getattr(contact, 'name', None) or '',
+                                              account, selected_contact=contact)
+            if new is None:
+                return
+            manager.presentViewer(new, focus=True, note_new_message=False)
+            self.selectViewer(new)
+            BlinkLogger().log_info('Messages to %s are now sent to %s (was %s)'
+                                   % (getattr(contact, 'name', '?'),
+                                      getattr(new, 'remote_uri', uri),
+                                      getattr(viewer, 'remote_uri', '?')))
+        except Exception as e:
+            BlinkLogger().log_error('Cannot switch the conversation to %s: %s' % (uri, e))
+
     # -- encryption --------------------------------------------------------
 
     @objc.python_method
@@ -982,80 +1286,21 @@ class MessagePaneController(NSObject):
 
     @objc.IBAction
     def showPublicKey_(self, sender):
-        """The peer's public key, to look at and to copy.
-
-        The same panel Sylk Mobile has: the key ID large enough to read out
-        loud, the armoured key underneath, and a Copy button -- comparing
-        the ID against the other device is what makes the key worth
-        anything, and that is done out of band, by a human.
-        """
+        """The peer's public key, to look at and to copy."""
         viewer = self._selected
         key_text, key_id = self._publicKeyForViewer(viewer)
         if not key_text:
             return
-        name = self.displayNameFor(viewer)
-        copied = False
-        while True:
-            alert = NSAlert.alloc().init()
-            alert.setMessageText_(
-                NSLocalizedString("PGP key ID %s", "Window title") % (key_id or '?'))
-            alert.setInformativeText_(
-                NSLocalizedString("Copied to the clipboard.", "Label") if copied else
-                NSLocalizedString("The public key of %s. The key ID above is the one "
-                                  "the other device shows for the same key: if they "
-                                  "match, it is the same key.", "Label") % name)
-
-            frame = NSMakeRect(0, 0, 460, 240)
-            text = NSTextView.alloc().initWithFrame_(frame)
-            text.setEditable_(False)
-            text.setSelectable_(True)
-            text.setVerticallyResizable_(True)
-            text.setHorizontallyResizable_(False)
-            text.setAutoresizingMask_(NSViewWidthSizable)
-            text.setFont_(NSFont.userFixedPitchFontOfSize_(10.0))
-            text.setString_(key_text)
-
-            scroll = NSScrollView.alloc().initWithFrame_(frame)
-            scroll.setHasVerticalScroller_(True)
-            scroll.setBorderType_(NSBezelBorder)
-            scroll.setDocumentView_(text)
-            alert.setAccessoryView_(scroll)
-
-            # The contact in place of the application icon: the panel is
-            # about one person's key, and the Blink logo says nothing about
-            # whose it is. Falls back to the logo if there is no avatar to
-            # draw.
-            try:
-                avatar = avatar_image(self._owner.iconPathForURI(str(viewer.remote_uri)),
-                                      self.displayNameFor(viewer), PANEL_AVATAR_SIZE)
-            except Exception as e:
-                BlinkLogger().log_error('Cannot draw the avatar for the key panel: %s' % e)
-                avatar = None
-            if avatar is not None:
-                alert.setIcon_(avatar)
-
-            alert.addButtonWithTitle_(NSLocalizedString("Copy", "Button title"))
-            alert.addButtonWithTitle_(NSLocalizedString("Close", "Button title"))
-            try:
-                response = alert.runModal()
-            except Exception as e:
-                BlinkLogger().log_error('Cannot show the public key of %s: %s'
-                                        % (getattr(viewer, 'remote_uri', None), e))
-                return
-            if response != NSAlertFirstButtonReturn:
-                return
-            # Copy leaves the panel open -- the key ID is what the user is
-            # here to read, and closing it the moment they copy the key
-            # would take it away mid-comparison.
-            try:
-                board = NSPasteboard.generalPasteboard()
-                board.declareTypes_owner_(
-                    NSArray.arrayWithObject_(NSStringPboardType), self)
-                board.setString_forType_(key_text, NSStringPboardType)
-                copied = True
-            except Exception as e:
-                BlinkLogger().log_error('Cannot copy the public key: %s' % e)
-                return
+        # The contact in place of the application icon: the panel is about
+        # one person's key, and the Blink logo says nothing about whose it
+        # is. Falls back to the logo if there is no avatar to draw.
+        try:
+            avatar = avatar_image(self._owner.iconPathForURI(str(viewer.remote_uri)),
+                                  self.displayNameFor(viewer), PANEL_AVATAR_SIZE)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot draw the avatar for the key panel: %s' % e)
+            avatar = None
+        show_public_key_panel(key_text, key_id, self.displayNameFor(viewer), avatar)
 
     @objc.python_method
     def _pgpActive(self, viewer):
@@ -1642,8 +1887,8 @@ class MessagePaneController(NSObject):
         viewer.jump_to_history_date(str(target) if target else None)
 
     @objc.python_method
-    def _label(self, frame, font, colour):
-        field = NSTextField.alloc().initWithFrame_(frame)
+    def _label(self, frame, font, colour, cls=NSTextField):
+        field = cls.alloc().initWithFrame_(frame)
         field.setEditable_(False)
         field.setSelectable_(False)
         field.setBordered_(False)
