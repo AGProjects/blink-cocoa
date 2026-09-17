@@ -846,15 +846,15 @@ class SMSViewController(NSObject):
 
     @objc.python_method
     def log_info(self, text):
-        BlinkLogger().log_info("[SMS with %s] %s" % (self.instance_id or self.remote_uri, text))
+        BlinkLogger().log_info("[Message with %s] %s" % (self.instance_id or self.remote_uri, text))
 
     @objc.python_method
     def log_debug(self, text):
-        BlinkLogger().log_debug("[SMS with %s] %s" % (self.instance_id or self.remote_uri, text))
+        BlinkLogger().log_debug("[Message with %s] %s" % (self.instance_id or self.remote_uri, text))
 
     @objc.python_method
     def log_error(self, text):
-        BlinkLogger().log_error("[SMS with %s] %s" % (self.instance_id or self.remote_uri, text))
+        BlinkLogger().log_error("[Message with %s] %s" % (self.instance_id or self.remote_uri, text))
 
     @objc.IBAction
     def addContactPanelClicked_(self, sender):
