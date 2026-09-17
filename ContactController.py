@@ -23,6 +23,7 @@ from Foundation import (NSArray,
                         NSImage,
                         NSImageView,
                         NSInsetRect,
+                        NSMakePoint,
                         NSMakeRect,
                         NSMenuItem,
                         NSMutableArray,
@@ -826,7 +827,186 @@ class AddContactController(NSObject):
         return True
 
 
+class XCAPResourceListPanel(NSObject):
+    """The XCAP resource list of a contact, or the whole document.
+
+    A panel of its own rather than an NSAlert: an alert with three buttons
+    stacks them vertically, and this one wants them on one row -- the view
+    switch on the left, Copy and Close on the right.
+    """
+
+    WIDTH = 680.0
+    MARGIN = 20.0
+    TEXT_HEIGHT = 400.0
+    BUTTON_HEIGHT = 32.0
+
+    @objc.python_method
+    def runModal(self, controller, account, name):
+        from AppKit import (NSBackingStoreBuffered, NSBezelBorder, NSButton,
+                            NSClosableWindowMask, NSFont, NSPanel,
+                            NSResizableWindowMask, NSRoundedBezelStyle,
+                            NSScrollView, NSTextField, NSTextView,
+                            NSTitledWindowMask, NSViewHeightSizable,
+                            NSViewMaxYMargin, NSViewMinXMargin,
+                            NSViewMinYMargin, NSViewWidthSizable)
+        from Foundation import NSMakeSize
+
+        self.controller = controller
+        self.account = account
+        self.name = name
+        self.whole_document = False
+        self.xml = None
+
+        margin = self.MARGIN
+        width = self.WIDTH
+        info_height = 30.0
+        title_height = 20.0
+        button_row = margin + self.BUTTON_HEIGHT
+        height = button_row + 12.0 + self.TEXT_HEIGHT + 8.0 + info_height + 4.0 + title_height + margin
+
+        panel = NSPanel.alloc().initWithContentRect_styleMask_backing_defer_(
+            NSMakeRect(0, 0, width, height),
+            NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask,
+            NSBackingStoreBuffered, False)
+        panel.setTitle_(NSLocalizedString("XCAP resource list", "Window title"))
+        panel.setMinSize_(NSMakeSize(420, 300))
+        panel.setDelegate_(self)
+        self.panel = panel
+        content = panel.contentView()
+
+        y = height - margin - title_height
+        self.titleLabel = NSTextField.alloc().initWithFrame_(
+            NSMakeRect(margin, y, width - 2 * margin, title_height))
+        self.titleLabel.setBezeled_(False)
+        self.titleLabel.setDrawsBackground_(False)
+        self.titleLabel.setEditable_(False)
+        self.titleLabel.setSelectable_(False)
+        self.titleLabel.setFont_(NSFont.boldSystemFontOfSize_(13.0))
+        self.titleLabel.setAutoresizingMask_(NSViewWidthSizable | NSViewMinYMargin)
+        content.addSubview_(self.titleLabel)
+
+        y -= 4.0 + info_height
+        self.infoLabel = NSTextField.alloc().initWithFrame_(
+            NSMakeRect(margin, y, width - 2 * margin, info_height))
+        self.infoLabel.setBezeled_(False)
+        self.infoLabel.setDrawsBackground_(False)
+        self.infoLabel.setEditable_(False)
+        self.infoLabel.setSelectable_(True)
+        self.infoLabel.setFont_(NSFont.systemFontOfSize_(NSFont.smallSystemFontSize()))
+        self.infoLabel.setTextColor_(NSColor.secondaryLabelColor())
+        self.infoLabel.setAutoresizingMask_(NSViewWidthSizable | NSViewMinYMargin)
+        content.addSubview_(self.infoLabel)
+
+        y -= 8.0 + self.TEXT_HEIGHT
+        scroll = NSScrollView.alloc().initWithFrame_(
+            NSMakeRect(margin, y, width - 2 * margin, self.TEXT_HEIGHT))
+        scroll.setHasVerticalScroller_(True)
+        scroll.setHasHorizontalScroller_(True)
+        scroll.setBorderType_(NSBezelBorder)
+        scroll.setAutoresizingMask_(NSViewWidthSizable | NSViewHeightSizable)
+        content_size = scroll.contentSize()
+        text = NSTextView.alloc().initWithFrame_(
+            NSMakeRect(0, 0, content_size.width, content_size.height))
+        text.setEditable_(False)
+        text.setSelectable_(True)
+        text.setRichText_(False)
+        text.setFont_(NSFont.userFixedPitchFontOfSize_(11.0))
+        # No wrapping: indentation is what makes the XML readable.
+        text.setMinSize_(NSMakeSize(0.0, content_size.height))
+        text.setMaxSize_(NSMakeSize(1.0e7, 1.0e7))
+        text.setVerticallyResizable_(True)
+        text.setHorizontallyResizable_(True)
+        text.setAutoresizingMask_(NSViewWidthSizable)
+        text.textContainer().setContainerSize_(NSMakeSize(1.0e7, 1.0e7))
+        text.textContainer().setWidthTracksTextView_(False)
+        scroll.setDocumentView_(text)
+        content.addSubview_(scroll)
+        self.textView = text
+
+        def button(title, action, x, anchor_right):
+            item = NSButton.alloc().initWithFrame_(NSMakeRect(0, margin - 6.0, 100, self.BUTTON_HEIGHT))
+            item.setBezelStyle_(NSRoundedBezelStyle)
+            item.setTitle_(title)
+            item.setTarget_(self)
+            item.setAction_(action)
+            item.sizeToFit()
+            frame = item.frame()
+            w = max(frame.size.width, 96.0)
+            left = x - w if anchor_right else x
+            item.setFrame_(NSMakeRect(left, margin - 6.0, w, self.BUTTON_HEIGHT))
+            item.setAutoresizingMask_((NSViewMinXMargin if anchor_right else 0) | NSViewMaxYMargin)
+            content.addSubview_(item)
+            return item
+
+        right = width - margin + 6.0
+        self.closeButton = button(NSLocalizedString("Close", "Button title"), 'closePanel:', right, True)
+        self.closeButton.setKeyEquivalent_('\r')
+        self.copyButton = button(NSLocalizedString("Copy", "Button title"), 'copyXML:',
+                                 self.closeButton.frame().origin.x, True)
+        self.switchButton = button(NSLocalizedString("Whole Document", "Button title"),
+                                   'switchView:', margin - 6.0, False)
+
+        self.reload()
+        panel.center()
+        try:
+            NSApp.runModalForWindow_(panel)
+        finally:
+            panel.orderOut_(None)
+            panel.setDelegate_(None)
+
+    @objc.python_method
+    def reload(self, note=None):
+        self.xml, info = self.controller.xcapStateForAccount(self.account, self.whole_document)
+        if self.whole_document:
+            self.titleLabel.setStringValue_(NSLocalizedString("Whole resource-lists document", "Label"))
+            self.switchButton.setTitle_(NSLocalizedString("This Contact", "Button title"))
+        else:
+            self.titleLabel.setStringValue_(
+                NSLocalizedString("Resource list entry for %s", "Label") % self.name)
+            self.switchButton.setTitle_(NSLocalizedString("Whole Document", "Button title"))
+        self.infoLabel.setStringValue_(note or info)
+        self.textView.setString_(self.xml or '')
+        self.textView.scrollRangeToVisible_((0, 0))
+        self.copyButton.setEnabled_(bool(self.xml))
+
+    def switchView_(self, sender):
+        self.whole_document = not self.whole_document
+        self.reload()
+
+    def copyXML_(self, sender):
+        if not self.xml:
+            return
+        try:
+            from AppKit import NSPasteboard, NSStringPboardType
+            board = NSPasteboard.generalPasteboard()
+            board.declareTypes_owner_(NSArray.arrayWithObject_(NSStringPboardType), None)
+            board.setString_forType_(self.xml, NSStringPboardType)
+            self.infoLabel.setStringValue_(NSLocalizedString("Copied to the clipboard.", "Label"))
+        except Exception as e:
+            BlinkLogger().log_error('Cannot copy the XCAP resource list: %s' % e)
+
+    def closePanel_(self, sender):
+        NSApp.stopModal()
+
+    def windowShouldClose_(self, sender):
+        NSApp.stopModal()
+        return True
+
+
 class EditContactController(AddContactController):
+    @objc.typedSelector(b'Z@:')
+    def worksWhenModal(self):
+        """Let menu items aimed at this controller fire.
+
+        The panel runs in NSApp.runModalForWindow_, and during a modal
+        session AppKit drops any action whose target is neither in the
+        modal window nor says it works when modal. A button in the window
+        gets through on its own; the XCAP account menu and the key id's
+        context menu target this controller directly, and without this
+        they close without doing anything.
+        """
+        return True
+
     @objc.python_method
     def publicKeyLabelForContact(self, blink_contact):
         """The OpenPGP key id of the key held for each of this contact's
@@ -843,6 +1023,19 @@ class EditContactController(AddContactController):
         agrees on. A contact can hold several addresses, and a key is stored
         per address, so all of them are listed rather than just the first.
         """
+        entries = getattr(self, 'public_keys', None)
+        if entries is None:
+            entries = self.publicKeysForContact(blink_contact)
+        if not entries:
+            return ''
+        if len(entries) == 1:
+            return NSLocalizedString("Public key: %s", "Label") % entries[0][1]
+        return NSLocalizedString("Public keys: %s", "Label") % ', '.join(
+            '%s %s' % (uri, key_id) for uri, key_id, _ in entries)
+
+    @objc.python_method
+    def publicKeysForContact(self, blink_contact):
+        """[(uri, key id, armoured key)] for each address that has a key."""
         from MessageHost import public_key_id
         from resources import ApplicationData
 
@@ -859,19 +1052,256 @@ class EditContactController(AddContactController):
                 continue
             try:
                 with open(path, 'rb') as key_file:
-                    key_id = public_key_id(key_file.read())
+                    data = key_file.read()
+                key_id = public_key_id(data)
             except Exception as e:
                 BlinkLogger().log_error('Cannot read the public key of %s: %s' % (uri, e))
                 continue
-            if key_id:
-                entries.append((uri, key_id))
+            if key_id and data:
+                entries.append((uri, key_id, data.decode('utf-8', 'replace')))
+        return entries
 
-        if not entries:
-            return ''
-        if len(entries) == 1:
-            return NSLocalizedString("Public key: %s", "Label") % entries[0][1]
-        return NSLocalizedString("Public keys: %s", "Label") % ', '.join(
-            '%s %s' % (uri, key_id) for uri, key_id in entries)
+    @objc.python_method
+    def setUpPublicKeyLink(self):
+        """Clicking the key id opens the same key panel as the message
+        pane's PGP menu; right-click copies the id.
+
+        The label is no longer selectable -- a selectable field hands the
+        click to its field editor and the recognizer never sees it -- so
+        copying the id moves to the context menu.
+        """
+        from AppKit import NSClickGestureRecognizer, NSMenu
+        self.publicKey.setSelectable_(False)
+        if not self.public_keys:
+            return
+        self.publicKey.setToolTip_(
+            NSLocalizedString("Click to show the public key", "Tooltip"))
+        recognizer = NSClickGestureRecognizer.alloc().initWithTarget_action_(
+            self, 'publicKeyClicked:')
+        self.publicKey.addGestureRecognizer_(recognizer)
+
+        menu = NSMenu.alloc().init()
+        menu.setAutoenablesItems_(False)
+        for index, (uri, key_id, _) in enumerate(self.public_keys):
+            title = NSLocalizedString("Show public key", "Menu item")
+            if len(self.public_keys) > 1:
+                title = '%s %s' % (title, uri)
+            item = menu.addItemWithTitle_action_keyEquivalent_(title, 'showPublicKeyItem:', '')
+            item.setTarget_(self)
+            item.setTag_(index)
+        menu.addItem_(NSMenuItem.separatorItem())
+        for index, (uri, key_id, _) in enumerate(self.public_keys):
+            title = NSLocalizedString("Copy key ID", "Menu item")
+            if len(self.public_keys) > 1:
+                title = '%s %s' % (title, key_id)
+            item = menu.addItemWithTitle_action_keyEquivalent_(title, 'copyPublicKeyId:', '')
+            item.setTarget_(self)
+            item.setTag_(index)
+        self.publicKey.setMenu_(menu)
+
+    def publicKeyClicked_(self, recognizer):
+        if len(self.public_keys) == 1:
+            self.showPublicKeyAtIndex(0)
+            return
+        # several addresses with a key of their own: ask which one
+        menu = self.publicKey.menu()
+        if menu is None:
+            return
+        location = recognizer.locationInView_(self.publicKey)
+        menu.popUpMenuPositioningItem_atLocation_inView_(None, location, self.publicKey)
+
+    def showPublicKeyItem_(self, sender):
+        self.showPublicKeyAtIndex(sender.tag())
+
+    def copyPublicKeyId_(self, sender):
+        try:
+            from AppKit import NSPasteboard, NSStringPboardType
+            uri, key_id, _ = self.public_keys[sender.tag()]
+            board = NSPasteboard.generalPasteboard()
+            board.declareTypes_owner_(NSArray.arrayWithObject_(NSStringPboardType), None)
+            board.setString_forType_(key_id, NSStringPboardType)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot copy the key id: %s' % e)
+
+    @objc.python_method
+    def showPublicKeyAtIndex(self, index):
+        try:
+            uri, key_id, key_text = self.public_keys[index]
+        except IndexError:
+            return
+        from MessagePaneController import show_public_key_panel, PANEL_AVATAR_SIZE
+        from Avatars import avatar_image
+        name = self.blink_contact.name or uri
+        try:
+            avatar = getattr(self.blink_contact, 'avatar', None)
+            image = avatar_image(getattr(avatar, 'path', None), name, PANEL_AVATAR_SIZE)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot draw the avatar for the key panel: %s' % e)
+            image = None
+        show_public_key_panel(key_text, key_id, name, image)
+
+    # -- XCAP ---------------------------------------------------------------
+
+    @objc.python_method
+    def xcapAccounts(self):
+        """Enabled SIP accounts with XCAP switched on.
+
+        The addressbook is replicated to every one of them, so each holds
+        its own copy of the resource-lists document worth looking at.
+        """
+        from sipsimple.account import Account
+        try:
+            return [account for account in AccountManager().get_accounts()
+                    if isinstance(account, Account) and account.enabled
+                    and account.xcap.enabled and account.xcap_manager is not None]
+        except Exception as e:
+            BlinkLogger().log_error('Cannot list the XCAP accounts: %s' % e)
+            return []
+
+    @objc.python_method
+    def setUpXCAPPill(self):
+        """An XCAP pill right after the key id, when any account uses XCAP."""
+        self.xcap_accounts = self.xcapAccounts()
+        if not self.xcap_accounts:
+            return
+        from AppKit import NSAttributedString, NSFont, NSFontAttributeName, NSForegroundColorAttributeName
+        from MessagePaneController import (AccountPill, ACCOUNT_PILL_FONT_SIZE,
+                                           ACCOUNT_PILL_H, ACCOUNT_PILL_PAD, ACCOUNT_PILL_GAP)
+        label = self.publicKey
+        superview = label.superview()
+        if superview is None:
+            return
+
+        title = 'XCAP'
+        pill_font = NSFont.systemFontOfSize_(ACCOUNT_PILL_FONT_SIZE)
+        text_width = NSAttributedString.alloc().initWithString_attributes_(
+            title, {NSFontAttributeName: pill_font}).size().width
+
+        frame = label.frame()
+        key_width = 0.0
+        if str(label.stringValue() or ''):
+            key_width = label.attributedStringValue().size().width + 4.0
+            # The label is only as wide as its text, so a click beside the
+            # key id does not open the key panel and the pill has room.
+            label.setFrame_(NSMakeRect(frame.origin.x, frame.origin.y, key_width, frame.size.height))
+        x = frame.origin.x + key_width + (ACCOUNT_PILL_GAP if key_width else 0.0)
+
+        # Centred on the key id's text, not on the label's frame: a text
+        # field draws its line at the top of a frame taller than the line,
+        # so the middle of the frame sits below the middle of the text.
+        try:
+            font = label.font()
+            text_height = font.ascender() - font.descender()
+            bounds = label.bounds()
+            title_rect = label.cell().titleRectForBounds_(bounds)
+            if label.isFlipped():
+                text_center = title_rect.origin.y + text_height / 2.0
+            else:
+                text_center = title_rect.origin.y + title_rect.size.height - text_height / 2.0
+            center = label.convertPoint_toView_(NSMakePoint(0.0, text_center), superview)
+            y = center.y - ACCOUNT_PILL_H / 2.0
+        except Exception as e:
+            BlinkLogger().log_error('Cannot align the XCAP pill: %s' % e)
+            y = frame.origin.y + frame.size.height - ACCOUNT_PILL_H
+
+        pill = AccountPill.alloc().initWithFrame_(
+            NSMakeRect(x, y, text_width + 2 * ACCOUNT_PILL_PAD, ACCOUNT_PILL_H))
+        pill.setBordered_(False)
+        pill.setAttributedTitle_(
+            NSAttributedString.alloc().initWithString_attributes_(
+                title, {NSFontAttributeName: pill_font,
+                        NSForegroundColorAttributeName: NSColor.secondaryLabelColor()}))
+        pill.setToolTip_(NSLocalizedString("Show the XCAP resource list of this contact", "Tooltip"))
+        pill.setTarget_(self)
+        pill.setAction_('xcapPillClicked:')
+        superview.addSubview_(pill)
+        self.xcapPill = pill
+
+    def xcapPillClicked_(self, sender):
+        if len(self.xcap_accounts) == 1:
+            self.showXCAPForAccount(self.xcap_accounts[0])
+            return
+        # the addressbook is kept on each XCAP account: ask which copy
+        from AppKit import NSMenu
+        menu = NSMenu.alloc().init()
+        menu.setAutoenablesItems_(False)
+        for index, account in enumerate(self.xcap_accounts):
+            item = menu.addItemWithTitle_action_keyEquivalent_(str(account.id), 'xcapAccountItem:', '')
+            item.setTarget_(self)
+            item.setTag_(index)
+        height = sender.bounds().size.height
+        below = NSMakePoint(0, height + 2 if sender.isFlipped() else -2)
+        menu.popUpMenuPositioningItem_atLocation_inView_(None, below, sender)
+
+    def xcapAccountItem_(self, sender):
+        try:
+            self.showXCAPForAccount(self.xcap_accounts[sender.tag()])
+        except IndexError:
+            pass
+
+    @objc.python_method
+    def xcapXMLForAccount(self, account, whole_document):
+        """Pretty printed XML: this contact's entry, or the whole document.
+
+        Re-parsed with blank text dropped before printing -- a document
+        fetched from the server keeps its own whitespace, and lxml will
+        not re-indent around text it already holds.
+        """
+        from lxml import etree
+        document = account.xcap_manager.resource_lists
+        content = document.content
+        if content is None:
+            return None
+        if whole_document:
+            raw = content.toxml(pretty_print=False, validate=False)
+        else:
+            from sipsimple.payloads import IterateItems
+            from sipsimple.payloads import addressbook as xcap_addressbook
+            contact_id = getattr(getattr(self.blink_contact, 'contact', None), 'id', None)
+            try:
+                entries = content['sipsimple_addressbook'][xcap_addressbook.Contact, IterateItems]
+            except KeyError:
+                return ''
+            entry = next((entry for entry in entries if entry.id == contact_id), None)
+            if entry is None:
+                return ''
+            # to_element(), not .element: the payload objects build their XML
+            # lazily, so a change applied since the document was last
+            # serialized (a fresh modified_by stamp, say) is only in the
+            # Python object until something rebuilds it. toxml() does that
+            # for the whole document; this does it for the one entry.
+            element = entry.to_element()
+            raw = etree.tostring(element)
+        parser = etree.XMLParser(remove_blank_text=True)
+        tree = etree.fromstring(raw, parser)
+        return etree.tostring(tree, pretty_print=True, encoding='unicode')
+
+    @objc.python_method
+    def xcapStateForAccount(self, account, whole_document):
+        """(xml or None, explanatory line) for the XCAP panel."""
+        try:
+            xml = self.xcapXMLForAccount(account, whole_document)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot serialize the XCAP resource list of %s: %s' % (account.id, e))
+            return None, NSLocalizedString("Cannot read the document: %s", "Label") % e
+        if xml is None:
+            return None, NSLocalizedString("The resource-lists document of %s has not been fetched yet.", "Label") % account.id
+        if not xml:
+            return None, NSLocalizedString("This contact is not in the resource-lists document of %s.", "Label") % account.id
+        document = account.xcap_manager.resource_lists
+        try:
+            info = '%s  %s' % (account.id, document.url)
+        except Exception:
+            info = str(account.id)
+        if getattr(document, 'etag', None):
+            info += '\nETag %s' % document.etag
+        return xml, info
+
+    @objc.python_method
+    def showXCAPForAccount(self, account):
+        name = self.blink_contact.name or str(getattr(self.blink_contact, 'uri', '') or '')
+        panel = XCAPResourceListPanel.alloc().init()
+        panel.runModal(self, account, name)
 
     def __init__(self, blink_contact):
         NSBundle.loadNibNamed_owner_("Contact", self)
@@ -883,9 +1313,10 @@ class EditContactController(AddContactController):
         self.belonging_groups = self.model.getBlinkGroupsForBlinkContact(blink_contact)
         self.all_groups = self.selectableGroups()
         self.nameText.setStringValue_(blink_contact.name or "")
+        self.public_keys = self.publicKeysForContact(blink_contact)
         self.publicKey.setStringValue_(self.publicKeyLabelForContact(blink_contact))
-        # so the key id can be copied out and compared against the phone
-        self.publicKey.setSelectable_(True)
+        self.setUpPublicKeyLink()
+        self.setUpXCAPPill()
         self.organizationText.setStringValue_(blink_contact.organization or "")
         # The stand-in is not a photograph: a contact who has never been
         # given one shows their initials here, the same as in the list.
