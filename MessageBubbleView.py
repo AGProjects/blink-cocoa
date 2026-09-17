@@ -2020,6 +2020,9 @@ class MessageBubbleView(NSView):
             # (fraction, phase) while a transfer is in flight
             self.transfer_progress = None
             self.transfer_meta = None
+            # The caption set on a picture or a movie with Edit Caption (a
+            # 'label' metadata message, as Sylk Mobile sends it), or None.
+            self.caption = None
             self._laid_out_width = -1.0
             self._laid_out_signature = None
             self._body_field = None
@@ -2265,6 +2268,10 @@ class MessageBubbleView(NSView):
         if summary is None:
             summary = plain_text(self.content, self.is_html)
         title, _, rest = summary.partition('\n')
+        if self.caption:
+            # A movie with no poster, or a picture not here yet: the caption
+            # is what it is called now; the particulars stay under it.
+            title = self.caption
 
         status = self.transfer_status if self.transfer_meta is not None else None
         if status:
@@ -2302,6 +2309,48 @@ class MessageBubbleView(NSView):
             except Exception:
                 pass
         return self._colouredWarningLine(body)
+
+    @objc.python_method
+    def _showsEditCaption(self):
+        """Whether the header pencil edits this bubble's caption.
+
+        Asked of the renderer, which knows whether this conversation can
+        send a caption at all; the cheap local tests go first because the
+        header is measured and drawn for every bubble.
+        """
+        if (not self.msgid or self._tileMode() or self._isEditable()
+                or self.direction != 'outgoing'
+                or not isinstance(self.transfer_meta, dict)
+                or not self.transfer_meta.get('transfer_id')):
+            return False
+        renderer = self.renderer
+        if renderer is None or not hasattr(renderer, 'canEditCaption'):
+            return False
+        try:
+            return bool(renderer.canEditCaption(self))
+        except Exception:
+            return False
+
+    @objc.python_method
+    def _showsCaption(self):
+        """Whether a caption is drawn under the picture."""
+        return bool(self.caption) and self._showsMedia() and not self._tileMode()
+
+    @objc.python_method
+    def _mediaCaption(self):
+        """The caption under a picture: body size, wrapped, centred on it.
+
+        The field spans the same inner width the picture is centred in, so
+        centring the text centres it under the picture.
+        """
+        wrap = NSMutableParagraphStyle.alloc().init()
+        wrap.setLineBreakMode_(NSLineBreakByWordWrapping)
+        wrap.setAlignment_(NSCenterTextAlignment)
+        return NSAttributedString.alloc().initWithString_attributes_(
+            self.caption or '',
+            {NSFontAttributeName: NSFont.systemFontOfSize_(self.font_size),
+             NSForegroundColorAttributeName: self.textColor(),
+             NSParagraphStyleAttributeName: wrap})
 
     @objc.python_method
     def _colouredWarningLine(self, body):
@@ -2370,7 +2419,11 @@ class MessageBubbleView(NSView):
             # repeating them under the photograph says nothing the user
             # cannot see. The envelope stays on the bubble, so the filter,
             # the copy affordance and click-to-open are unaffected.
-            body = NSAttributedString.alloc().initWithString_attributes_('', {})
+            #
+            # A caption someone set is different: it is words, not a
+            # stand-in, and it goes under the picture.
+            body = (self._mediaCaption() if self._showsCaption()
+                    else NSAttributedString.alloc().initWithString_attributes_('', {}))
         elif self.kind == self.KIND_DATE:
             style = NSMutableParagraphStyle.alloc().init()
             style.setAlignment_(NSCenterTextAlignment)
@@ -3806,7 +3859,7 @@ class MessageBubbleView(NSView):
                 return 0.0
 
         left = 0.0
-        if self._isEditable():
+        if self._isEditable() or self._showsEditCaption():
             left += width_of(GLYPH_EDIT, glyph_font) + 6.0
         if self._isCopyable():
             left += width_of(GLYPH_COPY, glyph_font) + 6.0
@@ -4067,7 +4120,8 @@ class MessageBubbleView(NSView):
                     body_h = max(body_h, text_height(body_w))
         except Exception:
             body_h = 16.0
-        body_h = 0.0 if self._showsMedia() else max(body_h, 14.0)
+        body_h = (0.0 if (self._showsMedia() and not self._showsCaption())
+                  else max(body_h, 14.0))
 
         header_h = 0.0 if self.kind in (self.KIND_SYSTEM, self.KIND_DATE) else HEADER_H
         inset = MAP_INSET_X
@@ -4099,8 +4153,9 @@ class MessageBubbleView(NSView):
                 map_h = min(map_w * ratio, self._mediaHeightLimit(map_w))
                 if map_h < map_w * ratio:
                     map_w = map_h / ratio if ratio else map_w
-            # No caption underneath, so no gap to reserve for one.
-            map_block = map_h
+            # No caption underneath, so no gap to reserve for one -- unless
+            # somebody set one.
+            map_block = map_h + (MAP_GAP if self._showsCaption() else 0.0)
             if not self._tileMode():
                 self._ensureMediaResolution(map_w, map_h)
         elif self._showsVideo() and self.video_no_poster:
@@ -4141,6 +4196,10 @@ class MessageBubbleView(NSView):
                 body_w = wanted
                 bubble_w = body_w + 2 * pad
                 container_w = bubble_w + avatar_slot
+            if self._showsCaption():
+                # Measured again at the width the picture settled on: the
+                # first measurement was taken across the whole pane.
+                body_h = max(text_height(body_w), 14.0)
 
         track_block = ((TRACK_SLIDER_H + TRACK_CAPTION_H + TRACK_GAP + TRACK_BODY_GAP)
                        if self._showsTrack() else 0.0)
@@ -5177,7 +5236,8 @@ class MessageBubbleView(NSView):
         # and keeping it away from delete means a misclick cannot destroy
         # what the user meant to correct.
         left = bubble.origin.x + PAD
-        if self._isEditable():
+        if self._isEditable() or self._showsEditCaption():
+            # The same pencil on a picture or a movie edits its caption.
             self._edit_rect = draw_glyph(GLYPH_EDIT, left)
             left = self._edit_rect.origin.x + self._edit_rect.size.width + 6.0
         else:
@@ -5964,6 +6024,12 @@ class MessageBubbleView(NSView):
                 item = menu.addItemWithTitle_action_keyEquivalent_(
                     NSLocalizedString("Save As\u2026", "Menu item"), "menuSaveAs:", "")
                 item.setTarget_(self)
+            if hasattr(self.renderer, 'canEditCaption') \
+                    and self.renderer.canEditCaption(self.msgid):
+                item = menu.addItemWithTitle_action_keyEquivalent_(
+                    NSLocalizedString("Edit Caption\u2026", "Menu item"),
+                    "menuEditCaption:", "")
+                item.setTarget_(self)
             item = menu.addItemWithTitle_action_keyEquivalent_(
                 NSLocalizedString("Delete\u2026", "Menu item"), "menuDeletePicture:", "")
             item.setTarget_(self)
@@ -6019,6 +6085,12 @@ class MessageBubbleView(NSView):
             BlinkLogger().log_debug('Bubble %s: delete from the menu' % self.msgid)
             renderer.bubbleDidRequestDelete(self.msgid)
 
+    def menuEditCaption_(self, sender):
+        renderer = self.renderer
+        if renderer is not None and hasattr(renderer, 'bubbleDidRequestEditCaption'):
+            BlinkLogger().log_debug('Bubble %s: edit caption from the menu' % self.msgid)
+            renderer.bubbleDidRequestEditCaption(self.msgid)
+
     def menuDeleteSelection_(self, sender):
         renderer = self.renderer
         if renderer is not None and hasattr(renderer, 'deleteSelectedMessages'):
@@ -6046,6 +6118,13 @@ class MessageBubbleView(NSView):
             if renderer is not None and hasattr(renderer, 'bubbleDidRequestDelete'):
                 BlinkLogger().log_debug('Bubble %s: delete' % self.msgid)
                 renderer.bubbleDidRequestDelete(self.msgid)
+                return
+        if self.msgid and self._hits(point, self._edit_rect, header and self._showsEditCaption()):
+            if renderer is not None and hasattr(renderer, 'bubbleDidRequestEditCaption'):
+                BlinkLogger().log_info('Bubble %s: edit caption at (%.0f,%.0f) edit=%s'
+                                       % (self.msgid, point.x, point.y,
+                                          _rect_text(self._edit_rect)))
+                renderer.bubbleDidRequestEditCaption(self.msgid)
                 return
         if self.msgid and self._hits(point, self._edit_rect, header and self._isEditable()):
             if renderer is not None and hasattr(renderer, 'bubbleDidRequestEdit'):

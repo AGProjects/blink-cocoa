@@ -2787,6 +2787,127 @@ class NativeChatViewController(ChatViewController):
         return self.delegate.audio_metadata_for(transfer_id)
 
     @objc.python_method
+    def _mediaLabel(self, meta):
+        """The caption set on this transfer, if any."""
+        transfer_id = meta.get('transfer_id') if isinstance(meta, dict) else None
+        if not transfer_id or not hasattr(self.delegate, 'media_label_for'):
+            return None
+        return self.delegate.media_label_for(transfer_id)
+
+    @objc.python_method
+    @run_in_gui_thread
+    def applyMediaLabel(self, transfer_id, label):
+        """Show (or take away) a caption set after its bubble was built.
+
+        On the GUI thread for the same reason as applyAudioMetadata: the
+        caption arrives on its own SIP message.
+        """
+        if self.messageListView is None:
+            return
+        transfer_id = str(transfer_id)
+        label = label or None
+        changed = False
+        for view in self.messageListView.subviews():
+            meta = getattr(view, 'transfer_meta', None)
+            if not isinstance(meta, dict) or str(meta.get('transfer_id') or '') != transfer_id:
+                continue
+            if getattr(view, 'caption', None) == label:
+                continue
+            view.caption = label
+            view.invalidateLayout()
+            changed = True
+        if changed:
+            self.messageListView.layoutMessages()
+
+    @objc.python_method
+    def canEditCaption(self, msgid):
+        """Whether Edit Caption is offered on this bubble.
+
+        Only on a picture or a movie this account sent, that has a transfer
+        id to key the caption on, in a conversation whose controller can
+        send the label. A received file's caption is the sender's to set.
+        """
+        if self.messageListView is None or not hasattr(self.delegate, 'send_media_label'):
+            return False
+        # A bubble asks about itself while it is being measured, which can
+        # be before it is in the index; it passes itself for that reason.
+        if isinstance(msgid, (str, bytes)):
+            bubble = self.messageListView.viewForMessageId_(str(msgid))
+        else:
+            bubble = msgid
+        if str(getattr(bubble, 'direction', '') or '') != 'outgoing':
+            return False
+        meta = getattr(bubble, 'transfer_meta', None)
+        if not isinstance(meta, dict) or not meta.get('transfer_id'):
+            return False
+        if getattr(bubble, 'transfer_failed', False):
+            return False
+        return self.messageCategory(bubble) in ('image', 'video')
+
+    @objc.python_method
+    def bubbleDidRequestEditCaption(self, msgid):
+        """Ask for the new caption and send it."""
+        if not self.canEditCaption(msgid):
+            return
+        bubble = self.messageListView.viewForMessageId_(str(msgid))
+        meta = bubble.transfer_meta
+        current = getattr(bubble, 'caption', None) or ''
+        try:
+            from AppKit import NSScrollView, NSTextView, NSBezelBorder
+            alert = NSAlert.alloc().init()
+            try:
+                from Avatars import avatar_image
+                peer, icon_path = self._peerIdentity()
+                avatar = avatar_image(icon_path, peer, 64.0)
+                if avatar is not None:
+                    alert.setIcon_(avatar)
+            except Exception:
+                pass
+            alert.setMessageText_(NSLocalizedString("Edit caption", "Window title"))
+            name = display_name(meta) or meta.get('filename')
+            if name:
+                alert.setInformativeText_(name)
+            alert.addButtonWithTitle_(NSLocalizedString("Save", "Button"))
+            alert.addButtonWithTitle_(NSLocalizedString("Cancel", "Button"))
+
+            # Several lines, as on mobile: a caption is a sentence or two,
+            # and Return inserts a line rather than dismissing the panel.
+            scroll = NSScrollView.alloc().initWithFrame_(NSMakeRect(0, 0, 320, 88))
+            scroll.setBorderType_(NSBezelBorder)
+            scroll.setHasVerticalScroller_(True)
+            scroll.setHasHorizontalScroller_(False)
+            size = scroll.contentSize()
+            text = NSTextView.alloc().initWithFrame_(NSMakeRect(0, 0, size.width, size.height))
+            text.setMinSize_((0.0, size.height))
+            text.setMaxSize_((1.0e7, 1.0e7))
+            text.setVerticallyResizable_(True)
+            text.setHorizontallyResizable_(False)
+            text.textContainer().setWidthTracksTextView_(True)
+            text.setRichText_(False)
+            text.setFont_(NSFont.systemFontOfSize_(13.0))
+            try:
+                text.setAutomaticQuoteSubstitutionEnabled_(False)
+            except Exception:
+                pass
+            text.setString_(current)
+            scroll.setDocumentView_(text)
+            alert.setAccessoryView_(scroll)
+            alert.layout()
+            alert.window().setInitialFirstResponder_(text)
+            # Caret after the existing caption, so editing carries on from it.
+            text.setSelectedRange_((len(current), 0))
+
+            if alert.runModal() != 1000:        # NSAlertFirstButtonReturn
+                return
+            label = str(text.string() or '').strip()
+        except Exception as e:
+            BlinkLogger().log_error('Cannot ask for the caption of %s: %s' % (msgid, e))
+            return
+        if label == current.strip():
+            return
+        self.delegate.send_media_label(meta['transfer_id'], label)
+
+    @objc.python_method
     @run_in_gui_thread
     def applyAudioMetadata(self, transfer_id, recording):
         """Attach a waveform that arrived after its bubble was built.
@@ -3780,6 +3901,10 @@ class NativeChatViewController(ChatViewController):
         # Left stale, the button was drawn against the rects of a bubble
         # that had no room for it.
         bubble.transfer_meta = meta
+        # A caption set with Edit Caption, here or on another device. It
+        # travels on its own message, so it is looked up rather than read
+        # off the envelope.
+        bubble.caption = self._mediaLabel(meta)
         # A failure this transfer already suffered in an earlier run, stored
         # in the envelope itself. Adopting it before anything touches the
         # network is the whole point: the bubble says what happened, and

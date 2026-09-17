@@ -657,9 +657,16 @@ class ChatViewController(NSObject):
             BlinkLogger().log_error('Cannot load the attachment preview: %s' % e)
             confirm_attachments = None
 
+        # A caption field only where the conversation can send one: it
+        # travels as its own message keyed on the transfer id, and not every
+        # delegate (an MSRP chat session) has anything to send it with.
+        send_captioned = getattr(delegate, 'sendFilesWithCaption', None)
+        caption = {'text': ''} if send_captioned is not None else None
+
         if confirm_attachments is not None:
             plan = confirm_attachments(paths, self.attachmentPreviewParent(),
-                                       title or self.attachmentPreviewTitle())
+                                       title or self.attachmentPreviewTitle(),
+                                       caption=caption)
             if not plan:
                 BlinkLogger().log_info('Attachment cancelled')
                 return 0
@@ -679,7 +686,8 @@ class ChatViewController(NSObject):
             # half said it may, shows a movie's result before it goes,
             # and comes back empty if the user changed their mind about
             # any of it.
-            paths = prepare_attachments(plan, self.attachmentPreviewParent())
+            paths = prepare_attachments(plan, self.attachmentPreviewParent(),
+                                        caption=caption)
             if not paths:
                 BlinkLogger().log_info('Attachment cancelled while it was '
                                        'being prepared')
@@ -689,6 +697,9 @@ class ChatViewController(NSObject):
                      for (path, send_original) in plan]
 
         try:
+            text = (caption or {}).get('text') or ''
+            if text and send_captioned is not None and len(paths) == 1:
+                return send_captioned(paths, text) or 0
             return send(paths) or 0
         except Exception as e:
             BlinkLogger().log_error('Cannot send the attachments: %s' % e)

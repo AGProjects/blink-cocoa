@@ -74,6 +74,9 @@ CHECK_H = 18.0
 # that gets truncated away.
 FACTS_H = 14.0
 PLAYER_BAR_H = 32.0
+# The caption field under a single picture or movie: what Sylk Mobile calls
+# the label, sent as its own metadata message once the transfer has an id.
+CAPTION_FIELD_H = 24.0
 PLAY_W = 64.0
 # The two marks that bound a trim, at the right-hand end of the scrub bar.
 # Narrow on purpose: they are punctuation on the bar, not buttons of their
@@ -1329,12 +1332,18 @@ class AttachmentPreviewController(NSObject):
     _caption_note = None
     _facts_label = None
     _checkboxes = None
+    # Offered only when the caller can send a caption with the file, and
+    # only for one picture or movie: the caption belongs to that bubble.
+    _offer_caption = False
+    _initial_caption = ''
+    _caption_field = None
 
     @objc.python_method
     def setupWithPaths(self, paths, title, window_title=None,
                        accept_title=None, square=False,
                        alternate_title=None, review=False,
-                       caption_note=None, back_title=None):
+                       caption_note=None, back_title=None,
+                       offer_caption=False, initial_caption=None):
         """Build the window. Separate from init on purpose.
 
         Overriding ObjC's own init from Python is a thing that works until
@@ -1350,6 +1359,8 @@ class AttachmentPreviewController(NSObject):
         self._review = review
         self._back_title = back_title
         self._caption_note = caption_note
+        self._offer_caption = bool(offer_caption)
+        self._initial_caption = initial_caption or ''
         self._build(title)
         return self
 
@@ -1626,6 +1637,10 @@ class AttachmentPreviewController(NSObject):
                                and (_facts(self.paths[0]) or video is not None))
                    else 0.0)
         transport_h = PLAYER_BAR_H if video is not None else 0.0
+        caption_field_h = (CAPTION_FIELD_H
+                           if (body is not None and self._offer_caption
+                               and not self._square and not self._review)
+                           else 0.0)
         # The box sits under a single attachment; in a list it sits in
         # each row and costs no height of its own. Never in the photograph
         # chooser: that window is picking a contact's picture, not sending
@@ -1636,6 +1651,7 @@ class AttachmentPreviewController(NSObject):
         height = (PAD + BUTTON_H + GAP
                   + (check_h + GAP if check_h else 0)
                   + (facts_h + 4.0 if facts_h else 0)
+                  + (caption_field_h + GAP if caption_field_h else 0)
                   + (caption_h + GAP if caption_h else 0)
                   + (transport_h + GAP if transport_h else 0)
                   + body_h + GAP + header_h + PAD)
@@ -1689,6 +1705,24 @@ class AttachmentPreviewController(NSObject):
                 content.addSubview_(facts)
                 self._facts_label = facts
                 self._noteFacts()
+
+            if caption_field_h:
+                y -= GAP + caption_field_h
+                field = NSTextField.alloc().initWithFrame_(
+                    NSMakeRect(PAD, y, WINDOW_W - 2 * PAD, caption_field_h))
+                field.setEditable_(True)
+                field.setSelectable_(True)
+                field.setBezeled_(True)
+                field.setFont_(NSFont.systemFontOfSize_(13))
+                try:
+                    field.cell().setPlaceholderString_(
+                        NSLocalizedString("Add a caption", "Placeholder"))
+                except Exception:
+                    pass
+                field.cell().setScrollable_(True)
+                field.setStringValue_(self._initial_caption)
+                content.addSubview_(field)
+                self._caption_field = field
         else:
             rows = self._rowsView()
             scroll = NSScrollView.alloc().initWithFrame_(
@@ -1804,6 +1838,11 @@ class AttachmentPreviewController(NSObject):
             self._revert_button = revert
 
         self.window = window
+        if self._caption_field is not None:
+            # Typing goes straight into the caption; Return still sends and
+            # Escape still cancels, as the buttons' key equivalents are
+            # looked at before the field is.
+            window.setInitialFirstResponder_(self._caption_field)
 
     # -- running ---------------------------------------------------------
 
@@ -1846,6 +1885,16 @@ class AttachmentPreviewController(NSObject):
         self._discardTemporaries(
             self.paths[0] if (self.accepted and self.paths) else None)
         return list(self.paths) if self.accepted else []
+
+    @objc.python_method
+    def caption(self):
+        """The caption typed for the attachment, or '' for none."""
+        if self._caption_field is None:
+            return ''
+        try:
+            return str(self._caption_field.stringValue() or '').strip()
+        except Exception:
+            return ''
 
     @objc.python_method
     def resolved(self):
@@ -2506,7 +2555,7 @@ class AttachmentPreviewController(NSObject):
         NSApp.stopModal()
 
 
-def confirm_attachments(paths, parent=None, title=None):
+def confirm_attachments(paths, parent=None, title=None, caption=None):
     """Ask before sending. Returns [(path, send_original), ...], or [] for no.
 
     The one entry point for every source: whatever produced the files,
@@ -2518,6 +2567,10 @@ def confirm_attachments(paths, parent=None, title=None):
     lists because the answer belongs to the file -- a selection is rarely
     all one thing, and losing which flag went with which picture is the
     one mistake this window exists to prevent.
+
+    `caption`, when given, is a dict: the window then offers a caption
+    field for a single picture or movie, prefilled from caption['text'],
+    and what was typed is written back to caption['text'] on Send.
     """
     paths = [str(p) for p in (paths or []) if os.path.isfile(str(p))]
     if not paths:
@@ -2526,9 +2579,14 @@ def confirm_attachments(paths, parent=None, title=None):
         controller = AttachmentPreviewController.alloc().init()
         if controller is None:
             return [(path, True) for path in paths]
-        chosen = controller.setupWithPaths(paths, title).runModal(parent)
+        chosen = controller.setupWithPaths(
+            paths, title,
+            offer_caption=caption is not None,
+            initial_caption=(caption or {}).get('text')).runModal(parent)
         if not chosen:
             return []
+        if caption is not None:
+            caption['text'] = controller.caption()
         if controller.resolved():
             # A single picture, settled in the window itself: what came
             # back IS the file to send, at the size the user was looking
@@ -2643,7 +2701,7 @@ class CompressionProgressController(NSObject):
                 pass
 
 
-def prepare_attachments(plan, parent=None):
+def prepare_attachments(plan, parent=None, caption=None):
     """Turn the preview's answers into the files that will actually go.
 
     `plan` is what confirm_attachments returned: (path, send_original)
@@ -2662,6 +2720,9 @@ def prepare_attachments(plan, parent=None):
     is between two files that both exist.
 
     Returns [] if the user cancels, which cancels the whole send.
+
+    `caption` is the dict confirm_attachments filled in, handed on so that
+    going Back to the first window shows -- and can change -- the caption.
     """
     try:
         import MediaCompression
@@ -2746,7 +2807,7 @@ def prepare_attachments(plan, parent=None):
             # directory for every one of them.
             temporary.remove(smaller)
             _remove_all([smaller])
-            again = confirm_attachments([source], parent)
+            again = confirm_attachments([source], parent, caption=caption)
             if not again:
                 _remove_all(temporary)
                 return []

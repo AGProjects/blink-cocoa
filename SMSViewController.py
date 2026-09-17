@@ -76,6 +76,7 @@ from MessageHost import (FILE_TRANSFER_CONTENT_TYPE,
                          is_renderable_content_type, peaks_metadata,
                          pgp_plaintext, pgp_plaintext_bytes,
                          peaks_envelope, reply_envelope, reply_metadata,
+                         label_envelope, label_metadata,
                          load_trace_key, load_trace_mark, load_trace_note,
                          load_trace_label, load_trace_arm, load_trace_finish,
                          load_trace_buckets_to, load_trace_tick,
@@ -322,6 +323,20 @@ class SMSSplitView(NSSplitView):
 _timestamp_fallbacks = set()
 
 
+def _label_time(value):
+    """A caption envelope's timestamp as an aware UTC datetime, or None."""
+    if not value:
+        return None
+    try:
+        import dateutil.parser
+        when = dateutil.parser.isoparse(str(value))
+    except (ValueError, TypeError, OverflowError):
+        return None
+    if when.tzinfo is None:
+        when = when.replace(tzinfo=datetime.timezone.utc)
+    return when.astimezone(datetime.timezone.utc)
+
+
 # (account, address) pairs whose public key has already been looked up in
 # this run of the application. A lookup is a SIP MESSAGE to the server, and
 # an address with no key published answers 404 every time it is asked, so
@@ -522,6 +537,12 @@ class SMSViewController(NSObject):
             # fixed field set and drops the rest), so it arrives as its own
             # message, before or after the transfer it belongs to.
             self.audio_metadata = {}
+            # transfer id -> {'label', 'timestamp', ...}: the caption set on a
+            # picture or a movie with Edit Caption, here or on another
+            # device. Its own message, like a waveform, and deliberately not
+            # cleared when the transcript reloads: a filtered page brings no
+            # sidecars with it, and a caption once seen is still the caption.
+            self.media_labels = {}
             # What the last file transfer filed here will be uploaded
             # from: the cache's copy of it, or the original when no copy
             # could be made. Read by a caller that owns a temporary file
@@ -1005,6 +1026,13 @@ class SMSViewController(NSObject):
         self.log_info('Delete message %s ' % id)
         self.history.delete_message(id);
         self.chatViewController.markMessage(id, 'deleted')
+        try:
+            from SMSWindowManager import SMSWindowManager
+            # Queued behind the delete on the database thread, so the re-read
+            # no longer sees the row: a deleted last message stops being quoted.
+            SMSWindowManager().refreshMessagePreview(self.conversation_peer_uri())
+        except Exception as e:
+            self.log_error('Cannot refresh the conversation preview: %s' % e)
         if local:
             return
         if self.account is BonjourAccount():
@@ -1397,6 +1425,10 @@ class SMSViewController(NSObject):
             recording = peaks_metadata(content)
             if recording is not None:
                 self.note_audio_metadata(recording)
+                return
+            caption = label_metadata(content)
+            if caption is not None:
+                self.note_media_label(caption)
             return
 
         if content_type == LOCATION_CONTENT_TYPE:
@@ -1982,6 +2014,61 @@ class SMSViewController(NSObject):
                           'resync would bring it back.' % transfer_id)
 
     @objc.python_method
+    def note_media_label(self, caption, render=True):
+        """Record the caption of a picture or a movie, and show it.
+
+        Last writer wins by the envelope's own timestamp, not by arrival:
+        a journal catch-up and a scroll back both replay older edits after
+        newer ones. An envelope whose time cannot be read only fills a gap.
+        """
+        transfer_id = caption['transfer_id']
+        known = self.media_labels.get(transfer_id)
+        if known is not None:
+            if known.get('label') == caption['label']:
+                return False
+            new_time = _label_time(caption.get('timestamp'))
+            old_time = _label_time(known.get('timestamp'))
+            if new_time is None or (old_time is not None and new_time < old_time):
+                return False
+        self.media_labels[transfer_id] = caption
+        self.log_debug('Caption of transfer %s: %r' % (transfer_id, caption['label']))
+        if render:
+            try:
+                self.chatViewController.applyMediaLabel(transfer_id, caption['label'])
+            except AttributeError:
+                pass                    # no captions on this renderer
+        return True
+
+    @objc.python_method
+    def media_label_for(self, transfer_id):
+        """The caption set on a transfer, or None."""
+        caption = self.media_labels.get(str(transfer_id or ''))
+        return (caption or {}).get('label') or None
+
+    @objc.python_method
+    def send_media_label(self, transfer_id, label):
+        """Set the caption of a picture or a movie, here and on the other side.
+
+        Sent the way Sylk Mobile sends it -- a label envelope keyed on the
+        transfer id -- so a caption edited on either client shows on both.
+        """
+        transfer_id = str(transfer_id or '')
+        if not transfer_id:
+            return None
+        label = (label or '').strip()
+        timestamp = ISOTimestamp.now()
+        body = label_envelope(transfer_id, str(uuid.uuid4()), label,
+                              self.remote_uri, timestamp)
+        self.log_info('Caption of transfer %s %s' % (transfer_id,
+                      'set' if label else 'cleared'))
+        msgid = self.sendMessage(body, LEGACY_LOCATION_CONTENT_TYPE)
+        self.note_media_label({'transfer_id': transfer_id,
+                               'label': label,
+                               'timestamp': str(timestamp),
+                               'metadata_id': ''})
+        return msgid
+
+    @objc.python_method
     def note_reply_link(self, link, timestamp=None, render=True):
         """Record that one message answers another, and show it if we can.
 
@@ -2316,6 +2403,29 @@ class SMSViewController(NSObject):
             if self.sendFile(path):
                 sent += 1
         return sent
+
+    @objc.python_method
+    def sendFilesWithCaption(self, paths, caption):
+        """Send files, captioning the single picture or movie among them.
+
+        The caption typed in the attachment preview. It cannot ride in the
+        transfer's envelope -- the server relays a fixed field set -- so it
+        goes the way Edit Caption sends it, as a label keyed on the id the
+        transfer was just given.
+        """
+        caption = (caption or '').strip()
+        if not caption or len(paths or []) != 1:
+            return self.sendFiles(paths)
+        if not self.confirmOutgoingAccount():
+            return 0
+        transfer_id = self.sendFile(paths[0])
+        if not transfer_id:
+            return 0
+        try:
+            self.send_media_label(transfer_id, caption)
+        except Exception as e:
+            self.log_error('Cannot send the caption of %s: %s' % (transfer_id, e))
+        return 1
 
     @objc.python_method
     def sendCallRecording(self, path, duration=None, peaks=None):
@@ -5244,6 +5354,15 @@ class SMSViewController(NSObject):
                     self.note_reply_link(link)
                     continue
 
+                caption = label_metadata(message.body)
+                if caption is not None:
+                    # A caption for a picture or a movie. Replayed in page
+                    # order, which is not the order they were set in once
+                    # the user scrolls back, so the newer one is kept rather
+                    # than the last one seen.
+                    self.note_media_label(caption)
+                    continue
+
                 if message.direction == 'incoming' and message.status != MSG_STATE_DISPLAYED and message.media_type == '':
                     self.not_read_queue.put(message.msgid)
 
@@ -5361,6 +5480,14 @@ class SMSViewController(NSObject):
                         call_id = message.sip_callid
                         last_media_type = 'sms'
                         continue
+
+                    if message.content_type == LEGACY_LOCATION_CONTENT_TYPE and content:
+                        # The same caption, stored armoured and only now
+                        # opened: the check above could only read cleartext.
+                        caption = label_metadata(content)
+                        if caption is not None:
+                            self.note_media_label(caption)
+                            continue
 
                     if message.content_type in (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE):
                         # Rows are persisted exactly as they arrived --

@@ -63,7 +63,7 @@ __all__ = ['USE_MESSAGE_PANEL',
            'FILE_TRANSFER_CONTENT_TYPES', 'file_transfer_summary',
            'reply_metadata', 'reply_envelope', 'REPLY_ACTION', 'quote_digest',
            'recording_title', 'peaks_metadata', 'peaks_envelope',
-           'PEAKS_ACTION',
+           'PEAKS_ACTION', 'LABEL_ACTION', 'label_metadata', 'label_envelope',
            'is_renderable_content_type', 'LOCAL_STATUS_MEDIA_TYPES',
            'CALL_CONTENT_TYPE', 'call_record', 'call_outcome', 'call_summary',
            'call_lines', 'CALL_ATTENTION_OUTCOMES', 'call_needs_attention',
@@ -901,6 +901,73 @@ def peaks_envelope(transfer_id, metadata_id, peaks, spectrum, peer_uri, timestam
                        'value': value,
                        'timestamp': str(timestamp),
                        'uri': str(peer_uri)})
+
+
+LABEL_ACTION = 'label'
+
+
+def label_metadata(body):
+    """A caption set on a picture or a movie, or None.
+
+    Sylk Mobile's "Edit caption" does not touch the transfer: it sends a
+    companion message on the same pipeline as replies and waveforms::
+
+        {"messageId":  "<the TRANSFER id>",
+         "metadataId": "<this envelope's id>",
+         "action":     "label",
+         "value":      "<the caption>",
+         "timestamp":  ..., "uri": ...}
+
+    The newest one wins, and an empty value takes the caption away again
+    (mobile falls back to the bubble's own text when the label is empty).
+
+    Returns {'transfer_id', 'label', 'timestamp', 'metadata_id'}; the label
+    is '' for a cleared caption, never None.
+    """
+    import json
+
+    if isinstance(body, bytes):
+        try:
+            body = body.decode('utf-8')
+        except UnicodeDecodeError:
+            return None
+    if not isinstance(body, str) or LABEL_ACTION not in body:
+        return None
+    try:
+        envelope = json.loads(body)
+    except (TypeError, ValueError):
+        return None
+    if not isinstance(envelope, dict) or envelope.get('action') != LABEL_ACTION:
+        return None
+
+    transfer_id = envelope.get('messageId')
+    if not transfer_id:
+        return None
+    value = envelope.get('value')
+    label = value.strip() if isinstance(value, str) else ''
+    return {'transfer_id': str(transfer_id),
+            'label': label,
+            'timestamp': str(envelope.get('timestamp') or ''),
+            'metadata_id': str(envelope.get('metadataId') or '')}
+
+
+def label_envelope(transfer_id, metadata_id, label, peer_uri, timestamp):
+    """The body of the companion message that sets a caption.
+
+    The sending half of label_metadata, field for field what mobile's
+    sendEditedMessage writes. Compact separators, as JSON.stringify
+    produces: the tombstone that follows a removed transfer finds its
+    sidecars with a LIKE on '"messageId":"<id>"'.
+    """
+    import json
+
+    return json.dumps({'messageId': str(transfer_id),
+                       'metadataId': str(metadata_id),
+                       'action': LABEL_ACTION,
+                       'value': str(label or ''),
+                       'timestamp': str(timestamp),
+                       'uri': str(peer_uri)},
+                      separators=(',', ':'))
 
 
 def reply_envelope(reply_id, original_id, metadata_id, peer_uri, timestamp):
