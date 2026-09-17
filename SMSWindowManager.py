@@ -1040,6 +1040,16 @@ class SMSWindowManagerClass(NSObject):
     def _abNoteXCAPChange(self, manager, kind, id, op=None, data=None):
         if self._ab_notify_suppress_all[0]:
             return          # a repair, not an edit -- see suppressAddressbookNotifications
+        # Copying a fetched document into this account, decided by sipsimple
+        # at the moment the write was made (data.remote, python3-sipsimple
+        # xcap.is_applying_remote_document). This handler runs on the GUI
+        # thread after the notification was queued, by which time the
+        # applying_remote_data counter below has usually gone back to zero:
+        # the copies of 2026-09-17 09:11:43 were announced to every device
+        # for exactly that reason. The counter stays as the fallback for a
+        # sipsimple that does not tag its notifications yet.
+        if getattr(data, 'remote', False):
+            return
         # Nor is copying a document we just fetched. Applying ONE account's
         # addressbook writes the same contacts into every OTHER account's xcap
         # manager (sipsimple addressbook.py, the propagation loop in
