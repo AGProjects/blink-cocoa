@@ -6676,6 +6676,12 @@ class SMSWindowManagerClass(NSObject):
 
             return
         elif content_type == IsComposingDocument.content_type:
+            if direction == 'outgoing':
+                # Our own typing state, replicated back by the server (from
+                # this device or another of ours). window_tab_identity is the
+                # PEER for an outgoing copy, so without this we announce that
+                # they are typing whenever we are.
+                return
             content = cpim_message.content if is_cpim else data.body
             try:
                 msg = IsComposingMessage.parse(content)
