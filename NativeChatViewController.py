@@ -3315,11 +3315,20 @@ class NativeChatViewController(ChatViewController):
 
         # -- delivery ----------------------------------------------------
         delivery = []
-        if bubble is not None:
-            delivery.append((NSLocalizedString("Shown as", "Message info"), text(getattr(bubble, 'state', None))))
-        delivery.append((NSLocalizedString("Stored status", "Message info"), text(row.get('status'))))
+        # One status. The bubble, the stored row and the open session all
+        # hold one, and they agree unless something failed to update one of
+        # them -- so the others are shown only when they disagree, which is
+        # exactly when they are worth reading.
+        shown = text(getattr(bubble, 'state', None)) if bubble is not None else ''
+        stored = text(row.get('status'))
+        session = text(live.get('status')) if live else ''
+        status = stored or shown or session
+        delivery.append((NSLocalizedString("Status", "Message info"), status))
+        if shown and shown != status:
+            delivery.append((NSLocalizedString("Shown as", "Message info"), shown))
+        if session and session != status:
+            delivery.append((NSLocalizedString("Session status", "Message info"), session))
         if live:
-            delivery.append((NSLocalizedString("Session status", "Message info"), text(live.get('status'))))
             if live.get('queued'):
                 delivery.append((NSLocalizedString("In send queue", "Message info"), text(True)))
             delivery.append((NSLocalizedString("PJSIP id", "Message info"), text(live.get('pjsip_id'))))
