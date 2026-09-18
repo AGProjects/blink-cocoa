@@ -708,15 +708,15 @@
 		AD0000000000000000730001 /* VideoPlayback.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000730000 /* VideoPlayback.py */; };
 		AD0000000000000000730003 /* VideoPlayback.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000730000 /* VideoPlayback.py */; };
 		AD0000000000000000AB0001 /* AddressbookNotify.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000AB0000 /* AddressbookNotify.py */; };
-		AD0000000000000000AB0011 /* AddressbookOrigin.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000AB0010 /* AddressbookOrigin.py */; };
 		AD0000000000000000AB0003 /* AddressbookNotify.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000AB0000 /* AddressbookNotify.py */; };
+		AD0000000000000000AB0011 /* AddressbookOrigin.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000AB0010 /* AddressbookOrigin.py */; };
 		AD0000000000000000AB0013 /* AddressbookOrigin.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000AB0010 /* AddressbookOrigin.py */; };
+		AD0000000000000000CD0001 /* CallDetailsPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000CD0000 /* CallDetailsPanel.py */; };
+		AD0000000000000000CD0003 /* CallDetailsPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000CD0000 /* CallDetailsPanel.py */; };
+		AD0000000000000000DE0001 /* MessageDetailsPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000DE0000 /* MessageDetailsPanel.py */; };
+		AD0000000000000000DE0003 /* MessageDetailsPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000DE0000 /* MessageDetailsPanel.py */; };
 		AD0000000000000000EF0003 /* ScreenPointer.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000EF0000 /* ScreenPointer.py */; };
 		AD0000000000000000EF0103 /* ScreenPointerController.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000EF0100 /* ScreenPointerController.py */; };
-		AD0000000000000000CD0001 /* CallDetailsPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000CD0000 /* CallDetailsPanel.py */; };
-		AD0000000000000000DE0001 /* MessageDetailsPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000DE0000 /* MessageDetailsPanel.py */; };
-		AD0000000000000000CD0003 /* CallDetailsPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000CD0000 /* CallDetailsPanel.py */; };
-		AD0000000000000000DE0003 /* MessageDetailsPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000DE0000 /* MessageDetailsPanel.py */; };
 		AD00000000000000740001 /* AttachmentPreview.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000740000 /* AttachmentPreview.py */; };
 		AD00000000000000740003 /* AttachmentPreview.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000740000 /* AttachmentPreview.py */; };
 		AD00000000000000750001 /* CameraCapture.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000750000 /* CameraCapture.py */; };
@@ -1549,10 +1549,10 @@
 		AD0000000000000000730000 /* VideoPlayback.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoPlayback.py; sourceTree = "<group>"; };
 		AD0000000000000000AB0000 /* AddressbookNotify.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AddressbookNotify.py; sourceTree = "<group>"; };
 		AD0000000000000000AB0010 /* AddressbookOrigin.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AddressbookOrigin.py; sourceTree = "<group>"; };
-		AD0000000000000000EF0000 /* ScreenPointer.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ScreenPointer.py; sourceTree = "<group>"; };
-		AD0000000000000000EF0100 /* ScreenPointerController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ScreenPointerController.py; sourceTree = "<group>"; };
 		AD0000000000000000CD0000 /* CallDetailsPanel.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = CallDetailsPanel.py; sourceTree = "<group>"; };
 		AD0000000000000000DE0000 /* MessageDetailsPanel.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MessageDetailsPanel.py; sourceTree = "<group>"; };
+		AD0000000000000000EF0000 /* ScreenPointer.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ScreenPointer.py; sourceTree = "<group>"; };
+		AD0000000000000000EF0100 /* ScreenPointerController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ScreenPointerController.py; sourceTree = "<group>"; };
 		AD00000000000000740000 /* AttachmentPreview.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AttachmentPreview.py; sourceTree = "<group>"; };
 		AD00000000000000750000 /* CameraCapture.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = CameraCapture.py; sourceTree = "<group>"; };
 		AD00000000000000760000 /* Avatars.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = Avatars.py; sourceTree = "<group>"; };
@@ -3958,7 +3958,7 @@
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 958;
+				CURRENT_PROJECT_VERSION = 959;
 				DEVELOPMENT_TEAM = 4DFEFUDLKZ;
 				ENABLE_HARDENED_RUNTIME = YES;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
@@ -3985,7 +3985,7 @@
 					"$(PROJECT_DIR)/Distribution/Frameworks/libs",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 9.8.0;
+				MARKETING_VERSION = 9.8.1;
 				ONLY_ACTIVE_ARCH = NO;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				OTHER_CODE_SIGN_FLAGS = "";
@@ -4009,7 +4009,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 958;
+				CURRENT_PROJECT_VERSION = 959;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 4DFEFUDLKZ;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -4035,7 +4035,7 @@
 					"$(PROJECT_DIR)/Distribution/Frameworks/libs",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 9.8.0;
+				MARKETING_VERSION = 9.8.1;
 				ONLY_ACTIVE_ARCH = NO;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				OTHER_CODE_SIGN_FLAGS = "";
