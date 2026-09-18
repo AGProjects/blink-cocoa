@@ -205,6 +205,10 @@ QUOTE_LINES   = 3
 # good reply, and letting it narrow to the width of the word would squeeze
 # the quoted original into a two-character column three lines deep.
 QUOTE_MIN_BODY_W = 140.0
+# A picture or movie being answered is quoted as a small square of itself,
+# at the trailing edge of the quote, rather than as its file name: the name
+# of a photograph is IMG_4127.jpg, which says nothing about which one.
+QUOTE_THUMB = 40.0
 # The inline player on a voice recording: the round play key, the gap
 # between it and the track, the track's own height, the gap under the whole
 # row, and how many waveform bars are drawn across it.
@@ -1811,6 +1815,9 @@ class BubbleTextField(NSTextField):
 
 
 class MessageBubbleView(NSView):
+    # The decode size a quote thumbnail asks the tile cache for: its side
+    # in points, doubled for Retina.
+    QUOTE_THUMB_PIXELS = QUOTE_THUMB * 2
     KIND_TEXT = 'text'
     KIND_SYSTEM = 'system'
     KIND_LOCATION = 'location'
@@ -1830,6 +1837,9 @@ class MessageBubbleView(NSView):
     def initWithFrame_(self, frame):
         self = objc.super(MessageBubbleView, self).initWithFrame_(frame)
         if self:
+            # Every subview is placed by _layoutForWidth; none is to be
+            # moved by AppKit when the bubble's height changes under it.
+            self.setAutoresizesSubviews_(False)
             self.msgid = None
             self.kind = self.KIND_TEXT
             self.direction = 'incoming'
@@ -1947,6 +1957,9 @@ class MessageBubbleView(NSView):
             # Whose message is being quoted, which picks the accent colour
             # -- the same green/blue split the sender names already use.
             self.reply_from_self = False
+            # A thumbnail of the original when it is a picture or a movie
+            # that is on this disc; None quotes it as text only.
+            self.reply_image = None
             self._quote_rect = NSZeroRect
             self._audio_shape_logged = None
             # The inline player on a voice recording. audio_path is set by
@@ -2934,6 +2947,24 @@ class MessageBubbleView(NSView):
                 and self.kind == self.KIND_CALL
                 and bool(self.call_record))
 
+    @objc.python_method
+    def _showsMessageInfo(self):
+        """Every message has an info glyph; a call has its own panel."""
+        return (bool(self.msgid)
+                and not self._tileMode()
+                and self.kind not in (self.KIND_DATE, self.KIND_SYSTEM, self.KIND_CALL))
+
+    @objc.python_method
+    def _showsInfo(self):
+        return self._showsCallInfo() or self._showsMessageInfo()
+
+    def showMessageInfo_(self, sender):
+        """Deferred like showCallDetails_, and for the same reason."""
+        renderer = self.renderer
+        if renderer is not None and hasattr(renderer, 'bubbleDidRequestInfo'):
+            BlinkLogger().log_debug('Bubble %s: message info' % self.msgid)
+            renderer.bubbleDidRequestInfo(self.msgid)
+
     def showCallDetails_(self, sender):
         """The details panel, run after the click that asked for it.
 
@@ -3093,6 +3124,7 @@ class MessageBubbleView(NSView):
                 self.reply_to,
                 self.reply_text,
                 self._showsQuote(),
+                self.reply_image is not None,
                 # The well a posterless movie plays in: it is a picture
                 # block like any other, so its arrival changes the height.
                 bool(self.video_no_poster),
@@ -3108,7 +3140,7 @@ class MessageBubbleView(NSView):
                 self._callSignature(),
                 # The info glyph widens the header's floor once a call
                 # record lands on a bubble already drawn.
-                self._showsCallInfo(),
+                self._showsInfo(),
                 # A call recording carries both sides and stacks two
                 # strips, and a spectrogram adds a row of its own, so the
                 # player's height depends on what the envelope brought.
@@ -3762,7 +3794,8 @@ class MessageBubbleView(NSView):
         if not self._showsQuote():
             return 0.0
         sender, body = self._quoteStrings()
-        text_w = max(body_w - QUOTE_BAR_W - QUOTE_BAR_GAP - QUOTE_PAD, 20.0)
+        text_w = max(body_w - QUOTE_BAR_W - QUOTE_BAR_GAP - QUOTE_PAD
+                     - self._quoteThumbRoom(), 20.0)
         height = QUOTE_PAD
         try:
             height += float(sender.size().height)
@@ -3779,7 +3812,15 @@ class MessageBubbleView(NSView):
             height += min(float(measured.size.height), line * QUOTE_LINES)
         except Exception:
             height += (meta_font_size(self.font_size) + 3.0) * QUOTE_LINES
-        return height + QUOTE_PAD + QUOTE_GAP
+        height += QUOTE_PAD
+        if self.reply_image is not None:
+            height = max(height, QUOTE_THUMB + 2 * QUOTE_PAD)
+        return height + QUOTE_GAP
+
+    @objc.python_method
+    def _quoteThumbRoom(self):
+        """The width the thumbnail takes out of the quote's text column."""
+        return (QUOTE_THUMB + QUOTE_PAD) if self.reply_image is not None else 0.0
 
     @objc.python_method
     def _drawQuote(self, rect):
@@ -3806,9 +3847,25 @@ class MessageBubbleView(NSView):
         except Exception:
             pass
 
+        if self.reply_image is not None:
+            side = min(QUOTE_THUMB, max(block.size.height - 2 * QUOTE_PAD, 1.0))
+            thumb = NSMakeRect(block.origin.x + block.size.width - QUOTE_PAD - side,
+                               block.origin.y + (block.size.height - side) / 2.0,
+                               side, side)
+            NSGraphicsContext.saveGraphicsState()
+            try:
+                NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(
+                    thumb, 3.0, 3.0).addClip()
+                _draw_image_filling(self.reply_image, thumb)
+            except Exception as e:
+                BlinkLogger().log_debug('Cannot draw the quote thumbnail: %s' % e)
+            finally:
+                NSGraphicsContext.restoreGraphicsState()
+
         sender, body = self._quoteStrings()
         text_x = block.origin.x + QUOTE_BAR_W + QUOTE_BAR_GAP
-        text_w = max(block.origin.x + block.size.width - QUOTE_PAD - text_x, 10.0)
+        text_w = max(block.origin.x + block.size.width - QUOTE_PAD
+                     - self._quoteThumbRoom() - text_x, 10.0)
         y = block.origin.y + QUOTE_PAD
         try:
             sender_h = float(sender.size().height)
@@ -3869,7 +3926,7 @@ class MessageBubbleView(NSView):
             left += width_of(GLYPH_SAVE, glyph_font) + 6.0
         if self._isRepliable():
             left += width_of(GLYPH_REPLY, glyph_font) + 6.0
-        if self._showsCallInfo():
+        if self._showsInfo():
             left += width_of(GLYPH_INFO, glyph_font) + 6.0
 
         right = width_of(GLYPH_DELETE, glyph_font) + 4.0
@@ -4272,11 +4329,12 @@ class MessageBubbleView(NSView):
             if self._track_slider is not None:
                 self._track_slider.setHidden_(True)
 
-        self._body_field.setFrame_(NSMakeRect(bubble_x + pad,
-                                              bubble_y + pad + header_h + quote_block
-                                              + map_block + track_block,
-                                              body_w,
-                                              body_h))
+        body_rect = NSMakeRect(bubble_x + pad,
+                               bubble_y + pad + header_h + quote_block
+                               + map_block + track_block,
+                               body_w,
+                               body_h)
+        self._body_field.setFrame_(body_rect)
 
         if audio_block:
             audio_y = (bubble_y + pad + header_h + quote_block + map_block
@@ -4314,6 +4372,11 @@ class MessageBubbleView(NSView):
         frame.size.width = width
         frame.size.height = total_h
         self.setFrame_(frame)
+        # Placed again after the resize, not only before it: a bubble that
+        # grows -- a quote attached to a reply already on screen -- would
+        # otherwise have AppKit carry the text along with the resize and
+        # leave it where it sat without the quote, over the quote itself.
+        self._body_field.setFrame_(body_rect)
         self._laid_out_width = width
         self._laid_out_signature = signature
         self.setNeedsDisplay_(True)
@@ -5287,8 +5350,9 @@ class MessageBubbleView(NSView):
         else:
             self._reply_rect = NSZeroRect
 
-        # A call's details, the SIP trace link among them.
-        if self._showsCallInfo():
+        # A call's details, the SIP trace link among them; for any other
+        # message, what is known about it.
+        if self._showsInfo():
             self._info_rect = draw_glyph(GLYPH_INFO, left)
             left = self._info_rect.origin.x + self._info_rect.size.width + 6.0
         else:
@@ -6159,8 +6223,9 @@ class MessageBubbleView(NSView):
                 BlinkLogger().log_debug('Bubble %s: reply' % self.msgid)
                 renderer.bubbleDidRequestReply(self.msgid)
             return
-        if self.msgid and self._hits(point, self._info_rect, header and self._showsCallInfo()):
-            self.performSelector_withObject_afterDelay_('showCallDetails:', None, 0.0)
+        if self.msgid and self._hits(point, self._info_rect, header and self._showsInfo()):
+            selector = 'showCallDetails:' if self._showsCallInfo() else 'showMessageInfo:'
+            self.performSelector_withObject_afterDelay_(selector, None, 0.0)
             return
         if header and self.holdsDraggableFile() \
                 and self._bubble_rect.origin.y <= point.y <= self._bubble_rect.origin.y + PAD + HEADER_H:

@@ -24,23 +24,12 @@ import objc
 
 from AppKit import (NSApp,
                     NSAttributedString,
-                    NSBackingStoreBuffered,
                     NSButton,
-                    NSClosableWindowMask,
                     NSColor,
                     NSCursor,
                     NSFont,
                     NSFontAttributeName,
                     NSForegroundColorAttributeName,
-                    NSGridCell,
-                    NSGridCellPlacementLeading,
-                    NSGridCellPlacementTrailing,
-                    NSGridRowAlignmentFirstBaseline,
-                    NSGridView,
-                    NSPanel,
-                    NSRoundedBezelStyle,
-                    NSTextField,
-                    NSTitledWindowMask,
                     NSUnderlineStyleAttributeName,
                     NSUnderlineStyleSingle,
                     NSWorkspace)
@@ -49,18 +38,13 @@ from Foundation import (NSDate,
                         NSDateFormatterMediumStyle,
                         NSDateFormatterNoStyle,
                         NSLocalizedString,
-                        NSMakeRect,
-                        NSObject,
                         NSURL)
 
 from BlinkLogger import BlinkLogger
+from MessageDetailsPanel import DetailsPanel
 from MessageHost import (SIP_STATUS_PHRASES, call_answered_elsewhere, call_outcome,
                          call_summary, format_call_duration, sip_status_phrase)
 
-
-PAD = 20.0
-VALUE_WIDTH = 340.0
-BUTTON_W = 96.0
 
 # Fields the sections below say something about. Anything else a record
 # carries -- a field a newer server or client adds -- is still shown, under
@@ -282,40 +266,29 @@ class CallDetailsLinkButton(NSButton):
         self.addCursorRect_cursor_(self.bounds(), NSCursor.pointingHandCursor())
 
 
-class CallDetailsWindow(NSPanel):
-    """Escape closes it, as it does every other panel on the Mac."""
+class CallDetailsPanel(DetailsPanel):
+    """The details panel for a call record, with its SIP trace link."""
 
-    def cancelOperation_(self, sender):
-        self.performClose_(sender)
-
-
-class CallDetailsPanel(NSObject):
-
-    window = None
     trace_url = None
 
     @objc.python_method
-    def setup(self, record, device_id=None):
+    def setupCall(self, record, device_id=None):
         self.trace_url = sip_trace_url(record)
-        self._build(record, device_id)
-        return self
-
-    @objc.python_method
-    def _label(self, text, font=None, color=None):
-        field = NSTextField.labelWithString_(text)
-        if font is not None:
-            field.setFont_(font)
-        if color is not None:
-            field.setTextColor_(color)
-        return field
-
-    @objc.python_method
-    def _value(self, text):
-        field = NSTextField.wrappingLabelWithString_(text)
-        field.setSelectable_(True)
-        field.setPreferredMaxLayoutWidth_(VALUE_WIDTH)
-        field.widthAnchor().constraintLessThanOrEqualToConstant_(VALUE_WIDTH).setActive_(True)
-        return field
+        sections = [(heading, list(rows)) for heading, rows in call_detail_sections(record, device_id)]
+        if self.trace_url:
+            # With the other SIP identifiers, where someone who has just read
+            # the Call-ID will look for what to do with it.
+            trace_row = (NSLocalizedString("SIP trace", "Call details"), self._traceLink())
+            sip_heading = NSLocalizedString("SIP", "Call details section")
+            for heading, rows in sections:
+                if heading == sip_heading:
+                    rows.append(trace_row)
+                    break
+            else:
+                sections.append((sip_heading, [trace_row]))
+        return self.setup(NSLocalizedString("Call Detail Record", "Window title"),
+                          call_summary(record, device_id) or NSLocalizedString("Call", "Call details"),
+                          sections)
 
     @objc.python_method
     def _traceLink(self):
@@ -329,93 +302,6 @@ class CallDetailsPanel(NSObject):
             NSAttributedString.alloc().initWithString_attributes_(text, attributes))
         button.setToolTip_(self.trace_url)
         return button
-
-    @objc.python_method
-    def _build(self, record, device_id):
-        panel = CallDetailsWindow.alloc().initWithContentRect_styleMask_backing_defer_(
-            NSMakeRect(0, 0, 480, 320), NSTitledWindowMask | NSClosableWindowMask,
-            NSBackingStoreBuffered, False)
-        panel.setTitle_(NSLocalizedString("Call Detail Record", "Window title"))
-        panel.setReleasedWhenClosed_(False)
-        panel.setDelegate_(self)
-        content = panel.contentView()
-
-        system_size = NSFont.systemFontSize()
-        title = self._label(call_summary(record, device_id)
-                            or NSLocalizedString("Call", "Call details"),
-                            font=NSFont.boldSystemFontOfSize_(system_size + 2.0))
-
-        secondary = NSColor.secondaryLabelColor()
-        heading_font = NSFont.boldSystemFontOfSize_(system_size)
-        empty = NSGridCell.emptyContentView()
-
-        sections = call_detail_sections(record, device_id)
-        rows, headings = [], []
-        for heading, entries in sections:
-            headings.append(len(rows))
-            rows.append([self._label(heading, font=heading_font), empty])
-            for label, value in entries:
-                rows.append([self._label(label, color=secondary), self._value(value)])
-        link = None
-        if self.trace_url:
-            # With the other SIP identifiers, where someone who has just read
-            # the Call-ID will look for what to do with it.
-            link = self._traceLink()
-            trace_row = [self._label(NSLocalizedString("SIP trace", "Call details"), color=secondary), link]
-            sip_heading = NSLocalizedString("SIP", "Call details section")
-            index = None
-            for position, (heading, entries) in zip(headings, sections):
-                if heading == sip_heading:
-                    index = position + 1 + len(entries)
-            if index is None:
-                headings.append(len(rows))
-                rows.append([self._label(sip_heading, font=heading_font), empty])
-                rows.append(trace_row)
-            else:
-                rows.insert(index, trace_row)
-                headings = [h + 1 if h >= index else h for h in headings]
-
-        grid = NSGridView.gridViewWithViews_(rows)
-        grid.setRowSpacing_(5.0)
-        grid.setColumnSpacing_(10.0)
-        grid.setRowAlignment_(NSGridRowAlignmentFirstBaseline)
-        grid.columnAtIndex_(0).setXPlacement_(NSGridCellPlacementTrailing)
-        grid.columnAtIndex_(1).setXPlacement_(NSGridCellPlacementLeading)
-        for number, index in enumerate(headings):
-            row = grid.rowAtIndex_(index)
-            row.mergeCellsInRange_((0, 2))
-            grid.cellAtColumnIndex_rowIndex_(0, index).setXPlacement_(NSGridCellPlacementLeading)
-            if number:
-                row.setTopPadding_(10.0)
-
-        close = NSButton.buttonWithTitle_target_action_(
-            NSLocalizedString("Close", "Button title"), self, 'close:')
-        close.setBezelStyle_(NSRoundedBezelStyle)
-        close.setKeyEquivalent_('\r')
-
-        for view in (title, grid, close):
-            view.setTranslatesAutoresizingMaskIntoConstraints_(False)
-            content.addSubview_(view)
-
-        constraints = [
-            title.topAnchor().constraintEqualToAnchor_constant_(content.topAnchor(), PAD),
-            title.leadingAnchor().constraintEqualToAnchor_constant_(content.leadingAnchor(), PAD),
-            title.trailingAnchor().constraintLessThanOrEqualToAnchor_constant_(content.trailingAnchor(), -PAD),
-            grid.topAnchor().constraintEqualToAnchor_constant_(title.bottomAnchor(), 14.0),
-            grid.leadingAnchor().constraintEqualToAnchor_constant_(content.leadingAnchor(), PAD),
-            grid.trailingAnchor().constraintEqualToAnchor_constant_(content.trailingAnchor(), -PAD),
-            close.topAnchor().constraintEqualToAnchor_constant_(grid.bottomAnchor(), 18.0),
-            close.trailingAnchor().constraintEqualToAnchor_constant_(content.trailingAnchor(), -PAD),
-            close.widthAnchor().constraintGreaterThanOrEqualToConstant_(BUTTON_W),
-            close.bottomAnchor().constraintEqualToAnchor_constant_(content.bottomAnchor(), -PAD),
-        ]
-        for constraint in constraints:
-            constraint.setActive_(True)
-
-        content.layoutSubtreeIfNeeded()
-        panel.setContentSize_(content.fittingSize())
-        panel.setInitialFirstResponder_(close)
-        self.window = panel
 
     # -- actions -------------------------------------------------------
 
@@ -431,37 +317,6 @@ class CallDetailsPanel(NSObject):
         # hold the rest of Blink until someone came back to dismiss it.
         NSApp.stopModal()
 
-    def close_(self, sender):
-        NSApp.stopModal()
-
-    def windowWillClose_(self, notification):
-        NSApp.stopModal()
-
-    # -- running -------------------------------------------------------
-
-    @objc.python_method
-    def runModal(self, parent=None):
-        if self.window is None:
-            return
-        if parent is not None:
-            try:
-                frame = parent.frame()
-                size = self.window.frame().size
-                self.window.setFrameOrigin_((
-                    frame.origin.x + (frame.size.width - size.width) / 2.0,
-                    frame.origin.y + (frame.size.height - size.height) * 0.6))
-            except Exception:
-                self.window.center()
-        else:
-            self.window.center()
-        try:
-            NSApp.runModalForWindow_(self.window)
-        finally:
-            self.window.orderOut_(None)
-            # The window does not own its delegate, and this controller is
-            # about to go.
-            self.window.setDelegate_(None)
-
 
 def show_call_details(record, device_id=None, parent=None):
     """Open the details panel for a call record and wait for it to close."""
@@ -471,6 +326,6 @@ def show_call_details(record, device_id=None, parent=None):
         controller = CallDetailsPanel.alloc().init()
         if controller is None:
             return
-        controller.setup(record, device_id).runModal(parent)
+        controller.setupCall(record, device_id).runModal(parent)
     except Exception as e:
         BlinkLogger().log_error('Cannot show the call details: %s' % e)

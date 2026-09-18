@@ -178,6 +178,32 @@ def is_otr_wire_text(content):
     return content.lstrip()[:4].upper() == OTR_WIRE_PREFIX
 
 
+def _row_details(row, body=True):
+    """One stored chat_messages row as a plain dict, for the info panel."""
+    fields = ('msgid', 'direction', 'time', 'local_uri', 'remote_uri', 'cpim_from',
+              'cpim_to', 'cpim_timestamp', 'content_type', 'status', 'media_type',
+              'encryption', 'read', 'uuid', 'journal_id', 'sip_callid',
+              'metadata', 'related_msg_id', 'related_action', 'category', 'private')
+    result = {}
+    for name in fields:
+        try:
+            result[name] = getattr(row, name)
+        except Exception:
+            pass
+    for name in ('deleted',):
+        try:
+            result[name] = getattr(row, name)
+        except Exception:
+            pass
+    if body:
+        try:
+            result['body_length'] = len(row.body or '')
+            result['body'] = row.body
+        except Exception:
+            pass
+    return result
+
+
 class MessageInfo(object):
     def __init__(self, id, content=None, content_type='text/plain', call_id=None, direction='outgoing', sender=None, recipient=None, timestamp=None, status=None, encryption=None, require_delivered_notification=False, require_displayed_notification=False):
     
@@ -1396,6 +1422,30 @@ class SMSViewController(NSObject):
         self.incoming_queue.put(message_tuple)
 
     @objc.python_method
+    def _storeCompanionRow(self, sender_identity, msgid, call_id, direction, content,
+                           content_type, imdn_timestamp, status):
+        """Write a sylk-message-metadata row (reply link, waveform, caption)."""
+        try:
+            try:
+                timestamp = ISOTimestamp(imdn_timestamp)
+            except (DateParserError, TypeError, ValueError):
+                timestamp = ISOTimestamp.now()
+            if direction == 'outgoing':
+                recipient = ChatIdentity(self.target_uri, self.display_name)
+            else:
+                recipient = ChatIdentity(self.account.uri, self.account.display_name)
+            info = MessageInfo(msgid, call_id=call_id, direction=direction,
+                               sender=sender_identity, recipient=recipient,
+                               timestamp=timestamp, content=content,
+                               content_type=str(content_type),
+                               status=status or ('delivered' if direction == 'incoming' else 'sent'),
+                               encryption='')
+            # Not a message: it must not move the conversation up the list.
+            self.add_to_history(info, stamps_conversation_time=False)
+        except Exception as e:
+            self.log_error('Cannot store %s %s: %s' % (content_type, msgid, e))
+
+    @objc.python_method
     def _receive_message(self, message_tuple):
         (sender_identity, id, call_id, direction, content, content_type, is_replication_message, window, cpim_imdn_events, imdn_timestamp, account, imdn_message_id, status, metadata, counts_as_unread) = message_tuple
 
@@ -1418,6 +1468,16 @@ class SMSViewController(NSObject):
             # its own for a long time; a flavour this build does not know
             # is still not a location, so it is taken in silently rather
             # than announced as one.
+            #
+            # Stored first, whatever it turns out to be. With the
+            # conversation open this is the ONLY road the row takes to SQL
+            # -- the manager persists companion rows itself only when no
+            # viewer exists -- and a link applied to the screen alone is
+            # gone on the next reload, turning the reply back into an
+            # unrelated remark. A journal entry the manager already stored
+            # lands on the duplicate path of add_message and is left as is.
+            self._storeCompanionRow(sender_identity, id, call_id, direction, content,
+                                    content_type, imdn_timestamp, status)
             link = reply_metadata(content)
             if link is not None:
                 self.note_reply_link(link, timestamp=imdn_timestamp)
@@ -1943,6 +2003,46 @@ class SMSViewController(NSObject):
         self._deliver_quote_source(callback, str(msgid), digest)
 
     @objc.python_method
+    @run_in_green_thread
+    def fetch_message_details(self, msgid, callback):
+        """Everything stored about one message, for the info panel.
+
+        Off the GUI thread for the same reason as fetch_quote_source.
+        """
+        msgid = str(msgid)
+        details = {'rows': [], 'replies': [], 'related': [], 'error': None}
+        try:
+            rows, replies, related = self.history.message_details(msgid)
+            details['rows'] = [_row_details(row) for row in rows]
+            links = []
+            for row in replies:
+                link = reply_metadata(row.body)
+                if link is not None and link.get('original_id') == msgid:
+                    links.append({'reply_id': link['reply_id'],
+                                  'direction': row.direction,
+                                  'time': row.time})
+            details['replies'] = links
+            details['related'] = [_row_details(row, body=False) for row in related]
+        except Exception as e:
+            details['error'] = str(e)
+            self.log_error('Cannot read the details of message %s: %s' % (msgid, e))
+
+        info = self.messages.get(msgid)
+        if info is not None:
+            details['live'] = {'status': info.status,
+                               'queued': getattr(info, 'queued', None),
+                               'encryption': info.encryption,
+                               'content_type': info.content_type,
+                               'call_id': info.call_id,
+                               'pjsip_id': getattr(info, 'pjsip_id', None)}
+        details['reply_to'] = self.reply_targets.get(msgid)
+        details['replies_live'] = sorted(reply for reply, original in self.reply_targets.items()
+                                         if original == msgid)
+        details['local_uri'] = getattr(self, 'local_uri', None)
+        details['remote_uri'] = str(getattr(self, 'remote_uri', '') or '')
+        self._deliver_quote_source(callback, msgid, details)
+
+    @objc.python_method
     @run_in_gui_thread
     def _deliver_quote_source(self, callback, msgid, row):
         try:
@@ -2084,12 +2184,13 @@ class SMSViewController(NSObject):
         if self.reply_targets.get(reply_id) == original_id:
             return False
         self.reply_targets[reply_id] = original_id
-        self.log_debug('Message %s is a reply to %s' % (reply_id, original_id))
+        self.log_info('[replytrace] Message %s is a reply to %s (render=%s)' % (reply_id, original_id, render))
         if render:
-            try:
-                self.chatViewController.applyReplyLink(reply_id, original_id)
-            except AttributeError:
-                pass                    # no quotes on this renderer
+            if hasattr(self.chatViewController, 'applyReplyLink'):
+                try:
+                    self.chatViewController.applyReplyLink(reply_id, original_id)
+                except Exception as e:
+                    self.log_error('Cannot show the quote on %s: %r' % (reply_id, e))
         return True
 
     @objc.python_method

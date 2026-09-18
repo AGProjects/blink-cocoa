@@ -2301,6 +2301,32 @@ class ChatHistory(object, metaclass=Singleton):
         return block_on(self._present_categories(local_uri, remote_uri, media_type))
 
     @run_in_db_thread
+    def _message_details(self, msgid):
+        rows, replies, related = [], [], []
+        key = ChatMessage.sqlrepr(str(msgid))
+        try:
+            rows = list(ChatMessage.select("msgid=%s" % key))
+            # A reply link names the reply in messageId (so related_msg_id)
+            # and the original only in its body, so the replies TO a
+            # message are found by content.
+            like = ChatMessage.sqlrepr('%%%s%%' % msgid)
+            replies = list(ChatMessage.select(
+                "content_type in ('application/sylk-message-metadata', 'application/sylk-location-sharing')"
+                " and body like %s and body like '%%\"reply\"%%'" % like))
+            related = list(ChatMessage.select("related_msg_id=%s and msgid != %s" % (key, key)))
+        except Exception as e:
+            BlinkLogger().log_error("Error getting the details of %s: %s" % (msgid, e))
+        return rows, replies, related
+
+    def message_details(self, msgid):
+        """(rows stored under this id, reply links naming it, rows related to it).
+
+        For the message info panel. A message id is stored once per
+        (local, remote) pair, so more than one row is possible.
+        """
+        return block_on(self._message_details(msgid))
+
+    @run_in_db_thread
     def _related_messages(self, msgids):
         query = "related_msg_id in (%s)" % ','.join(ChatMessage.sqlrepr(str(i)) for i in msgids)
         try:
@@ -3021,8 +3047,9 @@ class ChatHistory(object, metaclass=Singleton):
             # existed here, and nothing came off the screen. New transfers
             # share the id the SDP carries; anything sent before that
             # cannot be matched and this is where it shows.
-            BlinkLogger().log_info('Message %s marked deleted, 0 row(s) affected -- '
-                                   'no message with that id in this history' % msgid)
+            #BlinkLogger().log_info('Message %s marked deleted, 0 row(s) affected -- '
+            #                       'no message with that id in this history' % msgid)
+            pass
         else:
             BlinkLogger().log_info('Message %s marked deleted, %d row(s) affected%s'
                                    % (msgid, affected,

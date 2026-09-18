@@ -968,7 +968,10 @@ def run_in_gui_thread(func):
     @preserve_signature(func)
     def wrapper(*args, **kw):
         if NSThread.isMainThread():
-            func(*args, **kw)
+            # The result is handed back when there is one to hand: a caller
+            # already on the GUI thread (sendMessage's id, say) gets it. One
+            # on another thread gets None, as it always did.
+            return func(*args, **kw)
         else:
             pool = NSAutoreleasePool.alloc().init()
             NSApp.delegate().performSelectorOnMainThread_withObject_waitUntilDone_("callObject:", lambda: func(*args, **kw), False)

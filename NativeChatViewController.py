@@ -67,6 +67,7 @@ from BlinkLogger import BlinkLogger
 from resources import ApplicationData
 from MessageHost import (location_summary, file_transfer_category,
                          file_transfer_summary, merge_transfer_error,
+                         file_transfer_envelope,
                          quote_digest, transfer_error_note, MESSAGE_CATEGORIES,
                          load_trace_tick, load_trace_bucket)
 from MessageHost import (call_summary, dominant_media, merge_call_records,
@@ -256,7 +257,7 @@ def _haversine(lat1, lon1, lat2, lon2):
 from ChatViewController import (ChatViewController, ChatMessageObject,
                                 pasteboard_attachments, pasteboard_can_attach)
 from MessageBubbleView import MessageBubbleView, _url_re
-from FileTransferCache import (FileTransferCache, display_name,
+from FileTransferCache import (FileTransferCache, display_name, tile_pixels,
                                envelope as transfer_envelope,
                                is_encrypted, AUTO_VIDEO_MAX_AGE_DAYS,
                                MAX_AUTO_IMAGE_BYTES, MAX_AUTO_VIDEO_BYTES)
@@ -2773,6 +2774,8 @@ class NativeChatViewController(ChatViewController):
             if touched:
                 view.invalidateLayout()
                 changed = True
+                if image is not None:
+                    self._refreshQuotesOf(getattr(view, 'msgid', None))
         if changed:
             BlinkLogger().log_info('Poster attached to %s'
                                    % os.path.basename(str(path)))
@@ -3210,7 +3213,230 @@ class NativeChatViewController(ChatViewController):
         if not hasattr(self.delegate, 'begin_reply_to_message'):
             return
         sender, text, from_self = self.quoteForMessage(msgid)
+        try:
+            original = (self.messageListView.viewForMessageId_(str(msgid))
+                        if self.messageListView is not None else None)
+            if original is not None:
+                image, label = self._quoteMediaFromBubble(original)
+                if image is not None:
+                    text = label
+        except Exception as e:
+            BlinkLogger().log_error('Quote thumbnail for %s failed: %r' % (msgid, e))
         self.delegate.begin_reply_to_message(msgid, sender, text, from_self)
+
+    @objc.python_method
+    def bubbleDidRequestInfo(self, msgid):
+        """Open the info panel for one message.
+
+        What the bubble knows is read now; what the database knows is read
+        off the GUI thread, and the panel opens when it comes back.
+        """
+        if not msgid:
+            return
+        msgid = str(msgid)
+        if hasattr(self.delegate, 'fetch_message_details'):
+            self.delegate.fetch_message_details(msgid, self._messageDetailsArrived)
+        else:
+            self._messageDetailsArrived(msgid, {})
+
+    @objc.python_method
+    def _messageDetailsArrived(self, msgid, details):
+        bubble = None
+        if self.messageListView is not None:
+            bubble = self.messageListView.viewForMessageId_(str(msgid))
+        try:
+            title, sections = self._messageInfoSections(msgid, bubble, details or {})
+        except Exception as e:
+            BlinkLogger().log_error('Cannot describe message %s: %s' % (msgid, e))
+            return
+        from MessageDetailsPanel import show_detail_sections
+        window = None
+        try:
+            window = self.outputView.window()
+        except Exception:
+            pass
+        show_detail_sections(NSLocalizedString("Message Info", "Window title"),
+                             title, sections, window)
+
+    @objc.python_method
+    def _messageInfoSections(self, msgid, bubble, details):
+        """(title, [(heading, [(label, value)])]) for the info panel."""
+        import json
+
+        def text(value):
+            if value is None or value == '':
+                return ''
+            if isinstance(value, bool):
+                return NSLocalizedString("Yes", "Label") if value else NSLocalizedString("No", "Label")
+            if isinstance(value, (dict, list)):
+                try:
+                    return json.dumps(value, indent=1, sort_keys=True, default=str)
+                except Exception:
+                    return str(value)
+            return str(value)
+
+        rows = details.get('rows') or []
+        row = rows[0] if rows else {}
+        live = details.get('live') or {}
+        meta = getattr(bubble, 'transfer_meta', None) if bubble is not None else None
+
+        direction = (getattr(bubble, 'direction', None) if bubble is not None else None) \
+            or row.get('direction')
+        outgoing = direction == 'outgoing'
+
+        # -- the message -------------------------------------------------
+        message = [(NSLocalizedString("ID", "Message info"), msgid)]
+        message.append((NSLocalizedString("Direction", "Message info"),
+                        {'incoming': NSLocalizedString("Incoming", "Message info"),
+                         'outgoing': NSLocalizedString("Outgoing", "Message info")}.get(direction, text(direction))))
+        if bubble is not None:
+            sender = (NSLocalizedString("You", "Label") if outgoing
+                      else (getattr(bubble, 'sender_label', None)
+                            or getattr(bubble, 'avatar_name', None)))
+            message.append((NSLocalizedString("From", "Message info"), text(sender)))
+        message.append((NSLocalizedString("Time", "Message info"),
+                        text(row.get('time')
+                             or (getattr(bubble, 'message_timestamp', None) if bubble is not None else None))))
+        message.append((NSLocalizedString("Sender timestamp", "Message info"), text(row.get('cpim_timestamp'))))
+        message.append((NSLocalizedString("Content type", "Message info"),
+                        text(row.get('content_type') or live.get('content_type'))))
+        if bubble is not None:
+            message.append((NSLocalizedString("Category", "Message info"), text(self.messageCategory(bubble))))
+        if row.get('body_length') is not None:
+            message.append((NSLocalizedString("Stored size", "Message info"),
+                            '%s bytes' % row.get('body_length')))
+        encryption = (row.get('encryption') or live.get('encryption')
+                      or (getattr(bubble, 'encryption', None) if bubble is not None else None))
+        message.append((NSLocalizedString("Encryption", "Message info"), text(encryption)))
+        if row.get('private') not in (None, '', '0', 0, 'False'):
+            message.append((NSLocalizedString("Private", "Message info"), text(row.get('private'))))
+        if bubble is not None and getattr(bubble, 'caption', None):
+            message.append((NSLocalizedString("Caption", "Message info"), text(bubble.caption)))
+
+        # -- delivery ----------------------------------------------------
+        delivery = []
+        if bubble is not None:
+            delivery.append((NSLocalizedString("Shown as", "Message info"), text(getattr(bubble, 'state', None))))
+        delivery.append((NSLocalizedString("Stored status", "Message info"), text(row.get('status'))))
+        if live:
+            delivery.append((NSLocalizedString("Session status", "Message info"), text(live.get('status'))))
+            if live.get('queued'):
+                delivery.append((NSLocalizedString("In send queue", "Message info"), text(True)))
+            delivery.append((NSLocalizedString("PJSIP id", "Message info"), text(live.get('pjsip_id'))))
+        if not outgoing and 'read' in row:
+            delivery.append((NSLocalizedString("Read", "Message info"), text(bool(row.get('read')))))
+        if row.get('deleted'):
+            delivery.append((NSLocalizedString("Deleted", "Message info"), text(row.get('deleted'))))
+
+        # -- replies -----------------------------------------------------
+        replies_section = []
+        reply_to = details.get('reply_to') or (getattr(bubble, 'reply_to', None) if bubble is not None else None)
+        if reply_to:
+            quoted = ''
+            if bubble is not None and getattr(bubble, 'reply_text', None):
+                quoted = ' \u2014 %s' % bubble.reply_text[:80]
+            replies_section.append((NSLocalizedString("Reply to", "Message info"), '%s%s' % (reply_to, quoted)))
+        replies = set(details.get('replies_live') or ())
+        for link in details.get('replies') or ():
+            replies.add(link.get('reply_id'))
+        if self.messageListView is not None:
+            for view in self.messageListView.subviews():
+                if str(getattr(view, 'reply_to', None) or '') == msgid and getattr(view, 'msgid', None):
+                    replies.add(str(view.msgid))
+        replies.discard(None)
+        if replies:
+            replies_section.append((NSLocalizedString("Replies", "Message info"),
+                                    '%d: %s' % (len(replies), '\n'.join(sorted(replies)))))
+
+        # -- file transfer -----------------------------------------------
+        transfer = []
+        if isinstance(meta, dict):
+            from urllib.parse import unquote
+            for key in sorted(meta):
+                value = meta[key]
+                if isinstance(value, str) and value.lower().startswith(('http%3a', 'https%3a')):
+                    # Mobile sends the URL percent-encoded as a whole.
+                    value = unquote(value)
+                transfer.append((key, text(value)))
+            path = getattr(bubble, 'media_path', None)
+            if not path:
+                try:
+                    account, peer = self._transferPeers()
+                    path = FileTransferCache().local_file(meta, account, peer)
+                except Exception:
+                    path = None
+            transfer.append((NSLocalizedString("Local file", "Message info"),
+                             text(path) or NSLocalizedString("Not downloaded", "Message info")))
+            try:
+                failure = FileTransferCache().failure(meta)
+            except Exception:
+                failure = None
+            transfer.append((NSLocalizedString("Download failure", "Message info"), text(failure)))
+            transfer.append((NSLocalizedString("Encrypted file", "Message info"), text(bool(is_encrypted(meta)))))
+
+        # -- location ----------------------------------------------------
+        location = []
+        if bubble is not None and getattr(bubble, 'location_latitude', None) is not None:
+            location.append((NSLocalizedString("Latitude", "Message info"), text(bubble.location_latitude)))
+            location.append((NSLocalizedString("Longitude", "Message info"), text(bubble.location_longitude)))
+            track = getattr(bubble, 'location_track', None) or []
+            if track:
+                location.append((NSLocalizedString("Track points", "Message info"), text(len(track))))
+
+        # -- storage -----------------------------------------------------
+        storage = []
+        if not rows:
+            storage.append((NSLocalizedString("Stored", "Message info"),
+                            details.get('error') or NSLocalizedString("Not in history", "Message info")))
+        elif len(rows) > 1:
+            storage.append((NSLocalizedString("Stored rows", "Message info"), text(len(rows))))
+        for label, key in ((NSLocalizedString("Local URI", "Message info"), 'local_uri'),
+                           (NSLocalizedString("Remote URI", "Message info"), 'remote_uri'),
+                           (NSLocalizedString("CPIM From", "Message info"), 'cpim_from'),
+                           (NSLocalizedString("CPIM To", "Message info"), 'cpim_to'),
+                           (NSLocalizedString("SIP Call-ID", "Message info"), 'sip_callid'),
+                           (NSLocalizedString("Journal id", "Message info"), 'journal_id'),
+                           (NSLocalizedString("UUID", "Message info"), 'uuid'),
+                           (NSLocalizedString("Related to", "Message info"), 'related_msg_id'),
+                           (NSLocalizedString("Related action", "Message info"), 'related_action'),
+                           (NSLocalizedString("Stored category", "Message info"), 'category')):
+            storage.append((label, text(row.get(key))))
+        stored_meta = row.get('metadata')
+        if stored_meta:
+            try:
+                stored_meta = json.loads(stored_meta)
+            except Exception:
+                pass
+            storage.append((NSLocalizedString("Metadata", "Message info"), text(stored_meta)))
+
+        related = []
+        for item in details.get('related') or ():
+            related.append((text(item.get('related_action') or item.get('content_type')),
+                            '%s  %s  %s' % (item.get('msgid'), item.get('direction') or '',
+                                            item.get('time') or '')))
+
+        sections = [(NSLocalizedString("Message", "Message info section"), message)]
+        if outgoing:
+            sections.append((NSLocalizedString("Delivery", "Message info section"), delivery))
+        sections.append((NSLocalizedString("Replies", "Message info section"), replies_section))
+        if transfer:
+            sections.append((NSLocalizedString("File transfer", "Message info section"), transfer))
+        if location:
+            sections.append((NSLocalizedString("Location", "Message info section"), location))
+        sections.append((NSLocalizedString("Storage", "Message info section"), storage))
+        if related:
+            sections.append((NSLocalizedString("Related messages", "Message info section"), related))
+
+        title = ''
+        if bubble is not None:
+            if isinstance(meta, dict):
+                title = display_name(meta)
+            else:
+                title = quote_digest(getattr(bubble, 'content', None),
+                                     getattr(bubble, 'is_html', False)) or ''
+        if len(title) > 60:
+            title = title[:60].rstrip() + '\u2026'
+        return title or NSLocalizedString("Message", "Label"), sections
 
     @objc.python_method
     def bubbleDidRequestReveal(self, msgid):
@@ -3299,6 +3525,14 @@ class NativeChatViewController(ChatViewController):
                       else self.contactName())
             text = quote_digest(row.get('body'),
                                 row.get('content_type') == 'text/html')
+        image = None
+        try:
+            image, label = self._quoteMediaFromRow(row)
+            if image is not None:
+                text = label
+        except Exception as e:
+            image = None
+            BlinkLogger().log_error('Quote thumbnail for %s failed: %r' % (msgid, e))
         changed = False
         for view in self.messageListView.subviews():
             if str(getattr(view, 'reply_to', None) or '') != str(msgid):
@@ -3306,6 +3540,7 @@ class NativeChatViewController(ChatViewController):
             view.reply_sender = sender
             view.reply_text = text
             view.reply_from_self = bool(from_self)
+            view.reply_image = image
             view.invalidateLayout()
             changed = True
         if changed:
@@ -3322,6 +3557,7 @@ class NativeChatViewController(ChatViewController):
             return
         bubble = self.messageListView.viewForMessageId_(str(reply_id))
         if bubble is None:
+            BlinkLogger().log_info('[replytrace] reply %s not on screen yet' % reply_id)
             return                      # not loaded; _attachReply will do it
         self._attachReply(bubble, original_id)
 
@@ -3340,13 +3576,112 @@ class NativeChatViewController(ChatViewController):
             if hasattr(self.delegate, 'fetch_quote_source'):
                 self.delegate.fetch_quote_source(str(original_id),
                                                  self._quoteSourceArrived)
+        image = None
+        try:
+            original = None
+            if self.messageListView is not None:
+                original = self.messageListView.viewForMessageId_(str(original_id))
+            if original is not None:
+                image, label = self._quoteMediaFromBubble(original)
+                if image is not None:
+                    text = label
+        except Exception as e:
+            image = None
+            BlinkLogger().log_error('Quote thumbnail for %s failed: %r' % (original_id, e))
         bubble.reply_to = str(original_id)
         bubble.reply_sender = sender
         bubble.reply_text = text
         bubble.reply_from_self = bool(from_self)
+        bubble.reply_image = image
+        BlinkLogger().log_info('[replytrace] %s %s quotes %s: sender=%r text=%r image=%s shows=%s'
+                               % (getattr(bubble, 'direction', None), bubble.msgid, original_id,
+                                  sender, (text or '')[:30], image is not None, bubble._showsQuote()))
         bubble.invalidateLayout()
         if self.messageListView is not None:
             self.messageListView.layoutMessages()
+
+    @objc.python_method
+    def _quoteThumbnail(self, path):
+        """A small decoded copy of a picture on disc, for a quote.
+
+        Through the tile decoder, not an NSImage on the file: the quote is
+        drawn out of the same display lists a grid tile is, and a
+        file-backed image there is the crash tile() exists to prevent.
+        """
+        if not path:
+            return None
+        try:
+            return FileTransferCache().tile(path, tile_pixels(MessageBubbleView.QUOTE_THUMB_PIXELS))
+        except Exception as e:
+            BlinkLogger().log_debug('No quote thumbnail for %s: %s' % (path, e))
+            return None
+
+    @objc.python_method
+    def _quoteMediaLabel(self, category, caption):
+        if caption:
+            return ' '.join(caption.split())
+        if category == 'video':
+            return NSLocalizedString("Video", "Label")
+        return NSLocalizedString("Photo", "Label")
+
+    @objc.python_method
+    def _quoteMediaFromBubble(self, original):
+        """(thumbnail, text) for quoting a picture or movie on screen.
+
+        (None, None) when it is anything else, or when there is nothing on
+        this disc to show yet -- the file name stays the quote then, since
+        it is the only thing known about it.
+        """
+        category = self.messageCategory(original)
+        image = None
+        if category == 'image':
+            image = self._quoteThumbnail(getattr(original, 'media_path', None))
+            if image is None:
+                image = (getattr(original, 'tile_image', None)
+                         or getattr(original, 'media_image', None))
+        elif category == 'video':
+            # The poster, already decoded when it was generated.
+            image = getattr(original, 'media_image', None)
+        if image is None:
+            return None, None
+        return image, self._quoteMediaLabel(category, getattr(original, 'caption', None))
+
+    @objc.python_method
+    def _quoteMediaFromRow(self, row):
+        """(thumbnail, text) for quoting a stored transfer that is off screen.
+
+        Pictures only: a movie's poster is a decode that has to run off the
+        GUI thread, and a quote that fills in later is not worth that.
+        """
+        body = row.get('body') if row else None
+        if not body or file_transfer_category(body) != 'image':
+            return None, None
+        meta = file_transfer_envelope(body)
+        if meta is None:
+            return None, None
+        account, peer = self._transferPeers()
+        image = self._quoteThumbnail(FileTransferCache().local_file(meta, account, peer))
+        if image is None:
+            return None, None
+        return image, self._quoteMediaLabel('image', self._mediaLabel(meta))
+
+    @objc.python_method
+    def _refreshQuotesOf(self, msgid):
+        """Re-quote every reply to this message, now that it has a picture.
+
+        The original's file usually lands after its replies were drawn --
+        it is fetched as it scrolls in -- and the quote would otherwise
+        keep the file name it was given in the meantime.
+        """
+        if self.messageListView is None or not msgid:
+            return
+        msgid = str(msgid)
+        try:
+            for view in list(self.messageListView.subviews()):
+                if str(getattr(view, 'reply_to', None) or '') == msgid:
+                    self._attachReply(view, msgid)
+        except Exception as e:
+            BlinkLogger().log_error('Refreshing the quotes of %s failed: %r' % (msgid, e))
 
     # -- rendering ---------------------------------------------------------
 
@@ -4005,6 +4340,7 @@ class NativeChatViewController(ChatViewController):
                                   width,
                                   ('%dx%d' % (natural.width, natural.height))
                                   if natural is not None else 'unknown'))
+        self._refreshQuotesOf(getattr(bubble, 'msgid', None))
         if self.messageListView is not None:
             self.messageListView.layoutMessages()
 
