@@ -538,8 +538,27 @@ class SIPManager(object, metaclass=Singleton):
             return []
 
     @objc.python_method
+    @run_in_twisted_thread
+    def _start_reactor_watchdog(self):
+        # Report when the twisted reactor thread (which also runs all green
+        # threads) is blocked, together with the stack of the blocking code.
+        try:
+            from eventlib import watchdog
+        except ImportError:
+            return  # older eventlib
+
+        def report_stall(duration, stack):
+            BlinkLogger().log_warning('Reactor thread blocked for %.1f seconds at:\n%s' % (duration, stack.rstrip()))
+
+        def report_recovery(duration):
+            BlinkLogger().log_warning('Reactor thread was blocked for %.1f seconds' % duration)
+
+        watchdog.start(threshold=1.0, report_stall=report_stall, report_recovery=report_recovery)
+
+    @objc.python_method
     def _NH_SIPApplicationDidStart(self, sender, data):
         # BlinkLogger().log_info('startup: SIPManager.SIPApplicationDidStart enter')
+        self._start_reactor_watchdog()
         settings = SIPSimpleSettings()
         settings.audio.enable_aec = settings.audio.echo_canceller.enabled
         settings.audio.sound_card_delay = settings.audio.echo_canceller.tail_length
