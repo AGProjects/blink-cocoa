@@ -51,6 +51,7 @@ from operator import attrgetter
 from sipsimple.account import AccountManager
 from sipsimple.addressbook import ContactURI
 from sipsimple.core import SIPCoreError, SIPURI
+from AppKit import NSButton, NSSwitchButton
 from zope.interface import implementer
 
 from VirtualGroups import VirtualGroup
@@ -1336,6 +1337,7 @@ class EditContactController(AddContactController):
         self.addButton.setEnabled_(True if blink_contact.contact.uris else False)
         self.default_uri = self.blink_contact.contact.uris.default
         self.autoanswerCheckbox.setState_(NSOnState if blink_contact.auto_answer else NSOffState)
+        self.setUpNoMediaRelayCheckbox(blink_contact)
 
         self.uris = sorted(blink_contact.contact.uris, key=lambda uri: uri.position if uri.position is not None else sys.maxsize)
         # TODO: how to handle xmmp: uris?
@@ -1384,6 +1386,31 @@ class EditContactController(AddContactController):
                     'preferred_media' : self.preferred_media,
                     'subscriptions'   : self.subscriptions
                     }
+            if self.noMediaRelayCheckbox is not None:
+                contact['no_mediaproxy'] = self.noMediaRelayCheckbox.state() == NSOnState
             return contact
         return False
+
+    @objc.python_method
+    def setUpNoMediaRelayCheckbox(self, blink_contact):
+        # Debug-only, device-local option, placed right of Automatically Answer Calls
+        self.noMediaRelayCheckbox = None
+        if not NSApp.delegate().debug:
+            return
+        sip_contact = getattr(blink_contact, 'contact', None)
+        if sip_contact is None or not hasattr(sip_contact, 'no_mediaproxy'):
+            return
+        anchor = self.autoanswerCheckbox
+        anchor.sizeToFit()
+        frame = anchor.frame()
+        checkbox = NSButton.alloc().initWithFrame_(NSMakeRect(frame.origin.x + frame.size.width + 12, frame.origin.y, 160, frame.size.height))
+        checkbox.setButtonType_(NSSwitchButton)
+        checkbox.setTitle_(NSLocalizedString("No Media Relay", "Checkbox title"))
+        checkbox.setFont_(anchor.font())
+        checkbox.setToolTip_(NSLocalizedString("Ask the SIP proxy not to relay media for outgoing calls to this contact (adds X-No-MediaProxy header). Stored on this device only", "Tooltip"))
+        checkbox.setState_(NSOnState if sip_contact.no_mediaproxy else NSOffState)
+        checkbox.sizeToFit()
+        checkbox.setAutoresizingMask_(anchor.autoresizingMask())
+        anchor.superview().addSubview_(checkbox)
+        self.noMediaRelayCheckbox = checkbox
 

@@ -125,6 +125,7 @@ class RTPSettingsExtension(RTPSettings):
     inband_dtmf = Setting(type=bool, default=True)
     encryption_type = Setting(type=str, default='sdes_optional')
     hangup_on_timeout = Setting(type=bool, default=True)
+    no_mediaproxy = Setting(type=bool, default=False)
 
 
 class BonjourRTPSettingsExtension(RTPSettings):

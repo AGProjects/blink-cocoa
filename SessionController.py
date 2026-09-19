@@ -2527,6 +2527,19 @@ class SessionController(NSObject):
             self.connectSession()
 
     @objc.python_method
+    def contactWantsNoMediaRelay(self):
+        candidates = [self.contact]
+        try:
+            candidates.append(NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(self.remoteAOR))
+        except Exception:
+            pass
+        for candidate in candidates:
+            sip_contact = getattr(candidate, 'contact', None)
+            if sip_contact is not None and getattr(sip_contact, 'no_mediaproxy', False):
+                return True
+        return False
+
+    @objc.python_method
     def connectSession(self):
         if self.cancelled_during_dns_lookup:
             self.log_info("Session cancelled during DNS lookup")
@@ -2569,6 +2582,14 @@ class SessionController(NSObject):
                 NSRunAlertPanel(NSLocalizedString("Error", "Window title"), message, NSLocalizedString("OK", "Button title"), None, None)
             else:
                 extra_headers.append(Header('P-Asserted-Identity', '<%s>' % asserted_identity))
+
+        if self.session.account is not BonjourAccount():
+            if getattr(self.session.account.rtp, 'no_mediaproxy', False):
+                extra_headers.append(Header('X-No-MediaProxy', 'true'))
+                self.log_info('Requesting no media relay (X-No-MediaProxy) per account setting')
+            elif self.contactWantsNoMediaRelay():
+                extra_headers.append(Header('X-No-MediaProxy', 'true'))
+                self.log_info('Requesting no media relay (X-No-MediaProxy) per contact setting')
 
         self.session.connect(ToHeader(target_uri), self.routes, streams, extra_headers=extra_headers)
         self.changeSessionState(STATE_CONNECTING)

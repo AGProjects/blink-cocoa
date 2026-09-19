@@ -73,6 +73,10 @@ class BlinkContactExtension(ContactExtension):
     # XCAP document every other device reads.
     chat_language = Setting(type=str, default=None, nillable=True)
     silence_notifications = Setting(type=Boolean, default=False)
+    # Ask the proxy not to relay media (X-No-MediaProxy) on outgoing calls
+    # to this contact. Local to this device, not a SharedSetting, so it
+    # never reaches the XCAP document.
+    no_mediaproxy = Setting(type=Boolean, default=False)
     public_key = Setting(type=str, default=None, nillable=True)
     public_key_checksum = Setting(type=str, default=None, nillable=True)
     icon_info = IconSettings

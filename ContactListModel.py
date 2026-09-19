@@ -5214,6 +5214,9 @@ class ContactListModel(CustomListModel):
                 else:
                     contact.icon_info.local = False
 
+            if 'no_mediaproxy' in new_contact:
+                contact.no_mediaproxy = new_contact['no_mediaproxy']
+
             contact.save()
 
             self.removePolicyForContactURIs(contact)

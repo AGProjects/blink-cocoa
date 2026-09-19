@@ -2255,6 +2255,7 @@ SettingDescription = {
                       'rtp.video_codec_list': NSLocalizedString("Video Codecs", "Label"),
                       'rtp.port_range': NSLocalizedString("UDP Port Range", "Label"),
                       'rtp.hangup_on_timeout': NSLocalizedString("Hangup On Timeout", "Label"),
+                      'rtp.no_mediaproxy': NSLocalizedString("No Media Relay", "Label"),
                       'rtp.timeout': NSLocalizedString("Timeout", "Label"),
                       'rtp.encryption_type': NSLocalizedString("Encryption", "Label"),
                       'sip.invite_timeout': NSLocalizedString("INVITE Timeout", "Label"),
@@ -2376,7 +2377,7 @@ AccountSettingsOrder = {
                        'ldap': ['enabled', 'hostname', 'transport', 'port', 'username', 'password', 'dn', 'extra_fields'],
                        'pstn': ['dial_plan', 'idd_prefix', 'replace_leading_zero', 'strip_digits', 'prefix', 'asserted_identity'],
                        'sip': ['register', 'always_use_my_proxy', 'primary_proxy', 'alternative_proxy', 'register_interval', 'subscribe_interval', 'publish_interval', 'do_not_disturb_code'],
-                       'rtp': ['encryption_type', 'inband_dtmf', 'hangup_on_timeout', 'audio_codec_list', 'video_codec_list'],
+                       'rtp': ['encryption_type', 'inband_dtmf', 'hangup_on_timeout', 'no_mediaproxy', 'audio_codec_list', 'video_codec_list'],
                        'presence': ['enabled', 'enable_on_the_phone', 'disable_location', 'disable_timezone']
                        }
 
@@ -2413,6 +2414,7 @@ ToolTips = {
              'pstn.dial_plan': NSLocalizedString("List of numeric prefixes separated by spaces that auto-selects this account for outgoing calls to telephone numbers starting with any such prefix (e.g. +31 0031)", "Label"),
              'web_alert.alert_url': NSLocalizedString("URL that is opened when an incoming call is received. $caller_username, $caller_party and $called_party are replaced with the username part of the SIP address of the caller, the full SIP address of the caller and called SIP account respectively. Example: http://example.com/p.phtml?caller=$caller_party&called=$called_party&user=$caller_username", "Label"),
              'conference.server_address': NSLocalizedString("Address of the SIP conference server able to mix audio, chat, file transfers and provide participants information, must be given by the service provider. If empty, conference.sip2sip.info will be used by default", "Label"),
+             'rtp.no_mediaproxy': NSLocalizedString("Ask the SIP proxy not to relay media for outgoing calls (adds X-No-MediaProxy header). Only honoured if the server allows it for this account", "Label"),
              'rtp.timeout': NSLocalizedString("If RTP is not received in this interval, audio calls will be hangup when Hangup on Timeout option in the RTP advanced section of the account is enabled", "Label"),
              'server.settings_url': NSLocalizedString("Web page address that provides access to the SIP account information on the SIP server, must be given by the service provider. HTTP digest authentication is supported by using the same credentials of the SIP account. Alternatively, a different password can be set below", "Label"),
              'server.web_password': NSLocalizedString("Password for authentication requested by web server, if not set the SIP account password will be used", "Label"),

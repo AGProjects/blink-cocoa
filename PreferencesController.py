@@ -581,9 +581,11 @@ class PreferencesController(NSWindowController, object):
         if not NSApp.delegate().debug:
             PreferenceOptionTypes['audio.sound_card_delay'] = HiddenOption
             PreferenceOptionTypes['audio.sample_rate'] = HiddenOption
+            PreferenceOptionTypes['rtp.no_mediaproxy'] = HiddenOption
         else:
             PreferenceOptionTypes['audio.sound_card_delay'] = AecSliderOption
             PreferenceOptionTypes['audio.sample_rate'] = SampleRateOption
+            PreferenceOptionTypes.pop('rtp.no_mediaproxy', None)
 
         # For the general Video section, prepend a live camera preview
         # ABOVE the device / codec / resolution rows. Half the previous
