@@ -89,7 +89,6 @@ from application.python import Null
 from application.python.descriptor import classproperty
 from application.python.types import Singleton
 from application.system import makedirs, unlink
-from eventlib.green import urllib2
 from itertools import chain
 from sipsimple.configuration import DuplicateIDError
 from sipsimple.configuration.settings import SIPSimpleSettings
@@ -1760,7 +1759,7 @@ class BlinkPresenceContact(BlinkContact):
         return last is not None and now - last <= interval
 
     @objc.python_method
-    @run_in_green_thread
+    @run_in_thread('network-io')  # blocking urllib I/O, keep it off the reactor thread
     def _process_icon(self, icon_url):
         contact = self.contact
         if not contact:
@@ -1789,17 +1788,18 @@ class BlinkPresenceContact(BlinkContact):
         req = urllib.request.Request(icon_url, headers=headers)
         try:
             BlinkLogger().log_debug('Getting icon for %s %s' % (self.uri, icon_url))
-            response = urllib.request.urlopen(req)
+            response = urllib.request.urlopen(req, timeout=15)
             content = response.read()
             info = response.info()
             content_type = info.get('content-type')
             etag = info.get('etag')
-        except (ConnectionLost, urllib.error.HTTPError, urllib.error.URLError, TimeoutError) as e:
-            if e.status not in (304, 404):
+        except (ConnectionLost, urllib.error.HTTPError, urllib.error.URLError, TimeoutError, OSError) as e:
+            if getattr(e, 'status', None) not in (304, 404):
                 BlinkLogger().log_error('Failed to get icon for %s: %s' % (self.uri, str(e)))
             contact.updating_remote_icon = False
             return
         else:
+            etag = etag or ''
             if etag.startswith('W/'):
                 etag = etag[2:]
             etag = etag.replace('\"', '')
