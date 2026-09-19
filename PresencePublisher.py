@@ -19,7 +19,6 @@ import urllib.parse
 from application.notification import NotificationCenter, IObserver
 from application.python import Null
 from application.system import unlink
-from eventlib.green import urllib2
 from sipsimple.account import AccountManager, Account, BonjourAccount
 from sipsimple.account.bonjour import BonjourPresenceState
 from sipsimple.account.xcap import Icon, OfflineStatus
@@ -27,7 +26,7 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.payloads import pidf, rpid, cipid, caps, IterateItems
 from sipsimple.payloads.addressbook import Contact
 from sipsimple.util import ISOTimestamp
-from sipsimple.threading import run_in_twisted_thread
+from sipsimple.threading import run_in_thread, run_in_twisted_thread
 from sipsimple.threading.green import run_in_green_thread
 from twisted.internet import reactor
 from zope.interface import implementer
@@ -513,7 +512,10 @@ class PresencePublisher(object):
         for account in (account for account in AccountManager().iter_accounts() if account is not BonjourAccount()):
             account.presence_state = None
 
-    @run_in_green_thread
+    # Blocking urllib I/O must not run in a green thread: that is the twisted
+    # reactor thread, and a hung getaddrinfo/connect/read stalls all SIP
+    # signalling (registrations, DNS lookups, session setup).
+    @run_in_thread('network-io')
     def get_location(self, accounts):
         for account in accounts:
             if not account.server.settings_url or account.presence.disable_location:
@@ -522,11 +524,11 @@ class PresencePublisher(object):
             url = urllib.parse.urlunparse(account.server.settings_url[:4] + (query_string,) + account.server.settings_url[5:])
             req = urllib.request.Request(url)
             try:
-                data = urllib.request.urlopen(req).read()
+                data = urllib.request.urlopen(req, timeout=10).read()
             except Exception:
                 continue
             try:
-                response = json.loads(data.replace('\\/', '/'))
+                response = json.loads(data.decode(errors='replace').replace('\\/', '/'))
             except (TypeError, json.decoder.JSONDecodeError):
                 continue
             if response and self.location != response:
