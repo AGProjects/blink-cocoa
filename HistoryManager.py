@@ -4362,7 +4362,7 @@ def _stamp_one_group(kind, name, reserved_id=None):
 
     current = str(getattr(group, 'kind', '') or '').strip()
     if current == kind:
-        _log('%s already stamped kind=%s' % (_describe_group(group), _quote(kind)))
+        #_log('%s already stamped kind=%s' % (_describe_group(group), _quote(kind)))
         return False
     if current:
         # Somebody else's value. Never overwrite one: this is a shared
