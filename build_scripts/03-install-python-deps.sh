@@ -35,6 +35,11 @@ pip3 install -r requirements-python.txt
 # --no-build-isolation: python3-otr's setup.py imports `application`, which
 # only resolves if the active venv (not pip's ephemeral build env) is in use.
 pip3 install --no-build-isolation -r requirements-sipsimple.txt
+# python3-eventlib, python3-xcaplib and python3-msrplib from the local ~/work checkouts,
+# replacing the tarballs pinned in requirements-sipsimple.txt.
+./03d-install_python3-eventlib.sh || exit 1
+./03e-install_python3-xcaplib.sh || exit 1
+./03f-install_python3-msrplib.sh || exit 1
 pip3 install -r requirements-blink.txt
 
 ./install_objc-deps.sh 
