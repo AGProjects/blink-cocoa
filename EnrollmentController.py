@@ -21,7 +21,6 @@ import json
 import datetime
 import re
 import urllib.request, urllib.parse, urllib.error
-import urllib.request, urllib.error, urllib.parse
 
 from collections import defaultdict
 from dateutil.tz import tzlocal
@@ -32,12 +31,17 @@ from application.python import Null
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.account import Account, AccountManager
 
+from sipsimple.threading import run_in_thread
 from util import run_in_gui_thread
 from zope.interface import implementer
 
 from BlinkLogger import BlinkLogger
 from SIPManager import SIPManager
 
+
+
+# Seconds to wait for the enrollment server before reporting it unreachable
+ENROLLMENT_TIMEOUT = 30
 
 
 @implementer(IObserver)
@@ -69,6 +73,7 @@ class EnrollmentController(NSObject):
     purchaseProLabel = objc.IBOutlet()
     syncWithiCloudCheckbox = objc.IBOutlet()
     allowed_domains = []
+    _enrollment_request = None  # token of the sign-up request in flight
 
     def init(self):
         if self:
@@ -264,7 +269,13 @@ class EnrollmentController(NSObject):
 
     @objc.python_method
     def createNewAccount(self):
-        sip_address = None
+        """Start the sign-up request; the result arrives in _enrollmentFinished.
+
+        The HTTP POST runs in the 'network-io' thread: on the main thread a
+        slow or silent enrollment server froze the whole UI (the request had
+        no timeout either). The modal session keeps running meanwhile, and
+        the GUI-thread callback is delivered in the modal run loop mode.
+        """
         display_name = str(self.newDisplayNameText.stringValue().strip())
         username = str(self.newUsernameText.stringValue().strip())
         password = str(self.newPasswordText.stringValue().strip())
@@ -275,11 +286,9 @@ class EnrollmentController(NSObject):
         self.progressText.setHidden_(False)
         self.progressIndicator.setUsesThreadedAnimation_(True)
         self.progressIndicator.startAnimation_(None)
-        self.window.display()
+        self.nextButton.setEnabled_(False)
 
         url = SIPSimpleSettings().server.enrollment_url
-
-        sip_address = None
 
         tzname = datetime.datetime.now(tzlocal()).tzname() or ""
 
@@ -294,113 +303,84 @@ class EnrollmentController(NSObject):
 
         BlinkLogger().log_info("Requesting creation of a new SIP account at %s" % url)
 
-        data = urllib.parse.urlencode(values)
-        req = urllib.request.Request(url, data.encode("utf-8"))
+        self._enrollment_request = request = object()
+        self._requestEnrollment(request, url, values, display_name, password)
+
+    @objc.python_method
+    @run_in_thread('network-io')
+    def _requestEnrollment(self, request, url, values, display_name, password):
+        data = None
+        error_message = None
+
+        req = urllib.request.Request(url, urllib.parse.urlencode(values).encode("utf-8"))
 
         try:
-            raw_response = urllib.request.urlopen(req)
-        except (urllib.error.URLError, TimeoutError) as e:
-            error_message = NSLocalizedString("Cannot connect to enrollment server: %s", "Enrollment panel label") % e
-        except urllib.error.HTTPError as e:
-            error_message = NSLocalizedString("Error from enrollment server: %s", "Enrollment panel label") % e
-        else:
+            raw_response = urllib.request.urlopen(req, timeout=ENROLLMENT_TIMEOUT)
             raw_data = raw_response.read().decode().replace('\\/', '/')
-
+        except urllib.error.HTTPError as e:
+            # HTTPError is a URLError subclass, so it has to be caught first
+            error_message = NSLocalizedString("Error from enrollment server: %s", "Enrollment panel label") % e
+        except (urllib.error.URLError, TimeoutError, OSError) as e:
+            error_message = NSLocalizedString("Cannot connect to enrollment server: %s", "Enrollment panel label") % e
+        else:
             try:
                 json_data = json.loads(raw_data)
             except (TypeError, json.decoder.JSONDecodeError):
                 error_message = NSLocalizedString("Cannot decode data from enrollment server", "Enrollment panel label")
             else:
-
                 try:
                     success = json_data["success"]
                 except (TypeError, KeyError):
                     success = False
-                
+
                 if not success:
                     BlinkLogger().log_info("Enrollment Server failed to create SIP account")
                     try:
                         error_message = json_data["error_message"]
                     except (TypeError, KeyError):
-                        error_message == 'Cannot read server response'
+                        error_message = 'Cannot read server response'
                 else:
                     BlinkLogger().log_info("Enrollment Server successfully created SIP account")
-
                     data = defaultdict(lambda: None, json_data)
 
-                    sip_address = data['sip_address']
-                    try:
-                        outbound_proxy = data['outbound_proxy']
-                    except KeyError:
-                        outbound_proxy = None
+        self._enrollmentFinished(request, data, error_message, display_name, password)
 
-                    try:
-                        xcap_root = data['xcap_root']
-                    except KeyError:
-                        xcap_root = None
-
-                    try:
-                        msrp_relay = data['msrp_relay']
-                    except KeyError:
-                        msrp_relay = None
-
-                    try:
-                        settings_url = data['settings_url']
-                    except KeyError:
-                        settings_url = None
-
-                    try:
-                        web_alert_url = data['web_alert_url']
-                    except KeyError:
-                        web_alert_url = None
-
-                    try:
-                        web_password = data['web_password']
-                    except KeyError:
-                        web_password = None
-
-                    try:
-                        conference_server = data['conference_server']
-                    except KeyError:
-                        conference_server = None
-
-                    try:
-                        ldap_hostname = data['ldap_hostname']
-                    except KeyError:
-                        ldap_hostname = None
-
-                    try:
-                        ldap_transport = data['ldap_transport']
-                    except KeyError:
-                        ldap_transport = None
-
-                    try:
-                        ldap_port = data['ldap_port']
-                    except KeyError:
-                        ldap_port = None
-
-                    try:
-                        ldap_username = data['ldap_username']
-                    except KeyError:
-                        ldap_username = None
-
-                    try:
-                        ldap_password = data['ldap_password']
-                    except KeyError:
-                        ldap_password = None
-
-                    try:
-                        ldap_dn = data['ldap_dn']
-                    except KeyError:
-                        ldap_dn = None
-
+    @objc.python_method
+    @run_in_gui_thread
+    def _enrollmentFinished(self, request, data, error_message, display_name, password):
+        if request is not self._enrollment_request:
+            return  # the panel was cancelled or closed while the request ran
+        self._enrollment_request = None
 
         self.progressIndicator.stopAnimation_(None)
         self.progressIndicator.setHidden_(True)
         self.progressText.setHidden_(True)
         self.domainButton.setHidden_(False)
+        self.nextButton.setEnabled_(True)
+
+        if self._createAccountFromEnrollment(data, error_message, display_name, password):
+            NSApp.stopModalWithCode_(NSOKButton)
+
+    @objc.python_method
+    def _createAccountFromEnrollment(self, data, error_message, display_name, password):
+        data = data if data is not None else defaultdict(lambda: None)
+        sip_address = data['sip_address']
+        outbound_proxy = data['outbound_proxy']
+        xcap_root = data['xcap_root']
+        msrp_relay = data['msrp_relay']
+        settings_url = data['settings_url']
+        web_alert_url = data['web_alert_url']
+        web_password = data['web_password']
+        conference_server = data['conference_server']
+        ldap_hostname = data['ldap_hostname']
+        ldap_transport = data['ldap_transport']
+        ldap_port = data['ldap_port']
+        ldap_username = data['ldap_username']
+        ldap_password = data['ldap_password']
+        ldap_dn = data['ldap_dn']
 
         if sip_address is None:
+            error_message = error_message or 'Cannot read server response'
             BlinkLogger().log_info(error_message)
             NSRunAlertPanel(NSLocalizedString("Sign Up to SIP Account", "Window title"),
                             NSLocalizedString("Error creating SIP account: %s", "Label") % error_message, NSLocalizedString("OK", "Button title"), None, None)
@@ -473,13 +453,15 @@ class EnrollmentController(NSObject):
                 if self.radioMatrix.selectedCell().tag() == 1:
                     if self.addExistingAccount():
                         NSApp.stopModalWithCode_(NSOKButton)
-                else:
-                    if self.createNewAccount():
-                        NSApp.stopModalWithCode_(NSOKButton)
+                elif self._enrollment_request is None:
+                    # Finishes asynchronously, in _enrollmentFinished
+                    self.createNewAccount()
         else:
+            self._enrollment_request = None
             NSApp.stopModalWithCode_(NSCancelButton)
 
     def windowShouldClose_(self, sender):
+        self._enrollment_request = None
         NSApp.stopModalWithCode_(NSCancelButton)
         return False
 
