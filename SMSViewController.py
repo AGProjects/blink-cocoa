@@ -1881,7 +1881,7 @@ class SMSViewController(NSObject):
         """
         (sender_identity, id, call_id, direction, content, content_type,
          is_replication_message, window, cpim_imdn_events, imdn_timestamp,
-         account, imdn_message_id, status, metadata) = message_tuple
+         account, imdn_message_id, status, metadata, counts_as_unread) = message_tuple
 
         payload = self._location_payload(content, metadata, content_type)
         if payload is None:
