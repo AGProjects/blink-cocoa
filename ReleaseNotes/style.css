@@ -1,5 +1,10 @@
+:root {
+	color-scheme: light dark;
+}
+
 body {
       background-color: white;
+	color: black;
 	font-family: Luxino Sans, Verdana, Arial, Helvetica, sans-serif;
 	font-size: 10pt;
 	font-style: normal;
@@ -241,3 +246,12 @@ td.white {
                   -webkit-border-radius: 5px; 
                   padding: 1px 1px 1px 1px; }
                   
+/* Dark mode (Sparkle release notes window, browsers) */
+@media (prefers-color-scheme: dark) {
+	body { background-color: #1e1e1e; color: #e6e6e6; }
+	h2 { color: #ff8a3d; }
+	h3, h4 { color: #a0a0a0; }
+	a:link, a:visited, a.item, a.item:visited { color: #6f9bff; }
+	.para, td.text, td.text2, td.textj, th.sft, .hidden, .visible, .extrainfo { color: #e6e6e6; }
+	.bg { background-color: #4a4520; }
+}
