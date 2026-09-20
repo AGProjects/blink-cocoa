@@ -1,12 +1,12 @@
-Blink
------
+Blink SIP client
+----------------
 
 This is Blink, a state of the art, easy to use SIP client.
 
-Copyright (c) 2009-2021 AG Projects
-http://ag-projects.com
+Copyright (c) 2009-2026 AG Projects
+https://ag-projects.com
 
-Homepage: http://icanblink.com
+Homepage: https://icanblink.com
 
 
 License
@@ -20,3 +20,8 @@ The following restrictions apply:
  * You may not alter the name of the software (Blink)
  * You may not alter the Copyright and About notices
 
+
+Building Blink
+--------------
+
+See build_scripts/
