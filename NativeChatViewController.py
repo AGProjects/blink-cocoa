@@ -256,7 +256,7 @@ def _haversine(lat1, lon1, lat2, lon2):
         return 0.0
 from ChatViewController import (ChatViewController, ChatMessageObject,
                                 pasteboard_attachments, pasteboard_can_attach)
-from MessageBubbleView import MessageBubbleView, _url_re
+from MessageBubbleView import MessageBubbleView, _url_re, transcript_font_size
 from FileTransferCache import (FileTransferCache, display_name, tile_pixels,
                                envelope as transfer_envelope,
                                is_encrypted, AUTO_VIDEO_MAX_AGE_DAYS,
@@ -383,6 +383,7 @@ class NativeChatViewController(ChatViewController):
         if self.inputText:
             self.inputText.registerForDraggedTypes_(NSArray.arrayWithObject_(NSFilenamesPboardType))
             self.inputText.setOwner(self)
+            self.applyComposerFontSize()
             self._installComposerButtons()
             NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(
                 self, "textDidChange:", NSTextDidChangeNotification, self.inputText)
@@ -428,6 +429,34 @@ class NativeChatViewController(ChatViewController):
                 cell.setFocusRingType_(NSFocusRingTypeNone)
         except Exception as e:
             BlinkLogger().log_debug('Cannot set the cell focus ring type: %s' % e)
+
+    @objc.python_method
+    def applyComposerFontSize(self, size=None):
+        """Draw the composer at the size the transcript is drawn at.
+
+        The nib sets no font on the field at all, which left it at
+        AppKit's 12pt user font -- smaller than the bubbles above it and
+        smaller than anything else in the window. Tying it to the
+        transcript size instead means you write at the size you read, and
+        the A-/A+ pair in the header becomes one control over the whole
+        conversation rather than over half of it.
+
+        The typing attributes are set as well as the font: setFont_ takes
+        care of the text that is there, and the caret keeps whatever it
+        was given last, so a composer emptied and refilled (an edit, a
+        cancelled edit) would otherwise come back at the old size.
+        """
+        if self.inputText is None:
+            return
+        try:
+            font = NSFont.systemFontOfSize_(float(size if size is not None
+                                                  else transcript_font_size()))
+            self.inputText.setFont_(font)
+            attributes = dict(self.inputText.typingAttributes() or {})
+            attributes[NSFontAttributeName] = font
+            self.inputText.setTypingAttributes_(attributes)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot set the composer font: %s' % e)
 
     @objc.python_method
     def _installAttachButton(self):
@@ -4797,8 +4826,10 @@ class NativeChatViewController(ChatViewController):
         draw time, so that a conversation opened later cannot silently
         disagree with one already on screen. Changing it is therefore a
         walk over the views, and a relayout: the text is a different height
-        now, so the bubbles around it have to move.
+        now, so the bubbles around it have to move. The composer moves with
+        them -- it is the same reader's eyes.
         """
+        self.applyComposerFontSize(size)
         if self.messageListView is None:
             return
         for view in list(self.messageListView.subviews()):
