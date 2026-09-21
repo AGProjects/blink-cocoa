@@ -3151,13 +3151,69 @@ class CustomListModel(NSObject):
         # is selected. Only the display is affected, groupsList stays complete.
         return self.groupsList
 
+    # A contact filed under Deleted is shown there and nowhere else, the way
+    # Sylk Mobile's Deleted folder takes a contact out of every other list.
+    # Its other group memberships are untouched -- hidden here, at display
+    # time, so a restore puts it back exactly where it was. Calls and Tel
+    # rows carry no address book contact, so they are matched by address.
+    _deleted_contact_ids = frozenset()
+    _deleted_uri_keys = frozenset()
+    _displayed_contacts = None
+
+    @objc.python_method
+    def refreshDeletedMembership(self):
+        ids = set()
+        keys = set()
+        try:
+            group = next((g for g in AddressbookManager().get_groups() if g.id == DELETED_GROUP_ID), None)
+            if group is not None:
+                for contact in group.contacts:
+                    ids.add(contact.id)
+                    for uri in contact.uris:
+                        key = self._canonical_contact_uri(uri.uri)
+                        if key:
+                            keys.add(key)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot read the Deleted group: %s' % e)
+        self._deleted_contact_ids = frozenset(ids)
+        self._deleted_uri_keys = frozenset(keys)
+        self._displayed_contacts = {}
+
+    @objc.python_method
+    def isHiddenAsDeleted(self, item):
+        contact = getattr(item, 'contact', None)
+        contact_id = getattr(contact, 'id', None)
+        if contact_id is not None and isinstance(contact_id, str):
+            return contact_id in self._deleted_contact_ids
+        if isinstance(item, HistoryBlinkContact) and self._deleted_uri_keys:
+            return self._canonical_contact_uri(getattr(item, 'uri', '')) in self._deleted_uri_keys
+        return False
+
+    @objc.python_method
+    def displayedContacts(self, group, recompute=False):
+        """The rows of a group as the list shows them."""
+        if getattr(group, 'isDeletedGroup', None) and group.isDeletedGroup():
+            return group.contacts
+        if not self._deleted_contact_ids and not self._deleted_uri_keys:
+            return group.contacts
+        if self._displayed_contacts is None:
+            self._displayed_contacts = {}
+        key = id(group)
+        if recompute or key not in self._displayed_contacts:
+            self._displayed_contacts[key] = [c for c in group.contacts if not self.isHiddenAsDeleted(c)]
+        return self._displayed_contacts[key]
+
     # data source methods
     def outlineView_numberOfChildrenOfItem_(self, outline, item):
         try:
             if item is None:
+                # Every reloadData starts here: re-read who is in Deleted.
+                self.refreshDeletedMembership()
                 return len(self.visibleGroupsList)
             elif isinstance(item, BlinkGroup):
-                return len(item.contacts)
+                if self._displayed_contacts is None:
+                    self.refreshDeletedMembership()
+                return len(self.displayedContacts(item, recompute=True))
             else:
                 return 0
         except Exception:
@@ -3207,7 +3263,7 @@ class CustomListModel(NSObject):
                 return None
         elif isinstance(item, BlinkGroup):
             try:
-                return item.contacts[index]
+                return self.displayedContacts(item)[index]
             except IndexError:
                 pass
         return None
@@ -5260,7 +5316,7 @@ class ContactListModel(CustomListModel):
             self.addGroupsForContact(contact, new_groups)
 
     @objc.python_method
-    def deleteContacts(self, blink_contacts, selected_item=None):
+    def deleteDuplicateContacts(self, blink_contacts, selected_item=None):
         BlinkLogger().log_info('Will delete %d contacts' % (len(blink_contacts) - 1))
         addressbook_manager = AddressbookManager()
         with addressbook_manager.transaction():
@@ -5275,65 +5331,154 @@ class ContactListModel(CustomListModel):
 
     @objc.python_method
     def deleteContact(self, blink_contact):
-        if not blink_contact.deletable:
-            return
-
-        name = blink_contact.name if len(blink_contact.name) else str(blink_contact.uri)
-        # Deleting takes the conversation with it, so the dialog has to say
-        # so: this is the one action in the contact list that destroys
-        # something the user cannot get back.
-        message = '%s\n\n%s' % (
-            NSLocalizedString("Delete '%s' from the Contacts list?", "Label") % name,
-            NSLocalizedString("The messages and downloaded files kept for this contact's "
-                              "addresses will be deleted, unless another contact also "
-                              "lists them.", "Label"))
-        message = re.sub("%", "%%", message)
-
-        ret = NSRunAlertPanel(NSLocalizedString("Delete Contact", "Window title"), message, NSLocalizedString("Delete", "Button title"), NSLocalizedString("Cancel", "Button title"), None)
-        if ret == NSAlertDefaultReturn:
-            addressbook_manager = AddressbookManager()
-            with addressbook_manager.transaction():
-                #self.addBlockedPolicyForContactURIs(blink_contact.contact)
-                blink_contact.contact.delete()
-            self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
+        self.deleteContacts([blink_contact])
 
     @objc.python_method
-    def deleteContacts(self, blink_contacts):
-        """Delete several contacts behind a single confirmation."""
+    def _addressbookContacts(self, blink_contacts):
+        """The distinct address book contacts behind a set of rows."""
         contacts = []
         seen = set()
         for blink_contact in blink_contacts:
-            if not blink_contact.deletable or getattr(blink_contact, 'contact', None) is None:
+            if not getattr(blink_contact, 'deletable', False):
                 continue
-            if blink_contact.contact.id in seen:
+            contact = getattr(blink_contact, 'contact', None)
+            if not isinstance(contact, Contact) or contact.id in seen:
                 continue
-            seen.add(blink_contact.contact.id)
-            contacts.append(blink_contact)
-        if not contacts:
-            return
-        if len(contacts) == 1:
-            self.deleteContact(contacts[0])
-            return
+            seen.add(contact.id)
+            contacts.append((blink_contact, contact))
+        return contacts
 
-        names = [c.name if len(c.name) else str(c.uri) for c in contacts]
-        listed = '\n'.join(names[:10])
-        if len(names) > 10:
-            listed += '\n' + NSLocalizedString("and %d more", "Label") % (len(names) - 10)
-        message = '%s\n\n%s\n\n%s' % (
-            NSLocalizedString("Delete %d contacts from the Contacts list?", "Label") % len(contacts),
-            listed,
-            NSLocalizedString("The messages and downloaded files kept for these contacts' "
-                              "addresses will be deleted, unless another contact also "
-                              "lists them.", "Label"))
+    @objc.python_method
+    def deleteContacts(self, blink_contacts):
+        """Stage 1 of Sylk Mobile's delete: move the contacts to Deleted.
+
+        Their messages are marked deleted and hidden, the files stay on
+        disc, XCAP keeps the contact and nothing is sent to the server or
+        the other devices. Delete Permanently from inside Deleted is what
+        destroys anything (expungeContacts).
+        """
+        pairs = self._addressbookContacts(blink_contacts)
+        if not pairs:
+            return
+        names = [b.name if len(b.name) else str(b.uri) for b, c in pairs]
+        if len(pairs) == 1:
+            title = NSLocalizedString("Delete Contact", "Window title")
+            question = NSLocalizedString("Move '%s' to the Deleted group?", "Label") % names[0]
+        else:
+            title = NSLocalizedString("Delete Contacts", "Window title")
+            question = NSLocalizedString("Move %d contacts to the Deleted group?", "Label") % len(pairs)
+            listed = '\n'.join(names[:10])
+            if len(names) > 10:
+                listed += '\n' + NSLocalizedString("and %d more", "Label") % (len(names) - 10)
+            question = '%s\n\n%s' % (question, listed)
+        message = '%s\n\n%s' % (question, NSLocalizedString(
+            "Their messages are hidden, not deleted, and can be restored from the "
+            "Deleted group. Delete them permanently from there to remove them for good.", "Label"))
         message = re.sub("%", "%%", message)
+        ret = NSRunAlertPanel(title, message, NSLocalizedString("Delete", "Button title"), NSLocalizedString("Cancel", "Button title"), None)
+        if ret != NSAlertDefaultReturn:
+            return
+        from SMSWindowManager import SMSWindowManager
+        addressbook_manager = AddressbookManager()
+        with addressbook_manager.transaction():
+            SMSWindowManager().softDeleteContacts([c for b, c in pairs])
+        self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
-        ret = NSRunAlertPanel(NSLocalizedString("Delete Contacts", "Window title"), message, NSLocalizedString("Delete", "Button title"), NSLocalizedString("Cancel", "Button title"), None)
-        if ret == NSAlertDefaultReturn:
-            addressbook_manager = AddressbookManager()
-            with addressbook_manager.transaction():
-                for blink_contact in contacts:
-                    blink_contact.contact.delete()
-            self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
+    @objc.python_method
+    def restoreDeletedContacts(self, blink_contacts):
+        pairs = self._addressbookContacts(blink_contacts)
+        if not pairs:
+            return
+        from SMSWindowManager import SMSWindowManager
+        addressbook_manager = AddressbookManager()
+        with addressbook_manager.transaction():
+            SMSWindowManager().restoreDeletedContacts([c for b, c in pairs])
+        self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
+
+    @objc.python_method
+    def expungeContacts(self, blink_contacts):
+        """Stage 2: delete for good, from inside the Deleted group.
+
+        1. the contact leaves the Deleted group and is deleted from XCAP;
+           that deletion purges the messages, downloaded files and public
+           key of every address no other contact lists
+           (purgeDataForDeletedContact),
+        2. an address another contact still lists gets its messages back
+           instead -- they are that contact's conversation too,
+        3. a conversation-remove for each purged address tells the other
+           devices to drop the thread.
+        """
+        pairs = self._addressbookContacts(blink_contacts)
+        if not pairs:
+            return
+        names = [b.name if len(b.name) else str(b.uri) for b, c in pairs]
+        if len(pairs) == 1:
+            question = NSLocalizedString("Permanently delete '%s'?", "Label") % names[0]
+        else:
+            question = NSLocalizedString("Permanently delete %d contacts?", "Label") % len(pairs)
+            listed = '\n'.join(names[:10])
+            if len(names) > 10:
+                listed += '\n' + NSLocalizedString("and %d more", "Label") % (len(names) - 10)
+            question = '%s\n\n%s' % (question, listed)
+        message = '%s\n\n%s' % (question, NSLocalizedString(
+            "The contact is removed from the server address book, and its messages and "
+            "downloaded files are deleted on all your devices. This cannot be undone.", "Label"))
+        message = re.sub("%", "%%", message)
+        ret = NSRunAlertPanel(NSLocalizedString("Delete Permanently", "Window title"), message,
+                              NSLocalizedString("Delete", "Button title"),
+                              NSLocalizedString("Cancel", "Button title"), None)
+        if ret != NSAlertDefaultReturn:
+            return
+
+        from SMSWindowManager import SMSWindowManager
+        manager = SMSWindowManager()
+        going = set(c.id for b, c in pairs)
+        still_claimed = set()
+        try:
+            for other in AddressbookManager().get_contacts():
+                if other.id in going:
+                    continue
+                for uri in other.uris:
+                    key = self._canonical_contact_uri(uri.uri)
+                    if key:
+                        still_claimed.add(key)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot check which addresses are still in use: %s' % e)
+            return
+        neighbours = manager._bonjourConversationKeys()
+
+        purged = []
+        kept = []
+        for b, contact in pairs:
+            for key in manager._contactURIKeys(contact):
+                if key in still_claimed:
+                    kept.append(key)
+                elif key not in neighbours and key not in purged:
+                    purged.append(key)
+
+        deleted_group = manager._conversationGroup(DELETED_GROUP_ID, create=False)
+        addressbook_manager = AddressbookManager()
+        with addressbook_manager.transaction():
+            for b, contact in pairs:
+                if deleted_group is not None and contact in set(deleted_group.contacts):
+                    deleted_group.contacts.remove(contact)
+            if deleted_group is not None:
+                deleted_group.save()
+            for b, contact in pairs:
+                BlinkLogger().log_info('[trash] Contact %s deleted permanently' % (contact.name or contact.id))
+                contact.delete()
+
+        for key in kept:
+            BlinkLogger().log_info('[trash] Keeping the conversation with %s: another contact lists it' % key)
+            manager.deleted_conversations.pop(key, None)
+            try:
+                manager.history.restore_conversation(None, key)
+            except Exception as e:
+                BlinkLogger().log_error('Cannot restore the conversation with %s: %s' % (key, e))
+        for key in purged:
+            manager.deleted_conversations.pop(key, None)
+        manager.announceConversationRemoval(purged)
+        self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
     @objc.python_method
     def deleteGroup(self, blink_group):
@@ -5347,13 +5492,9 @@ class ContactListModel(CustomListModel):
 
     @objc.python_method
     def deleteContactsFromGroup(self, blink_group):
-        message =  NSLocalizedString("Please confirm the deletion of contacts from group '%s'", "Label") % blink_group.name
-        message = re.sub("%", "%%", message)
-        ret = NSRunAlertPanel(NSLocalizedString("Delete Contacts", "Window title"), message, NSLocalizedString("Delete", "Button title"), NSLocalizedString("Cancel", "Button title"), None)
-        if ret == NSAlertDefaultReturn and blink_group in self.groupsList:
-            for contact in blink_group.group.contacts:
-                contact.delete()
-            self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
+        if blink_group not in self.groupsList:
+            return
+        self.deleteContacts(list(self.displayedContacts(blink_group)))
 
     @objc.python_method
     @run_in_gui_thread

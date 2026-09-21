@@ -273,6 +273,14 @@ class PhotoView(NSImageView):
             BlinkLogger().log_error('Cannot draw my own avatar: %s' % e)
 
 
+class _DeletedGroupMenuPolicy(object):
+    # Stands in for the Deleted group where the row menu asks what the group
+    # allows: Delete, Delete duplicates and Remove From Group do not apply
+    # there -- Restore and Delete Permanently are offered instead.
+    delete_contact_allowed = False
+    remove_contact_allowed = False
+
+
 @implementer(IObserver)
 class ContactWindowController(NSWindowController):
 
@@ -922,6 +930,7 @@ class ContactWindowController(NSWindowController):
                 if group.group is not None and group.group.expanded:
                     self.contactOutline.expandItem_expandChildren_(group, False)
         else:
+            self.model.refreshDeletedMembership()
             self.contactOutline.reloadItem_reloadChildren_(sender, True)
 
         if selected:
@@ -1829,6 +1838,53 @@ class ContactWindowController(NSWindowController):
         return None
 
     @objc.python_method
+    def isRowInDeletedGroup(self, item):
+        group = self.groupForContact(item)
+        return bool(group is not None and getattr(group, "isDeletedGroup", None) and group.isDeletedGroup())
+
+    @objc.python_method
+    def _deletedGroupActionContacts(self, sender):
+        item = sender.representedObject() if sender.respondsToSelector_("representedObject") else None
+        if isinstance(item, BlinkContact) and self.contactOutline.numberOfSelectedRows() <= 1:
+            return [item]
+        contacts, group = self.selectedContactsForGroupAction()
+        if group is None or not (getattr(group, "isDeletedGroup", None) and group.isDeletedGroup()):
+            return []
+        return contacts
+
+    @objc.IBAction
+    def restoreDeletedContacts_(self, sender):
+        contacts = self._deletedGroupActionContacts(sender)
+        if contacts:
+            self.model.restoreDeletedContacts(contacts)
+            self.refreshContactsList()
+            self.searchContacts()
+
+    @objc.IBAction
+    def expungeDeletedContacts_(self, sender):
+        contacts = self._deletedGroupActionContacts(sender)
+        if contacts:
+            self.model.expungeContacts(contacts)
+            self.refreshContactsList()
+            self.searchContacts()
+
+    @objc.IBAction
+    def restoreDeletedGroup_(self, sender):
+        group = sender.representedObject()
+        if group is not None and group.contacts:
+            self.model.restoreDeletedContacts(list(group.contacts))
+            self.refreshContactsList()
+            self.searchContacts()
+
+    @objc.IBAction
+    def emptyDeletedGroup_(self, sender):
+        group = sender.representedObject()
+        if group is not None and group.contacts:
+            self.model.expungeContacts(list(group.contacts))
+            self.refreshContactsList()
+            self.searchContacts()
+
+    @objc.python_method
     def selectedContactsForGroupAction(self):
         # The contacts of a multiple selection in the contact list, with the
         # group they were selected in. The selection is confined to one group.
@@ -1843,6 +1899,14 @@ class ContactWindowController(NSWindowController):
         while self.contactContextMenu.numberOfItems() > 0:
             self.contactContextMenu.removeItemAtIndex_(0)
         contacts, group = self.selectedContactsForGroupAction()
+
+        if group is not None and getattr(group, "isDeletedGroup", None) and group.isDeletedGroup():
+            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Restore", "Menu item"), "restoreDeletedContacts:", "")
+            mitem.setEnabled_(bool(contacts))
+            self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Delete Permanently...", "Menu item"), "expungeDeletedContacts:", "")
+            mitem.setEnabled_(any(getattr(c, "deletable", False) for c in contacts))
+            return
 
         mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Start Conference", "Menu item"), "startConferenceWithSelectedContacts:", "")
         mitem.setEnabled_(bool(contacts) and self.activeAccount() is not None)
@@ -1881,6 +1945,11 @@ class ContactWindowController(NSWindowController):
     @objc.IBAction
     def deleteSelectedContacts_(self, sender):
         contacts, group = self.selectedContactsForGroupAction()
+        if group is not None and getattr(group, "isDeletedGroup", None) and group.isDeletedGroup():
+            self.model.expungeContacts(contacts)
+            self.refreshContactsList()
+            self.searchContacts()
+            return
         if group is not None and not getattr(group, "delete_contact_allowed", False):
             return
         contacts = [c for c in contacts if getattr(c, "editable", True) is not False]
@@ -1994,7 +2063,19 @@ class ContactWindowController(NSWindowController):
             # still on disc, and these two items are the fork -- have it all
             # back, or have it gone for good. Offered first because that is
             # the only decision to make about a row in this group.
-            if self._deletedConversationURIs(item):
+            if self.isRowInDeletedGroup(item):
+                # Sylk Mobile's Deleted folder: the contact comes back as it
+                # was, or goes for good -- XCAP, messages, files, and the
+                # other devices told.
+                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(
+                    NSLocalizedString("Restore", "Menu item"), "restoreDeletedContacts:", "")
+                mitem.setRepresentedObject_(item)
+                mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(
+                    NSLocalizedString("Delete Permanently...", "Menu item"), "expungeDeletedContacts:", "")
+                mitem.setEnabled_(getattr(item, "deletable", False))
+                mitem.setRepresentedObject_(item)
+                self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+            elif self._deletedConversationURIs(item):
                 mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(
                     NSLocalizedString("Restore Conversation", "Menu item"),
                     "restoreDeletedConversation:", "")
@@ -2598,6 +2679,8 @@ class ContactWindowController(NSWindowController):
                         self.contactContextMenu.setSubmenu_forItem_(name_submenu, mitem)
 
             group = self.groupForContact(item)
+            if group is not None and getattr(group, "isDeletedGroup", None) and group.isDeletedGroup():
+                group = _DeletedGroupMenuPolicy
             # A contact in NO group is still deletable. deleteContact works on
             # the addressbook entry itself, and delete_contact_allowed is a
             # per-group POLICY -- Messages and Deleted refuse it -- not a
@@ -2639,6 +2722,13 @@ class ContactWindowController(NSWindowController):
             lastItem.setRepresentedObject_(item)
             if isinstance(item, HistoryBlinkGroup) or isinstance(item, OnlineGroup):
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Hide", "Menu item"), "hideGroup:", "")
+                lastItem.setRepresentedObject_(item)
+            elif getattr(item, "isDeletedGroup", None) and item.isDeletedGroup():
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Restore All", "Menu item"), "restoreDeletedGroup:", "")
+                lastItem.setEnabled_(bool(item.contacts))
+                lastItem.setRepresentedObject_(item)
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Empty Deleted Group...", "Menu item"), "emptyDeletedGroup:", "")
+                lastItem.setEnabled_(bool(item.contacts))
                 lastItem.setRepresentedObject_(item)
             else:
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Delete...", "Menu item"), "deleteItem:", "")
@@ -4742,7 +4832,7 @@ class ContactWindowController(NSWindowController):
 
         if self.mainTabView.selectedTabViewItem().identifier() == "search":
             self.local_found_contacts = []
-            local_found_contacts = [contact for group in self.model.groupsList if group.ignore_search is False for contact in group.contacts if (text in contact or contact.matchesURI(text))]
+            local_found_contacts = [contact for group in self.model.groupsList if group.ignore_search is False for contact in self.model.displayedContacts(group) if (text in contact or contact.matchesURI(text))]
             found_count = {}
             for local_found_contact in local_found_contacts:
                 if hasattr(local_found_contact, 'contact') and local_found_contact.contact is not None:
@@ -5967,7 +6057,7 @@ class ContactWindowController(NSWindowController):
                 message = re.sub("%", "%%", message)
                 ret = NSRunAlertPanel(NSLocalizedString("Delete Duplicates", "Window title"), message, NSLocalizedString("Delete", "Button title"), NSLocalizedString("Cancel", "Button title"), None)
                 if ret == NSAlertDefaultReturn:
-                    self.model.deleteContacts(blink_contacts, selected_item=item)
+                    self.model.deleteDuplicateContacts(blink_contacts, selected_item=item)
             else:
                 message = NSLocalizedString("No duplicates found", "Label")
                 NSRunAlertPanel(NSLocalizedString("Delete Duplicates", "Window title"), message, NSLocalizedString("OK", "Button title"), None, None)
@@ -6011,6 +6101,11 @@ class ContactWindowController(NSWindowController):
             # search tab has no parent in the contacts outline, and asking for
             # one there is how this quietly did nothing.
             group = self.groupForContact(item)
+            if group is not None and getattr(group, "isDeletedGroup", None) and group.isDeletedGroup():
+                self.model.expungeContacts([item])
+                self.refreshContactsList()
+                self.searchContacts()
+                return
             if group is None or group.delete_contact_allowed:
                 # Noted before the confirmation dialog, so the decision is made
                 # on the tab the user actually acted from.

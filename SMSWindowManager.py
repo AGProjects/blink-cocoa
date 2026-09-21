@@ -4121,6 +4121,9 @@ class SMSWindowManagerClass(NSObject):
         key = self._canonical_uri(remote_uri)
         if not key or self.illegal_uri(remote_uri):
             return
+        if self._isEchoOfOwnConversationRemove(key):
+            BlinkLogger().log_debug('Own conversation removal for %s echoed back, ignored' % key)
+            return
         when = int(time.time())
         try:
             self.history.tombstone_conversation(str(account.id), remote_uri,
@@ -4172,8 +4175,30 @@ class SMSWindowManagerClass(NSObject):
             return False
         BlinkLogger().log_info('Conversation with %s came back: a message from %s is '
                                'newer than the removal' % (key, when))
-        self.restoreConversation(key)
+        # A contact deleted here comes back whole -- every address of it --
+        # like Sylk Mobile's _reviveDeletedContactForActivity.
+        contact = self._findContactByCanonicalURI(key)
+        if contact is not None and self._isInDeletedGroup(contact):
+            self._reviveDeletedContact(contact)
+        else:
+            self.restoreConversation(key)
         return True
+
+    @objc.python_method
+    def _isInDeletedGroup(self, contact):
+        from ContactListModel import DELETED_GROUP_ID
+        group = self._conversationGroup(DELETED_GROUP_ID, create=False)
+        try:
+            return group is not None and contact in set(group.contacts)
+        except Exception:
+            return False
+
+    @objc.python_method
+    @run_in_gui_thread
+    def _reviveDeletedContact(self, contact):
+        with AddressbookManager().transaction():
+            self.restoreDeletedContacts([contact])
+        NotificationCenter().post_notification("BlinkContactsHaveChanged", sender=None)   # None: a full reload
 
     @objc.python_method
     def restoreConversation(self, remote_uri):
@@ -4220,6 +4245,17 @@ class SMSWindowManagerClass(NSObject):
         contact = self._findContactByCanonicalURI(uri)
         if contact is None:
             return
+        self.fileContactAsDeleted(contact, deleted, label=uri)
+
+    @objc.python_method
+    def fileContactAsDeleted(self, contact, deleted, label=None, to_messages=True):
+        """Move one address book contact between Messages and Deleted.
+
+        GUI thread only. Membership of Deleted is what hides the contact in
+        every other group of the list; its other group memberships are left
+        exactly as they were, so a restore puts it back where it lived.
+        """
+        uri = label or getattr(contact, 'name', '') or contact.id
         # Imported here rather than at module scope: ContactListModel
         # reaches back into this module, and the pair of top-level imports
         # is a cycle.
@@ -4242,11 +4278,174 @@ class SMSWindowManagerClass(NSObject):
                 # Back into Messages through the one place that knows how to
                 # make that group -- including promoting it to the top, which
                 # a plain create does not do.
-                self.new_contacts.add(contact)
-                self.addContactsToMessagesGroup()
+                if to_messages:
+                    self.new_contacts.add(contact)
+                    self.addContactsToMessagesGroup()
         except Exception as e:
             BlinkLogger().log_error('Cannot file %s as %s: %s'
                                     % (uri, 'deleted' if deleted else 'restored', e))
+
+    # -- deleted contacts (Sylk Mobile's two-stage delete) --------------------
+    #
+    # Stage 1, Delete: the contact moves to the Deleted group and every
+    # message exchanged with any of its addresses is tombstoned. Nothing
+    # leaves the disc and nothing is said to the server or the other
+    # devices: it is one Restore away from being exactly as it was.
+    #
+    # Stage 2, Delete Permanently (from inside Deleted): the messages and
+    # files go, the contact is deleted from XCAP, and a conversation-remove
+    # tells the other devices to drop the thread too.
+
+    ownConversationRemovals = {}
+    OWN_CONVERSATION_REMOVE_TTL = 60
+
+    @objc.python_method
+    def _contactURIKeys(self, contact):
+        keys = []
+        try:
+            for u in contact.uris:
+                key = self._canonical_uri(u.uri)
+                if key and key not in keys and not self.illegal_uri(key):
+                    keys.append(key)
+        except Exception:
+            pass
+        return keys
+
+    @objc.python_method
+    def softDeleteContacts(self, contacts):
+        """Stage 1: move address book contacts to Deleted, hide their messages."""
+        when = int(time.time())
+        bonjour = self._bonjourConversationKeys()
+        for contact in contacts:
+            for key in self._contactURIKeys(contact):
+                if key in bonjour:
+                    continue
+                try:
+                    self.history.tombstone_conversation(None, key, when=when)
+                except Exception as e:
+                    BlinkLogger().log_error('Cannot mark the conversation with %s deleted: %s'
+                                            % (key, e))
+                    continue
+                # Armed even when there is no message yet: activity newer than
+                # this moment is what brings the contact back, same rule as a
+                # removal that came over the wire.
+                self.deleted_conversations[key] = when
+                self.closeConversationForURI(key)
+                self.last_message_times.pop(key, None)
+                self.message_previews.pop(key, None)
+                if self.unread_counts.pop(key, None):
+                    self._postUnreadChanged(key, 0)
+                self._postConversationOrderChanged(key)
+            self.fileContactAsDeleted(contact, True)
+            BlinkLogger().log_info('[trash] Contact %s moved to Deleted' % (contact.name or contact.id))
+
+    @objc.python_method
+    def restoreDeletedContacts(self, contacts):
+        """Un-trash: messages come back and the contact leaves Deleted.
+
+        Back into Messages only if there turned out to be messages to
+        restore -- a contact that never had a conversation was never in
+        Messages, and a restore puts things back as they were.
+        """
+        for contact in contacts:
+            keys = self._contactURIKeys(contact)
+            deferreds = []
+            for key in keys:
+                self.deleted_conversations.pop(key, None)
+                try:
+                    deferreds.append(self.history.restore_conversation(None, key))
+                except Exception as e:
+                    BlinkLogger().log_error('Cannot restore the conversation with %s: %s'
+                                            % (key, e))
+            self.fileContactAsDeleted(contact, False, to_messages=False)
+            BlinkLogger().log_info('[trash] Contact %s restored from Deleted' % (contact.name or contact.id))
+            self._afterContactRestore(contact, keys, deferreds)
+
+    @objc.python_method
+    def _afterContactRestore(self, contact, keys, deferreds):
+        counts = []
+
+        def collect(result):
+            try:
+                counts.append(int(result or 0))
+            except (TypeError, ValueError):
+                pass
+            return result
+
+        def finished(result=None):
+            if sum(counts) > 0:
+                self._addRestoredContactToMessages(contact)
+            for key in keys:
+                self._conversationRestored(key)
+
+        live = [d for d in deferreds if hasattr(d, 'addCallback')]
+        for d in live:
+            d.addCallback(collect)
+        if live:
+            # The db thread runs its queue in order: the last one done means all are.
+            live[-1].addBoth(finished)
+        else:
+            finished()
+
+    @objc.python_method
+    @run_in_gui_thread
+    def _addRestoredContactToMessages(self, contact):
+        self.new_contacts.add(contact)
+        self.addContactsToMessagesGroup()
+
+    @objc.python_method
+    def noteOwnConversationRemove(self, contact):
+        key = self._canonical_uri(contact)
+        if key:
+            self.ownConversationRemovals.setdefault(key, []).append(time.monotonic())
+
+    @objc.python_method
+    def _isEchoOfOwnConversationRemove(self, key):
+        pending = self.ownConversationRemovals.get(key, []) if key else []
+        horizon = time.monotonic() - self.OWN_CONVERSATION_REMOVE_TTL
+        pending = [t for t in pending if t >= horizon]
+        echo = bool(pending)
+        if echo:
+            pending.pop(0)
+        if pending:
+            self.ownConversationRemovals[key] = pending
+        else:
+            self.ownConversationRemovals.pop(key, None)
+        return echo
+
+    @objc.python_method
+    def announceConversationRemoval(self, uris):
+        """Stage 2 on the wire: tell our other devices, via SylkServer.
+
+        Same request Sylk Mobile makes with account.removeConversation,
+        carried as application/sylk-api-conversation-remove from each of
+        our accounts to itself. The server journals it and relays
+        application/sylk-conversation-remove to every device, this one
+        included -- that echo is swallowed.
+        """
+        keys = [self._canonical_uri(u) for u in uris]
+        keys = [k for k in keys if k]
+        if not keys:
+            return
+        accounts = [a for a in AccountManager().get_accounts()
+                    if a is not BonjourAccount() and a.enabled
+                    and getattr(a.sms, 'enable_replication', False)]
+        timestamp = str(ISOTimestamp.now())
+        for account in accounts:
+            if any(k == str(account.id).lower() for k in keys):
+                continue
+            for key in keys:
+                self.noteOwnConversationRemove(key)
+                payload = json.dumps({'contact': key, 'timestamp': timestamp})
+                self._sendConversationRemove(account, payload)
+
+    @objc.python_method
+    @run_in_green_thread
+    def _sendConversationRemove(self, account, payload):
+        try:
+            self.sendMessage(account, payload, 'application/sylk-api-conversation-remove')
+        except Exception as e:
+            BlinkLogger().log_error('Cannot send the conversation removal %s: %s' % (payload, e))
 
     @objc.python_method
     def purgeDeletedConversations(self, uris):
