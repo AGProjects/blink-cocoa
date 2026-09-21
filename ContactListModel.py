@@ -55,6 +55,8 @@ from Foundation import (NSArray,
                         NSImage,
                         NSIndexSet,
                         NSMakeSize,
+                        NSMutableIndexSet,
+                        NSNotFound,
                         NSMenu,
                         NSNotificationCenter,
                         NSObject,
@@ -3214,6 +3216,37 @@ class CustomListModel(NSObject):
         return 22 if isinstance(item, BlinkGroup) else 44
 
     # delegate methods
+    def outlineView_selectionIndexesForProposedSelection_(self, outline, proposed):
+        # A multiple selection (shift-click, shift-arrow) is confined to the
+        # contacts of one group: the group of the row the selection started
+        # from. Rows outside that group, and group rows themselves, are
+        # dropped, so a shift-click past the end of the group selects up to
+        # its last contact and a click in another group adds nothing.
+        if proposed.count() <= 1:
+            return proposed
+        anchor = NSNotFound
+        current = outline.selectedRowIndexes()
+        index = current.firstIndex()
+        while index != NSNotFound:
+            if proposed.containsIndex_(index):
+                anchor = index
+                break
+            index = current.indexGreaterThanIndex_(index)
+        if anchor == NSNotFound:
+            anchor = proposed.firstIndex()
+        anchor_item = outline.itemAtRow_(anchor)
+        if not isinstance(anchor_item, BlinkContact):
+            return NSIndexSet.indexSetWithIndex_(anchor)
+        parent = outline.parentForItem_(anchor_item)
+        result = NSMutableIndexSet.indexSet()
+        index = proposed.firstIndex()
+        while index != NSNotFound:
+            item = outline.itemAtRow_(index)
+            if isinstance(item, BlinkContact) and outline.parentForItem_(item) == parent:
+                result.addIndex_(index)
+            index = proposed.indexGreaterThanIndex_(index)
+        return result
+
     def outlineView_isGroupItem_(self, outline, item):
         return isinstance(item, BlinkGroup)
 
@@ -5262,6 +5295,44 @@ class ContactListModel(CustomListModel):
             with addressbook_manager.transaction():
                 #self.addBlockedPolicyForContactURIs(blink_contact.contact)
                 blink_contact.contact.delete()
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
+
+    @objc.python_method
+    def deleteContacts(self, blink_contacts):
+        """Delete several contacts behind a single confirmation."""
+        contacts = []
+        seen = set()
+        for blink_contact in blink_contacts:
+            if not blink_contact.deletable or getattr(blink_contact, 'contact', None) is None:
+                continue
+            if blink_contact.contact.id in seen:
+                continue
+            seen.add(blink_contact.contact.id)
+            contacts.append(blink_contact)
+        if not contacts:
+            return
+        if len(contacts) == 1:
+            self.deleteContact(contacts[0])
+            return
+
+        names = [c.name if len(c.name) else str(c.uri) for c in contacts]
+        listed = '\n'.join(names[:10])
+        if len(names) > 10:
+            listed += '\n' + NSLocalizedString("and %d more", "Label") % (len(names) - 10)
+        message = '%s\n\n%s\n\n%s' % (
+            NSLocalizedString("Delete %d contacts from the Contacts list?", "Label") % len(contacts),
+            listed,
+            NSLocalizedString("The messages and downloaded files kept for these contacts' "
+                              "addresses will be deleted, unless another contact also "
+                              "lists them.", "Label"))
+        message = re.sub("%", "%%", message)
+
+        ret = NSRunAlertPanel(NSLocalizedString("Delete Contacts", "Window title"), message, NSLocalizedString("Delete", "Button title"), NSLocalizedString("Cancel", "Button title"), None)
+        if ret == NSAlertDefaultReturn:
+            addressbook_manager = AddressbookManager()
+            with addressbook_manager.transaction():
+                for blink_contact in contacts:
+                    blink_contact.contact.delete()
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
     @objc.python_method

@@ -20,7 +20,10 @@ class ContactOutlineView(NSOutlineView):
         row = self.rowAtPoint_(point)
         if row < 0:
             return None
-        self.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(row), False)
+        # Right-clicking inside a multiple selection acts on the selection;
+        # anywhere else it selects the clicked row, as before.
+        if not (self.numberOfSelectedRows() > 1 and self.isRowSelected_(row)):
+            self.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(row), False)
         return self.menu()
 
     def keyDown_(self, event):
@@ -38,6 +41,10 @@ class ContactOutlineView(NSOutlineView):
         # its old meaning and edits the query.
         if key and key[0] in ("\x7f", "\x08", "\uf728"):
             row = self.selectedRow()
+            if self.numberOfSelectedRows() > 1:
+                # deleteItem_ sees the multiple selection and asks once for all.
+                self.target().deleteItem_(self)
+                return
             if row >= 0:
                 item = self.itemAtRow_(row)
                 if item is None or not getattr(item, "deletable", False):

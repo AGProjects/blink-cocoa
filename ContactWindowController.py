@@ -78,6 +78,7 @@ from Foundation import (NSArray,
                         NSMutableAttributedString,
                         NSMakeRange,
                         NSMakeRect,
+                        NSMutableIndexSet,
                         NSNotFound,
                         NSNotificationCenter,
                         NSParagraphStyle,
@@ -476,6 +477,11 @@ class ContactWindowController(NSWindowController):
                     scroll.setFocusRingType_(NSFocusRingTypeNone)
             except Exception as e:
                 BlinkLogger().log_error('Cannot hide the contact list focus ring: %s' % e)
+
+        # Shift extends the selection in the contact list. The model, as the
+        # outline's delegate, keeps a multiple selection inside one group.
+        if self.contactOutline is not None:
+            self.contactOutline.setAllowsMultipleSelection_(True)
 
         def check_camera_permission():
             # Get camera permission status
@@ -898,13 +904,17 @@ class ContactWindowController(NSWindowController):
         # slides into that index becomes the selection -- the message pane
         # switches to someone the user never clicked on. Remember the item,
         # put it back.
-        selected = None
+        selected = []
         try:
-            row = self.contactOutline.selectedRow()
-            if row >= 0:
-                selected = self.contactOutline.itemAtRow_(row)
+            rows = self.contactOutline.selectedRowIndexes()
+            row = rows.firstIndex()
+            while row != NSNotFound:
+                item = self.contactOutline.itemAtRow_(row)
+                if item is not None:
+                    selected.append(item)
+                row = rows.indexGreaterThanIndex_(row)
         except Exception:
-            selected = None
+            selected = []
 
         if sender is self.model:
             self.contactOutline.reloadData()
@@ -914,14 +924,17 @@ class ContactWindowController(NSWindowController):
         else:
             self.contactOutline.reloadItem_reloadChildren_(sender, True)
 
-        if selected is not None:
+        if selected:
             try:
-                row = self.contactOutline.rowForItem_(selected)
-                if row >= 0 and row != self.contactOutline.selectedRow():
-                    self.contactOutline.selectRowIndexes_byExtendingSelection_(
-                        NSIndexSet.indexSetWithIndex_(row), False)
+                indexes = NSMutableIndexSet.indexSet()
+                for item in selected:
+                    row = self.contactOutline.rowForItem_(item)
+                    if row >= 0:
+                        indexes.addIndex_(row)
+                if indexes.count() and not indexes.isEqualToIndexSet_(self.contactOutline.selectedRowIndexes()):
+                    self.contactOutline.selectRowIndexes_byExtendingSelection_(indexes, False)
             except Exception:
-                pass                # the item is gone; leave the selection alone
+                pass                # the items are gone; leave the selection alone
         # BlinkLogger().log_info('startup: refreshContactsList exit')
 
     @objc.python_method
@@ -1816,9 +1829,74 @@ class ContactWindowController(NSWindowController):
         return None
 
     @objc.python_method
+    def selectedContactsForGroupAction(self):
+        # The contacts of a multiple selection in the contact list, with the
+        # group they were selected in. The selection is confined to one group.
+        contacts = self.getSelectedContacts()
+        group = None
+        if contacts:
+            group = self.contactOutline.parentForItem_(contacts[0])
+        return contacts, group
+
+    @objc.python_method
+    def updateMultipleContactsContextMenu(self):
+        while self.contactContextMenu.numberOfItems() > 0:
+            self.contactContextMenu.removeItemAtIndex_(0)
+        contacts, group = self.selectedContactsForGroupAction()
+
+        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Start Conference", "Menu item"), "startConferenceWithSelectedContacts:", "")
+        mitem.setEnabled_(bool(contacts) and self.activeAccount() is not None)
+
+        self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+
+        delete_allowed = group is None or getattr(group, "delete_contact_allowed", False)
+        deletable = [c for c in contacts if getattr(c, "deletable", False) and getattr(c, "editable", True) is not False]
+        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Delete Contacts...", "Menu item"), "deleteSelectedContacts:", "")
+        mitem.setEnabled_(delete_allowed and bool(deletable))
+
+    @objc.IBAction
+    def startConferenceWithSelectedContacts_(self, sender):
+        account = self.activeAccount()
+        if account is None:
+            return
+        contacts, group = self.selectedContactsForGroupAction()
+        participants = []
+        for contact in contacts:
+            uri = str(contact.uri or '').strip()
+            uri = re.sub(r'^sips?:', '', uri, flags=re.I)
+            if not uri:
+                continue
+            if '@' not in uri:
+                uri = '%s@%s' % (uri, account.id.domain)
+            if uri not in participants:
+                participants.append(uri)
+        if not participants:
+            return
+        conference = self.showJoinConferenceWindow(participants=participants, default_domain=account.id.domain)
+        if conference is not None:
+            self.startConferenceIfAppropriate(conference, play_initial_announcement=True)
+        self.joinConferenceWindow.release()
+        self.joinConferenceWindow = None
+
+    @objc.IBAction
+    def deleteSelectedContacts_(self, sender):
+        contacts, group = self.selectedContactsForGroupAction()
+        if group is not None and not getattr(group, "delete_contact_allowed", False):
+            return
+        contacts = [c for c in contacts if getattr(c, "editable", True) is not False]
+        if not contacts:
+            return
+        self.model.deleteContacts(contacts)
+        self.refreshContactsList()
+        self.searchContacts()
+
+    @objc.python_method
     def updateContactContextMenu(self):
         from ContactMangler import mangled_name, mangled_uri
         settings = SIPSimpleSettings()
+        if self.mainTabView.selectedTabViewItem().identifier() == "contacts" and self.contactOutline.numberOfSelectedRows() > 1:
+            self.updateMultipleContactsContextMenu()
+            return
         if self.mainTabView.selectedTabViewItem().identifier() == "contacts":
             sel = self.contactOutline.selectedRow()
             if sel < 0:
@@ -5598,7 +5676,10 @@ class ContactWindowController(NSWindowController):
 
     def contactSelectionChanged_(self, notification):
         self.updateStartSessionButtons()
-        self.switchMessagePaneToSelectedContact()
+        # Extending the selection with shift is picking contacts to act on
+        # together, not opening a conversation: the pane stays where it is.
+        if len(self.getSelectedContacts()) <= 1:
+            self.switchMessagePaneToSelectedContact()
         readonly = any((getattr(c, "editable", None) is False) for c in self.getSelectedContacts(True))
 
         self.contactsMenu.itemWithTag_(31).setEnabled_(not readonly and len(self.getSelectedContacts(includeGroups=False)) > 0)
@@ -5911,6 +5992,9 @@ class ContactWindowController(NSWindowController):
                 outline = self.searchOutline
             else:
                 outline = self.contactOutline
+            if outline == self.contactOutline and outline.numberOfSelectedRows() > 1:
+                self.deleteSelectedContacts_(sender)
+                return
             row = outline.selectedRow()
             if row >= 0:
                 item = outline.itemAtRow_(row)
