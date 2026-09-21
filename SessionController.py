@@ -1590,10 +1590,12 @@ class SessionController(NSObject):
     cancelled_during_dns_lookup = False
     retries = 0
     display_name = None
-    encryption = {}
+    # Per call, and set per instance in every init: callers mutate these in
+    # place (encryption['audio'][...] = ...), so a dict here would be one
+    # dict shared by every SessionController that has not been reset yet.
+    encryption = None
     # {stream type: {'name': ..., 'sampleRate': ...}}, filled as each media
-    # stream starts. None at class level on purpose: a mutable class default
-    # would be one dict shared by every call.
+    # stream starts.
     codecs = None
     device_id = None
     finished = False
@@ -1620,6 +1622,8 @@ class SessionController(NSObject):
         self.postdial_string = None
         self.identifier = SessionIdentifierSerial
         self.streamHandlers = []
+        self.encryption = {}
+        self.codecs = {}
         self.cancelledStream = None
         self.remote_focus = False
         self.conference_info = None
@@ -1666,6 +1670,8 @@ class SessionController(NSObject):
         self.session = session
         self.postdial_string = None
         self.streamHandlers = []
+        self.encryption = {}
+        self.codecs = {}
         self.identifier = SessionIdentifierSerial
         self.cancelledStream = None
         self.remote_focus = False
@@ -1730,6 +1736,8 @@ class SessionController(NSObject):
         self.session = session
         self.postdial_string = None
         self.streamHandlers = []
+        self.encryption = {}
+        self.codecs = {}
         self.identifier = SessionIdentifierSerial
         self.cancelledStream = None
         self.remote_focus = False
