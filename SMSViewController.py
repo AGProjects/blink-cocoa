@@ -2662,7 +2662,7 @@ class SMSViewController(NSObject):
         if kind == 'video':
             # Never uploaded, so this name only ever appears on this
             # device -- but it is what recording_title() reads to put
-            # "Video Call Recording" on the bubble instead of a stamp.
+            # "Video call recording" on the bubble instead of a stamp.
             extension = os.path.splitext(path)[1] or '.mov'
             filename = 'sylk-video-recording-%d%s' % (stamp, extension)
         else:

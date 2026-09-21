@@ -94,6 +94,7 @@ except ImportError:
 from AudioPlayback import (AUDIO_CHANNELS, channel_peaks, has_spectrum,
                            level_at, spectrum_frame)
 from MessageHost import (file_transfer_category, file_transfer_summary,
+                         recording_title,
                          load_trace_tick, load_trace_bucket)
 # A call bubble says what MessageHost says a call is. The words, the
 # outcome and which of them deserve the eye are worked out once, for every
@@ -2345,9 +2346,25 @@ class MessageBubbleView(NSView):
             return False
 
     @objc.python_method
+    def _shownCaption(self):
+        """The words under a picture or a movie: the one set, else a title.
+
+        A caption someone set always wins. Failing that, a machine-named
+        recording gets the title recording_title() gives it -- a video call
+        recording is shown as a movie, and with no caption line at all the
+        bubble said nothing about what the movie was.
+        """
+        if self.caption:
+            return self.caption
+        meta = self.transfer_meta
+        if isinstance(meta, dict):
+            return recording_title(meta.get('filename'))
+        return None
+
+    @objc.python_method
     def _showsCaption(self):
         """Whether a caption is drawn under the picture."""
-        return bool(self.caption) and self._showsMedia() and not self._tileMode()
+        return bool(self._shownCaption()) and self._showsMedia() and not self._tileMode()
 
     @objc.python_method
     def _mediaCaption(self):
@@ -2360,7 +2377,7 @@ class MessageBubbleView(NSView):
         wrap.setLineBreakMode_(NSLineBreakByWordWrapping)
         wrap.setAlignment_(NSCenterTextAlignment)
         return NSAttributedString.alloc().initWithString_attributes_(
-            self.caption or '',
+            self._shownCaption() or '',
             {NSFontAttributeName: NSFont.systemFontOfSize_(self.font_size),
              NSForegroundColorAttributeName: self.textColor(),
              NSParagraphStyleAttributeName: wrap})

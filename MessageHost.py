@@ -181,7 +181,7 @@ _RECORDING_TITLES = (
     # the movie is never uploaded -- so unlike the audio prefixes above
     # this name never reaches a server, but it is still machine-made and
     # still wants a title rather than its own filename on the bubble.
-    ('sylk-video-recording', 'Video Call Recording'),
+    ('sylk-video-recording', 'Video call recording'),
     # What a call recording is uploaded as. The NAME is deliberately not
     # "call": it goes to the server, into its logs and into every device's
     # file list, and what a recording is OF is not the filename's
