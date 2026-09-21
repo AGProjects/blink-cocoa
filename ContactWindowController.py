@@ -1911,6 +1911,10 @@ class ContactWindowController(NSWindowController):
         mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Start Conference", "Menu item"), "startConferenceWithSelectedContacts:", "")
         mitem.setEnabled_(bool(contacts) and self.activeAccount() is not None)
 
+        # The first selected contact is the one the others are merged into.
+        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Merge Contacts...", "Menu item"), "mergeSelectedContacts:", "")
+        mitem.setEnabled_(len(contacts) > 1 and self.model.canMergeContacts(contacts[0], contacts[1:]))
+
         self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
 
         delete_allowed = group is None or getattr(group, "delete_contact_allowed", False)
@@ -1941,6 +1945,20 @@ class ContactWindowController(NSWindowController):
             self.startConferenceIfAppropriate(conference, play_initial_announcement=True)
         self.joinConferenceWindow.release()
         self.joinConferenceWindow = None
+
+    @objc.IBAction
+    def mergeSelectedContacts_(self, sender):
+        contacts, group = self.selectedContactsForGroupAction()
+        if len(contacts) < 2:
+            return
+        target = contacts[0]
+        if self.model.mergeContacts(target, contacts[1:]):
+            self.refreshContactsList()
+            row = self.contactOutline.rowForItem_(target)
+            if row >= 0:
+                self.contactOutline.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(row), False)
+                self.contactOutline.scrollRowToVisible_(row)
+            self.searchContacts()
 
     @objc.IBAction
     def deleteSelectedContacts_(self, sender):

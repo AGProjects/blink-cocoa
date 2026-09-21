@@ -5481,6 +5481,76 @@ class ContactListModel(CustomListModel):
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
     @objc.python_method
+    def canMergeContacts(self, target, sources):
+        if getattr(target, 'contact', None) is None or not isinstance(target.contact, Contact):
+            return False
+        return any(self._mergeableSource(target, source) for source in sources)
+
+    @objc.python_method
+    def _mergeableSource(self, target, source):
+        if source is target:
+            return False
+        if isinstance(source, BlinkPresenceContact) and source.contact is not None:
+            return source.contact.id != target.contact.id
+        return isinstance(source, BonjourBlinkContact)
+
+    @objc.python_method
+    def mergeContacts(self, target, sources):
+        """Fold several contacts into `target`, as dropping each on it does.
+
+        Same steps as the drop in outlineView_acceptDrop_: the target gains
+        every address it does not already have (a Bonjour row adds its
+        instance id as a Bonjour address) and the first avatar if it has
+        none; the source entries are then deleted from the address book.
+        Their history stays -- every address is now the target's, so the
+        purge on delete finds nothing orphaned.
+        """
+        if getattr(target, 'contact', None) is None or not isinstance(target.contact, Contact):
+            return False
+        sources = [s for s in sources if self._mergeableSource(target, s)]
+        if not sources:
+            return False
+
+        names = [s.name for s in sources]
+        listed = ', '.join(names[:10])
+        if len(names) > 10:
+            listed += ' ' + NSLocalizedString("and %d more", "Label") % (len(names) - 10)
+        message = NSLocalizedString("Would you like to merge %s into %s", "Label") % (listed, target.name) + " (%s)?" % target.uri
+        if not MergeContactController(message).runModal_(message):
+            return False
+
+        target_uris = {uri.uri for uri in target.contact.uris}
+        target_changed = False
+        for source in sources:
+            if isinstance(source, BonjourBlinkContact) and source.contact is None:
+                if source.id not in target_uris:
+                    target.contact.uris.add(ContactURI(uri=source.id, type='Bonjour'))
+                    target_uris.add(source.id)
+                    target_changed = True
+                continue
+            for uri in source.contact.uris:
+                if uri.uri not in target_uris:
+                    target.contact.uris.add(ContactURI(uri=uri.uri, type=uri.type))
+                    target_uris.add(uri.uri)
+                    target_changed = True
+            if target.avatar is DefaultUserAvatar() and source.avatar is not DefaultUserAvatar():
+                avatar = PresenceContactAvatar(source.avatar.icon)
+                avatar.path = avatar.path_for_contact(target.contact)
+                avatar.save()
+                target.avatar = avatar
+
+        addressbook_manager = AddressbookManager()
+        with addressbook_manager.transaction():
+            if target_changed:
+                target.contact.save()
+            for source in sources:
+                if isinstance(source, BlinkPresenceContact) and source.contact is not None:
+                    BlinkLogger().log_info('Merged contact %s into %s' % (source.contact.id, target.contact.id))
+                    source.contact.delete()
+        self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
+        return True
+
+    @objc.python_method
     def deleteGroup(self, blink_group):
         message =  NSLocalizedString("Please confirm the deletion of group '%s' from the Contacts list. The contacts part of this group will be preserved. ", "Label") % blink_group.name
         message = re.sub("%", "%%", message)
