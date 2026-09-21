@@ -816,6 +816,33 @@ class SessionControllersManager(object, metaclass=Singleton):
         if encryption:
             local['encryption'] = encryption
 
+        # Only streams that actually carried media have a codec; a call that
+        # never connected has none, and the key is left out.
+        codecs = {}
+        for stream_type, entry in (getattr(controller, 'codecs', None) or {}).items():
+            if isinstance(entry, dict) and entry.get('name'):
+                codecs[stream_type] = dict(entry)
+        if codecs:
+            local['codecs'] = codecs
+
+        # Both ends' User-Agent. The remote one comes from the INVITE (incoming)
+        # or the provisional/final response's User-Agent or Server header
+        # (outgoing); sipsimple keeps the invitation after the session ends.
+        user_agents = {}
+        try:
+            user_agents['local'] = str(SIPSimpleSettings().user_agent or '')
+        except Exception:
+            pass
+        try:
+            remote_ua = controller.session.remote_user_agent
+        except Exception:
+            remote_ua = None
+        if remote_ua:
+            user_agents['remote'] = str(remote_ua)
+        user_agents = {k: v for k, v in user_agents.items() if v}
+        if user_agents:
+            local['userAgents'] = user_agents
+
         # THIS device, not the far end. controller.device_id is the contact's
         # id -- for a Bonjour neighbour it is literally what gets stored as
         # remote_uri -- so putting it here labelled the far end as the device
@@ -1564,6 +1591,10 @@ class SessionController(NSObject):
     retries = 0
     display_name = None
     encryption = {}
+    # {stream type: {'name': ..., 'sampleRate': ...}}, filled as each media
+    # stream starts. None at class level on purpose: a mutable class default
+    # would be one dict shared by every call.
+    codecs = None
     device_id = None
     finished = False
     # Set by ContactWindowController.joinConference() before the streams are
@@ -2140,6 +2171,7 @@ class SessionController(NSObject):
         self.notify_when_participants_changed = False
         self.waitingForLocalVideo = False
         self.encryption = {}
+        self.codecs = {}
 
         self.contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(self.remoteAOR)
         for item in self.invited_participants:
@@ -2695,6 +2727,23 @@ class SessionController(NSObject):
         self.waitingForITunes = False
         if self.routes:
             self.connectSession()
+
+    @objc.python_method
+    def record_codec(self, stream_type, codec, sample_rate=None):
+        """Note the codec a media stream started with, for the call record.
+
+        The raw SDP name ('opus', 'H264'), not the display spelling: the
+        record is read by other clients, which pretty-print it themselves.
+        Called again if the stream restarts, so the last negotiation wins.
+        """
+        if not codec:
+            return
+        if self.codecs is None:
+            self.codecs = {}
+        entry = {'name': str(codec)}
+        if sample_rate:
+            entry['sampleRate'] = int(sample_rate)
+        self.codecs[stream_type] = entry
 
     @objc.python_method
     def _NH_SIPSessionGotRingIndication(self, sender, data):

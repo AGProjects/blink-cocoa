@@ -625,6 +625,11 @@ class VideoController(MediaStream):
         sample_rate = self.stream.sample_rate/1000
         codec = beautify_video_codec(self.stream.codec)
         self.sessionController.log_info("Video stream established to %s:%s using %s codec" % (self.stream.remote_rtp_address, self.stream.remote_rtp_port, codec))
+        try:
+            # No rate for video: its RTP clock is 90 kHz for every codec.
+            self.sessionController.record_codec('video', self.stream.codec)
+        except Exception as e:
+            self.sessionController.log_error("Cannot record video codec: %s" % e)
 
         # Surface the negotiated SDP fmtp options for the selected
         # video codec so the RTP / SIP info window shows exactly what

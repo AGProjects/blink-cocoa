@@ -44,6 +44,7 @@ from BlinkLogger import BlinkLogger
 from MessageDetailsPanel import DetailsPanel
 from MessageHost import (SIP_STATUS_PHRASES, call_answered_elsewhere, call_outcome,
                          call_summary, format_call_duration, sip_status_phrase)
+from util import beautify_audio_codec, beautify_video_codec
 
 
 # Fields the sections below say something about. Anything else a record
@@ -54,7 +55,8 @@ _KNOWN_FIELDS = ('version', 'sessionId', 'fromTag', 'toTag', 'remoteParty',
                  'displayName', 'direction', 'outcome', 'status', 'reason',
                  'duration', 'startTime', 'stopTime', 'timezone', 'media',
                  'proxyIP', 'sipTraceUrl', 'source', 'local', 'answeredBy')
-_KNOWN_LOCAL_FIELDS = ('deviceId', 'account', 'streams', 'encryption', 'recording')
+_KNOWN_LOCAL_FIELDS = ('deviceId', 'account', 'streams', 'encryption', 'recording',
+                       'codecs', 'userAgents')
 
 _OUTCOMES = {
     'completed':          'Answered',
@@ -130,6 +132,29 @@ def _streams(names):
     return [str(name).strip() for name in (names or ()) if str(name).strip()]
 
 
+def _codec(stream_type, entry):
+    """'OPUS, 48 kHz' / 'H.264' for a local.codecs entry."""
+    if isinstance(entry, dict):
+        name = _text(entry.get('name'))
+        rate = entry.get('sampleRate')
+    else:
+        name, rate = _text(entry), None
+    if not name:
+        return ''
+    beautify = beautify_video_codec if stream_type == 'video' else beautify_audio_codec
+    try:
+        name = beautify(name)
+    except Exception:
+        pass
+    try:
+        rate = float(rate or 0)
+    except (TypeError, ValueError):
+        rate = 0
+    if rate:
+        return '%s, %g kHz' % (name, rate / 1000)
+    return name
+
+
 def _device(device_id, this_device):
     device_id = _text(device_id)
     if device_id and this_device and device_id == str(this_device).strip():
@@ -201,6 +226,13 @@ def call_detail_sections(record, device_id=None):
         call.append((NSLocalizedString("Media at proxy", "Call details"),
                      ', '.join(s.capitalize() for s in proxied)))
 
+    codecs = local.get('codecs') if isinstance(local.get('codecs'), dict) else {}
+    for stream_type, label in (('audio', NSLocalizedString("Audio codec", "Call details")),
+                               ('video', NSLocalizedString("Video codec", "Call details"))):
+        call.append((label, _codec(stream_type, codecs.get(stream_type))))
+    for stream_type in sorted(set(codecs) - {'audio', 'video'}):
+        call.append(('%s codec' % str(stream_type).capitalize(), _codec(stream_type, codecs[stream_type])))
+
     encryption = local.get('encryption')
     if isinstance(encryption, dict):
         lines = []
@@ -226,6 +258,11 @@ def call_detail_sections(record, device_id=None):
         (NSLocalizedString("Account", "Call details"), _text(local.get('account'))),
         (NSLocalizedString("Answered by", "Call details"), _device(record.get('answeredBy'), device_id)),
         (NSLocalizedString("Logged by", "Call details"), _device(local.get('deviceId'), device_id)),
+    ]
+    user_agents = local.get('userAgents') if isinstance(local.get('userAgents'), dict) else {}
+    devices += [
+        (NSLocalizedString("Local user agent", "Call details"), _text(user_agents.get('local'))),
+        (NSLocalizedString("Remote user agent", "Call details"), _text(user_agents.get('remote'))),
     ]
 
     # -- SIP -----------------------------------------------------------

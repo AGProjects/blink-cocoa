@@ -1712,6 +1712,10 @@ class AudioController(MediaStream):
         self.sessionController.log_info("MediaStreamDidStart")
         codec = beautify_audio_codec(self.stream.codec)
         self.sessionController.log_info("Audio stream established to %s:%s using %s codec" % (self.stream.remote_rtp_address, self.stream.remote_rtp_port, codec))
+        try:
+            self.sessionController.record_codec('audio', self.stream.codec, self.stream.sample_rate)
+        except Exception as e:
+            self.sessionController.log_error("Cannot record audio codec: %s" % e)
         # Surface the account's stored RTP encryption fields verbatim AND
         # the actual stream-level negotiation result.  More verbose than
         # the previous one-line collapsed form because:
