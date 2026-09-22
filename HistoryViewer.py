@@ -12,6 +12,7 @@ from AppKit import (NSAlertDefaultReturn,
                     NSProgressIndicatorSpinningStyle,
                     NSRunAlertPanel,
                     NSTableViewSelectionDidChangeNotification,
+                    NSTableViewStylePlain,
                     NSModalPanelRunLoopMode,
                     NSToolbarPrintItemIdentifier)
 
@@ -202,6 +203,16 @@ class HistoryViewer(NSWindowController):
             self.keys_path = ApplicationData.get('keys')
 
             self.selectedTableView = self.contactTable
+
+            # macOS 11+ SDK defaults NSTableView to NSTableViewStyleAutomatic (inset):
+            # the selection highlight is inset and rounded while ContactCell draws at
+            # fixed offsets from the row edge, so the blue does not line up with the
+            # content. Force the plain style, same as the main contact list.
+            if self.contactTable.respondsToSelector_("setStyle:"):
+                self.contactTable.setStyle_(NSTableViewStylePlain)
+            # ContactCell is laid out for the main contact list's 40pt rows
+            # (avatar ends at 35pt, second text line below that); the xib's 34pt clips it.
+            self.contactTable.setRowHeight_(40)
 
     @objc.python_method
     def setPeriod(self, days):
