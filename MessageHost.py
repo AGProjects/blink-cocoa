@@ -176,7 +176,7 @@ def _media_label(filename, filetype):
 # that in the transcript spends the bubble's most prominent line on a
 # timestamp the message already carries, in a format nobody reads.
 _RECORDING_TITLES = (
-    ('sylk-call-recording', 'Call Recording'),
+    ('sylk-call-recording', 'Call recording'),
     # A recording of a video call. Local to the device that made it --
     # the movie is never uploaded -- so unlike the audio prefixes above
     # this name never reaches a server, but it is still machine-made and
@@ -190,10 +190,10 @@ _RECORDING_TITLES = (
     # which of the two kinds of recording this is, and only
     # sendCallRecording ever writes this prefix. A voice note is
     # `sylk-audio-recording` and keeps its own title below.
-    ('audio-recording', 'Call Recording'),
-    ('sylk-conf-recording', 'Conference Recording'),
-    ('sylk-audio-recording', 'Audio Recording'),
-    ('sylk-recording', 'Audio Recording'),
+    ('audio-recording', 'Call recording'),
+    ('sylk-conf-recording', 'Conference recording'),
+    ('sylk-audio-recording', 'Audio recording'),
+    ('sylk-recording', 'Audio recording'),
 )
 
 
@@ -202,7 +202,7 @@ def recording_title(filename):
 
     Only for names a recorder generated. A file somebody named
     themselves -- interview.mp3, song.m4a -- keeps its name: that name is
-    information, and replacing it with "Audio Recording" would throw away
+    information, and replacing it with "Audio recording" would throw away
     the only thing distinguishing one from another.
     """
     name = str(filename or '')
@@ -241,7 +241,7 @@ def file_transfer_summary(body, duration=None):
 
     details = []
     # A recording says what it is on the first line, so repeating the
-    # format there ("Audio Recording / OGG") adds nothing; its length is
+    # format there ("Audio recording / OGG") adds nothing; its length is
     # what the reader actually wants next.
     label = None if title else _media_label(name, meta.get('filetype'))
     if label:

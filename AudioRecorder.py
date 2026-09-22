@@ -81,7 +81,7 @@ PEAK_INTERVAL = 1.0 / PEAK_RATE_HZ
 # -- stops by itself instead of filling a disc.
 MAX_RECORDING_SECONDS = 600.0
 
-# The prefix recording_title() reads to show "Audio Recording" instead of
+# The prefix recording_title() reads to show "Audio recording" instead of
 # the name a machine generated. Mobile writes a fixed
 # sylk-audio-recording.m4a into its cache directory and overwrites it each
 # time; the epoch is added here because these files sit beside each other
