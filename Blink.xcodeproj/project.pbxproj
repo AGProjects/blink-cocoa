@@ -665,6 +665,8 @@
 		5A1E00010000000000000013 /* ShareController.py in Resources */ = {isa = PBXBuildFile; fileRef = 5A1E00010000000000000012 /* ShareController.py */; };
 		5A1E000200000000000000F2 /* VideoFrameSource.py in Resources */ = {isa = PBXBuildFile; fileRef = 5A1E000200000000000000F1 /* VideoFrameSource.py */; };
 		5A1E000200000000000000F4 /* VideoCallRecorder.py in Resources */ = {isa = PBXBuildFile; fileRef = 5A1E000200000000000000F3 /* VideoCallRecorder.py */; };
+		DD1A00000000000000000002 /* DataImport.py in Resources */ = {isa = PBXBuildFile; fileRef = DD1A00000000000000000001 /* DataImport.py */; };
+		DD1A00000000000000000004 /* DataImportPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = DD1A00000000000000000003 /* DataImportPanel.py */; };
 		8547A6C8114EB6E200AD84BF /* __init__.py in Copy Interfaces Package */ = {isa = PBXBuildFile; fileRef = 8547A6C6114EB6E200AD84BF /* __init__.py */; };
 		8547A6C9114EB6E200AD84BF /* itunes.py in Copy Interfaces Package */ = {isa = PBXBuildFile; fileRef = 8547A6C7114EB6E200AD84BF /* itunes.py */; };
 		85E8550710F643350083D346 /* __init__.py in Copy Configuration Package */ = {isa = PBXBuildFile; fileRef = 85E8550310F643350083D346 /* __init__.py */; };
@@ -1522,6 +1524,8 @@
 		5A1E00010000000000000012 /* ShareController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ShareController.py; sourceTree = "<group>"; };
 		5A1E000200000000000000F1 /* VideoFrameSource.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoFrameSource.py; sourceTree = "<group>"; };
 		5A1E000200000000000000F3 /* VideoCallRecorder.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoCallRecorder.py; sourceTree = "<group>"; };
+		DD1A00000000000000000001 /* DataImport.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = DataImport.py; sourceTree = "<group>"; };
+		DD1A00000000000000000003 /* DataImportPanel.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = DataImportPanel.py; sourceTree = "<group>"; };
 		8547A6C6114EB6E200AD84BF /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
 		8547A6C7114EB6E200AD84BF /* itunes.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = itunes.py; sourceTree = "<group>"; };
 		85E8550310F643350083D346 /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
@@ -1772,6 +1776,8 @@
 				1F0D4A3619BF351D002AB989 /* VideoRecorder.py */,
 				5A1E000200000000000000F1 /* VideoFrameSource.py */,
 				5A1E000200000000000000F3 /* VideoCallRecorder.py */,
+				DD1A00000000000000000001 /* DataImport.py */,
+				DD1A00000000000000000003 /* DataImportPanel.py */,
 				1FAF8C5C12DA18960029857C /* VideoController.py */,
 				1F447E7D18DF3522001EF4C9 /* VideoWindowController.py */,
 				1F4B789819AEAEC200F854CB /* VideoWindow.xib */,
@@ -2810,6 +2816,8 @@
 			files = (
 				5A1E000200000000000000F2 /* VideoFrameSource.py in Resources */,
 				5A1E000200000000000000F4 /* VideoCallRecorder.py in Resources */,
+				DD1A00000000000000000002 /* DataImport.py in Resources */,
+				DD1A00000000000000000004 /* DataImportPanel.py in Resources */,
 				5A1E00010000000000000013 /* ShareController.py in Resources */,
 				2B6596C10FCCB75500FC8CF2 /* ContactWindowController.py in Resources */,
 				2BC594750FCCDA910017CB1B /* ContactCell.py in Resources */,

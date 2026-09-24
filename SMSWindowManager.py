@@ -67,6 +67,14 @@ from ChatViewController import MSG_STATE_SENT, MSG_STATE_DELIVERED, MSG_STATE_DI
 
 import AddressbookNotify
 import AddressbookOrigin
+# Data import ships in the Blink target only. Without it an announcement is
+# still recognised and swallowed; it just opens nothing.
+DATA_EXPORT_CONTENT_TYPE = 'application/sylk-data-export'
+try:
+    import DataImport
+    from DataImportPanel import DataImportController
+except ImportError:
+    DataImport = DataImportController = None
 from BlinkLogger import BlinkLogger
 from KeyEscrow import (escrow_is_missing, install_keypair, log_self_contact,
                        restore_from_own_contact, write_self_keys)
@@ -1353,6 +1361,103 @@ class SMSWindowManagerClass(NSObject):
         if chat is not None and chat.hasRenderedMessage(msgid):
             chat.updateCallMessage(msgid, record)
 
+    # ===== application/sylk-data-export ======================================
+    #
+    # A Sylk Mobile device of this account started its data export and told
+    # its siblings where to find it. We take the history it offers, add-only,
+    # through the Data import panel. Spec: sylk-mobile docs/export/Readme.md.
+
+    _dataImport = None
+
+    @objc.python_method
+    def handleDataExportAnnouncement(self, account, content, sender_uri=None):
+        if DataImport is None or account is None or account is BonjourAccount():
+            return
+        if sender_uri is not None:
+            sender = str(sender_uri).split(':', 1)[-1].split(';', 1)[0]
+            if sender != str(account.id):
+                BlinkLogger().log_warning('[import] Ignoring a data export announcement for %s sent by %s'
+                                          % (account.id, sender))
+                return
+        if isinstance(content, bytes):
+            content = content.decode('utf-8', 'replace')
+        content = content or ''
+        if '-----BEGIN PGP MESSAGE-----' in content:
+            content = self._decrypt_pgp_for_account(str(account.id), content)
+            if content is None:
+                BlinkLogger().log_info('[import] Cannot decrypt the data export announcement for %s'
+                                       % account.id)
+                return
+            if isinstance(content, bytes):
+                content = content.decode('utf-8', 'replace')
+        announcement = DataImport.parse_announcement(content)
+        if announcement is None:
+            BlinkLogger().log_info('[import] Unreadable data export announcement for %s' % account.id)
+            return
+        if not DataImport.is_fresh(announcement['timestamp']):
+            BlinkLogger().log_info('[import] Ignoring a stale data export announcement from %s'
+                                   % announcement['server'])
+            return
+        BlinkLogger().log_info('[import] %s is exporting its data at %s (%s)'
+                               % (account.id, announcement['server'],
+                                  'encrypted' if announcement['enc'] else 'not encrypted'))
+        self._openDataImport(account, announcement)
+
+    @objc.python_method
+    @run_in_gui_thread
+    def _openDataImport(self, account, announcement):
+        if DataImportController is None:
+            BlinkLogger().log_info('[import] This build has no Data import panel')
+            return
+        current = self._dataImport
+        if current is not None:
+            if current.matches(account, announcement):
+                current.window.makeKeyAndOrderFront_(None)
+                return
+            if current.isBusy():
+                BlinkLogger().log_info('[import] An import is running; not switching to %s'
+                                       % announcement['server'])
+                return
+            current.close()
+        self._dataImport = DataImportController.alloc().init().setup(account, announcement, self)
+        self._dataImport.show()
+
+    @objc.python_method
+    def dataImportClosed(self, controller):
+        if self._dataImport is controller:
+            self._dataImport = None
+
+    @objc.python_method
+    @run_in_thread('sms_sync')
+    def applyImportedEntries(self, account, entries, finished=None):
+        """Write rows imported from another device, as a journal page is.
+
+        On the sms_sync thread, so an import never interleaves with a sync,
+        and in bulk, so a thousand rows are one preview refresh and not a
+        thousand. Each entry is (msg, direction, status, encryption,
+        cpim_from, cpim_to), msg shaped like a journal entry.
+        """
+        contacts = set()
+        self._journal_bulk = True
+        try:
+            for msg, direction, status, encryption, cpim_from, cpim_to in entries:
+                try:
+                    self._persist_journal_message(account, msg, direction, status, encryption,
+                                                  cpim_from=cpim_from, cpim_to=cpim_to, unread=False)
+                    if msg.get('contact'):
+                        contacts.add(msg['contact'])
+                except Exception as e:
+                    BlinkLogger().log_error('[import] Cannot store message %s: %s'
+                                            % (msg.get('message_id'), e))
+        finally:
+            self._journal_bulk = False
+        try:
+            self._finishJournalApply(account, contacts, {})
+        except Exception as e:
+            BlinkLogger().log_error('[import] Cannot refresh after the import: %s' % e)
+        if finished is not None:
+            finished()
+
     @objc.python_method
     def handleAddressbookNotify(self, account, content, sender_uri=None):
         """A tick from one of our own devices: arm a jittered refetch."""
@@ -2367,6 +2472,11 @@ class SMSWindowManagerClass(NSObject):
                     # Sent with X-Sylk-Skip-Journal, so this should not exist at
                     # all; a replayed one is a stale "refetch now" that would
                     # fire a pointless fetch on every launch.
+                    pass
+                elif content_type == DATA_EXPORT_CONTENT_TYPE:
+                    # The phone does journal its export announcements. A
+                    # replayed one points at a server that stopped long ago,
+                    # and stored it would be a bubble of PGP armour.
                     pass
                 elif content_type == 'application/sylk-conversation-read':
                     # Replayed in order with the messages themselves, so a
@@ -6806,6 +6916,11 @@ class SMSWindowManagerClass(NSObject):
             return
         elif content_type == AddressbookNotify.CONTENT_TYPE:
             self.handleAddressbookNotify(account, content, data.from_header.uri)
+            return
+        elif content_type == DATA_EXPORT_CONTENT_TYPE:
+            # Another device of ours is exporting its history. Memory only:
+            # never stored, never rendered.
+            self.handleDataExportAnnouncement(account, content, data.from_header.uri)
             return
         elif content_type == 'text/pgp-private-key':
             BlinkLogger().log_info('PGP private key from %s to %s received' % (data.from_header.uri, account.id))

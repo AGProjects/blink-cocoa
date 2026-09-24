@@ -125,6 +125,9 @@ CONTROL_CONTENT_TYPES = frozenset((
     # viewer at all -- it is listed here so that if it ever does, nothing
     # renders it, stores it, or acknowledges it.
     'application/sylk-addressbook-update',
+    # "My other device is exporting its data". Answered by the window
+    # manager with the Data import panel; never a message.
+    'application/sylk-data-export',
     'text/pgp-public-key',
     'text/pgp-private-key',
 ))
@@ -4066,7 +4069,7 @@ class SMSViewController(NSObject):
         if isinstance(message, OTRInternalMessage):
             return False
             
-        if message.content_type in (IsComposingDocument.content_type, IMDNDocument.content_type, 'text/pgp-public-key', 'text/pgp-private-key', 'application/sylk-api-pgp-key-lookup', 'application/sylk-api-message-remove', 'application/sylk-api-conversation-read', 'application/sylk-api-conversation-remove', 'application/sylk-conversation-read', 'application/sylk-conversation-remove', 'application/sylk-message-remove', 'application/sylk-addressbook-update'):
+        if message.content_type in (IsComposingDocument.content_type, IMDNDocument.content_type, 'text/pgp-public-key', 'text/pgp-private-key', 'application/sylk-api-pgp-key-lookup', 'application/sylk-api-message-remove', 'application/sylk-api-conversation-read', 'application/sylk-api-conversation-remove', 'application/sylk-conversation-read', 'application/sylk-conversation-remove', 'application/sylk-message-remove', 'application/sylk-addressbook-update', 'application/sylk-data-export'):
             return False
 
         if message.content_type == LEGACY_LOCATION_CONTENT_TYPE:

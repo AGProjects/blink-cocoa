@@ -1222,6 +1222,34 @@ class ChatHistory(object, metaclass=Singleton):
         return self._mark_conversation_read(local_uri, remote_uri)
 
     @run_in_db_thread
+    def get_import_inventory(self, local_uri):
+        """What one account already holds, for an add-only data import.
+
+        Returns (msgids, transfers). msgids is every message id on the
+        account, tombstoned ones included: a message the user removed here
+        is not new just because a phone still has it. transfers is
+        (msgid, remote_uri, body) for the live file-transfer rows, so the
+        caller can tell which of them are still missing their file.
+        """
+        table = ChatMessage.sqlmeta.table
+        account = ChatMessage.sqlrepr(str(local_uri))
+        msgids = set()
+        transfers = []
+        try:
+            for row in self.db.queryAll("select msgid from %s where local_uri = %s" % (table, account)):
+                if row[0]:
+                    msgids.add(row[0])
+            types = ', '.join(ChatMessage.sqlrepr(t) for t in FILE_TRANSFER_CONTENT_TYPES)
+            query = ("select msgid, remote_uri, body from %s where local_uri = %s "
+                     "and content_type in (%s) and %s" % (table, account, types, NOT_DELETED_SQL))
+            for msgid, remote_uri, body in self.db.queryAll(query):
+                if msgid:
+                    transfers.append((msgid, remote_uri, body))
+        except Exception as e:
+            BlinkLogger().log_error('Cannot read the import inventory of %s: %s' % (local_uri, e))
+        return msgids, transfers
+
+    @run_in_db_thread
     def _unread_counts(self, local_uri):
         """{remote uri: how many messages are waiting}, for every address."""
         query = ("select remote_uri, count(*) from chat_messages "
