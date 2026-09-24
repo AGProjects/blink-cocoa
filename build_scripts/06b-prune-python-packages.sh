@@ -167,17 +167,19 @@ prune "Crypto/Protocol/SecretSharing.py" "Shamir, not imported"
 # files are only loaded when their .py wrapper is imported, so removing the
 # .py is enough — we delete the .so anyway to shave the bundle further.
 #
-# IMPORTANT: do NOT remove _Salsa20.abi3.so. Although nothing imports the
-# Salsa20.py wrapper, Crypto/Protocol/KDF.py (scrypt) calls
+# IMPORTANT: do NOT remove _Salsa20.abi3.so. Crypto/Protocol/KDF.py (scrypt)
+# calls
 #   load_pycryptodome_raw_lib("Crypto.Cipher._Salsa20", ...)
 # at module load time, so PBKDF2's containing module imports break the
-# moment SMSWindowManager.py runs. Keep _Salsa20.abi3.so; Salsa20.py itself
-# is still safe to drop because load_pycryptodome_raw_lib only stat()s the
-# .so file, not the Python wrapper. Likewise keep _pkcs1_decode.abi3.so
+# moment SMSWindowManager.py runs. Likewise keep _pkcs1_decode.abi3.so
 # only if its sole caller _pkcs1_oaep_decode.py is still present — we drop
 # both together below.
+#
+# Salsa20.py is KEPT as well: DataImport.py opens the NaCl secretbox a Sylk
+# Mobile export is sealed with (XSalsa20-Poly1305) using Crypto.Cipher.Salsa20
+# for the stream and cryptography's Poly1305 for the tag.
 for cipher in ARC2 ARC4 Blowfish CAST ChaCha20 ChaCha20_Poly1305 \
-              DES DES3 Salsa20 _EKSBlowfish PKCS1_OAEP PKCS1_v1_5; do
+              DES DES3 _EKSBlowfish PKCS1_OAEP PKCS1_v1_5; do
     prune "Crypto/Cipher/${cipher}.py"  "Crypto.Cipher.${cipher} not imported"
     prune "Crypto/Cipher/${cipher}.pyi" "Crypto.Cipher.${cipher} stubs"
 done
