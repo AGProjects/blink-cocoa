@@ -458,6 +458,14 @@ class ContactCell(NSTextFieldCell):
             left = left - padding - 2
             self.drawIcon(self.screenIcon, left, self.frame.origin.y +14, 16, 16)
 
+        # The name and the URI are drawn after this and stop at
+        # contentRightEdge: publish the leftmost icon's edge so they
+        # truncate before the icons instead of running underneath them.
+        if left < self.frame.size.width - 8:
+            edge = left - 4.0
+            if self.contentRightEdge is None or edge < self.contentRightEdge:
+                self.contentRightEdge = edge
+
     @objc.python_method
     def drawPresenceIcon(self):
         status = 'offline'
