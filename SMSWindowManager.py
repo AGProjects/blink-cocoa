@@ -260,6 +260,14 @@ class SMSWindowController(NSWindowController):
     def _NH_BlinkShouldTerminate(self, sender, data):
         if self.window():
             self.window().orderOut_(self)
+        # An import holds the data_import thread in network calls; closing
+        # the panel cancels it between items and stops its retries, so the
+        # thread is free by the time the shutdown joins it.
+        if self._dataImport is not None:
+            try:
+                self._dataImport.close()
+            except Exception as e:
+                BlinkLogger().log_error('Cannot close the data import: %s' % e)
 
     @objc.python_method
     def _NH_ChatStreamOTREncryptionStateChanged(self, sender, data):
