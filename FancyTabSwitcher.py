@@ -54,6 +54,8 @@ from BlinkLogger import BlinkLogger
 MIN_TAB_WIDTH = 100
 TAB_WIDTH = 220
 
+from util import window_corner_inset
+
 class FancyTabItem(NSView):
     switcher = None
     label = None
@@ -290,6 +292,8 @@ class FancyTabSwitcher(NSView):
         self = NSView.initWithFrame_(self, frame)
         if self:
             self.items = []
+            if self.respondsToSelector_("setClipsToBounds:"):
+                self.setClipsToBounds_(True)
 
             self.leftButton = NSButton.alloc().initWithFrame_(NSMakeRect(0, 0, 20, 20))
             self.leftButton.setTarget_(self)
@@ -385,7 +389,7 @@ class FancyTabSwitcher(NSView):
         self.items.sort(key=lambda item: int(centerx(item.frame()) - centerx(item.frame())))
 
         frame = self.frame()
-        x = 5
+        x = 5 + window_corner_inset()
         h = NSHeight(frame)
         for item in self.items:
             w = item.idealWidth()
@@ -460,16 +464,19 @@ class FancyTabSwitcher(NSView):
             return
 
         frame = self.frame()
-        x = 5
+        # Clear of Tahoe's rounded bottom corners, which otherwise cut
+        # into the first tab and its spinning indicator.
+        inset = window_corner_inset()
+        x = 5 + inset
         h = NSHeight(frame)
 
-        if len(self.items) * MIN_TAB_WIDTH > NSWidth(frame) - 15 - 20:
+        if len(self.items) * MIN_TAB_WIDTH > NSWidth(frame) - 15 - 20 - 2 * inset:
             # some tabs don't fit, show what we can
-            self.fitTabCount = max(int(NSWidth(frame)-15-40) / MIN_TAB_WIDTH, 1)
-            tab_width = int(NSWidth(frame)-15-40) / self.fitTabCount
+            self.fitTabCount = max(int(NSWidth(frame)-15-40-2*inset) // MIN_TAB_WIDTH, 1)
+            tab_width = int(NSWidth(frame)-15-40-2*inset) / self.fitTabCount
 
-            self.leftButton.setFrame_(NSMakeRect(0, 3, 24, 20))
-            self.rightButton.setFrame_(NSMakeRect(NSWidth(frame)-31, 3, 24, 20))
+            self.leftButton.setFrame_(NSMakeRect(inset, 3, 24, 20))
+            self.rightButton.setFrame_(NSMakeRect(NSWidth(frame)-31-inset, 3, 24, 20))
             self.leftButton.setHidden_(False)
             self.rightButton.setHidden_(False)
 
@@ -492,7 +499,7 @@ class FancyTabSwitcher(NSView):
             self.leftButton.setHidden_(True)
             self.rightButton.setHidden_(True)
 
-            tab_width = min(TAB_WIDTH, (NSWidth(frame) - 15) / len(self.items))
+            tab_width = min(TAB_WIDTH, (NSWidth(frame) - 15 - 2 * inset) / len(self.items))
             for item in self.items:
                 w = tab_width
                 item.setFrame_(NSMakeRect(x, 2, w, h))
@@ -508,7 +515,11 @@ class FancyTabSwitcher(NSView):
         gradient = NSGradient.alloc().initWithColors_(
                     [NSColor.colorWithDeviceRed_green_blue_alpha_(121/256.0, 121/256.0, 121/256.0, 1),
                      NSColor.colorWithDeviceRed_green_blue_alpha_(111/256.0, 111/256.0, 111/256.0, 1)])
-        gradient.drawInRect_angle_(rect, 90.0)
+        # The bounds, not the dirty rect: since macOS 14 views no longer
+        # clip to their bounds by default and the dirty rect can reach far
+        # outside this 22pt strip -- filling it painted the tab bar's grey
+        # behind the whole chat pane (the history strip, the composer row).
+        gradient.drawInRect_angle_(self.bounds(), 90.0)
         NSView.drawRect_(self, rect)
 
 

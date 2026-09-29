@@ -156,6 +156,11 @@ ATTACH_BUTTON_GAP = 4.0
 # How far below the composer's top edge the paperclip sits, so its glyph is
 # optically level with the first line of text rather than with the frame.
 ATTACH_BUTTON_TOP_INSET = 1.0
+# The clip lives on the right, under the smiley, when the composer is tall
+# enough to stack the two; in a one-line composer it sits beside it.
+ATTACH_UNDER_SMILEY_GAP = 2.0
+# What the composer leaves at its left now that nothing sits there.
+COMPOSER_LEFT_INSET = 4.0
 # The microphone at the right of the composer, opposite the paperclip --
 # where Telegram, WhatsApp and Sylk Mobile all put it. Right rather than
 # left because it is the one control that ACTS on press: send lives on
@@ -262,7 +267,7 @@ from FileTransferCache import (FileTransferCache, display_name, tile_pixels,
                                is_encrypted, AUTO_VIDEO_MAX_AGE_DAYS,
                                MAX_AUTO_IMAGE_BYTES, MAX_AUTO_VIDEO_BYTES)
 from sipsimple.threading.green import run_in_green_thread
-from util import run_in_gui_thread
+from util import run_in_gui_thread, window_corner_inset
 
 
 class NativeChatViewController(ChatViewController):
@@ -460,7 +465,7 @@ class NativeChatViewController(ChatViewController):
 
     @objc.python_method
     def _installAttachButton(self):
-        """A paperclip at the left of the composer, the way Telegram has it.
+        """A paperclip at the right of the composer, under the smiley.
 
         Built here rather than in the nib because it has to take its place
         from the field it sits beside: the composer is laid out with a fixed
@@ -506,9 +511,9 @@ class NativeChatViewController(ChatViewController):
             # the first line of text and ended up sitting at the foot of a
             # tall composer.
             if row.isFlipped():
-                button.setAutoresizingMask_(NSViewMaxYMargin | NSViewMaxXMargin)
+                button.setAutoresizingMask_(NSViewMaxYMargin | NSViewMinXMargin)
             else:
-                button.setAutoresizingMask_(NSViewMinYMargin | NSViewMaxXMargin)
+                button.setAutoresizingMask_(NSViewMinYMargin | NSViewMinXMargin)
             row.addSubview_(button)
             self._attach_button = button
             self._layoutComposerRow()
@@ -750,8 +755,9 @@ class NativeChatViewController(ChatViewController):
 
     @objc.python_method
     def _layoutComposerRow(self):
-        """Keep the paperclip at the top left of the composer and the
-        microphone at its top right, with the composer clear of both.
+        """Keep the microphone, smiley and paperclip at the right of the
+        composer -- the clip under the smiley when there is height for it --
+        with the composer clear of all of them.
 
         All of it re-applied together rather than once at install: the row
         is re-framed by the pane, by the split view when the editing
@@ -833,12 +839,6 @@ class NativeChatViewController(ChatViewController):
                           - self._composer_right_inset)
             recording = self._recorder_bar is not None
 
-            if self._attach_button is not None:
-                settle(self._attach_button,
-                       NSMakeRect(left, top_for(ATTACH_BUTTON_SIZE, ATTACH_BUTTON_TOP_INSET),
-                                  ATTACH_BUTTON_SIZE, ATTACH_BUTTON_SIZE))
-                self._attach_button.setHidden_(recording)
-
             # The right-hand keys, laid out from the edge inwards so
             # each one only has to know how much the ones outside it took.
             edge = right_edge
@@ -868,12 +868,37 @@ class NativeChatViewController(ChatViewController):
                 if not recording:
                     smiley_room = SMILEY_BUTTON_SIZE + SMILEY_BUTTON_GAP
 
-            # And the composer starts after the clip and stops before the
-            # smiley. Re-applied because a re-frame from outside
-            # restores the nib's full width, which slides the field back
-            # over both.
-            wanted_x = left + reserved
-            wanted_w = (right_edge - record_room - smiley_room) - wanted_x
+            # The clip: under the smiley when the composer has the height
+            # for two keys, otherwise beside it (or where the smiley would
+            # be, for a viewer without the picker). Same column as the
+            # smiley, so stacking costs the text no extra width.
+            attach_room = 0.0
+            if self._attach_button is not None:
+                self._attach_button.setHidden_(recording)
+                stack_inset = (SMILEY_BUTTON_TOP_INSET + SMILEY_BUTTON_SIZE
+                               + ATTACH_UNDER_SMILEY_GAP)
+                can_stack = (self._smiley_button is not None
+                             and field.size.height >= stack_inset + ATTACH_BUTTON_SIZE)
+                if can_stack:
+                    x = edge - SMILEY_BUTTON_SIZE
+                    y = top_for(ATTACH_BUTTON_SIZE, stack_inset)
+                else:
+                    x = edge - smiley_room - ATTACH_BUTTON_SIZE
+                    y = top_for(ATTACH_BUTTON_SIZE, ATTACH_BUTTON_TOP_INSET)
+                    if not recording:
+                        attach_room = ATTACH_BUTTON_SIZE + ATTACH_BUTTON_GAP
+                settle(self._attach_button,
+                       NSMakeRect(x, y, ATTACH_BUTTON_SIZE, ATTACH_BUTTON_SIZE))
+
+            # And the composer starts at the left margin and stops before
+            # the right-hand keys. Re-applied because a re-frame from
+            # outside restores the nib's full width, which slides the
+            # field back over them.
+            # Plus Tahoe's corner: the composer is the lowest thing in the
+            # window above the tab bar.
+            wanted_x = (row_frame.origin.x + COMPOSER_LEFT_INSET
+                        + window_corner_inset())
+            wanted_w = (right_edge - record_room - smiley_room - attach_room) - wanted_x
             if wanted_w > reserved and (abs(field.origin.x - wanted_x) > 0.5
                                         or abs(field.size.width - wanted_w) > 0.5):
                 scrollview.setFrame_(NSMakeRect(wanted_x, field.origin.y,
@@ -2178,10 +2203,12 @@ class NativeChatViewController(ChatViewController):
             return
         # Set here as well as in the nib: this label sits over the linen, and
         # a fixed grey that reads on one appearance disappears on the other.
-        # secondaryLabelColor resolves at draw time, so it follows a theme
-        # switch with the transcript open.
+        # labelColor, not secondaryLabelColor: the latter is a half-alpha
+        # grey that, at the small size this is drawn at, all but vanishes
+        # over the grey window background. Both resolve at draw time, so a
+        # theme switch is still followed with the transcript open.
         try:
-            self.lastMessagesLabel.setTextColor_(NSColor.secondaryLabelColor())
+            self.lastMessagesLabel.setTextColor_(NSColor.labelColor())
         except Exception as e:
             BlinkLogger().log_debug('Cannot set the history label colour: %s' % e)
         range_text = self.loadedRangeLabel()

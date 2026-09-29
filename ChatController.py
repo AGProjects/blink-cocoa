@@ -434,6 +434,40 @@ class ChatController(MediaStream):
         smiley = sender.representedObject()
         self.chatViewController.appendAttributedString_(smiley)
 
+    # The same smiley grid as the Messages window. Having showSmileyPicker
+    # is what makes the renderer hide the nib's popup and put a smiley key
+    # in the composer; the popup and its menu above stay only as the
+    # fallback for a renderer that does not do that.
+    smiley_picker = None
+
+    @objc.python_method
+    def showSmileyPicker(self, button):
+        """Open the grid above the composer's smiley key."""
+        if self.smiley_picker is None:
+            from SmileyPicker import SmileyPicker
+            self.smiley_picker = SmileyPicker(self)
+        self.smiley_picker.showFromButton(button)
+
+    @objc.python_method
+    def insertSmileyText(self, text):
+        """Type a picked smiley into the composer, at the caret.
+
+        insertText_ rather than appending to the text storage, as in the
+        Messages window: it takes the composer's font, joins the undo
+        stack and fires the change notifications (is-composing included).
+        """
+        input_text = getattr(self.chatViewController, 'inputText', None) if self.chatViewController else None
+        if input_text is None:
+            BlinkLogger().log_error('Cannot insert %s: there is no composer' % text)
+            return
+        window = input_text.window()
+        if window is not None:
+            window.makeFirstResponder_(input_text)
+        try:
+            input_text.insertText_(text)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot insert %s: %s' % (text, e))
+
     @objc.python_method
     @run_in_gui_thread
     def changeStatus(self, newstate, fail_reason=None):
@@ -1914,6 +1948,10 @@ class ChatController(MediaStream):
         self.chatViewController.close()
 
         # release smileys
+        if self.smiley_picker is not None:
+            # a popover left open would be anchored to a view that is gone
+            self.smiley_picker.dispose()
+            self.smiley_picker = None
         self.smileyButton.removeFromSuperview()
 
         # remove held chat view reference needed for printing
