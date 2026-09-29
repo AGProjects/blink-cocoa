@@ -106,10 +106,10 @@
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="A8B34588-AC14-4529-AC47-CEE1FC2F8538" explicitItemIdentifier="screenshot" label="Grab" paletteLabel="Grab" toolTip="Send screenshot" image="screenshot" id="573">
-                        <size key="minSize" width="152" height="128"/>
-                        <size key="maxSize" width="152" height="128"/>
+                        <size key="minSize" width="40" height="24"/>
+                        <size key="maxSize" width="40" height="24"/>
                         <popUpButton key="view" id="567">
-                            <rect key="frame" x="0.0" y="14" width="152" height="128"/>
+                            <rect key="frame" x="0.0" y="14" width="40" height="24"/>
                             <autoresizingMask key="autoresizingMask"/>
                             <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" autoenablesItems="NO" id="568">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -142,10 +142,10 @@
                         </popUpButton>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="31DAD979-72E0-4CE9-8AC5-7F153ECEAEDF" explicitItemIdentifier="encryption" label="Encryption" paletteLabel="Encryption" toolTip="Encryption options" image="unlocked-darkgray" autovalidates="NO" id="666">
-                        <size key="minSize" width="195" height="170"/>
-                        <size key="maxSize" width="195" height="170"/>
+                        <size key="minSize" width="40" height="24"/>
+                        <size key="maxSize" width="40" height="24"/>
                         <popUpButton key="view" id="660">
-                            <rect key="frame" x="0.0" y="14" width="195" height="170"/>
+                            <rect key="frame" x="0.0" y="14" width="40" height="24"/>
                             <autoresizingMask key="autoresizingMask"/>
                             <popUpButtonCell key="cell" type="squareTextured" bezelStyle="texturedSquare" alignment="left" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyUpOrDown" inset="2" pullsDown="YES" autoenablesItems="NO" selectedItem="647" id="661">
                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
