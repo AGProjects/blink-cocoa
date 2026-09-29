@@ -609,6 +609,8 @@ class DataImportController(NSObject):
     @objc.python_method
     @run_in_thread('data_import')
     def _connect(self):
+        if self.closed:
+            return
         try:
             summary = self.client.summary()
             index = self.client.calendar()
@@ -696,6 +698,8 @@ class DataImportController(NSObject):
     @objc.python_method
     @run_in_thread('data_import')
     def _loadCalendar(self, contact):
+        if self.closed:
+            return
         try:
             index = self.client.calendar(contact)
         except DataImport.ExportServerError as e:
