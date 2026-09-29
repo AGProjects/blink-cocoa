@@ -17,6 +17,7 @@ from AppKit import (NSAlertDefaultReturn,
                     NSRunAlertPanel,
                     NSTableViewDropAbove,
                     NSTableViewSelectionDidChangeNotification,
+                    NSTableViewStylePlain,
                     NSSplitViewDidResizeSubviewsNotification,
                     NSStringPboardType,
                     NSWindowDocumentIconButton)
@@ -262,6 +263,15 @@ class ChatWindowController(NSWindowController):
         self.participantsTableView.setDoubleAction_("doubleClickReceived:")
         self.conferenceFilesTableView.setTarget_(self)
         self.conferenceFilesTableView.setDoubleAction_("doubleClickReceived:")
+
+        # The participants are drawn by ContactCell, the same cell as the
+        # contact list, which lays out a 28pt avatar 7pt from the top and a
+        # second line 22pt down: it needs the list's 40pt row, not the 34pt
+        # the nib carries. And the plain style, or the macOS 11+ automatic
+        # style insets the rows and clips them at the sides as well.
+        self.participantsTableView.setRowHeight_(40)
+        if self.participantsTableView.respondsToSelector_("setStyle:"):
+            self.participantsTableView.setStyle_(NSTableViewStylePlain)
 
     def splitView_shouldHideDividerAtIndex_(self, view, index):
         if self.conference_shared_files:
