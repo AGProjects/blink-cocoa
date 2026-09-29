@@ -31,6 +31,7 @@ from AppKit import (NSAttributedString,
                     NSCursor,
                     NSCursorAttributeName,
                     NSMenu,
+                    NSMenuItem,
                     NSBezierPath,
                     NSButton,
                     NSMomentaryChangeButton,
@@ -4490,6 +4491,8 @@ class MessageBubbleView(NSView):
             # nothing the message says is painted on top of it.
             if self.grid_mode and self._isSelectable():
                 self._drawSelection()
+            if self._showsTileInfo():
+                self._drawTileInfo()
 
     @objc.python_method
     def _ensureTileImage(self, width=0.0, height=0.0):
@@ -4861,6 +4864,64 @@ class MessageBubbleView(NSView):
                           box.origin.y - SELECT_HIT_SLOP,
                           box.size.width + SELECT_HIT_SLOP * 2,
                           box.size.height + SELECT_HIT_SLOP * 2)
+
+    @objc.python_method
+    def _showsTileInfo(self):
+        """A tile's own (i). The header that carries it in the transcript is
+        not drawn on a tile, and a tile is exactly where it is missed most:
+        a white cell -- no file here, no poster, a transfer that never
+        arrived -- says nothing about itself, and the info panel is the
+        only way to find out what it is."""
+        return (self._tileMode() and bool(self.msgid)
+                and self.kind not in (self.KIND_DATE, self.KIND_SYSTEM, self.KIND_CALL))
+
+    @objc.python_method
+    def _tileInfoRect(self):
+        """Top left, the mirror of the checkbox: bottom left is the size
+        pill, the middle is the play badge, top right is the tick."""
+        if not self._showsTileInfo():
+            return NSZeroRect
+        rect = NSIntersectionRect(self._bubble_rect, self.bounds())
+        if rect.size.width <= 0 or rect.size.height <= 0:
+            return NSZeroRect
+        size = min(SELECT_BADGE_SIZE,
+                   max(min(rect.size.width, rect.size.height) * 0.16,
+                       SELECT_BADGE_MIN))
+        # Two badges and their insets across the top of the cell.
+        if size * 2 + SELECT_BADGE_INSET * 4 > rect.size.width \
+                or size + SELECT_BADGE_INSET * 2 > rect.size.height:
+            return NSZeroRect
+        return NSMakeRect(rect.origin.x + SELECT_BADGE_INSET,
+                          rect.origin.y + SELECT_BADGE_INSET, size, size)
+
+    @objc.python_method
+    def _tileInfoHitRect(self):
+        box = self._tileInfoRect()
+        if box.size.width <= 0:
+            return NSZeroRect
+        return NSMakeRect(box.origin.x - SELECT_HIT_SLOP,
+                          box.origin.y - SELECT_HIT_SLOP,
+                          box.size.width + SELECT_HIT_SLOP * 2,
+                          box.size.height + SELECT_HIT_SLOP * 2)
+
+    @objc.python_method
+    def _drawTileInfo(self):
+        """The (i), drawn like the checkbox so the two read as a pair."""
+        box = self._tileInfoRect()
+        if box.size.width <= 0:
+            return
+        disc = NSBezierPath.bezierPathWithOvalInRect_(box)
+        COLOR_SELECT_WELL.set()
+        disc.fill()
+        COLOR_SELECT_RIM.set()
+        disc.setLineWidth_(1.0)
+        disc.stroke()
+        attrs = {NSFontAttributeName: NSFont.boldSystemFontOfSize_(box.size.height * 0.68),
+                 NSForegroundColorAttributeName: COLOR_SELECT_TICK}
+        glyph = NSAttributedString.alloc().initWithString_attributes_('i', attrs)
+        size = glyph.size()
+        glyph.drawAtPoint_((box.origin.x + (box.size.width - size.width) / 2.0,
+                            box.origin.y + (box.size.height - size.height) / 2.0))
 
     @objc.python_method
     def _drawSelection(self):
@@ -6077,11 +6138,21 @@ class MessageBubbleView(NSView):
             return None
         category = self.transferCategory()
         picture = self.media_image is not None or bool(self.media_path)
-        if category is None and not picture:
+        info_only = category is None and not picture
+        # A tile that is neither a file we can place nor a picture is the
+        # one that most needs explaining: it gets Info and nothing else.
+        if info_only and not self._showsTileInfo():
             return None
         try:
             menu = NSMenu.alloc().init()
             menu.setAutoenablesItems_(False)
+            if self._showsTileInfo():
+                item = menu.addItemWithTitle_action_keyEquivalent_(
+                    NSLocalizedString("Info", "Menu item"), "showMessageInfo:", "")
+                item.setTarget_(self)
+                if info_only:
+                    return menu
+                menu.addItem_(NSMenuItem.separatorItem())
             # Copy puts a PICTURE on the pasteboard. For a movie that would
             # be its poster -- a still of something the user asked to copy
             # as a film -- so it is not offered; the same is true of a file
@@ -6191,6 +6262,12 @@ class MessageBubbleView(NSView):
                                         % (self.msgid,
                                            'extend the ticks' if extend else 'ticked'))
                 renderer.bubbleDidToggleSelection(self.msgid, extend)
+            return
+        # A tile's (i), for the same reason and in the same place in the
+        # order: before the drag, and before the press that opens the file.
+        if NSPointInRect(point, self._tileInfoHitRect()):
+            BlinkLogger().log_debug('Bubble %s: tile info' % self.msgid)
+            self.performSelector_withObject_afterDelay_('showMessageInfo:', None, 0.0)
             return
         renderer = self.renderer
         header = self.kind not in (self.KIND_SYSTEM, self.KIND_DATE) and not self._tileMode()
