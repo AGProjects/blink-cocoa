@@ -982,9 +982,44 @@ class BlinkAppDelegate(NSObject):
         # BlinkLogger().log_info('startup: applicationDidFinishLaunching exit')
 
     def killSelfAfterTimeout_(self, arg):
-        time.sleep(15)
+        time.sleep(8)
+        # Still here: something is holding the shutdown up. SIPApplication
+        # stops the sipsimple worker threads by queueing a stop marker BEHIND
+        # whatever work they already have and then joining them, so one
+        # thread with a long job in hand -- a sync, a download, a blocking
+        # socket -- is enough. Name it before the axe falls, or the log only
+        # ever says that it happened.
+        self._logBusyThreads()
+        time.sleep(7)
         BlinkLogger().log_info("Application forcefully terminated because core engine did not be stop in a timely manner")
         os._exit(0)
+
+    @objc.python_method
+    def _logBusyThreads(self):
+        import sys
+        import threading
+        import traceback
+        # Where an idle thread sits. Anything parked in one of these is
+        # waiting for work, not doing it, and would only bury the culprit.
+        idle = {('queue.py', 'get'), ('threading.py', 'wait'), ('threading.py', '_wait_for_tstate_lock'),
+                ('selectors.py', 'select'), ('socketserver.py', 'serve_forever')}
+        try:
+            frames = sys._current_frames()
+            me = threading.get_ident()
+            for thread in threading.enumerate():
+                if thread.ident in (None, me) or thread is threading.main_thread():
+                    continue
+                frame = frames.get(thread.ident)
+                if frame is None:
+                    continue
+                stack = traceback.extract_stack(frame)
+                top = stack[-1] if stack else None
+                if top is not None and (os.path.basename(top.filename), top.name) in idle:
+                    continue
+                BlinkLogger().log_warning('Shutdown is waiting for thread %r, busy at:\n%s'
+                                          % (thread.name, ''.join(traceback.format_list(stack[-12:]))))
+        except Exception as e:
+            BlinkLogger().log_error('Cannot list the busy threads: %s' % e)
 
     def applicationShouldTerminate_(self, sender):
         if self.terminating:
