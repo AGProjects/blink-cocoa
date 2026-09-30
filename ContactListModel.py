@@ -6384,6 +6384,16 @@ class ContactListModel(CustomListModel):
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
         self.addPendingWatchers()
         NSApp.delegate().contactsWindowController.tellMeWhenContactBecomesAvailableList.discard(contact)
+        # A contact removed by another device (or by another client's merge
+        # picking a different survivor) arrives here through a fetched
+        # document. The messages, files and key under its addresses are this
+        # device's data, not the address book's: removing an entry elsewhere
+        # must not erase them here. Only a delete made on this device purges.
+        # An older sipsimple posts no data: treat it as local, as before.
+        if getattr(notification.data, 'remote', False):
+            BlinkLogger().log_info('Keeping the history of %s: the contact %s was removed '
+                                   'on another device' % (', '.join(uris) or '-', contact.id))
+            return
         self.purgeDataForDeletedContact(contact, uris)
 
     @objc.python_method
