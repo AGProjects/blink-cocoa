@@ -8256,17 +8256,10 @@ class ContactWindowController(NSWindowController):
             BlinkLogger().log_error('Cannot seed the conversation order: %s' % e)
         # BlinkLogger().log_info('startup: SIPApplicationDidStart exit')
 
-        # Defensive cleanup: silently merge any duplicate Contacts in
-        # the 'Messages' group on startup. Logs only when it actually
-        # deletes something, so a clean launch is silent. The race fix
-        # in SMSWindowManager.getContact() should keep new duplicates
-        # from being created in the first place.
-        try:
-            from SMSWindowManager import SMSWindowManager
-            SMSWindowManager().mergeMessagesGroupDuplicates()
-        except Exception as e:
-            BlinkLogger().log_info(
-                'Messages group merge failed: %s' % e)
+        # The merge of duplicate Contacts in the 'Messages' group no longer
+        # runs here: at launch the addressbook is still the cached document,
+        # and deleting from it deletes on the strength of stale data. It runs
+        # after each document is applied -- ContactListModel._callsGroupAfterReload.
         
     @objc.python_method
     def _NH_BlinkShouldTerminate(self, notification):

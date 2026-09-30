@@ -5838,6 +5838,17 @@ class ContactListModel(CustomListModel):
                                    'from here a contact change is a user edit and IS announced'
                                    % (time.time() - _started))
 
+        # Merge duplicate contacts only now: the document the server handed us
+        # has been applied, so the merge decides on what every other device
+        # sees rather than on the cache. And after notifications resumed on
+        # purpose: a merge deletes contacts, and the other devices must hear
+        # of it, or they keep the copies this device dropped.
+        try:
+            if _sms is not None:
+                _sms.mergeMessagesGroupDuplicates()
+        except Exception as e:
+            BlinkLogger().log_info('Messages group merge failed: %s' % e)
+
     @objc.python_method
     def _NH_AudioCallLoggedToHistory(self, notification):
         if not NSApp.delegate().history_enabled:

@@ -3423,17 +3423,30 @@ class SMSWindowManagerClass(NSObject):
 
     @objc.python_method
     def mergeMessagesGroupDuplicates(self):
-        """Walk the 'Messages' (_messages) group and merge duplicate
-        Contacts that share a canonical URI. Survivor is chosen as:
-            1. the contact with a user-edited display name (name != uri)
-            2. otherwise the oldest contact (lowest id, lexicographic)
-        Non-survivors are removed from the group and deleted from the
-        addressbook. Chat history is keyed by SIP URI (not contact id)
-        and the URIs are byte-identical across a cluster, so timelines
-        are inherited automatically by the survivor.
+        """Merge Contacts in the 'Messages' (_messages) group that share a
+        canonical URI.
+
+        Every client that merges duplicates must keep the SAME copy, or two
+        of them each delete the copy the other kept and the contact is gone
+        everywhere (leo_poldo@sylk.link, 2026-09-30: Blink kept the renamed
+        copy, another client kept the older one). So the survivor is chosen
+        from the document alone, with a rule simple enough to port verbatim:
+
+            the lowest id (lexicographic) in the cluster.
+
+        What made a copy worth keeping moves onto the survivor instead of
+        deciding which one survives: a user-given name (from the most
+        recently modified renamed copy, when the survivor's own name is only
+        its address) and every address the others carry. Clusters are
+        transitive -- A shares a URI with B, B with C -- so one contact is
+        never both a survivor and a loser.
+
+        Chat history is keyed by URI, not contact id, and the survivor ends
+        up holding every URI of the cluster, so no timeline is orphaned.
 
         Returns the number of contacts deleted.
         """
+        from sipsimple.addressbook import ContactURI
         log = BlinkLogger().log_info
         group_id = '_messages'
 
@@ -3443,14 +3456,12 @@ class SMSWindowManagerClass(NSObject):
             log("Messages group merge: no '_messages' group exists yet")
             return 0
 
-        # Cluster contacts by canonical URI, exactly like the audit.
-        by_key = {}
-        for c in list(group.contacts):
+        def keys_of(contact):
+            keys = set()
             try:
-                uris = list(c.uris)
+                uris = list(contact.uris)
             except Exception:
                 uris = []
-            keys = set()
             for u in uris:
                 try:
                     k = self._canonical_uri(u.uri)
@@ -3458,43 +3469,83 @@ class SMSWindowManagerClass(NSObject):
                     k = ''
                 if k:
                     keys.add(k)
+            return keys
+
+        # Union-find over contact ids, joined by shared canonical URIs.
+        contacts = {}
+        parent = {}
+
+        def find(x):
+            while parent[x] != x:
+                parent[x] = parent[parent[x]]
+                x = parent[x]
+            return x
+
+        owner_of_key = {}
+        for c in list(group.contacts):
+            keys = keys_of(c)
             if not keys:
-                # No URIs at all — leave it alone, we can't merge by key
-                continue
+                continue    # no URIs at all -- nothing to merge by
+            contacts[c.id] = c
+            parent.setdefault(c.id, c.id)
             for k in keys:
-                by_key.setdefault(k, []).append(c)
+                other = owner_of_key.setdefault(k, c.id)
+                if other != c.id:
+                    a, b = find(other), find(c.id)
+                    if a != b:
+                        parent[max(a, b)] = min(a, b)
+
+        clusters = {}
+        for cid in contacts:
+            clusters.setdefault(find(cid), []).append(contacts[cid])
 
         addressbook_manager = AddressbookManager()
         deleted_total = 0
         clusters_merged = 0
         try:
             with addressbook_manager.transaction():
-                for key, members in by_key.items():
-                    unique = {c.id: c for c in members}
-                    if len(unique) <= 1:
+                for members in clusters.values():
+                    if len(members) <= 1:
                         continue
+                    survivor = min(members, key=lambda c: c.id)
+                    losers = [c for c in members if c.id != survivor.id]
 
-                    renamed = [c for c in unique.values()
-                               if self._isUserRenamedContact(c)]
-                    if renamed:
-                        survivor = min(renamed, key=lambda c: c.id)
-                    else:
-                        survivor = min(unique.values(), key=lambda c: c.id)
+                    changed = []
+                    if not self._isUserRenamedContact(survivor):
+                        renamed = [c for c in losers if self._isUserRenamedContact(c)]
+                        if renamed:
+                            donor = max(renamed, key=lambda c: (str(getattr(c, 'modified_at', '') or ''), c.id))
+                            changed.append('name %r -> %r (from %s)' % (survivor.name, donor.name, donor.id))
+                            survivor.name = donor.name
 
-                    losers = [c for c in unique.values() if c.id != survivor.id]
-                    log("MERGE canonical=%r keep id=%s name=%r drop=%d" % (
-                        key, survivor.id, getattr(survivor, 'name', ''),
-                        len(losers)))
+                    have = keys_of(survivor)
+                    for c in losers:
+                        for u in list(c.uris):
+                            k = self._canonical_uri(u.uri)
+                            if k and k not in have:
+                                survivor.uris.add(ContactURI(uri=u.uri, type=u.type))
+                                have.add(k)
+                                changed.append('+uri %s (from %s)' % (u.uri, c.id))
+
+                    log("MERGE keep id=%s name=%r drop=%s%s" % (
+                        survivor.id, getattr(survivor, 'name', ''),
+                        ','.join(c.id for c in losers),
+                        (' -- ' + '; '.join(changed)) if changed else ''))
+
+                    if changed:
+                        try:
+                            survivor.save()
+                        except Exception as e:
+                            log("  -> cannot save survivor id=%s, leaving the cluster alone: %s"
+                                % (survivor.id, e))
+                            continue
 
                     for c in losers:
                         try:
-                            log("  -> delete id=%s name=%r" % (
-                                c.id, getattr(c, 'name', '')))
+                            log("  -> delete id=%s name=%r" % (c.id, getattr(c, 'name', '')))
                             try:
                                 group.contacts.discard(c)
                             except Exception:
-                                # Some Group implementations expose contacts
-                                # as a list rather than a set.
                                 try:
                                     group.contacts.remove(c)
                                 except Exception:
