@@ -1,7 +1,7 @@
 # Copyright (C) 2012 AG Projects. See LICENSE for details.
 #
 
-__all__ = ['audio_codecs', 'allocate_autorelease_pool', 'beautify_audio_codec', 'beautify_video_codec', 'call_in_gui_thread', 'call_later', 'run_in_gui_thread',
+__all__ = ['window_corner_inset', 'audio_codecs', 'allocate_autorelease_pool', 'beautify_audio_codec', 'beautify_video_codec', 'call_in_gui_thread', 'call_later', 'run_in_gui_thread',
            'compare_identity_addresses', 'escape_html', 'external_url_pattern', 'format_uri_type', 'format_identity_to_string', 'format_date', 'format_size', 'format_size_rounded', 'is_sip_aor_format', 'is_anonymous', 'image_file_extension_pattern', 'html2txt', 'normalize_sip_uri_for_outgoing_session', 'osx_version',
            'sipuri_components_from_string', 'strip_addressbook_special_characters', 'sip_prefix_pattern', 'video_file_extension_pattern',  'translate_alpha2digit', 'checkValidPhoneNumber',
            'pstn_apply_leading_zero_rule', 'pstn_home_country_code', 'pstn_strip_trunk_zero', 'pstn_e164', 'canonical_pstn_uri', 'same_phone_number', 'pstn_dial_username', 'pstn_uri_spellings', 'normalize_anonymous_uri', 'is_conference_uri', 'pstn_uri_spellings_for_accounts',
@@ -12,6 +12,30 @@ from AppKit import NSApp, NSRunAlertPanel
 from Foundation import NSAutoreleasePool, NSBundle, NSTimer, NSThread, NSLocalizedString
 
 import platform
+
+
+def window_corner_inset():
+    """Points to keep clear of a window's bottom corners.
+
+    macOS 26 (Tahoe) rounds window corners far more than before, and
+    anything laid flush against the bottom edge -- the chat tab bar, the
+    composer -- has its first few points cut away. Zero on older systems.
+    """
+    global _window_corner_inset
+    try:
+        return _window_corner_inset
+    except NameError:
+        pass
+    try:
+        from Foundation import NSProcessInfo
+        major = NSProcessInfo.processInfo().operatingSystemVersion().majorVersion
+    except Exception:
+        try:
+            major = int(platform.mac_ver()[0].split('.')[0])
+        except Exception:
+            major = 0
+    _window_corner_inset = 10 if major >= 26 else 0
+    return _window_corner_inset
 import re
 import shlex
 import unicodedata
