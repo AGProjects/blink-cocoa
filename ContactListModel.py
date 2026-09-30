@@ -3161,6 +3161,29 @@ class CustomListModel(NSObject):
     _displayed_contacts = None
 
     @objc.python_method
+    def _canonical_contact_uri(self, raw_uri):
+        """user@host, lower-cased, with the scheme and parameters gone.
+
+        The same normalisation SMSWindowManager files conversations under,
+        so that "SIP:Alice@Example.com;transport=tls" and "alice@example.com"
+        are recognised as the one address they are.
+        """
+        if raw_uri is None:
+            return ''
+        text = str(raw_uri).strip()
+        # a display-name form first, or the scheme inside the brackets
+        # survives the strip below and nothing matches
+        if '<' in text and '>' in text and text.index('<') < text.index('>'):
+            text = text[text.index('<') + 1:text.index('>')].strip()
+        lowered = text.lower()
+        for scheme in ('sips:', 'sip:'):
+            if lowered.startswith(scheme):
+                text = text[len(scheme):]
+                break
+        text = text.split(';')[0].split('?')[0]
+        return text.strip().lower()
+
+    @objc.python_method
     def refreshDeletedMembership(self):
         ids = set()
         keys = set()
@@ -6362,29 +6385,6 @@ class ContactListModel(CustomListModel):
         self.addPendingWatchers()
         NSApp.delegate().contactsWindowController.tellMeWhenContactBecomesAvailableList.discard(contact)
         self.purgeDataForDeletedContact(contact, uris)
-
-    @objc.python_method
-    def _canonical_contact_uri(self, raw_uri):
-        """user@host, lower-cased, with the scheme and parameters gone.
-
-        The same normalisation SMSWindowManager files conversations under,
-        so that "SIP:Alice@Example.com;transport=tls" and "alice@example.com"
-        are recognised as the one address they are.
-        """
-        if raw_uri is None:
-            return ''
-        text = str(raw_uri).strip()
-        # a display-name form first, or the scheme inside the brackets
-        # survives the strip below and nothing matches
-        if '<' in text and '>' in text and text.index('<') < text.index('>'):
-            text = text[text.index('<') + 1:text.index('>')].strip()
-        lowered = text.lower()
-        for scheme in ('sips:', 'sip:'):
-            if lowered.startswith(scheme):
-                text = text[len(scheme):]
-                break
-        text = text.split(';')[0].split('?')[0]
-        return text.strip().lower()
 
     @objc.python_method
     def purgeDataForDeletedContact(self, contact, uris):
