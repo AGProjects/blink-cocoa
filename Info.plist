@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>BlinkVersionDate</key>
-	<string>Aug 30th, 2026</string>
+	<string>Sep 30th, 2026</string>
 	<key>BrandingFile</key>
 	<string>branding</string>
 	<key>CFBundleDevelopmentRegion</key>
@@ -63,6 +63,8 @@
 	<string>Required for VoIP calls</string>
 	<key>NSContactsUsageDescription</key>
 	<string>Required for calling your contacts</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Blink connects to your other devices on the local network to import the messages and files they export.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Required to share your location in a conversation</string>
 	<key>NSMainNibFile</key>
@@ -73,7 +75,5 @@
 	<string>NSApplication</string>
 	<key>SUFeedURL</key>
 	<string>https://blink.sipthor.net/BlinkAppcast.xml</string>
-	<key>NSLocalNetworkUsageDescription</key>
-	<string>Blink connects to your other devices on the local network to import the messages and files they export.</string>
 </dict>
 </plist>
