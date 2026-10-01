@@ -19,6 +19,7 @@ and a failure is remembered so a dead URL is not retried on every scroll.
 """
 
 import json
+import math
 import mimetypes
 import os
 import re
@@ -59,6 +60,35 @@ except ImportError:
     except ImportError:
         HAS_IMAGE_IO = False
 
+# CoreGraphics' PDF reader, for drawing the first page of a PDF into its
+# bubble. Guarded like ImageIO: without it a PDF keeps its file icon.
+try:
+    from Quartz import (CGBitmapContextCreate,
+                        CGBitmapContextCreateImage,
+                        CGColorSpaceCreateDeviceRGB,
+                        CGContextClipToRect,
+                        CGContextDrawPDFPage,
+                        CGContextFillRect,
+                        CGContextRotateCTM,
+                        CGContextScaleCTM,
+                        CGContextSetInterpolationQuality,
+                        CGContextSetRGBFillColor,
+                        CGContextTranslateCTM,
+                        CGPDFDocumentCreateWithURL,
+                        CGPDFDocumentGetNumberOfPages,
+                        CGPDFDocumentGetPage,
+                        CGPDFDocumentIsUnlocked,
+                        CGPDFDocumentUnlockWithPassword,
+                        CGPDFPageGetBoxRect,
+                        CGPDFPageGetRotationAngle,
+                        CGRectMake,
+                        kCGImageAlphaNoneSkipLast,
+                        kCGInterpolationHigh,
+                        kCGPDFCropBox)
+    HAS_PDF = True
+except ImportError:
+    HAS_PDF = False
+
 from application.system import makedirs
 from resources import ApplicationData
 from BlinkLogger import BlinkLogger
@@ -78,6 +108,11 @@ MAX_AUTO_IMAGE_BYTES = 8 * 1024 * 1024
 # fetch to the clips someone is plausibly still catching up on.
 MAX_AUTO_VIDEO_BYTES = 20 * 1024 * 1024
 AUTO_VIDEO_MAX_AGE_DAYS = 7
+
+# A PDF fetches itself so its first page can be shown in the bubble. No age
+# limit: a document is small next to a clip, and an old one scrolled back
+# to is still worth recognising by its cover.
+MAX_AUTO_PDF_BYTES = 10 * 1024 * 1024
 
 # Past this a file goes up as it is: encrypting reads the whole thing into
 # memory and armours it, which is a copy and a half of the file in RAM and
@@ -209,6 +244,23 @@ def guess_filetype(path):
     return kind or 'application/octet-stream'
 
 
+def is_pdf_transfer(meta):
+    """Whether an envelope announces a PDF, encrypted or not.
+
+    The name decides before the mime type, as file_transfer_category does:
+    senders derive the one from the other, and an armoured transfer is
+    usually typed application/octet-stream.
+    """
+    if not isinstance(meta, dict):
+        return False
+    name = str(meta.get('filename') or '').lower()
+    if name.endswith('.asc'):
+        name = name[:-4]
+    if name.endswith('.pdf'):
+        return True
+    return str(meta.get('filetype') or '').lower() == 'application/pdf'
+
+
 def new_transfer_id():
     return str(uuid.uuid4())
 
@@ -276,6 +328,12 @@ class FileTransferCache(object):
             cls._instance._tile_cost = {}
             cls._instance._tile_bytes = 0
             cls._instance._natural = {}
+            # path -> (pages, NSSize of page one in points, rotation
+            # applied) for a readable PDF, or False for a file that is not
+            # one or cannot be opened (see pdf_info)
+            cls._instance._pdf = {}
+            # path -> whether the file starts like a PDF (see is_pdf)
+            cls._instance._pdf_header = {}
             # the account folders in the cache directory, and when that was
             # last read (see account_folders)
             cls._instance._folders = None
@@ -499,6 +557,10 @@ class FileTransferCache(object):
             self._originals.pop(path, None)
         for path in [p for p in self._natural if str(p).startswith(prefix)]:
             self._natural.pop(path, None)
+        for path in [p for p in self._pdf if str(p).startswith(prefix)]:
+            self._pdf.pop(path, None)
+        for path in [p for p in self._pdf_header if str(p).startswith(prefix)]:
+            self._pdf_header.pop(path, None)
         for tile_key in [k for k in self._tiles if str(k[0]).startswith(prefix)]:
             self._tiles.pop(tile_key, None)
             self._tile_bytes -= self._tile_cost.pop(tile_key, 0)
@@ -1004,6 +1066,14 @@ class FileTransferCache(object):
         cached = self._natural.get(path)
         if cached is not None:
             return cached
+        pdf = self.pdf_info(path)
+        if pdf:
+            # The page at Retina scale: what the bubble divides by the
+            # backing scale is then the page's own width in points.
+            size = pdf[1]
+            size = NSMakeSize(size.width * 2.0, size.height * 2.0)
+            self._natural[path] = size
+            return size
         try:
             source = NSImage.alloc().initWithContentsOfFile_(path)
             if source is None:
@@ -1034,6 +1104,12 @@ class FileTransferCache(object):
         through years of history would otherwise keep every one of them.
         """
         if not path:
+            return None
+        if self.is_pdf(path):
+            # AppKit would hand back an NSPDFImageRep backed by the file --
+            # the same provider-at-commit-time read tile() exists to avoid,
+            # and vector drawing on every scroll besides. A PDF is only
+            # ever drawn from the bitmap _decode_pdf renders.
             return None
         cached = self._originals.get(path)
         if cached is not None:
@@ -1091,7 +1167,10 @@ class FileTransferCache(object):
         keeps EXIF orientation, which the full-size path got from AppKit
         for free and a thumbnail does not.
         """
-        if not path or not HAS_IMAGE_IO:
+        if not path:
+            return None
+        pdf = self.is_pdf(path)
+        if not pdf and not HAS_IMAGE_IO:
             return None
         pixels = tile_pixels(pixels)
         key = (path, pixels)
@@ -1099,7 +1178,7 @@ class FileTransferCache(object):
         if cached is not None:
             self._tiles.move_to_end(key)
             return cached
-        image = self._decode_tile(path, pixels)
+        image = self._decode_pdf(path, pixels) if pdf else self._decode_tile(path, pixels)
         if image is None:
             return None
         self._tiles[key] = image
@@ -1194,3 +1273,146 @@ class FileTransferCache(object):
         if image is not None:
             return image
         return self.original(path)
+
+    # -- PDF ---------------------------------------------------------------
+
+    def is_pdf(self, path):
+        """Whether the file on disc is a PDF, by its header.
+
+        By content rather than by name: a decrypted transfer is filed under
+        whatever name the sender gave it, and the only thing that matters
+        here is whether CoreGraphics will be reading a PDF. The spec lets
+        the %PDF- marker sit anywhere in the first 1024 bytes.
+        """
+        if not path or not HAS_PDF:
+            return False
+        cached = self._pdf_header.get(path)
+        if cached is None:
+            try:
+                with open(path, 'rb') as f:
+                    cached = b'%PDF-' in f.read(1024)
+            except OSError:
+                return False            # not cached: it may yet arrive
+            self._pdf_header[path] = cached
+        return cached
+
+    def _pdf_page(self, path):
+        """(document, page one) for a readable PDF, or (None, None)."""
+        url = NSURL.fileURLWithPath_(str(path))
+        document = CGPDFDocumentCreateWithURL(url)
+        if document is None:
+            return None, None
+        if not CGPDFDocumentIsUnlocked(document):
+            # An owner password alone does not lock a PDF for reading, and
+            # CoreGraphics opens those by itself. One that is still locked
+            # wants a user password, and the empty one is the only one we
+            # can try without asking.
+            try:
+                CGPDFDocumentUnlockWithPassword(document, b'')
+            except Exception:
+                pass
+            if not CGPDFDocumentIsUnlocked(document):
+                BlinkLogger().log_info('%s is a locked PDF, keeping its icon'
+                                       % os.path.basename(str(path)))
+                return None, None
+        if CGPDFDocumentGetNumberOfPages(document) < 1:
+            return None, None
+        page = CGPDFDocumentGetPage(document, 1)
+        return document, page
+
+    def pdf_info(self, path):
+        """(pages, size of page one in points as displayed, rotation), or None.
+
+        None for a file that is not a PDF, or one that cannot be shown: a
+        locked document, one with no pages, one CoreGraphics cannot parse.
+        The bubble keeps its file icon for those.
+        """
+        if not path or not HAS_PDF:
+            return None
+        cached = self._pdf.get(path)
+        if cached is not None:
+            return cached or None
+        info = False
+        if self.is_pdf(path):
+            try:
+                document, page = self._pdf_page(path)
+                if page is not None:
+                    box = CGPDFPageGetBoxRect(page, kCGPDFCropBox)
+                    angle = int(CGPDFPageGetRotationAngle(page)) % 360
+                    width, height = float(box.size.width), float(box.size.height)
+                    if angle in (90, 270):
+                        width, height = height, width
+                    if width > 0 and height > 0:
+                        info = (int(CGPDFDocumentGetNumberOfPages(document)),
+                                NSMakeSize(width, height), angle)
+            except Exception as e:
+                BlinkLogger().log_error('Cannot read %s as a PDF: %s' % (path, e))
+                info = False
+        self._pdf[path] = info
+        return info or None
+
+    def _decode_pdf(self, path, pixels):
+        """Page one of a PDF as a finished bitmap, longest side `pixels`.
+
+        Rendered into a bitmap context here, for the same reason tile()
+        decodes pictures up front: what the transcript draws must be
+        ordinary retained memory, not a provider CoreAnimation reads from
+        at commit time. White underneath, because a PDF page is a
+        transparent canvas and most of them assume paper.
+
+        /Rotate is applied by hand. CGPDFPageGetDrawingTransform would do
+        it, but it never scales UP, and a small page asked for at Retina
+        size would come back letterboxed in a larger bitmap.
+        """
+        info = self.pdf_info(path)
+        if not info:
+            return None
+        try:
+            document, page = self._pdf_page(path)
+            if page is None:
+                return None
+            _, shown, angle = info
+            box = CGPDFPageGetBoxRect(page, kCGPDFCropBox)
+            bx, by = float(box.origin.x), float(box.origin.y)
+            bw, bh = float(box.size.width), float(box.size.height)
+            scale = float(pixels) / max(shown.width, shown.height)
+            width = max(int(round(shown.width * scale)), 1)
+            height = max(int(round(shown.height * scale)), 1)
+
+            context = CGBitmapContextCreate(None, width, height, 8, 0,
+                                            CGColorSpaceCreateDeviceRGB(),
+                                            kCGImageAlphaNoneSkipLast)
+            if context is None:
+                BlinkLogger().log_error('No bitmap context for %s at %dx%d'
+                                        % (path, width, height))
+                return None
+            CGContextSetRGBFillColor(context, 1.0, 1.0, 1.0, 1.0)
+            CGContextFillRect(context, CGRectMake(0, 0, width, height))
+            CGContextSetInterpolationQuality(context, kCGInterpolationHigh)
+
+            # Last call applies first: move the crop box to the origin,
+            # turn it clockwise by /Rotate, then scale to the bitmap.
+            CGContextScaleCTM(context, scale, scale)
+            if angle == 90:
+                CGContextTranslateCTM(context, 0.0, bw)
+                CGContextRotateCTM(context, -math.pi / 2.0)
+            elif angle == 180:
+                CGContextTranslateCTM(context, bw, bh)
+                CGContextRotateCTM(context, math.pi)
+            elif angle == 270:
+                CGContextTranslateCTM(context, bh, 0.0)
+                CGContextRotateCTM(context, math.pi / 2.0)
+            CGContextTranslateCTM(context, -bx, -by)
+            CGContextClipToRect(context, box)
+            CGContextDrawPDFPage(context, page)
+
+            cgimage = CGBitmapContextCreateImage(context)
+            if cgimage is None:
+                BlinkLogger().log_error('CoreGraphics drew nothing for %s' % path)
+                return None
+            BlinkLogger().log_debug('Rendered page one of %s at %dx%d'
+                                    % (os.path.basename(str(path)), width, height))
+            return NSImage.alloc().initWithCGImage_size_(cgimage, NSZeroSize)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot render %s: %s' % (path, e))
+            return None

@@ -190,6 +190,11 @@ MEDIA_MAX_H   = 320.0
 # looking at deserves the room; a small one stretched to the same height
 # just looks soft, so the larger ceiling is earned, not assumed.
 MEDIA_MAX_H_LARGE = 640.0
+# Page one of a PDF. A preview to recognise the document by, not to read
+# it in -- reading is what the external viewer is for -- so a fixed
+# ceiling rather than the photograph's earned one: every page is tall and
+# full of pixels, and at 640 points one cover would fill the pane.
+PDF_MAX_H     = 360.0
 # A picture bubble never shrinks below this, however small the picture: the
 # header (name, clock, ticks, copy and save) still has to fit under it.
 MEDIA_MIN_W   = 120.0
@@ -1923,6 +1928,10 @@ class MessageBubbleView(NSView):
             # An inline image for a file transfer: the decoded picture once
             # it is on disc, and the flag that says one is on its way.
             self.media_image = None
+            # Set, to the page count, when media_image is page one of a PDF
+            # rather than a picture: it picks the caption, the badge and
+            # what Copy puts on the pasteboard.
+            self.pdf_pages = None
             # What kind of file this bubble's transfer is, worked out once.
             self._transfer_category = None
             # The picture a grid tile draws, and the path it was read for.
@@ -2358,6 +2367,11 @@ class MessageBubbleView(NSView):
         if self.caption:
             return self.caption
         meta = self.transfer_meta
+        if self.pdf_pages and isinstance(meta, dict):
+            # A document is known by its name in a way a photograph is not:
+            # page one of a contract and page one of an invoice look alike.
+            from FileTransferCache import display_name
+            return display_name(meta)
         if isinstance(meta, dict):
             return recording_title(meta.get('filename'))
         return None
@@ -2555,6 +2569,18 @@ class MessageBubbleView(NSView):
         try:
             board = NSPasteboard.generalPasteboard()
             board.clearContents()
+
+            if self.pdf_pages and self.media_path and os.path.exists(str(self.media_path)):
+                # The document, not a picture of its first page: what gets
+                # pasted into Mail or the Finder should be the PDF itself.
+                url = NSURL.fileURLWithPath_(str(self.media_path))
+                written = bool(board.writeObjects_(NSArray.arrayWithObject_(url)))
+                BlinkLogger().log_info('Copied the PDF %s: %s'
+                                       % (self.media_path, 'ok' if written else 'FAILED'))
+                if written:
+                    self.noteCopied()
+                    return
+                board.clearContents()
 
             if self.media_image is not None:
                 # The file on disc, not the downscaled copy the bubble draws:
@@ -3196,6 +3222,8 @@ class MessageBubbleView(NSView):
         detail to justify the bigger bubble; a thumbnail does not, and
         blowing one up to 640 points only makes it soft.
         """
+        if self.pdf_pages:
+            return PDF_MAX_H
         natural = self.media_natural_size
         if natural is None:
             return MEDIA_MAX_H
@@ -4761,6 +4789,30 @@ class MessageBubbleView(NSView):
             COLOR_MAP_BORDER.set()
             frame.setLineWidth_(1.0)
             frame.stroke()
+            if self.pdf_pages:
+                self._drawPdfPill()
+
+    @objc.python_method
+    def _drawPdfPill(self):
+        """"PDF · 12 pages · 1.2 MB", bottom left, over the page.
+
+        The page count is what the preview cannot say: one page is all it
+        shows, and whether there are forty more behind it is the thing
+        that decides whether to open it now.
+        """
+        pages = int(self.pdf_pages or 0)
+        parts = ['PDF']
+        if pages == 1:
+            parts.append(NSLocalizedString("1 page", "Label"))
+        elif pages > 1:
+            parts.append(NSLocalizedString("%d pages", "Label") % pages)
+        try:
+            size = format_file_size((self.transfer_meta or {}).get('filesize'))
+        except Exception:
+            size = None
+        if size:
+            parts.append(size)
+        self._drawPill(' \u00b7 '.join(parts))
 
     @objc.python_method
     def transferCategory(self):
@@ -4791,6 +4843,11 @@ class MessageBubbleView(NSView):
             text = format_file_size(meta.get('filesize'))
         except Exception:
             text = None
+        self._drawPill(text)
+
+    @objc.python_method
+    def _drawPill(self, text):
+        """A line of text on a dark pill in the picture's bottom left."""
         if not text:
             return
         rect = NSIntersectionRect(self._map_rect, self.bounds())

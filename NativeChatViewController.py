@@ -264,8 +264,9 @@ from ChatViewController import (ChatViewController, ChatMessageObject,
 from MessageBubbleView import MessageBubbleView, _url_re, transcript_font_size
 from FileTransferCache import (FileTransferCache, display_name, tile_pixels,
                                envelope as transfer_envelope,
-                               is_encrypted, AUTO_VIDEO_MAX_AGE_DAYS,
-                               MAX_AUTO_IMAGE_BYTES, MAX_AUTO_VIDEO_BYTES)
+                               is_encrypted, is_pdf_transfer, AUTO_VIDEO_MAX_AGE_DAYS,
+                               MAX_AUTO_IMAGE_BYTES, MAX_AUTO_VIDEO_BYTES,
+                               MAX_AUTO_PDF_BYTES)
 from sipsimple.threading.green import run_in_green_thread
 from util import run_in_gui_thread, window_corner_inset
 
@@ -3687,6 +3688,8 @@ class NativeChatViewController(ChatViewController):
             return ' '.join(caption.split())
         if category == 'video':
             return NSLocalizedString("Video", "Label")
+        if category == 'pdf':
+            return NSLocalizedString("PDF", "Label")
         return NSLocalizedString("Photo", "Label")
 
     @objc.python_method
@@ -3699,6 +3702,14 @@ class NativeChatViewController(ChatViewController):
         """
         category = self.messageCategory(original)
         image = None
+        if self._isPdf(original):
+            # Page one, when the bubble has one to show; its label says PDF
+            # rather than Photo.
+            if getattr(original, 'pdf_pages', None):
+                image = self._quoteThumbnail(getattr(original, 'media_path', None))
+            if image is None:
+                return None, None
+            return image, self._quoteMediaLabel('pdf', getattr(original, 'caption', None))
         if category == 'image':
             image = self._quoteThumbnail(getattr(original, 'media_path', None))
             if image is None:
@@ -4349,13 +4360,15 @@ class NativeChatViewController(ChatViewController):
         if path is None:
             return
         _t = load_trace_tick()
-        is_image = self.messageCategory(bubble) == 'image'
+        is_image = self._rendersInline(bubble)
         load_trace_bucket('-- category', _t)
         if is_image:
             _t = load_trace_tick()
-            self._showMedia(bubble, path)
+            self._noteDecrypted(bubble, path)
+            if self._showMedia(bubble, path):
+                load_trace_bucket('-- show media', _t)
+                return
             load_trace_bucket('-- show media', _t)
-            return
         bubble.media_path = path
         _t = load_trace_tick()
         self._noteDecrypted(bubble, path)
@@ -4377,6 +4390,20 @@ class NativeChatViewController(ChatViewController):
         it -- but in a grid, where the picture FILLS its cell, a copy that
         is too small is magnified rather than letterboxed.
         """
+        pdf = None
+        if self._isPdf(bubble):
+            # Page one, when the document can be read at all. A locked or
+            # broken one answers None and the bubble stays a file with its
+            # icon -- which is what it was before there were previews.
+            pdf = FileTransferCache().pdf_info(path)
+            if pdf is None:
+                BlinkLogger().log_info('No preview for %s: not a readable PDF' % path)
+                bubble.media_path = path
+                bubble.media_pending = False
+                bubble.invalidateLayout()
+                if self.messageListView is not None:
+                    self.messageListView.setNeedsMessageLayout()
+                return False
         width = 0.0
         try:
             if getattr(bubble, 'grid_mode', False):
@@ -4386,6 +4413,13 @@ class NativeChatViewController(ChatViewController):
         except Exception:
             width = 320.0
         image = FileTransferCache().image(path, width * 2)   # room for Retina
+        if image is None and pdf is not None:
+            BlinkLogger().log_error('%s opened as a PDF but its first page did not render'
+                                    % path)
+            bubble.media_path = path
+            bubble.media_pending = False
+            bubble.invalidateLayout()
+            return False
         if image is None:
             size = -1
             try:
@@ -4394,9 +4428,10 @@ class NativeChatViewController(ChatViewController):
                 pass
             BlinkLogger().log_error('%s is on disc (%d bytes) but AppKit will not '
                                     'decode it as an image' % (path, size))
-            return
+            return False
         bubble.media_path = path
         bubble.media_pending = False
+        bubble.pdf_pages = pdf[0] if pdf is not None else None
         natural = FileTransferCache().natural_size(path)
         bubble.media_natural_size = natural
         bubble.configure(media_image=image)
@@ -4408,6 +4443,20 @@ class NativeChatViewController(ChatViewController):
         self._refreshQuotesOf(getattr(bubble, 'msgid', None))
         if self.messageListView is not None:
             self.messageListView.layoutMessages()
+        return True
+
+    @objc.python_method
+    def _isPdf(self, bubble):
+        return is_pdf_transfer(getattr(bubble, 'transfer_meta', None))
+
+    @objc.python_method
+    def _rendersInline(self, bubble):
+        """Whether the file, once here, is drawn as the bubble's picture.
+
+        A photograph, or page one of a PDF. A movie gets its picture from
+        the poster generator instead, and everything else keeps its icon.
+        """
+        return self.messageCategory(bubble) == 'image' or self._isPdf(bubble)
 
     @objc.python_method
     def _autoFetchLimit(self, bubble):
@@ -4421,6 +4470,8 @@ class NativeChatViewController(ChatViewController):
         category = self.messageCategory(bubble)
         if category == 'image':
             return MAX_AUTO_IMAGE_BYTES
+        if self._isPdf(bubble):
+            return MAX_AUTO_PDF_BYTES
         if category == 'video':
             # Recent only. A picture is cheap enough to fetch whenever it
             # scrolls past, but a scroll back through a year of clips would
@@ -4571,7 +4622,7 @@ class NativeChatViewController(ChatViewController):
         self._forgetTransferFailure(bubble)
         self._attachAudio(bubble, path)
         self._attachVideo(bubble, path)
-        if self.messageCategory(bubble) == 'image':
+        if self._rendersInline(bubble):
             self._setTransferStatus(bubble, None)
             self._showMedia(bubble, path)
             if save_when_ready:
@@ -4805,7 +4856,7 @@ class NativeChatViewController(ChatViewController):
             return
         bubble.upload_pending = True
         bubble.transfer_progress = (0.0, 'upload')
-        if self.messageCategory(bubble) == 'image' and os.path.exists(path):
+        if self._rendersInline(bubble) and os.path.exists(path):
             self._showMedia(bubble, path)
         else:
             bubble.invalidateLayout()
@@ -4943,6 +4994,8 @@ class NativeChatViewController(ChatViewController):
 
         path = cache.local_file(meta, account, peer)
         if path is not None:
+            if self._isPdf(bubble):
+                return '%s: PDF here at %s, no preview' % (detail, path)
             if category != 'image':
                 return '%s: here, at %s' % (detail, path)
             return '%s: on disc at %s but not decoded as an image' % (detail, path)
