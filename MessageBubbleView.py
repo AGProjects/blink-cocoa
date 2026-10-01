@@ -2367,11 +2367,10 @@ class MessageBubbleView(NSView):
         if self.caption:
             return self.caption
         meta = self.transfer_meta
-        if self.pdf_pages and isinstance(meta, dict):
-            # A document is known by its name in a way a photograph is not:
-            # page one of a contract and page one of an invoice look alike.
-            from FileTransferCache import display_name
-            return display_name(meta)
+        if self.pdf_pages:
+            # The page is the message, as a photograph is; only a caption
+            # someone set goes under it.
+            return None
         if isinstance(meta, dict):
             return recording_title(meta.get('filename'))
         return None
