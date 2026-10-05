@@ -8274,6 +8274,12 @@ class ContactWindowController(NSWindowController):
             self.runNoMicrophoneAlert(for_call=False)
 
     @objc.python_method
+    def warnAcceptedCallWithoutMicrophone(self):
+        if self.builtinMicrophoneIsDead():
+            BlinkLogger().log_warning('Incoming call accepted with the lid closed on the built-in microphone')
+            self.warnNoMicrophone(force=True)
+
+    @objc.python_method
     def ensureMicrophoneForCall(self):
         """Gate for starting a call: True when there is a working microphone.
 
@@ -8378,8 +8384,6 @@ class ContactWindowController(NSWindowController):
     def _NH_MediaStreamDidInitialize(self, notification):
         if notification.sender.type == "audio":
             self.updateAudioButtons()
-            if self.builtinMicrophoneIsDead():
-                self.warnNoMicrophone(force=True)
 
     @objc.python_method
     def _NH_MediaStreamDidEnd(self, notification):
