@@ -7111,18 +7111,33 @@ class ContactWindowController(NSWindowController):
                 else:
                     break
 
-            if not devices:
-                menu.itemWithTag_(404).setHidden_(True)
-                menu.itemWithTag_(405).setHidden_(True)
-            else:
-                menu.itemWithTag_(404).setHidden_(False)
-                menu.itemWithTag_(405).setHidden_(False)
-                index = menu.indexOfItem_(menu.itemWithTag_(tag))+1
-                monitor = ClamshellMonitor()
-                dead_inputs = monitor.builtin_inputs() if monitor.builtin_microphone_disabled else set()
-                if dead_inputs:
-                    dead_inputs.add(NSLocalizedString("Built-in Microphone and Output", "Label"))
-                i = 0
+            # Always shown: System Default is the way back to following the
+            # Mac's own input and output after picking a device.
+            menu.itemWithTag_(404).setHidden_(False)
+            menu.itemWithTag_(405).setHidden_(False)
+            index = menu.indexOfItem_(menu.itemWithTag_(tag))+1
+            monitor = ClamshellMonitor()
+            dead_inputs = monitor.builtin_inputs() if monitor.builtin_microphone_disabled else set()
+            if dead_inputs:
+                dead_inputs.add(NSLocalizedString("Built-in Microphone and Output", "Label"))
+
+            engine = self.backend._app.engine
+            default_in = (engine.default_input_device or '').strip()
+            default_out = (engine.default_output_device or '').strip()
+            default_dead = default_in in dead_inputs
+            title = NSLocalizedString("System Default (%s / %s)", "Menu item") % (default_in, default_out)
+            if default_dead:
+                title = "%s \u2014 %s" % (title, NSLocalizedString("microphone unavailable, lid is closed", "Menu item"))
+            item = menu.insertItemWithTitle_action_keyEquivalent_atIndex_(title, None if default_dead else selector, "", index)
+            item.setState_(NSOnState if settings.audio.input_device in ("default", "system_default") and settings.audio.output_device in ("default", "system_default") else NSOffState)
+            item.setRepresentedObject_("system_default")
+            item.setTarget_(self)
+            item.setTag_(tag*100)
+            item.setIndentationLevel_(2)
+            index += 1
+
+            if devices:
+                i = 1
                 for dev in devices:
                     dead = dev.strip() in dead_inputs
                     item = menu.insertItemWithTitle_action_keyEquivalent_atIndex_(dev.strip(), None if dead else selector, "", index)
