@@ -8270,8 +8270,31 @@ class ContactWindowController(NSWindowController):
 
     @objc.python_method
     def showNoMicrophoneAlert(self):
+        if not self._lid_alert_is_open():
+            self.runNoMicrophoneAlert(for_call=False)
+
+    @objc.python_method
+    def ensureMicrophoneForCall(self):
+        """Gate for starting a call: True when there is a working microphone.
+
+        With the lid closed on the built-in mic the same alert is shown, and
+        the call goes ahead only if the user picks a device that works (or
+        opens the lid while it is up).
+        """
+        if not self.builtinMicrophoneIsDead():
+            return True
         if self._lid_alert_is_open():
-            return
+            return False
+        BlinkLogger().log_warning('Lid closed and the built-in microphone is selected, asking for a microphone before starting the call')
+        self._lid_prompted_for = tuple(self.alternativeInputDevices())
+        ok = self.runNoMicrophoneAlert(for_call=True)
+        if not ok:
+            BlinkLogger().log_info('Call not started, no microphone selected')
+        return ok
+
+    @objc.python_method
+    def runNoMicrophoneAlert(self, for_call=False):
+        """Run the alert modally; True when a working microphone is in use afterwards."""
         from AppKit import NSAlert, NSPopUpButton
         try:
             from AppKit import NSAlertStyleWarning as warning_style
@@ -8284,6 +8307,7 @@ class ContactWindowController(NSWindowController):
             alert = NSAlert.alloc().init()
             alert.setAlertStyle_(warning_style)
             alert.setMessageText_(NSLocalizedString("Microphone not available", "Window title"))
+            cancel_title = NSLocalizedString("Cancel Call", "Button title") if for_call else NSLocalizedString("Cancel", "Button title")
             popup = None
             if alternatives:
                 alert.setInformativeText_(NSLocalizedString("The built-in microphone is disconnected while the lid is closed. The other party will not hear you.\n\nSelect another microphone to use:", "Label"))
@@ -8297,10 +8321,14 @@ class ContactWindowController(NSWindowController):
                     popup.selectItemAtIndex_(alternatives.index(settings.audio.output_device))
                 alert.setAccessoryView_(popup)
                 alert.addButtonWithTitle_(NSLocalizedString("Use This Microphone", "Button title"))
-                alert.addButtonWithTitle_(NSLocalizedString("Cancel", "Button title"))
+                alert.addButtonWithTitle_(cancel_title)
             else:
-                alert.setInformativeText_(NSLocalizedString("The built-in microphone is disconnected while the lid is closed, and no other microphone is connected. The other party will not hear you.\n\nOpen the lid or connect a headset or external microphone.", "Label"))
-                alert.addButtonWithTitle_(NSLocalizedString("OK", "Button title"))
+                if for_call:
+                    alert.setInformativeText_(NSLocalizedString("The built-in microphone is disconnected while the lid is closed, and no other microphone is connected. The call cannot be started.\n\nOpen the lid or connect a headset or external microphone.", "Label"))
+                    alert.addButtonWithTitle_(cancel_title)
+                else:
+                    alert.setInformativeText_(NSLocalizedString("The built-in microphone is disconnected while the lid is closed, and no other microphone is connected. The other party will not hear you.\n\nOpen the lid or connect a headset or external microphone.", "Label"))
+                    alert.addButtonWithTitle_(NSLocalizedString("OK", "Button title"))
 
             self._lid_alert = alert
             self._lid_alert_devices = tuple(alternatives)
@@ -8317,10 +8345,13 @@ class ContactWindowController(NSWindowController):
                 settings = SIPSimpleSettings()
                 settings.audio.input_device = dev
                 settings.save()
-                return
+                return True
             if not self._lid_alert_refresh:
-                return
+                break
             # aborted because the set of inputs changed: ask again with the new list
+
+        # left by the user, or aborted because the lid opened
+        return not self.builtinMicrophoneIsDead()
 
     @objc.python_method
     @run_in_gui_thread

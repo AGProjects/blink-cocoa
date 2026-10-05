@@ -11,6 +11,7 @@ from Foundation import (NSBundle,
                         NSObject,
                         NSRunLoop,
                         NSRunLoopCommonModes,
+                        NSThread,
                         NSTimer,
                         NSURL,
                         NSWorkspace)
@@ -2265,6 +2266,19 @@ class SessionController(NSObject):
 
     @objc.python_method
     def startCompositeSessionWithStreamsOfTypes(self, stype_tuple):
+        # A new call with the lid closed on the built-in microphone: ask for
+        # a microphone first, and do not place the call without one. Only
+        # for calls the user starts -- retries and redirects of a call that
+        # already passed this are left alone (_restarting_call). Not
+        # try_next_hop: that one is True on every fresh controller.
+        stypes = [s[0] if type(s) == tuple else s for s in stype_tuple]
+        if 'audio' in stypes and not self.hasStreamOfType('audio') and not getattr(self, '_restarting_call', False) and NSThread.isMainThread():
+            if not NSApp.delegate().contactsWindowController.ensureMicrophoneForCall():
+                self.log_info("Call cancelled, no working microphone")
+                if self.session is None and not self.streamHandlers:
+                    SessionControllersManager().removeController(self)
+                return False
+
         self.finished = False
     
         if self.state in (STATE_FINISHED, STATE_DNS_FAILED, STATE_FAILED):
@@ -2888,19 +2902,27 @@ class SessionController(NSObject):
                 self.remoteIdentity = target_uri
                 self.target_uri = target_uri
 
-                if len(oldSession.proposed_streams) == 1:
-                    self.startSessionWithStreamOfType(oldSession.proposed_streams[0].type)
-                else:
-                    self.startCompositeSessionWithStreamsOfTypes([s.type for s in oldSession.proposed_streams])
+                self._restarting_call = True
+                try:
+                    if len(oldSession.proposed_streams) == 1:
+                        self.startSessionWithStreamOfType(oldSession.proposed_streams[0].type)
+                    else:
+                        self.startCompositeSessionWithStreamsOfTypes([s.type for s in oldSession.proposed_streams])
+                finally:
+                    self._restarting_call = False
 
         # local timeout while we have an alternative route
         elif must_retry:
             self.log_info('Trying an alternative route...')
             self.routes.pop(0)
-            if len(oldSession.proposed_streams) == 1:
-                self.startSessionWithStreamOfType(oldSession.proposed_streams[0].type)
-            else:
-                self.startCompositeSessionWithStreamsOfTypes([s.type for s in oldSession.proposed_streams])
+            self._restarting_call = True
+            try:
+                if len(oldSession.proposed_streams) == 1:
+                    self.startSessionWithStreamOfType(oldSession.proposed_streams[0].type)
+                else:
+                    self.startCompositeSessionWithStreamsOfTypes([s.type for s in oldSession.proposed_streams])
+            finally:
+                self._restarting_call = False
 
     @objc.python_method
     def _store_sylk_zrtp_state(self, state, sas, installed_streams, failed_streams):
