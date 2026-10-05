@@ -14,6 +14,7 @@ from Foundation import (NSAttributedString,
                         NSFont,
                         NSMakeRange,
                         NSMutableAttributedString,
+                        NSNotFound,
                         NSNotificationCenter,
                         NSObject,
                         NSString
@@ -145,6 +146,10 @@ class DebugWindow(NSObject):
 
         for textView in [self.activityTextView, self.sipTextView, self.rtpTextView, self.msrpTextView, self.xcapTextView, self.pjsipTextView]:
             textView.setString_("")
+            # Touching layoutManager() drops the view to TextKit 1, where
+            # non-contiguous layout lets us scroll to the end of a large
+            # log without laying out everything before it.
+            textView.layoutManager().setAllowsNonContiguousLayout_(True)
 
         for label in [self.activityInfoLabel, self.sipInfoLabel, self.rtpInfoLabel, self.msrpInfoLabel, self.xcapInfoLabel, self.notificationsInfoLabel, self.pjsipInfoLabel]:
             label.setStringValue_('')
@@ -267,6 +272,8 @@ class DebugWindow(NSObject):
         # pjsip tabs update in real time again.
         self._attach_trace_observers()
         self.window.makeKeyAndOrderFront_(self)
+        # Catch up on scrolls skipped while the window was hidden.
+        self._flushPendingScrolls()
 
     def close_(self, sender):
         self.window.close()
@@ -519,6 +526,74 @@ class DebugWindow(NSObject):
 
         objc.super(DebugWindow, self).dealloc()
 
+    # Bound on how much text each log view keeps. The panel stays alive for
+    # the whole app lifetime and some tabs (RTP/ZRTP) are fed even while it
+    # is hidden, so without a cap a long-running Blink ends up with a text
+    # storage of hundreds of MB.
+    LOG_VIEW_MAX_CHARS = 2000000
+    SCROLL_COALESCE_INTERVAL = 0.2
+
+    @objc.python_method
+    def _trimLogView(self, textView):
+        storage = textView.textStorage()
+        length = storage.length()
+        if length <= self.LOG_VIEW_MAX_CHARS:
+            return
+        cut = length - int(self.LOG_VIEW_MAX_CHARS * 0.8)
+        # Cut on a line boundary so the first visible line is whole.
+        text = storage.string()
+        text = text.nsstring() if hasattr(text, 'nsstring') else text
+        nl = text.rangeOfString_options_range_("\n", 0, NSMakeRange(cut, min(4096, length - cut)))
+        if nl.location != NSNotFound:
+            cut = nl.location + 1
+        storage.deleteCharactersInRange_(NSMakeRange(0, cut))
+
+    @objc.python_method
+    def _scrollToEnd(self, textView):
+        """Trim and schedule a coalesced scroll-to-end for textView.
+
+        scrollRangeToVisible_ on a TextKit 2 NSTextView forces layout to be
+        ensured from the document start (O(text size)); calling it once per
+        appended line from handle_notification made the main thread spend
+        ~95% of its time in -[NSTextLayoutManager ensureLayoutForRange:]
+        once the logs grew large. Now: at most one scroll per view per
+        SCROLL_COALESCE_INTERVAL, and none at all while the window is
+        hidden (show() scrolls once on re-open).
+        """
+        self._trimLogView(textView)
+        if self.autoScrollCheckbox.state() != NSOnState:
+            return
+        try:
+            pending = self._pending_scrolls
+        except AttributeError:
+            pending = self._pending_scrolls = set()
+        pending.add(textView)
+        if not self.window.isVisible():
+            return
+        if getattr(self, '_scroll_flush_scheduled', False):
+            return
+        self._scroll_flush_scheduled = True
+        NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
+            self.SCROLL_COALESCE_INTERVAL, self, "scrollFlushTimer:", None, False)
+
+    def scrollFlushTimer_(self, timer):
+        self._scroll_flush_scheduled = False
+        self._flushPendingScrolls()
+
+    @objc.python_method
+    def _flushPendingScrolls(self):
+        try:
+            pending = self._pending_scrolls
+        except AttributeError:
+            return
+        self._pending_scrolls = set()
+        if self.autoScrollCheckbox.state() != NSOnState:
+            return
+        for textView in pending:
+            length = textView.textStorage().length()
+            if length:
+                textView.scrollRangeToVisible_(NSMakeRange(length - 1, 1))
+
     @objc.python_method
     def append_line(self, textView, line):
         if isinstance(line, NSAttributedString):
@@ -526,16 +601,14 @@ class DebugWindow(NSObject):
         else:
             textView.textStorage().appendAttributedString_(NSAttributedString.alloc().initWithString_attributes_(line+"\n", self.normalText))
 
-        if self.autoScrollCheckbox.state() == NSOnState:
-            textView.scrollRangeToVisible_(NSMakeRange(textView.textStorage().length()-1, 1))
+        self._scrollToEnd(textView)
 
     @objc.python_method
     def append_error_line(self, textView, line):
         red = NSDictionary.dictionaryWithObject_forKey_(NSColor.redColor(), NSForegroundColorAttributeName)
         textView.textStorage().appendAttributedString_(NSAttributedString.alloc().initWithString_attributes_(line+"\n", red))
 
-        if self.autoScrollCheckbox.state() == NSOnState:
-            textView.scrollRangeToVisible_(NSMakeRange(textView.textStorage().length()-1, 1))
+        self._scrollToEnd(textView)
 
     # Patterns matched against the un-timestamped activity message to
     # decide whether the line ALSO belongs in the RTP tab.  Anything
@@ -686,8 +759,7 @@ class DebugWindow(NSObject):
         finally:
             storage.endEditing()
 
-        if self.autoScrollCheckbox.state() == NSOnState:
-            textView.scrollRangeToVisible_(NSMakeRange(storage.length() - 1, 1))
+        self._scrollToEnd(textView)
 
     @objc.python_method
     def _appendRun(self, storage, lines, iserror):
@@ -913,8 +985,7 @@ class DebugWindow(NSObject):
 
         astring = NSAttributedString.alloc().initWithString_attributes_(text, self.normalText)
         self.rtpTextView.textStorage().appendAttributedString_(astring)
-        if self.autoScrollCheckbox.state() == NSOnState:
-            self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
+        self._scrollToEnd(self.rtpTextView)
 
     @objc.python_method
     def renderVideo(self, session):
@@ -1009,8 +1080,7 @@ class DebugWindow(NSObject):
 
         astring = NSAttributedString.alloc().initWithString_attributes_(text, self.normalText)
         self.rtpTextView.textStorage().appendAttributedString_(astring)
-        if self.autoScrollCheckbox.state() == NSOnState:
-            self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
+        self._scrollToEnd(self.rtpTextView)
 
     @objc.python_method
     def renderSIP(self, notification):
@@ -1130,8 +1200,7 @@ class DebugWindow(NSObject):
 
         self.sipTextView.textStorage().appendAttributedString_(text)
         self.sipTextView.textStorage().appendAttributedString_(self.newline)
-        if self.autoScrollCheckbox.state() == NSOnState:
-            self.sipTextView.scrollRangeToVisible_(NSMakeRange(self.sipTextView.textStorage().length()-1, 1))
+        self._scrollToEnd(self.sipTextView)
 
     @objc.python_method
     def renderDNS(self, text):
@@ -1251,8 +1320,7 @@ class DebugWindow(NSObject):
         text = '%s Audio call quality to %s is poor: loss %s, rtt: %s\n' % (notification.datetime, notification.sender.sessionController.target_uri, notification.data.packet_loss_rx, notification.data.latency)
         astring = NSAttributedString.alloc().initWithString_attributes_(text, self.normalText)
         self.rtpTextView.textStorage().appendAttributedString_(astring)
-        if self.autoScrollCheckbox.state() == NSOnState:
-            self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
+        self._scrollToEnd(self.rtpTextView)
 
     # Heuristic used to highlight a statistics line in red: little
     # speaker-to-mic isolation (low ERL) and little echo removed by the
@@ -1290,8 +1358,7 @@ class DebugWindow(NSObject):
         text = '%s Audio call quality to %s is back to normal: loss %s, rtt: %s\n' % (notification.datetime, notification.sender.sessionController.target_uri, notification.data.packet_loss_rx, notification.data.latency)
         astring = NSAttributedString.alloc().initWithString_attributes_(text, self.normalText)
         self.rtpTextView.textStorage().appendAttributedString_(astring)
-        if self.autoScrollCheckbox.state() == NSOnState:
-            self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
+        self._scrollToEnd(self.rtpTextView)
 
     @objc.python_method
     def _NH_MSRPTransportTrace(self, notification):
@@ -1375,8 +1442,7 @@ class DebugWindow(NSObject):
             text += '%s %s call established using %s codec at %sHz\n' % (notification.datetime, mType, stream.codec, stream.sample_rate)
         astring = NSAttributedString.alloc().initWithString_attributes_(text, self.normalText)
         self.rtpTextView.textStorage().appendAttributedString_(astring)
-        if self.autoScrollCheckbox.state() == NSOnState:
-            self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
+        self._scrollToEnd(self.rtpTextView)
 
     @objc.python_method
     def _NH_RTPStreamICENegotiationDidSucceed(self, notification):
@@ -1406,8 +1472,7 @@ class DebugWindow(NSObject):
             text += '\t%s\n' % check
         astring = NSAttributedString.alloc().initWithString_attributes_(text, self.normalText)
         self.rtpTextView.textStorage().appendAttributedString_(astring)
-        if self.autoScrollCheckbox.state() == NSOnState:
-            self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
+        self._scrollToEnd(self.rtpTextView)
 
     @objc.python_method
     def _NH_RTPStreamICENegotiationStateDidChange(self, notification):
@@ -1430,8 +1495,7 @@ class DebugWindow(NSObject):
         if text:
             astring = NSAttributedString.alloc().initWithString_attributes_(text, self.normalText)
             self.rtpTextView.textStorage().appendAttributedString_(astring)
-            if self.autoScrollCheckbox.state() == NSOnState:
-                self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
+            self._scrollToEnd(self.rtpTextView)
 
     @objc.python_method
     def _NH_RTPStreamICENegotiationDidFail(self, notification):
@@ -1442,8 +1506,7 @@ class DebugWindow(NSObject):
         text = '%s %s ICE negotiation failed: %s\n' % (notification.datetime, mtype, reason)
         astring = NSAttributedString.alloc().initWithString_attributes_(text, self.normalText)
         self.rtpTextView.textStorage().appendAttributedString_(astring)
-        if self.autoScrollCheckbox.state() == NSOnState:
-            self.rtpTextView.scrollRangeToVisible_(NSMakeRange(self.rtpTextView.textStorage().length()-1, 1))
+        self._scrollToEnd(self.rtpTextView)
 
     @objc.python_method
     def _append_rtp_line(self, text):
@@ -1452,9 +1515,7 @@ class DebugWindow(NSObject):
             text += '\n'
         astring = NSAttributedString.alloc().initWithString_attributes_(text, self.normalText)
         self.rtpTextView.textStorage().appendAttributedString_(astring)
-        if self.autoScrollCheckbox.state() == NSOnState:
-            self.rtpTextView.scrollRangeToVisible_(
-                NSMakeRange(self.rtpTextView.textStorage().length() - 1, 1))
+        self._scrollToEnd(self.rtpTextView)
 
     # ----- ZRTP negotiation traces -----------------------------------------
     # All four notifications are posted by sipsimple's RTP stream wrapper
