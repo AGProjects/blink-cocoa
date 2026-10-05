@@ -718,6 +718,8 @@
 		AD0000000000000000DE0001 /* MessageDetailsPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000DE0000 /* MessageDetailsPanel.py */; };
 		AD0000000000000000DE0003 /* MessageDetailsPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000DE0000 /* MessageDetailsPanel.py */; };
 		AD0000000000000000EF0003 /* ScreenPointer.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000EF0000 /* ScreenPointer.py */; };
+		AD0000000000000000F00001 /* ClamshellMonitor.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000F00000 /* ClamshellMonitor.py */; };
+		AD0000000000000000F00003 /* ClamshellMonitor.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000F00000 /* ClamshellMonitor.py */; };
 		AD0000000000000000EF0103 /* ScreenPointerController.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000EF0100 /* ScreenPointerController.py */; };
 		AD00000000000000740001 /* AttachmentPreview.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000740000 /* AttachmentPreview.py */; };
 		AD00000000000000740003 /* AttachmentPreview.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000740000 /* AttachmentPreview.py */; };
@@ -1557,6 +1559,7 @@
 		AD0000000000000000CD0000 /* CallDetailsPanel.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = CallDetailsPanel.py; sourceTree = "<group>"; };
 		AD0000000000000000DE0000 /* MessageDetailsPanel.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MessageDetailsPanel.py; sourceTree = "<group>"; };
 		AD0000000000000000EF0000 /* ScreenPointer.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ScreenPointer.py; sourceTree = "<group>"; };
+		AD0000000000000000F00000 /* ClamshellMonitor.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ClamshellMonitor.py; sourceTree = "<group>"; };
 		AD0000000000000000EF0100 /* ScreenPointerController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ScreenPointerController.py; sourceTree = "<group>"; };
 		AD00000000000000740000 /* AttachmentPreview.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AttachmentPreview.py; sourceTree = "<group>"; };
 		AD00000000000000750000 /* CameraCapture.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = CameraCapture.py; sourceTree = "<group>"; };
@@ -1921,6 +1924,7 @@
 				AD0000000000000000AB0000 /* AddressbookNotify.py */,
 				AD0000000000000000AB0010 /* AddressbookOrigin.py */,
 				AD0000000000000000EF0000 /* ScreenPointer.py */,
+				AD0000000000000000F00000 /* ClamshellMonitor.py */,
 				AD0000000000000000EF0100 /* ScreenPointerController.py */,
 				AD00000000000000004D0000 /* MessageHost.py */,
 				2B0CE72910CD824400325F30 /* SMSSession.xib */,
@@ -2640,7 +2644,6 @@
 				1F22731312B554F50010A8B2 /* SMSViewController.py in Resources */,
 				AD00000000000000004F0001 /* MessagePaneController.py in Resources */,
 				AD0000000000000000600001 /* ContactMangler.py in Resources */,
-				AD0000000000000000610001 /* Profiles.py in Resources */,
 				AD0000000000000000500001 /* MessageAccountPicker.py in Resources */,
 				AD00000000000000750001 /* CameraCapture.py in Resources */,
 				AD00000000000000740001 /* AttachmentPreview.py in Resources */,
@@ -2986,6 +2989,7 @@
 				AD0000000000000000AB0003 /* AddressbookNotify.py in Resources */,
 				AD0000000000000000AB0013 /* AddressbookOrigin.py in Resources */,
 				AD0000000000000000EF0003 /* ScreenPointer.py in Resources */,
+				AD0000000000000000F00003 /* ClamshellMonitor.py in Resources */,
 				AD0000000000000000EF0103 /* ScreenPointerController.py in Resources */,
 				AD00000000000000004D0003 /* MessageHost.py in Resources */,
 				2B29EF3811382F65009DA9B0 /* PresenceOfflineWindow.xib in Resources */,

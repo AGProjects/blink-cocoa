@@ -1013,14 +1013,25 @@ class AudioInputDeviceOption(PopUpMenuOption):
 
     @objc.python_method
     def refresh(self):
+        from ClamshellMonitor import ClamshellMonitor
+        monitor = ClamshellMonitor()
+        dead_inputs = monitor.builtin_inputs() if monitor.builtin_microphone_disabled else set()
+        unavailable = NSLocalizedString("unavailable, lid is closed", "Menu item")
+        self.popup.setAutoenablesItems_(False)
         self.popup.removeAllItems()
         self.popup.addItemWithTitle_(NSLocalizedString("None", "Menu item"))
         self.popup.lastItem().setRepresentedObject_(None)
         self.popup.addItemWithTitle_(NSLocalizedString("System Default", "Popup title"))
         self.popup.lastItem().setRepresentedObject_("system_default")
+        default_device = Engine().default_input_device
+        if default_device is not None and default_device.strip() in dead_inputs:
+            self.popup.lastItem().setEnabled_(False)
         for item in Engine().input_devices:
-            self.popup.addItemWithTitle_(item)
+            dead = item.strip() in dead_inputs
+            # titles must stay unique, NSPopUpButton drops duplicates
+            self.popup.addItemWithTitle_("%s \u2014 %s" % (item, unavailable) if dead else item)
             self.popup.lastItem().setRepresentedObject_(item)
+            self.popup.lastItem().setEnabled_(not dead)
 
 
 class AudioOutputDeviceOption(PopUpMenuOption):

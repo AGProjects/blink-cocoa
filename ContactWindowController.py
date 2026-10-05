@@ -96,6 +96,8 @@ from Foundation import (NSArray,
                         NSZeroRect)
 import objc
 import Contacts
+
+from ClamshellMonitor import ClamshellMonitor
 from AVFoundation import AVCaptureDevice
 
 import pickle
@@ -586,6 +588,7 @@ class ContactWindowController(NSWindowController):
         nc.add_observer(self, name="BonjourAccountRegistrationDidEnd")
         nc.add_observer(self, name="CFGSettingsObjectDidChange")
         nc.add_observer(self, name="DefaultAudioDeviceDidChange")
+        nc.add_observer(self, name="BlinkBuiltinMicrophoneAvailabilityDidChange")
         nc.add_observer(self, name="LDAPDirectorySearchFoundContact")
         nc.add_observer(self, name="HistoryEntriesVisibilityChanged")
         nc.add_observer(self, name="MediaStreamDidInitialize")
@@ -779,15 +782,12 @@ class ContactWindowController(NSWindowController):
         SIPApplication().engine._ua.refresh_sound_devices()
         
         settings = SIPSimpleSettings()
-        in_out_devices = list(set(self.backend._app.engine.input_devices) & set(self.backend._app.engine.output_devices))
-        in_out_devices.append('system_default')
-        #BlinkLogger().log_info('Selected input device %s' % settings.audio.input_device)
-        #BlinkLogger().log_info('Selected output device %s' % settings.audio.input_device)
-        #BlinkLogger().log_info('Available devices %s' % in_out_devices)
-        if settings.audio.input_device not in in_out_devices:
+        in_devices = list(self.backend._app.engine.input_devices) + ['system_default', None]
+        out_devices = list(self.backend._app.engine.output_devices) + ['system_default', None]
+        if settings.audio.input_device not in in_devices:
             BlinkLogger().log_info('Changing input to system_default')
             settings.audio.input_device = 'system_default'
-        if settings.audio.output_device not in in_out_devices:
+        if settings.audio.output_device not in out_devices:
             BlinkLogger().log_info('Changing output to system_default')
             settings.audio.output_device = 'system_default'
         
@@ -7010,6 +7010,13 @@ class ContactWindowController(NSWindowController):
 
             value = getattr(settings.audio, option_name)
 
+            # With the lid closed the built-in mic is listed but records
+            # silence. An item without an action is disabled by the menu's
+            # auto-enabling, which is how it is greyed out here.
+            monitor = ClamshellMonitor()
+            dead_inputs = monitor.builtin_inputs() if tag == 402 and monitor.builtin_microphone_disabled else set()
+            unavailable = NSLocalizedString("unavailable, lid is closed", "Menu item")
+
             index = menu.indexOfItem_(menu.itemWithTag_(tag))+1
 
             item = menu.insertItemWithTitle_action_keyEquivalent_atIndex_(NSLocalizedString("None", "Menu item"), selector, "", index)
@@ -7022,7 +7029,11 @@ class ContactWindowController(NSWindowController):
 
             default_device = self.backend._app.engine.default_output_device if tag in (401, 403) else self.backend._app.engine.default_input_device
 
-            item = menu.insertItemWithTitle_action_keyEquivalent_atIndex_(NSLocalizedString("System Default (%s)", "Menu item") % default_device.strip(), selector, "", index)
+            default_dead = default_device is not None and default_device.strip() in dead_inputs
+            title = NSLocalizedString("System Default (%s)", "Menu item") % (default_device or '').strip()
+            if default_dead:
+                title = "%s \u2014 %s" % (title, unavailable)
+            item = menu.insertItemWithTitle_action_keyEquivalent_atIndex_(title, None if default_dead else selector, "", index)
             item.setRepresentedObject_("system_default")
             item.setTarget_(self)
             item.setTag_(tag*100+1)
@@ -7033,7 +7044,10 @@ class ContactWindowController(NSWindowController):
             i = 2
             for dev in devices:
                 dev_title = dev.strip()
-                item = menu.insertItemWithTitle_action_keyEquivalent_atIndex_(dev_title, selector, "", index)
+                dead = dev_title in dead_inputs
+                if dead:
+                    dev_title = "%s \u2014 %s" % (dev_title, unavailable)
+                item = menu.insertItemWithTitle_action_keyEquivalent_atIndex_(dev_title, None if dead else selector, "", index)
                 item.setRepresentedObject_(dev)
                 item.setTarget_(self)
                 item.setTag_(tag * 100 + i)
@@ -7104,9 +7118,14 @@ class ContactWindowController(NSWindowController):
                 menu.itemWithTag_(404).setHidden_(False)
                 menu.itemWithTag_(405).setHidden_(False)
                 index = menu.indexOfItem_(menu.itemWithTag_(tag))+1
+                monitor = ClamshellMonitor()
+                dead_inputs = monitor.builtin_inputs() if monitor.builtin_microphone_disabled else set()
+                if dead_inputs:
+                    dead_inputs.add(NSLocalizedString("Built-in Microphone and Output", "Label"))
                 i = 0
                 for dev in devices:
-                    item = menu.insertItemWithTitle_action_keyEquivalent_atIndex_(dev.strip(), selector, "", index)
+                    dead = dev.strip() in dead_inputs
+                    item = menu.insertItemWithTitle_action_keyEquivalent_atIndex_(dev.strip(), None if dead else selector, "", index)
                     if settings.audio.input_device == dev and settings.audio.output_device == dev:
                         state = NSOnState
                     elif dev == NSLocalizedString("Built-in Microphone and Output", "Label") and settings.audio.input_device == NSLocalizedString("Built-in Microphone", "Label") and settings.audio.output_device == NSLocalizedString("Built-in Output", "Label"):
@@ -8167,15 +8186,154 @@ class ContactWindowController(NSWindowController):
         #else:
         #    self.menuWillOpen_(self.devicesMenu)
 
+        self.checkBuiltinMicrophone()
+
     @objc.python_method
     def _NH_DefaultAudioDeviceDidChange(self, notification):
-        pass
+        self.checkBuiltinMicrophone()
+
+    @objc.python_method
+    def _NH_BlinkBuiltinMicrophoneAvailabilityDidChange(self, notification):
+        self.checkBuiltinMicrophone()
+
+    @objc.python_method
+    def effectiveInputDevice(self):
+        settings = SIPSimpleSettings()
+        value = settings.audio.input_device
+        if value in ('system_default', 'default'):
+            return self.backend._app.engine.default_input_device
+        return value
+
+    @objc.python_method
+    def checkBuiltinMicrophone(self):
+        """React to the lid closing on the built-in microphone.
+
+        Lid closed and the mic in use is the built-in one: never switch on our
+        own -- ask. The alert lists the other inputs to pick from, or says
+        there is none. It is shown once per lid close and set of available
+        inputs, so plugging in a microphone with the lid closed asks again.
+        """
+        if not self.builtinMicrophoneIsDead():
+            self._lid_prompted_for = None
+            self.dismissNoMicrophoneAlert()
+            return
+
+        alternatives = self.alternativeInputDevices()
+        if self._lid_alert_is_open():
+            if tuple(alternatives) != getattr(self, '_lid_alert_devices', None):
+                self._lid_alert_refresh = True
+                NSApp.abortModal()
+            return
+        if tuple(alternatives) == getattr(self, '_lid_prompted_for', None):
+            return
+        self.warnNoMicrophone()
+
+    @objc.python_method
+    def alternativeInputDevices(self):
+        builtin = ClamshellMonitor().builtin_inputs()
+        return [dev for dev in self.backend._app.engine.input_devices if dev.strip() not in builtin]
+
+    @objc.python_method
+    def _lid_alert_is_open(self):
+        return getattr(self, '_lid_alert', None) is not None
+
+    @objc.python_method
+    def warnNoMicrophone(self, force=False):
+        alternatives = self.alternativeInputDevices()
+        if not force and tuple(alternatives) == getattr(self, '_lid_prompted_for', None):
+            return
+        self._lid_prompted_for = tuple(alternatives)
+        if alternatives:
+            BlinkLogger().log_warning('Lid closed, built-in microphone is disconnected, asking which input to use')
+        else:
+            BlinkLogger().log_warning('Lid closed and no other audio input is available, the other party will not hear you')
+            NSApp.delegate().gui_notify(NSLocalizedString("Microphone not available", "Label"),
+                                        NSLocalizedString("The built-in microphone does not work while the lid is closed. Open the lid or connect a headset or external microphone.", "Label"))
+        # Queued rather than run here: runModal would block the notification
+        # handler that got us here, and every observer after it.
+        NSApp.delegate().performSelectorOnMainThread_withObject_waitUntilDone_("callObject:", self.showNoMicrophoneAlert, False)
+
+    @objc.python_method
+    def showNoMicrophoneAlert(self):
+        if self._lid_alert_is_open():
+            return
+        from AppKit import NSAlert, NSPopUpButton
+        try:
+            from AppKit import NSAlertStyleWarning as warning_style
+        except ImportError:
+            from AppKit import NSWarningAlertStyle as warning_style
+        NSAlertFirstButtonReturn = 1000
+
+        while self.builtinMicrophoneIsDead():
+            alternatives = self.alternativeInputDevices()
+            alert = NSAlert.alloc().init()
+            alert.setAlertStyle_(warning_style)
+            alert.setMessageText_(NSLocalizedString("Microphone not available", "Window title"))
+            popup = None
+            if alternatives:
+                alert.setInformativeText_(NSLocalizedString("The built-in microphone is disconnected while the lid is closed. The other party will not hear you.\n\nSelect another microphone to use:", "Label"))
+                popup = NSPopUpButton.alloc().initWithFrame_pullsDown_(NSMakeRect(0, 0, 300, 26), False)
+                settings = SIPSimpleSettings()
+                for dev in alternatives:
+                    popup.addItemWithTitle_(dev.strip())
+                    popup.lastItem().setRepresentedObject_(dev)
+                # preselect, not select: a headset that is also the output
+                if settings.audio.output_device in alternatives:
+                    popup.selectItemAtIndex_(alternatives.index(settings.audio.output_device))
+                alert.setAccessoryView_(popup)
+                alert.addButtonWithTitle_(NSLocalizedString("Use This Microphone", "Button title"))
+                alert.addButtonWithTitle_(NSLocalizedString("Cancel", "Button title"))
+            else:
+                alert.setInformativeText_(NSLocalizedString("The built-in microphone is disconnected while the lid is closed, and no other microphone is connected. The other party will not hear you.\n\nOpen the lid or connect a headset or external microphone.", "Label"))
+                alert.addButtonWithTitle_(NSLocalizedString("OK", "Button title"))
+
+            self._lid_alert = alert
+            self._lid_alert_devices = tuple(alternatives)
+            self._lid_alert_refresh = False
+            NSApp.activateIgnoringOtherApps_(True)
+            try:
+                response = alert.runModal()
+            finally:
+                self._lid_alert = None
+
+            if popup is not None and response == NSAlertFirstButtonReturn:
+                dev = popup.selectedItem().representedObject()
+                BlinkLogger().log_info('Lid closed, user selected audio input %s' % dev.strip())
+                settings = SIPSimpleSettings()
+                settings.audio.input_device = dev
+                settings.save()
+                return
+            if not self._lid_alert_refresh:
+                return
+            # aborted because the set of inputs changed: ask again with the new list
+
+    @objc.python_method
+    @run_in_gui_thread
+    def dismissNoMicrophoneAlert(self):
+        # The lid opened or the user picked another input while the alert is
+        # up. The lid poll timer runs in the common modes, so this does arrive
+        # while the modal session is running.
+        if self._lid_alert_is_open():
+            self._lid_alert_refresh = False
+            NSApp.abortModal()
+
+    @objc.python_method
+    def builtinMicrophoneIsDead(self):
+        monitor = ClamshellMonitor()
+        if not monitor.builtin_microphone_disabled:
+            return False
+        if SIPSimpleSettings().audio.input_device is None:
+            return False
+        current = self.effectiveInputDevice()
+        return current is not None and current.strip() in monitor.builtin_inputs()
         #self.menuWillOpen_(self.devicesMenu)
 
     @objc.python_method
     def _NH_MediaStreamDidInitialize(self, notification):
         if notification.sender.type == "audio":
             self.updateAudioButtons()
+            if self.builtinMicrophoneIsDead():
+                self.warnNoMicrophone(force=True)
 
     @objc.python_method
     def _NH_MediaStreamDidEnd(self, notification):
@@ -8232,6 +8390,8 @@ class ContactWindowController(NSWindowController):
         #self.updateHistoryMenu()
         # BlinkLogger().log_info('startup: updateStartSessionButtons')
         self.updateStartSessionButtons()
+        ClamshellMonitor().start()
+        self.checkBuiltinMicrophone()
         # BlinkLogger().log_info('startup: removePresenceContactForOurselves')
         self.removePresenceContactForOurselves()
         # BlinkLogger().log_info('startup: FileTransferWindowController()')

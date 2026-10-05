@@ -189,6 +189,7 @@ class PreferencesController(NSWindowController, object):
         notification_center = NotificationCenter()
         notification_center.add_observer(self, name="CFGSettingsObjectDidChange")
         notification_center.add_observer(self, name="AudioDevicesDidChange")
+        notification_center.add_observer(self, name="BlinkBuiltinMicrophoneAvailabilityDidChange")
         notification_center.add_observer(self, name="VideoDevicesDidChange")
         # So the in-preferences video preview re-binds to the new camera
         # whenever pjsip actually switches devices (which may lag the
@@ -1286,6 +1287,10 @@ class PreferencesController(NSWindowController, object):
 
     @objc.python_method
     def _NH_AudioDevicesDidChange(self, notification):
+        self.updateAudioDevices_(None)
+
+    @objc.python_method
+    def _NH_BlinkBuiltinMicrophoneAvailabilityDidChange(self, notification):
         self.updateAudioDevices_(None)
 
     @objc.python_method
