@@ -469,11 +469,8 @@ class SMSWindowController(NSWindowController):
                 if self.window().isKeyWindow():
                     _item = self.tabSwitcher.itemForTabViewItem_(item)
                     _item.setBadgeLabel_("")
-                    # The tabbed window announces the read the same way the
-                    # pane does; it used to call a stub that returned
-                    # immediately, so selecting a tab told nobody.
-                    viewer.announce_conversation_read()
                     viewer.not_read_queue_start()
+                    # announces the read, but only when there was something unread
                     self.conversationBecameVisible(viewer)
 
         try:

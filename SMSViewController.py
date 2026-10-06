@@ -3613,10 +3613,7 @@ class SMSViewController(NSObject):
         else:
             encryption = ''
 
-        if content_type == 'application/sylk-api-conversation-read':
-            recipient = ChatIdentity(self.local_uri)
-        else:
-            recipient = ChatIdentity(self.target_uri, self.display_name)
+        recipient = ChatIdentity(self.target_uri, self.display_name)
 
         mInfo = MessageInfo(id, sender=self.account, recipient=recipient, timestamp=timestamp, content_type=content_type, content=content, status=status, encryption=encryption)
 
@@ -4030,7 +4027,12 @@ class SMSViewController(NSObject):
         payload = json.dumps({'contact': self.remote_uri, 'device_id': this_device_id()})
         self.log_info('Announcing that the conversation with %s was read: %s'
                       % (self.remote_uri, payload))
-        self.sendMessage(payload, 'application/sylk-api-conversation-read')
+        # Addressed to our own account, like the conversation remove: the
+        # server API only reads the From header and the body, and a request
+        # addressed to the peer was also delivered to the peer's devices.
+        manager = SMSWindowManager.SMSWindowManager()
+        manager.noteOwnConversationRead(self.remote_uri)
+        manager.sendMessage(self.account, payload, 'application/sylk-api-conversation-read')
 
     @objc.python_method
     def not_read_queue_start(self):
@@ -4266,10 +4268,6 @@ class SMSViewController(NSObject):
 
         self.messages[message.id] = message
         self.log_debug('PJSIP will send %s message %s' % (message.content_type, message.id))
-        if message.content_type == 'application/sylk-api-conversation-read':
-            # So the copy the server fans back to this device is recognised
-            # as ours and swallowed rather than applied and logged.
-            SMSWindowManager.SMSWindowManager().noteOwnConversationRead(self.remote_uri)
         message_request.send(timeout)
 
     @objc.python_method
