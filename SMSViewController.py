@@ -4053,9 +4053,29 @@ class SMSViewController(NSObject):
                 self.not_read_queue_started = True
             except RuntimeError as e:
                 pass
+            # Stopped before it was ever started -- the conversation was
+            # deselected, or the window resigned key, before it was first
+            # read -- leaves the queue paused, and starting it does not undo
+            # that: every display notification waited until the next time
+            # the conversation lost and regained visibility, so with the
+            # pane open on a conversation only the delivery receipts went out.
+            if self.not_read_queue_paused:
+                pending = len(self.not_read_queue.queue.queue)
+                self.not_read_queue.unpause()
+                self.not_read_queue_paused = False
+                self.log_debug('Display notifications queue started after a pause with %d pending messages' % pending)
 
     @objc.python_method
     def not_read_queue_stop(self):
+        # EventQueue.pause() counts: every pause needs its own unpause. This is
+        # called on every visibility change that leaves the conversation off
+        # screen (another conversation selected, the window resigning key,
+        # the pane closing), often several times in a row, while
+        # not_read_queue_start unpauses once -- so after a few of them the
+        # queue never ran again and no display notification went out, only
+        # the delivery ones (sent directly, not through this queue).
+        if self.not_read_queue_paused:
+            return
         if len(self.not_read_queue.queue.queue):
             self.log_debug('Display notifications queue paused with %d messages' % len(self.not_read_queue.queue.queue))
         else:
