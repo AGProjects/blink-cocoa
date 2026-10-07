@@ -796,7 +796,7 @@ NOT_DELETED_SQL = "(deleted is null or deleted = 0)"
 
 
 class ChatHistory(object, metaclass=Singleton):
-    __version__ = 22
+    __version__ = 23
 
     def __init__(self):
         path = ApplicationData.get('history')
@@ -1114,6 +1114,18 @@ class ChatHistory(object, metaclass=Singleton):
                 self.db.queryAll(query)
             except Exception as e:
                 BlinkLogger().log_error("Error stamping the category of stored calls: %s" % e)
+
+        if next_upgrade_version < 23:
+            # SylkServer's plain text notices of file transfers ("File transfer
+            # available at <url> (size)") are no longer stored: the transfer is
+            # a message of its own. The ones already stored go.
+            query = ("delete from chat_messages where content_type = 'text/plain'"
+                     " and body like 'File transfer available at %'"
+                     " and body like '%/webrtcgateway/filetransfer/%'")
+            try:
+                self.db.queryAll(query)
+            except Exception as e:
+                BlinkLogger().log_error("Error pruning file transfer notices: %s" % e)
 
         TableVersions().set_table_version(ChatMessage.sqlmeta.table, self.__version__)
 

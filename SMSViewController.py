@@ -181,6 +181,21 @@ def is_otr_wire_text(content):
     return content.lstrip()[:4].upper() == OTR_WIRE_PREFIX
 
 
+def is_file_transfer_notice(content_type, content):
+    """Whether this is SylkServer's plain text notice of a file transfer,
+    "File transfer available at <url> (size)". The server sends it to the
+    other party and to the sender's own devices for clients that cannot show
+    a transfer; the transfer itself arrives as a message of its own, so the
+    notice is dropped (sylk-mobile does the same)."""
+    if str(content_type or '').lower() != 'text/plain' or content is None:
+        return False
+    if isinstance(content, bytes):
+        content = content.decode('utf-8', 'replace')
+    if not isinstance(content, str):
+        return False
+    return content.startswith('File transfer available at ') and '/webrtcgateway/filetransfer/' in content
+
+
 def _row_details(row, body=True):
     """One stored chat_messages row as a plain dict, for the info panel."""
     fields = ('msgid', 'direction', 'time', 'local_uri', 'remote_uri', 'cpim_from',
@@ -1621,6 +1636,10 @@ class SMSViewController(NSObject):
             except UnicodeDecodeError:
                 return
             
+            if is_file_transfer_notice(content_type, content):
+                self.log_info('Dropped file transfer notice %s: the transfer comes as its own message' % call_id)
+                return None
+
             if is_otr_wire_text(content):
                 if content.lstrip().startswith('?OTR:'):
                     # Ciphertext that the session did not take. Either it is a
@@ -5440,6 +5459,9 @@ class SMSViewController(NSObject):
                     continue
             
                 if message.body.strip().startswith('-----BEGIN PGP PUBLIC KEY BLOCK-----'):
+                    continue
+
+                if is_file_transfer_notice(message.content_type, message.body):
                     continue
 
                 if is_otr_wire_text(message.body):

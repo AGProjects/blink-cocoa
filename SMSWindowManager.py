@@ -79,7 +79,7 @@ from BlinkLogger import BlinkLogger
 from KeyEscrow import (escrow_is_missing, install_keypair, log_self_contact,
                        restore_from_own_contact, write_self_keys)
 from HistoryManager import ChatHistory
-from SMSViewController import SMSViewController, is_otr_wire_text, is_placeholder_uri
+from SMSViewController import SMSViewController, is_file_transfer_notice, is_otr_wire_text, is_placeholder_uri
 
 
 def bare_instance_id(value):
@@ -5252,6 +5252,11 @@ class SMSWindowManagerClass(NSObject):
                                     % remote_uri)
             return False
 
+        if is_file_transfer_notice(content_type, body):
+            BlinkLogger().log_debug('Dropped file transfer notice from %s: the transfer comes as its own message'
+                                    % remote_uri)
+            return False
+
         encryption = ''
         stripped = body.strip()
         if stripped.startswith('-----BEGIN PGP MESSAGE-----') and stripped.endswith('-----END PGP MESSAGE-----'):
@@ -5505,6 +5510,9 @@ class SMSWindowManagerClass(NSObject):
         if is_otr_wire_text(msg.get('content')):
             return False
 
+        if is_file_transfer_notice(msg.get('content_type'), msg.get('content')):
+            return False
+
         content_type = msg['content_type']
         if content_type in ('text/plain', 'text/html') + FILE_TRANSFER_CONTENT_TYPES:
             return True
@@ -5592,6 +5600,12 @@ class SMSWindowManagerClass(NSObject):
         # storing it only guarantees a wire dump in some future replay.
         if is_otr_wire_text(body):
             BlinkLogger().log_debug('Dropped journalled OTR traffic %s' % msgid)
+            self._resolvePendingSave(msgid)
+            return
+
+        # The server's plain text notice of a file transfer: the transfer is its own entry.
+        if is_file_transfer_notice(content_type, body):
+            BlinkLogger().log_debug('Dropped journalled file transfer notice %s' % msgid)
             self._resolvePendingSave(msgid)
             return
 
@@ -7129,6 +7143,13 @@ class SMSWindowManagerClass(NSObject):
             except Exception as e:
                 BlinkLogger().log_error('Cannot store %s message %s: %s'
                                         % (content_type, imdn_id, e))
+            return
+
+        # SylkServer's plain text notice of a file transfer, sent for clients
+        # that cannot show one: the transfer itself arrives as its own message,
+        # so the notice raises no window, no banner and no row.
+        if is_file_transfer_notice(content_type, content):
+            BlinkLogger().log_debug('Dropped file transfer notice %s: the transfer comes as its own message' % imdn_id)
             return
 
         # application/sylk-message-metadata is deliberately absent. It is
