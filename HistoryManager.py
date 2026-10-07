@@ -1277,7 +1277,10 @@ class ChatHistory(object, metaclass=Singleton):
             results = ChatMessage.selectBy(msgid=msgid, direction=direction)
             message = results.getOne()
             if message:
-                if message.status != 'displayed' and message.status != status:
+                if direction == 'outgoing' and status == 'failed' and message.status == 'delivered':
+                    # the peer's devices answer each on its own: one that cannot show it does not undo one that did
+                    BlinkLogger().log_info("Message %s failed disposition ignored, already delivered" % msgid)
+                elif message.status != 'displayed' and message.status != status:
                     message.status = status
                     #BlinkLogger().log_info("Updated message %s to %s" % (msgid, status))
             else:

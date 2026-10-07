@@ -4118,6 +4118,10 @@ class NativeChatViewController(ChatViewController):
         if state == 'deleted':
             self.removeMessage(msgid)
             return
+        # receipts from the peer's devices come each on its own and in any order: never backwards
+        # (a device that cannot show it does not undo one that did, a late delivered does not undo displayed)
+        if (state == 'failed' and bubble.state in ('delivered', 'displayed')) or (state == 'delivered' and bubble.state == 'displayed'):
+            return
         bubble.state = state
         if private:
             bubble.is_private = True
