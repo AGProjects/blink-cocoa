@@ -140,7 +140,7 @@ BUBBLE_FRAC   = 0.97
 # reads better than a fraction: in a narrow drawer a percentage throws
 # away width the text badly needs, while in a wide one it leaves a gap
 # so large the bubbles look stranded on their own side.
-OPPOSITE_GUTTER = 22.0
+OPPOSITE_GUTTER = 30.0     # room for the actions button beside the bubble (MORE_BUTTON_SIZE + gap)
 PAD           = 6.0
 HEADER_H      = 18.0
 # Sylk Mobile rounds its bubbles at 16 (ChatBubble.js). The same figure
@@ -457,6 +457,12 @@ GLYPH_COPIED    = chr(10003)
 GLYPH_REPLY     = chr(8617)
 # Opens a call's details panel, which carries the link to its SIP trace.
 GLYPH_INFO      = chr(9432)
+# The message's actions are in one menu, as in Blink for Linux: opened by a
+# round button with three dots floating beside the bubble (on the side facing
+# the middle, level with its top) while the pointer is over the message, or by
+# a right click -- rather than a row of small glyphs in the header.
+MORE_BUTTON_SIZE = 22.0
+MORE_BUTTON_GAP  = 6.0
 # Which way the call went. Direction is the arrow's whole job: whether it
 # was answered is carried by the colour and said outright in the words, so
 # a missed call is the same arrow in the attention colour rather than a
@@ -2060,6 +2066,7 @@ class MessageBubbleView(NSView):
             self._open_rect = NSZeroRect
             self._reply_rect = NSZeroRect
             self._info_rect = NSZeroRect
+            self._more_rect = NSZeroRect
             # True for a moment after copying, so the affordance can say it
             # did something: a click that silently succeeds is
             # indistinguishable from one that silently failed.
@@ -3960,21 +3967,9 @@ class MessageBubbleView(NSView):
             except Exception:
                 return 0.0
 
-        left = 0.0
-        if self._isEditable() or self._showsEditCaption():
-            left += width_of(GLYPH_EDIT, glyph_font) + 6.0
-        if self._isCopyable():
-            left += width_of(GLYPH_COPY, glyph_font) + 6.0
-        if self._showsOpen():
-            left += width_of(GLYPH_OPEN, glyph_font) + 6.0
-        if self._showsSaveAs():
-            left += width_of(GLYPH_SAVE, glyph_font) + 6.0
-        if self._isRepliable():
-            left += width_of(GLYPH_REPLY, glyph_font) + 6.0
-        if self._showsInfo():
-            left += width_of(GLYPH_INFO, glyph_font) + 6.0
+        left = 0.0      # the actions are in the menu beside the bubble: nothing on the left but the sender
 
-        right = width_of(GLYPH_DELETE, glyph_font) + 4.0
+        right = 0.0
         ticks = self._deliveryGlyphs()
         if ticks:
             right += width_of(ticks, glyph_font) + 4.0
@@ -4475,6 +4470,7 @@ class MessageBubbleView(NSView):
                 self._clearAffordances()
             else:
                 self._drawHeader(bubble)
+                self._drawMoreButton(bubble)
 
             # Above everything the bubble says itself: the message being
             # answered comes first, the way it reads on paper.
@@ -5381,6 +5377,57 @@ class MessageBubbleView(NSView):
         self._open_rect = NSZeroRect
         self._reply_rect = NSZeroRect
         self._info_rect = NSZeroRect
+        self._more_rect = NSZeroRect
+
+    @objc.python_method
+    def _moreButtonRect(self, bubble):
+        """Beside the bubble, on the side facing the middle, level with its top."""
+        if self.direction == 'outgoing':
+            x = bubble.origin.x - MORE_BUTTON_GAP - MORE_BUTTON_SIZE
+        else:
+            x = bubble.origin.x + bubble.size.width + MORE_BUTTON_GAP
+        return NSMakeRect(x, bubble.origin.y + 2.0, MORE_BUTTON_SIZE, MORE_BUTTON_SIZE)
+
+    @objc.python_method
+    def _drawMoreButton(self, bubble):
+        """The actions button: drawn while the pointer is over the message (or its menu is open)."""
+        self._more_rect = self._moreButtonRect(bubble) if self.msgid else NSZeroRect
+        if not self.msgid or not (getattr(self, '_hovered', False) or getattr(self, '_menu_open', False)):
+            return
+        rect = self._more_rect
+        try:
+            NSColor.labelColor().colorWithAlphaComponent_(0.14).set()
+        except Exception:
+            NSColor.colorWithCalibratedWhite_alpha_(0.0, 0.14).set()
+        NSBezierPath.bezierPathWithOvalInRect_(rect).fill()
+        self.metaColor().set()
+        radius = 1.8
+        middle_x = rect.origin.x + rect.size.width / 2.0
+        middle_y = rect.origin.y + rect.size.height / 2.0
+        for offset in (-5.0, 0.0, 5.0):
+            NSBezierPath.bezierPathWithOvalInRect_(
+                NSMakeRect(middle_x + offset - radius, middle_y - radius, radius * 2, radius * 2)).fill()
+
+    def updateTrackingAreas(self):
+        objc.super(MessageBubbleView, self).updateTrackingAreas()
+        if getattr(self, '_hover_area', None) is None:
+            try:
+                from AppKit import NSTrackingArea
+                # entered and exited, while the window is key, over whatever the view shows
+                options = 0x01 | 0x20 | 0x200
+                area = NSTrackingArea.alloc().initWithRect_options_owner_userInfo_(NSZeroRect, options, self, None)
+                self.addTrackingArea_(area)
+                self._hover_area = area
+            except Exception as e:
+                BlinkLogger().log_error('Cannot follow the pointer over a bubble: %s' % e)
+
+    def mouseEntered_(self, event):
+        self._hovered = True
+        self.setNeedsDisplayInRect_(self._moreButtonRect(self._bubble_rect))
+
+    def mouseExited_(self, event):
+        self._hovered = False
+        self.setNeedsDisplayInRect_(self._moreButtonRect(self._bubble_rect))
 
     @objc.python_method
     def _drawHeader(self, bubble):
@@ -5423,74 +5470,11 @@ class MessageBubbleView(NSView):
             string.drawAtPoint_((x, top_for(font or glyph_font)))
             return NSMakeRect(x, y, string.size().width, HEADER_H)
 
-        # delete affordance, far right
-        delete_w = NSAttributedString.alloc().initWithString_attributes_(
-            GLYPH_DELETE, glyph_attrs).size().width
-        self._delete_rect = draw_glyph(GLYPH_DELETE, right - delete_w)
-        right = self._delete_rect.origin.x - 4.0
-
-        # edit affordance, far LEFT: it acts on the message body below it,
-        # and keeping it away from delete means a misclick cannot destroy
-        # what the user meant to correct.
+        # The message's actions are in the menu of the button beside the bubble
+        # (_drawMoreButton); copy, open, save, reply, edit, info and delete used
+        # to be a glyph each across the header.
+        self._clearAffordances()
         left = bubble.origin.x + PAD
-        if self._isEditable() or self._showsEditCaption():
-            # The same pencil on a picture or a movie edits its caption.
-            self._edit_rect = draw_glyph(GLYPH_EDIT, left)
-            left = self._edit_rect.origin.x + self._edit_rect.size.width + 6.0
-        else:
-            self._edit_rect = NSZeroRect
-
-        # copy, to the right of edit. Offered on every bubble with a body:
-        # the text is selectable, but dragging out a whole message is fiddly
-        # and copying it is the commonest thing anyone wants to do with it.
-        if self._isCopyable():
-            if self.copied_feedback:
-                # A tick in the delivery-tick green, in the place the copy
-                # glyph was: the affordance answers where it was pressed,
-                # which is the whole of the feedback anyone needs.
-                done_attrs = dict(glyph_attrs)
-                done_attrs[NSForegroundColorAttributeName] = COLOR_TICK
-                self._copy_rect = draw_glyph(GLYPH_COPIED, left, done_attrs)
-            else:
-                self._copy_rect = draw_glyph(GLYPH_COPY, left)
-            left = self._copy_rect.origin.x + self._copy_rect.size.width + 6.0
-        else:
-            self._copy_rect = NSZeroRect
-
-        # Open, or save-as: the same place in the row, because they are
-        # the same question asked of a file that is here and one that is
-        # not. Downloading and saving are two different things -- Download
-        # brings the file here so the bubble can show it, save-as puts a
-        # copy wherever the user wants to keep it, fetching first -- and
-        # once the file IS here neither is what anyone wants from a header
-        # glyph. Opening it is.
-        if self._showsOpen():
-            self._open_rect = draw_glyph(GLYPH_OPEN, left)
-            left = self._open_rect.origin.x + self._open_rect.size.width + 6.0
-        else:
-            self._open_rect = NSZeroRect
-        if self._showsSaveAs():
-            self._save_rect = draw_glyph(GLYPH_SAVE, left)
-            left = self._save_rect.origin.x + self._save_rect.size.width + 6.0
-        else:
-            self._save_rect = NSZeroRect
-
-        # reply, last of the left-hand group. Offered on both sides of the
-        # conversation: quoting your own message back is how you add to
-        # something already sent.
-        if self._isRepliable():
-            self._reply_rect = draw_glyph(GLYPH_REPLY, left)
-            left = self._reply_rect.origin.x + self._reply_rect.size.width + 6.0
-        else:
-            self._reply_rect = NSZeroRect
-
-        # A call's details, the SIP trace link among them; for any other
-        # message, what is known about it.
-        if self._showsInfo():
-            self._info_rect = draw_glyph(GLYPH_INFO, left)
-            left = self._info_rect.origin.x + self._info_rect.size.width + 6.0
-        else:
-            self._info_rect = NSZeroRect
 
         # delivery ticks
         ticks = self._deliveryGlyphs()
@@ -6192,6 +6176,9 @@ class MessageBubbleView(NSView):
         """
         if not self.msgid or self.renderer is None:
             return None
+        if not self._tileMode() and self.kind not in (self.KIND_SYSTEM, self.KIND_DATE):
+            # in the transcript: the message's own menu, the one the ⋯ opens
+            return self.messageMenu()
         category = self.transferCategory()
         picture = self.media_image is not None or bool(self.media_path)
         info_only = category is None and not picture
@@ -6262,6 +6249,71 @@ class MessageBubbleView(NSView):
             BlinkLogger().log_error('Cannot build the menu for %s: %s' % (self.msgid, e))
             return None
 
+    @objc.python_method
+    def messageMenu(self):
+        """The message's actions, as Blink for Linux has them: what the header's
+        glyphs used to do, in one menu (the ⋯ in the header, or a right click)."""
+        if not self.msgid:
+            return None
+        try:
+            menu = NSMenu.alloc().init()
+            menu.setAutoenablesItems_(False)
+
+            def add(title, selector):
+                item = menu.addItemWithTitle_action_keyEquivalent_(title, selector, "")
+                item.setTarget_(self)
+                return item
+
+            if self._isCopyable():
+                add(NSLocalizedString("Copy", "Menu item"), "menuCopyBody:")
+            if self._showsOpen() or self.media_path:
+                add(NSLocalizedString("Open", "Menu item"), "menuOpenFile:")
+                if self.media_path:
+                    add(NSLocalizedString("Show in Finder", "Menu item"), "menuShowInFinder:")
+            if self._showsSaveAs() or self.transfer_meta is not None:
+                add(NSLocalizedString("Save As\u2026", "Menu item"), "menuSaveAs:")
+            group = []
+            if self._isRepliable():
+                group.append((NSLocalizedString("Reply", "Menu item"), "menuReply:"))
+            if self._isEditable():
+                group.append((NSLocalizedString("Edit", "Menu item"), "menuEdit:"))
+            if self._showsEditCaption():
+                group.append((NSLocalizedString("Edit Caption\u2026", "Menu item"), "menuEditCaption:"))
+            if group:
+                if menu.numberOfItems():
+                    menu.addItem_(NSMenuItem.separatorItem())
+                for title, selector in group:
+                    add(title, selector)
+            if menu.numberOfItems():
+                menu.addItem_(NSMenuItem.separatorItem())
+            if self._showsInfo():
+                add(NSLocalizedString("Info\u2026", "Menu item"), "menuInfo:")
+            add(NSLocalizedString("Delete\u2026", "Menu item"), "menuDeletePicture:")
+            return menu
+        except Exception as e:
+            BlinkLogger().log_error('Cannot build the menu for %s: %s' % (self.msgid, e))
+            return None
+
+    def menuCopyBody_(self, sender):
+        BlinkLogger().log_debug('Bubble %s: copy, from the menu' % self.msgid)
+        self.copyBodyToPasteboard()
+
+    def menuReply_(self, sender):
+        renderer = self.renderer
+        if renderer is not None and hasattr(renderer, 'bubbleDidRequestReply'):
+            BlinkLogger().log_debug('Bubble %s: reply, from the menu' % self.msgid)
+            renderer.bubbleDidRequestReply(self.msgid)
+
+    def menuEdit_(self, sender):
+        renderer = self.renderer
+        if renderer is not None and hasattr(renderer, 'bubbleDidRequestEdit'):
+            BlinkLogger().log_info('Bubble %s: edit, from the menu' % self.msgid)
+            renderer.bubbleDidRequestEdit(self.msgid, plain_text(self.content, self.is_html), self.message_timestamp)
+
+    def menuInfo_(self, sender):
+        selector = 'showCallDetails:' if self._showsCallInfo() else 'showMessageInfo:'
+        self.performSelector_withObject_afterDelay_(selector, None, 0.0)
+
     def menuCopyPicture_(self, sender):
         # The same call the copy affordance makes, which puts the file on
         # disc on the pasteboard rather than the copy the tile is drawing:
@@ -6328,6 +6380,21 @@ class MessageBubbleView(NSView):
         renderer = self.renderer
         header = self.kind not in (self.KIND_SYSTEM, self.KIND_DATE) and not self._tileMode()
 
+        if self.msgid and self._hits(point, self._more_rect, header):
+            menu = self.messageMenu()
+            if menu is not None:
+                BlinkLogger().log_debug('Bubble %s: actions menu' % self.msgid)
+                # attached to the button: it opens just under it, and the button
+                # stays while it is open
+                anchor = (self._more_rect.origin.x, self._more_rect.origin.y + self._more_rect.size.height)     # a flipped view
+                self._menu_open = True
+                self.setNeedsDisplayInRect_(self._more_rect)
+                try:
+                    menu.popUpMenuPositioningItem_atLocation_inView_(None, anchor, self)
+                finally:
+                    self._menu_open = False
+                    self.setNeedsDisplayInRect_(self._more_rect)
+            return
         if self.msgid and self._hits(point, self._delete_rect, header):
             if renderer is not None and hasattr(renderer, 'bubbleDidRequestDelete'):
                 BlinkLogger().log_debug('Bubble %s: delete' % self.msgid)
