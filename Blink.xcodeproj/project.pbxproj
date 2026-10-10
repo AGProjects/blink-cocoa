@@ -2644,6 +2644,8 @@
 				1F22731312B554F50010A8B2 /* SMSViewController.py in Resources */,
 				AD00000000000000004F0001 /* MessagePaneController.py in Resources */,
 				AD0000000000000000600001 /* ContactMangler.py in Resources */,
+				AD0000000000000000610001 /* Profiles.py in Resources */,
+				AD0000000000000000F00001 /* ClamshellMonitor.py in Resources */,
 				AD0000000000000000500001 /* MessageAccountPicker.py in Resources */,
 				AD00000000000000750001 /* CameraCapture.py in Resources */,
 				AD00000000000000740001 /* AttachmentPreview.py in Resources */,
