@@ -97,6 +97,17 @@ def run_in_db_thread(func):
     return wrapper
 
 
+def _other_profiles_sql(column='local_uri'):
+    """Leaves out the rows of the accounts of the other profiles (Profiles): with several
+    profiles, the history of one is not shown in another. Nothing without other profiles."""
+    try:
+        import Profiles
+        return Profiles.hidden_accounts_sql(column) if Profiles.enabled() else ''
+    except Exception as e:
+        BlinkLogger().log_error('[profile] Cannot read the accounts of the other profiles: %s' % e)
+        return ''
+
+
 class TableVersionEntry(SQLObject):
     class sqlmeta:
         table = 'versions'
@@ -385,6 +396,8 @@ class SessionHistory(object, metaclass=Singleton):
             query += " and hidden = %s" % SessionHistoryEntry.sqlrepr(hidden)
         if after_date:
             query += " and start_time >= %s" % SessionHistoryEntry.sqlrepr(after_date)
+        if not (call_id or from_tag or to_tag):
+            query += _other_profiles_sql()
 
         if remote_uris:
             remote_uris_sql = ''
@@ -1599,6 +1612,7 @@ class ChatHistory(object, metaclass=Singleton):
     @run_in_db_thread
     def _get_contacts(self, remote_uri, media_type, search_text, after_date, before_date):
         query = "select distinct(remote_uri) from chat_messages where %s " % NOT_DELETED_SQL
+        query += _other_profiles_sql()
         if remote_uri:
             if remote_uri is not tuple:
                 remote_uri = (remote_uri,)
@@ -1695,6 +1709,7 @@ class ChatHistory(object, metaclass=Singleton):
         else:
             query = ("select date, local_uri, remote_uri, media_type from chat_messages where %s"
                      % NOT_DELETED_SQL)
+            query += _other_profiles_sql()
             if media_type:
                 if media_type is not tuple:
                     media_type = (media_type,)
@@ -2225,7 +2240,9 @@ class ChatHistory(object, metaclass=Singleton):
 
         * None -- no filter at all. What every caller that does not care
           about the account passes, and what a caller whose account list
-          could not be read passes rather than blanking the result.
+          could not be read passes rather than blanking the result. For
+          the account column, the accounts of the other profiles are still
+          left out (Profiles.hidden_accounts_sql).
         * a string -- the old `column = x`, unchanged, so the callers that
           have always passed a single address keep working.
         * a sequence -- `column in (...)`, and an EMPTY sequence becomes
@@ -2235,7 +2252,8 @@ class ChatHistory(object, metaclass=Singleton):
           opposite.
         """
         if value is None:
-            return ''
+            # every account -- but not those of another profile (Profiles)
+            return _other_profiles_sql(column) if column.endswith('local_uri') else ''
         if isinstance(value, str):
             return " and %s=%s" % (column, ChatMessage.sqlrepr(value))
         values = list(value)
@@ -2258,7 +2276,8 @@ class ChatHistory(object, metaclass=Singleton):
             query += " and msgid=%s" % ChatMessage.sqlrepr(msgid)
         if call_id:
             query += " and sip_callid=%s" % ChatMessage.sqlrepr(call_id)
-        query += self._uri_in_sql('local_uri', local_uri)
+        if local_uri is not None or not (msgid or call_id):
+            query += self._uri_in_sql('local_uri', local_uri)     # a lookup by id finds the row whatever the profile
         if remote_uri:
             if remote_uri is not tuple:
                 remote_uri = (remote_uri,)
@@ -3151,9 +3170,9 @@ class ChatHistory(object, metaclass=Singleton):
         """
         table = ChatMessage.sqlmeta.table
         query = ('select remote_uri, count(*), max(deleted_time) from %(table)s'
-                 ' where deleted = 1 and remote_uri not in'
-                 ' (select remote_uri from %(table)s where %(live)s)'
-                 ' group by remote_uri' % {'table': table, 'live': NOT_DELETED_SQL})
+                 ' where deleted = 1%(profile)s and remote_uri not in'
+                 ' (select remote_uri from %(table)s where %(live)s%(profile)s)'
+                 ' group by remote_uri' % {'table': table, 'live': NOT_DELETED_SQL, 'profile': _other_profiles_sql()})
         try:
             rows = self.db.queryAll(query)
         except Exception as e:

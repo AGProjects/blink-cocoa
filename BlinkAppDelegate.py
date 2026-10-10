@@ -917,6 +917,22 @@ class BlinkAppDelegate(NSObject):
 
         self.blinkMenu.setTitle_(self.applicationNamePrint)
 
+        # Profiles: a switch asked for is made now, before anything reads the configuration
+        new_profile = False
+        if getattr(self, 'profiles_enabled', False):
+            import Profiles
+            try:
+                switched = Profiles.apply_pending_switch()
+            except Exception as e:
+                switched = None
+                BlinkLogger().log_error('[profile] Cannot switch profiles: %s' % e)
+            if switched:
+                BlinkLogger().log_info('[profile] Switched from profile %s to %s' % switched)
+                if os.path.isdir(ApplicationData.get('profiles/.deleted')) and not os.path.isdir(ApplicationData.get('profiles/%s' % switched[0])):
+                    BlinkLogger().log_info('[profile] Profile %s deleted (kept in %s)' % (switched[0], ApplicationData.get('profiles/.deleted')))
+                new_profile = not Profiles.has_accounts()      # offer to add an account, as on a first run
+            BlinkLogger().log_info('[profile] Profile: %s' % Profiles.current_profile())
+
         config_file = ApplicationData.get('config')
         # BlinkLogger().log_info('startup: iCloudManager()')
         self.icloud_manager = iCloudManager()
@@ -929,7 +945,7 @@ class BlinkAppDelegate(NSObject):
 
         while True:
             try:
-                first_run = not os.path.exists(config_file)
+                first_run = not os.path.exists(config_file) or new_profile
                 self.contactsWindowController.first_run = first_run
 
                 # BlinkLogger().log_info('startup: backend.init()')
@@ -978,6 +994,11 @@ class BlinkAppDelegate(NSObject):
         # BlinkLogger().log_info('startup: DebugWindow.init exit')
         # BlinkLogger().log_info('startup: ChatWindowController.init enter')
         self.chatWindowController = ChatWindowController.ChatWindowController.alloc().init()
+
+        if getattr(self, 'profiles_enabled', False):
+            import Profiles
+            self.profilesMenu = Profiles.ProfilesMenu.alloc().init()
+            self.profilesMenu.install(self.blinkMenu)
         # BlinkLogger().log_info('startup: ChatWindowController.init exit')
         # BlinkLogger().log_info('startup: applicationDidFinishLaunching exit')
 

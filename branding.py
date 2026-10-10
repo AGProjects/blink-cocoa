@@ -23,6 +23,7 @@ def setup(delegate):
     delegate.service_provider_name = None
     delegate.hidden_account_preferences_sections = ('tls')
     delegate.icloud_enabled = False
+    delegate.profiles_enabled = True
     delegate.history_enabled = True
     delegate.answering_machine_enabled = True
     delegate.recording_enabled = True
