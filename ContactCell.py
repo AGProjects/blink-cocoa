@@ -158,6 +158,11 @@ class ContactCell(NSTextFieldCell):
     firstLineAttributes_highlighted = NSDictionary.dictionaryWithObjectsAndKeys_(NSColor.whiteColor(), NSForegroundColorAttributeName, style, NSParagraphStyleAttributeName, NSFont.systemFontOfSize_(NSFont.labelFontSize()+3), NSFontAttributeName)
     secondLineAttributes = NSDictionary.dictionaryWithObjectsAndKeys_(NSFont.systemFontOfSize_(NSFont.labelFontSize()+2), NSFontAttributeName, NSColor.secondaryLabelColor(), NSForegroundColorAttributeName, style, NSParagraphStyleAttributeName)
     secondLineAttributes_highlighted = NSDictionary.dictionaryWithObjectsAndKeys_( NSFont.systemFontOfSize_(NSFont.labelFontSize()+2), NSFontAttributeName, NSColor.whiteColor(), NSForegroundColorAttributeName, style, NSParagraphStyleAttributeName)
+    # the presence note after the name: the name's font, so the two share a baseline, in the second line's colour
+    noteAttributes = NSDictionary.dictionaryWithObjectsAndKeys_(style, NSParagraphStyleAttributeName, NSColor.secondaryLabelColor(), NSForegroundColorAttributeName, NSFont.systemFontOfSize_(NSFont.labelFontSize()+3), NSFontAttributeName)
+    noteAttributes_highlighted = NSDictionary.dictionaryWithObjectsAndKeys_(style, NSParagraphStyleAttributeName, NSColor.colorWithCalibratedWhite_alpha_(1.0, 0.75), NSForegroundColorAttributeName, NSFont.systemFontOfSize_(NSFont.labelFontSize()+3), NSFontAttributeName)
+    # the least room worth giving a note: less than this and the name keeps the line
+    NOTE_MIN_WIDTH = 40.0
 
     def setContact_(self, contact):
         self.contact = contact
@@ -332,7 +337,30 @@ class ContactCell(NSTextFieldCell):
                           self.textWidthFrom(frame, frame.origin.x, 10),
                           frame.size.height)
         attrs = self.firstLineAttributes if not self.isHighlighted() else self.firstLineAttributes_highlighted
-        self.stringValue().drawInRect_withAttributes_(rect, attrs)
+        name = self.stringValue()
+        note = self.presenceNote()
+        if note:
+            # the name always gets its room; the note what is left of it, cut short
+            name_width = name.sizeWithAttributes_(attrs).width + 1.0
+            if name_width + self.NOTE_MIN_WIDTH <= rect.size.width:
+                name.drawInRect_withAttributes_(NSMakeRect(rect.origin.x, rect.origin.y, name_width, rect.size.height), attrs)
+                note_attrs = self.noteAttributes if not self.isHighlighted() else self.noteAttributes_highlighted
+                NSString.stringWithString_(' \u00b7 ' + note).drawInRect_withAttributes_(
+                    NSMakeRect(rect.origin.x + name_width, rect.origin.y, rect.size.width - name_width, rect.size.height), note_attrs)
+                return
+        name.drawInRect_withAttributes_(rect, attrs)
+
+    @objc.python_method
+    def presenceNote(self):
+        """The contact's presence note on one line, mangled like the rest of the row, or None."""
+        note = getattr(self.contact, 'presence_note', None)
+        if not note:
+            return None
+        note = ' '.join(str(note).split())
+        if not note:
+            return None
+        from ContactMangler import mangled_text
+        return mangled_text(note, uri=getattr(self.contact, 'uri', None), name=getattr(self.contact, 'name', None))
 
     @objc.python_method
     def drawSecondLine(self):
@@ -365,6 +393,11 @@ class ContactCell(NSTextFieldCell):
                 mangled_text(self.lastMessagePreview,
                              uri=getattr(self.contact, 'uri', None),
                              name=getattr(self.contact, 'name', None)))
+            attrs = self.secondLineAttributes if not self.isHighlighted() else self.secondLineAttributes_highlighted
+        elif self.contact.detail and self.contact.detail == getattr(self.contact, 'presence_note', None) and getattr(self.contact, 'uri', None):
+            # the note is on the first line already: the address instead
+            from ContactMangler import mangled_uri
+            text = NSString.stringWithString_(mangled_uri(self.contact.uri))
             attrs = self.secondLineAttributes if not self.isHighlighted() else self.secondLineAttributes_highlighted
         elif self.contact.detail:
             # The detail line is built by whichever group owns the row --

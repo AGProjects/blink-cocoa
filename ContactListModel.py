@@ -3530,15 +3530,14 @@ class CustomListModel(NSObject):
     def lastMessagePreviewForRow(self, outline, item):
         """The typed text to quote on a row's second line, or None.
 
-        Messages group only, for the reason the time is: there a row is a
-        conversation. Everywhere else the second line keeps what its group
-        put there -- an address, a presence note, a call.
+        In every group the contact appears in: the last thing said with them
+        wins over the address or presence note the group would put there.
         """
         if not isinstance(item, BlinkContact):
             return None
         try:
             group = outline.parentForItem_(item)
-            if isinstance(group, BlinkGroup) and group.isMessagesGroup():
+            if isinstance(group, BlinkGroup):
                 return group.lastMessagePreviewForContact(item)
         except Exception:
             pass
@@ -3549,8 +3548,8 @@ class CustomListModel(NSObject):
     def _NH_BlinkConversationPreviewChanged(self, notification):
         """Redraw the rows whose quoted message changed.
 
-        keys None is a full load: every row of the Messages group, still
-        without reloadData, which would lose the scroll position.
+        keys None is a full load: every row of every group, still without
+        reloadData, which would lose the scroll position.
         """
         keys = getattr(notification.data, 'keys', None)
         if keys is not None:
@@ -3561,7 +3560,7 @@ class CustomListModel(NSObject):
         if outline is None:
             return
         for group in getattr(self, 'groupsList', ()):
-            if isinstance(group, BlinkGroup) and group.isMessagesGroup():
+            if isinstance(group, BlinkGroup):
                 outline.reloadItem_reloadChildren_(group, True)
 
     @objc.python_method
@@ -3601,7 +3600,12 @@ class CustomListModel(NSObject):
 
     def outlineView_toolTipForCell_rect_tableColumn_item_mouseLocation_(self, ov, cell, rect, tc, item, mouse):
         if isinstance(item, BlinkContact):
-            from ContactMangler import mangled_uri
+            from ContactMangler import mangled_text, mangled_uri
+            # the whole presence note, which the row may have cut short, above the address
+            note = ' '.join(str(getattr(item, 'presence_note', None) or '').split())
+            if note:
+                note = mangled_text(note, uri=getattr(item, 'uri', None), name=getattr(item, 'name', None))
+                return ('%s\n%s' % (note, mangled_uri(item.uri)), rect)
             return (mangled_uri(item.uri), rect)
         else:
             return (None, rect)
