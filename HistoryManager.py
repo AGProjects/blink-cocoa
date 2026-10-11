@@ -5269,6 +5269,14 @@ def block_party(uri, name=None, account=None, exclusive=False):
             return False
 
         if contact is not None:
+            # no presence subscription to somebody blocked, as on Blink Qt
+            try:
+                if contact.presence.subscribe:
+                    contact.presence.subscribe = False
+                    contact.save()
+                    _log('%s no longer subscribed to for presence' % _quote(address))
+            except Exception as e:
+                _log('[!] cannot unsubscribe from the presence of %s: %s' % (_quote(address), e))
             try:
                 if contact.id in group.contacts:
                     _log('%s is already in %s' % (_quote(address), _describe_group(group)))
@@ -5280,6 +5288,7 @@ def block_party(uri, name=None, account=None, exclusive=False):
             contact.name = name or address
             uri_type = 'phone' if pstn_e164(address, account) else 'SIP'
             contact.uris.add(ContactURI(uri=address, type=format_uri_type(uri_type)))
+            contact.presence.subscribe = False
             contact.save()
             _publish_contact_for_groups(contact)
             _log_ab('created contact %s to block' % _quote(address))

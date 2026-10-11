@@ -4459,10 +4459,13 @@ class SMSWindowManagerClass(NSObject):
 
     @objc.python_method
     def _setPresenceSubscription(self, contact, subscribe, label=None):
-        """No presence subscription for a contact in Deleted; a restore subscribes again.
-        The flag is in the addressbook, so every device of the account follows."""
+        """No presence subscription for a contact in Deleted; a restore subscribes again,
+        unless its presence is blocked. The flag is in the addressbook, so every device of
+        the account follows."""
         try:
             if bool(contact.presence.subscribe) == subscribe:
+                return
+            if subscribe and contact.presence.policy == 'block':
                 return
             contact.presence.subscribe = subscribe
             contact.save()
