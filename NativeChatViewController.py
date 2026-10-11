@@ -327,6 +327,9 @@ class NativeChatViewController(ChatViewController):
     # once, before anything here has moved a row, and used to collapse the
     # rows that are hidden instead of leaving their space reserved.
     _chrome_rows = None
+    # A control of the message pane shown left of the search field (its calendar)
+    _chrome_accessory = None
+    _search_left = None
     _chrome_ref_height = None
     _chrome_output_inset = None
     _chrome_applied = None
@@ -5580,6 +5583,44 @@ class NativeChatViewController(ChatViewController):
         return True
 
     @objc.python_method
+    def setChromeAccessory(self, view):
+        """Show a control of the message pane left of the search field (the calendar, as on
+        Blink Qt). The one view moves to whichever conversation is on screen."""
+        self._chrome_accessory = view
+        self._placeChromeAccessory()
+
+    @objc.python_method
+    def _placeChromeAccessory(self):
+        view = self._chrome_accessory
+        search = self.searchMessagesBox
+        if view is None or search is None:
+            return
+        parent = search.superview()
+        if parent is None:
+            return
+        try:
+            if view.superview() is not parent:
+                view.removeFromSuperview()
+                parent.addSubview_(view)
+            frame = search.frame()
+            if self._search_left is None:
+                self._search_left = frame.origin.x
+            width, height = view.frame().size.width, view.frame().size.height
+            left = self._search_left + width + 6.0
+            if abs(frame.origin.x - left) > 0.5:
+                search.setFrame_(NSMakeRect(left, frame.origin.y,
+                                            max(frame.size.width - (left - frame.origin.x), 60.0),
+                                            frame.size.height))
+                frame = search.frame()
+            view.setFrame_(NSMakeRect(self._search_left,
+                                      frame.origin.y + (frame.size.height - height) / 2.0,
+                                      width, height))
+            view.setAutoresizingMask_(NSViewMaxXMargin | NSViewMinYMargin)
+            view.setHidden_(bool(search.isHidden()))
+        except Exception as e:
+            BlinkLogger().log_error('Cannot place the calendar by the search field: %s' % e)
+
+    @objc.python_method
     def _layoutHistoryChrome(self):
         """Give the strip only the rows it is actually using.
 
@@ -5630,6 +5671,7 @@ class NativeChatViewController(ChatViewController):
                                         '%.0fpt collapsed' % (shown, collapsed))
         except Exception as e:
             BlinkLogger().log_error('Cannot lay the transcript chrome out: %s' % e)
+        self._placeChromeAccessory()
 
     @objc.python_method
     def _layoutFilterRow(self, show_columns):

@@ -56,6 +56,8 @@ from AppKit import (NSRoundedBezelStyle,
                     NSViewMaxYMargin,
                     NSViewMinXMargin,
                     NSViewMinYMargin,
+                    NSViewMaxXMargin,
+                    NSSegmentedControl,
                     NSViewWidthSizable)
 from Foundation import (NSArray,
                         NSLocalizedString,
@@ -89,6 +91,19 @@ AVATAR_SIZE = 28.0
 # key panel, at the size an alert draws its icon.
 PANEL_AVATAR_SIZE = 64.0
 LOCK_SIZE = 14.0
+# The lock is a badge on the avatar's bottom left corner, sticking out past it
+# by LOCK_BADGE_OFFSET, as on Blink Qt: a round chip with the lock inside.
+LOCK_BADGE = 16.0
+LOCK_BADGE_IMAGE = 10.0
+LOCK_BADGE_OFFSET = 4.0
+# Segmented pairs in the header (A- A+, audio | video), as on Blink Qt.
+# Wide enough for "A\u2212" at the small control size with the segment's own
+# inset; narrower and AppKit truncates the label to an ellipsis.
+SEGMENT_W = 34.0
+SEGMENT_H = 22.0
+NSSegmentStyleRoundRect = 3
+NSSegmentSwitchTrackingMomentary = 2
+NSSmallControlSize = 1
 # Drawn if the lock artwork cannot be loaded: the control has to keep its
 # place in the header whatever happens to the image files.
 LOCK_GLYPH = chr(128274)
@@ -621,11 +636,16 @@ class MessagePaneController(NSObject):
         self.accountPill.setHidden_(True)
         header.addSubview_(self.accountPill)
 
+        avatar_frame = self.avatarView.frame()
         self.encryptionButton = NSButton.alloc().initWithFrame_(
-            NSMakeRect(480 - PAD - LOCK_SIZE, (HEADER_HEIGHT - LOCK_SIZE) / 2.0, LOCK_SIZE, LOCK_SIZE))
-        self.encryptionButton.setAutoresizingMask_(NSViewMinXMargin | NSViewMinYMargin)
+            NSMakeRect(avatar_frame.origin.x - LOCK_BADGE_OFFSET, avatar_frame.origin.y - LOCK_BADGE_OFFSET,
+                       LOCK_BADGE, LOCK_BADGE))
+        self.encryptionButton.setAutoresizingMask_(NSViewMaxXMargin | NSViewMinYMargin)
         self.encryptionButton.setBezelStyle_(NSRoundedBezelStyle)
         self.encryptionButton.setBordered_(False)
+        self.encryptionButton.setWantsLayer_(True)
+        self.encryptionButton.layer().setCornerRadius_(LOCK_BADGE / 2.0)
+        self.encryptionButton.layer().setBorderWidth_(1.0)
         self.encryptionButton.setImagePosition_(NSImageOnly)
         self.encryptionButton.setTitle_('')
         self.encryptionButton.setToolTip_(
@@ -637,38 +657,31 @@ class MessagePaneController(NSObject):
         # selected, and a button with no image at all is an invisible one.
         self.updateEncryptionWidgets(None)
 
-        # Text size, immediately left of the lock. Two buttons rather than a
-        # menu: making the transcript readable is a thing people do while
-        # reading it, and a menu would put two clicks in front of every step.
+        # Right to left, as on Blink Qt: audio | video, the pin, A- | A+, and
+        # the stop square. The calendar is not here: it sits left of the
+        # transcript's search field (placeHistoryButton). The lock is a badge
+        # on the avatar.
         button_y = (HEADER_HEIGHT - FONT_BUTTON_H) / 2.0
-        large_x = 480 - PAD - LOCK_SIZE - 10.0 - FONT_BUTTON_W
-        small_x = large_x - FONT_BUTTON_W
-        history_x = small_x - 8.0 - HISTORY_BUTTON_W
-        location_x = history_x - 8.0 - LOCATION_BUTTON_W
-        call_x = location_x - 8.0 - CALL_BUTTON_W
-        video_x = call_x - 8.0 - VIDEO_BUTTON_W
-        stop_x = video_x - 8.0 - STOP_BUTTON_W
-        self.fontSmallerButton = self._fontButton(
-            NSMakeRect(small_x, button_y, FONT_BUTTON_W, FONT_BUTTON_H),
-            FONT_BUTTON_SMALL, 'decreaseFontSize:',
-            NSLocalizedString("Smaller text", "Tooltip"))
-        self.fontLargerButton = self._fontButton(
-            NSMakeRect(large_x, button_y, FONT_BUTTON_W, FONT_BUTTON_H),
-            FONT_BUTTON_LARGE, 'increaseFontSize:',
-            NSLocalizedString("Larger text", "Tooltip"))
-        header.addSubview_(self.fontSmallerButton)
-        header.addSubview_(self.fontLargerButton)
+        stop_x = 480 - PAD - STOP_BUTTON_W
+
+        # Text size: two segments rather than a menu -- making the transcript
+        # readable is a thing people do while reading it.
+        self.fontSegment = self._segmentedPair(
+            ('A\u2212', 'A+'),
+            (NSLocalizedString("Smaller text", "Tooltip"), NSLocalizedString("Larger text", "Tooltip")),
+            'fontSegmentClicked:')
+        header.addSubview_(self.fontSegment)
         self._updateFontButtons()
 
         self.historyButton = self._fontButton(
-            NSMakeRect(history_x, button_y, HISTORY_BUTTON_W, FONT_BUTTON_H),
+            NSMakeRect(0, 0, HISTORY_BUTTON_W, FONT_BUTTON_H),
             FONT_BUTTON_LARGE - 2.0, 'showHistoryDates:',
             NSLocalizedString("Jump to a date in this conversation", "Tooltip"),
             title=HISTORY_GLYPH)
-        header.addSubview_(self.historyButton)
+        self.historyButton.setHidden_(True)
 
         self.locationButton = self._fontButton(
-            NSMakeRect(location_x, button_y, LOCATION_BUTTON_W, FONT_BUTTON_H),
+            NSMakeRect(0, button_y, LOCATION_BUTTON_W, FONT_BUTTON_H),
             FONT_BUTTON_LARGE - 2.0, 'showLocationMenu:',
             NSLocalizedString("Location", "Tooltip"),
             title=LOCATION_GLYPH)
@@ -678,32 +691,25 @@ class MessagePaneController(NSObject):
         self.locationButton.setHidden_(True)
         header.addSubview_(self.locationButton)
 
-        self.callButton = self._fontButton(
-            NSMakeRect(call_x, button_y, CALL_BUTTON_W, FONT_BUTTON_H),
-            CALL_GLYPH_SIZE, 'startAudioCall:',
-            NSLocalizedString("Start an audio call", "Tooltip"),
-            title=CALL_GLYPH)
-        # Hidden until there is somebody to call, for the same reason the
-        # pin is: a button that does nothing is worse than no button.
-        self.callButton.setHidden_(True)
-        header.addSubview_(self.callButton)
-
-        self.videoCallButton = self._fontButton(
-            NSMakeRect(video_x, button_y, VIDEO_BUTTON_W, FONT_BUTTON_H),
-            VIDEO_GLYPH_SIZE, 'startVideoCall:',
-            NSLocalizedString("Start a video call", "Tooltip"),
-            title=VIDEO_GLYPH)
+        # Audio | video as one control. The handset is the glyph the rest of
+        # the application uses for an audio session; the camera is the
+        # artwork of the video segment at the bottom of the contacts window.
+        self.callSegment = self._segmentedPair(
+            (CALL_GLYPH, VIDEO_GLYPH),
+            (NSLocalizedString("Start an audio call", "Tooltip"), NSLocalizedString("Start a video call", "Tooltip")),
+            'callSegmentClicked:')
         # A copy: imageNamed_ hands out the shared instance, and resizing
         # it would shrink the camera in the contacts window as well.
         camera = NSImage.imageNamed_(VIDEO_IMAGE_NAME)
         if camera is not None:
             camera = camera.copy()
             camera.setSize_(NSMakeSize(VIDEO_IMAGE_SIZE, VIDEO_IMAGE_SIZE))
-            self.videoCallButton.setTitle_('')
-            self.videoCallButton.setImage_(camera)
-            self.videoCallButton.setImagePosition_(NSImageOnly)
-        self.videoCallButton.setHidden_(True)
-        header.addSubview_(self.videoCallButton)
+            self.callSegment.setLabel_forSegment_('', 1)
+            self.callSegment.setImage_forSegment_(camera, 1)
+        # Hidden until there is somebody to call: a control that does nothing
+        # is worse than no control.
+        self.callSegment.setHidden_(True)
+        header.addSubview_(self.callSegment)
 
         self.stopPlaybackButton = PlaybackStopButton.alloc().initWithFrame_(
             NSMakeRect(stop_x, button_y, STOP_BUTTON_W, FONT_BUTTON_H))
@@ -749,13 +755,9 @@ class MessagePaneController(NSObject):
     # account's encryption settings, the pin with the server, the handset
     # with the conversation -- and a hidden button left holding its slot is
     # a hole in the row.
-    HEADER_BUTTONS = (('encryptionButton', 'LOCK_SIZE', 0.0),
-                      ('fontLargerButton', 'FONT_BUTTON_W', 10.0),
-                      ('fontSmallerButton', 'FONT_BUTTON_W', 0.0),
-                      ('historyButton', 'HISTORY_BUTTON_W', 8.0),
+    HEADER_BUTTONS = (('callSegment', None, 0.0),
                       ('locationButton', 'LOCATION_BUTTON_W', 8.0),
-                      ('callButton', 'CALL_BUTTON_W', 8.0),
-                      ('videoCallButton', 'VIDEO_BUTTON_W', 8.0),
+                      ('fontSegment', None, 8.0),
                       ('stopPlaybackButton', 'STOP_BUTTON_W', 8.0))
 
     @objc.python_method
@@ -773,11 +775,11 @@ class MessagePaneController(NSObject):
                 continue                # not built yet
             if button.isHidden():
                 continue
-            width = sizes[width_name]
-            if attribute == 'encryptionButton':
-                height, y = LOCK_SIZE, (HEADER_HEIGHT - LOCK_SIZE) / 2.0
+            if width_name is None:      # a segmented pair: its own size
+                width, height = button.frame().size.width, button.frame().size.height
             else:
-                height, y = FONT_BUTTON_H, (HEADER_HEIGHT - FONT_BUTTON_H) / 2.0
+                width, height = sizes[width_name], FONT_BUTTON_H
+            y = (HEADER_HEIGHT - height) / 2.0
             x -= (gap if placed else 0.0) + width
             button.setFrame_(NSMakeRect(x, y, width, height))
             placed = True
@@ -795,6 +797,69 @@ class MessagePaneController(NSObject):
         button.setTarget_(self)
         button.setAction_(action)
         return button
+
+    @objc.python_method
+    def _segmentedPair(self, labels, tooltips, action):
+        """Two momentary segments as one control (A- A+, audio | video), as on Blink Qt."""
+        control = NSSegmentedControl.alloc().initWithFrame_(NSMakeRect(0, 0, 2 * SEGMENT_W, SEGMENT_H))
+        control.setSegmentCount_(2)
+        control.setSegmentStyle_(NSSegmentStyleRoundRect)
+        control.cell().setTrackingMode_(NSSegmentSwitchTrackingMomentary)
+        control.cell().setControlSize_(NSSmallControlSize)
+        control.setFont_(NSFont.systemFontOfSize_(NSFont.smallSystemFontSize()))
+        for index, (label, tooltip) in enumerate(zip(labels, tooltips)):
+            control.setLabel_forSegment_(label, index)
+            control.setWidth_forSegment_(SEGMENT_W, index)
+            control.cell().setToolTip_forSegment_(tooltip, index)
+        control.sizeToFit()
+        control.setAutoresizingMask_(NSViewMinXMargin | NSViewMinYMargin)
+        control.setTarget_(self)
+        control.setAction_(action)
+        return control
+
+    @objc.IBAction
+    def fontSegmentClicked_(self, sender):
+        if sender.selectedSegment() == 0:
+            self._stepFontSize(-FONT_SIZE_STEP)
+        else:
+            self._stepFontSize(FONT_SIZE_STEP)
+
+    @objc.IBAction
+    def callSegmentClicked_(self, sender):
+        self._startCall('video' if sender.selectedSegment() == 1 else 'audio')
+
+    @objc.python_method
+    def _styleLockBadge(self):
+        """The badge's chip: colours resolved now, as a layer does not follow the appearance."""
+        try:
+            layer = self.encryptionButton.layer()
+            appearance = self.encryptionButton.effectiveAppearance()
+            from AppKit import NSAppearance
+            previous = NSAppearance.currentAppearance()
+            NSAppearance.setCurrentAppearance_(appearance)
+            try:
+                layer.setBackgroundColor_(NSColor.controlBackgroundColor().CGColor())
+                layer.setBorderColor_(NSColor.separatorColor().CGColor())
+            finally:
+                NSAppearance.setCurrentAppearance_(previous)
+        except Exception as e:
+            BlinkLogger().log_debug('Cannot style the lock badge: %s' % e)
+
+    @objc.python_method
+    def placeHistoryButton(self, viewer):
+        """The calendar sits left of the search field of the conversation on screen, as on Blink Qt."""
+        button = getattr(self, 'historyButton', None)
+        if button is None:
+            return
+        controller = getattr(viewer, 'chatViewController', None) if viewer is not None else None
+        attach = getattr(controller, 'setChromeAccessory', None)
+        if attach is None:
+            button.setHidden_(True)
+            return
+        try:
+            attach(button)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot place the calendar button: %s' % e)
 
     @objc.IBAction
     def increaseFontSize_(self, sender):
@@ -829,8 +894,8 @@ class MessagePaneController(NSObject):
         """Grey out whichever end of the range we have reached."""
         try:
             size = transcript_font_size()
-            self.fontSmallerButton.setEnabled_(size > MIN_BODY_FONT_SIZE)
-            self.fontLargerButton.setEnabled_(size < MAX_BODY_FONT_SIZE)
+            self.fontSegment.setEnabled_forSegment_(size > MIN_BODY_FONT_SIZE, 0)
+            self.fontSegment.setEnabled_forSegment_(size < MAX_BODY_FONT_SIZE, 1)
         except Exception:
             pass
 
@@ -1577,12 +1642,10 @@ class MessagePaneController(NSObject):
         disabled the call would be refused, and the button would be the
         dead kind this row does not keep.
         """
-        button = getattr(self, 'callButton', None)
-        if button is not None:
-            button.setHidden_(viewer is None)
-        video = getattr(self, 'videoCallButton', None)
-        if video is not None:
-            video.setHidden_(viewer is None or not self._videoSupported())
+        control = getattr(self, 'callSegment', None)
+        if control is not None:
+            control.setHidden_(viewer is None)
+            control.setEnabled_forSegment_(viewer is not None and self._videoSupported(), 1)
         self._layoutHeaderButtons()
 
     @objc.python_method
@@ -2068,7 +2131,7 @@ class MessagePaneController(NSObject):
             # The lock artwork is far larger than the header; a borderless
             # NSButton draws it at natural size, which is why it came out as
             # a huge lock floating over the drawer.
-            image.setSize_(NSMakeSize(LOCK_SIZE, LOCK_SIZE))
+            image.setSize_(NSMakeSize(LOCK_BADGE_IMAGE, LOCK_BADGE_IMAGE))
             self.encryptionButton.setImagePosition_(NSImageOnly)
             self.encryptionButton.setTitle_('')
             self.encryptionButton.setImage_(image)
@@ -2086,7 +2149,8 @@ class MessagePaneController(NSObject):
         # Dimmed, not gone, while there is nothing to report. It stays
         # clickable as long as a conversation is selected, because the menu
         # behind it is what turns encryption on.
-        self.encryptionButton.setAlphaValue_(1.0 if name != 'locked-gray.png' else 0.45)
+        self.encryptionButton.setAlphaValue_(1.0 if name != 'locked-gray.png' else 0.6)
+        self._styleLockBadge()
         self.encryptionButton.setEnabled_(viewer is not None)
         self.encryptionButton.setHidden_(False)
         self.encryptionButton.setToolTip_(tooltip)
@@ -2124,6 +2188,7 @@ class MessagePaneController(NSObject):
             self.updateEncryptionWidgets(None)
             self.updateLocationButton(None)
             self.updateCallButton(None)
+            self.placeHistoryButton(None)
             self._setInfoLine(None)
             BlinkLogger().log_info('Message pane: nothing selected%s'
                                    % ('' if previous is None else
@@ -2197,6 +2262,7 @@ class MessagePaneController(NSObject):
         self.updateEncryptionWidgets(viewer)
         self.updateLocationButton(viewer)
         self.updateCallButton(viewer)
+        self.placeHistoryButton(viewer)
         load_trace_bucket('- header widgets', _t)
         _t = load_trace_tick()
         # Last: the pill is placed against the end of the address, and how
