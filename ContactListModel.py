@@ -29,7 +29,8 @@ __all__ = ['BlinkContact',
            'presence_status_for_contact',
            'presence_status_icons']
 
-from AppKit import (NSAlertDefaultReturn,
+from AppKit import (NSAlertAlternateReturn,
+                    NSAlertDefaultReturn,
                         NSApp,
                         NSDragOperationCopy,
                         NSDragOperationGeneric,
@@ -2269,6 +2270,9 @@ CALLS_GROUP_KIND = 'calls'
 TEL_GROUP_ID = '_tel'
 TEL_GROUP_NAME = 'Tel'
 TEL_GROUP_KIND = 'tel'
+CONFERENCE_GROUP_ID = '_conference'
+CONFERENCE_GROUP_NAME = 'Conference'
+CONFERENCE_GROUP_KIND = 'conference'
 # How long to wait after an XCAP reload before creating anything. Long enough
 # for AddressbookManager's own handler for the same notification to have run
 # and for its transaction to have been pushed -- see _NH_XCAPManagerDidReloadData.
@@ -2347,7 +2351,7 @@ class BlinkGroup(NSObject):
         adding a fourth such group later is one line here rather than a hunt
         through the file.
         """
-        return self.isMessagesGroup() or self.isCallsGroup() or self.isTelGroup()
+        return self.isMessagesGroup() or self.isCallsGroup() or self.isTelGroup() or self.isConferenceGroup()
 
     @objc.python_method
     def isCallsGroup(self):
@@ -2376,13 +2380,22 @@ class BlinkGroup(NSObject):
         return getattr(self.group, 'id', None) == TEL_GROUP_ID
 
     @objc.python_method
+    def isConferenceGroup(self):
+        # as isTelGroup: kind, then name, then the reserved id
+        if str(getattr(self.group, 'kind', '') or '').strip().lower() == CONFERENCE_GROUP_KIND:
+            return True
+        if str(getattr(self.group, 'name', '') or '').strip().lower() == CONFERENCE_GROUP_NAME.lower():
+            return True
+        return getattr(self.group, 'id', None) == CONFERENCE_GROUP_ID
+
+    @objc.python_method
     def isDeletedGroup(self):
         return getattr(self.group, 'id', None) == DELETED_GROUP_ID
 
     @objc.python_method
     def sortContacts(self):
-        if self.isCallsGroup() or self.isTelGroup():
-            # Same stable two-pass as the Messages group: alphabetical first,
+        if self.isCallsGroup() or self.isTelGroup() or self.isConferenceGroup():
+            # Conference: a room is ordered by its last conference. Same stable two-pass as the Messages group: alphabetical first,
             # then by recency, so contacts that share a timestamp -- and the
             # whole tail that has none -- keep A..Z order underneath instead
             # of shuffling on every redraw. Tel rides the same clock as Calls:
@@ -3518,7 +3531,7 @@ class CustomListModel(NSObject):
             group = outline.parentForItem_(item)
             if not isinstance(group, BlinkGroup):
                 return None
-            if group.isCallsGroup() or group.isTelGroup():
+            if group.isCallsGroup() or group.isTelGroup() or group.isConferenceGroup():
                 return group.lastCallTimeForContact(item)
             if group.isMessagesGroup():
                 return group.lastMessageTimeForContact(item)
@@ -4368,6 +4381,11 @@ class CustomListModel(NSObject):
                         self.addContact(uris=[(sourceContact.uri, uri_type)], name=sourceContact.name, group=targetGroup)
                         return False
 
+                    if (not is_favorites_group(targetGroup.group) and sourceGroup.remove_contact_allowed
+                            and self.isBlockedBlinkGroup(sourceGroup) and not self.isBlockedBlinkGroup(targetGroup)
+                            and not self.confirmUnblock([sourceContact])):
+                        return False
+
                     with addressbook_manager.transaction():
                         if isinstance(sourceContact, BlinkPendingWatcher):
                             contact = Contact()
@@ -5177,9 +5195,39 @@ class ContactListModel(CustomListModel):
 
     @objc.python_method
     def removeContactFromGroups(self, blink_contact, blink_groups):
+        blink_groups = list(blink_groups)
+        blocked = [blink_group for blink_group in blink_groups if self.isBlockedBlinkGroup(blink_group)]
+        if blocked and not self.confirmUnblock([blink_contact]):
+            blink_groups = [blink_group for blink_group in blink_groups if blink_group not in blocked]
         for blink_group in blink_groups:
             blink_group.group.contacts.remove(blink_contact.contact)
             blink_group.group.save()
+
+    @objc.python_method
+    def isBlockedBlinkGroup(self, blink_group):
+        try:
+            from HistoryManager import _blocked_group
+            blocked = _blocked_group()
+            return blocked is not None and getattr(getattr(blink_group, 'group', None), 'id', None) == blocked.id
+        except Exception:
+            return False
+
+    @objc.python_method
+    def confirmUnblock(self, blink_contacts):
+        """Unblock only once the user said so: their calls and messages get through again."""
+        names = [getattr(blink_contact, 'name', None) or str(getattr(blink_contact, 'uri', '')) for blink_contact in blink_contacts]
+        if len(names) == 1:
+            question = NSLocalizedString("Unblock %s?", "Label") % names[0]
+        else:
+            question = NSLocalizedString("Unblock %d contacts?", "Label") % len(names)
+        message = '%s\n\n%s' % (question, NSLocalizedString(
+            "Their calls and messages will reach you again, on all your devices, "
+            "and they will see your presence.", "Label"))
+        message = re.sub("%", "%%", message)
+        # Cancel is the default button: Return does not unblock
+        ret = NSRunAlertPanel(NSLocalizedString("Unblock", "Window title"), message,
+                              NSLocalizedString("Cancel", "Button title"), NSLocalizedString("Unblock", "Button title"), None)
+        return ret == NSAlertAlternateReturn
 
     @objc.python_method
     def removeContactFromBlinkGroups(self, contact, groups):

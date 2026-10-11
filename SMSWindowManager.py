@@ -1206,6 +1206,55 @@ class SMSWindowManagerClass(NSObject):
     @objc.python_method
     def _NH_AddressbookGroupDidChange(self, sender, data):
         self._abRecordModified(sender, data)
+        try:
+            from HistoryManager import _blocked_group
+            blocked = _blocked_group()
+        except Exception:
+            blocked = None
+        if blocked is not None and sender.id == blocked.id and 'contacts' in data.modified:
+            self.releasePresenceBlock(list(data.modified['contacts'].removed))
+
+    @objc.python_method
+    def releasePresenceBlock(self, contacts):
+        """Contacts taken out of Blocked, here or on another device: the presence block goes too.
+
+        Their presence policy back to allow and subscribed to again (not while in Deleted), and the
+        Policy entries blocking their addresses removed. Blink Qt heals the two lists at start by
+        adding blocks, so a presence block left behind would block them again.
+        """
+        from HistoryManager import _blocked_group
+        from ContactListModel import DELETED_GROUP_ID
+        manager = AddressbookManager()
+        blocked = _blocked_group()
+        blocked_ids = set(member.id for member in blocked.contacts) if blocked is not None else set()
+        deleted = self._conversationGroup(DELETED_GROUP_ID, create=False)
+        deleted_ids = set(member.id for member in deleted.contacts) if deleted is not None else set()
+        contacts = [contact for contact in contacts if manager.has_contact(contact.id) and contact.id not in blocked_ids]
+        if not contacts:
+            return
+        addresses = set(self._canonical_uri(str(uri.uri)) for contact in contacts for uri in contact.uris)
+        addresses.discard('')
+        addresses.discard(None)
+        policies = [policy for policy in manager.get_policies()
+                    if policy.presence.policy == 'block' and self._canonical_uri(str(policy.uri)) in addresses]
+        changed = [contact for contact in contacts
+                   if contact.presence.policy == 'block' or (not contact.presence.subscribe and contact.id not in deleted_ids)]
+        if not changed and not policies:
+            return
+        try:
+            with manager.transaction():
+                for contact in changed:
+                    contact.presence.policy = 'allow'
+                    if contact.id not in deleted_ids:
+                        contact.presence.subscribe = True
+                    contact.save()
+                    BlinkLogger().log_info('[presence] %s left Blocked: allowed to see our presence%s'
+                                           % (contact.name or contact.id, '' if contact.id in deleted_ids else ', subscribed to'))
+                for policy in policies:
+                    BlinkLogger().log_info('[presence] %s left Blocked: its presence block removed' % policy.uri)
+                    policy.delete()
+        except Exception as e:
+            BlinkLogger().log_error('[presence] Cannot release the presence block: %s' % e)
 
     @objc.python_method
     def _abArmNotify(self, manager):
