@@ -3232,6 +3232,60 @@ class ChatHistory(object, metaclass=Singleton):
             self.db.queryAll('vacuum')
             return affected
 
+    # The Data manager (DataManagerWindow): what it drills into, and its removal by row id
+
+    @run_in_db_thread
+    def data_accounts(self):
+        """[(account, rows)] of the accounts with live history here, most first, account in
+        lower case; the accounts of the other profiles are left out."""
+        table = ChatMessage.sqlmeta.table
+        try:
+            rows = self.db.queryAll('select lower(local_uri), count(*) from %s where %s%s group by lower(local_uri) order by 2 desc'
+                                    % (table, NOT_DELETED_SQL, _other_profiles_sql()))
+        except Exception as e:
+            BlinkLogger().log_error('[data] Counting the messages per account failed: %s' % e)
+            return []
+        return [(str(account), int(count)) for account, count in rows if account]
+
+    @run_in_db_thread
+    def data_inventory(self, account_id, head=400):
+        """Every live row of an account as tuples (id, msgid, remote_uri, local day, time, direction,
+        category, content_type, related_action, the first `head` characters of the body, related_msg_id)."""
+        table = ChatMessage.sqlmeta.table
+        query = ("select id, msgid, remote_uri, date(time, 'localtime'), time, direction, category, content_type, related_action,"
+                 " substr(body, 1, %d), related_msg_id from %s where lower(local_uri) = %s and %s"
+                 % (int(head), table, ChatMessage.sqlrepr(str(account_id).lower()), NOT_DELETED_SQL))
+        try:
+            return list(self.db.queryAll(query))
+        except Exception as e:
+            BlinkLogger().log_error('[data] Reading the messages of %s for the Data manager failed: %s' % (account_id, e))
+            return []
+
+    DATA_MESSAGE_COLUMNS = ('id', 'msgid', 'local_uri', 'remote_uri', 'time', 'direction', 'content_type', 'category', 'related_action',
+                            'related_msg_id', 'status', 'encryption', 'read', 'deleted', 'journal_id', 'uuid', 'sip_callid', 'media_type',
+                            'cpim_from', 'cpim_to', 'cpim_timestamp', 'private', 'expire_time', 'metadata', 'body')
+
+    @run_in_db_thread
+    def data_message(self, row_id):
+        """One row as {column: value}, body and metadata in full; None if it is gone."""
+        try:
+            row = self.db.queryOne('select %s from %s where id = %d'
+                                   % (', '.join(self.DATA_MESSAGE_COLUMNS), ChatMessage.sqlmeta.table, int(row_id)))
+        except Exception as e:
+            BlinkLogger().log_error('[data] Reading message row %s failed: %s' % (row_id, e))
+            return None
+        return dict(zip(self.DATA_MESSAGE_COLUMNS, row)) if row else None
+
+    @run_in_db_thread
+    def purge_messages(self, row_ids, files=True):
+        """Erase rows by id, a deletion made here by the user in the Data manager: no tombstones,
+        the downloaded files of the transfers among them go too. Returns (rows erased, conversations)."""
+        if not row_ids:
+            return 0, []
+        removed, conversations = self._erase_rows(sorted({int(row_id) for row_id in row_ids}), files)
+        BlinkLogger().log_info('[data] Erased %d messages in %d conversations' % (removed, len(conversations)))
+        return removed, conversations
+
     @run_in_db_thread
     def bulk_delete(self, account_id, criteria, files=True, cascade=False):
         """Erase the rows of one account that match a bulk delete (bulk_delete_criteria).

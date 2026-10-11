@@ -995,6 +995,14 @@ class BlinkAppDelegate(NSObject):
         # BlinkLogger().log_info('startup: ChatWindowController.init enter')
         self.chatWindowController = ChatWindowController.ChatWindowController.alloc().init()
 
+        # Blink > Data Manager...: the module ships in the Blink target only
+        try:
+            import DataManagerWindow
+        except ImportError as e:
+            BlinkLogger().log_info('Data Manager not available: %s' % e)
+        else:
+            DataManagerWindow.install_menu(self.blinkMenu)
+
         if getattr(self, 'profiles_enabled', False):
             import Profiles
             self.profilesMenu = Profiles.ProfilesMenu.alloc().init()

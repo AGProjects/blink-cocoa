@@ -6119,6 +6119,60 @@ class SMSWindowManagerClass(NSObject):
         deferred.addCallbacks(done, failed)
 
     @objc.python_method
+    def sendMessagesBulkDelete(self, account, payload):
+        """Ask the other devices of the account to erase what a Data manager deletion here erased.
+
+        Sent to the server API from the account to itself, without CPIM: the server keeps it in
+        the journal and relays application/sylk-messages-bulk-delete to every device, this one
+        included (skipped by its device id in applyMessagesBulkDelete). Returns whether it went.
+        """
+        if account is None or account is BonjourAccount() or not account.enabled:
+            return False
+        if not account.sms.enable_replication:
+            BlinkLogger().log_info('[data] Bulk delete not announced: %s does not replicate messages to other devices' % account.id)
+            return False
+        from DataManage import criteria_label
+        BlinkLogger().log_info('[data] Announcing the bulk delete %s (%s) to the other devices of %s'
+                               % (payload['bulk_delete_id'], criteria_label(payload['criteria']), account.id))
+        self._sendApiRequest(account, json.dumps(payload), 'application/sylk-api-messages-bulk-delete')
+        return True
+
+    @objc.python_method
+    def sendMessageRemoveForMessage(self, account, contact, msgid):
+        """Remove one message on the server and the account's other devices, as a delete in the
+        conversation does, without a conversation open. Returns whether it was sent."""
+        if account is None or account is BonjourAccount() or not account.enabled or not msgid or not contact:
+            return False
+        recipient = str(contact)
+        for scheme in ('sips:', 'sip:'):
+            if recipient.lower().startswith(scheme):
+                recipient = recipient[len(scheme):]
+        self._sendApiRequest(account, msgid, 'application/sylk-api-message-remove', recipient)
+        return True
+
+    @objc.python_method
+    @run_in_green_thread
+    def _sendApiRequest(self, account, content, content_type, recipient=None):
+        try:
+            self.sendMessage(account, content, content_type, recipient=recipient)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot send %s for %s: %s' % (content_type, account.id, e))
+
+    @objc.python_method
+    @run_in_gui_thread
+    def messageDeletedInDataManager(self, account, contact, msgid):
+        """A message the Data manager deleted: off the open conversation and out of its preview."""
+        viewer = self._viewerForContact(account, contact) if account is not None else None
+        if viewer is not None and msgid:
+            self._markMessageRemovedInViewer(viewer, msgid)
+        self.refreshMessagePreview(contact)
+
+    @objc.python_method
+    def messagesDeletedInDataManager(self, account, contact, conversations):
+        """Rows the Data manager erased: the open conversation reloads, previews and badges follow."""
+        self._messagesBulkDeleted(account, contact, conversations)
+
+    @objc.python_method
     @run_in_gui_thread
     def _messagesBulkDeleted(self, account, contact, conversations):
         viewer = self._viewerForContact(account, contact)
