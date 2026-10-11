@@ -5033,7 +5033,12 @@ class ContactListModel(CustomListModel):
     def getBlinkContactsAndGroupsForURI(self, uri):
         main_contacts = []
         other_contacts = []
-        allowed_groups = [group for group in self.groupsList if (group.add_contact_allowed or isinstance(group, AllContactsBlinkGroup))]
+        # Every group that holds address book contacts, not only the ones a contact may be
+        # added to: Messages and Deleted are filled by the application, and their rows
+        # still show presence.
+        allowed_groups = [group for group in self.groupsList
+                          if group.add_contact_allowed or isinstance(group, AllContactsBlinkGroup)
+                          or not isinstance(group, VirtualBlinkGroup)]
         for group in allowed_groups:
             for blink_contact in group.contacts:
                 if not isinstance(blink_contact, BlinkPresenceContact):
