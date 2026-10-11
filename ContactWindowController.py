@@ -130,7 +130,7 @@ from application.python import Null
 from application.system import unlink, makedirs, host
 
 from sipsimple.account import AccountManager, Account, BonjourAccount
-from sipsimple.addressbook import AddressbookManager, ContactURI, Policy, unique_id
+from sipsimple.addressbook import AddressbookManager, Contact, ContactURI, Policy, unique_id
 from sipsimple.application import SIPApplication
 from sipsimple.audio import AudioConference, WavePlayer
 from sipsimple.configuration.settings import SIPSimpleSettings
@@ -152,7 +152,6 @@ import KeyEscrow
 from AccountSettings import AccountSettings
 from AlertPanel import AlertPanel
 from AudioSession import AudioSession
-from BlockedContact import BlockedContact
 from BlinkLogger import BlinkLogger
 from Avatars import NO_PHOTO_AVATAR, draw_avatar
 from HistoryManager import SessionHistory
@@ -178,7 +177,7 @@ from configuration.datatypes import UserIcon
 from resources import ApplicationData, Resources
 from util import allocate_autorelease_pool, format_date, format_identity_to_string, format_uri_type, is_anonymous, is_sip_aor_format, normalize_sip_uri_for_outgoing_session
 from util import pstn_uri_spellings_for_accounts
-from HistoryManager import block_party, block_caller, is_blocked_party
+from HistoryManager import block_contacts, unblock_contacts, _blocked_group
 from util import log_gui_exception, run_in_gui_thread, sip_prefix_pattern, sipuri_components_from_string, translate_alpha2digit, AccountInfo, utc_to_local
 
 
@@ -1435,11 +1434,6 @@ class ContactWindowController(NSWindowController):
         item.setRepresentedObject_(self.model.online_contacts_group)
         item.setState_(NSOnState if settings.contacts.enable_online_group else NSOffState)
 
-        item = self.groupMenu.addItemWithTitle_action_keyEquivalent_(self.model.blocked_contacts_group.name, "toggleGroupVisibility:", "")
-        item.setIndentationLevel_(1)
-        item.setRepresentedObject_(self.model.blocked_contacts_group)
-        item.setState_(NSOnState if settings.contacts.enable_blocked_group else NSOffState)
-
         item = self.groupMenu.addItemWithTitle_action_keyEquivalent_(self.model.no_group.name, "toggleGroupVisibility:", "")
         item.setIndentationLevel_(1)
         item.setRepresentedObject_(self.model.no_group)
@@ -1908,6 +1902,10 @@ class ContactWindowController(NSWindowController):
             mitem.setEnabled_(any(getattr(c, "deletable", False) for c in contacts))
             return
 
+        if contacts and len(self.blockedContactsForItems(contacts)) == len(contacts):
+            self.addBlockedContactItems(contacts)
+            return
+
         mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Start Conference", "Menu item"), "startConferenceWithSelectedContacts:", "")
         mitem.setEnabled_(bool(contacts) and self.activeAccount() is not None)
 
@@ -1919,8 +1917,79 @@ class ContactWindowController(NSWindowController):
 
         delete_allowed = group is None or getattr(group, "delete_contact_allowed", False)
         deletable = [c for c in contacts if getattr(c, "deletable", False) and getattr(c, "editable", True) is not False]
+        blockable = self.blockableContactsForItems(contacts)
+        if blockable and len(blockable) == len(contacts):
+            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Block %d Contacts", "Menu item") % len(contacts), "blockContacts:", "")
+            mitem.setRepresentedObject_(contacts)
         mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Delete Contacts...", "Menu item"), "deleteSelectedContacts:", "")
         mitem.setEnabled_(delete_allowed and bool(deletable))
+
+    @objc.python_method
+    def _addressbookContact(self, item):
+        contact = getattr(item, 'contact', None)
+        if contact is not None and not isinstance(contact, Contact):
+            contact = getattr(contact, 'contact', None)     # a history row's contact is a BlinkContact
+        return contact if isinstance(contact, Contact) else None
+
+    @objc.python_method
+    def blockedContactsForItems(self, items):
+        """The addressbook contacts among items that are in the Blocked group."""
+        group = _blocked_group()
+        if group is None:
+            return []
+        contacts = {}
+        for item in items:
+            contact = self._addressbookContact(item)
+            if contact is not None and contact.id in group.contacts:
+                contacts[contact.id] = contact
+        return list(contacts.values())
+
+    @objc.python_method
+    def blockableContactsForItems(self, items):
+        """The addressbook contacts Block applies to: not blocked already, not deleted;
+        [] when any item is something else."""
+        contacts = {}
+        for item in items:
+            contact = self._addressbookContact(item)
+            if contact is None or self.isRowInDeletedGroup(item) or self.blockedContactsForItems([item]):
+                return []
+            contacts[contact.id] = contact
+        return list(contacts.values())
+
+    @objc.python_method
+    def addBlockedContactItems(self, items):
+        """What a blocked contact offers: Unblock and Delete."""
+        n = len(self.blockedContactsForItems(items))
+        title = NSLocalizedString("Unblock...", "Menu item") if n == 1 else NSLocalizedString("Unblock %d Contacts...", "Menu item") % n
+        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(title, "unblockContacts:", "")
+        mitem.setRepresentedObject_(list(items))
+        if len(items) == 1:
+            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Delete", "Menu item"), "deleteItem:", "")
+            mitem.setEnabled_(getattr(items[0], "deletable", False))
+            mitem.setRepresentedObject_(items[0])
+        else:
+            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Delete Contacts...", "Menu item"), "deleteSelectedContacts:", "")
+            mitem.setEnabled_(any(getattr(c, "deletable", False) for c in items))
+
+    @objc.IBAction
+    def blockContacts_(self, sender):
+        items = sender.representedObject()
+        items = list(items) if isinstance(items, (list, tuple)) else [items] if items is not None else []
+        contacts = self.blockableContactsForItems(items)
+        if contacts:
+            block_contacts(contacts)
+            self.refreshContactsList()
+            self.searchContacts()
+
+    @objc.IBAction
+    def unblockContacts_(self, sender):
+        items = sender.representedObject()
+        items = list(items) if isinstance(items, (list, tuple)) else [items] if items is not None else []
+        contacts = self.blockedContactsForItems(items)
+        if contacts and self.model.confirmUnblock(items):
+            unblock_contacts(contacts)
+            self.refreshContactsList()
+            self.searchContacts()
 
     @objc.IBAction
     def startConferenceWithSelectedContacts_(self, sender):
@@ -2084,7 +2153,8 @@ class ContactWindowController(NSWindowController):
             if self.isRowInDeletedGroup(item):
                 # Sylk Mobile's Deleted folder: the contact comes back as it
                 # was, or goes for good -- XCAP, messages, files, and the
-                # other devices told.
+                # other devices told. Nothing else: a deleted contact is not
+                # called or written to.
                 mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(
                     NSLocalizedString("Restore", "Menu item"), "restoreDeletedContacts:", "")
                 mitem.setRepresentedObject_(item)
@@ -2092,8 +2162,13 @@ class ContactWindowController(NSWindowController):
                     NSLocalizedString("Delete Permanently...", "Menu item"), "expungeDeletedContacts:", "")
                 mitem.setEnabled_(getattr(item, "deletable", False))
                 mitem.setRepresentedObject_(item)
-                self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-            elif self._deletedConversationURIs(item):
+                return
+            if self.blockedContactsForItems([item]):
+                # Blocked, wherever it shows: unblocked or deleted, nothing
+                # else (no calls or messages to them), as on Blink Qt.
+                self.addBlockedContactItems([item])
+                return
+            if self._deletedConversationURIs(item):
                 mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(
                     NSLocalizedString("Restore Conversation", "Menu item"),
                     "restoreDeletedConversation:", "")
@@ -2535,21 +2610,6 @@ class ContactWindowController(NSWindowController):
                         mitem.setRepresentedObject_(item.uri)
                         mitem.setEnabled_(self.contactSupportsMedia("screen-sharing-client", item, item.uri))
 
-            if isinstance(item, BlinkPresenceContact):
-                # Blocking somebody you already have. Without this the only way
-                # to block a contact was the "Add Blocked Contact..." dialog and
-                # retyping their address, which is why the Calls group could
-                # fill up with people there was no convenient way to stop.
-                self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
-                if is_blocked_party(item.uri):
-                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(
-                        NSLocalizedString("Blocked Caller", "Menu item"), "", "")
-                    mitem.setEnabled_(False)
-                else:
-                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(
-                        NSLocalizedString("Block Caller", "Menu item"), "blockCaller:", "")
-                    mitem.setRepresentedObject_(item)
-
             if isinstance(item, BlinkPresenceContact) or isinstance(item, BonjourBlinkContact):
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
                 history_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("History...", "Menu item"), "viewHistory:", "")
@@ -2705,6 +2765,9 @@ class ContactWindowController(NSWindowController):
             # requirement that a group exist at all. Without this allowance an
             # ungrouped contact, which is what a half-finished write leaves
             # behind, could not be removed from the interface by any means.
+            if self.blockableContactsForItems([item]):
+                lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Block", "Menu item"), "blockContacts:", "")
+                lastItem.setRepresentedObject_(item)
             if group is None or group.delete_contact_allowed:
                 lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Delete", "Menu item"), "deleteItem:", "")
                 lastItem.setEnabled_(item.deletable)
@@ -2734,8 +2797,7 @@ class ContactWindowController(NSWindowController):
             lastItem.setEnabled_(False)
             self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
 
-            if item.add_contact_allowed:
-                self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Add Contact...", "Menu item"), "addContact:", "")
+            # adding a contact is the Contacts button's (Add Contact... / Add Group...), not a group's
             lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Rename...", "Menu item"), "renameGroup:", "")
             lastItem.setRepresentedObject_(item)
             if isinstance(item, HistoryBlinkGroup) or isinstance(item, OnlineGroup):
@@ -6469,68 +6531,6 @@ class ContactWindowController(NSWindowController):
         self.resetWidgets()
 
     @objc.IBAction
-    def blockCaller_(self, sender):
-        """Block a contact from calling, and take them out of the other groups.
-
-        The two facts a block is, as everywhere else: the Blocked group, which
-        is what rejects the call and what replicates to the phone, and the
-        presence policy, because nobody blocking a caller means "and do keep
-        publishing my availability to them".
-
-        Then the tidy-up: somebody blocked should stop appearing in the Calls
-        group they were just blocked out of. That part is lossy -- unblocking
-        cannot put them back into Family or Friends, because nothing records
-        that they were there -- so block_caller names every group it removed
-        them from in the log.
-        """
-        item = sender.representedObject()
-        if item is None:
-            return
-
-        try:
-            contact = item.contact
-        except AttributeError:
-            contact = None
-
-        if contact is not None:
-            try:
-                contact.presence.policy = 'block'
-                contact.dialog.policy = 'block'
-                contact.save()
-            except Exception as e:
-                BlinkLogger().log_error('Cannot set the presence policy for %s: %s' % (item.uri, e))
-
-        block_caller(item.uri, name=getattr(item, 'name', None), account=self.activeAccount())
-
-    @objc.IBAction
-    def blockContact_(self, sender):
-        controller = BlockedContact()
-        contact = controller.runModal()
-        if not contact:
-            return
-
-        # Blocking somebody is two facts, and the user asserting one means
-        # both: stop telling them whether I am available, and stop them
-        # ringing me. They are separate lists on purpose -- a presence policy
-        # must never decide whether a call is accepted (see
-        # docs/PSTN-CALLS-GROUP.md section 21) -- but this one action writes
-        # to both, because nobody blocking a caller means "and do keep
-        # publishing my availability to them".
-
-        # 1. presence and dialog: the policy, as it has always been.
-        policy_contact = Policy()
-        policy_contact.name = contact['name']
-        policy_contact.uri = contact['address']
-        policy_contact.presence.policy = 'block'
-        policy_contact.dialog.policy = 'block'
-        policy_contact.save()
-
-        # 2. calls: membership of the Blocked group, which is what
-        #    SessionController actually rejects on, and what replicates to
-        #    sylk mobile so the block travels with the account.
-        block_party(contact['address'], name=contact['name'], account=self.activeAccount())
-
-    @objc.IBAction
     def addGroup_(self, sender):
         self.model.addGroup()
         self.refreshContactsList()
@@ -6706,38 +6706,14 @@ class ContactWindowController(NSWindowController):
                 return
 
             if sender == self.contactOutline or sender == self.searchOutline:
-                # Double-click / Return. Messaging is now the DEFAULT action;
-                # it used to be a call. Explicit per-contact preferences are
-                # still honoured, except 'audio' -- that is also the stored
-                # default for every contact that was never configured, so it
-                # cannot be told apart from "no preference" and falls through
-                # to messages with everything else.
-                msrp_chat = self.sessionControllersManager.isPeerToPeerChatEnabled()
-                if isinstance(contact, BonjourBlinkContact):
-                    # Messages, like every other contact. Bonjour used to be
-                    # the exception that still rang, which made
-                    # double-clicking a neighbour mean something different
-                    # from double-clicking anyone else -- and for one who is
-                    # not on the network it rang out into a failure the user
-                    # had to read to understand, since there is no route to
-                    # resolve and nothing to ring.
-                    #
-                    # The conversation is the useful thing either way: the
-                    # history is there to read, and anything typed to an
-                    # absent neighbour waits and is delivered when they come
-                    # back. Calling them is still a click away in the menu.
-                    media_type = "sms"
-                elif contact.preferred_media == "chat":
-                    # A contact configured for MSRP chat before the preference
-                    # was switched off falls back to messages rather than to a
-                    # session that would be refused further down.
-                    media_type = "chat" if msrp_chat else "sms"
-                elif contact.preferred_media in ("chat+audio", "audio+chat"):
-                    media_type = ("chat", "audio") if msrp_chat else ("audio",)
-                elif contact.preferred_media == "video":
-                    media_type = ("audio", "video")
-                else:
-                    media_type = "sms"
+                # Double-click / Return opens the contact's conversation in the
+                # message pane, for every contact, Bonjour neighbours included:
+                # there is no per-contact preferred media any more (as on Blink
+                # Qt). Calling is a click away in the menu and the call buttons.
+                # A deleted or blocked contact is not written to.
+                if self.isRowInDeletedGroup(contact) or self.blockedContactsForItems([contact]):
+                    return
+                media_type = "sms"
             elif sender.selectedSegment() == video_segment:
                 media_type = ("audio", "video")
             elif sender.selectedSegment() == chat_segment:

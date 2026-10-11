@@ -386,10 +386,6 @@
 		1FAA5E100000000000000104 /* dark_linen.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA5E100000000000000101 /* dark_linen.png */; };
 		1FAA5E100000000000000202 /* light_linen.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA5E100000000000000201 /* light_linen.png */; };
 		1FAA5E100000000000000204 /* light_linen.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA5E100000000000000201 /* light_linen.png */; };
-		1FAA839E16566D8C00C4C212 /* BlockedContact.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA839D16566D8C00C4C212 /* BlockedContact.py */; };
-		1FAA839F16566D8C00C4C212 /* BlockedContact.py in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA839D16566D8C00C4C212 /* BlockedContact.py */; };
-		1FAA83A51656745500C4C212 /* BlockedContact.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA83A91656745500C4C212 /* BlockedContact.xib */; };
-		1FAA83A61656745500C4C212 /* BlockedContact.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1FAA83A91656745500C4C212 /* BlockedContact.xib */; };
 		1FAD022D18C8010C00FBE7EE /* Grab.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1FAD022C18C8010C00FBE7EE /* Grab.aif */; };
 		1FAD022E18C8010C00FBE7EE /* Grab.aif in Resources */ = {isa = PBXBuildFile; fileRef = 1FAD022C18C8010C00FBE7EE /* Grab.aif */; };
 		1FAE0B1218FD7A2300038AA4 /* pencil_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FAE0B1118FD7A2300038AA4 /* pencil_16.png */; };
@@ -1104,7 +1100,6 @@
 		1F6460A618BC926500AC41E0 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/AecSlider.xib; sourceTree = "<group>"; };
 		1F6460A718BC926500AC41E0 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/EnrollmentWindow.xib; sourceTree = "<group>"; };
 		1F6460A818BC926500AC41E0 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/Contact.xib; sourceTree = "<group>"; };
-		1F6460A918BC926500AC41E0 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/BlockedContact.xib; sourceTree = "<group>"; };
 		1F6460AA18BC926500AC41E0 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/Group.xib; sourceTree = "<group>"; };
 		1F6460AB18BC926500AC41E0 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/MergeContacts.xib; sourceTree = "<group>"; };
 		1F6460AC18BC926500AC41E0 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/PhotoPicker.xib; sourceTree = "<group>"; };
@@ -1166,7 +1161,6 @@
 		1F73B300191BCBB500213DC5 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/AecSlider.xib; sourceTree = "<group>"; };
 		1F73B301191BCBB500213DC5 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/EnrollmentWindow.xib; sourceTree = "<group>"; };
 		1F73B302191BCBB500213DC5 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/Contact.xib; sourceTree = "<group>"; };
-		1F73B303191BCBB500213DC5 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/BlockedContact.xib; sourceTree = "<group>"; };
 		1F73B304191BCBB500213DC5 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/Group.xib; sourceTree = "<group>"; };
 		1F73B305191BCBB500213DC5 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/MergeContacts.xib; sourceTree = "<group>"; };
 		1F73B306191BCBB500213DC5 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/PhotoPicker.xib; sourceTree = "<group>"; };
@@ -1203,7 +1197,6 @@
 		1F762B59194B34B4002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/AecSlider.xib; sourceTree = "<group>"; };
 		1F762B5A194B34B4002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/EnrollmentWindow.xib; sourceTree = "<group>"; };
 		1F762B5B194B34B4002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/Contact.xib; sourceTree = "<group>"; };
-		1F762B5C194B34B4002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/BlockedContact.xib; sourceTree = "<group>"; };
 		1F762B5D194B34B4002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/Group.xib; sourceTree = "<group>"; };
 		1F762B5E194B34B4002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/MergeContacts.xib; sourceTree = "<group>"; };
 		1F762B5F194B34B5002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/PhotoPicker.xib; sourceTree = "<group>"; };
@@ -1259,8 +1252,6 @@
 		1FA6251F13828E2500DFC8E3 /* editor.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = editor.png; path = icons/editor.png; sourceTree = "<group>"; };
 		1FAA5E100000000000000101 /* dark_linen.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = dark_linen.png; path = icons/dark_linen.png; sourceTree = "<group>"; };
 		1FAA5E100000000000000201 /* light_linen.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = light_linen.png; path = icons/light_linen.png; sourceTree = "<group>"; };
-		1FAA839D16566D8C00C4C212 /* BlockedContact.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = BlockedContact.py; sourceTree = "<group>"; };
-		1FAA83A81656745500C4C212 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/BlockedContact.xib; sourceTree = "<group>"; };
 		1FAD022C18C8010C00FBE7EE /* Grab.aif */ = {isa = PBXFileReference; lastKnownFileType = file; name = Grab.aif; path = sounds/Grab.aif; sourceTree = "<group>"; };
 		1FAE0B1118FD7A2300038AA4 /* pencil_16.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = pencil_16.png; path = icons/pencil_16.png; sourceTree = "<group>"; };
 		1FAF8C5C12DA18960029857C /* VideoController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoController.py; sourceTree = "<group>"; };
@@ -1337,7 +1328,6 @@
 		1FCEFA3C19EBF9DE00E9647D /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/EnrollmentWindow.xib; sourceTree = "<group>"; };
 		1FCEFA3D19EBF9DE00E9647D /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/MainWindow.xib; sourceTree = "<group>"; };
 		1FCEFA3E19EBF9DE00E9647D /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/Contact.xib; sourceTree = "<group>"; };
-		1FCEFA3F19EBF9DE00E9647D /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/BlockedContact.xib; sourceTree = "<group>"; };
 		1FCEFA4019EBF9DE00E9647D /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/Group.xib; sourceTree = "<group>"; };
 		1FCEFA4119EBF9DE00E9647D /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/MergeContacts.xib; sourceTree = "<group>"; };
 		1FCEFA4219EBF9DE00E9647D /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/PhotoPicker.xib; sourceTree = "<group>"; };
@@ -2135,9 +2125,7 @@
 				2BC594740FCCDA910017CB1B /* ContactCell.py */,
 				2BAF38080FE088C70040117A /* Contact.xib */,
 				2B4CA93110AA5FAE00D5F19E /* GroupController.py */,
-				1FAA839D16566D8C00C4C212 /* BlockedContact.py */,
 				2B068492C79CC554E4C527B0 /* KeyEscrow.py */,
-				1FAA83A91656745500C4C212 /* BlockedContact.xib */,
 				2B4CA92D10AA5F2F00D5F19E /* Group.xib */,
 				1F72E53916A027F600837311 /* MergeContactController.py */,
 				1F72E54316A02B3600837311 /* MergeContacts.xib */,
@@ -2785,9 +2773,7 @@
 				1F3C358615F522FA005356AE /* PresenceInfoController.py in Resources */,
 				1F3BF8BF1611D06800F84EB9 /* WorldMapView.py in Resources */,
 				1FE59BBA161621BB00CD7B21 /* location.png in Resources */,
-				1FAA839F16566D8C00C4C212 /* BlockedContact.py in Resources */,
 				E99293C0BD4A3709F776A2B4 /* KeyEscrow.py in Resources */,
-				1FAA83A61656745500C4C212 /* BlockedContact.xib in Resources */,
 				1FCE2BE0166BABBC00090A86 /* time.png in Resources */,
 				1F9BE2E3167B7AC8006DFF3F /* lupa.png in Resources */,
 				1F2436801912B23700E71253 /* MyVideoLocalWindow.xib in Resources */,
@@ -3105,9 +3091,7 @@
 				1F8EA3A02D510C6B00D22473 /* belloff.png in Resources */,
 				1F3BF8BE1611D06800F84EB9 /* WorldMapView.py in Resources */,
 				1FE59BB9161621BB00CD7B21 /* location.png in Resources */,
-				1FAA839E16566D8C00C4C212 /* BlockedContact.py in Resources */,
 				261D209F613682E8862D6E7A /* KeyEscrow.py in Resources */,
-				1FAA83A51656745500C4C212 /* BlockedContact.xib in Resources */,
 				1FCE2BDF166BABBC00090A86 /* time.png in Resources */,
 				1F9BE2E2167B7AC8006DFF3F /* lupa.png in Resources */,
 				1FD0808418C02DA800A3B313 /* busy.png in Resources */,
@@ -3470,18 +3454,6 @@
 				1FCEFA3B19EBF9DE00E9647D /* nl */,
 			);
 			name = AecSlider.xib;
-			sourceTree = "<group>";
-		};
-		1FAA83A91656745500C4C212 /* BlockedContact.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				1FAA83A81656745500C4C212 /* en */,
-				1F6460A918BC926500AC41E0 /* ro */,
-				1F73B303191BCBB500213DC5 /* es */,
-				1F762B5C194B34B4002D998E /* pt */,
-				1FCEFA3F19EBF9DE00E9647D /* nl */,
-			);
-			name = BlockedContact.xib;
 			sourceTree = "<group>";
 		};
 		1FB30808146D540C001430B5 /* JoinConferenceWindow.xib */ = {

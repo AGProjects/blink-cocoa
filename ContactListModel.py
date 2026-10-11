@@ -113,7 +113,7 @@ from HistoryManager import SessionHistory, ChatHistory
 from HistoryManager import calls_group_startup_check
 from HistoryManager import ensure_call_contact
 from HistoryManager import backfill_call_contacts
-from HistoryManager import BLOCKED_GROUP_KIND, BLOCKED_GROUP_NAME, is_blocked_party
+from HistoryManager import BLOCKED_GROUP_KIND, BLOCKED_GROUP_NAME, is_blocked_party, blocked_sync_done, sync_blocked_policy, block_contacts, unblock_contacts
 from SIPManager import MWIData
 from MergeContactController import MergeContactController
 from VirtualGroups import VirtualGroupsManager, VirtualGroup
@@ -4381,10 +4381,25 @@ class CustomListModel(NSObject):
                         self.addContact(uris=[(sourceContact.uri, uri_type)], name=sourceContact.name, group=targetGroup)
                         return False
 
-                    if (not is_favorites_group(targetGroup.group) and sourceGroup.remove_contact_allowed
-                            and self.isBlockedBlinkGroup(sourceGroup) and not self.isBlockedBlinkGroup(targetGroup)
-                            and not self.confirmUnblock([sourceContact])):
+                    unblocking = (not is_favorites_group(targetGroup.group) and sourceGroup.remove_contact_allowed
+                                  and self.isBlockedBlinkGroup(sourceGroup) and not self.isBlockedBlinkGroup(targetGroup))
+                    if unblocking and not self.confirmUnblock([sourceContact]):
                         return False
+
+                    if (self.isBlockedBlinkGroup(targetGroup) and not self.isBlockedBlinkGroup(sourceGroup)
+                            and not isinstance(sourceContact, BlinkPendingWatcher) and getattr(sourceContact, 'contact', None) is not None):
+                        # dropped on Blocked: blocked, as the menu's Block does
+                        block_contacts([sourceContact.contact])
+                        self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
+                        return True
+
+                    if unblocking and getattr(sourceContact, 'contact', None) is not None:
+                        with addressbook_manager.transaction():
+                            targetGroup.group.contacts.add(sourceContact.contact)
+                            targetGroup.group.save()
+                        unblock_contacts([sourceContact.contact])
+                        self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
+                        return True
 
                     with addressbook_manager.transaction():
                         if isinstance(sourceContact, BlinkPendingWatcher):
@@ -5197,8 +5212,10 @@ class ContactListModel(CustomListModel):
     def removeContactFromGroups(self, blink_contact, blink_groups):
         blink_groups = list(blink_groups)
         blocked = [blink_group for blink_group in blink_groups if self.isBlockedBlinkGroup(blink_group)]
-        if blocked and not self.confirmUnblock([blink_contact]):
+        if blocked:
             blink_groups = [blink_group for blink_group in blink_groups if blink_group not in blocked]
+            if self.confirmUnblock([blink_contact]):
+                unblock_contacts([blink_contact.contact])
         for blink_group in blink_groups:
             blink_group.group.contacts.remove(blink_contact.contact)
             blink_group.group.save()
@@ -6015,17 +6032,6 @@ class ContactListModel(CustomListModel):
                 self.saveGroupPosition()
                 self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
-        if "contacts.enable_blocked_group" in notification.data.modified:
-            if settings.contacts.enable_blocked_group and self.blocked_contacts_group not in self.groupsList:
-                position = len(self.groupsList) if self.groupsList else 0
-                self.groupsList.insert(position, self.blocked_contacts_group)
-                self.saveGroupPosition()
-                self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
-            elif not settings.contacts.enable_blocked_group and self.blocked_contacts_group in self.groupsList:
-                self.groupsList.remove(self.blocked_contacts_group)
-                self.saveGroupPosition()
-                self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
-
         if "contacts.enable_online_group" in notification.data.modified:
             if settings.contacts.enable_online_group and self.online_contacts_group not in self.groupsList:
                 position = len(self.groupsList) if self.groupsList else 0
@@ -6317,11 +6323,11 @@ class ContactListModel(CustomListModel):
         policy = notification.sender
 
         if policy.presence.policy == 'block':
-            # add to blocked group
-            policy_contact = BlinkBlockedPresenceContact(policy)
-            self.blocked_contacts_group.contacts.append(policy_contact)
-            self.blocked_contacts_group.sortContacts()
-            self.nc.post_notification("BlinkContactsHaveChanged", sender=self.blocked_contacts_group)
+            # A presence block is the Blocked group's business: with no contact
+            # behind it, it becomes a blocked contact. Before the addressbook has
+            # loaded, the startup pass (sync_blocked_with_policies) does this.
+            if blocked_sync_done():
+                sync_blocked_policy(policy)
 
             # remove from pending group
             try:
@@ -6801,11 +6807,9 @@ class ContactListModel(CustomListModel):
                     group.save()
                 self.groupsList.insert(index, self.no_group)
         elif group.id == "blocked_contacts":
-            if settings.contacts.enable_blocked_group:
-                if not group.position:
-                    group.position = max(len(self.groupsList)-1, 0)
-                    group.save()
-                self.groupsList.insert(index, self.blocked_contacts_group)
+            # the virtual presence-block group is gone: presence blocks are members
+            # of the replicated Blocked group (HistoryManager.sync_blocked_with_policies)
+            pass
         elif group.id == "online_contacts":
             if settings.contacts.enable_online_group:
                 if not group.position:

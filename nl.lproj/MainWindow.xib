@@ -152,12 +152,6 @@
                                     <action selector="addContact:" target="389" id="1599"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Voeg geblokkeerd contact toe..." id="1804">
-                                <modifierMask key="keyEquivalentModifierMask"/>
-                                <connections>
-                                    <action selector="blockContact:" target="389" id="1806"/>
-                                </connections>
-                            </menuItem>
                             <menuItem title="Vind contact" keyEquivalent="f" id="1682">
                                 <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
                                 <connections>

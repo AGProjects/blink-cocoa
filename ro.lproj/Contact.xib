@@ -17,7 +17,6 @@
                 <outlet property="nameText" destination="15" id="19"/>
                 <outlet property="organizationText" destination="DDa-EM-8ae" id="xJ4-8B-CND"/>
                 <outlet property="photoImage" destination="61" id="65"/>
-                <outlet property="preferredMediaPopUpButton" destination="199" id="213"/>
                 <outlet property="publicKey" destination="6yv-zp-bF7" id="jGp-R4-Qny"/>
                 <outlet property="subscribePopUp" destination="163" id="187"/>
                 <outlet property="window" destination="3" id="23"/>
@@ -172,15 +171,6 @@ Gw
                             <action selector="buttonClicked:" target="-2" id="93"/>
                         </connections>
                     </imageView>
-                    <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="37">
-                        <rect key="frame" x="18" y="84" width="147" height="17"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Canal Preferat:" id="38">
-                            <font key="font" metaFont="system"/>
-                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
-                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
-                        </textFieldCell>
-                    </textField>
                     <scrollView fixedFrame="YES" autohidesScrollers="YES" horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="101">
                         <rect key="frame" x="169" y="202" width="337" height="95"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -316,36 +306,6 @@ Gw
                         </popUpButtonCell>
                         <connections>
                             <action selector="subscribePopUpClicked:" target="-2" id="189"/>
-                        </connections>
-                    </popUpButton>
-                    <popUpButton verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="199">
-                        <rect key="frame" x="166" y="79" width="342" height="26"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <popUpButtonCell key="cell" type="push" title="Audio" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="border" tag="1" inset="2" autoenablesItems="NO" selectedItem="208" id="200">
-                            <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
-                            <font key="font" metaFont="menu"/>
-                            <menu key="menu" title="OtherViews" autoenablesItems="NO" id="201">
-                                <items>
-                                    <menuItem title="Audio" state="on" tag="1" id="208">
-                                        <modifierMask key="keyEquivalentModifierMask"/>
-                                    </menuItem>
-                                    <menuItem title="Convorbire Text" tag="2" id="203">
-                                        <modifierMask key="keyEquivalentModifierMask"/>
-                                    </menuItem>
-                                    <menuItem title="Audio și Text" tag="3" id="212">
-                                        <modifierMask key="keyEquivalentModifierMask"/>
-                                    </menuItem>
-                                    <menuItem title="Audio și Video" tag="4" id="cuH-m4-if2">
-                                        <modifierMask key="keyEquivalentModifierMask"/>
-                                    </menuItem>
-                                    <menuItem title="Mesaje" tag="5" id="Q9h-Tm-Pml">
-                                        <modifierMask key="keyEquivalentModifierMask"/>
-                                    </menuItem>
-                                </items>
-                            </menu>
-                        </popUpButtonCell>
-                        <connections>
-                            <action selector="preferredMediaPopUpClicked:" target="-2" id="214"/>
                         </connections>
                     </popUpButton>
                     <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="LX8-ek-Wr8">

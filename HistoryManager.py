@@ -4165,11 +4165,10 @@ TEL_GROUP_KIND = 'tel'
 # group the software files by itself is not the user's group to name.
 TEL_GROUP_ID = '_tel'
 
-# Mobile's Blocked group, replicated here. Blink has its own, unrelated notion
-# of blocked -- a virtual group built from Policy objects whose presence policy
-# is 'block' (ContactListModel._NH_AddressbookPolicyWasActivated) -- so the
-# name collides and the meaning does not, exactly as Missed and Conference do.
-# is_blocked_party() below honours both.
+# Mobile's Blocked group, replicated here. It is the one notion of blocked:
+# a member cannot call or write, and carries a presence policy of 'block'
+# (no presence either way). A presence-block Policy with no contact behind it
+# becomes a member at startup -- see sync_blocked_with_policies().
 #
 # 'blocked', not '_blocked': the kind values already on the wire and round
 # tripped with mobile are 'calls' and 'tel', lowercase words with no prefix.
@@ -4282,13 +4281,12 @@ def is_blocked_party(uri):
 
     Membership of the replicated "Blocked" group, and nothing else.
 
-    NOT a presence policy of 'block'. Those are two different things wearing
-    one word: a presence block says "do not tell them whether I am available",
-    a call block says "do not let them ring me". Blink's own BlockedGroup is
-    the first kind -- a virtual group built from Policy objects
-    (ContactListModel._NH_AddressbookPolicyWasActivated) -- and reading it as
-    the second would silently start rejecting calls from everybody the user
-    had merely hidden their availability from.
+    NOT a contact's presence policy of 'block': that only says "do not tell
+    them whether I am available" (Allow to see my presence state off), and
+    reading it as a call block would reject calls from everybody the user had
+    merely hidden their availability from. Members of Blocked carry that
+    policy too; a presence-block Policy with no contact behind it is made a
+    member by sync_blocked_with_policies().
 
     Contact matching is getFirstContactMatchingURI's, so a party blocked as
     '+31201234567' is still recognised when the call arrives as
@@ -4801,6 +4799,7 @@ def calls_group_startup_check(xcap_loaded=False):
         # back whatever the reload is about to replace.
         if xcap_loaded:
             repair_contact_addresses()
+            sync_blocked_with_policies()
             file_contacts_into_kind_groups()
 
         # Last, and on every pass: who is actually in the two groups. The
@@ -5104,6 +5103,9 @@ def file_contacts_into_kind_groups():
         except Exception:
             return []
 
+    # a blocked or deleted contact is never filed: it stays where it is
+    contacts = [c for c in contacts if c.id not in _set_aside_ids()]
+
     wanted = (
         (TEL_GROUP_KIND, TEL_GROUP_NAME, TEL_GROUP_ID,
          [c for c in contacts if any(pstn_e164(a, default_account) for a in addresses(c))]),
@@ -5269,14 +5271,8 @@ def block_party(uri, name=None, account=None, exclusive=False):
             return False
 
         if contact is not None:
-            # no presence subscription to somebody blocked, as on Blink Qt
-            try:
-                if contact.presence.subscribe:
-                    contact.presence.subscribe = False
-                    contact.save()
-                    _log('%s no longer subscribed to for presence' % _quote(address))
-            except Exception as e:
-                _log('[!] cannot unsubscribe from the presence of %s: %s' % (_quote(address), e))
+            # a blocked contact neither sees our presence nor is subscribed to
+            _set_blocked_policy(contact)
             try:
                 if contact.id in group.contacts:
                     _log('%s is already in %s' % (_quote(address), _describe_group(group)))
@@ -5288,7 +5284,7 @@ def block_party(uri, name=None, account=None, exclusive=False):
             contact.name = name or address
             uri_type = 'phone' if pstn_e164(address, account) else 'SIP'
             contact.uris.add(ContactURI(uri=address, type=format_uri_type(uri_type)))
-            contact.presence.subscribe = False
+            _set_blocked_policy(contact, save=False)
             contact.save()
             _publish_contact_for_groups(contact)
             _log_ab('created contact %s to block' % _quote(address))
@@ -5621,6 +5617,196 @@ def _remove_from_other_groups(contact, blocked_group):
                  'them back later is by hand)' % (_quote(contact.name), ', '.join(removed)))
     except Exception as e:
         _log('[!] could not tidy the groups of %s: %s' % (_quote(getattr(contact, 'name', '?')), e))
+
+
+def _set_aside_ids():
+    """Ids of the contacts in Blocked and Deleted: never filed into a group by software."""
+    ids = set()
+    try:
+        from sipsimple.addressbook import AddressbookManager
+        blocked = _blocked_group()
+        for group in AddressbookManager().get_groups():
+            if group.id == '_deleted' or (blocked is not None and group.id == blocked.id):
+                ids.update(member.id for member in group.contacts)
+    except Exception:
+        pass
+    return ids
+
+
+def _set_blocked_policy(contact, save=True):
+    """What being blocked means for presence: they do not see ours, we do not ask for theirs."""
+    try:
+        changed = (contact.presence.policy != 'block' or contact.presence.subscribe
+                   or contact.dialog.policy != 'block')
+        if changed:
+            contact.presence.policy = 'block'
+            contact.presence.subscribe = False
+            contact.dialog.policy = 'block'
+            if save:
+                contact.save()
+            _log_ab('%s: presence policy block, not subscribed' % _quote(contact.name or contact.id))
+        return changed
+    except Exception as e:
+        _log('[!] cannot set the presence policy of %s: %s' % (_quote(getattr(contact, 'name', '?')), e))
+        return False
+
+
+def _delete_policies_for(contact):
+    """Stand-alone presence Policies for a contact's addresses. The contact carries its
+    own rule; a Policy left behind would contradict it once the contact is unblocked."""
+    try:
+        from sipsimple.addressbook import AddressbookManager
+        addresses = {str(uri.uri) for uri in contact.uris}
+        for policy in list(AddressbookManager().get_policies()):
+            if str(policy.uri) in addresses:
+                policy.delete()
+                _log_ab('deleted presence policy for %s' % _quote(policy.uri))
+    except Exception as e:
+        _log('[!] cannot delete the presence policies of %s: %s' % (_quote(getattr(contact, 'name', '?')), e))
+
+
+@AddressbookOrigin.with_reason('block')
+def block_contacts(contacts):
+    """Block addressbook contacts: into Blocked (made if missing), out of every other
+    group, presence policy block and no subscription. Their calls are refused and their
+    messages dropped on every device, the block being the membership."""
+    try:
+        group = ensure_group(BLOCKED_GROUP_KIND, BLOCKED_GROUP_NAME, BLOCKED_GROUP_ID, xcap_loaded=True)
+        if group is None:
+            _log('[!] cannot block: no Blocked group and it could not be created')
+            return False
+        from sipsimple.addressbook import AddressbookManager
+        with AddressbookManager().transaction():
+            for contact in contacts:
+                _set_blocked_policy(contact, save=False)
+                contact.save()
+                if contact.id not in group.contacts:
+                    group.contacts.add(contact)
+                _log('BLOCKED %s - added to %s' % (_quote(contact.name or contact.id), _describe_group(group)))
+            group.save()
+        for contact in contacts:
+            _remove_from_other_groups(contact, group)
+        return True
+    except Exception as e:
+        try:
+            BlinkLogger().log_error('%s cannot block: %s' % (_PREFIX, e))
+        except Exception:
+            pass
+        return False
+
+
+@AddressbookOrigin.with_reason('unblock')
+def unblock_contacts(contacts):
+    """Take contacts out of Blocked: they can call and write again, see our presence and
+    are subscribed to. Back into Tel and Conference by their addresses; Calls and the
+    user's own groups do not get them back (nothing recorded where they were)."""
+    try:
+        from sipsimple.addressbook import AddressbookManager
+        group = _blocked_group()
+        if group is None:
+            return False
+        manager = AddressbookManager()
+        with manager.transaction():
+            for contact in contacts:
+                if contact.id in group.contacts:
+                    group.contacts.remove(contact)
+                contact.presence.policy = 'allow'
+                contact.presence.subscribe = True
+                contact.dialog.policy = 'allow'
+                contact.save()
+                _delete_policies_for(contact)
+                _log_ab('UNBLOCKED %s - presence policy allow, subscribed' % _quote(contact.name or contact.id))
+            group.save()
+        _kind_groups_filed[0] = False
+        file_contacts_into_kind_groups()
+        return True
+    except Exception as e:
+        try:
+            BlinkLogger().log_error('%s cannot unblock: %s' % (_PREFIX, e))
+        except Exception:
+            pass
+        return False
+
+
+def _addressbook_contact_for(address):
+    """The addressbook contact holding exactly this address, straight from the
+    addressbook (the contact list may not have caught up with a reload yet)."""
+    def bare(value):
+        value = str(value or '').strip().lower()
+        return value[4:] if value.startswith('sip:') else value[5:] if value.startswith('sips:') else value
+    try:
+        from sipsimple.addressbook import AddressbookManager
+        wanted = bare(address)
+        for contact in AddressbookManager().get_contacts():
+            if any(bare(uri.uri) == wanted for uri in contact.uris):
+                return contact
+    except Exception:
+        pass
+    return None
+
+
+_blocked_synced = [False]
+
+
+def blocked_sync_done():
+    return _blocked_synced[0]
+
+
+@AddressbookOrigin.with_reason('block')
+def sync_blocked_policy(policy):
+    """One presence-block Policy against the Blocked group: with no contact behind its
+    address it becomes a blocked contact; an existing contact that is not blocked is not
+    blocked by it, only stops seeing our presence."""
+    try:
+        if policy.presence.policy != 'block':
+            return
+        address = str(policy.uri)
+        contact = _addressbook_contact_for(address)
+        if contact is None:
+            blink_contact = _lookup_contact(address)
+            contact = getattr(blink_contact, 'contact', None) if blink_contact is not None else None
+        if contact is None or not hasattr(contact, 'uris'):
+            _log('presence block for %s has no contact: blocking it' % _quote(address))
+            block_party(address, name=policy.name or None, exclusive=True)
+            return
+        if is_blocked_party(address):
+            return
+        if contact.presence.policy != 'block':
+            contact.presence.policy = 'block'
+            contact.save()
+            _log_ab('%s: presence policy block (from a presence block of %s), not blocked'
+                    % (_quote(contact.name or contact.id), _quote(address)))
+    except Exception as e:
+        _log('[!] cannot sync the presence block of %s: %s' % (_quote(getattr(policy, 'uri', '?')), e))
+
+
+def sync_blocked_with_policies():
+    """Once the addressbook reflects the server: every Blocked member has a presence
+    policy of block, and every presence-block Policy is a blocked contact (or, for a
+    contact that is not blocked, just hides our presence from it)."""
+    if _blocked_synced[0]:
+        return
+    _blocked_synced[0] = True
+    try:
+        from sipsimple.addressbook import AddressbookManager
+        manager = AddressbookManager()
+        group = _blocked_group()
+        if group is not None:
+            members = [contact for contact in manager.get_contacts() if contact.id in group.contacts]
+            changed = [contact for contact in members if _set_blocked_policy(contact, save=False)]
+            if changed:
+                with manager.transaction():
+                    for contact in changed:
+                        contact.save()
+                _log('blocked sync: presence policy block set on %d member(s) of %s'
+                     % (len(changed), _describe_group(group)))
+        for policy in list(manager.get_policies()):
+            sync_blocked_policy(policy)
+    except Exception as e:
+        try:
+            BlinkLogger().log_error('%s blocked sync failed: %s' % (_PREFIX, e))
+        except Exception:
+            pass
 
 
 @AddressbookOrigin.with_reason('block')

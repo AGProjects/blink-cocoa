@@ -273,12 +273,10 @@ class AddContactController(NSObject):
     defaultButton = objc.IBOutlet()
     subscribePopUp = objc.IBOutlet()
     photoImage = objc.IBOutlet()
-    preferredMediaPopUpButton = objc.IBOutlet()
     addressTable = objc.IBOutlet()
     addressTypesPopUpButton = objc.IBOutlet()
     addressTableDatasource = NSMutableArray.array()
     defaultPhotoImage = None
-    media_tags = {'audio': 1, 'chat': 2, 'audio+chat': 3, 'video': 4, 'messages': 5}
     autoanswerCheckbox = objc.IBOutlet()
 
     def __new__(cls, *args, **kwargs):
@@ -576,38 +574,6 @@ class AddContactController(NSObject):
         elif index  == 8:
             self.subscriptions['dialog']['policy'] = 'allow' if self.subscriptions['dialog']['policy'] == 'block' else 'block'
         self.updateSubscriptionMenus()
-
-    @objc.IBAction
-    def preferredMediaPopUpClicked_(self, sender):
-        item = self.preferredMediaPopUpButton.selectedItem()
-        try:
-            self.preferred_media = next((media for media in list(self.media_tags.keys()) if self.media_tags[media] == item.tag()))
-        except StopIteration:
-            self.preferred_media == 'audio'
-
-        self.updatePreferredMediaMenus()
-
-    @objc.python_method
-    def updatePreferredMediaMenus(self):
-        items = self.preferredMediaPopUpButton.itemArray()
-        for menu_item in items:
-            if menu_item.tag() == 1:
-                menu_item.setState_(NSOnState if self.preferred_media == 'audio' else NSOffState)
-            elif menu_item.tag() == 2:
-                menu_item.setState_(NSOnState if self.preferred_media == 'chat' else NSOffState)
-            elif menu_item.tag() == 3:
-                menu_item.setState_(NSOnState if self.preferred_media in ('audio+chat', 'chat+audio') else NSOffState)
-            elif menu_item.tag() == 4:
-                menu_item.setState_(NSOnState if self.preferred_media == 'video' else NSOffState)
-            elif menu_item.tag() == 5:
-                menu_item.setState_(NSOnState if self.preferred_media == 'messages' else NSOffState)
-
-        try:
-            tag = self.media_tags[self.preferred_media]
-        except KeyError:
-            tag = 1
-
-        self.preferredMediaPopUpButton.selectItemWithTag_(tag)
 
     @objc.python_method
     def updateSubscriptionMenus(self):
@@ -1356,7 +1322,6 @@ class EditContactController(AddContactController):
         }
         self.defaultButton.setEnabled_(False)
         self.updateSubscriptionMenus()
-        self.updatePreferredMediaMenus()
         self.loadGroupNames()
 
     @objc.python_method
