@@ -1715,6 +1715,7 @@ class SMSWindowManagerClass(NSObject):
         self.suppressAddressbookNotifications()
         try:
             self._applyReloadedAddressbook(account)
+            self.unsubscribeDeletedContacts()
         finally:
             self.resumeAddressbookNotifications()
 
@@ -4439,11 +4440,13 @@ class SMSWindowManagerClass(NSObject):
                 if source is not None and contact in set(source.contacts):
                     source.contacts.remove(contact)
                     source.save()
+                self._setPresenceSubscription(contact, False, uri)
             else:
                 source = self._conversationGroup(DELETED_GROUP_ID, create=False)
                 if source is not None and contact in set(source.contacts):
                     source.contacts.remove(contact)
                     source.save()
+                self._setPresenceSubscription(contact, True, uri)
                 # Back into Messages through the one place that knows how to
                 # make that group -- including promoting it to the top, which
                 # a plain create does not do.
@@ -4453,6 +4456,37 @@ class SMSWindowManagerClass(NSObject):
         except Exception as e:
             BlinkLogger().log_error('Cannot file %s as %s: %s'
                                     % (uri, 'deleted' if deleted else 'restored', e))
+
+    @objc.python_method
+    def _setPresenceSubscription(self, contact, subscribe, label=None):
+        """No presence subscription for a contact in Deleted; a restore subscribes again.
+        The flag is in the addressbook, so every device of the account follows."""
+        try:
+            if bool(contact.presence.subscribe) == subscribe:
+                return
+            contact.presence.subscribe = subscribe
+            contact.save()
+        except Exception as e:
+            BlinkLogger().log_error('Cannot %s presence of %s: %s'
+                                    % ('subscribe to' if subscribe else 'unsubscribe from', label or contact.id, e))
+            return
+        BlinkLogger().log_info('[trash] Presence of %s %s'
+                               % (label or getattr(contact, 'name', '') or contact.id,
+                                  'subscribed again' if subscribe else 'no longer subscribed'))
+
+    @objc.python_method
+    def unsubscribeDeletedContacts(self):
+        """Stop the presence subscription of every contact already in Deleted."""
+        from ContactListModel import DELETED_GROUP_ID
+        group = self._conversationGroup(DELETED_GROUP_ID, create=False)
+        if group is None:
+            return
+        contacts = [contact for contact in group.contacts if contact.presence.subscribe]
+        if not contacts:
+            return
+        with AddressbookManager().transaction():
+            for contact in contacts:
+                self._setPresenceSubscription(contact, False)
 
     # -- deleted contacts (Sylk Mobile's two-stage delete) --------------------
     #
