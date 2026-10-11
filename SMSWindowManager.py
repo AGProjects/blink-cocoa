@@ -78,7 +78,7 @@ except ImportError:
 from BlinkLogger import BlinkLogger
 from KeyEscrow import (escrow_is_missing, install_keypair, log_self_contact,
                        restore_from_own_contact, write_self_keys)
-from HistoryManager import ChatHistory
+from HistoryManager import ChatHistory, MESSAGES_BULK_DELETE_CONTENT_TYPE, bulk_delete_criteria, bulk_delete_label
 from SMSViewController import SMSViewController, is_file_transfer_notice, is_otr_wire_text, is_placeholder_uri
 
 
@@ -152,6 +152,7 @@ SERVER_API_REQUEST_CONTENT_TYPES = frozenset((
     'application/sylk-api-message-remove',
     'application/sylk-api-conversation-read',
     'application/sylk-api-conversation-remove',
+    'application/sylk-api-messages-bulk-delete',
 ))
 
 unpad = lambda s: s[:-ord(s[len(s) - 1:])]
@@ -2426,6 +2427,8 @@ class SMSWindowManagerClass(NSObject):
                                                 % (target_id, target_contact or msg.get('contact')))
                         self.applyMessageRemoval(account, target_id,
                                                  target_contact or msg.get('contact'))
+                elif content_type == MESSAGES_BULK_DELETE_CONTENT_TYPE:
+                    self.applyMessagesBulkDelete(account, msg.get('content'), 'from the journal')
                 elif content_type == 'message/imdn':
                     if first_sync:
                         # Nothing has ever been synced on this device, so every
@@ -6069,6 +6072,66 @@ class SMSWindowManagerClass(NSObject):
             self._markMessageRemovedInViewer(viewer, target_id)
 
     @objc.python_method
+    def applyMessagesBulkDelete(self, account, content, source):
+        """Erase what a bulk delete made on another device of the account asks for.
+
+        Spec: sylk-mobile docs/messages/sylk-messages-bulk-delete.md. Criteria only:
+        one type, a contact and a period are all required, or it is ignored. Rows are
+        erased rather than tombstoned, and nothing is kept for messages that come later.
+        """
+        if account is None or account is BonjourAccount():
+            return
+        if isinstance(content, bytes):
+            content = content.decode('utf-8', 'replace')
+        try:
+            payload = json.loads(content)
+        except (TypeError, ValueError):
+            payload = None
+        criteria = bulk_delete_criteria(payload)
+        if criteria is None:
+            BlinkLogger().log_warning('Bulk delete for %s (%s) ignored, its criteria are missing or too broad: %r'
+                                      % (account.id, source, str(content)[:300]))
+            return
+        device = str(payload.get('device_id') or '')
+        bulk_id = payload.get('bulk_delete_id') or '?'
+        if device and device == str(this_device_id() or ''):
+            BlinkLogger().log_debug('Own bulk delete %s echoed back, ignored' % bulk_id)
+            return
+        label = bulk_delete_label(criteria)
+        try:
+            deferred = self.history.bulk_delete(str(account.id), criteria,
+                                                files=payload.get('files', True) is not False,
+                                                cascade=payload.get('cascade') is True)
+        except Exception as e:
+            BlinkLogger().log_error('Bulk delete %s for %s failed: %s' % (bulk_id, account.id, e))
+            return
+
+        def done(result):
+            removed, conversations = result
+            BlinkLogger().log_info('Bulk delete %s: erased %d rows of %s (%s) on request of %s, %s'
+                                   % (bulk_id, removed, account.id, label, device or 'another device', source))
+            if removed:
+                self._messagesBulkDeleted(account, criteria['contact'], conversations)
+
+        def failed(failure):
+            BlinkLogger().log_error('Bulk delete %s for %s failed: %s' % (bulk_id, account.id, failure.getErrorMessage()))
+
+        deferred.addCallbacks(done, failed)
+
+    @objc.python_method
+    @run_in_gui_thread
+    def _messagesBulkDeleted(self, account, contact, conversations):
+        viewer = self._viewerForContact(account, contact)
+        if viewer is not None:
+            try:
+                viewer._restart_history(NSLocalizedString("Loading messages...", "Label"))
+            except Exception as e:
+                BlinkLogger().log_error('Cannot reload the conversation with %s: %s' % (contact, e))
+        for uri in conversations:
+            self.refreshMessagePreview(uri)
+        self.reloadConversationState()
+
+    @objc.python_method
     def _viewerForContact(self, account, contact):
         """The open viewer for a contact, or None if nobody has it open.
 
@@ -6908,6 +6971,11 @@ class SMSWindowManagerClass(NSObject):
         # about it would put a line in the log for every key lookup anyone
         # makes. The line above already recorded that it arrived.
         if content_type in SERVER_API_REQUEST_CONTENT_TYPES:
+            return
+
+        if content_type == MESSAGES_BULK_DELETE_CONTENT_TYPE:
+            # The journal brings it again; the second run erases nothing more.
+            self.applyMessagesBulkDelete(account, content, 'live')
             return
 
         # Live only: a replicated copy has already been through the

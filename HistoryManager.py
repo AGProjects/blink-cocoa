@@ -3232,6 +3232,114 @@ class ChatHistory(object, metaclass=Singleton):
             self.db.queryAll('vacuum')
             return affected
 
+    @run_in_db_thread
+    def bulk_delete(self, account_id, criteria, files=True, cascade=False):
+        """Erase the rows of one account that match a bulk delete (bulk_delete_criteria).
+
+        Erased, not tombstoned, as on every other device: the user asked for these to go, and
+        the server journal no longer has them either. With `cascade`, the rows filed against
+        them go too, all the way down: the ticks of a location share by related_msg_id, the
+        metadata sidecars by the messageId in their body. With `files`, the downloaded files
+        of the file transfers among them. Returns (rows erased, conversations touched).
+        """
+        table = ChatMessage.sqlmeta.table
+        try:
+            start = dateutil.parser.isoparse(criteria['from'])
+            end = dateutil.parser.isoparse(criteria['until'])
+        except (KeyError, ValueError, TypeError, OverflowError, DateParserError) as e:
+            BlinkLogger().log_error('Bulk delete for %s ignored, unreadable period: %s' % (account_id, e))
+            return 0, []
+        account = ChatMessage.sqlrepr(str(account_id).lower())
+        keys = ', '.join(ChatMessage.sqlrepr(key) for key in _bulk_delete_keys(criteria['contact']))
+        conversation = ('((lower(local_uri) = %(account)s and lower(remote_uri) in (%(keys)s))'
+                        ' or (lower(remote_uri) = %(account)s and lower(local_uri) in (%(keys)s)))'
+                        % {'account': account, 'keys': keys})
+        where = [conversation,
+                 'time >= %s' % ChatMessage.sqlrepr(self._storage_time(start)),
+                 'time < %s' % ChatMessage.sqlrepr(self._storage_time(end))]
+        if criteria.get('category'):
+            where.append('category = %s' % ChatMessage.sqlrepr(criteria['category']))
+        else:
+            where.append('lower(content_type) = %s' % ChatMessage.sqlrepr(criteria['content_type']))
+        action = criteria.get('action')
+        try:
+            rows = self.db.queryAll('select id, msgid, related_action, substr(body, 1, 400) from %s where %s'
+                                    % (table, ' and '.join(where)))
+        except Exception as e:
+            BlinkLogger().log_error('Bulk delete for %s failed: %s' % (account_id, e))
+            return 0, []
+        chosen = {}
+        for row_id, msgid, related_action, head in rows:
+            if not action or bulk_delete_action(related_action, head) == action:
+                chosen[row_id] = msgid
+        if cascade and chosen:
+            try:
+                self._bulk_delete_related(conversation, chosen)
+            except Exception as e:
+                BlinkLogger().log_error('Bulk delete for %s: cannot follow the related rows: %s' % (account_id, e))
+        if not chosen:
+            return 0, []
+        return self._erase_rows(sorted(chosen), files)
+
+    def _bulk_delete_related(self, conversation, chosen):
+        """Add to `chosen` ({row id: msgid}) the rows of the conversation filed against them.
+        Caller is in the db thread."""
+        table = ChatMessage.sqlmeta.table
+        # metadata sidecars name their message in the body only
+        sidecars = {}
+        for row_id, msgid, head in self.db.queryAll(
+                "select id, msgid, substr(body, 1, 400) from %s where (%s) and content_type = 'application/sylk-message-metadata'"
+                % (table, conversation)):
+            match = _SIDECAR_TARGET.search(str(head or ''))
+            if match:
+                sidecars.setdefault(match.group(1), []).append((row_id, msgid))
+        frontier = sorted({msgid for msgid in chosen.values() if msgid})
+        seen = set(frontier)
+        while frontier:
+            found = []
+            for index in range(0, len(frontier), 500):
+                chunk = frontier[index:index + 500]
+                parents = ', '.join(ChatMessage.sqlrepr(msgid) for msgid in chunk)
+                related = list(self.db.queryAll('select id, msgid from %s where (%s) and related_msg_id in (%s)'
+                                                % (table, conversation, parents)))
+                for msgid in chunk:
+                    related.extend(sidecars.get(msgid, ()))
+                for row_id, msgid in related:
+                    if row_id in chosen:
+                        continue
+                    chosen[row_id] = msgid
+                    if msgid and msgid not in seen:
+                        seen.add(msgid)
+                        found.append(msgid)
+            frontier = found
+
+    def _erase_rows(self, row_ids, files=True):
+        """Delete rows by id, then the downloaded files of the transfers among them.
+        Returns (rows erased, conversations touched). Caller is in the db thread."""
+        from MessageHost import FILE_TRANSFER_CONTENT_TYPES
+        table = ChatMessage.sqlmeta.table
+        types = ', '.join(ChatMessage.sqlrepr(content_type) for content_type in FILE_TRANSFER_CONTENT_TYPES)
+        removed = 0
+        transfers = []
+        conversations = set()
+        try:
+            for index in range(0, len(row_ids), 500):
+                chunk = ', '.join(str(int(row_id)) for row_id in row_ids[index:index + 500])
+                if files:
+                    transfers.extend(self.db.queryAll('select msgid, content_type, body, local_uri, remote_uri from %s'
+                                                      ' where id in (%s) and content_type in (%s)' % (table, chunk, types)))
+                conversations.update(str(remote_uri) for (remote_uri,) in
+                                     self.db.queryAll('select distinct remote_uri from %s where id in (%s)' % (table, chunk))
+                                     if remote_uri)
+                removed += int(self.db.queryAll('select count(*) from %s where id in (%s)' % (table, chunk))[0][0])
+                self.db.queryAll('delete from %s where id in (%s)' % (table, chunk))
+        except Exception as e:
+            BlinkLogger().log_error('Erasing messages failed after %d rows: %s' % (removed, e))
+        # after the rows, never before: a file thrown away for a row that stayed would leave a bubble pointing at nothing
+        for msgid, content_type, body, local_uri, remote_uri in transfers:
+            self._delete_message_file(msgid, content_type, body, local_uri, remote_uri)
+        return removed, sorted(conversations)
+
     def _delete_message_file(self, msgid, content_type, body, local_uri, remote_uri):
         """Take the downloaded file of a removed message with it.
 
@@ -3265,6 +3373,82 @@ class ChatHistory(object, metaclass=Singleton):
         BlinkLogger().log_info('Message %s carried %s: %d file(s) deleted'
                                % (msgid, meta.get('filename') or 'a file', removed))
         return removed
+
+
+# A bulk delete made on another device of the account: one message with criteria, never ids
+# (application/sylk-messages-bulk-delete, sylk-mobile docs/messages/sylk-messages-bulk-delete.md).
+MESSAGES_BULK_DELETE_CONTENT_TYPE = 'application/sylk-messages-bulk-delete'
+BULK_DELETE_CATEGORIES = ('text', 'image', 'audio', 'video', 'other', 'call')
+# The action in the first characters of a body: "action" for metadata and location sharing,
+# "request_type" for application/sylk-request; with or without a space after the colon.
+_BULK_DELETE_ACTION = re.compile(r'"(?:action|request_type)"\s*:\s*"([^"\\]{1,64})"')
+# The message a metadata sidecar is about, named in its body rather than in related_msg_id.
+_SIDECAR_TARGET = re.compile(r'"messageId"\s*:\s*"([^"\\]{1,128})"')
+
+
+def bulk_delete_criteria(payload):
+    """The criteria of a bulk delete, checked, or None to ignore it.
+
+    All of them are required -- one type (a category or a content type), a contact and a
+    period -- so that a mistake can only reach one kind of message, with one contact, in one
+    period. A list of ids is never honoured."""
+    if not isinstance(payload, dict) or not isinstance(payload.get('criteria'), dict):
+        return None
+    criteria = payload['criteria']
+    if 'ids' in criteria:
+        return None
+    category, content_type = criteria.get('category'), criteria.get('content_type')
+    if bool(category) == bool(content_type):
+        return None
+    if category and category not in BULK_DELETE_CATEGORIES:
+        return None
+    if criteria.get('action') and not content_type:
+        return None
+    if not (criteria.get('contact') and criteria.get('from') and criteria.get('until')):
+        return None
+    result = {}
+    for name in ('category', 'content_type', 'action', 'contact', 'from', 'until'):
+        if criteria.get(name):
+            result[name] = str(criteria[name]).strip()
+    if 'content_type' in result:
+        result['content_type'] = result['content_type'].lower()
+    return result
+
+
+def bulk_delete_label(criteria):
+    what = criteria.get('category') or criteria.get('content_type') or '?'
+    if criteria.get('action'):
+        what += ' / %s' % criteria['action']
+    return '%s, %s, %s .. %s' % (what, criteria.get('contact'), criteria.get('from'), criteria.get('until'))
+
+
+def bulk_delete_action(related_action, body):
+    """The action of a row as every client reads it: the stored one, else the one in the
+    body, else 'encrypted' for a body still PGP ciphertext."""
+    if related_action:
+        return str(related_action)
+    text = str(body or '')[:400].lstrip()
+    if text.startswith('-----BEGIN PGP'):
+        return 'encrypted'
+    match = _BULK_DELETE_ACTION.search(text)
+    return match.group(1) if match else ''
+
+
+def _bulk_delete_keys(contact):
+    """The spellings a conversation with this contact may be stored under, lowercase."""
+    text = str(contact or '').strip().lower()
+    address = text
+    for scheme in ('sips:', 'sip:'):
+        if address.startswith(scheme):
+            address = address[len(scheme):]
+    address = address.split(';', 1)[0].split('?', 1)[0]
+    keys = {text, address, 'sip:' + address}
+    user, at, domain = address.rpartition('@')
+    if at and domain.startswith('videoconference.'):
+        keys.add('%s@%s' % (user, domain[len('video'):]))
+    elif at and domain.startswith('conference.'):
+        keys.add('%s@video%s' % (user, domain))
+    return sorted(key for key in keys if key and key != 'sip:')
 
 
 class FileTransfer(SQLObject):
