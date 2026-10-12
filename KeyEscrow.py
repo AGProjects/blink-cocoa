@@ -689,6 +689,82 @@ def _describe_public_key(account, public_key):
     return 'matches this device' if local == normalized else 'DIFFERENT from this device'
 
 
+def key_fingerprint(blob):
+    """The fingerprint of an armored PGP key (public or private), or None."""
+    pgpy = _pgpy()
+    if pgpy is None or not blob:
+        return None
+    try:
+        if isinstance(blob, str):
+            blob = blob.encode()
+        key, _ = pgpy.PGPKey.from_blob(blob)
+        return str(key.fingerprint)
+    except Exception:
+        return None
+
+
+def _key_file_fingerprint(path):
+    if not path or not os.path.exists(path):
+        return None
+    try:
+        with open(path, 'rb') as fd:
+            return key_fingerprint(fd.read())
+    except (IOError, OSError):
+        return None
+
+
+def _compared(fingerprint, device_fingerprint):
+    if not device_fingerprint:
+        return '%s' % fingerprint
+    return '%s, %s' % (fingerprint, 'same as the device key' if fingerprint == device_fingerprint else 'DIFFERENT from the device key')
+
+
+def key_status_lines(account, server_state, server_key=None, server_reason=None, addressbook_fetched=True):
+    """Three lines: the key on this device, the escrow in the addressbook and the
+    public key the server holds, each with its fingerprint and whether it is the
+    same as the device key. Pure, never raises.
+
+    server_state: 'unknown' (not asked yet), 'asked', 'present', 'absent' or 'failed'."""
+    lines = []
+    try:
+        device = _key_file_fingerprint(account.sms.private_key)
+        if device:
+            lines.append('device key %s (%s)' % (device, account.sms.private_key))
+        elif account.sms.private_key:
+            lines.append('device key configured at %s but missing or unreadable' % account.sms.private_key)
+        else:
+            lines.append('no device key')
+
+        if not getattr(account, 'xcap', None) or not account.xcap.enabled:
+            lines.append('addressbook escrow: XCAP disabled')
+        elif not addressbook_fetched:
+            lines.append('addressbook escrow: addressbook not fetched yet')
+        else:
+            record = read_self_keys(account)
+            if record is None:
+                lines.append('addressbook escrow: none')
+            else:
+                escrowed = key_fingerprint(record.get('public_key'))
+                lines.append('addressbook escrow %s (contact %s, written %s by %s)'
+                             % (_compared(escrowed, device) if escrowed else 'without a readable public key',
+                                record.get('contact_id'), record.get('timestamp', '?'), record.get('device', '?')))
+
+        if server_state == 'present':
+            server = key_fingerprint(server_key)
+            lines.append('server public key %s' % (_compared(server, device) if server else 'present (key not received yet)'))
+        elif server_state == 'absent':
+            lines.append('server public key: none (%s)' % (server_reason or 'no key'))
+        elif server_state == 'asked':
+            lines.append('server public key: lookup pending')
+        elif server_state == 'failed':
+            lines.append('server public key: lookup failed (%s)' % (server_reason or 'no answer'))
+        else:
+            lines.append('server public key: not looked up yet')
+    except Exception as e:
+        lines.append('cannot describe the keys: %s' % e)
+    return lines
+
+
 def self_contact_report(account, accounts=None):
     """The lines describing what our own contact carries. Pure, never raises.
 

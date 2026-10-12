@@ -77,7 +77,7 @@ except ImportError:
     DataImport = DataImportController = None
 from BlinkLogger import BlinkLogger
 from KeyEscrow import (escrow_is_missing, install_keypair, log_self_contact,
-                       restore_from_own_contact, write_self_keys)
+                       restore_from_own_contact, write_self_keys, key_status_lines)
 from HistoryManager import ChatHistory, MESSAGES_BULK_DELETE_CONTENT_TYPE, bulk_delete_criteria, bulk_delete_label
 from SMSViewController import SMSViewController, is_file_transfer_notice, is_otr_wire_text, is_placeholder_uri
 
@@ -156,6 +156,25 @@ SERVER_API_REQUEST_CONTENT_TYPES = frozenset((
 ))
 
 unpad = lambda s: s[:-ord(s[len(s) - 1:])]
+
+
+@implementer(IObserver)
+class _MessageResult(object):
+    """Hands the final code and reason of one SIP MESSAGE to a callback."""
+
+    def __init__(self, callback):
+        self.callback = callback
+        self.reason = None
+
+    def handle_notification(self, notification):
+        if notification.name not in ('SIPMessageDidSucceed', 'SIPMessageDidFail'):
+            return
+        NotificationCenter().discard_observer(self, sender=notification.sender)
+        code = getattr(notification.data, 'code', None)
+        reason = getattr(notification.data, 'reason', None)
+        if isinstance(reason, bytes):
+            reason = reason.decode(errors='replace')
+        self.callback(code, reason)
 
 
 def pgp_messaging_possible(account):
@@ -847,6 +866,14 @@ class SMSWindowManagerClass(NSObject):
     # write that keeps failing is attempted once rather than per reload.
     escrow_repaired = set()
     generate_prompt_deferred = {}
+    # What the server says about our own public key, per account:
+    # 'unknown', 'asked', 'present', 'absent' or 'failed' (see lookupOwnServerKey)
+    server_key_state = {}
+    server_key_reason = {}
+    server_public_key = {}          # the key the server sent back, armored
+    pgp_support_logged = {}         # account id: the support line last logged
+    key_status_logged = {}          # account id: the status lines last logged
+    OWN_KEY_LOOKUP_TIMEOUT = 40
     # The enabled accounts as of the last time anything was reloaded for
     # them, or None before the first look. Enabling an account announces
     # itself twice -- the setting changes and the account then activates --
@@ -1815,6 +1842,96 @@ class SMSWindowManagerClass(NSObject):
             BlinkLogger().log_info('[ab] [origin] cannot attribute the changes in the addressbook of %s: %s'
                                    % (getattr(account, 'id', '?'), e))
 
+    # PGP key status: whether the account can use PGP, and the key on this
+    # device, in the addressbook escrow and on the server
+
+    @objc.python_method
+    @run_in_gui_thread
+    def checkKeyStatus(self, account, why):
+        if account is None or not account.enabled:
+            return
+        if account is BonjourAccount():
+            support = 'PGP supported (Bonjour, no server)'
+        elif pgp_messaging_possible(account):
+            support = 'PGP supported (%s runs SylkServer)' % account.id.domain
+        else:
+            support = 'PGP not supported: %s does not run SylkServer' % account.id.domain
+        if self.pgp_support_logged.get(account.id) != support:
+            self.pgp_support_logged[account.id] = support
+            BlinkLogger().log_info('[pgp] %s: %s' % (account.id, support))
+        if account is BonjourAccount() or not pgp_messaging_possible(account):
+            return
+        if self.server_key_state.get(account.id, 'unknown') in ('unknown', 'failed'):
+            self.lookupOwnServerKey(account)
+        self.logKeyStatus(account, why)
+
+    @objc.python_method
+    @run_in_gui_thread
+    def logKeyStatus(self, account, why, force=False):
+        if account is BonjourAccount() or not pgp_messaging_possible(account):
+            return
+        lines = key_status_lines(account, self.server_key_state.get(account.id, 'unknown'),
+                                 self.server_public_key.get(account.id),
+                                 self.server_key_reason.get(account.id),
+                                 addressbook_fetched=account.id in self.key_escrow_checked)
+        if not force and self.key_status_logged.get(account.id) == lines:
+            return
+        self.key_status_logged[account.id] = lines
+        for line in lines:
+            BlinkLogger().log_info('[pgp] %s: %s (%s)' % (account.id, line, why))
+
+    @objc.python_method
+    def lookupOwnServerKey(self, account):
+        """Ask the server whether it holds a public key for our own account:
+        a sylk-api-pgp-key-lookup to our own address. 200 means it has one
+        (the key itself comes back as a text/pgp-public-key message from our
+        own address), 404 that it has none, anything else that we do not know."""
+        self.server_key_state[account.id] = 'asked'
+        self.server_key_reason.pop(account.id, None)
+        BlinkLogger().log_info('[pgp] %s: asking the server whether it holds our public key' % account.id)
+        self._sendOwnKeyLookup(account)
+        call_later(self.OWN_KEY_LOOKUP_TIMEOUT, self._ownKeyLookupTimedOut, account)
+
+    @objc.python_method
+    @run_in_thread('pgp-key-lookup')
+    def _sendOwnKeyLookup(self, account):
+        observer = _MessageResult(lambda code, reason: self._ownKeyLookupAnswered(account, code, reason))
+        try:
+            sent = self.sendMessage(account, 'Public key lookup', 'application/sylk-api-pgp-key-lookup', observer=observer)
+        except Exception as e:
+            sent, observer.reason = False, str(e)
+        if not sent:
+            self._ownKeyLookupAnswered(account, None, getattr(observer, 'reason', None) or 'not sent')
+
+    @objc.python_method
+    @run_in_gui_thread
+    def _ownKeyLookupAnswered(self, account, code, reason):
+        if self.server_key_state.get(account.id) != 'asked':
+            return
+        if code in (200, 202):
+            self.server_key_state[account.id] = 'present'
+        elif code == 404:
+            self.server_key_state[account.id] = 'absent'
+        else:
+            self.server_key_state[account.id] = 'failed'
+        self.server_key_reason[account.id] = '%s %s' % (code, reason) if code else reason
+        BlinkLogger().log_info('[pgp] %s: key lookup answered %s %s -> %s'
+                               % (account.id, code or '-', reason or '', self.server_key_state[account.id]))
+        self.logKeyStatus(account, 'server answered')
+
+    @objc.python_method
+    def _ownKeyLookupTimedOut(self, account):
+        if self.server_key_state.get(account.id) == 'asked':
+            self._ownKeyLookupAnswered(account, None, 'no answer in %d seconds' % self.OWN_KEY_LOOKUP_TIMEOUT)
+
+    @objc.python_method
+    @run_in_gui_thread
+    def serverPublicKeyReceived(self, account, public_key):
+        self.server_public_key[account.id] = public_key
+        if self.server_key_state.get(account.id) in ('asked', 'unknown', 'failed'):
+            self.server_key_state[account.id] = 'present'
+        self.logKeyStatus(account, 'server sent our public key')
+
     @objc.python_method
     def _NH_SylkServerConfigurationDidChange(self, sender, data):
         # On a first run the addressbook can come back before the domain is
@@ -1823,6 +1940,7 @@ class SMSWindowManagerClass(NSObject):
         for account in AccountManager().get_accounts():
             if account is BonjourAccount() or account.id.domain != data.domain:
                 continue
+            self.checkKeyStatus(account, 'SylkServer configuration')
             if account.id not in self.key_escrow_checked or not pgp_messaging_possible(account):
                 continue
             self.suppressAddressbookNotifications()
@@ -1860,6 +1978,8 @@ class SMSWindowManagerClass(NSObject):
         except Exception as e:
             BlinkLogger().log_error('Key escrow repair failed for %s: %s'
                                     % (getattr(account, 'id', '?'), e))
+
+        self.logKeyStatus(account, 'addressbook fetched')
 
     @objc.python_method
     def repairMissingEscrow(self, account):
@@ -1965,6 +2085,7 @@ class SMSWindowManagerClass(NSObject):
     @objc.python_method
     def _NH_SIPAccountDidActivate(self, account, data):
         self.accountsDidChange()
+        call_later(2, self.checkKeyStatus, account, 'start')
 
     @objc.python_method
     def _NH_SIPAccountDidDeactivate(self, account, data):
@@ -2073,6 +2194,8 @@ class SMSWindowManagerClass(NSObject):
         # BlinkLogger().log_info('startup: SMSWindowManager._NH_SIPAccountRegistrationDidSucceed enter (%s)' % account.id)
         if account is not BonjourAccount():
             call_later(10, self.syncConversations, account)
+            if self.server_key_state.get(account.id, 'unknown') in ('unknown', 'failed'):
+                self.checkKeyStatus(account, 'registration')
         # BlinkLogger().log_info('startup: SMSWindowManager._NH_SIPAccountRegistrationDidSucceed exit')
 
 
@@ -2114,7 +2237,9 @@ class SMSWindowManagerClass(NSObject):
 
     @objc.python_method
     @run_in_green_thread
-    def sendMessage(self, account, content, content_type, recipient=None, extra_headers=None):
+    def sendMessage(self, account, content, content_type, recipient=None, extra_headers=None, observer=None):
+        """Send a request; True when it went out. An observer, if given, gets
+        the SIPMessageDidSucceed/DidFail of it."""
         # tls_name must be carried into the lookup: without it the route is
         # verified against the DNS-resolved name rather than the account's
         # configured TLS name, so an account whose proxy answers under a
@@ -2144,11 +2269,16 @@ class SMSWindowManagerClass(NSObject):
         try:
            routes = lookup.lookup_sip_proxy(uri, settings.sip.transport_list, tls_name=tls_name).wait()
         except DNSLookupError as e:
-           BlinkLogger().log_info('DNS Lookup error for token request: %s' % str(e))
+           BlinkLogger().log_info('DNS Lookup error for %s request: %s' % (content_type, str(e)))
+           if observer is not None:
+               observer.reason = 'DNS lookup error: %s' % e
+           return False
         else:
             if not routes:
-               BlinkLogger().log_info('DNS Lookup failed for token request, no routes found')
-               return
+               BlinkLogger().log_info('DNS Lookup failed for %s request, no routes found' % content_type)
+               if observer is not None:
+                   observer.reason = 'no SIP route'
+               return False
 
             route = routes[0]
             BlinkLogger().log_info('Sending %s message to %s' % (content_type, route.uri))
@@ -2159,8 +2289,11 @@ class SMSWindowManagerClass(NSObject):
                 to_uri = SIPURI.parse('sip:%s' % account.id)
 
             message_request = Message(FromHeader(from_uri), ToHeader(to_uri), RouteHeader(route.uri), content_type, content.encode(), credentials=account.credentials, extra_headers=extra_headers or [])
+            if observer is not None:
+                NotificationCenter().add_observer(observer, sender=message_request)
 
             message_request.send()
+            return True
 
     @objc.python_method
     @run_in_thread('sms_sync')
@@ -7176,6 +7309,15 @@ class SMSWindowManagerClass(NSObject):
         if content_type in FILE_TRANSFER_CONTENT_TYPES and not is_replication_message:
             self._dump_file_transfer_payload(content, metadata)
         
+        if content_type == 'text/pgp-public-key' and not is_replication_message and account is not None and account is not BonjourAccount():
+            sender_aor = '%s@%s' % (data.from_header.uri.user.decode() if isinstance(data.from_header.uri.user, bytes) else data.from_header.uri.user,
+                                    data.from_header.uri.host.decode() if isinstance(data.from_header.uri.host, bytes) else data.from_header.uri.host)
+            if sender_aor.lower() == str(account.id).lower():
+                # the server's answer to our own key lookup
+                text = content.decode() if isinstance(content, bytes) else content
+                BlinkLogger().log_info('[pgp] %s: the server sent our own public key' % account.id)
+                self.serverPublicKeyReceived(account, text)
+
         if content_type == 'text/pgp-public-key':
             BlinkLogger().log_info('Public key message received from %s for %s (%s)'
                                    % (format_identity_to_string(sender_identity),
