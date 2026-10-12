@@ -1196,6 +1196,13 @@ class BlinkAppDelegate(NSObject):
         self.debug = settings.gui.extended_debug
         self.purge_temporary_files()
 
+        # stored PGP messages are decrypted in the background, throttled
+        try:
+            from PGPDecryptor import BackgroundDecryptor
+            BackgroundDecryptor().start()
+        except Exception as e:
+            BlinkLogger().log_error('Cannot start the background decryption: %s' % e)
+
         # One-time migration: HD 720p capture has been removed from the
         # video preferences, only VGA is offered, the framerate /
         # resolution / max-bitrate / container controls are hidden

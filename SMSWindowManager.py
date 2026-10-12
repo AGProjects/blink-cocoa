@@ -938,6 +938,7 @@ class SMSWindowManagerClass(NSObject):
             self.notification_center.add_observer(self, name="MessageSaved")
             self.notification_center.add_observer(self, name="XCAPManagerDidReloadData")
             self.notification_center.add_observer(self, name="SylkServerConfigurationDidChange")
+            self.notification_center.add_observer(self, name="BlinkMessagesDidDecryptInBackground")
             # application/sylk-addressbook-update: every local write to the
             # server addressbook, so one tick per burst can tell our other
             # devices to refetch it. NOTE the two group-member notifications
@@ -3368,6 +3369,9 @@ class SMSWindowManagerClass(NSObject):
                 pass
 
         if pages:
+            # what the journal stored armoured is decrypted in the background
+            self.notification_center.post_notification('BlinkJournalDidApply', sender=account,
+                                                       data=NotificationData(first_sync=first_sync, pages=pages, entries=entries))
             BlinkLogger().log_info('Journal sync for %s finished in %.1fs: %d page(s), %d entries'
                                    % (account.id, time.time() - started, pages, entries))
         else:
@@ -4202,6 +4206,30 @@ class SMSWindowManagerClass(NSObject):
             log("Messages group merge: %d cluster(s), deleted %d duplicate "
                 "contact(s)" % (clusters_merged, deleted_total))
         return deleted_total
+
+    @objc.python_method
+    def _NH_BlinkMessagesDidDecryptInBackground(self, sender, data):
+        """Messages decrypted in the background: the text bubbles of open
+        conversations show the plaintext, the previews are read again."""
+        messages = data.messages or {}
+        if not messages:
+            return
+        for viewer in list(self.allViewers()):
+            chat = getattr(viewer, 'chatViewController', None)
+            if chat is None:
+                continue
+            for msgid, entry in messages.items():
+                content_type = entry.get('content_type') or ''
+                if content_type not in ('text', 'text/plain', 'text/html'):
+                    continue    # other kinds are drawn from the decrypted body when the page is loaded again
+                try:
+                    chat.updateMessage(msgid, entry['text'], content_type == 'text/html',
+                                       getattr(chat, 'expandSmileys', True))
+                except Exception:
+                    pass
+        remote_uris = sorted({entry.get('remote_uri') for entry in messages.values() if entry.get('remote_uri')})
+        if remote_uris:
+            self.loadMessagePreviews(remote_uris if len(remote_uris) <= 200 else None)
 
     @objc.python_method
     def resetDecryption(self, account):
