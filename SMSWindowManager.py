@@ -4567,13 +4567,20 @@ class SMSWindowManagerClass(NSObject):
         return keys
 
     @objc.python_method
-    def softDeleteContacts(self, contacts):
-        """Stage 1: move address book contacts to Deleted, hide their messages."""
+    def softDeleteContacts(self, contacts, spared=()):
+        """Stage 1: move address book contacts to Deleted, hide their messages.
+
+        `spared`: conversation keys that stay visible, addresses another contact
+        lists too whose messages the user chose to keep for that contact."""
         when = int(time.time())
         bonjour = self._bonjourConversationKeys()
+        spared = set(spared)
         for contact in contacts:
+            kept = [key for key in self._contactURIKeys(contact) if key in spared]
+            if kept:
+                BlinkLogger().log_info('[trash] Keeping the conversation with %s: another contact lists it' % ', '.join(kept))
             for key in self._contactURIKeys(contact):
-                if key in bonjour:
+                if key in bonjour or key in spared:
                     continue
                 try:
                     self.history.tombstone_conversation(None, key, when=when)

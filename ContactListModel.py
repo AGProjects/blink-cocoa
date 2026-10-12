@@ -5446,6 +5446,59 @@ class ContactListModel(CustomListModel):
         return contacts
 
     @objc.python_method
+    def _sharedContactKeys(self, contacts):
+        """{conversation key: [names of the other contacts listing it]} for the
+        addresses of these contacts that a contact not among them lists too.
+        Raises when the address book cannot be read."""
+        from SMSWindowManager import SMSWindowManager
+        manager = SMSWindowManager()
+        going = set(c.id for c in contacts)
+        neighbours = manager._bonjourConversationKeys()
+        owners = {}
+        for other in AddressbookManager().get_contacts():
+            if other.id in going:
+                continue
+            name = other.name or other.id
+            for key in manager._contactURIKeys(other):
+                owners.setdefault(key, set()).add(name)
+        shared = {}
+        for contact in contacts:
+            for key in manager._contactURIKeys(contact):
+                if key in owners and key not in neighbours and key not in shared:
+                    shared[key] = sorted(owners[key])
+        return shared
+
+    @objc.python_method
+    def _askAboutSharedMessages(self, title, message, shared, warning=False):
+        """Some addresses of the contacts being deleted are also listed by other
+        contacts: their conversation is the other contacts' too, so ask.
+        Returns None (cancelled), False (delete the contact only, those
+        conversations stay) or True (delete their messages as well)."""
+        from AppKit import NSAlert, NSAlertFirstButtonReturn, NSAlertSecondButtonReturn
+        try:
+            from AppKit import NSAlertStyleWarning as warning_style, NSAlertStyleInformational as info_style
+        except ImportError:
+            from AppKit import NSWarningAlertStyle as warning_style, NSInformationalAlertStyle as info_style
+        listed = '\n'.join('%s  (%s)' % (key, ', '.join(names)) for key, names in shared.items())
+        details = '%s\n%s\n\n%s' % (
+            NSLocalizedString("These addresses are also in other contacts:", "Label"), listed,
+            NSLocalizedString("Delete only the contact and keep the messages of these addresses "
+                              "for the other contacts, or delete those messages as well?", "Label"))
+        alert = NSAlert.alloc().init()
+        alert.setAlertStyle_(warning_style if warning else info_style)
+        alert.setMessageText_(title)
+        alert.setInformativeText_('%s\n\n%s' % (message, details))
+        alert.addButtonWithTitle_(NSLocalizedString("Delete Contact Only", "Button title"))
+        alert.addButtonWithTitle_(NSLocalizedString("Delete Contact and Messages", "Button title"))
+        alert.addButtonWithTitle_(NSLocalizedString("Cancel", "Button title"))
+        ret = alert.runModal()
+        if ret == NSAlertFirstButtonReturn:
+            return False
+        if ret == NSAlertSecondButtonReturn:
+            return True
+        return None
+
+    @objc.python_method
     def deleteContacts(self, blink_contacts):
         """Stage 1 of Sylk Mobile's delete: move the contacts to Deleted.
 
@@ -5471,14 +5524,27 @@ class ContactListModel(CustomListModel):
         message = '%s\n\n%s' % (question, NSLocalizedString(
             "Their messages are hidden, not deleted, and can be restored from the "
             "Deleted group. Delete them permanently from there to remove them for good.", "Label"))
-        message = re.sub("%", "%%", message)
-        ret = NSRunAlertPanel(title, message, NSLocalizedString("Delete", "Button title"), NSLocalizedString("Cancel", "Button title"), None)
-        if ret != NSAlertDefaultReturn:
+        try:
+            shared = self._sharedContactKeys([c for b, c in pairs])
+        except Exception as e:
+            BlinkLogger().log_error('Cannot check which addresses are still in use: %s' % e)
             return
+        spared = []
+        if shared:
+            choice = self._askAboutSharedMessages(title, message, shared)
+            if choice is None:
+                return
+            if not choice:
+                spared = list(shared)
+        else:
+            message = re.sub("%", "%%", message)
+            ret = NSRunAlertPanel(title, message, NSLocalizedString("Delete", "Button title"), NSLocalizedString("Cancel", "Button title"), None)
+            if ret != NSAlertDefaultReturn:
+                return
         from SMSWindowManager import SMSWindowManager
         addressbook_manager = AddressbookManager()
         with addressbook_manager.transaction():
-            SMSWindowManager().softDeleteContacts([c for b, c in pairs])
+            SMSWindowManager().softDeleteContacts([c for b, c in pairs], spared=spared)
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
     @objc.python_method
@@ -5500,8 +5566,9 @@ class ContactListModel(CustomListModel):
            that deletion purges the messages, downloaded files and public
            key of every address no other contact lists
            (purgeDataForDeletedContact),
-        2. an address another contact still lists gets its messages back
-           instead -- they are that contact's conversation too,
+        2. an address another contact still lists: the user is asked whether
+           its messages stay (they are that contact's conversation too, and
+           come back if stage 1 hid them) or are deleted as well,
         3. a conversation-remove for each purged address tells the other
            devices to drop the thread.
         """
@@ -5520,12 +5587,25 @@ class ContactListModel(CustomListModel):
         message = '%s\n\n%s' % (question, NSLocalizedString(
             "The contact is removed from the server address book, and its messages and "
             "downloaded files are deleted on all your devices. This cannot be undone.", "Label"))
-        message = re.sub("%", "%%", message)
-        ret = NSRunAlertPanel(NSLocalizedString("Delete Permanently", "Window title"), message,
-                              NSLocalizedString("Delete", "Button title"),
-                              NSLocalizedString("Cancel", "Button title"), None)
-        if ret != NSAlertDefaultReturn:
+        title = NSLocalizedString("Delete Permanently", "Window title")
+        try:
+            shared = self._sharedContactKeys([c for b, c in pairs])
+        except Exception as e:
+            BlinkLogger().log_error('Cannot check which addresses are still in use: %s' % e)
             return
+        shared_messages = False
+        if shared:
+            choice = self._askAboutSharedMessages(title, message, shared, warning=True)
+            if choice is None:
+                return
+            shared_messages = choice
+        else:
+            message = re.sub("%", "%%", message)
+            ret = NSRunAlertPanel(title, message,
+                                  NSLocalizedString("Delete", "Button title"),
+                                  NSLocalizedString("Cancel", "Button title"), None)
+            if ret != NSAlertDefaultReturn:
+                return
 
         from SMSWindowManager import SMSWindowManager
         manager = SMSWindowManager()
@@ -5546,12 +5626,18 @@ class ContactListModel(CustomListModel):
 
         purged = []
         kept = []
+        shared = []     # another contact lists it too, erased because the user said so
         for b, contact in pairs:
             for key in manager._contactURIKeys(contact):
-                if key in still_claimed:
-                    kept.append(key)
-                elif key not in neighbours and key not in purged:
+                if key in neighbours or key in purged or key in kept:
+                    continue
+                if key not in still_claimed:
                     purged.append(key)
+                elif shared_messages:
+                    shared.append(key)
+                    purged.append(key)
+                else:
+                    kept.append(key)
 
         deleted_group = manager._conversationGroup(DELETED_GROUP_ID, create=False)
         addressbook_manager = AddressbookManager()
@@ -5572,6 +5658,9 @@ class ContactListModel(CustomListModel):
                 manager.history.restore_conversation(None, key)
             except Exception as e:
                 BlinkLogger().log_error('Cannot restore the conversation with %s: %s' % (key, e))
+        if shared:
+            BlinkLogger().log_info('[trash] Erasing the conversations with %s as asked, though another contact lists them' % ', '.join(shared))
+            manager.purgeConversationsForURIs(shared, reason='contact deleted permanently, messages of shared addresses too')
         for key in purged:
             manager.deleted_conversations.pop(key, None)
         manager.announceConversationRemoval(purged)
