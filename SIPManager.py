@@ -157,6 +157,10 @@ class SIPManager(object, metaclass=Singleton):
             SIPSimpleSettings.register_extension(SIPSimpleSettingsExtension)
 
         app = AppKit.NSApplication.sharedApplication()
+        # the domains' SylkServer settings (DNS TXT _sylkserver.<domain>), cached;
+        # loaded before the accounts activate so has_sylkserver() answers at once
+        from SylkDiscovery import SylkServerDiscovery
+        SylkServerDiscovery().start()
         self._app.start(FileStorage(ApplicationData.directory))
 
         # start session mgr
