@@ -682,8 +682,10 @@
 		AD0000000000000000500001 /* MessageAccountPicker.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000500000 /* MessageAccountPicker.py */; };
 		AD0000000000000000500003 /* MessageAccountPicker.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000500000 /* MessageAccountPicker.py */; };
 		AD00000000000000005A0001 /* SylkLocation.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005A0000 /* SylkLocation.py */; };
+		AD00000000000000006A0001 /* JournalProgressStrip.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000006A0000 /* JournalProgressStrip.py */; };
 		AD00000000000000005E0001 /* SylkDiscovery.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005E0000 /* SylkDiscovery.py */; };
 		AD00000000000000005A0003 /* SylkLocation.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005A0000 /* SylkLocation.py */; };
+		AD00000000000000006A0003 /* JournalProgressStrip.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000006A0000 /* JournalProgressStrip.py */; };
 		AD00000000000000005E0003 /* SylkDiscovery.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005E0000 /* SylkDiscovery.py */; };
 		AD00000000000000005B0001 /* Base in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005B0000 /* Base */; };
 		AD00000000000000005B0003 /* Base in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005B0000 /* Base */; };
@@ -1537,6 +1539,7 @@
 		AD00000000000000004F0000 /* MessagePaneController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MessagePaneController.py; sourceTree = "<group>"; };
 		AD0000000000000000500000 /* MessageAccountPicker.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MessageAccountPicker.py; sourceTree = "<group>"; };
 		AD00000000000000005A0000 /* SylkLocation.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SylkLocation.py; sourceTree = "<group>"; };
+		AD00000000000000006A0000 /* JournalProgressStrip.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = JournalProgressStrip.py; sourceTree = "<group>"; };
 		AD00000000000000005E0000 /* SylkDiscovery.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SylkDiscovery.py; sourceTree = "<group>"; };
 		AD00000000000000005B0000 /* Base */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MessageView.xib; sourceTree = "<group>"; };
 		AD00000000000000005C0000 /* AudioPlayback.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AudioPlayback.py; sourceTree = "<group>"; };
@@ -1920,6 +1923,7 @@
 				AD00000000000000004E0000 /* NativeChatViewController.py */,
 				AD00000000000000005B0000 /* Base */,
 				AD00000000000000005A0000 /* SylkLocation.py */,
+				AD00000000000000006A0000 /* JournalProgressStrip.py */,
 				AD00000000000000005E0000 /* SylkDiscovery.py */,
 				AD0000000000000000AB0000 /* AddressbookNotify.py */,
 				AD0000000000000000AB0010 /* AddressbookOrigin.py */,
@@ -2665,6 +2669,7 @@
 				AD00000000000000004E0001 /* NativeChatViewController.py in Resources */,
 				AD00000000000000005B0001 /* Base in Resources */,
 				AD00000000000000005A0001 /* SylkLocation.py in Resources */,
+				AD00000000000000006A0001 /* JournalProgressStrip.py in Resources */,
 				AD00000000000000005E0001 /* SylkDiscovery.py in Resources */,
 				AD0000000000000000AB0001 /* AddressbookNotify.py in Resources */,
 				AD0000000000000000AB0011 /* AddressbookOrigin.py in Resources */,
@@ -2987,6 +2992,7 @@
 				AD00000000000000004E0003 /* NativeChatViewController.py in Resources */,
 				AD00000000000000005B0003 /* Base in Resources */,
 				AD00000000000000005A0003 /* SylkLocation.py in Resources */,
+				AD00000000000000006A0003 /* JournalProgressStrip.py in Resources */,
 				AD00000000000000005E0003 /* SylkDiscovery.py in Resources */,
 				AD0000000000000000AB0003 /* AddressbookNotify.py in Resources */,
 				AD0000000000000000AB0013 /* AddressbookOrigin.py in Resources */,

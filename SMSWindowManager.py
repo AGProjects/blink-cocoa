@@ -2410,11 +2410,43 @@ class SMSWindowManagerClass(NSObject):
         """
         last = messages[-1]
         stamp = re.sub(r'[^0-9A-Za-z]', '-', str(last.get('timestamp') or '')) or 'unknown'
-        return '%s-%s.json' % (stamp, last.get('message_id') or 'page')
+        # the number of entries at the end, so the import knows its total
+        # without opening every page first (see _journalPageCount)
+        return '%s-%s__n%d.json' % (stamp, last.get('message_id') or 'page', len(messages))
+
+    @objc.python_method
+    def _journalPageCount(self, directory, name):
+        """The number of entries of a cached page: from its name, or (a page cached
+        by an earlier version) by reading it."""
+        match = re.search(r'__n(\d+)\.json$', name)
+        if match:
+            return int(match.group(1))
+        try:
+            with open(os.path.join(directory, name)) as f:
+                return len(json.load(f).get('messages') or [])
+        except Exception:
+            return 0
+
+    # Progress for the strip at the top of the contact list (JournalProgressStrip)
+    JOURNAL_PROGRESS_INTERVAL = 0.25    # seconds between progress notifications
+    _journal_progress_posted = 0.0
+    _journal_apply_progress = None      # (account, entries applied before this page, total) during the import
+
+    @objc.python_method
+    def _journalProgress(self, account, phase, done=None, total=None, force=False):
+        """'download' or 'apply', done of total entries (total None: not known), then 'done'."""
+        now = time.monotonic()
+        if not force and phase != 'done' and now - self._journal_progress_posted < self.JOURNAL_PROGRESS_INTERVAL:
+            return
+        self._journal_progress_posted = now
+        self.notification_center.post_notification('BlinkJournalProgress', sender=account,
+                                                   data=NotificationData(phase=phase, done=done, total=total))
 
     @objc.python_method
     def _fetchJournalPage(self, account, url):
-        """GET one journal page. Returns (messages, status): ok / auth / error."""
+        """GET one journal page. Returns (messages, status): ok / auth / error.
+        self._journal_remaining is set from X-Sylk-Journal-Remaining (None when the server does not send it)."""
+        self._journal_remaining = None
         req = urllib.request.Request(url, method="GET")
         req.add_header('Authorization', 'Apikey %s' % account.sms.history_token)
         # Journal pages are JSON with the same handful of keys repeated
@@ -2441,6 +2473,10 @@ class SMSWindowManagerClass(NSObject):
                 raw = gzip.decompress(raw)
             raw_data = raw.decode().replace('\\/', '/')
             json_data = json.loads(raw_data)
+            try:
+                self._journal_remaining = int(raw_response.headers.get('X-Sylk-Journal-Remaining'))
+            except (TypeError, ValueError):
+                self._journal_remaining = None
         except Exception as e:
             BlinkLogger().log_error('Error reading SylkServer response from %s: %s' % (url, str(e)))
             return None, 'error'
@@ -2475,6 +2511,11 @@ class SMSWindowManagerClass(NSObject):
                     os.unlink(os.path.join(directory, name))
                 except OSError:
                     pass
+
+        # what an earlier, interrupted run cached counts as downloaded
+        cached = sum(self._journalPageCount(directory, name) for name in os.listdir(directory) if name.endswith('.json'))
+        expected = None         # entries the server has after the cursor, from the first page
+        self._journalProgress(account, 'download', cached, None, force=True)
 
         while pages < self.MAX_JOURNAL_PAGES:
             if self.quitting:
@@ -2525,6 +2566,11 @@ class SMSWindowManagerClass(NSObject):
             pages += 1
             entries += len(messages)
             BlinkLogger().log_info('Cached journal page %s (%d entries)' % (name, len(messages)))
+            if expected is None:
+                remaining = getattr(self, '_journal_remaining', None)
+                expected = remaining if remaining else 0      # 0: an older server, the total is not known
+            self._journalProgress(account, 'download', cached + entries,
+                                  cached + max(expected, entries) if expected else None)
 
             last_message_id = messages[-1].get('message_id')
             if last_message_id:
@@ -2556,12 +2602,16 @@ class SMSWindowManagerClass(NSObject):
         all_contacts = set()
         all_incoming = {}
 
+        total = sum(self._journalPageCount(directory, name) for name in names)
+        self._journal_apply_progress = (account, 0, total)
+        self._journalProgress(account, 'apply', 0, total, force=True)
         self._journal_bulk = True
         try:
             complete = self._applyJournalFiles(account, directory, names, all_contacts, all_incoming,
                                                first_sync=first_sync)
         finally:
             self._journal_bulk = False
+            self._journal_apply_progress = None
 
         # On a quit the receipts and the rest of the finish are dropped; the
         # pages not yet applied are applied at the next start.
@@ -2605,6 +2655,9 @@ class SMSWindowManagerClass(NSObject):
                     incoming=all_incoming)
                 all_contacts |= contacts
                 self._logJournalSummary(account, summary, unhandled=unhandled)
+                if self._journal_apply_progress is not None:
+                    progress_account, base, total = self._journal_apply_progress
+                    self._journal_apply_progress = (progress_account, base + len(messages), total)
             except JournalInterrupted:
                 BlinkLogger().log_info('Journal apply for %s interrupted by quitting in page %s; '
                                        'the page is kept and applied again at the next start' % (account.id, name))
@@ -2690,6 +2743,9 @@ class SMSWindowManagerClass(NSObject):
             if self.quitting:
                 raise JournalInterrupted()
             i = i + 1
+            if self._journal_apply_progress is not None:
+                progress_account, base, progress_total = self._journal_apply_progress
+                self._journalProgress(progress_account, 'apply', base + i, progress_total)
 
             if total and (i % self.JOURNAL_PROGRESS_EVERY == 0 or i == total):
                 now = datetime.datetime.now()
@@ -3114,6 +3170,7 @@ class SMSWindowManagerClass(NSObject):
         except JournalInterrupted:
             return
         finally:
+            self._journalProgress(account, 'done')
             try:
                 del self.syncConversationsInProgress[account.id]
             except KeyError:

@@ -468,6 +468,10 @@ class ContactWindowController(NSWindowController):
         if self.messagesDrawerView is not None:
             self.messagesDrawerView.setHidden_(True)
 
+        # journal download / import and background decryption, at the top of the contact list
+        from JournalProgressStrip import JournalProgressStrip
+        self.progressStrip = JournalProgressStrip.alloc().initWithScrollView_(self.contactsScrollView)
+
         # Before anything is on screen. The frame is autosaved and comes back
         # at the two-pane width, so narrowing it any later means the user
         # watches the window appear wide and then jump narrower.
