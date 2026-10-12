@@ -6,6 +6,30 @@
 
 <body>
 
+<h2>Version 9.9.0</h2>
+
+<p>October 12th, 2026
+
+<ul>
+<li>Added Data export and import
+<li>Added file transfer data management
+<li>Added multi-process decryptor
+<li>Speed menu for background decryption on the progress strip
+<li>Decrypt stored PGP messages in a throttled background thread
+<li>Generate the PGP key silently only when the addressbook and the server have no key; keygen in a thread
+<li>Journal replay never changes the addressbook; missing contacts are added once at the end
+<li>Create test contacts from SylkServer testNumbers after the addressbook settled, never twice
+<li>Fetch server call history only after the addressbook has settled
+<li>Log per-entry journal lines at debug during the first sync
+<li>Progress strip for journal download, import and decryption
+<li>Journal first-sync resume
+<li>Log PGP support and key status per account, ask the server for our own public key
+<li>Only generate PGP keys for bonjour or sylkserver supported accounts
+<li>Discover SylkServer from DNS
+<li>Prompt user if messages must be deleted for contacts that have same uris in others
+</ul>
+
+
 <h2>Version 9.8.7</h2>
 
 <p>October 11th, 2026
