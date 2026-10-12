@@ -158,6 +158,18 @@ SERVER_API_REQUEST_CONTENT_TYPES = frozenset((
 unpad = lambda s: s[:-ord(s[len(s) - 1:])]
 
 
+def pgp_messaging_possible(account):
+    """PGP messaging works only for Bonjour and for accounts whose domain runs
+    SylkServer: no key is generated, restored or escrowed, and no key status is
+    logged, for any other account."""
+    if account is None:
+        return False
+    if account is BonjourAccount():
+        return True
+    from SylkDiscovery import has_sylkserver
+    return has_sylkserver(account)
+
+
 def generate_pgp_keypair(account):
     """Generate a fresh 4096-bit RSA PGP key pair for the account and persist
     it to the keys directory, updating the account settings. Any existing key
@@ -864,6 +876,7 @@ class SMSWindowManagerClass(NSObject):
             self.notification_center.add_observer(self, name="SIPAccountRegistrationDidSucceed")
             self.notification_center.add_observer(self, name="MessageSaved")
             self.notification_center.add_observer(self, name="XCAPManagerDidReloadData")
+            self.notification_center.add_observer(self, name="SylkServerConfigurationDidChange")
             # application/sylk-addressbook-update: every local write to the
             # server addressbook, so one tick per burst can tell our other
             # devices to refetch it. NOTE the two group-member notifications
@@ -1803,7 +1816,27 @@ class SMSWindowManagerClass(NSObject):
                                    % (getattr(account, 'id', '?'), e))
 
     @objc.python_method
+    def _NH_SylkServerConfigurationDidChange(self, sender, data):
+        # On a first run the addressbook can come back before the domain is
+        # known to run SylkServer, and the key work below was skipped for it:
+        # do it now for the accounts of that domain whose addressbook is in.
+        for account in AccountManager().get_accounts():
+            if account is BonjourAccount() or account.id.domain != data.domain:
+                continue
+            if account.id not in self.key_escrow_checked or not pgp_messaging_possible(account):
+                continue
+            self.suppressAddressbookNotifications()
+            try:
+                self._applyReloadedAddressbook(account)
+            finally:
+                self.resumeAddressbookNotifications()
+
+    @objc.python_method
     def _applyReloadedAddressbook(self, account):
+        if not pgp_messaging_possible(account):
+            # no PGP for an account whose domain does not run SylkServer:
+            # nothing to restore, report or escrow, and nothing logged
+            return
 
         # Restore BEFORE reporting. The report describes the state of the
         # account, and a restore in the same pass changes it: reporting first
@@ -6704,6 +6737,14 @@ class SMSWindowManagerClass(NSObject):
         handler(notification.sender, notification.data)
 
     @objc.python_method
+    def addressbookAnswered(self, account):
+        """Whether the server addressbook, which may carry this account's key,
+        has been fetched. Without XCAP there is nothing to wait for. Unlike
+        escrowQuestionAnswered there is no timeout: this is what keeps the
+        Generate menu item disabled until it is no longer too early."""
+        return account.id in self.key_escrow_checked or not account.xcap.enabled
+
+    @objc.python_method
     def escrowQuestionAnswered(self, account):
         """Whether we yet know if the server holds a key for this account.
 
@@ -6757,6 +6798,11 @@ class SMSWindowManagerClass(NSObject):
         # modal first; if a key already exists, warn that it will be
         # overwritten and old encrypted messages will become unreadable.
         if account is None or account is BonjourAccount():
+            return False
+
+        if not pgp_messaging_possible(account):
+            # PGP needs SylkServer; nothing to offer, and silently: most
+            # domains do not run it
             return False
 
         if not self.escrowQuestionAnswered(account):

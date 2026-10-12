@@ -1604,6 +1604,13 @@ class ContactWindowController(NSWindowController):
                     entry.setToolTip_(NSLocalizedString("Bonjour accounts have no server to save a key to", "Tooltip"))
             return
 
+        if not SMSWindowManager.pgp_messaging_possible(account):
+            for entry in (item, forced):
+                if entry is not None:
+                    entry.setEnabled_(False)
+                    entry.setToolTip_(NSLocalizedString("PGP messaging needs a SylkServer, and the domain of this account does not run one", "Tooltip"))
+            return
+
         from ContactMangler import mangled_account_label
         item.setTitle_(NSLocalizedString("Save PGP private key of %s to server", "Menu item") % mangled_account_label(str(account.id)))
         if forced is not None:
@@ -7281,14 +7288,24 @@ class ContactWindowController(NSWindowController):
             item.setEnabled_(True)
             item.setTitle_(NSLocalizedString("Show Dialpad", "Contacts menu item") if self.mainTabView.selectedTabViewItem().identifier() != "dialpad" else NSLocalizedString("Hide Dialpad", "Contacts menu item"))
 
-            item = self.contactsMenu.itemWithTag_(67)  # Dialpad
+            item = self.contactsMenu.itemWithTag_(67)  # Export PGP private key
             account = AccountManager().default_account
+            pgp_possible = bool(account) and SMSWindowManager.pgp_messaging_possible(account)
             if not account:
                 item.setEnabled_(False)
             else:
                 keys_path = ApplicationData.get('keys')
                 private_key_path = "%s/%s.privkey" % (keys_path, account.id)
-                item.setEnabled_(account is not BonjourAccount() and os.path.exists(private_key_path))
+                item.setEnabled_(account is not BonjourAccount() and pgp_possible and os.path.exists(private_key_path))
+
+            # Generate PGP private key: untagged in the nibs, found by its action.
+            # Disabled while it is too early: the addressbook, which may carry
+            # the account's key, has not been fetched yet.
+            too_early = pgp_possible and account is not BonjourAccount() and not SMSWindowManager.SMSWindowManager().addressbookAnswered(account)
+            for entry in item.menu().itemArray():
+                if entry.action() in ('generateKeyButtonClicked:', b'generateKeyButtonClicked:'):
+                    entry.setEnabled_(pgp_possible and not too_early)
+                    entry.setToolTip_(NSLocalizedString("Waiting for the addressbook of this account, it may already carry a key", "Tooltip") if too_early else "")
 
     def selectInputDevice_(self, sender):
         settings = SIPSimpleSettings()

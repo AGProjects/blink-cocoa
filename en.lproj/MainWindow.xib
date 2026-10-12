@@ -220,6 +220,12 @@ CA
                                     <action selector="goToPGPKeyFolderClicked:" target="389" id="0oy-jT-INt"/>
                                 </connections>
                             </menuItem>
+                            <menuItem title="Generate PGP private key..." id="Gpk-en-001">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="generateKeyButtonClicked:" target="389" id="Gpk-en-002"/>
+                                </connections>
+                            </menuItem>
                             <menuItem title="Export PGP private key..." tag="67" id="fS7-ZG-QI4">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
