@@ -2945,7 +2945,8 @@ class SMSWindowManagerClass(NSObject):
                         # every public key that arrived.
                         self.notification_center.post_notification('PGPPublicKeyReceived', sender=account, data=NotificationData(uri=uri, key=public_key))
 
-                        self.saveContact(uri, {'public_key': key_file, 'public_key_checksum': public_key_checksum})
+                        # an existing contact only: an old journal entry adds nothing to the addressbook
+                        self.saveContact(uri, {'public_key': key_file, 'public_key_checksum': public_key_checksum}, create=False)
                     else:
                          BlinkLogger().log_info(u"No public key detected in the payload")
 
@@ -3066,8 +3067,8 @@ class SMSWindowManagerClass(NSObject):
                 nc_body = NSLocalizedString("From %d contacts" % count, "Label")
             NSApp.delegate().notify_new_message(nc_title, nc_body)
 
-        for uri in sync_contacts:
-            self.ensureMessagesGroupContains(uri)
+        # Missing contacts only, never a refile: see addMissingConversationContacts
+        self.addMissingConversationContacts(sync_contacts, 'Journal')
 
         # Post-sync history refresh — limit it to the viewer the
         # user is actually looking at right now. The live path
@@ -3303,7 +3304,10 @@ class SMSWindowManagerClass(NSObject):
                                    % (dropped, total, types))
 
     @objc.python_method
-    def saveContact(self, uri, data={}):
+    def saveContact(self, uri, data={}, create=True):
+        """Store attributes (a public key, say) on the contact of uri. With
+        create=False an unknown address gets no contact: the journal's old
+        entries must not add to the addressbook."""
         if self.illegal_uri(uri):
             return
         if self._canonical_uri(uri) in self._bonjourConversationKeys():
@@ -3314,7 +3318,7 @@ class SMSWindowManagerClass(NSObject):
             BlinkLogger().log_debug('Not filing the Bonjour neighbour %s in the address book' % uri)
             return
 
-        contact = self.getContact(uri)
+        contact = self.getContact(uri, create=create)
         if contact is not None:
             attrs = ('public_key', 'public_key_checksum', 'name', 'organization')
             for a in attrs:
@@ -3325,8 +3329,10 @@ class SMSWindowManagerClass(NSObject):
                 else:
                     setattr(contact, a, value)
             contact.save()
-        else:
+        elif create:
             BlinkLogger().log_info("No contact found to save the public key for %s" % uri)
+        else:
+            BlinkLogger().log_debug("No contact for %s, its public key is kept in the keys folder only" % uri)
 
     @objc.python_method
     def illegal_uri(self, uri):
@@ -3494,6 +3500,34 @@ class SMSWindowManagerClass(NSObject):
         except Exception as e:
             BlinkLogger().log_error('Cannot file %s under Messages: %s' % (uri, e))
             return None
+
+    @objc.python_method
+    def addMissingConversationContacts(self, uris, why):
+        """Create a Messages contact for each conversation no addressbook contact
+        has -- and only for those.
+
+        The addressbook fetched from the server is the latest: what replaying old
+        journal entries (or restoring unread counts at launch) finds must not
+        change it. An existing contact is not refiled into Messages, and not
+        brought back from Deleted or Blocked. Done at the end, once, after the
+        whole journal has been applied."""
+        created = 0
+        for uri in sorted(set(uris)):
+            try:
+                if self.illegal_uri(uri) or not self.isFileableAddress(uri):
+                    continue
+                if self._findContactByCanonicalURI(uri) is not None:
+                    continue
+                if NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(uri) is not None:
+                    continue
+                if self.getContact(uri) is not None:      # creates it, and queues it for Messages
+                    created += 1
+            except Exception as e:
+                BlinkLogger().log_error('Cannot add a contact for %s: %s' % (uri, e))
+        if created:
+            BlinkLogger().log_info('%s: added %d missing contact(s) to the Messages group' % (why, created))
+        self.addContactsToMessagesGroup()
+        return created
 
     @objc.python_method
     def isFileableAddress(self, uri):
@@ -4401,9 +4435,7 @@ class SMSWindowManagerClass(NSObject):
 
         BlinkLogger().log_info('Restored %d unread message(s) in %d conversation(s)'
                                % (restored, len(counts)))
-        for key in counts:
-            self.ensureMessagesGroupContains(key)
-        self.addContactsToMessagesGroup()
+        self.addMissingConversationContacts(counts.keys(), 'Unread conversations at start')
         for key, count in counts.items():
             self._postUnreadChanged(key, self.unread_counts.get(key, count))
 
@@ -4732,6 +4764,13 @@ class SMSWindowManagerClass(NSObject):
         if self.unread_counts.pop(key, None):
             self._postUnreadChanged(key, 0)
         self._postConversationOrderChanged(key)
+        if self._journal_bulk:
+            # replayed from the journal: the conversation is hidden, but the
+            # addressbook fetched from the server already says where its
+            # contact lives and is left alone
+            self._syncLog(account)('Conversation with %s removed (from the journal, contact left where it is)'
+                                   % remote_uri)
+            return
         self.fileConversationAsDeleted(remote_uri, True)
         self._syncLog(account)('Conversation with %s removed and filed under Deleted'
                                % remote_uri)
@@ -4758,6 +4797,10 @@ class SMSWindowManagerClass(NSObject):
         """
         removed_at = self.deleted_conversations.get(key)
         if removed_at is None:
+            return False
+        if self._journal_bulk:
+            # journal entries do not change the addressbook: a contact the
+            # server's addressbook has in Deleted stays there
             return False
         try:
             stamp = int(when.replace(tzinfo=datetime.timezone.utc).timestamp())
