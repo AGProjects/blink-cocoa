@@ -79,6 +79,7 @@ from BlinkLogger import BlinkLogger
 from KeyEscrow import (escrow_is_missing, install_keypair, log_self_contact,
                        restore_from_own_contact, write_self_keys, key_status_lines)
 from HistoryManager import ChatHistory, MESSAGES_BULK_DELETE_CONTENT_TYPE, bulk_delete_criteria, bulk_delete_label
+import HistoryManager as _history_module
 from SMSViewController import SMSViewController, is_file_transfer_notice, is_otr_wire_text, is_placeholder_uri
 
 
@@ -1412,7 +1413,7 @@ class SMSWindowManagerClass(NSObject):
                                     or record.get('media'))
         timestamp = record.get('startTime') or str(ISOTimestamp.now())
 
-        BlinkLogger().log_info('[cdr] %s %s call %s from another device of %s'
+        self._syncLog(account)('[cdr] %s %s call %s from another device of %s'
                                % (direction, record.get('outcome'),
                                   record['sessionId'], account.id))
 
@@ -2391,6 +2392,15 @@ class SMSWindowManagerClass(NSObject):
         return os.path.exists(os.path.join(ApplicationData.get('journal/%s' % account.id), self.FIRST_SYNC_MARKER))
 
     @objc.python_method
+    def _syncLog(self, account=None):
+        """log_info, or log_debug while a first sync of the account (any account
+        when None) is being applied: a first sync replays the whole journal, and a
+        line per entry buries everything else. _logJournalSummary has the counts."""
+        accounts = _history_module.first_sync_accounts
+        quiet = bool(accounts) if account is None else getattr(account, 'id', None) in accounts
+        return BlinkLogger().log_debug if quiet else BlinkLogger().log_info
+
+    @objc.python_method
     def journalSinceWindow(self):
         """The `since` a cursor-less first sync asks from, as an ISO timestamp.
 
@@ -2606,16 +2616,21 @@ class SMSWindowManagerClass(NSObject):
         self._journal_apply_progress = (account, 0, total)
         self._journalProgress(account, 'apply', 0, total, force=True)
         self._journal_bulk = True
+        if first_sync:
+            _history_module.first_sync_accounts.add(account.id)
         try:
-            complete = self._applyJournalFiles(account, directory, names, all_contacts, all_incoming,
-                                               first_sync=first_sync)
-        finally:
-            self._journal_bulk = False
-            self._journal_apply_progress = None
+            try:
+                complete = self._applyJournalFiles(account, directory, names, all_contacts, all_incoming,
+                                                   first_sync=first_sync)
+            finally:
+                self._journal_bulk = False
+                self._journal_apply_progress = None
 
-        # On a quit the receipts and the rest of the finish are dropped; the
-        # pages not yet applied are applied at the next start.
-        self._finishJournalApply(account, all_contacts, all_incoming)
+            # On a quit the receipts and the rest of the finish are dropped; the
+            # pages not yet applied are applied at the next start.
+            self._finishJournalApply(account, all_contacts, all_incoming)
+        finally:
+            _history_module.first_sync_accounts.discard(account.id)
         return complete
 
     @objc.python_method
@@ -2894,7 +2909,7 @@ class SMSWindowManagerClass(NSObject):
                         BlinkLogger().log_debug(
                             u'Skipping our own public key sent to %s' % uri)
                         continue
-                    BlinkLogger().log_info(u"Public key from %s received" % (uri))
+                    self._syncLog(account)(u"Public key from %s received" % (uri))
                     content = (msg['content'] or '').encode()
 
                     if AccountManager().has_account(uri):
@@ -3368,7 +3383,7 @@ class SMSWindowManagerClass(NSObject):
                     BlinkLogger().log_info('Not adding an address book contact for %s: '
                                            'not an address anybody can be written to' % uri)
                     return None
-                BlinkLogger().log_info('Adding contact for %s' % uri)
+                self._syncLog()('Adding contact for %s' % uri)
                 contact = NSApp.delegate().contactsWindowController.model.addContactForUri(uri)
                 self.new_contacts.add(contact)
 
@@ -4718,7 +4733,7 @@ class SMSWindowManagerClass(NSObject):
             self._postUnreadChanged(key, 0)
         self._postConversationOrderChanged(key)
         self.fileConversationAsDeleted(remote_uri, True)
-        BlinkLogger().log_info('Conversation with %s removed and filed under Deleted'
+        self._syncLog(account)('Conversation with %s removed and filed under Deleted'
                                % remote_uri)
 
     @objc.python_method
@@ -6417,7 +6432,7 @@ class SMSWindowManagerClass(NSObject):
             BlinkLogger().log_error('Cannot read the conversation-read payload %r' % content)
             return
 
-        BlinkLogger().log_info('Conversation with %s was read on another device' % contact)
+        self._syncLog(account)('Conversation with %s was read on another device' % contact)
         self.clearUnreadMessages(contact)
 
         # If this device has the conversation open, settle it there too: the

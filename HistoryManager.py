@@ -4198,8 +4198,16 @@ FAVORITES_GROUP_ID = '_favorites'
 _PREFIX = '[cdr]'
 
 
+# Accounts whose first journal sync is being applied (SMSWindowManager): the
+# per-entry lines are logged at debug meanwhile, the journal summary counts them.
+first_sync_accounts = set()
+
+
 def _log(line):
-    BlinkLogger().log_info('%s %s' % (_PREFIX, line))
+    if first_sync_accounts:
+        BlinkLogger().log_debug('%s %s' % (_PREFIX, line))
+    else:
+        BlinkLogger().log_info('%s %s' % (_PREFIX, line))
 
 
 def _log_debug(line):
