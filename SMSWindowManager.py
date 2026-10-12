@@ -158,6 +158,10 @@ SERVER_API_REQUEST_CONTENT_TYPES = frozenset((
 unpad = lambda s: s[:-ord(s[len(s) - 1:])]
 
 
+class JournalInterrupted(Exception):
+    """Blink is quitting: stop downloading or applying the journal, keep what is cached."""
+
+
 @implementer(IObserver)
 class _MessageResult(object):
     """Hands the final code and reason of one SIP MESSAGE to a callback."""
@@ -743,6 +747,16 @@ class SMSWindowManagerClass(NSObject):
     # GUI thread -- 14 of them during one sync is what made the app unusable.
     # Messages still reach any viewer the user already has open.
     _journal_bulk = False
+    # Set when the application is ending: the journal download and apply stop
+    # at the next page or entry and leave the cached pages for the next start.
+    quitting = False
+    # Present in journal/<account>/ while a first sync is in progress. A first
+    # sync interrupted by quitting is continued as a first sync after a
+    # restart, although the cursor has moved by then. Removed only once every
+    # page was downloaded and applied.
+    FIRST_SYNC_MARKER = 'first-sync.marker'
+    # A page that raised this many times is moved to journal/<account>/failed
+    MAX_JOURNAL_PAGE_ATTEMPTS = 3
     # canonical remote uri -> unread count. The only place unread lives now
     # that an arriving message no longer creates a conversation.
     unread_counts = {}
@@ -897,6 +911,7 @@ class SMSWindowManagerClass(NSObject):
             self.notification_center = NotificationCenter()
             self.notification_center.add_observer(self, name="SIPEngineGotMessage")
             self.notification_center.add_observer(self, name="SIPAccountDidActivate")
+            self.notification_center.add_observer(self, name="SIPApplicationWillEnd")
             self.notification_center.add_observer(self, name="SIPAccountDidDeactivate")
             self.notification_center.add_observer(self, name="BlinkFileTransferDidEnd")
             self.notification_center.add_observer(self, name="CFGSettingsObjectDidChange")
@@ -2083,6 +2098,10 @@ class SMSWindowManagerClass(NSObject):
                 self.accountsDidChange()
 
     @objc.python_method
+    def _NH_SIPApplicationWillEnd(self, sender, data):
+        self.quitting = True
+
+    @objc.python_method
     def _NH_SIPAccountDidActivate(self, account, data):
         self.accountsDidChange()
         call_later(2, self.checkKeyStatus, account, 'start')
@@ -2363,6 +2382,15 @@ class SMSWindowManagerClass(NSObject):
         return path
 
     @objc.python_method
+    def firstSyncMarker(self, account):
+        return os.path.join(self.journalDirectory(account), self.FIRST_SYNC_MARKER)
+
+    @objc.python_method
+    def first_sync_pending(self, account):
+        """Whether a first sync of this account is in progress (or was interrupted)."""
+        return os.path.exists(os.path.join(ApplicationData.get('journal/%s' % account.id), self.FIRST_SYNC_MARKER))
+
+    @objc.python_method
     def journalSinceWindow(self):
         """The `since` a cursor-less first sync asks from, as an ISO timestamp.
 
@@ -2440,7 +2468,20 @@ class SMSWindowManagerClass(NSObject):
         pages = 0
         entries = 0
 
+        # what a quit left half written
+        for name in os.listdir(directory):
+            if name.endswith('.part'):
+                try:
+                    os.unlink(os.path.join(directory, name))
+                except OSError:
+                    pass
+
         while pages < self.MAX_JOURNAL_PAGES:
+            if self.quitting:
+                BlinkLogger().log_info('Journal download for %s interrupted by quitting after %d page(s); '
+                                       'the cached pages are kept and the download resumes at the next start'
+                                       % (account.id, pages))
+                raise JournalInterrupted()
             cursor = account.sms.history_last_id
             if cursor:
                 url = "%s/%s" % (base_url, cursor)
@@ -2453,26 +2494,33 @@ class SMSWindowManagerClass(NSObject):
             if status == 'auth':
                 BlinkLogger().log_info('History token rejected for %s (401), requesting a new one in 30s' % account.id)
                 reactor.callLater(30, self.request_token, account)
-                return pages, entries
+                return pages, entries, False
             if status != 'ok':
                 BlinkLogger().log_info('Journal download for %s stopped after %d page(s): the last '
                                        'request to %s failed' % (account.id, pages, url))
-                return pages, entries
+                return pages, entries, False
             if not messages:
-                break
+                return pages, entries, True
+            if self.quitting:
+                # the page in flight is dropped, the cursor did not move past it
+                continue
 
             name = self._journalFileName(messages)
             path = os.path.join(directory, name)
             try:
-                with open(path, 'w') as f:
+                # Written aside and renamed: a quit in the middle of the write
+                # leaves a .part, never a truncated page that would fail to
+                # parse and be taken for applied.
+                with open(path + '.part', 'w') as f:
                     # Store the cursor as it stood BEFORE this page: the apply
                     # stage needs it to tell a first-ever backfill (persist
                     # only) from a catch-up (present in the GUI), and by then
                     # the account cursor has advanced past every cached page.
                     json.dump({'cursor': cursor or '', 'messages': messages}, f)
+                os.replace(path + '.part', path)
             except Exception as e:
                 BlinkLogger().log_error('Cannot write journal file %s: %s' % (path, e))
-                return pages, entries
+                return pages, entries, False
 
             pages += 1
             entries += len(messages)
@@ -2482,11 +2530,9 @@ class SMSWindowManagerClass(NSObject):
             if last_message_id:
                 account.sms.history_last_id = last_message_id
                 account.save()
-        else:
-            BlinkLogger().log_error('Journal download for %s hit the %d page cap; more may remain'
-                                    % (account.id, self.MAX_JOURNAL_PAGES))
-
-        return pages, entries
+        BlinkLogger().log_error('Journal download for %s hit the %d page cap; more may remain'
+                                % (account.id, self.MAX_JOURNAL_PAGES))
+        return pages, entries, False
 
     @objc.python_method
     def _applyCachedJournals(self, account, first_sync=False):
@@ -2500,34 +2546,53 @@ class SMSWindowManagerClass(NSObject):
             names = sorted(n for n in os.listdir(directory) if n.endswith('.json'))
         except OSError as e:
             BlinkLogger().log_error('Cannot list journal directory %s: %s' % (directory, e))
-            return
+            return False
 
         if not names:
-            return
+            return True
 
-        BlinkLogger().log_info('Applying %d cached journal pages for %s' % (len(names), account.id))
+        BlinkLogger().log_info('Applying %d cached journal pages for %s%s'
+                               % (len(names), account.id, ' (first sync)' if first_sync else ''))
         all_contacts = set()
         all_incoming = {}
 
         self._journal_bulk = True
         try:
-            self._applyJournalFiles(account, directory, names, all_contacts, all_incoming,
-                                    first_sync=first_sync)
+            complete = self._applyJournalFiles(account, directory, names, all_contacts, all_incoming,
+                                               first_sync=first_sync)
         finally:
             self._journal_bulk = False
 
+        # On a quit the receipts and the rest of the finish are dropped; the
+        # pages not yet applied are applied at the next start.
         self._finishJournalApply(account, all_contacts, all_incoming)
+        return complete
 
     @objc.python_method
     def _applyJournalFiles(self, account, directory, names, all_contacts, all_incoming,
                            first_sync=False):
+        """Apply the pages in order; True when every one was applied.
+
+        A page is deleted only once applied. One that raised is kept and tried
+        again at the next sync, and after MAX_JOURNAL_PAGE_ATTEMPTS moved to
+        failed/. On a quit (JournalInterrupted) the page being applied is kept
+        as it is, not counted as an attempt, and the exception propagates."""
+        complete = True
         for index, name in enumerate(names, 1):
+            if self.quitting:
+                BlinkLogger().log_info('Journal apply for %s interrupted by quitting before page %d/%d; '
+                                       'the rest is applied at the next start' % (account.id, index, len(names)))
+                raise JournalInterrupted()
             path = os.path.join(directory, name)
+            payload = None
             try:
                 with open(path) as f:
                     payload = json.load(f)
                 messages = payload.get('messages') or []
-                cursor = payload.get('cursor') or None
+                # Every page of a first sync is a first-sync page, also the
+                # pages after the first, whose stored cursor is set, and the
+                # pages of a first sync resumed after a restart.
+                cursor = None if first_sync else (payload.get('cursor') or None)
                 BlinkLogger().log_info('Applying journal %d/%d: %s (%d entries)'
                                        % (index, len(names), name, len(messages)))
                 # The banner counter is handed in rather than merged
@@ -2536,18 +2601,54 @@ class SMSWindowManagerClass(NSObject):
                 # in a later page than the messages it covers has to be
                 # able to cancel what an earlier page raised.
                 _, contacts, _, summary, unhandled = self._applyJournalEntries(
-                    account, messages, cursor, label=name, first_sync=first_sync,
+                    account, messages, cursor, label=name, first_sync=first_sync or not cursor,
                     incoming=all_incoming)
                 all_contacts |= contacts
                 self._logJournalSummary(account, summary, unhandled=unhandled)
+            except JournalInterrupted:
+                BlinkLogger().log_info('Journal apply for %s interrupted by quitting in page %s; '
+                                       'the page is kept and applied again at the next start' % (account.id, name))
+                raise
             except Exception as e:
+                complete = False
                 BlinkLogger().log_error('Error applying journal %s: %s' % (name, e))
                 import traceback
                 traceback.print_exc()
+                self._journalPageFailed(account, directory, name, payload)
+                continue
             try:
                 os.unlink(path)
             except OSError as e:
                 BlinkLogger().log_error('Cannot delete applied journal %s: %s' % (path, e))
+        return complete
+
+    @objc.python_method
+    def _journalPageFailed(self, account, directory, name, payload):
+        path = os.path.join(directory, name)
+        if not isinstance(payload, dict):
+            attempts = self.MAX_JOURNAL_PAGE_ATTEMPTS       # unreadable: no point in trying again
+        else:
+            attempts = int(payload.get('attempts') or 0) + 1
+        if attempts >= self.MAX_JOURNAL_PAGE_ATTEMPTS:
+            failed = os.path.join(directory, 'failed')
+            try:
+                makedirs(failed)
+                os.replace(path, os.path.join(failed, name))
+                BlinkLogger().log_error('Journal page %s of %s failed %d time(s), moved to %s'
+                                        % (name, account.id, attempts, failed))
+            except OSError as e:
+                BlinkLogger().log_error('Cannot move the failed journal page %s: %s' % (path, e))
+            return
+        payload['attempts'] = attempts
+        try:
+            with open(path + '.part', 'w') as f:
+                json.dump(payload, f)
+            os.replace(path + '.part', path)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot update journal page %s: %s' % (path, e))
+            return
+        BlinkLogger().log_info('Journal page %s of %s kept, it is tried again at the next sync (attempt %d of %d)'
+                               % (name, account.id, attempts, self.MAX_JOURNAL_PAGE_ATTEMPTS))
 
     @objc.python_method
     def _applyJournalEntries(self, account, messages, cursor, label='', first_sync=False,
@@ -2586,6 +2687,8 @@ class SMSWindowManagerClass(NSObject):
         i = 0
         for msg in messages:
             #BlinkLogger().log_info('Process journal %d: %s' % (i, msg['timestamp']))
+            if self.quitting:
+                raise JournalInterrupted()
             i = i + 1
 
             if total and (i % self.JOURNAL_PROGRESS_EVERY == 0 or i == total):
@@ -2969,32 +3072,47 @@ class SMSWindowManagerClass(NSObject):
             BlinkLogger().log_debug('Journal sync for %s is already running' % account.id)
             return
 
+        if self.quitting:
+            self.syncConversationsInProgress.pop(account.id, None)
+            return
+
         self.sync_skip_logged.pop(account.id, None)
         cursor = account.sms.history_last_id
+        # A first sync is one with no cursor -- nothing ever synced on this
+        # device, which is what makes the journal's own message states
+        # authoritative -- or one that was interrupted by quitting: the cursor
+        # has moved since, but the marker says the first sync is not done.
+        marker = self.firstSyncMarker(account)
+        resumed = os.path.exists(marker)
+        first_sync = resumed or not cursor
+        if first_sync and not resumed:
+            try:
+                with open(marker, 'w') as f:
+                    f.write(datetime.datetime.utcnow().isoformat() + 'Z\n')
+            except OSError as e:
+                BlinkLogger().log_error('Cannot write the first sync marker %s: %s' % (marker, e))
         started = time.time()
-        BlinkLogger().log_info('Journal sync starting for %s from %s (%s)'
-                               % (account.id, account.sms.history_url,
-                                  'after %s' % cursor if cursor
-                                  else 'since %s' % self.journalSinceWindow()))
+        if resumed:
+            BlinkLogger().log_info('Journal sync for %s resumes an interrupted first sync from %s (after %s)'
+                                   % (account.id, account.sms.history_url, cursor or 'the start'))
+        else:
+            BlinkLogger().log_info('Journal sync starting for %s from %s (%s)'
+                                   % (account.id, account.sms.history_url,
+                                      'after %s' % cursor if cursor
+                                      else 'since %s, first sync' % self.journalSinceWindow()))
 
         pages = entries = 0
+        downloaded = applied = False
         # Released in `finally`, not per exit path: previously a non-401 HTTP
         # error returned with this flag still set, wedging journal sync for the
         # account until the app restarted.
         try:
-            pages, entries = self._downloadJournal(account)
-            # `cursor` is what the account held BEFORE this run: empty means
-            # nothing has ever been synced on this device, which is what makes
-            # the journal's own message states authoritative.
-            self._applyCachedJournals(account, first_sync=not cursor)
-            if not cursor:
-                # First sync on this device: the Messages group has just been
-                # filled with everyone the journal mentioned, so put it where
-                # the user will look. Done here rather than where the group is
-                # created because the group usually already exists by now --
-                # it is created the first time any message is filed, which on
-                # a fresh profile is during this very apply.
-                self.promoteMessagesGroup()
+            # On a quit during the download nothing is applied: the next start
+            # downloads the rest first, then applies every page in order.
+            pages, entries, downloaded = self._downloadJournal(account)
+            applied = self._applyCachedJournals(account, first_sync=first_sync)
+        except JournalInterrupted:
+            return
         finally:
             try:
                 del self.syncConversationsInProgress[account.id]
@@ -3008,11 +3126,28 @@ class SMSWindowManagerClass(NSObject):
             BlinkLogger().log_info('Journal sync for %s finished in %.1fs: the server had nothing new'
                                    % (account.id, time.time() - started))
 
-        if not cursor:
-            # There was no cursor when this started, so this was the account's
-            # first sync on this device -- the same condition sylk mobile uses
-            # for afterFirstSync (no last message and no stored sync id).
-            self.announceActivation(account)
+        if not first_sync:
+            return
+        if not (downloaded and applied):
+            BlinkLogger().log_info('First sync of %s not complete yet (%s); it continues as a first sync at the next sync'
+                                   % (account.id, 'download stopped' if not downloaded else 'a page failed'))
+            return
+
+        # The first sync is done: every page downloaded and applied.
+        try:
+            os.unlink(marker)
+        except OSError:
+            pass
+        BlinkLogger().log_info('First sync of %s completed' % account.id)
+        # The Messages group has just been filled with everyone the journal
+        # mentioned, so put it where the user will look. Done here rather than
+        # where the group is created because the group usually already exists
+        # by now -- it is created the first time any message is filed, which
+        # on a fresh profile is during this very apply.
+        self.promoteMessagesGroup()
+        # The same condition sylk mobile uses for afterFirstSync (no last
+        # message and no stored sync id).
+        self.announceActivation(account)
 
     @objc.python_method
     def announceActivation(self, account):
