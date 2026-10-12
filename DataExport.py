@@ -110,16 +110,19 @@ def _display_name(meta):
     return name[:-4] if name.endswith('.asc') else name
 
 
-def find_cached_file(root, account, peer, meta):
+def find_cached_file(root, account, peer, meta, encrypted=False):
     """Where the transfer cache keeps this transfer's (decrypted) file, or None: under the account's
     folder first, then any other account's, as FileTransferCache.local_file looks -- without creating
-    any folder on the way."""
+    any folder on the way. With encrypted, a .asc never decrypted here will do when the plain file is
+    not there: the importing side decrypts it (DataImport.looks_like_pgp)."""
     tail = os.path.join(_safe(peer), _safe(meta.get('transfer_id') or meta.get('filename')), _safe(_display_name(meta)) or 'file')
-    candidates = [os.path.join(root, _safe(account), tail)]
+    tails = [tail, tail + '.asc'] if encrypted else [tail]
+    accounts = [_safe(account)]
     try:
-        candidates += [os.path.join(root, name, tail) for name in sorted(os.listdir(root)) if name != _safe(account)]
+        accounts += [name for name in sorted(os.listdir(root)) if name != _safe(account)]
     except OSError:
         pass
+    candidates = [os.path.join(root, name, t) for t in tails for name in accounts]
     for path in candidates:
         try:
             if os.path.isfile(path) and os.path.getsize(path) > 0:
@@ -199,7 +202,7 @@ class ExportSnapshot(object):
             meta = envelope(body) if body and not armored else None
             if not meta or not meta.get('filename'):
                 return
-            path = find_cached_file(self.cache_root, local_uri, remote_uri, meta)
+            path = find_cached_file(self.cache_root, local_uri, remote_uri, meta, encrypted=True)
             category = category if category in FILE_CATEGORIES else 'other'
             plain = {'filename': _display_name(meta),
                      'filetype': meta.get('filetype') or None,
@@ -348,12 +351,20 @@ class _Handler(BaseHTTPRequestHandler):
                 return self._reply_json(200, snapshot.calendar(contact), seal)
             if path == '/api/ids':
                 ids = [row['msg_id'] for peer, day, row in snapshot.rows(kind, category, period, contact)]
-                return self._reply_json(200, {'kind': kind, 'count': len(ids), 'ids': ids}, seal)
+                reply = {'kind': kind, 'count': len(ids), 'ids': ids}
+                if kind == 'files':
+                    # rows offered without bytes here (the row still carries the message); a Blink importer
+                    # does not ask /api/blob for them, the phone ignores the key
+                    reply['without_file'] = [msg_id for msg_id in ids if not snapshot.by_id[msg_id][1]]
+                return self._reply_json(200, reply, seal)
             if path == '/api/rows-bulk':
                 rows = [row for peer, day, row in snapshot.rows(kind, category, period, contact)]
                 return self._reply_json(200, {'count': len(rows), 'rows': rows}, seal)
             if path == '/api/idindex':
                 items = [{'id': row['msg_id'], 'day': day, 'contact': peer} for peer, day, row in snapshot.rows(kind, category, 'all', contact)]
+                if kind == 'files':
+                    for item in items:
+                        item['file'] = bool(snapshot.by_id[item['id']][1])
                 return self._reply_json(200, {'items': items}, seal)
             if path == '/api/contacts-counts':
                 contacts = snapshot.contact_counts(kind, category, period)

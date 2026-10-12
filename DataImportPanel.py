@@ -610,10 +610,11 @@ class DataImportController(NSObject):
     @objc.python_method
     def _local_ids(self, kind):
         """The ids that do NOT need importing. For files, a row whose file is
-        missing is left out, so its bytes are fetched again."""
+        missing is left out, so its bytes are fetched again -- unless the other
+        device has no bytes for it either, when there is nothing to fetch."""
         msgids, missing = self._inventory()
         if kind == 'files':
-            return msgids - set(missing)
+            return msgids - (set(missing) - self.client.no_file)
         return msgids
 
     # -- the worker -------------------------------------------------------------
@@ -845,8 +846,8 @@ class DataImportController(NSObject):
     @objc.python_method
     def _importFiles(self, category, period, contact, result):
         ids = self.client.ids('files', category, period, contact)
+        local = self._local_ids('files')
         msgids, missing = self._inventory()
-        local = msgids - set(missing)
         new = [i for i in ids if i not in local]
         result['server'], result['new'] = len(ids), len(new)
         self._progress(0, len(new))
@@ -868,11 +869,14 @@ class DataImportController(NSObject):
                 peer, meta = missing[msg_id]
             else:
                 peer, meta = DataImport.other_party(row, self.account_id), DataImport.transfer_envelope(row)
-            try:
-                payload = self.client.blob(msg_id)
-            except DataImport.ExportServerError as e:
-                _log('No file for %s (%s): %s' % (msg_id, meta.get('filename'), e))
-                payload = None
+            if msg_id in self.client.no_file:
+                payload = None          # only the row is there to take
+            else:
+                try:
+                    payload = self.client.blob(msg_id)
+                except DataImport.ExportServerError as e:
+                    _log('No file for %s (%s): %s' % (msg_id, meta.get('filename'), e))
+                    payload = None
             if payload is not None and DataImport.looks_like_pgp(payload, meta):
                 try:
                     payload = _pgp_decrypt(payload)
@@ -888,7 +892,7 @@ class DataImportController(NSObject):
                 except Exception as e:
                     BlinkLogger().log_error('[import] Cannot save %s: %s' % (meta.get('filename'), e))
                     payload = None
-            if payload is None:
+            if payload is None and msg_id not in self.client.no_file:
                 result['files_failed'] += 1
             if msg_id not in missing:
                 # The row goes in even without its bytes: the transcript can
