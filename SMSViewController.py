@@ -201,7 +201,8 @@ def _row_details(row, body=True):
     fields = ('msgid', 'direction', 'time', 'local_uri', 'remote_uri', 'cpim_from',
               'cpim_to', 'cpim_timestamp', 'content_type', 'status', 'media_type',
               'encryption', 'read', 'uuid', 'journal_id', 'sip_callid',
-              'metadata', 'related_msg_id', 'related_action', 'category', 'private')
+              'metadata', 'related_msg_id', 'related_action', 'category', 'private',
+              'encryption_keys')
     result = {}
     for name in fields:
         try:
@@ -5291,6 +5292,13 @@ class SMSViewController(NSObject):
             if not (stripped.startswith('-----BEGIN PGP MESSAGE-----') and stripped.endswith('-----END PGP MESSAGE-----')):
                 continue
 
+            if getattr(message, 'decrypted', None) == '2':
+                # failed before; tried again when the private key changes
+                decrypted_bodies[message.msgid] = (
+                    'Encrypted message: %s' % (getattr(message, 'decryption_error', None)
+                                               or 'no private key on this device can open it'), None)
+                continue
+
             if not have_a_key:
                 if not reported_missing:
                     reported_missing = True
@@ -5332,6 +5340,11 @@ class SMSViewController(NSObject):
                     unopened_keys[keyid] = unopened_keys.get(keyid, 0) + 1
                 decrypted_bodies[message.msgid] = (
                     'Encrypted message: no private key on this device can open it', None)
+                try:
+                    self.history.store_undecryptable_message(message.msgid, str(e) or 'no private key on this device opens it',
+                                                             self._pgp_key_ids(pgpMessage) if pgpMessage is not None else None)
+                except Exception:
+                    pass
                 continue
 
             text = pgp_plaintext(decrypted_message)

@@ -1268,6 +1268,69 @@ def pgp_message_key_ids(blob):
         return []
 
 
+# key id -> (address, own) of the keys in the keys folder, rebuilt when the
+# folder changes (its mtime and the files' names and mtimes)
+_key_owners_cache = {'signature': None, 'owners': {}}
+
+
+def pgp_key_owners():
+    """{key id: (address, own)} for every key in the keys folder: our accounts'
+    keys (<account>.privkey, own=True) and the public keys of contacts
+    (<address>.pubkey). Primary and sub keys: a message is usually encrypted
+    to an encryption subkey. Never raises."""
+    try:
+        from resources import ApplicationData
+        import os
+        folder = ApplicationData.get('keys')
+        names = sorted(name for name in os.listdir(folder) if name.endswith(('.privkey', '.pubkey')))
+        signature = tuple((name, os.path.getmtime(os.path.join(folder, name))) for name in names)
+    except Exception:
+        return {}
+    if _key_owners_cache['signature'] == signature:
+        return _key_owners_cache['owners']
+    owners = {}
+    try:
+        import pgpy
+    except ImportError:
+        return {}
+    for name in names:
+        address, _, kind = name.rpartition('.')
+        own = kind == 'privkey'
+        try:
+            key, _ = pgpy.PGPKey.from_file(os.path.join(folder, name))
+        except Exception:
+            continue
+        ids = [str(key.fingerprint.keyid)]
+        try:
+            ids.extend(str(keyid) for keyid in key.subkeys)
+        except Exception:
+            pass
+        for keyid in ids:
+            if own or keyid not in owners:      # our own key wins over a copy filed for a contact
+                owners[keyid] = (address, own)
+    _key_owners_cache['signature'] = signature
+    _key_owners_cache['owners'] = owners
+    return owners
+
+
+def pgp_describe_key_ids(key_ids):
+    """'KEYID (address, own key), KEYID (unknown key)' for the info panel."""
+    if not key_ids:
+        return ''
+    if isinstance(key_ids, str):
+        key_ids = [keyid for keyid in key_ids.replace(',', ' ').split() if keyid]
+    owners = pgp_key_owners()
+    parts = []
+    for keyid in key_ids:
+        owner = owners.get(keyid)
+        if owner is None:
+            parts.append('%s (unknown key)' % keyid)
+        else:
+            address, own = owner
+            parts.append('%s (%s%s)' % (keyid, address, ', own key' if own else ''))
+    return ', '.join(parts)
+
+
 def pgp_plaintext(decrypted_message):
     """The same payload as text, with a lossy fallback for odd encodings."""
     data = pgp_plaintext_bytes(decrypted_message)

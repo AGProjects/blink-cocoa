@@ -761,6 +761,15 @@ class ChatMessage(SQLObject):
     # can find them; NULL on trail update ticks. Derived from related_action,
     # so no decryption.
     category          = StringCol(default=None)
+    # The ids of the PGP keys the message was encrypted to, space separated,
+    # read from the ciphertext before the plaintext replaces it.
+    encryption_keys   = StringCol(default=None)
+    # Decryption of stored PGP messages: '0' not tried (or not encrypted),
+    # '1' decrypted (the plaintext replaced the ciphertext), '2' failed (the
+    # ciphertext stays, decryption_error says why), '3' failed but to be tried
+    # again (the private key changed since).
+    decrypted         = StringCol(default='0')
+    decryption_error  = StringCol(default=None)
     # Every category page is "the newest rows of THIS type for these
     # addresses", which is remote_uri + category + an ORDER BY time. Without
     # the index SQLite finds the address's rows and then sorts the whole
@@ -809,7 +818,7 @@ NOT_DELETED_SQL = "(deleted is null or deleted = 0)"
 
 
 class ChatHistory(object, metaclass=Singleton):
-    __version__ = 23
+    __version__ = 25
 
     def __init__(self):
         path = ApplicationData.get('history')
@@ -1140,6 +1149,38 @@ class ChatHistory(object, metaclass=Singleton):
             except Exception as e:
                 BlinkLogger().log_error("Error pruning file transfer notices: %s" % e)
 
+        if next_upgrade_version < 24:
+            # The key ids a PGP message was encrypted to, kept when the
+            # plaintext overwrites the ciphertext (message info: Encrypted to)
+            query = "alter table chat_messages add column 'encryption_keys' TEXT"
+            try:
+                self.db.queryAll(query)
+                BlinkLogger().log_info("Added column 'encryption_keys' to table %s" % ChatMessage.sqlmeta.table)
+            except dberrors.OperationalError as e:
+                if not str(e).startswith('duplicate column name'):
+                    BlinkLogger().log_error("Error adding column encryption_keys to table %s: %s"
+                                            % (ChatMessage.sqlmeta.table, e))
+
+        if next_upgrade_version < 25:
+            # Decryption state of stored PGP messages: a message that cannot be
+            # opened is marked so, instead of being tried again on every page
+            # load and preview build, and tried again when the key changes.
+            for column, declaration in (('decrypted', "TEXT DEFAULT '0'"),
+                                        ('decryption_error', 'TEXT')):
+                query = "alter table chat_messages add column '%s' %s" % (column, declaration)
+                try:
+                    self.db.queryAll(query)
+                    BlinkLogger().log_info("Added column '%s' to table %s" % (column, ChatMessage.sqlmeta.table))
+                except dberrors.OperationalError as e:
+                    if not str(e).startswith('duplicate column name'):
+                        BlinkLogger().log_error("Error adding column %s to table %s: %s"
+                                                % (column, ChatMessage.sqlmeta.table, e))
+            query = "CREATE INDEX IF NOT EXISTS decrypted_index ON chat_messages (decrypted)"
+            try:
+                self.db.queryAll(query)
+            except Exception as e:
+                BlinkLogger().log_error("Error adding index decrypted_index: %s" % e)
+
         TableVersions().set_table_version(ChatMessage.sqlmeta.table, self.__version__)
 
     def _backfill_categories(self):
@@ -1324,8 +1365,19 @@ class ChatHistory(object, metaclass=Singleton):
             results = ChatMessage.selectBy(msgid=msgid)
             message = results.getOne()
             if message:
+                # the key ids are read from the ciphertext, which is about to go
+                if not message.encryption_keys and '-----BEGIN PGP MESSAGE-----' in (message.body or ''):
+                    try:
+                        from MessageHost import pgp_message_key_ids
+                        key_ids = pgp_message_key_ids(message.body)
+                        if key_ids:
+                            message.encryption_keys = ' '.join(key_ids)
+                    except Exception:
+                        pass
                 message.body = body
                 message.encryption = encryption
+                message.decrypted = '1'
+                message.decryption_error = None
                 # An armoured file-transfer envelope cannot be classified at
                 # insert, so the row was stored with no category and is
                 # invisible to the Images filter. This is the first moment
@@ -1346,6 +1398,81 @@ class ChatHistory(object, metaclass=Singleton):
         except Exception as e:
             pass
             #BlinkLogger().log_error("Error updating decrypted message %s: %s" % (msgid, e))
+
+    @run_in_db_thread
+    def store_undecryptable_message(self, msgid, error, encryption_keys=None):
+        """A stored PGP message no key we hold opens: the ciphertext stays,
+        marked so it is not tried again until the private key changes."""
+        try:
+            message = ChatMessage.selectBy(msgid=msgid).getOne()
+        except Exception:
+            return False
+        if message.decrypted == '1':
+            return False
+        message.decrypted = '2'
+        message.decryption_error = str(error or '')[:500] or None
+        if not message.encryption_keys:
+            if not encryption_keys and '-----BEGIN PGP MESSAGE-----' in (message.body or ''):
+                try:
+                    from MessageHost import pgp_message_key_ids
+                    encryption_keys = pgp_message_key_ids(message.body)
+                except Exception:
+                    encryption_keys = None
+            if encryption_keys:
+                message.encryption_keys = encryption_keys if isinstance(encryption_keys, str) else ' '.join(encryption_keys)
+        return True
+
+    @run_in_db_thread
+    def reset_decryption(self, local_uri=None):
+        """The private key changed: the messages that failed are tried again.
+        local_uri limits it to one account. Returns how many."""
+        table = ChatMessage.sqlmeta.table
+        where = "decrypted = '2'"
+        if local_uri:
+            where += " and local_uri = %s" % ChatMessage.sqlrepr(str(local_uri))
+        try:
+            count = self.db.queryAll("select count(*) from %s where %s" % (table, where))[0][0]
+            if count:
+                self.db.queryAll("update %s set decrypted = '3' where %s" % (table, where))
+            return count
+        except Exception as e:
+            BlinkLogger().log_error('Error resetting the decryption state: %s' % e)
+            return 0
+
+    @run_in_db_thread
+    def undecrypted_message_ids(self, local_uris, limit=None):
+        """Ids of stored messages still armoured and to be tried ('0' or '3'),
+        of the given accounts, newest first."""
+        table = ChatMessage.sqlmeta.table
+        where = ("(decrypted is null or decrypted in ('0', '3')) "
+                 "and body like '-----BEGIN PGP MESSAGE-----%' "
+                 "and (deleted is null or deleted = 0)")
+        where += self._uri_in_sql('local_uri', local_uris)
+        query = "select msgid from %s where %s order by time desc, id desc" % (table, where)
+        if limit:
+            query += " limit %d" % int(limit)
+        try:
+            return [str(row[0]) for row in self.db.queryAll(query) if row[0]]
+        except Exception as e:
+            BlinkLogger().log_error('Error reading the messages to decrypt: %s' % e)
+            return []
+
+    @run_in_db_thread
+    def messages_by_ids(self, msgids):
+        """[{msgid, local_uri, remote_uri, body, content_type, decrypted}] for the given ids."""
+        msgids = [str(msgid) for msgid in msgids if msgid]
+        if not msgids:
+            return []
+        table = ChatMessage.sqlmeta.table
+        query = ("select msgid, local_uri, remote_uri, body, content_type, decrypted from %s where msgid in (%s)"
+                 % (table, ', '.join(ChatMessage.sqlrepr(msgid) for msgid in msgids)))
+        try:
+            rows = self.db.queryAll(query)
+        except Exception as e:
+            BlinkLogger().log_error('Error reading messages by id: %s' % e)
+            return []
+        return [{'msgid': str(r[0]), 'local_uri': str(r[1] or ''), 'remote_uri': str(r[2] or ''),
+                 'body': r[3], 'content_type': str(r[4] or ''), 'decrypted': str(r[5] or '0')} for r in rows]
 
     # Message ids whose row could not be found, so the miss is reported once
     # instead of once per live-location tick.
@@ -2714,7 +2841,7 @@ class ChatHistory(object, metaclass=Singleton):
                  + " and category = 'text'"
                  + self._uri_in_sql('local_uri', local_uri)
                  + self._uri_in_sql('remote_uri', remote_uri))
-        columns = 'remote_uri, local_uri, msgid, time, content_type, body'
+        columns = 'remote_uri, local_uri, msgid, time, content_type, body, decrypted'
         # category = 'text' is stamped at insert (and backfilled), so this
         # rides category_time_idx rather than parsing every row's type.
         query = ('select %(columns)s from (select %(columns)s, row_number() over '
@@ -2728,7 +2855,7 @@ class ChatHistory(object, metaclass=Singleton):
         except Exception as e:
             # An SQLite without window functions (< 3.25): newest row only.
             BlinkLogger().log_warning('Preview query fell back to the newest row only: %s' % e)
-            query = ('select m.remote_uri, m.local_uri, m.msgid, m.time, m.content_type, m.body '
+            query = ('select m.remote_uri, m.local_uri, m.msgid, m.time, m.content_type, m.body, m.decrypted '
                      'from %(table)s m join (select remote_uri, max(time) as newest '
                      'from %(table)s%(where)s group by remote_uri) latest '
                      'on m.remote_uri = latest.remote_uri and m.time = latest.newest '
@@ -2743,14 +2870,15 @@ class ChatHistory(object, metaclass=Singleton):
         result = []
         for row in rows:
             try:
-                remote, local, msgid, stamp, content_type, body = row
+                remote, local, msgid, stamp, content_type, body, decrypted = row
             except Exception:
                 continue
             if not remote or not stamp:
                 continue
             result.append({'remote_uri': str(remote), 'local_uri': str(local or ''),
                            'msgid': str(msgid or ''), 'time': str(stamp),
-                           'content_type': str(content_type or ''), 'body': body})
+                           'content_type': str(content_type or ''), 'body': body,
+                           'decrypted': str(decrypted or '0')})
 
         # Reply links, so a one-tap reaction (a pure-emoji reply) can be told
         # from a typed message. Only the reply ids are kept.

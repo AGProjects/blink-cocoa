@@ -3368,6 +3368,17 @@ class NativeChatViewController(ChatViewController):
         encryption = (row.get('encryption') or live.get('encryption')
                       or (getattr(bubble, 'encryption', None) if bubble is not None else None))
         message.append((NSLocalizedString("Encryption", "Message info"), text(encryption)))
+        # the PGP keys it was encrypted to: kept from the ciphertext when it was
+        # decrypted, or read from the body while it is still armoured
+        try:
+            from MessageHost import pgp_message_key_ids, pgp_describe_key_ids
+            key_ids = row.get('encryption_keys')
+            if not key_ids and '-----BEGIN PGP MESSAGE-----' in str(row.get('body') or ''):
+                key_ids = pgp_message_key_ids(row.get('body'))
+            if key_ids:
+                message.append((NSLocalizedString("Encrypted to", "Message info"), pgp_describe_key_ids(key_ids)))
+        except Exception:
+            pass
         if row.get('private') not in (None, '', '0', 0, 'False'):
             message.append((NSLocalizedString("Private", "Message info"), text(row.get('private'))))
         if bubble is not None and getattr(bubble, 'caption', None):

@@ -2094,6 +2094,7 @@ class SMSWindowManagerClass(NSObject):
             return
         BlinkLogger().log_info('PGP key generated for %s in %.1fs%s' % (account.id, seconds, ' (silently)' if silent else ''))
         self.private_keys.pop(account.id, None)     # drop the cached miss
+        self.resetDecryption(account)               # same path, no settings change: said here
         # the new key goes into the addressbook escrow, so another device adopts it
         try:
             self.escrow_repaired.discard(account.id)
@@ -2228,6 +2229,7 @@ class SMSWindowManagerClass(NSObject):
         if restored:
             self.key_restore_done.add(account.id)
             self.private_keys.pop(account.id, None)   # drop the cached miss
+            self.resetDecryption(account)
             nc_title = NSLocalizedString("Private key", "System notification title")
             nc_body = NSLocalizedString("The private key of this account was restored from the server", "System notification body")
             NSApp.delegate().gui_notify(nc_title, nc_body, str(account.id))
@@ -2237,6 +2239,10 @@ class SMSWindowManagerClass(NSObject):
 
     @objc.python_method
     def _NH_CFGSettingsObjectDidChange(self, account, data):
+        if isinstance(account, (Account, BonjourAccount)) and 'sms.private_key' in data.modified:
+            # another key: what the old one could not open may open now
+            self.private_keys.pop(account.id, None)
+            self.resetDecryption(account)
         if isinstance(account, Account):
             if 'sms.history_token' in data.modified:
                 if account.sms.history_token:
@@ -4198,6 +4204,20 @@ class SMSWindowManagerClass(NSObject):
         return deleted_total
 
     @objc.python_method
+    def resetDecryption(self, account):
+        def done(count):
+            if count:
+                BlinkLogger().log_info('[pgp] %s: the private key changed, %d message(s) that could not be '
+                                       'decrypted will be tried again' % (account.id, count))
+                self.notification_center.post_notification('BlinkDecryptionWasReset', sender=account,
+                                                           data=NotificationData(count=count))
+        try:
+            deferred = self.history.reset_decryption(str(account.id))
+            deferred.addCallback(done)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot reset the decryption state of %s: %s' % (account.id, e))
+
+    @objc.python_method
     def _decrypt_pgp_for_account(self, account_id, body):
         """Decrypt a PGP-armoured body using the account's private key.
 
@@ -4691,8 +4711,13 @@ class SMSWindowManagerClass(NSObject):
                 except UnicodeDecodeError:
                     continue
             if is_pgp_armoured(body):
+                if row.get('decrypted') == '2':
+                    continue        # failed before, tried again when the key changes
                 plain = self._decrypt_pgp_for_account(row['local_uri'], body)
                 if plain is None:
+                    if self.private_keys.get(row['local_uri']):
+                        # a key we hold that does not open it: remembered
+                        self.history.store_undecryptable_message(row['msgid'], 'no private key on this device opens it')
                     continue
                 body = plain
                 decrypted += 1
