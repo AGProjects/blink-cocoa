@@ -6012,6 +6012,16 @@ class ContactListModel(CustomListModel):
         except Exception as e:
             BlinkLogger().log_info('Messages group merge failed: %s' % e)
 
+        # The addressbook of this account reflects the server now: what waits
+        # for that (the server call history, the test contacts) can go ahead.
+        if account is not None:
+            import HistoryManager
+            first = account.id not in HistoryManager.addressbook_settled
+            HistoryManager.addressbook_settled.add(account.id)
+            if first:
+                BlinkLogger().log_info('[ab] [lifecycle] Addressbook of %s settled' % account.id)
+            self.nc.post_notification('BlinkAddressbookDidSettle', sender=account)
+
     @objc.python_method
     def _NH_AudioCallLoggedToHistory(self, notification):
         if not NSApp.delegate().history_enabled:

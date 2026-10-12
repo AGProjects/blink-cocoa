@@ -44,7 +44,7 @@ from twisted.python.threadpool import ThreadPool
 from BlinkLogger import BlinkLogger
 import AddressbookOrigin
 from resources import ApplicationData
-from util import allocate_autorelease_pool, format_identity_to_string, sipuri_components_from_string, run_in_gui_thread
+from util import allocate_autorelease_pool, format_identity_to_string, sipuri_components_from_string, run_in_gui_thread, call_later
 # Calls group preview (end of this file)
 from util import canonical_pstn_uri, pstn_e164, is_conference_uri, sip_prefix_pattern, same_phone_number
 
@@ -3633,6 +3633,23 @@ class FileTransferHistory(object, metaclass=Singleton):
             return True
 
 
+# Accounts whose XCAP addressbook has been fetched from the server and the
+# post-reload pass has run over it (ContactListModel posts
+# BlinkAddressbookDidSettle). Until then nothing may create contacts from
+# other sources for an XCAP account: they would duplicate what the
+# addressbook is about to bring.
+addressbook_settled = set()
+
+
+def addressbook_ready(account):
+    """Whether the account's addressbook can be trusted to reflect the server:
+    settled, or the account has no XCAP and nothing to wait for."""
+    xcap = getattr(account, 'xcap', None)
+    if xcap is None or not getattr(xcap, 'enabled', False):
+        return True
+    return account.id in addressbook_settled
+
+
 @implementer(IObserver)
 class SessionHistoryReplicator(object):
 
@@ -3650,19 +3667,65 @@ class SessionHistoryReplicator(object):
             NotificationCenter().add_observer(self, name='SIPAccountDidActivate')
             NotificationCenter().add_observer(self, name='SIPAccountDidDeactivate')
             NotificationCenter().add_observer(self, name='CFGSettingsObjectDidChange')
+            NotificationCenter().add_observer(self, name='BlinkAddressbookDidSettle')
 
     @run_in_gui_thread
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)
 
+    # Accounts whose server call history waits for their addressbook to settle
+    waiting_for_addressbook = set()
+    # Seconds after the settle: the post-reload pass has just filed and merged
+    # contacts, and the call history files more
+    AFTER_SETTLE_DELAY = 5
+    # An XCAP account whose addressbook never arrives (no XCAP on the server,
+    # say) gets its call history anyway after this long
+    ADDRESSBOOK_WAIT_LIMIT = 180
+
     def _NH_SIPAccountDidActivate(self, account, data):
         if account is not BonjourAccount():
-            self.get_last_calls(account)
+            self.start_last_calls(account)
 
     def _NH_SIPAccountDidDeactivate(self, account, data):
         if account is not BonjourAccount():
+            self.waiting_for_addressbook.discard(account.id)
             self.close_last_call_connection(account)
+
+    def _NH_BlinkAddressbookDidSettle(self, account, data):
+        if account.id not in self.waiting_for_addressbook:
+            return
+        self.waiting_for_addressbook.discard(account.id)
+        BlinkLogger().log_info('%s addressbook of %s settled, fetching its server call history in %ds'
+                               % (_PREFIX, account.id, self.AFTER_SETTLE_DELAY))
+        call_later(self.AFTER_SETTLE_DELAY, self._start_if_enabled, account)
+
+    def _start_if_enabled(self, account):
+        if account.enabled and account.id not in self.last_calls_connections:
+            self.get_last_calls(account)
+
+    def _addressbook_wait_expired(self, account):
+        if account.id not in self.waiting_for_addressbook:
+            return
+        self.waiting_for_addressbook.discard(account.id)
+        BlinkLogger().log_info('%s addressbook of %s not settled after %ds, fetching its server call history anyway'
+                               % (_PREFIX, account.id, self.ADDRESSBOOK_WAIT_LIMIT))
+        self._start_if_enabled(account)
+
+    def start_last_calls(self, account):
+        """Fetch the server call history now, or -- for an XCAP account whose
+        addressbook has not been fetched and settled yet -- once it has: the calls
+        file their parties into the addressbook, and before it arrives that
+        creates contacts and Calls/Tel groups the addressbook already has."""
+        if addressbook_ready(account):
+            self.get_last_calls(account)
+            return
+        if account.id in self.waiting_for_addressbook:
+            return
+        self.waiting_for_addressbook.add(account.id)
+        BlinkLogger().log_info('%s server call history of %s waits for its addressbook to be fetched'
+                               % (_PREFIX, account.id))
+        call_later(self.ADDRESSBOOK_WAIT_LIMIT, self._addressbook_wait_expired, account)
 
     def _NH_CFGSettingsObjectDidChange(self, sender, data):
         account = sender
@@ -3672,7 +3735,7 @@ class SessionHistoryReplicator(object):
                     self.close_last_call_connection(account)
                 else:
                     self.close_last_call_connection(account)
-                    self.get_last_calls(account)
+                    self.start_last_calls(account)
 
     @run_in_gui_thread
     def get_last_calls(self, account):
