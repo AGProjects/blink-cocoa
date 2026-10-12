@@ -1,10 +1,12 @@
 # Copyright (C) 2026 AG Projects. See LICENSE for details.
 #
 
-"""The Data import panel: pull history from a Sylk Mobile export.
+"""The Import section of the Data manager: pull history from a Sylk Mobile export.
 
-Opened by SMSWindowManager when a fresh application/sylk-data-export
-announcement arrives from another device of the account (see DataImport).
+Started by SMSWindowManager when a fresh application/sylk-data-export
+announcement arrives from another device of the account (see DataImport):
+the Data manager comes forward on its Import section, which hosts this
+session until it is disconnected or a new announcement replaces it.
 The controls are the ones the phone's own Import modal has -- kind,
 category, a contact train, Year/Month/Day -- and, like it, the panel only
 ever shows and imports what is NOT already here.
@@ -30,21 +32,23 @@ import uuid
 
 import objc
 
-from AppKit import (NSApp,
-                    NSBackingStoreBuffered,
-                    NSButton,
+from AppKit import (NSButton,
                     NSCenterTextAlignment,
-                    NSClosableWindowMask,
                     NSColor,
                     NSFont,
                     NSLineBreakByTruncatingMiddle,
-                    NSPanel,
                     NSPopUpButton,
                     NSProgressIndicator,
                     NSRoundedBezelStyle,
                     NSSegmentedControl,
                     NSTextField,
-                    NSTitledWindowMask)
+                    NSView,
+                    NSViewHeightSizable,
+                    NSViewMaxXMargin,
+                    NSViewMaxYMargin,
+                    NSViewMinXMargin,
+                    NSViewMinYMargin,
+                    NSViewWidthSizable)
 from Foundation import NSLocalizedString, NSMakeRect, NSObject, NSTimer
 
 from sipsimple.threading import run_in_thread
@@ -61,8 +65,6 @@ from util import run_in_gui_thread
 
 MONTHS = ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec')
 
-WIDTH = 540.0
-HEIGHT = 380.0
 PAD = 20.0
 LABEL_W = 80.0
 ROW_H = 26.0
@@ -137,16 +139,19 @@ def _write_file(path, payload):
 
 
 class DataImportController(NSObject):
-    """One import session with one phone, for one account."""
+    """One import session with one phone, for one account, shown in the Import section of the Data
+    manager (`host`, which shows its placeholder again when the session ends)."""
 
-    window = None
+    view = None
     manager = None
+    host = None
 
     # -- life cycle -----------------------------------------------------------
 
     @objc.python_method
-    def setup(self, account, announcement, manager):
+    def setup(self, account, announcement, manager, host, parent):
         self.account = account
+        self.host = host
         self.account_id = str(account.id)
         self.manager = manager
         self.announcement = announcement
@@ -181,7 +186,7 @@ class DataImportController(NSObject):
         self._years = []
         self._months = []
         self._days = []
-        self._build()
+        self._build(parent)
         self.refreshControls()
         return self
 
@@ -192,10 +197,7 @@ class DataImportController(NSObject):
                 and self.announcement.get('key') == announcement.get('key'))
 
     @objc.python_method
-    def show(self):
-        self.window.center()
-        self.window.makeKeyAndOrderFront_(None)
-        NSApp.activateIgnoringOtherApps_(True)
+    def start(self):
         self._connect()
 
     @objc.python_method
@@ -211,14 +213,12 @@ class DataImportController(NSObject):
         if self.heartbeat is not None:
             self.heartbeat.invalidate()
             self.heartbeat = None
-        if self.window is not None:
-            self.window.setDelegate_(None)
-            self.window.orderOut_(None)
+        if self.view is not None:
+            self.view.removeFromSuperview()
         if self.manager is not None:
             self.manager.dataImportClosed(self)
-
-    def windowWillClose_(self, notification):
-        self.close()
+        if self.host is not None:
+            self.host.importClosed(self)
 
     # -- the panel ----------------------------------------------------------------
 
@@ -233,7 +233,8 @@ class DataImportController(NSObject):
         if color is not None:
             label.setTextColor_(color)
         label.setStringValue_(text)
-        self.window.contentView().addSubview_(label)
+        label.setAutoresizingMask_(NSViewMinYMargin)
+        self.view.addSubview_(label)
         return label
 
     @objc.python_method
@@ -241,7 +242,8 @@ class DataImportController(NSObject):
         popup = NSPopUpButton.alloc().initWithFrame_pullsDown_(frame, False)
         popup.setTarget_(self)
         popup.setAction_(action)
-        self.window.contentView().addSubview_(popup)
+        popup.setAutoresizingMask_(NSViewMinYMargin)
+        self.view.addSubview_(popup)
         return popup
 
     @objc.python_method
@@ -250,21 +252,23 @@ class DataImportController(NSObject):
         return PAD + LABEL_W
 
     @objc.python_method
-    def _build(self):
-        self.window = NSPanel.alloc().initWithContentRect_styleMask_backing_defer_(
-            NSMakeRect(0, 0, WIDTH, HEIGHT), NSTitledWindowMask | NSClosableWindowMask,
-            NSBackingStoreBuffered, False)
-        self.window.setTitle_(NSLocalizedString("Data import", "Window title"))
-        self.window.setReleasedWhenClosed_(False)
-        self.window.setHidesOnDeactivate_(False)
-        self.window.setDelegate_(self)
-        field_w = WIDTH - 2 * PAD - LABEL_W
+    def _build(self, parent):
+        """The controls, in a view filling `parent` (the Import section of the Data manager)."""
+        frame = parent.bounds()
+        self.view = NSView.alloc().initWithFrame_(frame)
+        self.view.setAutoresizingMask_(NSViewWidthSizable | NSViewHeightSizable)
+        parent.addSubview_(self.view)
+        width, height = frame.size.width, frame.size.height
+        top = NSViewMinYMargin
+        wide = NSViewWidthSizable | NSViewMinYMargin
+        field_w = width - 2 * PAD - LABEL_W
 
-        y = HEIGHT - PAD - 17
-        self.sourceLabel = self._label(NSMakeRect(PAD, y, WIDTH - 2 * PAD, 17),
+        y = height - PAD - 17
+        self.sourceLabel = self._label(NSMakeRect(PAD, y, width - 2 * PAD, 17),
                                        NSLocalizedString("Connecting to %s…", "Label") % self.client.server,
                                        color=NSColor.secondaryLabelColor())
         self.sourceLabel.cell().setLineBreakMode_(NSLineBreakByTruncatingMiddle)
+        self.sourceLabel.setAutoresizingMask_(wide)
 
         y -= ROW_H + ROW_GAP + 4
         x = self._row(y, NSLocalizedString("Import", "Label"))
@@ -277,7 +281,8 @@ class DataImportController(NSObject):
         self.kindControl.setSelectedSegment_(0)
         self.kindControl.setTarget_(self)
         self.kindControl.setAction_('kindChanged:')
-        self.window.contentView().addSubview_(self.kindControl)
+        self.kindControl.setAutoresizingMask_(top)
+        self.view.addSubview_(self.kindControl)
 
         y -= ROW_H + ROW_GAP
         x = self._row(y, NSLocalizedString("Category", "Label"))
@@ -286,6 +291,7 @@ class DataImportController(NSObject):
         y -= ROW_H + ROW_GAP
         x = self._row(y, NSLocalizedString("Contact", "Label"))
         self.contactPopup = self._popup(NSMakeRect(x, y, field_w, ROW_H), 'contactChanged:')
+        self.contactPopup.setAutoresizingMask_(wide)
 
         y -= ROW_H + ROW_GAP
         x = self._row(y, NSLocalizedString("Period", "Label"))
@@ -293,41 +299,47 @@ class DataImportController(NSObject):
         self.yearPopup = self._popup(NSMakeRect(x, y, third, ROW_H), 'yearChanged:')
         self.monthPopup = self._popup(NSMakeRect(x + third + 8, y, third, ROW_H), 'monthChanged:')
         self.dayPopup = self._popup(NSMakeRect(x + 2 * (third + 8), y, third, ROW_H), 'dayChanged:')
+        self.yearPopup.setAutoresizingMask_(top | NSViewWidthSizable | NSViewMaxXMargin)
+        self.monthPopup.setAutoresizingMask_(top | NSViewMinXMargin | NSViewWidthSizable | NSViewMaxXMargin)
+        self.dayPopup.setAutoresizingMask_(top | NSViewMinXMargin | NSViewWidthSizable)
 
         y -= 44 + ROW_GAP + 6
-        self.headline = self._label(NSMakeRect(PAD, y, WIDTH - 2 * PAD, 44), '', size=13, bold=True)
+        self.headline = self._label(NSMakeRect(PAD, y, width - 2 * PAD, 44), '', size=13, bold=True)
         self.headline.setAlignment_(NSCenterTextAlignment)
+        self.headline.setAutoresizingMask_(wide)
 
         y -= 20 + ROW_GAP
-        self.progressBar = NSProgressIndicator.alloc().initWithFrame_(NSMakeRect(PAD, y, WIDTH - 2 * PAD, 20))
+        self.progressBar = NSProgressIndicator.alloc().initWithFrame_(NSMakeRect(PAD, y, width - 2 * PAD, 20))
         self.progressBar.setIndeterminate_(False)
         self.progressBar.setMinValue_(0.0)
         self.progressBar.setMaxValue_(1.0)
         self.progressBar.setHidden_(True)
-        self.window.contentView().addSubview_(self.progressBar)
+        self.progressBar.setAutoresizingMask_(wide)
+        self.view.addSubview_(self.progressBar)
 
         y -= 34 + 4
-        self.statusLabel = self._label(NSMakeRect(PAD, y, WIDTH - 2 * PAD, 34), '', size=11,
+        self.statusLabel = self._label(NSMakeRect(PAD, y, width - 2 * PAD, 34), '', size=11,
                                        color=NSColor.systemRedColor())
         self.statusLabel.setAlignment_(NSCenterTextAlignment)
+        self.statusLabel.setAutoresizingMask_(wide)
 
         self.closeButton = NSButton.alloc().initWithFrame_(
-            NSMakeRect(WIDTH - PAD - 2 * BUTTON_W - 8, PAD - 6, BUTTON_W, BUTTON_H))
+            NSMakeRect(width - PAD - 2 * BUTTON_W - 8, PAD - 6, BUTTON_W, BUTTON_H))
         self.closeButton.setBezelStyle_(NSRoundedBezelStyle)
-        self.closeButton.setTitle_(NSLocalizedString("Close", "Button title"))
+        self.closeButton.setTitle_(NSLocalizedString("Disconnect", "Button title"))
         self.closeButton.setTarget_(self)
         self.closeButton.setAction_('closeOrCancel:')
-        self.closeButton.setKeyEquivalent_(chr(27))
-        self.window.contentView().addSubview_(self.closeButton)
+        self.closeButton.setAutoresizingMask_(NSViewMinXMargin | NSViewMaxYMargin)
+        self.view.addSubview_(self.closeButton)
 
         self.importButton = NSButton.alloc().initWithFrame_(
-            NSMakeRect(WIDTH - PAD - BUTTON_W, PAD - 6, BUTTON_W, BUTTON_H))
+            NSMakeRect(width - PAD - BUTTON_W, PAD - 6, BUTTON_W, BUTTON_H))
         self.importButton.setBezelStyle_(NSRoundedBezelStyle)
         self.importButton.setTitle_(NSLocalizedString("Import", "Button title"))
         self.importButton.setTarget_(self)
         self.importButton.setAction_('startImport:')
-        self.importButton.setKeyEquivalent_('\r')
-        self.window.contentView().addSubview_(self.importButton)
+        self.importButton.setAutoresizingMask_(NSViewMinXMargin | NSViewMaxYMargin)
+        self.view.addSubview_(self.importButton)
 
     # -- what the controls show -------------------------------------------------
 
@@ -482,7 +494,7 @@ class DataImportController(NSObject):
         self.importButton.setEnabled_(can_import)
         self.importButton.setHidden_(not live)
         self.closeButton.setTitle_(NSLocalizedString("Cancel", "Button title") if self.busy
-                                   else NSLocalizedString("Close", "Button title"))
+                                   else NSLocalizedString("Disconnect", "Button title"))
 
     # -- actions -----------------------------------------------------------------
 

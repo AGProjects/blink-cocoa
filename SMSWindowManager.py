@@ -75,6 +75,10 @@ try:
     from DataImportPanel import DataImportController
 except ImportError:
     DataImport = DataImportController = None
+try:
+    import DataExport
+except ImportError:
+    DataExport = None
 from BlinkLogger import BlinkLogger
 from KeyEscrow import (escrow_is_missing, install_keypair, log_self_contact,
                        restore_from_own_contact, write_self_keys, key_status_lines)
@@ -1524,6 +1528,8 @@ class SMSWindowManagerClass(NSObject):
         if announcement is None:
             BlinkLogger().log_info('[import] Unreadable data export announcement for %s' % account.id)
             return
+        if DataExport is not None and announcement['key'] in DataExport.ACTIVE_TOKENS:
+            return      # our own export, relayed back to us
         if not DataImport.is_fresh(announcement['timestamp']):
             BlinkLogger().log_info('[import] Ignoring a stale data export announcement from %s'
                                    % announcement['server'])
@@ -1534,23 +1540,36 @@ class SMSWindowManagerClass(NSObject):
         self._openDataImport(account, announcement)
 
     @objc.python_method
+    @run_in_green_thread
+    def sendDataExportAnnouncement(self, account, payload):
+        """Tell the other devices of the account that this one is exporting (Export to device): the
+        payload PGP-encrypted to the account's own public key, as application/sylk-data-export to the
+        account itself. Not kept in the journal: a replay would be stale by the time anyone read it."""
+        key_file = '%s/%s.pubkey' % (self.keys_path, account.id)
+        try:
+            public_key, _ = pgpy.PGPKey.from_file(key_file)
+            content = str(public_key.encrypt(pgpy.PGPMessage.new(payload)))
+        except Exception as e:
+            BlinkLogger().log_error('[export] Cannot encrypt the export announcement to %s: %s' % (key_file, e))
+            return
+        BlinkLogger().log_info('[export] Announcing the export to the other devices of %s' % account.id)
+        try:
+            self.sendMessage(account, content, DATA_EXPORT_CONTENT_TYPE,
+                             extra_headers=[Header(AddressbookNotify.SKIP_JOURNAL_HEADER, 'yes')])
+        except Exception as e:
+            BlinkLogger().log_error('[export] Cannot send the export announcement for %s: %s' % (account.id, e))
+
+    @objc.python_method
     @run_in_gui_thread
     def _openDataImport(self, account, announcement):
         if DataImportController is None:
-            BlinkLogger().log_info('[import] This build has no Data import panel')
+            BlinkLogger().log_info('[import] This build has no Data import')
             return
-        current = self._dataImport
-        if current is not None:
-            if current.matches(account, announcement):
-                current.window.makeKeyAndOrderFront_(None)
-                return
-            if current.isBusy():
-                BlinkLogger().log_info('[import] An import is running; not switching to %s'
-                                       % announcement['server'])
-                return
-            current.close()
-        self._dataImport = DataImportController.alloc().init().setup(account, announcement, self)
-        self._dataImport.show()
+        # the Data manager hosts the session in its Import section and comes forward on it
+        from DataManagerWindow import DataManagerController
+        controller = DataManagerController.sharedController().openImport(account, announcement, self)
+        if controller is not None:
+            self._dataImport = controller
 
     @objc.python_method
     def dataImportClosed(self, controller):

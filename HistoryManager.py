@@ -3417,6 +3417,25 @@ class ChatHistory(object, metaclass=Singleton):
             BlinkLogger().log_error('[data] Reading the file transfers of %s for the Data manager failed: %s' % (account_id, e))
             return []
 
+    @run_in_db_thread
+    def data_export_rows(self, account_id):
+        """What Export to device offers of an account: its live text, location and file transfer rows,
+        as tuples (msgid, local_uri, remote_uri, unix time, local day, direction, content_type, category,
+        related_msg_id, related_action, status, encryption, metadata, body), oldest first."""
+        table = ChatMessage.sqlmeta.table
+        types = ', '.join(ChatMessage.sqlrepr(t) for t in FILE_TRANSFER_CONTENT_TYPES)
+        query = ("select msgid, local_uri, remote_uri, cast(strftime('%%s', time) as integer), date(time, 'localtime'), direction,"
+                 " content_type, category, related_msg_id, related_action, status, encryption, metadata, body from %s"
+                 " where lower(local_uri) = %s and %s and msgid is not null and msgid != ''"
+                 " and (category in ('text', 'location') or content_type in (%s))"
+                 " order by time"
+                 % (table, ChatMessage.sqlrepr(str(account_id).lower()), NOT_DELETED_SQL, types))
+        try:
+            return list(self.db.queryAll(query))
+        except Exception as e:
+            BlinkLogger().log_error('[export] Reading the messages of %s for the export failed: %s' % (account_id, e))
+            return []
+
     DATA_MESSAGE_COLUMNS = ('id', 'msgid', 'local_uri', 'remote_uri', 'time', 'direction', 'content_type', 'category', 'related_action',
                             'related_msg_id', 'status', 'encryption', 'read', 'deleted', 'journal_id', 'uuid', 'sip_callid', 'media_type',
                             'cpim_from', 'cpim_to', 'cpim_timestamp', 'private', 'expire_time', 'metadata', 'body')

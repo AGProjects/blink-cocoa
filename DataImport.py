@@ -172,6 +172,32 @@ def secretbox_open(key_b64, data):
     return stream[32:]
 
 
+
+def secretbox_seal(key_b64, plaintext, nonce=None):
+    """plaintext -> nonce(24) || box, as the phone's ExportCrypto.encrypt makes it (for Blink's export)."""
+    import os as _os
+    key = base64.b64decode(key_b64)
+    if len(key) != 32:
+        raise DecryptionError('bad key length')
+    nonce = nonce or _os.urandom(24)
+    plaintext = bytes(plaintext)
+    try:
+        import nacl.secret
+    except ImportError:
+        pass
+    else:
+        return nonce + bytes(nacl.secret.SecretBox(key).encrypt(plaintext, nonce).ciphertext)
+    from Crypto.Cipher import Salsa20
+    subkey = _hsalsa20(key, nonce[:16])
+    stream = Salsa20.new(key=subkey, nonce=nonce[16:]).encrypt(bytes(32) + plaintext)
+    ciphertext = stream[32:]
+    return nonce + _poly1305_tag(stream[:32], ciphertext) + ciphertext
+
+
+def new_secretbox_key():
+    import os as _os
+    return base64.b64encode(_os.urandom(32)).decode('ascii')
+
 # -- talking to the phone -----------------------------------------------------
 
 class ExportServerError(Exception):

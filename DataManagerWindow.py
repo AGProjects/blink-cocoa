@@ -3,10 +3,14 @@
 
 """The Data manager: the message history in bulk.
 
-Two sections, switched at the top: Messages (below) and File Transfers
+Four sections, switched at the top: Messages (below); File Transfers
 (FileTransfersPanel): the transfers whose file is on the server and not on
 this computer, drilled into the same way, and downloaded in bulk through
-FileTransferCache, as a click on each bubble would.
+FileTransferCache, as a click on each bubble would; and Import
+(DataImportPanel.DataImportController): a Sylk Mobile export, hosted here
+when the phone announces it; and Export to device
+(DataExportPanel.DataExportController): this computer serving its history to
+another device of the account, which imports it as from a phone.
 
 Drill into an account's stored rows by type (category, location sharing, or
 content type), action (location_start/update/stop, the action of a metadata
@@ -85,6 +89,8 @@ from DataManage import (CATEGORY_LABELS, REMOVE_BATCH, JournalRemoveError, Journ
                         select, type_label, with_related,
                         DOWNLOADABLE, FILE_KINDS, build_file_rows, scan_transfer_storage, status_label)
 from BlinkLogger import BlinkLogger
+from DataExportPanel import DataExportController
+from DataImportPanel import DataImportController
 from FileTransferCache import FileTransferCache
 from ContactMangler import mangled_account_label, mangled_text, mangled_uri
 from HistoryManager import ChatHistory
@@ -245,12 +251,63 @@ class DataManagerController(NSObject):
             self.filesPanel.refresh(keep_status=True)
 
     def sectionChanged_(self, sender):
-        files = sender.selectedSegment() == 1
-        self.messagesView.setHidden_(files)
-        self.filesPanel.view.setHidden_(not files)
+        self._showSection(sender.selectedSegment())
+
+    @objc.python_method
+    def _showSection(self, index):
+        self.sectionControl.setSelectedSegment_(index)
+        self.messagesView.setHidden_(index != 0)
+        self.filesPanel.view.setHidden_(index != 1)
+        self.importView.setHidden_(index != 2)
+        self.exportPanel.view.setHidden_(index != 3)
+        if index == 3 and self.exportPanel.server is None:
+            self.exportPanel.refreshAccounts()
         # the storage is listed when the section is looked at, not every time the window opens
-        if files and not self.filesPanel.busy and not self.filesPanel.loading:
+        if index == 1 and not self.filesPanel.busy and not self.filesPanel.loading:
             self.filesPanel.refresh(keep_status=True)
+
+    def windowWillClose_(self, notification):
+        # an export is a server on the local network: it does not outlive the window that shows it
+        self.exportPanel.stop()
+
+    # -- Import -----------------------------------------------------------------------
+
+    @objc.python_method
+    def openImport(self, account, announcement, manager):
+        """A fresh export announcement: the session it starts, shown in the Import section, with the
+        window brought forward on it. The same export again only brings it forward; another one
+        replaces the session unless that one is importing. Returns the session in place."""
+        current = self.importSession
+        if current is not None:
+            if current.matches(account, announcement):
+                self._showImport()
+                return current
+            if current.isBusy():
+                BlinkLogger().log_info('[import] An import is running; not switching to %s' % announcement['server'])
+                return current
+            current.close()
+        session = DataImportController.alloc().init().setup(account, announcement, manager, self, self.importView)
+        self.importSession = session
+        self.importHint.setHidden_(True)
+        self._showImport()
+        session.start()
+        return session
+
+    @objc.python_method
+    def _showImport(self):
+        self._showSection(2)
+        self.window.makeKeyAndOrderFront_(None)
+        NSApp.activateIgnoringOtherApps_(True)
+        self.refresh()
+
+    @objc.python_method
+    def importClosed(self, session):
+        if self.importSession is session:
+            self.importSession = None
+            self.importHint.setHidden_(False)
+            # what was imported is in the history now
+            if self.window.isVisible():
+                self.refresh(keep_status=True)
 
     # -- the window ------------------------------------------------------------------
 
@@ -315,11 +372,12 @@ class DataManagerController(NSObject):
         window_content = self.window.contentView()
 
         # the sections, switched at the top
-        self.sectionControl = NSSegmentedControl.alloc().initWithFrame_(NSMakeRect((WIDTH - 300) / 2.0, HEIGHT + TAB_H - 34, 300, 24))
-        self.sectionControl.setSegmentCount_(2)
-        for index, title in enumerate((_t("Messages"), _t("File Transfers"))):
+        self.sectionControl = NSSegmentedControl.alloc().initWithFrame_(NSMakeRect((WIDTH - 640) / 2.0, HEIGHT + TAB_H - 34, 640, 24))
+        self.sectionControl.setSegmentCount_(4)
+        for index, (title, width) in enumerate(((_t("Local Messages"), 140), (_t("File transfers on server"), 190),
+                                                (_t("Import from device"), 150), (_t("Export to device"), 140))):
             self.sectionControl.setLabel_forSegment_(title, index)
-            self.sectionControl.setWidth_forSegment_(148, index)
+            self.sectionControl.setWidth_forSegment_(width, index)
         self.sectionControl.setSelectedSegment_(0)
         self.sectionControl.setTarget_(self)
         self.sectionControl.setAction_('sectionChanged:')
@@ -330,6 +388,30 @@ class DataManagerController(NSObject):
         window_content.addSubview_(self.messagesView)
         self.filesPanel = FileTransfersPanel.alloc().init().setupInView(window_content, NSMakeRect(0, 0, WIDTH, HEIGHT))
         self.filesPanel.view.setHidden_(True)
+        # Import: a session with a phone that announced its export, else how to start one
+        self.importView = NSView.alloc().initWithFrame_(NSMakeRect(0, 0, WIDTH, HEIGHT))
+        self.importView.setAutoresizingMask_(NSViewWidthSizable | NSViewHeightSizable)
+        self.importView.setHidden_(True)
+        window_content.addSubview_(self.importView)
+        self.importHint = NSTextField.alloc().initWithFrame_(NSMakeRect(PAD * 3, HEIGHT / 2.0 - 60, WIDTH - 6 * PAD, 120))
+        self.importHint.setBezeled_(False)
+        self.importHint.setDrawsBackground_(False)
+        self.importHint.setEditable_(False)
+        self.importHint.setSelectable_(False)
+        self.importHint.setAlignment_(NSCenterTextAlignment)
+        self.importHint.setTextColor_(NSColor.secondaryLabelColor())
+        self.importHint.setFont_(NSFont.systemFontOfSize_(13))
+        self.importHint.setStringValue_(_t("Import messages and files from Sylk Mobile.\n\n"
+                                           "Start the data export on the phone, on the same network as this computer "
+                                           "and with the same account. Blink connects to it by itself and shows "
+                                           "what it can import here."))
+        self.importHint.setAutoresizingMask_(NSViewWidthSizable | NSViewMinYMargin | NSViewMaxYMargin)
+        self.importView.addSubview_(self.importHint)
+        self.importSession = None
+        # Export: this computer serving its history to another device of the account
+        self.exportPanel = DataExportController.alloc().init().setupInView(window_content, NSMakeRect(0, 0, WIDTH, HEIGHT), _sms_manager())
+        self.exportPanel.view.setHidden_(True)
+        self.window.setDelegate_(self)
         content = self.messagesView
         secondary = NSColor.secondaryLabelColor()
         top = NSViewWidthSizable | NSViewMinYMargin
