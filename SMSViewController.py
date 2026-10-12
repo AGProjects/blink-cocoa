@@ -758,11 +758,11 @@ class SMSViewController(NSObject):
     @objc.python_method
     def load_private_key(self):
         if self.account.enabled and (not self.account.sms.private_key or not os.path.exists(self.account.sms.private_key)):
-            # Private keys are never generated automatically. Prompt the user
-            # with a modal; if they choose to generate one (and we are on the
-            # main thread) it is created synchronously and loaded below,
-            # otherwise it becomes available the next time a viewer opens.
-            SMSWindowManager.SMSWindowManager().showGeneratePrivateKeyPanel(self.account)
+            # Once the addressbook and the server have said whether a key
+            # exists, one is generated silently when nothing could carry a key
+            # it would orphan, otherwise the user is asked. It is made in a
+            # thread; this viewer's load_private_key is called again when done.
+            SMSWindowManager.SMSWindowManager().offerKeyGeneration(self.account)
 
         if not self.account.sms.private_key or not os.path.exists(self.account.sms.private_key):
             # No key available (user declined, account disabled, or deferred) —

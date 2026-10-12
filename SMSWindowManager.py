@@ -200,15 +200,25 @@ def generate_pgp_keypair(account):
     files for this account are overwritten. This is the single place PGP keys
     are created; it must only be called after the user has explicitly opted in
     via the generate-key modal — never automatically."""
-    keys_path = ApplicationData.get('keys')
-    makedirs(keys_path)
+    return install_pgp_keypair(account, new_pgp_keypair(account))
 
+
+def new_pgp_keypair(account):
+    """The slow part (seconds, for 4096-bit RSA): no file, no setting written,
+    so it can run in a thread of its own."""
     private_key = pgpy.PGPKey.new(PubKeyAlgorithm.RSAEncryptOrSign, 4096)
     uid = pgpy.PGPUID.new(account.display_name, comment='Blink client', email=account.id)
     private_key.add_uid(uid, usage={KeyFlags.Sign, KeyFlags.EncryptCommunications, KeyFlags.EncryptStorage},
                              hashes=[HashAlgorithm.SHA512],
                              ciphers=[SymmetricKeyAlgorithm.AES256],
                              compression=[CompressionAlgorithm.Uncompressed])
+    return private_key
+
+
+def install_pgp_keypair(account, private_key):
+    """Write a key made by new_pgp_keypair and point the account at it."""
+    keys_path = ApplicationData.get('keys')
+    makedirs(keys_path)
 
     private_key_path = "%s/%s.privkey" % (keys_path, account.id)
     with open(private_key_path, "wb+") as fd:
@@ -889,6 +899,14 @@ class SMSWindowManagerClass(NSObject):
     pgp_support_logged = {}         # account id: the support line last logged
     key_status_logged = {}          # account id: the status lines last logged
     OWN_KEY_LOOKUP_TIMEOUT = 40
+    # Key generation: offered (silently or with a prompt) only once the
+    # addressbook has been fetched -- it may carry the account's key -- and
+    # the server has answered whether it holds a public key for it.
+    key_question_waiters = {}       # account id: [callbacks] until both are known
+    key_addressbook_wait_over = set()   # accounts whose addressbook did not come in ADDRESSBOOK_KEY_WAIT
+    ADDRESSBOOK_KEY_WAIT = 15
+    key_generation_declined = set() # declined in this run: not asked again until restart
+    key_generation_running = set()
     # The enabled accounts as of the last time anything was reloaded for
     # them, or None before the first look. Enabling an account announces
     # itself twice -- the setting changes and the account then activates --
@@ -1934,11 +1952,161 @@ class SMSWindowManagerClass(NSObject):
         BlinkLogger().log_info('[pgp] %s: key lookup answered %s %s -> %s'
                                % (account.id, code or '-', reason or '', self.server_key_state[account.id]))
         self.logKeyStatus(account, 'server answered')
+        self.releaseKeyQuestion(account)
 
     @objc.python_method
     def _ownKeyLookupTimedOut(self, account):
         if self.server_key_state.get(account.id) == 'asked':
             self._ownKeyLookupAnswered(account, None, 'no answer in %d seconds' % self.OWN_KEY_LOOKUP_TIMEOUT)
+
+    # Key generation
+
+    @objc.python_method
+    def keyQuestionAnswered(self, account):
+        """Both known: the addressbook (fetched, or waited for long enough) and the
+        server's answer about our public key (present, absent or failed)."""
+        addressbook = self.addressbookAnswered(account) or account.id in self.key_addressbook_wait_over
+        server = self.server_key_state.get(account.id) in ('present', 'absent', 'failed')
+        return addressbook and server
+
+    @objc.python_method
+    @run_in_gui_thread
+    def whenKeyQuestionAnswered(self, account, callback):
+        if self.keyQuestionAnswered(account):
+            callback(account)
+            return
+        waiters = self.key_question_waiters.setdefault(account.id, [])
+        first = not waiters
+        waiters.append(callback)
+        if not first:
+            return
+        BlinkLogger().log_info('[pgp] %s: key generation waits for the addressbook and the server key lookup' % account.id)
+        if self.server_key_state.get(account.id, 'unknown') in ('unknown', 'failed'):
+            self.lookupOwnServerKey(account)
+        if not self.addressbookAnswered(account):
+            call_later(self.ADDRESSBOOK_KEY_WAIT, self._addressbookKeyWaitOver, account)
+
+    @objc.python_method
+    def _addressbookKeyWaitOver(self, account):
+        if self.addressbookAnswered(account):
+            return
+        BlinkLogger().log_info('[pgp] %s: the addressbook did not come in %ds, the key question goes on without it'
+                               % (account.id, self.ADDRESSBOOK_KEY_WAIT))
+        self.key_addressbook_wait_over.add(account.id)
+        self.releaseKeyQuestion(account)
+
+    @objc.python_method
+    @run_in_gui_thread
+    def releaseKeyQuestion(self, account):
+        if not self.keyQuestionAnswered(account):
+            return
+        for callback in self.key_question_waiters.pop(account.id, []):
+            try:
+                callback(account)
+            except Exception as e:
+                BlinkLogger().log_error('[pgp] %s: %s' % (account.id, e))
+
+    @objc.python_method
+    def _hasPrivateKey(self, account):
+        keys_path = ApplicationData.get('keys')
+        default_path = "%s/%s.privkey" % (keys_path, account.id)
+        return (bool(account.sms.private_key) and os.path.exists(account.sms.private_key)) or os.path.exists(default_path)
+
+    @objc.python_method
+    def maySilentlyGenerateKey(self, account):
+        """Only when nothing can carry a key we would orphan: the account has
+        XCAP, its addressbook was fetched and holds no escrow, and the server
+        answered that it holds no public key for it."""
+        if account is BonjourAccount() or not account.xcap.enabled:
+            return False
+        if account.id not in self.key_escrow_checked:
+            return False
+        try:
+            from KeyEscrow import read_self_keys
+            if read_self_keys(account) is not None:
+                return False
+        except Exception:
+            return False
+        return self.server_key_state.get(account.id) == 'absent'
+
+    @objc.python_method
+    @run_in_gui_thread
+    def offerKeyGeneration(self, account):
+        """A conversation needs our private key and there is none: generate one
+        silently when that is safe, otherwise ask -- but only once the addressbook
+        and the server have said what they know."""
+        if account is None or account is BonjourAccount() or not account.enabled:
+            return
+        if not pgp_messaging_possible(account) or self._hasPrivateKey(account):
+            return
+        if account.id in self.key_generation_declined or account.id in self.key_generation_running:
+            return
+        if any(getattr(callback, '__name__', '') == '_keyGenerationDecided' for callback in self.key_question_waiters.get(account.id, ())):
+            return
+        self.whenKeyQuestionAnswered(account, self._keyGenerationDecided)
+
+    @objc.python_method
+    def _keyGenerationDecided(self, account):
+        if self._hasPrivateKey(account) or account.id in self.key_generation_running:
+            return      # restored from the escrow meanwhile, or being made
+        if self.maySilentlyGenerateKey(account):
+            BlinkLogger().log_info('[pgp] %s: no key on this device, in the addressbook or on the server: '
+                                   'generating one' % account.id)
+            self.generateKeyInBackground(account, silent=True)
+        else:
+            self.showGeneratePrivateKeyPanel(account)
+
+    @objc.python_method
+    def generateKeyInBackground(self, account, silent=False):
+        if account.id in self.key_generation_running:
+            return
+        self.key_generation_running.add(account.id)
+        self._makeKey(account, silent)
+
+    @objc.python_method
+    @run_in_thread('pgp-keygen')
+    def _makeKey(self, account, silent):
+        started = time.time()
+        try:
+            key = new_pgp_keypair(account)
+        except Exception as e:
+            self._keyMade(account, None, str(e), silent, 0)
+        else:
+            self._keyMade(account, key, None, silent, time.time() - started)
+
+    @objc.python_method
+    @run_in_gui_thread
+    def _keyMade(self, account, key, error, silent, seconds):
+        self.key_generation_running.discard(account.id)
+        if key is not None:
+            try:
+                install_pgp_keypair(account, key)
+            except Exception as e:
+                key, error = None, str(e)
+        if key is None:
+            BlinkLogger().log_error('PGP key generation failed for %s: %s' % (account.id, error))
+            if not silent:
+                alert = NSAlert.alloc().init()
+                alert.setMessageText_(NSLocalizedString("Key Generation Failed", "Window title"))
+                alert.setInformativeText_(error or '')
+                alert.addButtonWithTitle_(NSLocalizedString("OK", "button"))
+                alert.runModal()
+            return
+        BlinkLogger().log_info('PGP key generated for %s in %.1fs%s' % (account.id, seconds, ' (silently)' if silent else ''))
+        self.private_keys.pop(account.id, None)     # drop the cached miss
+        # the new key goes into the addressbook escrow, so another device adopts it
+        try:
+            self.escrow_repaired.discard(account.id)
+            self.repairMissingEscrow(account)
+        except Exception as e:
+            BlinkLogger().log_error('Key escrow after generating a key for %s failed: %s' % (account.id, e))
+        for viewer in list(self.allViewers()):
+            if getattr(viewer, 'account', None) is account:
+                try:
+                    viewer.load_private_key()
+                except Exception:
+                    pass
+        self.logKeyStatus(account, 'key generated')
 
     @objc.python_method
     @run_in_gui_thread
@@ -1996,6 +2164,7 @@ class SMSWindowManagerClass(NSObject):
                                     % (getattr(account, 'id', '?'), e))
 
         self.logKeyStatus(account, 'addressbook fetched')
+        self.releaseKeyQuestion(account)
 
     @objc.python_method
     def repairMissingEscrow(self, account):
@@ -7188,7 +7357,7 @@ class SMSWindowManagerClass(NSObject):
             # domains do not run it
             return False
 
-        if not self.escrowQuestionAnswered(account):
+        if not self.escrowQuestionAnswered(account) and account.id not in self.key_addressbook_wait_over:
             # The addressbook has not come back yet, and it may be carrying
             # this account's real key. Generating one now would mint a second
             # keypair and leave every existing message unreadable, so say
@@ -7201,9 +7370,12 @@ class SMSWindowManagerClass(NSObject):
         default_path = "%s/%s.privkey" % (keys_path, account.id)
         has_key = (bool(account.sms.private_key) and os.path.exists(account.sms.private_key)) or os.path.exists(default_path)
 
+        server_has_key = self.server_key_state.get(account.id) == 'present'
         alert = NSAlert.alloc().init()
         alert.setMessageText_(NSLocalizedString("Generate PGP Private Key", "Window title"))
-        if has_key:
+        if not has_key and server_has_key:
+            alert.setInformativeText_(NSLocalizedString("The server holds a PGP public key for account %s, so another device has a private key for it, but it was not found in the addressbook. A new key makes the messages encrypted to the other one unreadable here. Better: save the key to the server from the other device, or import it. Generate a new key anyway?", "label") % account.id)
+        elif has_key:
             alert.setInformativeText_(NSLocalizedString("A PGP private key already exists for account %s. Generating a new key will permanently overwrite it, and any messages encrypted with the old key will no longer be readable. Do you want to continue?", "label") % account.id)
         else:
             alert.setInformativeText_(NSLocalizedString("Account %s has no PGP private key yet. A key is required to send and receive encrypted messages. Do you want to generate one now?", "label") % account.id)
@@ -7212,20 +7384,14 @@ class SMSWindowManagerClass(NSObject):
 
         if alert.runModal() != NSAlertFirstButtonReturn:
             BlinkLogger().log_info("PGP key generation cancelled for %s" % account.id)
+            if not has_key:
+                self.key_generation_declined.add(account.id)    # not asked again in this run
             return False
 
-        try:
-            generate_pgp_keypair(account)
-        except Exception as e:
-            BlinkLogger().log_error("PGP key generation failed: %s" % str(e))
-            error = NSAlert.alloc().init()
-            error.setMessageText_(NSLocalizedString("Key Generation Failed", "Window title"))
-            error.setInformativeText_(str(e))
-            error.addButtonWithTitle_(NSLocalizedString("OK", "button"))
-            error.runModal()
-            return False
-
-        BlinkLogger().log_info("PGP key generated for %s" % account.id)
+        # made in a thread: 4096-bit RSA takes seconds, and the key is in place
+        # (open conversations reload it) when it is done
+        self.key_generation_declined.discard(account.id)
+        self.generateKeyInBackground(account)
         return True
 
     @objc.python_method
