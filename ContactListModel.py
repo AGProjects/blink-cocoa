@@ -4608,6 +4608,7 @@ class ContactListModel(CustomListModel):
         # and so the only moment at which "there is no Calls group" is a
         # fact rather than a race. See calls_group_startup_check.
         self.nc.add_observer(self, name="XCAPManagerDidReloadData")
+        self.nc.add_observer(self, name="SylkServerConfigurationDidChange")
         self.nc.add_observer(self, name="AddressbookGroupWasActivated")
         self.nc.add_observer(self, name="AddressbookGroupWasDeleted")
         self.nc.add_observer(self, name="AddressbookGroupDidChange")
@@ -5106,42 +5107,143 @@ class ContactListModel(CustomListModel):
                         group.position = self.groupsList.index(blink_group)
                         group.save()
 
+    # Test numbers: the SylkServer configuration's testNumbers ([{name, uri}])
+    # of each enabled account, as contacts in the Test group, as Sylk Mobile
+    # does. Only once an account's addressbook has been fetched and settled,
+    # and once per number: what the user then deletes, moves or renames stays
+    # so (test_numbers.json); nothing is removed when the server drops one.
+    TEST_NUMBERS_FILE = 'test_numbers.json'
+    # for an account whose domain publishes no SylkServer configuration
+    FALLBACK_TEST_NUMBERS = [{'name': 'Test Call', 'uri': 'echo@conference.sip2sip.info'},
+                             {'name': 'Test Conference', 'uri': 'test@conference.sip2sip.info'}]
+    _test_numbers_pending = set()
+
     @objc.python_method
-    def createInitialGroupAndContacts(self):
-        BlinkLogger().log_debug("Creating initial contacts")
-
-        test_contacts = [dict(id='test_call',       name='Test Call',       preferred_media='audio+chat', uri='echo@conference.sip2sip.info'),
-                         dict(id='test_conference', name='Test Conference', preferred_media='audio+chat', uri='test@conference.sip2sip.info')]
-        @objc.python_method
-        def create_contact(id, name, preferred_media, uri):
-            contact = Contact(id)
-            contact.name = name
-            contact.preferred_media = preferred_media
-            contact.uris = [ContactURI(uri=uri, type='SIP')]
-            icon = NSImage.alloc().initWithContentsOfFile_(NSBundle.mainBundle().pathForImageResource_("%s.tiff" % uri))
-            avatar = PresenceContactAvatar(icon)
-            avatar.path = os.path.join(avatar.base_path, '%s.tiff' % id)
-            avatar.save()
-            return contact
-
+    def _addedTestNumbers(self):
         try:
-            group = Group(id='test')
-        except DuplicateIDError as e:
-            BlinkLogger().log_debug('Duplicate group: test')
-            return
-        
-        group.name = 'Test'
-        group.expanded = True
-        for entry in test_contacts:
-            try:
-                c = create_contact(**entry)
-            except DuplicateIDError as e:
-                BlinkLogger().log_debug('Duplicate contact %s' % entry)
-            else:
-                group.contacts.add(c)
+            with open(ApplicationData.get(self.TEST_NUMBERS_FILE), encoding='utf-8') as f:
+                return set(json.load(f))
+        except (OSError, ValueError, TypeError):
+            return set()
 
-        modified_items = list(group.contacts) + [group]
-        self._atomic_update(save=modified_items)
+    @objc.python_method
+    def _saveAddedTestNumbers(self, numbers):
+        path = ApplicationData.get(self.TEST_NUMBERS_FILE)
+        try:
+            with open(path + '.tmp', 'w', encoding='utf-8') as f:
+                json.dump(sorted(numbers), f)
+            os.replace(path + '.tmp', path)
+        except OSError as e:
+            BlinkLogger().log_warning('[ab] Cannot write %s: %s' % (path, e))
+
+    @objc.python_method
+    def _NH_SylkServerConfigurationDidChange(self, notification):
+        self.fileTestNumbers()
+
+    @objc.python_method
+    def fileTestNumbers(self):
+        from HistoryManager import addressbook_ready
+        from SylkDiscovery import test_numbers
+        from SMSWindowManager import SMSWindowManager
+        sms = SMSWindowManager()
+        entries = {}        # canonical uri: (uri, name)
+        for account in AccountManager().get_accounts():
+            if account is BonjourAccount() or not account.enabled:
+                continue
+            if not addressbook_ready(account):
+                continue    # filed after its addressbook has settled: the server may already have them
+            numbers = test_numbers(account)
+            if numbers is None:
+                numbers = self.FALLBACK_TEST_NUMBERS
+            for entry in numbers:
+                uri = str(entry.get('uri') or '').strip() if isinstance(entry, dict) else ''
+                if not uri:
+                    continue
+                uri = re.sub('^sips?:', '', uri)
+                key = sms._canonical_uri(uri) or uri
+                entries.setdefault(key, (uri, str(entry.get('name') or '').strip()))
+        added = self._addedTestNumbers()
+        entries = {key: value for key, value in entries.items() if key not in added and key not in self._test_numbers_pending}
+        if not entries:
+            return 0
+        # two calls close together (a settle, a configuration change) must not both create them
+        self._test_numbers_pending.update(entries)
+        try:
+            self._writeTestNumbers(sms, entries, added)
+        except Exception as e:
+            BlinkLogger().log_error('[ab] Cannot file the test numbers: %s' % e)
+        finally:
+            self._test_numbers_pending.difference_update(entries)
+        return len(entries)
+
+    @objc.python_method
+    def _testGroup(self):
+        """The Test group, whoever made it: Blink's ('test'), or another client's by kind or name."""
+        groups = list(AddressbookManager().get_groups())
+        for test in (lambda group: group.id == 'test',
+                     lambda group: str(getattr(group, 'kind', '') or '').lower() == 'test',
+                     lambda group: str(group.name or '').strip().lower() == 'test'):
+            group = next((group for group in groups if test(group)), None)
+            if group is not None:
+                return group
+        return None
+
+    @objc.python_method
+    def _writeTestNumbers(self, sms, entries, added):
+        """Only what the addressbook as fetched from the server does not have is
+        created: a number some contact already has is filed into Test (and named,
+        if it has no name). Contacts in Deleted or Blocked are left alone."""
+        from HistoryManager import BLOCKED_GROUP_KIND, BLOCKED_GROUP_NAME, BLOCKED_GROUP_ID, _find_group
+        set_aside = set()
+        for group in (_find_group('deleted', 'Deleted', DELETED_GROUP_ID),
+                      _find_group(BLOCKED_GROUP_KIND, BLOCKED_GROUP_NAME, BLOCKED_GROUP_ID)):
+            if group is not None:
+                set_aside |= {member.id for member in group.contacts}
+        group = self._testGroup()
+        if group is None:
+            group = Group(id='test')
+            group.name = 'Test'
+            group.expanded = True
+        members = {member.id for member in group.contacts}
+        created, filed, named = [], [], []
+        modified = []
+        for key, (uri, name) in sorted(entries.items()):
+            contact = sms._findContactByCanonicalURI(uri)
+            if contact is not None and contact.id in set_aside:
+                continue
+            if contact is None:
+                contact = Contact()
+                contact.name = name or uri
+                contact.preferred_media = 'audio'
+                contact.uris = [ContactURI(uri=uri, type='SIP')]
+                icon_path = NSBundle.mainBundle().pathForImageResource_("%s.tiff" % uri)
+                if icon_path:
+                    try:
+                        avatar = PresenceContactAvatar(NSImage.alloc().initWithContentsOfFile_(icon_path))
+                        avatar.path = os.path.join(avatar.base_path, '%s.tiff' % contact.id)
+                        avatar.save()
+                    except Exception:
+                        pass
+                modified.append(contact)
+                created.append('%s <%s>' % (contact.name, uri))
+            elif not contact.name and name:
+                contact.name = name
+                modified.append(contact)
+                named.append('%s <%s>' % (name, uri))
+            if contact.id not in members:
+                group.contacts.add(contact)
+                members.add(contact.id)
+                filed.append(contact.name or uri)
+        if created or filed or named:
+            # one XCAP update: the new contacts and the group listing them
+            self._atomic_update(save=modified + ([group] if (created or filed) else []))
+        self._saveAddedTestNumbers(added | set(entries))
+        if created:
+            BlinkLogger().log_info('[ab] Test numbers: created %s' % ', '.join(created))
+        if filed:
+            BlinkLogger().log_info('[ab] Test numbers: filed into Test %s' % ', '.join(filed))
+        if named:
+            BlinkLogger().log_info('[ab] Test numbers: named %s' % ', '.join(named))
 
     @property
     def visibleGroupsList(self):
@@ -5933,8 +6035,11 @@ class ContactListModel(CustomListModel):
         self.outgoing_calls_group.setInitialPeriod(settings.contacts.outgoing_calls_period)
         self.outgoing_calls_group.load_group()
 
-        if NSApp.delegate().contactsWindowController.first_run:
-            self.createInitialGroupAndContacts()
+        # Test contacts: not on the first run any more, but once an account's
+        # addressbook has been fetched (fileTestNumbers, after the settle) --
+        # created before it, they duplicated what the server already had.
+        # Accounts without XCAP have nothing to wait for.
+        call_later(25, self.fileTestNumbers)
 
         self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
         self.contact_backup_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(3600.0, self, "checkContactBackup:", None, True)
@@ -6021,6 +6126,7 @@ class ContactListModel(CustomListModel):
             if first:
                 BlinkLogger().log_info('[ab] [lifecycle] Addressbook of %s settled' % account.id)
             self.nc.post_notification('BlinkAddressbookDidSettle', sender=account)
+            self.fileTestNumbers()
 
     @objc.python_method
     def _NH_AudioCallLoggedToHistory(self, notification):
