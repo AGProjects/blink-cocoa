@@ -229,8 +229,9 @@ class JournalProgressStrip(NSObject):
             self.bar.setDoubleValue_(0)
             text = '%s %d' % (label, done)
         self.label.setStringValue_(text)
-        self.view.setToolTip_(tooltip or text)
-        self.label.setToolTip_(tooltip or text)
+        # on every part of the strip: the bar and the speed button cover most of it
+        for view in (self.view, self.label, self.bar, self.speed_button):
+            view.setToolTip_(tooltip or text)
         self._layout()
         self._show_later()
 
@@ -271,6 +272,7 @@ class JournalProgressStrip(NSObject):
                 self._hide()
             return
         self.decryption_progress = (data.done or 0, data.total, getattr(data, 'speed', 'normal'), getattr(data, 'eta', None))
+        self.decryption_details = (getattr(data, 'rate', None), getattr(data, 'workers', None))
         if not self.journal_in_progress:
             self._show_decryption()
 
@@ -284,5 +286,16 @@ class JournalProgressStrip(NSObject):
             label = NSLocalizedString("Decrypting messages paused", "Progress")
         else:
             label = NSLocalizedString("Decrypting messages", "Progress")
-        tooltip = '%s: %d%s%s' % (label, done, (' of %d' % total) if total else '', ('\n%s' % eta) if eta else '')
+        rate, workers = getattr(self, 'decryption_details', (None, None))
+        lines = ['%s: %d%s' % (label, done, (' of %d' % total) if total else '')]
+        details = []
+        if rate:
+            details.append('%.1f messages/s' % rate)
+        details.append('speed %s' % ('paused' if speed == 'paused' else speed))
+        if workers:
+            details.append('%d worker process%s' % (workers, '' if workers == 1 else 'es'))
+        lines.append(', '.join(details))
+        if speed != 'paused':
+            lines.append(eta[0].upper() + eta[1:] if eta else NSLocalizedString("Estimating the time left...", "Tooltip"))
+        tooltip = '\n'.join(lines)
         self._show(label, done, total, tooltip)

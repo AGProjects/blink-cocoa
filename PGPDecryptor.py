@@ -150,8 +150,14 @@ class BackgroundDecryptor(object, metaclass=Singleton):
     FIRST_RUN_DELAY = 30            # seconds after the start
     VIEW_YIELD = 5                  # seconds after a conversation decrypted what it shows
     MIN_SLEEP = 0.02
+    LOG_INTERVAL = 10               # seconds between progress lines in the log
+    # Decrypt in worker processes (the Blink executable with --pgp-worker),
+    # falling back to this process when they cannot be started
+    USE_WORKERS = True
 
     def __init__(self):
+        self.pool = None
+        self.executable = None
         self.lock = threading.Lock()
         self.running = False
         self.again = False
@@ -214,6 +220,8 @@ class BackgroundDecryptor(object, metaclass=Singleton):
             return
         self.started = True
         self.app_state = _AppState.alloc().init()
+        from Foundation import NSBundle
+        self.executable = str(NSBundle.mainBundle().executablePath() or '')
         notification_center = NotificationCenter()
         notification_center.add_observer(self, name='BlinkJournalDidApply')
         notification_center.add_observer(self, name='BlinkDecryptionWasReset')
@@ -234,6 +242,8 @@ class BackgroundDecryptor(object, metaclass=Singleton):
 
     def _NH_SIPApplicationWillEnd(self, notification):
         self.stopped = True
+        if self.pool is not None:
+            self.pool.close()
 
     def request(self):
         """Run a pass, or another one after the current one."""
@@ -265,10 +275,22 @@ class BackgroundDecryptor(object, metaclass=Singleton):
                 continue
         return uris
 
-    def _progress(self, phase, done=None, total=None, eta=None):
+    def _progress(self, phase, done=None, total=None, eta=None, rate=None, workers=None):
         NotificationCenter().post_notification('BlinkBackgroundDecryptionProgress', sender=self,
                                                data=NotificationData(phase=phase, done=done, total=total,
-                                                                     speed=self.speed, eta=eta))
+                                                                     speed=self.speed, eta=eta, rate=rate,
+                                                                     workers=workers))
+
+    @staticmethod
+    def _eta_text(seconds):
+        if seconds is None:
+            return None
+        if seconds < 60:
+            return 'less than a minute left'
+        if seconds < 3600:
+            return 'about %d minute%s left' % (round(seconds / 60), '' if round(seconds / 60) == 1 else 's')
+        hours, minutes = divmod(int(round(seconds / 60)), 60)
+        return 'about %dh %02dm left' % (hours, minutes)
 
     def _run(self):
         try:
@@ -287,10 +309,83 @@ class BackgroundDecryptor(object, metaclass=Singleton):
                 self.running = False
             self._progress('done')
 
-    def _pass(self):
-        from MessageHost import is_pgp_armoured, private_key_for_message, pgp_plaintext, pgp_message_key_ids
-        from HistoryManager import ChatHistory
+    # Decrypting one batch: in the worker processes when there are any, else here
+
+    def _decrypt_here(self, row, duty):
+        """(text, error, key ids) for one row, in this thread, then the duty-cycle sleep."""
+        from MessageHost import private_key_for_message, pgp_plaintext, pgp_message_key_ids
         import pgpy
+        cpu = time.thread_time()
+        text = error = None
+        key_ids = None
+        try:
+            message = pgpy.PGPMessage.from_blob(row['body'].strip())
+            key_ids = pgp_message_key_ids(message)
+            key = private_key_for_message(message, None)
+            if key is None:
+                error = 'no private key on this device opens it'
+            else:
+                text = pgp_plaintext(key.decrypt(message))
+                if text is None:
+                    error = 'it decrypted to nothing'
+        except Exception as e:
+            error = str(e) or type(e).__name__
+        cpu = time.thread_time() - cpu
+        time.sleep(max(self.MIN_SLEEP, cpu * (1.0 / duty - 1.0)))
+        return text, error, key_ids
+
+    def _thread_duty(self):
+        active, idle, _ = self.speeds.get(self.resume_speed if self.paused else self.speed, self.speeds['normal'])
+        return active if (self.app_state is None or self.app_state.active) else idle
+
+    def _decrypt_batch(self, rows):
+        """{msgid: (text, error, key ids)} for the rows."""
+        results = {}
+        workers = self.pool.workers_for(self.resume_speed if self.paused else self.speed) if self.pool is not None else []
+        if not workers:
+            for row in rows:
+                if self.stopped:
+                    break
+                results[row['msgid']] = self._decrypt_here(row, self._thread_duty())
+            return results
+        duty = WorkerPool.duty(self.resume_speed if self.paused else self.speed)
+        shares = [rows[index::len(workers)] for index in range(len(workers))]
+        lock = threading.Lock()
+
+        def work(worker, share):
+            for position, row in enumerate(share):
+                if self.stopped:
+                    return
+                try:
+                    answer = worker.decrypt(row['msgid'], row['body'])
+                except Exception as e:
+                    # a worker that died or hung: what it had left is done here
+                    BlinkLogger().log_warning('[pgp] Decryption worker %s failed (%s), decrypting in Blink instead' % (worker.pid, e))
+                    self.pool.discard(worker)
+                    for rest in share[position:]:
+                        if self.stopped:
+                            return
+                        result = self._decrypt_here(rest, self._thread_duty())
+                        with lock:
+                            results[rest['msgid']] = result
+                    return
+                with lock:
+                    results[row['msgid']] = (answer.get('text'), answer.get('error'), answer.get('keys'))
+                cpu = float(answer.get('cpu') or 0)
+                if duty < 1.0:
+                    time.sleep(max(self.MIN_SLEEP, cpu * (1.0 / duty - 1.0)))
+
+        threads = [threading.Thread(target=work, args=(worker, share), name='pgp-decrypt-feeder', daemon=True)
+                   for worker, share in zip(workers, shares) if share]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join()
+        return results
+
+    def _pass(self):
+        from MessageHost import is_pgp_armoured
+        from HistoryManager import ChatHistory
 
         history = ChatHistory()
         uris = self._accounts()
@@ -300,13 +395,17 @@ class BackgroundDecryptor(object, metaclass=Singleton):
         total = len(ids)
         if not total:
             return
+        if self.pool is None and self.USE_WORKERS:
+            self.pool = WorkerPool(self.executable)
         BlinkLogger().log_info('[pgp] Background decryption: %d stored message(s) of %s to decrypt (speed %s)'
                                % (total, ', '.join(uris), self.speed))
         started = time.monotonic()
+        last_logged = started
         done = opened = failed = 0
         self._progress('run', 0, total)
         try:
-            for index in range(0, total, self.BATCH):
+            index = 0
+            while index < total:
                 if self.stopped:
                     return
                 while self.paused and not self.stopped:
@@ -314,12 +413,11 @@ class BackgroundDecryptor(object, metaclass=Singleton):
                     time.sleep(1)
                 while view_decrypt_age() < self.VIEW_YIELD and not self.stopped:
                     time.sleep(0.5)      # a conversation is decrypting what it shows: it goes first
-                batch = ids[index:index + self.BATCH]
-                rows = _wait(history.messages_by_ids(batch)) or []
-                results = {}
-                for row in rows:
-                    if self.stopped:
-                        return
+                count = self.BATCH * max(1, self.pool.size_for(self.speed) if self.pool is not None else 1)
+                batch = ids[index:index + count]
+                index += len(batch)
+                rows = []
+                for row in _wait(history.messages_by_ids(batch)) or []:
                     body = row['body']
                     if isinstance(body, bytes):
                         try:
@@ -328,45 +426,202 @@ class BackgroundDecryptor(object, metaclass=Singleton):
                             continue
                     if row['decrypted'] not in ('0', '3') or not is_pgp_armoured(body):
                         continue        # decrypted meanwhile (a conversation was opened)
-                    cpu = time.thread_time()
-                    text = error = None
-                    try:
-                        message = pgpy.PGPMessage.from_blob(body.strip())
-                        key = private_key_for_message(message, None)
-                        if key is None:
-                            error = 'no private key on this device opens it'
-                        else:
-                            text = pgp_plaintext(key.decrypt(message))
-                            if text is None:
-                                error = 'it decrypted to nothing'
-                    except Exception as e:
-                        message = None
-                        error = str(e) or type(e).__name__
-                    cpu = time.thread_time() - cpu
+                    row['body'] = body
+                    rows.append(row)
+                decrypted = {}
+                for msgid, (text, error, key_ids) in self._decrypt_batch(rows).items():
+                    row = next(row for row in rows if row['msgid'] == msgid)
                     if text is not None:
-                        _wait(history.update_decrypted_message(row['msgid'], text))
-                        results[row['msgid']] = {'text': text, 'content_type': row['content_type'],
-                                                 'remote_uri': row['remote_uri']}
+                        _wait(history.update_decrypted_message(msgid, text))
+                        decrypted[msgid] = {'text': text, 'content_type': row['content_type'], 'remote_uri': row['remote_uri']}
                         opened += 1
                     else:
-                        _wait(history.store_undecryptable_message(row['msgid'], error,
-                                                                  pgp_message_key_ids(message) if message is not None else None))
+                        _wait(history.store_undecryptable_message(msgid, error, key_ids))
                         failed += 1
-                    active, idle, _ = self.speeds.get(self.resume_speed if self.paused else self.speed, self.speeds['normal'])
-                    duty = active if (self.app_state is None or self.app_state.active) else idle
-                    time.sleep(max(self.MIN_SLEEP, cpu * (1.0 / duty - 1.0)))
-                done = min(total, index + len(batch))
-                if results:
+                if decrypted:
                     NotificationCenter().post_notification('BlinkMessagesDidDecryptInBackground', sender=self,
-                                                           data=NotificationData(messages=results))
+                                                           data=NotificationData(messages=decrypted))
+                done = min(total, index)
                 elapsed = time.monotonic() - started
-                eta = None
-                if done and done < total:
-                    seconds = (total - done) * elapsed / done
-                    eta = 'About %d minute(s) left' % max(1, round(seconds / 60)) if seconds >= 60 else 'Less than a minute left'
-                self._progress('run', min(done, total), total, eta)
+                rate = done / elapsed if elapsed > 0 else None
+                seconds = (total - done) / rate if rate and done < total else None
+                eta = self._eta_text(seconds)
+                workers = len(self.pool.workers) if self.pool is not None and not self.pool.broken else 0
+                self._progress('run', done, total, eta, rate, workers)
+                now = time.monotonic()
+                if now - last_logged >= self.LOG_INTERVAL or done >= total:
+                    last_logged = now
+                    BlinkLogger().log_info('[pgp] Background decryption: %d/%d (%d%%), %.1f messages/s, speed %s, %s%s'
+                                           % (done, total, done * 100 // total, rate or 0, self.speed,
+                                              ('%d worker process(es)' % workers) if workers else 'in Blink',
+                                              (', %s' % eta) if eta else ''))
                 time.sleep(self.speeds.get(self.speed, self.speeds['normal'])[2])
         finally:
+            if self.pool is not None:
+                self.pool.close()
             self._progress('done')
-            BlinkLogger().log_info('[pgp] Background decryption: %d decrypted, %d could not be opened, in %.0fs'
-                                   % (opened, failed, time.monotonic() - started))
+            elapsed = time.monotonic() - started
+            BlinkLogger().log_info('[pgp] Background decryption: %d decrypted, %d could not be opened, in %.0fs (%.1f messages/s)'
+                                   % (opened, failed, elapsed, (opened + failed) / elapsed if elapsed > 0 else 0))
+
+
+class _Worker(object):
+    """One worker process: the Blink executable run with --pgp-worker (PGPWorker.py)."""
+
+    HELLO_TIMEOUT = 15
+    DECRYPT_TIMEOUT = 60
+
+    def __init__(self, executable):
+        import subprocess
+        self.process = subprocess.Popen([executable, '--pgp-worker'], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                        stderr=subprocess.DEVNULL, close_fds=True)
+        self.pid = self.process.pid
+        self.keys_signature = None
+        answer = self._request({'op': 'hello'}, self.HELLO_TIMEOUT)
+        if answer.get('pgp_worker') != 1:
+            self.close()
+            raise RuntimeError('not a PGP worker: %r' % answer)
+
+    def _request(self, request, timeout):
+        import json
+        import select
+        self.process.stdin.write((json.dumps(request) + '\n').encode())
+        self.process.stdin.flush()
+        deadline = time.monotonic() + timeout
+        line = b''
+        while not line.endswith(b'\n'):
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                self.close()
+                raise TimeoutError('no answer in %d seconds' % timeout)
+            ready, _, _ = select.select([self.process.stdout], [], [], remaining)
+            if not ready:
+                continue
+            chunk = self.process.stdout.readline()
+            if not chunk:
+                self.close()
+                raise EOFError('the worker exited (%s)' % self.process.poll())
+            line += chunk
+        return json.loads(line.decode())
+
+    def push_keys(self, signature, keys):
+        if signature != self.keys_signature:
+            self._request({'op': 'keys', 'keys': keys}, self.HELLO_TIMEOUT)
+            self.keys_signature = signature
+
+    def decrypt(self, msgid, body):
+        signature, keys = WorkerPool.private_keys()
+        self.push_keys(signature, keys)
+        return self._request({'op': 'decrypt', 'id': msgid, 'body': body}, self.DECRYPT_TIMEOUT)
+
+    def close(self):
+        try:
+            self.process.stdin.close()
+        except Exception:
+            pass
+        try:
+            self.process.wait(2)
+        except Exception:
+            try:
+                self.process.kill()
+                self.process.wait(2)
+            except Exception:
+                pass
+
+
+class WorkerPool(object):
+    """Worker processes for the background decryption, as many as the speed asks
+    for, each used at its duty cycle. Started on the first batch, closed at the
+    end of every pass. When a worker cannot be started (an executable without
+    --pgp-worker, a bundle without PGPWorker.py), the pass decrypts in Blink."""
+
+    # speed: (workers, duty of each); cores is os.cpu_count()
+    @staticmethod
+    def plan(speed):
+        cores = os.cpu_count() or 2
+        if speed == 'fast':
+            return max(1, cores - 1), 1.0
+        if speed == 'gentle':
+            return 1, 0.15
+        return max(1, min(2, cores - 1)), 0.5
+
+    @classmethod
+    def duty(cls, speed):
+        return cls.plan(speed)[1]
+
+    _keys = {'signature': None, 'keys': []}
+
+    @classmethod
+    def private_keys(cls):
+        """(signature, [armour]) of every private key on this device; read again when the folder changes."""
+        folder = ApplicationData.get('keys')
+        try:
+            names = sorted(name for name in os.listdir(folder) if name.endswith('.privkey'))
+            signature = tuple((name, os.path.getmtime(os.path.join(folder, name))) for name in names)
+        except OSError:
+            return None, []
+        if signature != cls._keys['signature']:
+            keys = []
+            for name in names:
+                try:
+                    with open(os.path.join(folder, name)) as f:
+                        keys.append(f.read())
+                except (OSError, UnicodeDecodeError):
+                    continue
+            cls._keys = {'signature': signature, 'keys': keys}
+        return cls._keys['signature'], cls._keys['keys']
+
+    def __init__(self, executable):
+        self.executable = executable
+        self.workers = []
+        self.lock = threading.Lock()
+        self.broken = not self.supported(executable)
+
+    @staticmethod
+    def supported(executable):
+        """The executable knows --pgp-worker (a main.m that does not would start a second Blink)
+        and PGPWorker.py is in the bundle."""
+        if not executable or not os.path.exists(executable):
+            return False
+        try:
+            from resources import Resources
+            if not os.path.exists(Resources.get('PGPWorker.py')):
+                return False
+            with open(executable, 'rb') as f:
+                return b'--pgp-worker' in f.read()
+        except Exception:
+            return False
+
+    def size_for(self, speed):
+        return 0 if self.broken else self.plan(speed)[0]
+
+    def workers_for(self, speed):
+        if self.broken:
+            return []
+        wanted = self.plan(speed)[0]
+        with self.lock:
+            while len(self.workers) > wanted:
+                self.workers.pop().close()
+            while len(self.workers) < wanted:
+                try:
+                    worker = _Worker(self.executable)
+                except Exception as e:
+                    BlinkLogger().log_warning('[pgp] Cannot start a decryption worker (%s); decrypting in Blink' % e)
+                    if not self.workers:
+                        self.broken = True
+                    break
+                self.workers.append(worker)
+                BlinkLogger().log_info('[pgp] Decryption worker %d started (%d of %d)' % (worker.pid, len(self.workers), wanted))
+            return list(self.workers)
+
+    def discard(self, worker):
+        with self.lock:
+            if worker in self.workers:
+                self.workers.remove(worker)
+        worker.close()
+
+    def close(self):
+        with self.lock:
+            workers, self.workers = self.workers, []
+        for worker in workers:
+            worker.close()

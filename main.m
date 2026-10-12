@@ -171,8 +171,20 @@ int main(int argc, char *argv[])
     NSArray *possibleMainExtensions = [NSArray arrayWithObjects: @"py", @"pyc", @"pyo", nil];
     NSString *mainFilePath = nil;
 
+    // --pgp-worker: started by PGPDecryptor.WorkerPool to decrypt stored PGP
+    // messages in a process of its own. Same interpreter, libraries and code
+    // signature as Blink; runs PGPWorker.py instead of Main.py, so no
+    // NSApplication, no Dock icon, no window.
+    NSString *mainName = @"Main";
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "--pgp-worker") == 0) {
+            mainName = @"PGPWorker";
+            break;
+        }
+    }
+
     for (NSString *possibleMainExtension in possibleMainExtensions) {
-        mainFilePath = [mainBundle pathForResource: @"Main" ofType: possibleMainExtension];
+        mainFilePath = [mainBundle pathForResource: mainName ofType: possibleMainExtension];
         if ( mainFilePath != nil ) break;
     }
 
