@@ -6905,6 +6905,20 @@ class SMSWindowManagerClass(NSObject):
 
     @objc.python_method
     @run_in_gui_thread
+    def transferFetchedInDataManager(self, account, contact, msgid):
+        """A file the Data manager downloaded: an open conversation showing its bubble picks it up from
+        the cache at once (the file is here now, so this asks nothing of the network)."""
+        viewer = self._viewerForContact(account, contact)
+        controller = getattr(viewer, 'chatViewController', None) if viewer is not None else None
+        if controller is None or not hasattr(controller, 'bubbleDidRequestDownload'):
+            return
+        try:
+            controller.bubbleDidRequestDownload(msgid)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot show the downloaded file of %s: %s' % (msgid, e))
+
+    @objc.python_method
+    @run_in_gui_thread
     def _messagesBulkDeleted(self, account, contact, conversations):
         viewer = self._viewerForContact(account, contact)
         if viewer is not None:

@@ -17,6 +17,7 @@ No AppKit here, so the classification and the requests can be tested alone.
 """
 
 import json
+import os
 import re
 import ssl
 import uuid
@@ -30,7 +31,8 @@ from datetime import datetime, timedelta, timezone
 __all__ = ['Row', 'ENCRYPTED', 'CATEGORY_LABELS', 'classify', 'type_label', 'action_label', 'row_label', 'build_rows', 'with_related',
            'select', 'count_by', 'aggregate_days', 'period_bounds', 'bulk_delete_payload',
            'REMOVE_BATCH', 'PROGRESS_EVERY', 'JournalRemoveError', 'JournalRemoveUnsupported', 'JournalRemoveRefused',
-           'journal_remove_url', 'remove_from_journal']
+           'journal_remove_url', 'remove_from_journal',
+           'FileRow', 'FILE_KINDS', 'ON_SERVER', 'FAILED', 'NO_KEY', 'DOWNLOADABLE', 'status_label', 'scan_transfer_storage', 'build_file_rows']
 
 
 LOCATION_CONTENT_TYPE = 'application/sylk-location-sharing'
@@ -346,3 +348,166 @@ def criteria_label(criteria):
     else:
         what = 'All types'
     return '%s, %s, %s .. %s' % (what, criteria.get('contact') or 'all contacts', criteria.get('from') or 'the beginning', criteria.get('until'))
+
+
+
+# File transfers whose file is on the server and not on this computer
+#
+# The cache (FileTransferCache) files a transfer under
+# file_transfers/<account>/<peer>/<transfer id, else filename>/<display name>, and finds it there
+# under any account folder for the same peer (local_file). The storage is listed once here for the
+# whole history instead of asked about one message at a time. A transfer is on the server when its
+# envelope has a URL, has not passed its `until`, and has no stored 404/410 (an `error` the
+# conversation wrote into the envelope; any other stored error is a failure Download asks again).
+
+FILE_KINDS = ('image', 'audio', 'video', 'other')
+
+ON_SERVER = 'on_server'     # not fetched yet
+FAILED = 'failed'           # a fetch failed before, for a reason retrying might change
+NO_KEY = 'no_key'           # encrypted (.asc) and no private key on this device
+
+DOWNLOADABLE = (ON_SERVER, FAILED)
+
+STATUS_LABELS = {ON_SERVER: 'On the server', FAILED: 'Failed before', NO_KEY: 'Encrypted, no key here'}
+
+GONE_MARKERS = ('HTTP 404', 'HTTP 410')
+
+# 'type' and 'action' (the status) so that select, count_by and aggregate_days drill into them as into messages;
+# account and peer are the row's local_uri and remote_uri as stored, which is what the cache files under
+FileRow = namedtuple('FileRow', 'id message_id contact day timestamp direction type action name size filetype url until reason account peer meta')
+
+_FILE_EXTENSIONS = {'image': ('jpg', 'jpeg', 'png', 'gif', 'heic', 'heif', 'webp', 'tiff', 'bmp'),
+                    'video': ('mp4', 'mov', 'm4v', 'avi', 'mkv', 'webm', '3gp'),
+                    'audio': ('mp3', 'm4a', 'wav', 'aac', 'ogg', 'opus', 'caf', 'flac')}
+
+
+def status_label(status):
+    if status is None:
+        return 'Any status'
+    return STATUS_LABELS.get(status, status)
+
+
+def _safe(text):
+    """A path component as FileTransferCache._safe makes it."""
+    keep = '-_.@+'
+    return ''.join(c if (c.isalnum() or c in keep) else '_' for c in str(text or ''))[:96]
+
+
+def _display_name(meta):
+    name = str(meta.get('filename') or '')
+    return name[:-4] if name.endswith('.asc') else name
+
+
+def _is_encrypted(meta):
+    return str(meta.get('url') or '').endswith('.asc') or str(meta.get('filename') or '').endswith('.asc')
+
+
+def scan_transfer_storage(root):
+    """{(peer folder, transfer folder): set of file names} of every non-empty file stored, whatever
+    the account folder; partial writes (.part-*) left out."""
+    storage = {}
+
+    def folders(path):
+        try:
+            with os.scandir(path) as entries:
+                return [entry for entry in entries if entry.is_dir(follow_symlinks=False)]
+        except OSError:
+            return []
+
+    for account in folders(root):
+        for peer in folders(account.path):
+            for transfer in folders(peer.path):
+                try:
+                    with os.scandir(transfer.path) as entries:
+                        names = {entry.name for entry in entries
+                                 if '.part-' not in entry.name and entry.is_file() and entry.stat().st_size > 0}
+                except OSError:
+                    continue
+                if names:
+                    storage.setdefault((peer.name, transfer.name), set()).update(names)
+    return storage
+
+
+def _expired(until, now):
+    if not until:
+        return False
+    try:
+        expires = datetime.fromisoformat(str(until).replace('Z', '+00:00'))
+    except ValueError:
+        try:
+            from dateutil.parser import parse
+            expires = parse(str(until))
+        except Exception:
+            return False
+    if expires.tzinfo is None:
+        expires = expires.replace(tzinfo=timezone.utc)
+    return expires < now
+
+
+def _file_kind(category, filetype, name):
+    if category in FILE_KINDS:
+        return category
+    filetype = str(filetype or '').lower()
+    for kind in ('image', 'video', 'audio'):
+        if filetype.startswith(kind + '/'):
+            return kind
+    extension = name.rsplit('.', 1)[-1].lower() if '.' in name else ''
+    for kind, extensions in _FILE_EXTENSIONS.items():
+        if extension in extensions:
+            return kind
+    return 'other'
+
+
+def build_file_rows(db_rows, storage, envelope, can_decrypt=True, failure=None, now=None):
+    """(rows, counts) from ChatHistory.data_file_transfers tuples and scan_transfer_storage.
+
+    envelope(body) parses a transfer envelope (MessageHost.file_transfer_envelope); failure(meta), if
+    given, is (reason, gone) for a failure this run already knows of, or None. rows are the transfers
+    whose file is not here and is on the server; counts tells what became of the others:
+    {'transfers', 'here', 'expired', 'gone', 'no_url', 'unreadable'}."""
+    now = now or datetime.now(timezone.utc)
+    counts = Counter(transfers=0, here=0, expired=0, gone=0, no_url=0, unreadable=0)
+    rows = []
+    for row_id, message_id, local_uri, remote_uri, day, timestamp, direction, category, body in db_rows:
+        counts['transfers'] += 1
+        try:
+            meta = envelope(body) if body else None
+        except Exception:
+            meta = None
+        if not meta or not meta.get('filename') or not message_id:
+            counts['unreadable'] += 1       # an envelope nobody decrypted, or not one at all
+            continue
+        name = _display_name(meta)
+        stored = storage.get((_safe(remote_uri), _safe(meta.get('transfer_id') or meta.get('filename'))))
+        if stored and (_safe(name) or 'file') in stored:
+            counts['here'] += 1
+            continue
+        if not meta.get('url'):
+            counts['no_url'] += 1
+            continue
+        if _expired(meta.get('until'), now):
+            counts['expired'] += 1
+            continue
+        reason = str(meta.get('error') or '')
+        gone = any(marker in reason for marker in GONE_MARKERS)
+        if failure is not None and not reason:
+            known = failure(meta)
+            if known:
+                reason, gone = str(known[0] or 'failed'), bool(known[1])
+        if gone:
+            counts['gone'] += 1
+            continue
+        if reason:
+            status = FAILED
+        elif _is_encrypted(meta) and not can_decrypt:
+            status, reason = NO_KEY, 'encrypted, and no private key on this device'
+        else:
+            status = ON_SERVER
+        try:
+            size = int(meta.get('filesize') or 0) or None
+        except (TypeError, ValueError):
+            size = None
+        rows.append(FileRow(int(row_id), str(message_id), contact_key(remote_uri), str(day or ''), str(timestamp or ''), str(direction or ''),
+                            _file_kind(category, meta.get('filetype'), name), status, name, size, str(meta.get('filetype') or ''),
+                            str(meta['url']), meta.get('until'), reason, str(local_uri or 'account'), str(remote_uri or 'peer'), meta))
+    return rows, dict(counts)

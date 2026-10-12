@@ -3,6 +3,11 @@
 
 """The Data manager: the message history in bulk.
 
+Two sections, switched at the top: Messages (below) and File Transfers
+(FileTransfersPanel): the transfers whose file is on the server and not on
+this computer, drilled into the same way, and downloaded in bulk through
+FileTransferCache, as a click on each bubble would.
+
 Drill into an account's stored rows by type (category, location sharing, or
 content type), action (location_start/update/stop, the action of a metadata
 sidecar, ...), contact and year/month/day, look at any one of them, and remove
@@ -21,6 +26,9 @@ click is answered while a removal is busy.
 import json
 import time
 import uuid
+
+from collections import deque
+from functools import partial
 
 from datetime import datetime, timezone
 
@@ -46,6 +54,7 @@ from AppKit import (NSAlert,
                     NSResizableWindowMask,
                     NSRoundedBezelStyle,
                     NSScrollView,
+                    NSSegmentedControl,
                     NSSplitView,
                     NSSwitchButton,
                     NSTableColumn,
@@ -53,6 +62,7 @@ from AppKit import (NSAlert,
                     NSTableViewLastColumnOnlyAutoresizingStyle,
                     NSTextField,
                     NSTextView,
+                    NSTimer,
                     NSTitledWindowMask,
                     NSView,
                     NSViewHeightSizable,
@@ -72,11 +82,13 @@ from twisted.internet.threads import blockingCallFromThread
 
 from DataManage import (CATEGORY_LABELS, REMOVE_BATCH, JournalRemoveError, JournalRemoveRefused, JournalRemoveUnsupported,
                         action_label, aggregate_days, build_rows, bulk_delete_payload, count_by, remove_from_journal, row_label,
-                        select, type_label, with_related)
+                        select, type_label, with_related,
+                        DOWNLOADABLE, FILE_KINDS, build_file_rows, scan_transfer_storage, status_label)
 from BlinkLogger import BlinkLogger
+from FileTransferCache import FileTransferCache
 from ContactMangler import mangled_account_label, mangled_text, mangled_uri
 from HistoryManager import ChatHistory
-from MessageHost import this_device_id
+from MessageHost import merge_transfer_error, this_device_id, transfer_error_note
 from util import run_in_gui_thread
 
 
@@ -95,6 +107,8 @@ ROW_H = 26.0
 ROW_STEP = 32.0
 BUTTON_W = 120.0
 BUTTON_H = 32.0
+DETAIL_GAP = 10.0       # space between the list and the row shown under it
+TAB_H = 40.0            # the Messages / File Transfers switch above the sections
 
 # The fields of a row shown above its content, in this order, when they have a value
 DETAIL_FIELDS = ('id', 'msgid', 'local_uri', 'remote_uri', 'time', 'direction', 'content_type', 'category', 'related_action',
@@ -227,6 +241,16 @@ class DataManagerController(NSObject):
         self.window.makeKeyAndOrderFront_(None)
         NSApp.activateIgnoringOtherApps_(True)
         self.refresh()
+        if self.sectionControl.selectedSegment() == 1:
+            self.filesPanel.refresh(keep_status=True)
+
+    def sectionChanged_(self, sender):
+        files = sender.selectedSegment() == 1
+        self.messagesView.setHidden_(files)
+        self.filesPanel.view.setHidden_(not files)
+        # the storage is listed when the section is looked at, not every time the window opens
+        if files and not self.filesPanel.busy and not self.filesPanel.loading:
+            self.filesPanel.refresh(keep_status=True)
 
     # -- the window ------------------------------------------------------------------
 
@@ -252,7 +276,7 @@ class DataManagerController(NSObject):
         popup.setAction_(action)
         popup.setAutoresizingMask_(mask)
         popup.menu().setAutoenablesItems_(False)
-        self.window.contentView().addSubview_(popup)
+        self.messagesView.addSubview_(popup)
         self.popup_values[name] = []
         return popup
 
@@ -264,7 +288,7 @@ class DataManagerController(NSObject):
         button.setTarget_(self)
         button.setAction_(action)
         button.setAutoresizingMask_(mask)
-        self.window.contentView().addSubview_(button)
+        self.messagesView.addSubview_(button)
         return button
 
     @objc.python_method
@@ -276,19 +300,37 @@ class DataManagerController(NSObject):
         box.setTarget_(self)
         box.setAction_(action)
         box.setAutoresizingMask_(NSViewWidthSizable | NSViewMaxYMargin)
-        self.window.contentView().addSubview_(box)
+        self.messagesView.addSubview_(box)
         return box
 
     @objc.python_method
     def _build(self):
         self.window = NSWindow.alloc().initWithContentRect_styleMask_backing_defer_(
-            NSMakeRect(0, 0, WIDTH, HEIGHT),
+            NSMakeRect(0, 0, WIDTH, HEIGHT + TAB_H),
             NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask | NSResizableWindowMask,
             NSBackingStoreBuffered, False)
         self.window.setTitle_(_t("Data Manager"))
         self.window.setReleasedWhenClosed_(False)
-        self.window.setMinSize_(NSMakeSize(640, 560))
-        content = self.window.contentView()
+        self.window.setMinSize_(NSMakeSize(640, 560 + TAB_H))
+        window_content = self.window.contentView()
+
+        # the sections, switched at the top
+        self.sectionControl = NSSegmentedControl.alloc().initWithFrame_(NSMakeRect((WIDTH - 300) / 2.0, HEIGHT + TAB_H - 34, 300, 24))
+        self.sectionControl.setSegmentCount_(2)
+        for index, title in enumerate((_t("Messages"), _t("File Transfers"))):
+            self.sectionControl.setLabel_forSegment_(title, index)
+            self.sectionControl.setWidth_forSegment_(148, index)
+        self.sectionControl.setSelectedSegment_(0)
+        self.sectionControl.setTarget_(self)
+        self.sectionControl.setAction_('sectionChanged:')
+        self.sectionControl.setAutoresizingMask_(NSViewMinXMargin | NSViewMaxXMargin | NSViewMinYMargin)
+        window_content.addSubview_(self.sectionControl)
+        self.messagesView = NSView.alloc().initWithFrame_(NSMakeRect(0, 0, WIDTH, HEIGHT))
+        self.messagesView.setAutoresizingMask_(NSViewWidthSizable | NSViewHeightSizable)
+        window_content.addSubview_(self.messagesView)
+        self.filesPanel = FileTransfersPanel.alloc().init().setupInView(window_content, NSMakeRect(0, 0, WIDTH, HEIGHT))
+        self.filesPanel.view.setHidden_(True)
+        content = self.messagesView
         secondary = NSColor.secondaryLabelColor()
         top = NSViewWidthSizable | NSViewMinYMargin
         x = PAD + LABEL_W
@@ -373,7 +415,7 @@ class DataManagerController(NSObject):
 
         detail = NSView.alloc().initWithFrame_(NSMakeRect(0, 0, width, split_top - split_bottom - list_h))
         detail_h = detail.frame().size.height
-        text_scroll = NSScrollView.alloc().initWithFrame_(NSMakeRect(0, 34, width, detail_h - 34))
+        text_scroll = NSScrollView.alloc().initWithFrame_(NSMakeRect(0, 34, width, detail_h - 34 - DETAIL_GAP))
         text_scroll.setHasVerticalScroller_(True)
         text_scroll.setBorderType_(NSBezelBorder)
         text_scroll.setAutoresizingMask_(NSViewWidthSizable | NSViewHeightSizable)
@@ -971,6 +1013,712 @@ class DataManagerController(NSObject):
                         _sms_manager().refreshMessagePreview(uri)
             except Exception as e:
                 BlinkLogger().log_error('[data] Cannot refresh the conversations: %s' % e)
+        self.refresh(keep_status=True)
+
+
+# File Transfers: the files of the transfers that are on the server and not here
+
+FILE_COLUMNS = (('time', 'Time', 135), ('direction', 'Direction', 65), ('contact', 'Contact', 170), ('type', 'Type', 80),
+                ('size', 'Size', 65), ('status', 'Status', 100), ('file', 'File', 160))
+
+DOWNLOAD_CONCURRENCY = 3        # files fetched at the same time
+
+
+def _format_size(size):
+    if not size:
+        return ''
+    if size < 1024:
+        return '%d bytes' % size
+    value = float(size)
+    for unit in ('KB', 'MB', 'GB', 'TB'):
+        value /= 1024.0
+        if value < 1024 or unit == 'TB':
+            return '%.0f %s' % (value, unit) if value >= 100 or unit == 'KB' else '%.1f %s' % (value, unit)
+
+
+def _decryptor():
+    """Opens a downloaded .asc with the private key it was sealed to, among those on this device; None
+    when there is none (the cache then fails it as 'no key yet', which a later Download retries)."""
+    from MessageHost import load_private_keys
+    if not load_private_keys():
+        return None
+
+    def decrypt(payload):
+        try:
+            import pgpy
+            from MessageHost import pgp_plaintext_bytes, private_key_for_message
+            blob = payload
+            try:
+                text = payload.decode('utf-8')
+            except (UnicodeDecodeError, AttributeError):
+                text = None
+            if text is not None and 'BEGIN PGP' in text:
+                blob = text
+            message = pgpy.PGPMessage.from_blob(blob)
+            key = private_key_for_message(message, None)
+            if key is None:
+                raise ValueError('no private key on this device opens it')
+            return pgp_plaintext_bytes(key.decrypt(message))
+        except Exception as e:
+            BlinkLogger().log_error('[data] Cannot decrypt a downloaded file (%d bytes): %s' % (len(payload or b''), e))
+            return None
+    return decrypt
+
+
+class FileTransfersPanel(NSObject):
+    """The File Transfers section of the Data manager: the transfers of an account whose file is on the
+    server and not on this computer, drilled into as messages are (type, status, contact, year/month/day),
+    and Download for the whole selection through the cache the conversations fetch with."""
+
+    view = None
+
+    @objc.python_method
+    def setupInView(self, parent, frame):
+        self.accounts = []          # [(account id, transfers)]
+        self.account_id = None
+        self.rows = []              # DataManage.FileRow whose file is missing
+        self.counts = {}
+        self.kind = None
+        self.action = None          # the status
+        self.contact = None
+        self.year = self.month = self.day = None
+        self.loading = False
+        self.busy = False
+        self.cancelled = False
+        self.result = None
+        self.error = None
+        self.seq = 0
+        self.queue = deque()
+        self.active = {}            # msgid: FileRow being fetched
+        self.total = self.downloaded = 0
+        self.failures = []          # (name, reason)
+        self.timer = None
+        self.decrypt = None
+        self.preview_rows = []
+        self.popup_values = {}
+        self.view = NSView.alloc().initWithFrame_(frame)
+        self.view.setAutoresizingMask_(NSViewWidthSizable | NSViewHeightSizable)
+        parent.addSubview_(self.view)
+        self._build()
+        self.refreshControls()
+        return self
+
+    # -- the panel ----------------------------------------------------------------------
+
+    @objc.python_method
+    def _label(self, frame, text='', size=12, bold=False, color=None, mask=0):
+        label = NSTextField.alloc().initWithFrame_(frame)
+        label.setBezeled_(False)
+        label.setDrawsBackground_(False)
+        label.setEditable_(False)
+        label.setSelectable_(False)
+        label.setFont_(NSFont.boldSystemFontOfSize_(size) if bold else NSFont.systemFontOfSize_(size))
+        if color is not None:
+            label.setTextColor_(color)
+        label.setStringValue_(text)
+        label.setAutoresizingMask_(mask)
+        self.view.addSubview_(label)
+        return label
+
+    @objc.python_method
+    def _popup(self, name, frame, action, mask):
+        popup = NSPopUpButton.alloc().initWithFrame_pullsDown_(frame, False)
+        popup.setTarget_(self)
+        popup.setAction_(action)
+        popup.setAutoresizingMask_(mask)
+        popup.menu().setAutoenablesItems_(False)
+        self.view.addSubview_(popup)
+        self.popup_values[name] = []
+        return popup
+
+    @objc.python_method
+    def _button(self, frame, title, action, mask):
+        button = NSButton.alloc().initWithFrame_(frame)
+        button.setBezelStyle_(NSRoundedBezelStyle)
+        button.setTitle_(title)
+        button.setTarget_(self)
+        button.setAction_(action)
+        button.setAutoresizingMask_(mask)
+        self.view.addSubview_(button)
+        return button
+
+    @objc.python_method
+    def _build(self):
+        secondary = NSColor.secondaryLabelColor()
+        top = NSViewWidthSizable | NSViewMinYMargin
+        height = self.view.frame().size.height
+        x = PAD + LABEL_W
+        field_w = WIDTH - 2 * PAD - LABEL_W
+
+        y = height - PAD - ROW_H
+        rows = []
+        for name, title, action in (('account', _t("Account"), 'accountChanged:'), ('kind', _t("Type"), 'kindChanged:'),
+                                    ('action', _t("Status"), 'actionChanged:'), ('contact', _t("Contact"), 'contactChanged:')):
+            self._label(NSMakeRect(PAD, y + 4, LABEL_W - 6, 17), title, color=secondary, mask=NSViewMinYMargin)
+            rows.append(self._popup(name, NSMakeRect(x, y, field_w, ROW_H), action, top))
+            y -= ROW_STEP
+        self.accountPopup, self.kindPopup, self.actionPopup, self.contactPopup = rows
+
+        self._label(NSMakeRect(PAD, y + 4, LABEL_W - 6, 17), _t("Period"), color=secondary, mask=NSViewMinYMargin)
+        third = (field_w - 2 * 8) / 3.0
+        self.yearPopup = self._popup('year', NSMakeRect(x, y, third, ROW_H), 'yearChanged:',
+                                     NSViewMinYMargin | NSViewWidthSizable | NSViewMaxXMargin)
+        self.monthPopup = self._popup('month', NSMakeRect(x + third + 8, y, third, ROW_H), 'monthChanged:',
+                                      NSViewMinYMargin | NSViewMinXMargin | NSViewWidthSizable | NSViewMaxXMargin)
+        self.dayPopup = self._popup('day', NSMakeRect(x + 2 * (third + 8), y, third, ROW_H), 'dayChanged:',
+                                    NSViewMinYMargin | NSViewMinXMargin | NSViewWidthSizable)
+
+        y -= 8 + 52
+        self.headline = self._label(NSMakeRect(PAD, y, WIDTH - 2 * PAD, 52), '', size=13, bold=True, mask=top)
+        self.headline.setAlignment_(NSCenterTextAlignment)
+        split_top = y - 6
+
+        bottom = NSViewWidthSizable | NSViewMaxYMargin
+        self.refreshButton = self._button(NSMakeRect(PAD - 6, 12, 100, BUTTON_H), _t("Refresh"), 'refreshClicked:', NSViewMaxXMargin | NSViewMaxYMargin)
+        self.resetButton = self._button(NSMakeRect(PAD - 6 + 100, 12, 120, BUTTON_H), _t("Reset Filters"), 'resetClicked:', NSViewMaxXMargin | NSViewMaxYMargin)
+        self.downloadButton = self._button(NSMakeRect(WIDTH - PAD + 6 - 160, 12, 160, BUTTON_H), _t("Download"), 'downloadClicked:', NSViewMinXMargin | NSViewMaxYMargin)
+        self.stopButton = self._button(NSMakeRect(WIDTH - PAD + 6 - 160 - BUTTON_W, 12, BUTTON_W, BUTTON_H), _t("Stop"), 'stopClicked:', NSViewMinXMargin | NSViewMaxYMargin)
+
+        self.statusLabel = self._label(NSMakeRect(PAD, 48, WIDTH - 2 * PAD, 30), '', size=11, mask=bottom)
+        self.statusLabel.setAlignment_(NSCenterTextAlignment)
+
+        self.progressBar = NSProgressIndicator.alloc().initWithFrame_(NSMakeRect(PAD, 82, WIDTH - 2 * PAD, 16))
+        self.progressBar.setIndeterminate_(False)
+        self.progressBar.setHidden_(True)
+        self.progressBar.setAutoresizingMask_(bottom)
+        self.view.addSubview_(self.progressBar)
+        split_bottom = 106
+
+        self.split = NSSplitView.alloc().initWithFrame_(NSMakeRect(PAD, split_bottom, WIDTH - 2 * PAD, split_top - split_bottom))
+        self.split.setVertical_(False)
+        self.split.setDividerStyle_(2)      # thin
+        self.split.setAutoresizingMask_(NSViewWidthSizable | NSViewHeightSizable)
+        self.view.addSubview_(self.split)
+        width = WIDTH - 2 * PAD
+        list_h = (split_top - split_bottom) * 0.7
+
+        scroll = NSScrollView.alloc().initWithFrame_(NSMakeRect(0, 0, width, list_h))
+        scroll.setHasVerticalScroller_(True)
+        scroll.setHasHorizontalScroller_(True)
+        scroll.setAutohidesScrollers_(True)
+        scroll.setBorderType_(NSBezelBorder)
+        self.table = NSTableView.alloc().initWithFrame_(scroll.contentView().bounds())
+        for identifier, title, column_width in FILE_COLUMNS:
+            column = NSTableColumn.alloc().initWithIdentifier_(identifier)
+            column.headerCell().setStringValue_(_t(title))
+            column.setWidth_(column_width)
+            column.setEditable_(False)
+            column.dataCell().setFont_(NSFont.systemFontOfSize_(11))
+            column.dataCell().setLineBreakMode_(NSLineBreakByTruncatingTail)
+            self.table.addTableColumn_(column)
+        self.table.setUsesAlternatingRowBackgroundColors_(True)
+        self.table.setColumnAutoresizingStyle_(NSTableViewLastColumnOnlyAutoresizingStyle)
+        self.table.setRowHeight_(16)
+        self.table.setAllowsMultipleSelection_(False)
+        self.table.setDataSource_(self)
+        self.table.setDelegate_(self)
+        scroll.setDocumentView_(self.table)
+        self.split.addSubview_(scroll)
+
+        detail = NSView.alloc().initWithFrame_(NSMakeRect(0, 0, width, split_top - split_bottom - list_h))
+        text_scroll = NSScrollView.alloc().initWithFrame_(NSMakeRect(0, 0, width, detail.frame().size.height - DETAIL_GAP))
+        text_scroll.setHasVerticalScroller_(True)
+        text_scroll.setBorderType_(NSBezelBorder)
+        text_scroll.setAutoresizingMask_(NSViewWidthSizable | NSViewHeightSizable)
+        size = text_scroll.contentSize()
+        self.detailText = NSTextView.alloc().initWithFrame_(NSMakeRect(0, 0, size.width, size.height))
+        self.detailText.setEditable_(False)
+        self.detailText.setSelectable_(True)
+        self.detailText.setRichText_(False)
+        self.detailText.setVerticallyResizable_(True)
+        self.detailText.setHorizontallyResizable_(False)
+        self.detailText.setAutoresizingMask_(NSViewWidthSizable)
+        self.detailText.setMinSize_(NSMakeSize(0, size.height))
+        self.detailText.setMaxSize_(NSMakeSize(1.0e7, 1.0e7))
+        self.detailText.textContainer().setWidthTracksTextView_(True)
+        text_scroll.setDocumentView_(self.detailText)
+        detail.addSubview_(text_scroll)
+        self.split.addSubview_(detail)
+        self._setDetail(None)
+
+    @objc.python_method
+    def _setDetail(self, text):
+        if text is None:
+            self.detailText.setString_(_t("Click a file transfer to see it in full"))
+            color = NSColor.secondaryLabelColor()
+        else:
+            self.detailText.setString_(text)
+            color = NSColor.textColor()
+        self.detailText.setFont_(NSFont.userFixedPitchFontOfSize_(11))
+        self.detailText.setTextColor_(color)
+
+    @objc.python_method
+    def _fill(self, name, popup, items, selected):
+        menu = popup.menu()
+        menu.removeAllItems()
+        values = []
+        index = 0
+        for value, title in items:
+            menu.addItem_(NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(title, None, ""))
+            values.append(value)
+            if value == selected:
+                index = len(values) - 1
+        if values:
+            popup.selectItemAtIndex_(index)
+        self.popup_values[name] = values
+
+    @objc.python_method
+    def _value(self, name, popup):
+        index = popup.indexOfSelectedItem()
+        values = self.popup_values.get(name) or []
+        return values[index] if 0 <= index < len(values) else None
+
+    # -- what is selected ----------------------------------------------------------------
+
+    @objc.python_method
+    def period(self):
+        return self.day or self.month or self.year
+
+    @objc.python_method
+    def _periodLabel(self):
+        if self.day:
+            return '%s %s' % (_day_label(self.day), self.day[:4])
+        if self.month:
+            return _month_label(self.month)
+        if self.year:
+            return self.year
+        return _t("All time")
+
+    @objc.python_method
+    def selection(self):
+        return select(self.rows, self.kind, self.action, self.contact, self.period())
+
+    @objc.python_method
+    def _account(self):
+        """The account files are fetched for: enabled, and not Bonjour (its files do not go through the server)."""
+        account = _account(self.account_id)
+        return None if account is None or account is BonjourAccount() else account
+
+    @objc.python_method
+    def _downloadable(self, rows):
+        """The rows Download fetches, once per message."""
+        seen = set()
+        result = []
+        for row in rows:
+            if row.action in DOWNLOADABLE and row.message_id not in seen:
+                seen.add(row.message_id)
+                result.append(row)
+        return result
+
+    @objc.python_method
+    def _summary(self):
+        counts = self.counts
+        if not counts or not counts.get('transfers'):
+            return ''
+        parts = [_t("%d of %d file transfers are here") % (counts.get('here', 0), counts['transfers'])]
+        if counts.get('expired'):
+            parts.append(_t("%d expired on the server") % counts['expired'])
+        if counts.get('gone'):
+            parts.append(_t("%d gone from the server") % counts['gone'])
+        if counts.get('no_url'):
+            parts.append(_t("%d never uploaded") % counts['no_url'])
+        if counts.get('unreadable'):
+            parts.append(_t("%d not readable (encrypted message)") % counts['unreadable'])
+        return ', '.join(parts)
+
+    @objc.python_method
+    def refreshControls(self):
+        idle = not self.busy and not self.loading
+
+        self._fill('account', self.accountPopup, [(account_id, '%s  (%d)' % (mangled_account_label(account_id), count))
+                                                  for account_id, count in self.accounts], self.account_id)
+        self.accountPopup.setEnabled_(idle and len(self.accounts) > 1)
+
+        # each filter lists what is left once every other filter is applied, as for messages
+        period = self.period()
+        rows_for_type = select(self.rows, action=self.action, contact=self.contact, period=period)
+        kinds = sorted(count_by(rows_for_type, 'type'), key=lambda item: FILE_KINDS.index(item[0]) if item[0] in FILE_KINDS else len(FILE_KINDS))
+        items = [(None, _t("All types") + '  (%d)' % len(rows_for_type))]
+        items += [(kind, '%s  (%d)' % (type_label(kind), count)) for kind, count in kinds]
+        self._fill('kind', self.kindPopup, items, self.kind)
+        self.kindPopup.setEnabled_(idle and bool(kinds))
+
+        rows_for_status = select(self.rows, self.kind, contact=self.contact, period=period)
+        statuses = count_by(rows_for_status, 'action')
+        items = [(None, _t("Any status") + '  (%d)' % len(rows_for_status))]
+        items += [(status, '%s  (%d)' % (_t(status_label(status)), count)) for status, count in statuses]
+        self._fill('action', self.actionPopup, items, self.action)
+        self.actionPopup.setEnabled_(idle and (len(statuses) > 1 or self.action is not None))
+
+        contacts = count_by(select(self.rows, self.kind, self.action, period=period), 'contact')
+        items = [(None, _t("All contacts") + '  (%d)' % len(contacts))]
+        items += [(contact, '%s  (%d)' % (mangled_uri(contact) or _t("(no contact)"), count)) for contact, count in contacts]
+        self._fill('contact', self.contactPopup, items, self.contact)
+        self.contactPopup.setEnabled_(idle and len(contacts) > 0)
+
+        scoped = select(self.rows, self.kind, self.action, self.contact)
+        items = [(None, _t("All years"))] + [(year, '%s  (%d)' % (year, count)) for year, count in aggregate_days(scoped, 4)]
+        self._fill('year', self.yearPopup, items, self.year)
+        self.yearPopup.setEnabled_(idle and len(items) > 1)
+
+        items = [(None, _t("All months"))]
+        if self.year:
+            items += [(month, '%s  (%d)' % (_month_label(month), count)) for month, count in aggregate_days(scoped, 7, self.year)]
+        self._fill('month', self.monthPopup, items, self.month)
+        self.monthPopup.setEnabled_(idle and bool(self.year))
+
+        items = [(None, _t("All days"))]
+        if self.month:
+            items += [(day, '%s  (%d)' % (_day_label(day), count)) for day, count in aggregate_days(scoped, 10, self.month)]
+        self._fill('day', self.dayPopup, items, self.day)
+        self.dayPopup.setEnabled_(idle and bool(self.month))
+
+        selected = self.selection()
+        downloadable = self._downloadable(selected)
+        size = sum(row.size or 0 for row in downloadable)
+        line = '%s · %s' % (type_label(self.kind) if self.kind else _t("All files"), self._periodLabel())
+        if self.action is not None:
+            line += ' · %s' % _t(status_label(self.action))
+        if self.contact:
+            line += ' · %s' % mangled_uri(self.contact)
+        if self.loading:
+            detail = _t("Looking for the files of the file transfers…")
+        elif not self.accounts:
+            detail = _t("There are no file transfers")
+        elif not self.rows:
+            detail = _t("Every file on the server is on this computer")
+        else:
+            detail = _t("%d files missing here, %d to download (%s)") % (len(selected), len(downloadable), _format_size(size) or '0 bytes')
+        text = '%s\n%s' % (line, detail) if self.account_id and self.rows else detail
+        summary = self._summary()
+        if summary and not self.loading:
+            text += '\n%s' % summary
+        self.headline.setStringValue_(text)
+
+        if not self.busy:
+            self._fillPreview(selected if not self.loading else [])
+
+        if self.busy:
+            fractions = 0.0
+            for row in self.active.values():
+                fraction, phase = FileTransferCache().progress(row.meta)
+                fractions += fraction or 0.0
+            done = self.total - len(self.queue) - len(self.active)
+            self.progressBar.setHidden_(False)
+            self.progressBar.setMinValue_(0.0)
+            self.progressBar.setMaxValue_(float(max(self.total, 1)))
+            self.progressBar.setDoubleValue_(done + fractions)
+        else:
+            self.progressBar.setHidden_(True)
+
+        if self.busy:
+            if self.cancelled:
+                status = _t("Stopping after the files being fetched…")
+            else:
+                names = ', '.join(row.name for row in list(self.active.values())[:DOWNLOAD_CONCURRENCY])
+                status = _t("Downloading %d of %d: %s") % (min(self.total - len(self.queue), self.total), self.total, names)
+            color = NSColor.secondaryLabelColor()
+        elif self.error:
+            status, color = ('%s\n%s' % (self.result, self.error) if self.result else self.error), NSColor.systemRedColor()
+        else:
+            status, color = self.result or '', NSColor.secondaryLabelColor()
+        self.statusLabel.setStringValue_(status)
+        self.statusLabel.setTextColor_(color)
+
+        account = self._account()
+        self.refreshButton.setEnabled_(idle)
+        self.resetButton.setEnabled_(idle and any(value is not None for value in (self.kind, self.action, self.contact, self.year)))
+        self.stopButton.setHidden_(not self.busy)
+        self.stopButton.setEnabled_(self.busy and not self.cancelled)
+        self.downloadButton.setTitle_(_t("Download %d…") % len(downloadable) if downloadable else _t("Download"))
+        self.downloadButton.setEnabled_(idle and bool(downloadable) and account is not None)
+        self.downloadButton.setToolTip_(_t("Fetch every file of the selection that is on the server") if account is not None
+                                        else _t("Files of this account cannot be fetched from the server (disabled, or Bonjour)"))
+
+    @objc.python_method
+    def _fillPreview(self, selected):
+        self._setDetail(None)
+        newest = sorted(selected, key=lambda row: (row.timestamp, row.id), reverse=True)[:PREVIEW_ROWS]
+        rows = []
+        for row in newest:
+            rows.append((row.id, {'time': _local_time(row.timestamp), 'direction': row.direction, 'contact': mangled_uri(row.contact) or '',
+                                  'type': type_label(row.type), 'size': _format_size(row.size), 'status': _t(status_label(row.action)),
+                                  'file': row.name}))
+        if len(selected) > PREVIEW_ROWS:
+            rows.append((None, {'file': _t("… and %d older") % (len(selected) - PREVIEW_ROWS)}))
+        self.preview_rows = rows
+        self.table.deselectAll_(None)
+        self.table.reloadData()
+
+    # -- the table ----------------------------------------------------------------------------
+
+    def numberOfRowsInTableView_(self, table):
+        return len(self.preview_rows)
+
+    def tableView_objectValueForTableColumn_row_(self, table, column, row):
+        try:
+            return self.preview_rows[row][1].get(str(column.identifier()), '')
+        except IndexError:
+            return ''
+
+    def tableView_shouldSelectRow_(self, table, row):
+        return 0 <= row < len(self.preview_rows) and self.preview_rows[row][0] is not None
+
+    def tableViewSelectionDidChange_(self, notification):
+        index = self.table.selectedRow()
+        row_id = self.preview_rows[index][0] if 0 <= index < len(self.preview_rows) else None
+        row = next((row for row in self.rows if row.id == row_id), None) if row_id is not None else None
+        if row is None:
+            self._setDetail(None)
+            return
+        fields = [('file', row.name), ('size', _format_size(row.size)), ('filetype', row.filetype), ('status', status_label(row.action)),
+                  ('reason', row.reason), ('contact', row.peer), ('account', row.account), ('time', _local_time(row.timestamp)),
+                  ('direction', row.direction), ('msgid', row.message_id), ('transfer_id', row.meta.get('transfer_id')),
+                  ('url', row.url), ('until', row.until)]
+        text = '\n'.join('%s: %s' % (name, value) for name, value in fields if value not in (None, ''))
+        self._setDetail(mangled_text(text, uri=row.contact))
+
+    # -- loading ---------------------------------------------------------------------------------
+
+    @objc.python_method
+    def refresh(self, keep_status=False):
+        if self.busy:
+            return
+        self.loading = True
+        self.seq += 1
+        if not keep_status:
+            self.error = self.result = None
+        self.refreshControls()
+        self._load(self.seq, self.account_id, True)
+
+    @objc.python_method
+    @run_in_thread('data-manage-files')
+    def _load(self, seq, account_id, with_accounts):
+        accounts = None
+        counts = {}
+        rows = []
+        try:
+            if with_accounts:
+                stored = blockingCallFromThread(reactor, lambda: ChatHistory().data_file_transfer_accounts())
+                enabled = {str(account.id).lower() for account in AccountManager().iter_accounts() if account.enabled}
+                accounts = [(account, count) for account, count in stored if account in enabled]
+                ids = [account for account, count in accounts]
+                if account_id not in ids:
+                    account_id = ids[0] if ids else None
+            if account_id:
+                from MessageHost import file_transfer_envelope, load_private_keys
+                started = time.monotonic()
+                db_rows = blockingCallFromThread(reactor, lambda: ChatHistory().data_file_transfers(account_id))
+                cache = FileTransferCache()
+                storage = scan_transfer_storage(cache.directory())
+
+                def failure(meta):
+                    reason = cache.failure(meta)
+                    return (reason, cache.is_gone(meta)) if reason and cache.is_permanent_failure(meta) else None
+                rows, counts = build_file_rows(db_rows, storage, file_transfer_envelope, can_decrypt=bool(load_private_keys()), failure=failure)
+                _log('%d of %d file transfers of %s are on the server and not here (%d here, %d expired, %d gone, %d without URL, %d unreadable) in %.1fs'
+                     % (len(rows), counts['transfers'], account_id, counts['here'], counts['expired'], counts['gone'], counts['no_url'],
+                        counts['unreadable'], time.monotonic() - started))
+        except Exception as e:
+            BlinkLogger().log_error('[data] Cannot read the file transfers: %s' % e)
+        self._gotRows(seq, accounts, account_id, rows, counts)
+
+    @objc.python_method
+    @run_in_gui_thread
+    def _gotRows(self, seq, accounts, account_id, rows, counts):
+        if seq != self.seq:
+            return
+        if accounts is not None:
+            self.accounts = accounts
+        if account_id != self.account_id:
+            self.account_id = account_id
+            self.kind = self.action = self.contact = self.year = self.month = self.day = None
+        self.rows = rows
+        self.counts = counts
+        self.loading = False
+        if self.kind is not None and not select(rows, self.kind):
+            self.kind = None
+        if self.action is not None and not select(rows, self.kind, self.action):
+            self.action = None
+        if self.contact is not None and not select(rows, self.kind, self.action, self.contact):
+            self.contact = None
+        for name in ('day', 'month', 'year'):
+            value = getattr(self, name)
+            if value and not select(rows, self.kind, self.action, self.contact, value):
+                setattr(self, name, None)
+        self.refreshControls()
+
+    # -- the controls ------------------------------------------------------------------------------
+
+    def accountChanged_(self, sender):
+        account_id = self._value('account', sender)
+        if account_id == self.account_id:
+            return
+        self.account_id = account_id
+        self.kind = self.action = self.contact = self.year = self.month = self.day = None
+        self.result = self.error = None
+        self.seq += 1
+        self.loading = True
+        self.refreshControls()
+        self._load(self.seq, account_id, False)
+
+    def kindChanged_(self, sender):
+        self.kind = self._value('kind', sender)
+        self.result = None
+        self.refreshControls()
+
+    def actionChanged_(self, sender):
+        self.action = self._value('action', sender)
+        self.result = None
+        self.refreshControls()
+
+    def contactChanged_(self, sender):
+        self.contact = self._value('contact', sender)
+        self.result = None
+        self.refreshControls()
+
+    def yearChanged_(self, sender):
+        self.year = self._value('year', sender)
+        self.month = self.day = None
+        self.result = None
+        self.refreshControls()
+
+    def monthChanged_(self, sender):
+        self.month = self._value('month', sender)
+        self.day = None
+        self.result = None
+        self.refreshControls()
+
+    def dayChanged_(self, sender):
+        self.day = self._value('day', sender)
+        self.result = None
+        self.refreshControls()
+
+    def refreshClicked_(self, sender):
+        self.refresh()
+
+    def resetClicked_(self, sender):
+        self.kind = self.action = self.contact = self.year = self.month = self.day = None
+        self.result = None
+        self.refreshControls()
+
+    # -- the download --------------------------------------------------------------------------------
+
+    def downloadClicked_(self, sender):
+        if self.busy or self.loading:
+            return
+        account = self._account()
+        rows = self._downloadable(self.selection())
+        if account is None or not rows:
+            return
+        size = sum(row.size or 0 for row in rows)
+        alert = NSAlert.alloc().init()
+        alert.setMessageText_(_t("Download Files"))
+        alert.setInformativeText_(_t("Download %d files (%s) from the server?") % (len(rows), _format_size(size) or _t("size unknown")))
+        alert.addButtonWithTitle_(_t("Download"))
+        alert.addButtonWithTitle_(_t("Cancel"))
+        if alert.runModal() != NSAlertFirstButtonReturn:
+            return
+        self.busy = True
+        self.cancelled = False
+        self.result = self.error = None
+        self.queue = deque(sorted(rows, key=lambda row: (row.timestamp, row.id), reverse=True))     # newest first
+        self.active = {}
+        self.total = len(rows)
+        self.downloaded = 0
+        self.failures = []
+        self.decrypt = _decryptor()
+        self.timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(0.5, self, 'progressTimer:', None, True)
+        _log('Downloading %d files (%d bytes) of %s: %s, %s, %s, %s' % (len(rows), size, self.account_id, type_label(self.kind) if self.kind else 'all types',
+                                                                        status_label(self.action), self.contact or 'all contacts', self.period() or 'all time'))
+        self._pump()
+
+    def stopClicked_(self, sender):
+        if not self.busy:
+            return
+        self.cancelled = True       # the files being fetched finish, no new one starts
+        if not self.active:
+            self._finish()
+        else:
+            self.refreshControls()
+
+    def progressTimer_(self, timer):
+        if self.busy:
+            self.refreshControls()
+
+    @objc.python_method
+    def _pump(self):
+        while self.queue and not self.cancelled and len(self.active) < DOWNLOAD_CONCURRENCY:
+            row = self.queue.popleft()
+            self.active[row.message_id] = row
+            try:
+                path = FileTransferCache().fetch(dict(row.meta), row.account, row.peer, partial(self._arrived, row),
+                                                 decrypt=self.decrypt, force=True)
+            except Exception as e:
+                BlinkLogger().log_error('[data] Cannot fetch %s of %s: %s' % (row.name, row.message_id, e))
+                self.active.pop(row.message_id, None)
+                self.failures.append((row.name, str(e)))
+                continue
+            if path is not None:
+                self._arrived(row, path)       # it was here after all
+        if not self.active and (self.cancelled or not self.queue):
+            self._finish()
+        else:
+            self.refreshControls()
+
+    @objc.python_method
+    def _arrived(self, row, path):
+        """The cache's answer for one file (GUI thread): its path, or None when it failed."""
+        if self.active.pop(row.message_id, None) is None:
+            return
+        cache = FileTransferCache()
+        history = ChatHistory()
+        if path is not None:
+            self.downloaded += 1
+            if row.meta.get('error'):
+                # a failure an earlier run wrote into the envelope, disproved
+                try:
+                    history.update_message_body(row.message_id, transfer_error_note(None), merge=merge_transfer_error)
+                except Exception as e:
+                    BlinkLogger().log_error('[data] Cannot clear the failure of %s: %s' % (row.message_id, e))
+            try:
+                _sms_manager().transferFetchedInDataManager(self._account(), row.peer, row.message_id)
+            except Exception as e:
+                BlinkLogger().log_error('[data] Cannot show the file of %s: %s' % (row.message_id, e))
+        else:
+            reason = cache.failure(row.meta) or 'failed'
+            self.failures.append((row.name, reason))
+            if cache.is_permanent_failure(row.meta):
+                # as the conversation does: kept in the envelope so the next run knows (a 404 there drops the message)
+                try:
+                    history.update_message_body(row.message_id, transfer_error_note(reason), merge=merge_transfer_error)
+                except Exception as e:
+                    BlinkLogger().log_error('[data] Cannot record the failure of %s: %s' % (row.message_id, e))
+        self._pump()
+
+    @objc.python_method
+    def _finish(self):
+        if self.timer is not None:
+            self.timer.invalidate()
+            self.timer = None
+        stopped = self.cancelled
+        self.busy = False
+        self.cancelled = False
+        self.queue.clear()
+        self.active = {}
+        self.decrypt = None
+        result = _t("Downloaded %d of %d files") % (self.downloaded, self.total)
+        if stopped:
+            result += _t(", stopped")
+        self.result = result
+        if self.failures:
+            shown = '; '.join('%s: %s' % (name, reason) for name, reason in self.failures[:3])
+            more = len(self.failures) - 3
+            self.error = _t("%d failed: %s") % (len(self.failures), shown) + (_t(" and %d more (see the logs)") % more if more > 0 else '')
+        else:
+            self.error = None
+        _log('Downloaded %d of %d files of %s' % (self.downloaded, self.total, self.account_id) + (', %d failed' % len(self.failures) if self.failures else '')
+             + (' (stopped)' if stopped else ''))
         self.refresh(keep_status=True)
 
 

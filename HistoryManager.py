@@ -3389,6 +3389,34 @@ class ChatHistory(object, metaclass=Singleton):
             BlinkLogger().log_error('[data] Reading the messages of %s for the Data manager failed: %s' % (account_id, e))
             return []
 
+    @run_in_db_thread
+    def data_file_transfer_accounts(self):
+        """Like data_accounts, counting the file transfer messages only."""
+        table = ChatMessage.sqlmeta.table
+        types = ', '.join(ChatMessage.sqlrepr(t) for t in FILE_TRANSFER_CONTENT_TYPES)
+        try:
+            rows = self.db.queryAll('select lower(local_uri), count(*) from %s where content_type in (%s) and %s%s group by lower(local_uri) order by 2 desc'
+                                    % (table, types, NOT_DELETED_SQL, _other_profiles_sql()))
+        except Exception as e:
+            BlinkLogger().log_error('[data] Counting the file transfers per account failed: %s' % e)
+            return []
+        return [(str(account), int(count)) for account, count in rows if account]
+
+    @run_in_db_thread
+    def data_file_transfers(self, account_id):
+        """The live file transfer rows of an account as tuples (id, msgid, local_uri, remote_uri, local day,
+        time, direction, category, body), local_uri and remote_uri as stored: the cache files under them."""
+        table = ChatMessage.sqlmeta.table
+        types = ', '.join(ChatMessage.sqlrepr(t) for t in FILE_TRANSFER_CONTENT_TYPES)
+        query = ("select id, msgid, local_uri, remote_uri, date(time, 'localtime'), time, direction, category, body from %s"
+                 " where lower(local_uri) = %s and content_type in (%s) and %s"
+                 % (table, ChatMessage.sqlrepr(str(account_id).lower()), types, NOT_DELETED_SQL))
+        try:
+            return list(self.db.queryAll(query))
+        except Exception as e:
+            BlinkLogger().log_error('[data] Reading the file transfers of %s for the Data manager failed: %s' % (account_id, e))
+            return []
+
     DATA_MESSAGE_COLUMNS = ('id', 'msgid', 'local_uri', 'remote_uri', 'time', 'direction', 'content_type', 'category', 'related_action',
                             'related_msg_id', 'status', 'encryption', 'read', 'deleted', 'journal_id', 'uuid', 'sip_callid', 'media_type',
                             'cpim_from', 'cpim_to', 'cpim_timestamp', 'private', 'expire_time', 'metadata', 'body')
