@@ -22,6 +22,10 @@ __all__ = ['JournalProgressStrip']
 import objc
 
 from AppKit import (NSFont,
+                    NSMenu,
+                    NSMenuItem,
+                    NSOnState,
+                    NSOffState,
                     NSLineBreakByTruncatingTail,
                     NSProgressIndicator,
                     NSTextField,
@@ -103,9 +107,64 @@ class JournalProgressStrip(NSObject):
         self.speed_button.setBordered_(False)
         self.speed_button.setAutoresizingMask_(NSViewMinXMargin)
         self.speed_button.setHidden_(True)
+        self._build_speed_menu()
         self.view.addSubview_(self.speed_button)
 
         self.container.addSubview_(self.view)
+
+    @objc.python_method
+    def _build_speed_menu(self):
+        """Fast / Normal / Gentle, then Pause (Resume while paused): how much CPU
+        the background decryption of stored messages may use."""
+        from PGPDecryptor import BackgroundDecryptor
+        menu = NSMenu.alloc().init()
+        menu.setAutoenablesItems_(False)
+        # a pull-down shows its first item as the button's title
+        title = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('', None, '')
+        menu.addItem_(title)
+        for speed, name in BackgroundDecryptor.speed_names:
+            if speed == 'paused':
+                menu.addItem_(NSMenuItem.separatorItem())
+            item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(NSLocalizedString(name, "Menu item"), 'speedChosen:', '')
+            item.setTarget_(self)
+            item.setRepresentedObject_(speed)
+            item.setToolTip_(NSLocalizedString(BackgroundDecryptor.speed_descriptions[speed], "Tooltip"))
+            menu.addItem_(item)
+        self.speed_button.setMenu_(menu)
+        self.speed_button.setToolTip_(NSLocalizedString("How much CPU decrypting stored messages may use", "Tooltip"))
+
+    @objc.python_method
+    def _update_speed_menu(self, speed):
+        from PGPDecryptor import BackgroundDecryptor
+        names = dict(BackgroundDecryptor.speed_names)
+        menu = self.speed_button.menu()
+        for item in menu.itemArray()[1:]:
+            value = item.representedObject()
+            if value is None:
+                continue
+            if value == 'paused':
+                # the menu says what to do (Pause / Resume), the button what is (Paused)
+                item.setTitle_(NSLocalizedString("Resume" if speed == 'paused' else "Pause", "Menu item"))
+                item.setState_(NSOffState)
+            else:
+                item.setState_(NSOnState if value == speed else NSOffState)
+        label = NSLocalizedString("Paused", "Label") if speed == 'paused' else NSLocalizedString(names.get(speed, 'Normal'), "Menu item")
+        menu.itemAtIndex_(0).setTitle_(label)
+        self.speed_button.setTitle_(label)
+
+    def speedChosen_(self, sender):
+        from PGPDecryptor import BackgroundDecryptor
+        decryptor = BackgroundDecryptor()
+        speed = sender.representedObject()
+        if speed == 'paused' and decryptor.paused:
+            decryptor.resume()
+        else:
+            decryptor.set_speed(speed)
+        if self.decryption_progress is not None:
+            done, total, _, eta = self.decryption_progress
+            self.decryption_progress = (done, total, decryptor.speed, eta)
+            if not self.journal_in_progress:
+                self._show_decryption()
 
     # Showing and hiding: the strip takes the top STRIP_HEIGHT points of the
     # contact list's tab, the list gets the rest
@@ -219,6 +278,8 @@ class JournalProgressStrip(NSObject):
     def _show_decryption(self):
         done, total, speed, eta = self.decryption_progress
         self.speed_menu_visible = self.speed_button.menu() is not None and self.speed_button.numberOfItems() > 1
+        if self.speed_menu_visible:
+            self._update_speed_menu(speed)
         if speed == 'paused':
             label = NSLocalizedString("Decrypting messages paused", "Progress")
         else:
