@@ -196,6 +196,13 @@ def is_file_transfer_notice(content_type, content):
     return content.startswith('File transfer available at ') and '/webrtcgateway/filetransfer/' in content
 
 
+def _is_armoured_body(body):
+    if not body or not isinstance(body, str):
+        return False
+    stripped = body.strip()
+    return stripped.startswith('-----BEGIN PGP MESSAGE-----') and stripped.endswith('-----END PGP MESSAGE-----')
+
+
 def _row_details(row, body=True):
     """One stored chat_messages row as a plain dict, for the info panel."""
     fields = ('msgid', 'direction', 'time', 'local_uri', 'remote_uri', 'cpim_from',
@@ -5028,10 +5035,21 @@ class SMSViewController(NSObject):
             # never finishes loading, with no way to tell it from a slow one.
             self._noteReplayFailed(str(e))
         else:
-            # Decrypt PGP messages off the GUI thread so the UI stays responsive
-            # while we work through the journal. The render method below only
-            # consumes the pre-decrypted text.
-            decrypted_bodies = self._decrypt_history_messages(messages)
+            # Decrypt PGP messages off the GUI thread and off the reactor: in
+            # the pgp-decrypt thread, waited for with block_on so SIP, the
+            # journal and the other conversations go on meanwhile. The render
+            # method below only consumes the pre-decrypted text. The background
+            # decryption yields while a conversation is doing this.
+            decrypted_bodies = {}
+            if any(_is_armoured_body(message.body) for message in messages):
+                from eventlib.twistedutil import block_on
+                from PGPDecryptor import decrypt_in_thread, note_view_decrypt
+                note_view_decrypt()
+                try:
+                    decrypted_bodies = block_on(decrypt_in_thread(self._decrypt_history_messages, messages)) or {}
+                except Exception as e:
+                    self.log_error('Cannot decrypt the history page: %s' % e)
+                note_view_decrypt()
             load_trace_mark(self.trace_key, 'decrypt')
             # From here to the end of the trace the per-message buckets are
             # collected: the render loop and the layout pass that follows it.
