@@ -1225,46 +1225,43 @@ class BlinkAppDelegate(NSObject):
         # 4G / weak-WiFi uplink can sustain end-to-end.
         try:
             from sipsimple.configuration.datatypes import VideoResolution
-            vga = VideoResolution('640x480')
+            try:
+                from ScreenPointerController import CAMERA_RESOLUTIONS
+            except ImportError:
+                CAMERA_RESOLUTIONS = [('640x480', '480p', 0.8, '3.0')]
             changed = False
-            # Pin resolution to VGA every startup.  Non-VGA captures
-            # (720p / 1080p) don't survive pjsip's avf_dev -> encoder
-            # -> packetizer pipeline cleanly on macOS - both the local
-            # preview and the remote Sylk receiver see broken aspect
-            # ratio at higher resolutions.  Until that's fixed at the
-            # pjsip layer, VGA is the only resolution that gives a
-            # working end-to-end video call.
-            if settings.video.resolution != vga:
-                settings.video.resolution = vga
+            # The resolution is chosen in Preferences (or the video
+            # window's menu) from CAMERA_RESOLUTIONS; patch 57 keeps the
+            # camera's shape on macOS at 720p / 1080p. Bitrate and H.264
+            # level follow the resolution; anything not in the table (an
+            # old setting, the screen's size left over from a crash while
+            # sharing) goes back to VGA.
+            by_size = dict((size, (bitrate, level)) for size, label, bitrate, level in CAMERA_RESOLUTIONS)
+            if str(settings.video.resolution) not in by_size:
+                settings.video.resolution = VideoResolution('640x480')
                 changed = True
+            bitrate, level = by_size.get(str(settings.video.resolution), (0.8, '3.0'))
             if settings.video.framerate != 24:
                 settings.video.framerate = 24
                 changed = True
-            # max_bitrate is stored as a float in Mbit/s (matches the
-            # BandwidthOption popup's representedObject values).
-            # 0.8 Mbit/s == 800 kbps.
-            if settings.video.max_bitrate != 0.8:
-                settings.video.max_bitrate = 0.8
+            # max_bitrate is stored as a float in Mbit/s.
+            if settings.video.max_bitrate != bitrate:
+                settings.video.max_bitrate = bitrate
                 changed = True
             if settings.video.container != 'standalone':
                 settings.video.container = 'standalone'
                 changed = True
-            # Pin H.264 profile to "baseline" and level to "3.0".  The
-            # H.264 toolbar tab is removed from Preferences (see
-            # PreferencesController.awakeFromNib_), and video.resolution
-            # is pinned to VGA above - Level 3.0 is the correct H.264
-            # level for 640x480, and Constrained Baseline is what every
-            # WebRTC peer (libwebrtc, Sylk Mobile, browsers) actually
-            # decodes.  Patch 48
-            # (deps/patches/2.17/48_h264_sylk_mobile_interop.patch)
-            # makes pjsip's default fmtp advertise profile-level-id
-            # 42e01f (Level 3.1); we override to 3.0 here so the offered
-            # SDP matches the resolution we'll actually send.
+            # Pin H.264 profile to "baseline" (what every WebRTC peer -
+            # libwebrtc, Sylk Mobile, browsers - decodes) and the level to
+            # the one of the resolution (3.0 for VGA, 3.1 for 720p, 4.0
+            # for 1080p), so the offered SDP matches what is sent. Patch 48
+            # (deps/patches/2.17/48_h264_sylk_mobile_interop.patch) makes
+            # pjsip's default fmtp advertise 42e01f (Level 3.1).
             if settings.video.h264.profile != 'baseline':
                 settings.video.h264.profile = 'baseline'
                 changed = True
-            if settings.video.h264.level != '3.0':
-                settings.video.h264.level = '3.0'
+            if settings.video.h264.level != level:
+                settings.video.h264.level = level
                 changed = True
             if changed:
                 settings.save()

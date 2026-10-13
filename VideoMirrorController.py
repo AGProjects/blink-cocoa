@@ -110,6 +110,16 @@ class PreviewVideoWidget(VideoWidget):
                 # Mask any source pixels that overflow the layer bounds
                 # (we're cropping rather than letterboxing).
                 layer.setMasksToBounds_(True)
+            # Gravity alone did not keep the shape: AppKit owns this layer
+            # and sets contentsGravity from its own state, so a 16:9 camera
+            # was still squeezed into the 4:3 box. The crop is done
+            # explicitly instead (contentsRect, see handle_frame) and the
+            # cropped part fills the box exactly, so any gravity is right.
+            self.setLayerContentsPlacement_(0)  # ScaleAxesIndependently
+            layer = self.layer()
+            if layer is not None:
+                from Quartz import kCAGravityResize
+                layer.setContentsGravity_(kCAGravityResize)
         except Exception:
             pass
 
@@ -146,6 +156,45 @@ class PreviewVideoWidget(VideoWidget):
             except Exception:
                 pass
         return objc.super(PreviewVideoWidget, self).setProducer(producer)
+
+    _crop_key = None
+
+    @objc.python_method
+    @run_in_gui_thread
+    def handle_frame(self, frame):
+        # The renderer calls self.handle_frame, i.e. this override, from
+        # pjsip's thread: hop to the GUI thread first; the base class's
+        # run_in_gui_thread then runs in line.
+        objc.super(PreviewVideoWidget, self).handle_frame(frame)
+        self._apply_crop(frame)
+
+    @objc.python_method
+    def _apply_crop(self, frame):
+        """Show the centre of the picture with the box's shape: a 16:9
+        camera loses its sides in the 4:3 box, a 4:3 one fills it."""
+        try:
+            width, height = float(frame.width), float(frame.height)
+            bounds = self.bounds().size
+            if width <= 0 or height <= 0 or bounds.width <= 0 or bounds.height <= 0:
+                return
+            key = (int(width), int(height), int(bounds.width), int(bounds.height))
+            if key == self._crop_key:
+                return
+            layer = self.layer()
+            if layer is None:
+                return
+            source = width / height
+            box = bounds.width / bounds.height
+            if source > box:        # wider than the box: crop the sides
+                w = box / source
+                rect = ((0.5 - w / 2.0, 0.0), (w, 1.0))
+            else:                   # taller: crop top and bottom
+                h = source / box
+                rect = ((0.0, 0.5 - h / 2.0), (1.0, h))
+            layer.setContentsRect_(rect)
+            self._crop_key = key
+        except Exception as e:
+            BlinkLogger().log_debug("Preferences preview crop failed: %s" % e)
 
     @objc.python_method
     def _on_aspect_ratio_detected(self, width, height):

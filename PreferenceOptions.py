@@ -1069,31 +1069,46 @@ class H264ProfileOption(PopUpMenuOption):
 
 
 class VideoResolutionOption(PopUpMenuOption):
+    """Camera resolution, the same choices as the video window's Resolution
+    menu (CAMERA_RESOLUTIONS). Picking one also sets the bitrate and the
+    H.264 level that go with it and resizes the encoder of the calls going
+    on, through ScreenPointerManager.set_camera_resolution()."""
+
     def __init__(self, object, name, option, description=None):
         PopUpMenuOption.__init__(self, object, name, option, useRepresented=True, description=description)
-        # Three standard capture sizes the H.264 level map covers
-        # cleanly:
-        #   VGA   640x480   -> Level 3.0 (4:3)
-        #   720p  1280x720  -> Level 3.1 (16:9)
-        #   1080p 1920x1080 -> Level 4.0 (16:9)
-        # QVGA / nHD / qHD were trimmed because they crowd the dropdown
-        # without offering visibly different bitrate / quality trade-
-        # offs from VGA / 720p on modern Mac uplinks - users who really
-        # want them can still set the value in settings.cfg directly
-        # and addMissingOptions=True will show the non-standard entry
-        # in the dropdown so they can switch back.
+        # A value not in the list (settings.cfg edited by hand, the
+        # screen's size while it is shared) is shown so it can be switched
+        # back from.
         self.addMissingOptions = True
         self.popup.sizeToFit()
-        for title, w, h in (
-            ("VGA (640x480)",              640,  480),
-            ("HD 720p (1280x720)",        1280,  720),
-            ("Full HD 1080p (1920x1080)", 1920, 1080),
-        ):
-            self.popup.addItemWithTitle_(NSLocalizedString(title, "Menu item"))
-            self.popup.lastItem().setRepresentedObject_(VideoResolution("%dx%d" % (w, h)))
+        try:
+            from ScreenPointerController import CAMERA_RESOLUTIONS
+        except ImportError:
+            CAMERA_RESOLUTIONS = [('640x480', '480p', 0.8, '3.0'),
+                                  ('1280x720', '720p', 1.5, '3.1'),
+                                  ('1920x1080', '1080p', 2.5, '4.0')]
+        for size, label, bitrate, level in CAMERA_RESOLUTIONS:
+            self.popup.addItemWithTitle_("%s (%s)" % (label, size))
+            self.popup.lastItem().setRepresentedObject_(VideoResolution(size))
         frame = self.popup.frame()
         frame.size.width = 220
         self.popup.setFrame_(frame)
+
+    @objc.python_method
+    def _store(self):
+        item = self.popup.selectedItem().representedObject()
+        if item is None or item == self.get():
+            return
+        try:
+            from ScreenPointerController import ScreenPointerManager
+        except ImportError:
+            ScreenPointerManager = None
+        if ScreenPointerManager is not None:
+            # Saves the settings itself; refused while the screen is shared
+            if not ScreenPointerManager().set_camera_resolution(str(item)):
+                self.restore()
+            return
+        self.set(item)
 
 
 class VideoFramerateOption(PopUpMenuOption):
@@ -2141,15 +2156,10 @@ PreferenceOptionTypes = {
 "tls.timeout" : HiddenOption,
 "video.device" : VideoDeviceOption,
 "video.enable_colorbar_device" : HiddenOption,
-# Resolution / framerate / max_bitrate / container are all pinned to
-# canonical values at startup (see BlinkAppDelegate._NH_SIPApplication
-# DidStart). Hide their UI controls so the user doesn't see options
-# they can't meaningfully change.  Resolution was briefly user-visible
-# but non-VGA captures don't survive pjsip's avf_dev -> encoder ->
-# packetizer pipeline cleanly on macOS - both local preview and the
-# remote receiver see a broken aspect ratio at 720p and 1080p - so
-# we're back to VGA-only until the pjsip-side issue is fixed.
-"video.resolution" : HiddenOption,
+# Resolution picks the bitrate and H.264 level that go with it (see
+# VideoResolutionOption); framerate / max_bitrate / container are pinned
+# at startup (see BlinkAppDelegate._NH_SIPApplicationDidStart) and hidden.
+"video.resolution" : VideoResolutionOption,
 "video.max_bitrate": HiddenOption,
 "video.framerate" : HiddenOption,
 "video.paused" : HiddenOption,

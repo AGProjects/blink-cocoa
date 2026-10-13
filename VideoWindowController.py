@@ -430,6 +430,15 @@ class VideoWidget(NSView):
             # disable the implicit ~0.25s contents crossfade that would
             # otherwise smear video at 30 fps.
             layer.setContentsGravity_(kCAGravityResizeAspect)
+            # The layer belongs to the view, and AppKit sets its
+            # contentsGravity from the view's layerContentsPlacement
+            # (default: scale each axis on its own, which stretches), so
+            # the gravity above alone does not stick.
+            # 1 = NSViewLayerContentsPlacementScaleProportionallyToFit
+            try:
+                self.setLayerContentsPlacement_(1)
+            except Exception:
+                pass
             layer.setActions_({"contents": None})
             self._renderer_kind = 'cg'
 
