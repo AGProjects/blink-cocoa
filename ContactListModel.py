@@ -3235,7 +3235,7 @@ class CustomListModel(NSObject):
         return False
 
     @objc.python_method
-    def isHiddenOwnContact(self, item):
+    def isHiddenOwnContact(self, group, item):
         """Our own contact is listed only while it has messages: it exists for
         the PGP key escrow, and shows up when a message to ourselves arrives."""
         contact = getattr(item, 'contact', None)
@@ -3245,7 +3245,7 @@ class CustomListModel(NSObject):
         keys.discard('')
         if not keys or not keys <= own_account_keys():
             return False
-        return self.lastMessageTimeForContact(item) is None
+        return group.lastMessageTimeForContact(item) is None
 
     @objc.python_method
     def displayedContacts(self, group, recompute=False):
@@ -3257,7 +3257,7 @@ class CustomListModel(NSObject):
         key = id(group)
         if recompute or key not in self._displayed_contacts:
             self._displayed_contacts[key] = [c for c in group.contacts
-                                             if not self.isHiddenAsDeleted(c) and not self.isHiddenOwnContact(c)]
+                                             if not self.isHiddenAsDeleted(c) and not self.isHiddenOwnContact(group, c)]
         return self._displayed_contacts[key]
 
     # data source methods
