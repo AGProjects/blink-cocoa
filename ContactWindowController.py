@@ -5620,9 +5620,16 @@ class ContactWindowController(NSWindowController):
 
         settings = SIPSimpleSettings()
         if settings.video.auto_rotate_cameras and len(self.sessionControllersManager.connectedVideoSessions):
-            devices = list(device for device in NSApp.delegate().video_devices if device not in ('system_default', None))
+            from ScreenPointer import is_screen_device
+            current = self.backend._app.video_device.real_name
+            if is_screen_device(current):
+                # Sharing my screen: not a camera, don't rotate away from it
+                return
+            devices = list(device for device in NSApp.delegate().video_devices if device not in ('system_default', None) and not is_screen_device(device))
+            if len(devices) < 2:
+                return
             try:
-                idx = devices.index(self.backend._app.video_device.real_name)
+                idx = devices.index(current)
             except ValueError:
                 return
             else:

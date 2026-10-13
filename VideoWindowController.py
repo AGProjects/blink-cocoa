@@ -1205,9 +1205,10 @@ class myVideoWidget(VideoWidget):
         lastItem.setEnabled_(False)
         videoDevicesMenu.addItem_(NSMenuItem.separatorItem())
 
+        from ScreenPointer import is_screen_device
         i = 0
         for item in NSApp.delegate().video_devices:
-            if item not in (None, 'system_default'):
+            if item not in (None, 'system_default') and not is_screen_device(item):
                 i += 1
             lastItem = videoDevicesMenu.addItemWithTitle_action_keyEquivalent_(item, "changeVideoDevice:", "")
             lastItem.setRepresentedObject_(item)
