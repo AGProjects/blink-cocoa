@@ -82,7 +82,7 @@ except ImportError:
 from BlinkLogger import BlinkLogger
 from KeyEscrow import (escrow_is_missing, install_keypair, log_self_contact,
                        restore_from_own_contact, write_self_keys, key_status_lines,
-                       reencrypt_escrow, self_escrow_records)
+                       reencrypt_escrow, self_escrow_records, foreign_escrows, key_fingerprint)
 from HistoryManager import ChatHistory, MESSAGES_BULK_DELETE_CONTENT_TYPE, bulk_delete_criteria, bulk_delete_label
 import HistoryManager as _history_module
 from SMSViewController import SMSViewController, is_file_transfer_notice, is_otr_wire_text, is_placeholder_uri
@@ -901,6 +901,9 @@ class SMSWindowManagerClass(NSObject):
     accepted_passwords = {}     # account id -> password a registration last succeeded with
     password_changed = set()    # accounts whose new password the server has not accepted yet
     password_checked = {}       # account id -> escrow and password last checked
+    # Accounts whose key was imported from another device and not yet
+    # compared with the escrow (the addressbook may not be in yet).
+    key_imported_pending = set()
     generate_prompt_deferred = {}
     # What the server says about our own public key, per account:
     # 'unknown', 'asked', 'present', 'absent' or 'failed' (see lookupOwnServerKey)
@@ -1869,6 +1872,12 @@ class SMSWindowManagerClass(NSObject):
         finally:
             self.resumeAddressbookNotifications()
 
+        # may ask the user, so outside the quiet stretch
+        try:
+            self.escrowImportedKey(account)
+        except Exception as e:
+            BlinkLogger().log_error('Key escrow of the imported key of %s failed: %s' % (account.id, e))
+
     AB_ORIGIN_CAP = 50
 
     @objc.python_method
@@ -2231,6 +2240,75 @@ class SMSWindowManagerClass(NSObject):
         if not written:
             BlinkLogger().log_info('Key escrow: could not restore the backup for %s -- %s'
                                    % (account.id, reason))
+
+    @objc.python_method
+    def keyImported(self, account):
+        """A key was imported from another device: put it on our own contact
+        now rather than on some later reload."""
+        if account is None or account is BonjourAccount() or not account.xcap.enabled or not pgp_messaging_possible(account):
+            return
+        self.key_imported_pending.add(account.id)
+        self.escrow_repaired.discard(account.id)
+        self.password_checked.pop(account.id, None)
+        self.escrowImportedKey(account)
+
+    @objc.python_method
+    def escrowImportedKey(self, account):
+        """No escrow, or one of the same key: repair and re-encrypt as needed.
+        An escrow of ANOTHER key is that key's only server copy, so it is
+        replaced only when the user says so."""
+        if account.id not in self.key_imported_pending:
+            return
+        from KeyEscrow import _resource_lists_element
+        if _resource_lists_element(account) is None:
+            BlinkLogger().log_info('Key escrow: the addressbook of %s has not been fetched yet, '
+                                   'the imported key is saved on the server once it is' % account.id)
+            return
+        self.key_imported_pending.discard(account.id)
+
+        foreign = foreign_escrows(account)
+        if not foreign:
+            self.suppressAddressbookNotifications()
+            try:
+                self.repairMissingEscrow(account)
+                self.reencryptEscrowIfNeeded(account)
+            finally:
+                self.resumeAddressbookNotifications()
+            return
+
+        contact_id, record = foreign[0]
+        old = key_fingerprint(record.get('public_key'))
+        try:
+            with open(account.sms.public_key, 'rb') as fd:
+                new = key_fingerprint(fd.read())
+        except (IOError, OSError, TypeError):
+            new = None
+        unknown = NSLocalizedString("unknown", "label")
+        old_id = old[-16:].upper() if old else unknown
+        new_id = new[-16:].upper() if new else unknown
+        BlinkLogger().log_info('Key escrow: contact %s of %s keeps a backup of key %s, saved %s by "%s", '
+                               'not of the imported key %s: asking'
+                               % (contact_id, account.id, old_id, record.get('timestamp', '?'), record.get('device', '?'), new_id))
+
+        alert = NSAlert.alloc().init()
+        alert.setMessageText_(NSLocalizedString("Replace PGP key backup", "Window title"))
+        alert.setInformativeText_(NSLocalizedString("The server keeps a backup of another PGP key for %s.\n\nKey on the server: %s, saved %s by %s\nImported key: %s\n\nReplace the backup with the imported key? The key on the server can then no longer be restored on a new device, and messages encrypted to it cannot be read there.", "label")
+                                  % (account.id, old_id, record.get('timestamp', '?'), record.get('device', '?'), new_id))
+        alert.addButtonWithTitle_(NSLocalizedString("Keep", "button"))
+        alert.addButtonWithTitle_(NSLocalizedString("Replace", "button"))
+        if alert.runModal() == NSAlertFirstButtonReturn:
+            BlinkLogger().log_info('Key escrow: the user kept the backup of key %s for %s' % (old_id, account.id))
+            return
+        BlinkLogger().log_info('Key escrow: the user chose to replace the backup of key %s for %s with the imported key %s'
+                               % (old_id, account.id, new_id))
+        # announced: the other devices learn of the new backup on their next reload
+        written, reason = write_self_keys(account, force=True)
+        if not written:
+            failed = NSAlert.alloc().init()
+            failed.setMessageText_(NSLocalizedString("Replace PGP key backup", "Window title"))
+            failed.setInformativeText_(NSLocalizedString("The backup of %s was not replaced: %s", "label") % (account.id, reason or ''))
+            failed.addButtonWithTitle_(NSLocalizedString("OK", "button"))
+            failed.runModal()
 
     @objc.python_method
     def reencryptEscrowIfNeeded(self, account):
@@ -8334,6 +8412,11 @@ class ImportPrivateKeyController(NSObject):
         else:
             self.status.setTextColor_(NSColor.greenColor())
             self.status.setStringValue_(NSLocalizedString("Key imported sucessfully", "status label"));
+            # the escrow on our own contact follows the imported key (may ask)
+            try:
+                SMSWindowManager().keyImported(self.account)
+            except Exception as e:
+                BlinkLogger().log_error('Key escrow of the imported key of %s failed: %s' % (self.account.id, e))
 
     def deallocTimer_(self, timer):
         self.dealloc_timer.invalidate()
