@@ -1201,6 +1201,14 @@ class AudioController(MediaStream):
                     item.setTitle_(NSLocalizedString("Stop Screen Sharing", "Menu item"))
             else:
                 item.setTitle_(NSLocalizedString("Cancel Screen Sharing Proposal", "Menu item"))
+
+            if not NSApp.delegate().screen_sharing_ui_enabled:
+                first = menu.indexOfItemWithTag_(11)
+                for tag in (11, 12, 13):
+                    menu.itemWithTag_(tag).setHidden_(True)
+                # and the separator above them
+                if first > 0 and menu.itemAtIndex_(first - 1).isSeparatorItem():
+                    menu.itemAtIndex_(first - 1).setHidden_(True)
             item = menu.itemWithTag_(20) # add to contacts
             item.setEnabled_(not self.contact and self.sessionController.account is not BonjourAccount())
             item = menu.itemWithTag_(30)

@@ -679,6 +679,19 @@ class ContactWindowController(NSWindowController):
         segmentChildren2.objectAtIndex_(1).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
         segmentChildren2.objectAtIndex_(2).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
 
+        if not NSApp.delegate().screen_sharing_ui_enabled:
+            # Screen sharing is the last segment of both call button bars.
+            for control in (self.actionButtons, self.actionButtonsNoVideo):
+                count = control.segmentCount()
+                if count < 2:
+                    continue
+                frame = control.frame()
+                removed = frame.size.width / count
+                control.setSegmentCount_(count - 1)
+                frame.size.width -= removed
+                frame.origin.x += removed / 2
+                control.setFrame_(frame)
+
         self.setAlwaysOnTop()
 
         path = ApplicationData.get('presence')
@@ -2452,7 +2465,7 @@ class ContactWindowController(NSWindowController):
                             self.contactContextMenu.setSubmenu_forItem_(ft_submenu, mitem)
                             mitem.setEnabled_(self.contactSupportsMedia("file-transfer", item))
 
-                    if self.sessionControllersManager.isMediaTypeSupported('screen-sharing-client'):
+                    if NSApp.delegate().screen_sharing_ui_enabled and self.sessionControllersManager.isMediaTypeSupported('screen-sharing-client'):
                         ds_submenu = NSMenu.alloc().init()
                         ds_submenu.setAutoenablesItems_(False)
                         for uri in sorted(item.uris, key=lambda uri: uri.position if uri.position is not None else sys.maxsize):
@@ -2503,7 +2516,7 @@ class ContactWindowController(NSWindowController):
                             self.contactContextMenu.setSubmenu_forItem_(ds_submenu, mitem)
                             mitem.setEnabled_(self.contactSupportsMedia("screen-sharing-server", item))
 
-                    if self.sessionControllersManager.isMediaTypeSupported('screen-sharing-server'):
+                    if NSApp.delegate().screen_sharing_ui_enabled and self.sessionControllersManager.isMediaTypeSupported('screen-sharing-server'):
                         ds_submenu = NSMenu.alloc().init()
                         ds_submenu.setAutoenablesItems_(False)
                         for uri in sorted(item.uris, key=lambda uri: uri.position if uri.position is not None else sys.maxsize):
@@ -2608,14 +2621,14 @@ class ContactWindowController(NSWindowController):
                             ft_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Send Files...", "Menu item"), "sendFile:", "")
                             ft_item.setEnabled_(self.contactSupportsMedia("file-transfer", item, item.uri))
 
-                    if self.sessionControllersManager.isMediaTypeSupported('screen-sharing-client'):
+                    if NSApp.delegate().screen_sharing_ui_enabled and self.sessionControllersManager.isMediaTypeSupported('screen-sharing-client'):
                         mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Request Screen Sharing", "Menu item"), "startScreenSharing:", "")
                         mitem.setTag_(1)
                         mitem.setEnabled_(has_fully_qualified_sip_uri)
                         mitem.setRepresentedObject_(item.uri)
                         mitem.setEnabled_(self.contactSupportsMedia("screen-sharing-server", item, item.uri))
 
-                    if self.sessionControllersManager.isMediaTypeSupported('screen-sharing-server'):
+                    if NSApp.delegate().screen_sharing_ui_enabled and self.sessionControllersManager.isMediaTypeSupported('screen-sharing-server'):
                         mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Share My Screen", "Menu item"), "startScreenSharing:", "")
                         mitem.setTag_(2)
                         mitem.setRepresentedObject_(item.uri)
@@ -4753,11 +4766,13 @@ class ContactWindowController(NSWindowController):
             self.actionButtons.setEnabled_forSegment_(audioOk, 0)
             self.actionButtons.setEnabled_forSegment_(videoOk, 1)
             self.actionButtons.setEnabled_forSegment_(chatOk, 2)
-            self.actionButtons.setEnabled_forSegment_(screenOk, 3)
+            if self.actionButtons.segmentCount() > 3:
+                self.actionButtons.setEnabled_forSegment_(screenOk, 3)
         else:
             self.actionButtons.setEnabled_forSegment_(audioOk, 0)
             self.actionButtons.setEnabled_forSegment_(chatOk, 1)
-            self.actionButtons.setEnabled_forSegment_(screenOk, 2)
+            if self.actionButtons.segmentCount() > 2:
+                self.actionButtons.setEnabled_forSegment_(screenOk, 2)
 
         c = sum(s and 1 or 0 for s in self.sessionControllersManager.sessionControllers if s.hasStreamOfType("audio") and s.streamHandlerOfType("audio").canConference)
         self.addContactToConferenceDialPad.setEnabled_((self.isJoinConferenceWindowOpen() or self.isAddParticipantsWindowOpen() or c > 0) and self.searchBox.stringValue().strip() != "")

@@ -193,6 +193,9 @@ class BlinkAppDelegate(NSObject):
     allowed_domains = []
     icloud_enabled = False
     answering_machine_enabled = True
+    # Screen sharing entry points (main window call button, contact and call
+    # menus) are hidden until we decide what replaces the former VNC sharing.
+    screen_sharing_ui_enabled = False
     history_enabled = True
     recording_enabled = True
     file_logging_enabled = True
