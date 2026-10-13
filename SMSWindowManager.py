@@ -5477,7 +5477,7 @@ class SMSWindowManagerClass(NSObject):
         return echo
 
     @objc.python_method
-    def announceConversationRemoval(self, uris):
+    def announceConversationRemoval(self, uris, include_own=False):
         """Stage 2 on the wire: tell our other devices, via SylkServer.
 
         Same request Sylk Mobile makes with account.removeConversation,
@@ -5495,7 +5495,9 @@ class SMSWindowManagerClass(NSObject):
                     and getattr(a.sms, 'enable_replication', False)]
         timestamp = str(ISOTimestamp.now())
         for account in accounts:
-            if any(k == str(account.id).lower() for k in keys):
+            # include_own: the conversation with ourselves, removed when our own
+            # contact is deleted (the contact itself stays, see ContactListModel)
+            if not include_own and any(k == str(account.id).lower() for k in keys):
                 continue
             for key in keys:
                 self.noteOwnConversationRemove(key)
@@ -5664,6 +5666,9 @@ class SMSWindowManagerClass(NSObject):
             except Exception as e:
                 BlinkLogger().log_error('Cannot delete the files of %s: %s' % (uri, e))
 
+            if any(uri == str(account.id).lower() for account in AccountManager().get_accounts()
+                   if account is not BonjourAccount()):
+                continue        # the conversation with ourselves: <account>.pubkey is OUR key, it stays
             key_file = "%s/%s.pubkey" % (self.keys_path, uri)
             try:
                 if os.path.exists(key_file):
