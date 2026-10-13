@@ -154,9 +154,13 @@ class BackgroundDecryptor(object, metaclass=Singleton):
     # Decrypt in worker processes (the Blink executable with --pgp-worker),
     # falling back to this process when they cannot be started
     USE_WORKERS = True
+    # Fewer messages than this are decrypted here: starting the worker
+    # processes costs more than it saves
+    WORKERS_MIN_MESSAGES = 100
 
     def __init__(self):
         self.pool = None
+        self.use_pool = False       # this pass decrypts in the worker processes
         self.executable = None
         self.lock = threading.Lock()
         self.running = False
@@ -338,10 +342,15 @@ class BackgroundDecryptor(object, metaclass=Singleton):
         active, idle, _ = self.speeds.get(self.resume_speed if self.paused else self.speed, self.speeds['normal'])
         return active if (self.app_state is None or self.app_state.active) else idle
 
+    @property
+    def _pass_pool(self):
+        return self.pool if self.use_pool else None
+
     def _decrypt_batch(self, rows):
         """{msgid: (text, error, key ids)} for the rows."""
         results = {}
-        workers = self.pool.workers_for(self.resume_speed if self.paused else self.speed) if self.pool is not None else []
+        pool = self._pass_pool
+        workers = pool.workers_for(self.resume_speed if self.paused else self.speed) if pool is not None else []
         if not workers:
             for row in rows:
                 if self.stopped:
@@ -395,7 +404,8 @@ class BackgroundDecryptor(object, metaclass=Singleton):
         total = len(ids)
         if not total:
             return
-        if self.pool is None and self.USE_WORKERS:
+        self.use_pool = self.USE_WORKERS and total >= self.WORKERS_MIN_MESSAGES
+        if self.pool is None and self.use_pool:
             self.pool = WorkerPool(self.executable)
         BlinkLogger().log_info('[pgp] Background decryption: %d stored message(s) of %s to decrypt (speed %s)'
                                % (total, ', '.join(uris), self.speed))
@@ -413,7 +423,8 @@ class BackgroundDecryptor(object, metaclass=Singleton):
                     time.sleep(1)
                 while view_decrypt_age() < self.VIEW_YIELD and not self.stopped:
                     time.sleep(0.5)      # a conversation is decrypting what it shows: it goes first
-                count = self.BATCH * max(1, self.pool.size_for(self.speed) if self.pool is not None else 1)
+                pool = self._pass_pool
+                count = self.BATCH * max(1, pool.size_for(self.speed) if pool is not None else 1)
                 batch = ids[index:index + count]
                 index += len(batch)
                 rows = []
@@ -446,7 +457,8 @@ class BackgroundDecryptor(object, metaclass=Singleton):
                 rate = done / elapsed if elapsed > 0 else None
                 seconds = (total - done) / rate if rate and done < total else None
                 eta = self._eta_text(seconds)
-                workers = len(self.pool.workers) if self.pool is not None and not self.pool.broken else 0
+                pool = self._pass_pool
+                workers = len(pool.workers) if pool is not None and not pool.broken else 0
                 self._progress('run', done, total, eta, rate, workers)
                 now = time.monotonic()
                 if now - last_logged >= self.LOG_INTERVAL or done >= total:
