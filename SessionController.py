@@ -2023,12 +2023,32 @@ class SessionController(NSObject):
             log_data = NotificationData(timestamp=datetime.now(), target_uri=format_identity_to_string(self.target_uri, check_contact=True), streams=self.streams_log, focus=self.remote_focus_log, participants=self.participants_log, call_id=self.call_id, from_tag='', to_tag='')
             self.notification_center.post_notification("BlinkSessionDidEnd", sender=self, data=log_data)
 
-        if self.session is not None:
-            if self.session.state is not None:
-                self.session.end()
+        if self.session is not None and self.session.state is not None:
+            self.session.end()
         else:
-            for streamHandler in self.streamHandlers:
-                self.endStream(streamHandler)
+            # Not started in the middleware: hung up before the INVITE went
+            # out (during the DNS lookup or the wait for the camera). Nothing
+            # else ends the streams then, and they hold the devices: an
+            # AudioStream puts its bridge on the voice mixer as soon as it is
+            # created (the microphone stays open) and the video window's
+            # preview keeps the camera running, both until Blink quits.
+            for streamHandler in list(self.streamHandlers):
+                stream = streamHandler.stream
+                if stream is not None:
+                    for action in ('deactivate', 'end'):
+                        try:
+                            getattr(stream, action)()
+                        except Exception as e:
+                            self.log_info("Cannot %s the %s stream of a session that did not start: %s" % (action, stream.type, e))
+                if stream is not None:
+                    # Whichever controller hung up is already ending and
+                    # ignores this (end() is re-entrant: endStream() comes
+                    # back here and returns at self.finished); the others,
+                    # the video window and its preview above all, are not.
+                    try:
+                        streamHandler.end()
+                    except Exception as e:
+                        self.log_info("Cannot end the %s controller of a session that did not start: %s" % (stream.type, e))
 
     @objc.python_method
     def endStream(self, streamHandler):
