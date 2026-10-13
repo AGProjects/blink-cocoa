@@ -1205,7 +1205,10 @@ class myVideoWidget(VideoWidget):
         lastItem.setEnabled_(False)
         videoDevicesMenu.addItem_(NSMenuItem.separatorItem())
 
-        from ScreenPointer import is_screen_device
+        try:
+            from ScreenPointer import is_screen_device
+        except ImportError:
+            is_screen_device = lambda device: False
         i = 0
         for item in NSApp.delegate().video_devices:
             if item not in (None, 'system_default') and not is_screen_device(item):
@@ -1772,6 +1775,8 @@ class VideoWindowController(NSWindowController):
     visible_buttons = True
     recording_timer = None
     must_hide_after_exit_full_screen = False
+    must_minimize_after_exit_full_screen = False
+    sharing_my_screen = False
     will_close = False
     
     def __new__(cls, *args, **kwargs):
@@ -1784,7 +1789,12 @@ class VideoWindowController(NSWindowController):
         self.flipWnd = mbFlipWindow.alloc().init()
         self.flipWnd.setFlipRight_(True)
         self.flipWnd.setDuration_(2.4)
-        
+        try:
+            # A call that starts on the screen is not "starting to share"
+            self.sharing_my_screen = ScreenPointer is not None and ScreenPointer.is_screen_device(SIPApplication.video_device.real_name)
+        except Exception:
+            self.sharing_my_screen = False
+
         self.notification_center = NotificationCenter()
 
 
@@ -1816,6 +1826,29 @@ class VideoWindowController(NSWindowController):
             # Whatever the new camera's shape, the thumbnail is re-derived
             # from its corner when the first real frame reports it.
             self.myVideoView.aspect_ratio = None
+        self._minimizeIfSharingScreen()
+
+    @objc.python_method
+    def _minimizeIfSharingScreen(self):
+        # Starting to share my screen: get the call window out of the way
+        # of what is being shared. Only on the switch to the screen, not
+        # while it stays on it, and not for a call that started on it.
+        try:
+            on_screen = ScreenPointer is not None and ScreenPointer.is_screen_device(SIPApplication.video_device.real_name)
+        except Exception:
+            on_screen = False
+        was_on_screen, self.sharing_my_screen = self.sharing_my_screen, on_screen
+        if not on_screen or was_on_screen:
+            return
+        if self.closed or self.will_close or self.window() is None or not self.window().isVisible():
+            return
+        if self.streamController is None or self.streamController.ended:
+            return
+        if self.full_screen or self.full_screen_in_progress or self._windowIsFullScreen():
+            self.must_minimize_after_exit_full_screen = True
+            self.goToWindowMode()
+        else:
+            self.window().miniaturize_(None)
 
 
     @property
@@ -3237,6 +3270,9 @@ class VideoWindowController(NSWindowController):
                 if self.streamController.ended or self.must_hide_after_exit_full_screen:
                     self.must_hide_after_exit_full_screen = False
                     self.window().orderOut_(self)
+                elif self.must_minimize_after_exit_full_screen:
+                    self.must_minimize_after_exit_full_screen = False
+                    self.window().miniaturize_(None)
                 else:
                     self.window().orderFront_(self)
                     self.window().setLevel_(NSFloatingWindowLevel if self.always_on_top else NSNormalWindowLevel)

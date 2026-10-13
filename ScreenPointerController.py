@@ -132,6 +132,7 @@ class _CallState(object):
         self.prompt = None                  # (request_id, alert, parent window)
         self.awaiting_share = False         # accepted, the screen is not on yet
         self.device_before_share = None     # settings.video.device to put back
+        self.started_on_screen = False      # the call started on the screen: it stays the device
         self.encoder = None                 # (w, h, bps) the video is encoded at, None: unknown
 
 
@@ -373,10 +374,17 @@ class ScreenPointerManager(object, metaclass=Singleton):
         self.calls = {}
         self.overlay = None
         self.resolution_before_screen = None    # str(settings.video.resolution) to put back
+        # The last camera used: the screen shared in a call that did not
+        # start on it is not remembered as the video device after the call.
+        try:
+            device = SIPSimpleSettings().video.device
+            self.last_camera = None if ScreenPointer.is_screen_device(device) else device
+        except Exception:
+            self.last_camera = None
         self.notification_center = NotificationCenter()
         for name in ('SIPSessionDidStart', 'SIPSessionDidEnd', 'SIPSessionDidFail',
                      'SIPSessionGotMessage', 'MediaStreamDidStart', 'MediaStreamDidEnd',
-                     'VideoDeviceDidChangeCamera'):
+                     'VideoDeviceDidChangeCamera', 'SIPApplicationWillEnd'):
             self.notification_center.add_observer(self, name=name)
 
     @run_in_gui_thread
@@ -570,7 +578,10 @@ class ScreenPointerManager(object, metaclass=Singleton):
     # --- notifications ----------------------------------------------------------------
 
     def _NH_SIPSessionDidStart(self, session, data):
+        new_call = session not in self.calls
         state = self._state(session)
+        if new_call:
+            state.started_on_screen = ScreenPointer.is_screen_device(SIPSimpleSettings().video.device)
         if self._eligible(session) and not state.capabilities_sent:
             state.capabilities_sent = True
             capabilities = ScreenPointer.my_capabilities(can_share_screen=bool(_screen_devices()))
@@ -631,9 +642,17 @@ class ScreenPointerManager(object, metaclass=Singleton):
             return
         self._resize_encoders()
         on_screen = _local_screen_index() is not None
+        if not on_screen and device:
+            # As the user chose it ('system_default' stays that)
+            chosen = settings.video.device
+            self.last_camera = chosen if chosen and not ScreenPointer.is_screen_device(chosen) else device
         for session, state in list(self.calls.items()):
             self._update_sharing(session)
             if on_screen:
+                if (state.device_before_share is None and not state.started_on_screen
+                        and self.last_camera is not None):
+                    # Screen picked by hand: back to the camera after the call
+                    state.device_before_share = self.last_camera
                 continue
             if state.awaiting_share:
                 # The capture fell back to a camera, on a first run because
@@ -832,6 +851,19 @@ class ScreenPointerManager(object, metaclass=Singleton):
         state.awaiting_share = True
         BlinkLogger().log_info('[screen-request] accepted, switching video to %s' % devices[0])
         self.select_device(devices[0])
+
+    def _NH_SIPApplicationWillEnd(self, sender, data):
+        # Quitting while sharing: the screen is not the device next time
+        settings = SIPSimpleSettings()
+        if not ScreenPointer.is_screen_device(settings.video.device):
+            return
+        previous = next((state.device_before_share for state in self.calls.values()
+                         if state.device_before_share is not None), None)
+        if previous is not None:
+            BlinkLogger().log_info('[screen-request] quitting while sharing, video device back to %s' % previous)
+            self._capture_resolution_for(previous, settings)
+            settings.video.device = previous
+            settings.save()
 
     def _restore_device(self, state):
         previous, state.device_before_share = state.device_before_share, None

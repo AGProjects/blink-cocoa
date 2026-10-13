@@ -276,7 +276,10 @@ class VideoLocalWindowController(NSWindowController):
         lastItem.setEnabled_(False)
         videoDevicesMenu.addItem_(NSMenuItem.separatorItem())
 
-        from ScreenPointer import is_screen_device
+        try:
+            from ScreenPointer import is_screen_device
+        except ImportError:
+            is_screen_device = lambda device: False
         i = 0
         for item in NSApp.delegate().video_devices:
             if item not in (None, 'system_default') and not is_screen_device(item):
