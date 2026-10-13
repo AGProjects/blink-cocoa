@@ -7347,8 +7347,14 @@ class ContactWindowController(NSWindowController):
         else:
            BlinkLogger().log_info('Video sessions are disabled')
 
-        settings.video.device = sender.representedObject()
-        settings.save()
+        try:
+            # the screen is also captured at the screen's resolution
+            from ScreenPointerController import select_video_device
+        except ImportError:
+            settings.video.device = device
+            settings.save()
+        else:
+            select_video_device(device)
         self.updateStartSessionButtons()
 
     def participantSelectionChanged_(self, notification):

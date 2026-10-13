@@ -275,11 +275,13 @@ from BlinkLogger import BlinkLogger
 
 try:
     import ScreenPointer
-    from ScreenPointerController import ScreenPointerManager, PointerEchoView
+    from ScreenPointerController import ScreenPointerManager, PointerEchoView, CAMERA_RESOLUTIONS, can_resize_encoder
 except ImportError:     # the remote pointer is not part of every target
     ScreenPointer = None
     ScreenPointerManager = None
     PointerEchoView = None
+    CAMERA_RESOLUTIONS = []
+    can_resize_encoder = lambda: False
 
 # How long the viewer's green "the peer drew it" ring stays up.
 POINTER_ECHO_SECONDS = 0.9
@@ -2120,6 +2122,25 @@ class VideoWindowController(NSWindowController):
             item.setState_(NSOnState if current else NSOffState)
         aspect_item.setSubmenu_(submenu)
 
+        # The camera is sent at another size at once, without renegotiating;
+        # a shared screen has its own size, so not while sharing.
+        if ScreenPointerManager is not None and CAMERA_RESOLUTIONS and can_resize_encoder():
+            manager = ScreenPointerManager()
+            try:
+                on_screen = ScreenPointer.is_screen_device(SIPApplication.video_device.real_name)
+            except AttributeError:
+                on_screen = False
+            resolution_item = add(NSLocalizedString("Resolution", "Menu item"), None, enabled=not on_screen)
+            submenu = NSMenu.alloc().init()
+            submenu.setAutoenablesItems_(False)
+            current = manager.camera_resolution()
+            for size, label, bitrate, level in CAMERA_RESOLUTIONS:
+                item = submenu.addItemWithTitle_action_keyEquivalent_(label, 'userSelectedResolution:', '')
+                item.setTarget_(self)
+                item.setRepresentedObject_(size)
+                item.setState_(NSOnState if size == current else NSOffState)
+            resolution_item.setSubmenu_(submenu)
+
         menu.addItem_(NSMenuItem.separatorItem())
         cameras = self.availableCameras()
         try:
@@ -2138,6 +2159,14 @@ class VideoWindowController(NSWindowController):
         bounds = sender.bounds()
         below = bounds.size.height if sender.isFlipped() else 0.0
         menu.popUpMenuPositioningItem_atLocation_inView_(None, NSMakePoint(0.0, below), sender)
+
+    @objc.IBAction
+    def userSelectedResolution_(self, sender):
+        size = sender.representedObject()
+        if size is None or ScreenPointerManager is None:
+            return
+        if ScreenPointerManager().set_camera_resolution(size) and self.sessionController is not None:
+            self.sessionController.log_info("Video resolution set to %s" % size)
 
     @objc.IBAction
     def userSelectedAspectRatio_(self, sender):

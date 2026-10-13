@@ -14,7 +14,11 @@ Wire format and geometry are in ScreenPointer.py. This module:
   * as the SHARER, draws the pointers the peer sends over the display being
     captured (PointerOverlay) and acks them;
   * as the VIEWER, sends pointers for VideoWindowController and reports the
-    acks back to it.
+    acks back to it;
+  * keeps the encoder of the calls going on at the size of what is sent,
+    without renegotiating (VideoStream.set_encoder_size): the screen at
+    SCREEN_RESOLUTION, a camera at the resolution picked in the video
+    window's Resolution menu.
 
 Per-call state lives here, keyed by the sipsimple Session, not in the video
 window, so it survives the window being closed and reopened mid-call.
@@ -56,6 +60,7 @@ from application.notification import IObserver, NotificationCenter, Notification
 from application.python import Null
 from application.python.types import Singleton
 from sipsimple.application import SIPApplication
+from sipsimple.configuration.datatypes import VideoResolution
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import Engine
 from sipsimple.threading import run_in_thread
@@ -68,7 +73,8 @@ from BlinkLogger import BlinkLogger
 from util import call_later, checkValidPhoneNumber, run_in_gui_thread
 
 
-__all__ = ['ScreenPointerManager', 'PointerEchoView']
+__all__ = ['ScreenPointerManager', 'PointerEchoView', 'select_video_device',
+           'CAMERA_RESOLUTIONS', 'can_resize_encoder']
 
 
 MARKER_RADIUS = 26.0
@@ -78,6 +84,36 @@ PULSES = 2
 FADE_SECONDS = 0.2
 PENDING_CLICK_TTL = 5.0         # seconds a sent click waits for its ack
 NSModalResponseAbort = -1001
+
+# A screen is sent sharper than a camera: captured and encoded at this size
+# and bitrate while it is shared, during the call (no renegotiation: the
+# encoder is reopened at the new size, see VideoStream.set_encoder_size).
+SCREEN_RESOLUTION = '1280x720'
+SCREEN_BITRATE = 1.5e6          # bits per second
+
+# Camera resolutions offered in the video window: (size, label, Mbps the
+# camera is sent at, H.264 level new calls offer for it). Changing it
+# applies to the calls going on at once.
+CAMERA_RESOLUTIONS = [('640x480', '480p', 0.8, '3.0'),
+                      ('1280x720', '720p', 1.5, '3.1'),
+                      ('1920x1080', '1080p', 2.5, '4.0')]
+
+
+def can_resize_encoder():
+    """The SIP SIMPLE core changes the encoder size during a call."""
+    try:
+        from sipsimple.streams.rtp.video import VideoStream
+    except ImportError:
+        return False
+    return hasattr(VideoStream, 'set_encoder_size')
+
+
+def select_video_device(device):
+    """Select the video device with one settings change: the screen is
+    captured at SCREEN_RESOLUTION, a camera gets back the resolution it had
+    before the screen. Devices > Video Camera and the video window's camera
+    menu both come here."""
+    ScreenPointerManager().select_device(device)
 
 
 class _CallState(object):
@@ -96,6 +132,7 @@ class _CallState(object):
         self.prompt = None                  # (request_id, alert, parent window)
         self.awaiting_share = False         # accepted, the screen is not on yet
         self.device_before_share = None     # settings.video.device to put back
+        self.encoder = None                 # (w, h, bps) the video is encoded at, None: unknown
 
 
 def _content_of(data):
@@ -114,6 +151,12 @@ def _content_of(data):
             return None, None
         return (payload.content_type or '').lower(), payload.content
     return content_type, body
+
+
+def _video_streams(session):
+    """The established video streams of a call whose encoder can be resized."""
+    return [stream for stream in (session.streams or []) if stream.type == 'video'
+            and getattr(stream, 'state', None) == 'ESTABLISHED' and hasattr(stream, 'set_encoder_size')]
 
 
 def _video_established(session):
@@ -329,6 +372,7 @@ class ScreenPointerManager(object, metaclass=Singleton):
     def __init__(self):
         self.calls = {}
         self.overlay = None
+        self.resolution_before_screen = None    # str(settings.video.resolution) to put back
         self.notification_center = NotificationCenter()
         for name in ('SIPSessionDidStart', 'SIPSessionDidEnd', 'SIPSessionDidFail',
                      'SIPSessionGotMessage', 'MediaStreamDidStart', 'MediaStreamDidEnd',
@@ -444,6 +488,85 @@ class ScreenPointerManager(object, metaclass=Singleton):
     def _anyone_sharing(self):
         return any(state.sharing_signalled for state in self.calls.values())
 
+    # --- what is sent: device, capture size and encoder size ------------------------
+
+    def select_device(self, device):
+        settings = SIPSimpleSettings()
+        self._capture_resolution_for(device, settings)
+        settings.video.device = device
+        settings.save()
+
+    def _capture_resolution_for(self, device, settings):
+        """Set the capture resolution for device (not saved): the screen's,
+        or what the camera had before it. True when it changed."""
+        if device and ScreenPointer.is_screen_device(device):
+            if str(settings.video.resolution) == SCREEN_RESOLUTION:
+                return False
+            if self.resolution_before_screen is None:
+                self.resolution_before_screen = str(settings.video.resolution)
+            settings.video.resolution = VideoResolution(SCREEN_RESOLUTION)
+            return True
+        before, self.resolution_before_screen = self.resolution_before_screen, None
+        if before is None or str(settings.video.resolution) == before:
+            return False
+        settings.video.resolution = VideoResolution(before)
+        return True
+
+    def camera_resolution(self):
+        """The camera resolution as 'WxH', the one before the screen while it is shared."""
+        if self.resolution_before_screen is not None:
+            return self.resolution_before_screen
+        return str(SIPSimpleSettings().video.resolution)
+
+    def set_camera_resolution(self, resolution):
+        """Send the camera at another resolution (one of CAMERA_RESOLUTIONS),
+        in the calls going on too. Not while the screen is shared."""
+        if _local_screen_index() is not None:
+            return False
+        for size, label, bitrate, level in CAMERA_RESOLUTIONS:
+            if size == str(resolution):
+                break
+        else:
+            return False
+        settings = SIPSimpleSettings()
+        settings.video.resolution = VideoResolution(size)
+        settings.video.max_bitrate = bitrate
+        settings.video.h264.level = level       # what new calls offer
+        settings.save()     # the camera reopens at the new size
+        BlinkLogger().log_info('[video] camera resolution %s (%s, %.1f Mbps)' % (size, label, bitrate))
+        self._resize_encoders()
+        return True
+
+    @staticmethod
+    def _encoder_target():
+        """(w, h, bps) to encode at: the screen's while it is shared, the
+        video settings' otherwise."""
+        if _local_screen_index() is not None:
+            size = VideoResolution(SCREEN_RESOLUTION)
+            return size.width, size.height, SCREEN_BITRATE
+        settings = SIPSimpleSettings()
+        size = settings.video.resolution
+        bitrate = settings.video.max_bitrate * 1e6 if settings.video.max_bitrate else None
+        return size.width, size.height, bitrate
+
+    def _resize_encoders(self, session=None):
+        """Bring the encoder of the calls going on (or of one) to the target,
+        during the call: the other side gets a keyframe at the new size."""
+        width, height, bitrate = target = self._encoder_target()
+        for call in ([session] if session is not None else list(self.calls)):
+            state = self.calls.get(call)
+            if state is None or state.encoder == target:
+                continue
+            for stream in _video_streams(call):
+                try:
+                    if stream.set_encoder_size(width, height, bitrate):
+                        state.encoder = target
+                        BlinkLogger().log_info('[video] %s: encoding at %dx%d, %.1f Mbps'
+                                               % (call.remote_identity.uri, width, height, (bitrate or 0) / 1e6))
+                except Exception as e:
+                    BlinkLogger().log_info('[video] %s: cannot encode at %dx%d: %s'
+                                           % (call.remote_identity.uri, width, height, e))
+
     # --- notifications ----------------------------------------------------------------
 
     def _NH_SIPSessionDidStart(self, session, data):
@@ -467,6 +590,14 @@ class ScreenPointerManager(object, metaclass=Singleton):
 
     def _NH_MediaStreamDidStart(self, stream, data):
         if stream.type == 'video' and stream.session is not None and stream.session in self.calls:
+            # A new stream encodes at the settings of the moment, but above
+            # VGA the negotiated H.264 level (3.0 from another Blink) can
+            # have clamped it smaller: set it to be sure.
+            settings = SIPSimpleSettings()
+            size = settings.video.resolution
+            current = (size.width, size.height, settings.video.max_bitrate * 1e6 if settings.video.max_bitrate else None)
+            self.calls[stream.session].encoder = current if size.width * size.height <= 640 * 480 else None
+            self._resize_encoders(stream.session)
             self._update_sharing(stream.session)
 
     def _NH_MediaStreamDidEnd(self, stream, data):
@@ -483,9 +614,22 @@ class ScreenPointerManager(object, metaclass=Singleton):
         else:
             state.sharing_signalled = False
         self._dismiss_prompt(state)
+        state.encoder = None                # a new video stream starts at the settings
         self._restore_device(state)
 
     def _NH_VideoDeviceDidChangeCamera(self, sender, data):
+        # The device was changed somewhere select_video_device() was not
+        # used (Preferences, say): fix the capture size, the device reopens
+        # and we are back here.
+        settings = SIPSimpleSettings()
+        try:
+            device = SIPApplication.video_device.real_name
+        except AttributeError:
+            device = None
+        if self._capture_resolution_for(device, settings):
+            settings.save()
+            return
+        self._resize_encoders()
         on_screen = _local_screen_index() is not None
         for session, state in list(self.calls.items()):
             self._update_sharing(session)
@@ -687,8 +831,7 @@ class ScreenPointerManager(object, metaclass=Singleton):
             state.device_before_share = settings.video.device
         state.awaiting_share = True
         BlinkLogger().log_info('[screen-request] accepted, switching video to %s' % devices[0])
-        settings.video.device = devices[0]
-        settings.save()
+        self.select_device(devices[0])
 
     def _restore_device(self, state):
         previous, state.device_before_share = state.device_before_share, None
@@ -699,8 +842,7 @@ class ScreenPointerManager(object, metaclass=Singleton):
         if not ScreenPointer.is_screen_device(settings.video.device):
             return      # already moved off the screen
         BlinkLogger().log_info('[screen-request] sharing over, video back to %s' % previous)
-        settings.video.device = previous
-        settings.save()
+        self.select_device(previous)
 
     # --- drawing -----------------------------------------------------------------
 
