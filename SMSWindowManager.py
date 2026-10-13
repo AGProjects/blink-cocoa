@@ -81,7 +81,8 @@ except ImportError:
     DataExport = None
 from BlinkLogger import BlinkLogger
 from KeyEscrow import (escrow_is_missing, install_keypair, log_self_contact,
-                       restore_from_own_contact, write_self_keys, key_status_lines)
+                       restore_from_own_contact, write_self_keys, key_status_lines,
+                       reencrypt_escrow, self_escrow_records)
 from HistoryManager import ChatHistory, MESSAGES_BULK_DELETE_CONTENT_TYPE, bulk_delete_criteria, bulk_delete_label
 import HistoryManager as _history_module
 from SMSViewController import SMSViewController, is_file_transfer_notice, is_otr_wire_text, is_placeholder_uri
@@ -894,6 +895,12 @@ class SMSWindowManagerClass(NSObject):
     # Accounts whose missing escrow has been repaired this session, so a
     # write that keeps failing is attempted once rather than per reload.
     escrow_repaired = set()
+    # The escrow is encrypted with the account password. When the password
+    # changes it is encrypted again, but only with a password the server has
+    # accepted (a registration succeeded with it): a typo must never lock it.
+    accepted_passwords = {}     # account id -> password a registration last succeeded with
+    password_changed = set()    # accounts whose new password the server has not accepted yet
+    password_checked = {}       # account id -> escrow and password last checked
     generate_prompt_deferred = {}
     # What the server says about our own public key, per account:
     # 'unknown', 'asked', 'present', 'absent' or 'failed' (see lookupOwnServerKey)
@@ -2184,6 +2191,12 @@ class SMSWindowManagerClass(NSObject):
             BlinkLogger().log_error('Key escrow repair failed for %s: %s'
                                     % (getattr(account, 'id', '?'), e))
 
+        try:
+            self.reencryptEscrowIfNeeded(account)
+        except Exception as e:
+            BlinkLogger().log_error('Key escrow password check failed for %s: %s'
+                                    % (getattr(account, 'id', '?'), e))
+
         self.logKeyStatus(account, 'addressbook fetched')
         self.releaseKeyQuestion(account)
 
@@ -2218,6 +2231,38 @@ class SMSWindowManagerClass(NSObject):
         if not written:
             BlinkLogger().log_info('Key escrow: could not restore the backup for %s -- %s'
                                    % (account.id, reason))
+
+    @objc.python_method
+    def reencryptEscrowIfNeeded(self, account):
+        """Encrypt the escrow of our key again when it does not open with the
+        account password -- changed here, on the web or on another device.
+
+        Only with a password a registration has succeeded with: a password
+        typed into the preferences may be wrong, and an escrow encrypted with
+        it opens nowhere. Each escrow and password is checked once, since
+        decrypting is not free and reloads are frequent.
+        """
+        if not pgp_messaging_possible(account):
+            return
+        password = (account.auth.password or '').strip()
+        if not password or self.accepted_passwords.get(account.id) != password:
+            return
+        from KeyEscrow import _resource_lists_element
+        if _resource_lists_element(account) is None:
+            return      # not fetched yet; the reload checks again
+        if not (account.sms.private_key and os.path.exists(account.sms.private_key)):
+            return
+        records = self_escrow_records(account)
+        if not records:
+            return      # nothing escrowed: repairMissingEscrow writes it
+        import hashlib
+        signature = (hashlib.sha256(password.encode()).hexdigest(),
+                     tuple(sorted((str(contact_id), str(record.get('timestamp')), len(record.get('private_key') or ''))
+                                  for contact_id, _label, record in records)))
+        if self.password_checked.get(account.id) == signature:
+            return
+        self.password_checked[account.id] = signature
+        reencrypt_escrow(account)
 
     @objc.python_method
     def restorePrivateKeyFromOwnContact(self, account):
@@ -2264,6 +2309,13 @@ class SMSWindowManagerClass(NSObject):
             self.private_keys.pop(account.id, None)
             self.resetDecryption(account)
         if isinstance(account, Account):
+            if 'auth.password' in data.modified:
+                self.accepted_passwords.pop(account.id, None)
+                if pgp_messaging_possible(account):
+                    self.password_changed.add(account.id)
+                    BlinkLogger().log_info('Key escrow: the password of %s changed, the escrow is encrypted with it '
+                                           'once a registration succeeds with it' % account.id)
+
             if 'sms.history_token' in data.modified:
                 if account.sms.history_token:
                     BlinkLogger().log_info("Sync token for account %s has been updated" % account.id)
@@ -2411,6 +2463,20 @@ class SMSWindowManagerClass(NSObject):
             call_later(10, self.syncConversations, account)
             if self.server_key_state.get(account.id, 'unknown') in ('unknown', 'failed'):
                 self.checkKeyStatus(account, 'registration')
+            password = (account.auth.password or '').strip()
+            if self.accepted_passwords.get(account.id) != password:
+                # the first success with this password: the server accepts it
+                self.accepted_passwords[account.id] = password
+                if account.id in self.password_changed:
+                    self.password_changed.discard(account.id)
+                    BlinkLogger().log_info('Key escrow: the server accepted the new password of %s' % account.id)
+                self.suppressAddressbookNotifications()
+                try:
+                    self.reencryptEscrowIfNeeded(account)
+                except Exception as e:
+                    BlinkLogger().log_error('Key escrow password check failed for %s: %s' % (account.id, e))
+                finally:
+                    self.resumeAddressbookNotifications()
         # BlinkLogger().log_info('startup: SMSWindowManager._NH_SIPAccountRegistrationDidSucceed exit')
 
 
