@@ -4092,6 +4092,15 @@ class SMSWindowManagerClass(NSObject):
         self.closeConversationForURI(source)
         self._postConversationOrderChanged(target)
 
+    @staticmethod
+    def _sharedAccountUris():
+        """active_account_uris without Bonjour: the accounts whose conversations may be
+        filed in the Messages group, which XCAP shares with the other devices."""
+        uris = active_account_uris()
+        if uris is None:
+            return None
+        return [uri for uri in uris if str(uri) != str(BonjourAccount().id)]
+
     @objc.python_method
     def _bonjourConversationKeys(self):
         """Every instance id the Bonjour group is holding a conversation for.
@@ -4651,6 +4660,16 @@ class SMSWindowManagerClass(NSObject):
         # `stored` is every conversation the history holds, which is the only
         # complete answer to who belongs in the Messages group -- so the audit
         # rides on the read that already has it rather than making its own.
+        # Except Bonjour's: the group is shared with the other devices, a
+        # neighbour's conversation stays on this one, and a row filed under an
+        # address the neighbour answered on would otherwise become a contact.
+        shared = self._sharedAccountUris()
+        if shared is not None and shared != active_account_uris():
+            try:
+                stored = self.history.last_message_times(local_uri=shared)
+            except Exception as e:
+                BlinkLogger().log_error('Cannot read the last message times: %s' % e)
+                stored = {}
         self.auditMessagesGroupAgainstHistory(stored)
 
         self.loadMessagePreviews()
@@ -4758,7 +4777,18 @@ class SMSWindowManagerClass(NSObject):
         if not counts:
             BlinkLogger().log_debug('No unread messages were waiting')
             return
-        self._applyRestoredUnreadCounts(counts)
+        # only conversations of accounts the addressbook is shared by may get a
+        # contact; a Bonjour neighbour's stay out of the Messages group
+        fileable = None
+        shared = self._sharedAccountUris()
+        if shared is not None and shared != active_account_uris():
+            try:
+                fileable = {self._canonical_uri(uri) for uri, count in
+                            self.history.unread_counts(local_uri=shared).items() if count > 0}
+            except Exception as e:
+                BlinkLogger().log_error('Cannot read the unread counts: %s' % e)
+                fileable = set()
+        self._applyRestoredUnreadCounts(counts, fileable)
 
     @objc.python_method
     @run_in_gui_thread
@@ -4798,7 +4828,7 @@ class SMSWindowManagerClass(NSObject):
 
     @objc.python_method
     @run_in_gui_thread
-    def _applyRestoredUnreadCounts(self, counts):
+    def _applyRestoredUnreadCounts(self, counts, fileable=None):
         """Put the restored badges on screen, on the GUI thread.
 
         The counting happens in a green thread because that is the only
@@ -4815,7 +4845,8 @@ class SMSWindowManagerClass(NSObject):
 
         BlinkLogger().log_info('Restored %d unread message(s) in %d conversation(s)'
                                % (restored, len(counts)))
-        self.addMissingConversationContacts(counts.keys(), 'Unread conversations at start')
+        keys = [key for key in counts if fileable is None or key in fileable]
+        self.addMissingConversationContacts(keys, 'Unread conversations at start')
         for key, count in counts.items():
             self._postUnreadChanged(key, self.unread_counts.get(key, count))
 

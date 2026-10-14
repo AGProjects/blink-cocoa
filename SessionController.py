@@ -1823,6 +1823,25 @@ class SessionController(NSObject):
         objc.super(SessionController, self).dealloc()
 
     @objc.python_method
+    def bonjour_instance_id(self):
+        """The bare instance id of the Bonjour neighbour this session is with, or None.
+
+        What anything kept from the call is filed under: the transport address
+        the neighbour answers on changes every time it starts.
+        """
+        if not isinstance(self.account, BonjourAccount):
+            return None
+        from SMSWindowManager import bare_instance_id
+        instance_id = bare_instance_id(getattr(self, 'device_id', None))
+        if not instance_id:
+            try:
+                contact = NSApp.delegate().contactsWindowController.getBonjourContact(None, str(self.target_uri))
+            except Exception:
+                contact = None
+            instance_id = bare_instance_id(getattr(contact, 'id', None))
+        return instance_id or None
+
+    @objc.python_method
     def log_info(self, text):
         BlinkLogger().log_info("[Session %d with %s] %s" % (self.identifier, self.remoteAOR, text))
 

@@ -1429,7 +1429,8 @@ class AudioController(MediaStream):
         message += "<p><audio src='%s' controls='controls'>" %  urllib.parse.quote(filename)
         media_type = 'audio-recording'
         local_uri = format_identity_to_string(self.sessionController.account)
-        remote_uri = format_identity_to_string(self.sessionController.target_uri)
+        remote_uri = (self.sessionController.bonjour_instance_id()
+                      or format_identity_to_string(self.sessionController.target_uri))
 
         # A recording belongs to a call, so it is filed the way that call was.
         # This used to be hardcoded 'incoming', and addressed from the remote
@@ -1489,10 +1490,22 @@ class AudioController(MediaStream):
             except Exception as e:
                 self.sessionController.log_error('Cannot describe the recording: %s' % e)
             account = self.sessionController.account
-            if account is None or isinstance(account, BonjourAccount):
+            if account is None:
                 if fallback is not None:
                     self._writeRecordingHistoryEntry(fallback)
                 return
+            instance_id = None
+            if isinstance(account, BonjourAccount):
+                # Kept on this device, in the timeline of the conversation with
+                # the neighbour, filed under its instance id: never uploaded,
+                # never sent, never under the address it answered on today.
+                instance_id = self.sessionController.bonjour_instance_id()
+                if not instance_id:
+                    self.sessionController.log_info('Recording kept as a history entry: '
+                                                    'no instance id for the Bonjour neighbour')
+                    if fallback is not None:
+                        self._writeRecordingHistoryEntry(fallback)
+                    return
 
             # An account with no transfer service is NOT a reason to stop
             # here. It used to be, and the result was that a recorded PSTN
@@ -1511,7 +1524,7 @@ class AudioController(MediaStream):
                                                      check_contact=True, format='compact')
             self._prepareRecordingForSharing(filename, account,
                                              self.sessionController.target_uri, display_name,
-                                             fallback=fallback)
+                                             fallback=fallback, instance_id=instance_id)
         except Exception as e:
             self.sessionController.log_error('Cannot share the recording: %s' % e)
             if fallback is not None:
@@ -1519,7 +1532,7 @@ class AudioController(MediaStream):
 
     @objc.python_method
     @run_in_green_thread
-    def _prepareRecordingForSharing(self, filename, account, target, display_name, fallback=None):
+    def _prepareRecordingForSharing(self, filename, account, target, display_name, fallback=None, instance_id=None):
         """Wait for the file, then make it the shape a voice note is.
 
         Both halves are why this is not done in the notification handler.
@@ -1575,7 +1588,8 @@ class AudioController(MediaStream):
                 repaired = None
             self._shareRecording(converted or recording, duration, peaks, account,
                                  target, display_name,
-                                 temporary=converted or repaired, fallback=fallback)
+                                 temporary=converted or repaired, fallback=fallback,
+                                 instance_id=instance_id)
         except Exception as e:
             self.sessionController.log_error('Cannot prepare the recording: %s' % e)
             if fallback is not None:
@@ -1584,17 +1598,21 @@ class AudioController(MediaStream):
     @objc.python_method
     @run_in_gui_thread
     def _shareRecording(self, path, duration, peaks, account, target, display_name,
-                        temporary=None, fallback=None):
+                        temporary=None, fallback=None, instance_id=None):
         """Hand the finished file to the conversation with that contact."""
         viewer = None
         try:
             from SMSWindowManager import SMSWindowManager
-            viewer = SMSWindowManager().viewerForTarget(target, display_name, account)
+            viewer = SMSWindowManager().viewerForTarget(target, display_name, account, instance_id=instance_id)
             if viewer is None:
                 if fallback is not None:
                     self._writeRecordingHistoryEntry(fallback)
                 return
-            transfer_id = viewer.sendCallRecording(path, duration=duration, peaks=peaks)
+            if instance_id:
+                # a Bonjour neighbour: this device only
+                transfer_id = viewer.fileCallRecordingLocally(path, duration=duration, peaks=peaks)
+            else:
+                transfer_id = viewer.sendCallRecording(path, duration=duration, peaks=peaks)
             self.sessionController.log_info(
                 'Recording of the call with %s shared with this account as %s'
                 % (target, transfer_id or 'nothing'))

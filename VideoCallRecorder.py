@@ -907,7 +907,8 @@ class VideoCallRecorder(object):
             display_name = format_identity_to_string(session.remoteIdentity,
                                                      check_contact=True, format='compact')
             viewer = SMSWindowManager().viewerForTarget(session.target_uri, display_name,
-                                                        session.account)
+                                                        session.account,
+                                                        instance_id=session.bonjour_instance_id())
             if viewer is None:
                 self.log_info('No conversation to file the recording in')
                 return
