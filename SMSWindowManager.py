@@ -1935,6 +1935,12 @@ class SMSWindowManagerClass(NSObject):
         if self.server_key_state.get(account.id, 'unknown') in ('unknown', 'failed'):
             self.lookupOwnServerKey(account)
         self.logKeyStatus(account, why)
+        if account.sms.enable_pgp and not self._hasPrivateKey(account):
+            # no key here: decided at start, not when the first conversation opens, as Blink Qt does.
+            # Generated silently when nobody has one; otherwise the user is asked (the panel says
+            # when another device has it). offerKeyGeneration waits for the addressbook and the
+            # server, and asks once per run
+            self.offerKeyGeneration(account)
 
     @objc.python_method
     @run_in_gui_thread
