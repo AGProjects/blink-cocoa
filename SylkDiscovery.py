@@ -250,9 +250,19 @@ class SylkServerDiscovery(object, metaclass=Singleton):
     def _apply(cls, account, configuration):
         """What of the domain's settings goes into the account, overwriting the user's (the server
         knows its infrastructure): conference.sipBridge as its conference server address, and the
-        PSTN rule replacePlus (pstn.rules, as mobile reads it, or a top-level rules) as its IDD prefix."""
+        PSTN rule replacePlus (pstn.rules, as mobile reads it, or a top-level rules) as its IDD prefix.
+        A SylkServer account always encrypts its messages with OpenPGP (sms.enable_pgp) and sends
+        them in a CPIM envelope, which SylkServer requires (sms.use_cpim). Its address book is
+        always stored with XCAP (xcap.enabled) and it does not subscribe to xcap-diff
+        (xcap.xcap_diff: the SDK's XCAPManager stops the subscription as soon as it is turned off).
+        As Blink Qt does."""
         if not configuration:
             return
+        for name, value, what in (('sms.enable_pgp', True, 'OpenPGP message encryption'),
+                                  ('sms.use_cpim', True, 'the CPIM envelope'),
+                                  ('xcap.enabled', True, 'XCAP storage'),
+                                  ('xcap.xcap_diff', False, 'the xcap-diff subscription')):
+            cls._force(account, name, value, what)
         conference = configuration.get('conference')
         bridge = conference.get('sipBridge') if isinstance(conference, dict) else None
         if isinstance(bridge, str) and bridge.strip():
@@ -266,6 +276,21 @@ class SylkServerDiscovery(object, metaclass=Singleton):
             value = str(replace_plus).strip()
             # '+' is the IDD prefix setting's own way of saying "keep the +" (None)
             cls._set(account, 'pstn.idd_prefix', None if value == '+' else value, 'rules.replacePlus', 'IDD prefix')
+
+    @staticmethod
+    def _force(account, name, value, what):
+        group, _, attribute = name.partition('.')
+        settings = getattr(account, group, None)
+        if settings is None or not hasattr(settings, attribute) or getattr(settings, attribute) == value:
+            return
+        try:
+            setattr(settings, attribute, value)
+            account.save()
+        except Exception as e:
+            BlinkLogger().log_warning('[sylkserver] Cannot turn %s %s for %s: %s' % ('on' if value else 'off', what, account.id, e))
+            return
+        BlinkLogger().log_info('[sylkserver] %s turned %s for %s (%s runs SylkServer)'
+                               % (what[0].upper() + what[1:], 'on' if value else 'off', account.id, account.id.domain))
 
     @staticmethod
     def _set(account, name, value, source, what):
