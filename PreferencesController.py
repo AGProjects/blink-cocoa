@@ -62,6 +62,10 @@ from zope.interface import implementer
 from BlinkLogger import BlinkLogger, FileLogger
 
 from EnrollmentController import EnrollmentController
+# Settings a SylkServer account cannot change (SylkDiscovery forces them)
+SYLKSERVER_HIDDEN_OPTIONS = {'sms.enable_pgp', 'xcap.enabled', 'xcap.xcap_diff'}
+SYLKSERVER_LOCKED_OPTIONS = {'sms.use_cpim'}
+
 from PreferenceOptions import AccountSectionOrder, AccountSettingsOrder, AecSliderOption, AdvancedGeneralSectionOrder, BonjourAccountSectionOrder, DisabledAccountPreferenceSections, DisabledPreferenceSections, GeneralSettingsOrder, HiddenOption, PreferenceOptionTypes, SampleRateOption, SettingDescription, StaticPreferenceSections, SectionNames, ToolTips, Placeholders, formatName
 from SIPManager import SIPManager
 from VerticalBoxView import VerticalBoxView
@@ -665,8 +669,22 @@ class PreferencesController(NSWindowController, object):
                 BlinkLogger().log_info(
                     "Could not create video preview in preferences: %s" % e)
 
+        # A SylkServer account always uses OpenPGP, XCAP storage and no xcap-diff, and always
+        # sends CPIM (SylkDiscovery forces them): those are not shown for it, and the CPIM
+        # checkbox is shown ticked and locked. As Blink Qt does.
+        sylkserver = False
+        if forAccount and storage_object is not BonjourAccount():
+            try:
+                from SylkDiscovery import has_sylkserver
+                sylkserver = bool(has_sylkserver(storage_object))
+            except Exception:
+                sylkserver = False
+
         for option_name in options:
             if section_name == 'auth' and option_name == 'password':
+                continue
+
+            if sylkserver and section_name + '.' + option_name in SYLKSERVER_HIDDEN_OPTIONS:
                 continue
         
             if option_name == 'video_codec_list' and not NSApp.delegate().contactsWindowController.sessionControllersManager.isMediaTypeSupported('video'):
@@ -725,6 +743,12 @@ class PreferencesController(NSWindowController, object):
             control.delegate = self
             control.owner = storage_object
             control.restore()
+
+            if sylkserver and section_name + '.' + option_name in SYLKSERVER_LOCKED_OPTIONS:
+                try:
+                    control.check.setEnabled_(False)
+                except AttributeError:
+                    pass
 
         return section_view
 
