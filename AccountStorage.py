@@ -16,6 +16,10 @@ re-registration, and the change notifications in between. The local cache
 mirrors that, so a contact has a stored picture exactly when the cache holds
 one under its id.
 
+The user is asked to choose between a server picture and one set on this Mac
+only at the first sync of each account (first_sync_done). After it, a picture
+set here that has not been uploaded is newer than the server's, and is uploaded.
+
 Precedence when a contact is drawn (ContactListModel.PresenceContactAvatar):
   1. a new picture still waiting to be uploaded (local file, avatar_pending)
   2. the stored avatar, from the cache below
@@ -535,31 +539,55 @@ class AccountStorage(object, metaclass=Singleton):
         except Exception:
             return []
 
+    def first_sync_done(self, account):
+        """Whether this Mac has been through its first avatar sync with the
+        account: the listing read and the choice, if any, confirmed. Kept in
+        account_storage/<account>/state.json."""
+        return bool(self.cache.state(account.id).get('first_sync_done'))
+
+    def _first_sync_finished(self, account):
+        if not self.first_sync_done(account):
+            self.cache.set_state(account.id, first_sync_done=int(time.time()))
+            BlinkLogger().log_info('[avatar] First avatar sync of %s done: from now on a picture set here '
+                                   'replaces the server one, nobody is asked' % account.id)
+
     @run_in_gui_thread
     def sync(self, account):
         self.last_sync[account.id] = time.time()
         contacts = self._contacts()
         contact_ids = set(c.id for c in contacts)
+        # Pictures the user set on this Mac that were never uploaded
+        # (icon_info.local: set in the contact editor, as opposed to a
+        # contact's presence icon or a bundled one, which never count).
+        from ContactListModel import PresenceContactAvatar
+        unsent = {}
+        for contact in contacts:
+            if getattr(contact, 'avatar_pending', False) or getattr(contact, 'avatar_delete_pending', False):
+                continue
+            if not valid_name(contact.id) or not getattr(getattr(contact, 'icon_info', None), 'local', False):
+                continue
+            path = PresenceContactAvatar.path_for_contact(contact)
+            if os.path.isfile(path):
+                unsent[contact.id] = (contact, path)
+        if unsent and self.first_sync_done(account):
+            # After the first sync there is nothing to choose: a picture set
+            # here is newer than the server's (set while the storage was not
+            # reachable, or before the storage account was known), so it is
+            # uploaded and replaces it.
+            for contact, path in unsent.values():
+                contact.avatar_pending = True
+                contact.save()
+                self.upload_avatar(contact, reason='set on this Mac, not uploaded yet')
+            unsent = {}
         # Ours to settle first: a picture not uploaded yet must not be
         # overwritten by the old one, a removed one must not come back.
         pending = set(c.id for c in contacts if getattr(c, 'avatar_pending', False)
                       or getattr(c, 'avatar_delete_pending', False))
-        # Pictures the user set on this Mac that the server does not hold
-        # yet (icon_info.local: set in the contact editor, as opposed to a
-        # contact's presence icon or a bundled one, which never count).
-        # Where the server has a picture too, the user chooses; where it has
-        # none, the local one is pushed. A successful upload or a choice
-        # removes the local file, so each contact is handled once.
-        local = {}
-        from ContactListModel import PresenceContactAvatar
-        for contact in contacts:
-            if contact.id in pending or not valid_name(contact.id):
-                continue
-            if not getattr(getattr(contact, 'icon_info', None), 'local', False):
-                continue
-            path = PresenceContactAvatar.path_for_contact(contact)
-            if os.path.isfile(path):
-                local[contact.id] = path
+        # First sync only: where the server has a picture too, the user
+        # chooses; where it has none, the local one is pushed. A successful
+        # upload or a choice removes the local file, so each contact is
+        # handled once.
+        local = dict((contact_id, path) for contact_id, (contact, path) in unsent.items())
         self._sync(account, contact_ids, pending, local)
 
     @run_in_thread('account-storage')
@@ -635,6 +663,8 @@ class AccountStorage(object, metaclass=Singleton):
             BlinkLogger().log_info('[avatar] %d contacts of %s have a picture both on the server and on '
                                    'this Mac, asking which to keep' % (len(conflicts), account.id))
             self._ask_conflicts(account, [(object_id, local[object_id]) for object_id in conflicts])
+        elif not self.asking:
+            self._first_sync_finished(account)
 
     @run_in_gui_thread
     def _push(self, account, contact_ids):
@@ -700,6 +730,7 @@ class AccountStorage(object, metaclass=Singleton):
                           'local_time': local_time,
                           'default': 'local' if local_time and local_time > server_time else 'server'})
         if not items:
+            self._first_sync_finished(account)
             return
         items.sort(key=lambda item: item['name'].lower())
         self.asking = True
@@ -725,6 +756,10 @@ class AccountStorage(object, metaclass=Singleton):
                 contact.avatar_pending = True
                 contact.save()
                 self.upload_avatar(contact, reason='kept over the server picture')
+        BlinkLogger().log_info('[avatar] Pictures chosen for %d contacts: %d kept from the server, %d from this Mac'
+                               % (len(choice), sum(1 for side in choice.values() if side == 'server'),
+                                  sum(1 for side in choice.values() if side != 'server')))
+        self._first_sync_finished(account)
         self._post_changed(list(choice))
 
     def device_label(self, device_id):
@@ -865,12 +900,13 @@ class AccountStorage(object, metaclass=Singleton):
         elif status in (413, 507):
             BlinkLogger().log_info('[avatar] Picture of %s not uploaded (%s): %s' % (
                 who, reason, 'too large (413)' if status == 413 else 'account storage full (507)'))
-            # keep the old avatar: the stored one if there is one, which wins
-            # over the local file once the pending flag is gone
+            # keep the old avatar (the stored one, else the presence icon):
+            # the rejected picture goes, or the next sync would push it again
             contact.avatar_pending = False
-            if self.avatar_path(contact):
-                unlink(PresenceContactAvatar.path_for_contact(contact))
-                contact.icon_info.local = False
+            unlink(PresenceContactAvatar.path_for_contact(contact))
+            contact.icon_info.local = False
+            contact.icon_info.url = None
+            contact.icon_info.etag = None
             contact.save()
             self._post_changed([contact.id])
             title = NSLocalizedString("Contact picture not saved", "Notification title")

@@ -196,15 +196,26 @@ def encode_avatar(path):
 - A 404 means the object is gone: drop it and show the default picture. Do not retry until the next listing or notification.
 
 ### Pictures set on this device
-On every sync, each picture the user set on this device (in Blink Cocoa: set in the contact editor, `icon_info.local`) that is not yet on the server is reconciled. Presence and bundled icons never count: on the server they would be a copy that goes stale.
-- **Nothing on the server:** the local picture is pushed. This is also how pictures from before account storage get uploaded, and pictures set while storage was unreachable.
+On every sync, each picture the user set on this device (in Blink Cocoa: set in the contact editor, `icon_info.local`; in Blink Qt: `alternate_icon`) that was never uploaded (not pending) is reconciled. Presence and bundled icons never count: on the server they would be a copy that goes stale.
+
+**In steady state there is never anything to choose.** A picture set in the editor is pending until its upload succeeds, and the local copy is dropped then. A change from another device only updates the cache. So with every device in sync, changing an avatar on one device is last writer wins, and nobody is asked.
+
+**A choice is offered only at the first sync of an account on a device.** The first sync is when pictures from before account storage are met. After it, a device keeps a per-account marker, `first_sync_done`, in its local state (not in XCAP, not on the server).
+- The marker is set once the listing has been read and either nothing needed a choice or the user has confirmed it.
+- If the listing fails, or the app quits before Confirm, the marker stays unset and the next sync starts the first sync again.
+
+**First sync (no marker):**
+- **Nothing on the server:** the local picture is pushed. This is how pictures from before account storage get uploaded.
 - **A picture on the server too:** the user chooses. The server copies are fetched first, so both can be shown.
   - A modal lists one row per contact with two columns, **On the server** and **On this device**. Each shows the picture, a **Keep** tick box, and where it comes from: the uploader (this device, or another device by its id) and the upload time (`modified`) for the server; the file's time for the local one.
   - In each row exactly one box is ticked. Ticking one unticks the other. The default is the newer picture.
   - **Select All** above each column ticks that whole column. **Confirm** is the only way out.
   - Keeping the server picture deletes the local one. Keeping the local picture uploads it, replacing the server copy for all devices.
 - Either way the local file goes away (after a successful upload, or when the server copy is kept), so each contact is handled once. If the app quits before Confirm, the next sync asks again.
-- A picture with an upload or delete pending is left to that retry.
+
+**Every later sync (marker set):** a user-set picture that was never uploaded is newer than whatever the server holds. It was set while the storage was not reachable, or before the storage account was known (discovery, first token). It is marked pending and uploaded, replacing the server copy, without asking.
+
+A picture with an upload or delete pending is left to that retry in both cases.
 
 ### Sync
 After the XCAP addressbook has been fetched and is stable (same rule as the journal), and again on re-registration (at most every 10 minutes) to catch notifications missed while disconnected:
@@ -226,7 +237,7 @@ On `application/sylk-storage-changed` with `namespace == "avatars"`:
 2. `PUT {storage_url}/avatars/<contact id>` with `X-Sylk-Device-Id`.
 3. On 200 or 201: cache the bytes under the contact id, clear the pending mark, and drop the local copy.
 4. Errors:
-   - 413 or 507: tell the user (size or quota), clear the pending mark, and keep the old stored avatar.
+   - 413 or 507: tell the user (size or quota), clear the pending mark, and drop the rejected local picture (and its user-set flag). The contact keeps its old avatar, the stored one or else the presence icon, and the rejected picture is not pushed again by the next sync.
    - 401: handled by the common token mechanism, as for the journal.
    - Network error: keep the picture locally and pending, and retry later (when the addressbook settles, when a new token arrives, and every 5 minutes).
 - A removal whose DELETE fails stays pending the same way and is retried.
@@ -276,6 +287,7 @@ Never written to XCAP:
   - Presence must not overwrite the local picture while it is set.
 - **avatar_pending**: a user-set picture not uploaded yet.
 - **avatar_delete_pending**: a removed picture whose DELETE has not succeeded yet.
+- **first_sync_done** (per account, not per contact): this device has been through its first avatar sync with the account (see "Pictures set on this device"). Blink Cocoa and Blink Qt: `account_storage/<account>/state.json` (`AccountStorage.first_sync_done`, set by `_first_sync_finished`).
 - The local picture file is shared between a user-set picture and the presence icon. The flag says which one it is.
 
 ### Contact editor
@@ -285,7 +297,7 @@ Never written to XCAP:
 - Picture cleared: delete the local file, clear user-set, set delete-pending, drop the cache entry at once, then DELETE.
 
 ### When things run
-- **Sync** (listing, fetch, drop, GC, push, choice): when the XCAP addressbook has settled after a fetch (the same point the journal and call history wait for). Again on re-registration, at most every 10 minutes, and only after the first settle, because GC decides on which contacts exist.
+- **Sync** (listing, fetch, drop, GC, push, and the choice on the first sync only): when the XCAP addressbook has settled after a fetch (the same point the journal and call history wait for), or when the storage account's first token arrives after that. Again on re-registration, at most every 10 minutes, and only after the first settle, because GC decides on which contacts exist.
 - **Pending retries** (uploads and deletes): on settle, when a new token arrives, and every 5 minutes.
 - **Expunging a contact** (permanent delete from the Deleted group): DELETE its object, best effort; GC covers a failure.
 - All HTTP off the GUI thread, serialised on one worker. Contact and UI updates back on the GUI thread.
@@ -309,7 +321,8 @@ Never written to XCAP:
 Every line starts with `[avatar]`, so `grep '\[avatar\]'` gives the whole story. It includes:
 - storage URL in use (once);
 - per sync: counts on server / to fetch / dropped / orphans deleted;
-- **one line per contact uploaded**: name, URI, id, reason (`set in the contact editor`, `set on this Mac, none on the server`, `kept over the server picture`, `retry`), size, etag;
+- **one line per contact uploaded**: name, URI, id, reason (`set in the contact editor`, `set on this Mac/computer, none on the server`, `kept over the server picture`, `set on this Mac/computer, not uploaded yet`, `retry`), size, etag;
+- the first sync of an account done (once per account per device);
 - one line per failed upload (413 / 507 / postponed), per delete, and per remote change applied;
 - the number of contacts in a choice and the totals chosen.
 
@@ -327,3 +340,27 @@ Reference for the port.
 | Presence must not overwrite a user-set picture | `ContactListModel.py`, presence icon handling checks `icon_info.local` |
 | `application/sylk-storage-changed` intake, journal skip | `SMSWindowManager.py`; control types in `SMSViewController.py` |
 | Settle trigger | `BlinkAddressbookDidSettle` (posted by `ContactListModel` after the post-reload pass) |
+
+## Blink Qt implementation
+
+| Requirement | Where |
+|---|---|
+| Storage URL (the file transfer base minus `/filetransfer`), HTTP client (`requests`, `tls.verify_server`), cache, encoding (QImage: centre crop, 96×96, flattened onto white, JPEG 70), sync, GC, push, live sync, upload, delete, logging | `blink/account_storage.py` |
+| Server-or-local choice window | `blink/avatar_choice.py` (`AvatarChoiceDialog`) |
+| `avatar_pending`, `avatar_delete_pending` (local settings) | `blink/configuration/addressbook.py` |
+| Display precedence | `account_storage.contact_picture`, used by `Contact.icon` and `ContactDetail.icon` in `blink/contacts.py` and by the editor's picture well |
+| Add/edit contact upload or remove, delete-permanently DELETE | `blink/contacts.py` (`ContactEditorDialog._SH_Accepted`, `ContactTrash.delete_permanently`) |
+| Editor: explicit change (`IconSelector.filename` is `NotSelected` unless a picture was chosen or cleared), uploader tooltip | `blink/widgets/labels.py` (`IconSelector`) |
+| Presence must not overwrite a user-set picture | Already the case: the user-set picture is `images/<id>_alt.png` (`contact.alternate_icon`), the presence icon `images/<id>.png` |
+| `application/sylk-storage-changed` intake | `MessageManager._NH_SIPEngineGotMessage` in `blink/messages.py`, before anything is logged as a message, stored or shown |
+| Journal skip | `STORAGE_CHANGED_CONTENT_TYPE` in `blink/message_envelopes.py`, in `IGNORED_CONTENT_TYPES` (`blink/journal.py`) and `__not_history_content_types__` |
+| Settle trigger | `BlinkAddressbookDidSettle` (posted by `ContactRepair`, `data.accounts`); also the first token of the storage account if it arrives after the settle |
+| View refresh | `BlinkContactAvatarDidChange` posted with the addressbook contact as sender, so `Contact`, `ContactDetail` and the open contact editor redraw |
+| Start | `AccountStorage().start()` in `blink/__init__.py` |
+
+Qt specifics:
+- **"User-set" flag:** `contact.alternate_icon` together with the `images/<id>_alt.png` file. It is cleared, and the file removed, after a successful upload or when the server picture is kept in the choice window.
+- **Removing in the editor:** "Use contact provided icon" removes the picture and sends the DELETE. The well then shows the presence icon, if any.
+- **First sync marker:** `first_sync_done` in `account_storage/<account>/state.json`, set by `_first_sync_finished` after a sync with nothing to choose, or after the choice is confirmed.
+- **Device label:** "This computer" for our own id.
+- **Notifications:** 413 and 507 are told through `org.freedesktop.Notifications`, or through a non-modal message box when there is no notification service.
