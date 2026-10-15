@@ -2402,6 +2402,7 @@ class SMSWindowManagerClass(NSObject):
                 else:
                     BlinkLogger().log_info("Sync token for account %s has been removed" % account.id)
                     account.sms.history_last_id = None
+                    account.sms.history_last_id_timestamp = None
                     account.sms.enable_replication = False
                     account.save()
 
@@ -2410,6 +2411,7 @@ class SMSWindowManagerClass(NSObject):
                     BlinkLogger().log_info("Sync url for account %s has been updated: %s" % (account.id, account.sms.history_url))
                 else:
                     account.sms.history_last_id = None
+                    account.sms.history_last_id_timestamp = None
                     account.sms.history_token = None
                     account.sms.enable_replication = False
                     account.save()
@@ -2925,6 +2927,7 @@ class SMSWindowManagerClass(NSObject):
             last_message_id = messages[-1].get('message_id')
             if last_message_id:
                 account.sms.history_last_id = last_message_id
+                account.sms.history_last_id_timestamp = messages[-1].get('timestamp') or None
                 account.save()
         BlinkLogger().log_error('Journal download for %s hit the %d page cap; more may remain'
                                 % (account.id, self.MAX_JOURNAL_PAGES))

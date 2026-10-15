@@ -57,6 +57,7 @@ class SMSSettingsExtension(SettingsGroup):
     file_transfer_url = Setting(type=str, default=None, nillable=True)
     history_token = Setting(type=str, default=None, nillable=True)
     history_last_id = Setting(type=str, default=None, nillable=True)
+    history_last_id_timestamp = Setting(type=str, default=None, nillable=True)    # the journal timestamp of the entry the cursor points at
     public_key = Setting(type=str, default=None, nillable=True)
     private_key = Setting(type=str, default=None, nillable=True)
     public_key_checksum = Setting(type=str, default=None, nillable=True)

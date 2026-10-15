@@ -10,6 +10,8 @@ from AppKit import (NSAccessibilityTitleAttribute,
                     NSOnState,
                     NSOffState,
                     NSOKButton,
+                    NSColor,
+                    NSLeftTextAlignment,
                     NSRightTextAlignment,
                     NSRoundedBezelStyle,
                     NSRunAlertPanel,
@@ -319,6 +321,73 @@ class NullableStringOption(StringOption):
     def __init__(self, object, name, option, description=None):
         StringOption.__init__(self, object, name, option, description)
         self.emptyIsNone = True
+
+
+class JournalCursorOption(NullableStringOption):
+    """The journal cursor and, beside it, the journal timestamp of the entry it points at, as
+    Blink Qt shows it. A cursor without its timestamp (entered by hand, or from before the
+    timestamp was kept): the message it points at, if history holds it, has it."""
+
+    def __init__(self, object, name, option, description=None):
+        NullableStringOption.__init__(self, object, name, option, description)
+        self.when = makeLabel('')
+        self.when.setAlignment_(NSLeftTextAlignment)
+        self.when.setFrame_(NSMakeRect(0, 0, 170, 17))
+        self.when.setTextColor_(NSColor.secondaryLabelColor())
+        self.addSubview_(self.when)
+
+    @objc.python_method
+    def set(self, value):
+        if self.get() != value:
+            setattr(self.object, 'history_last_id_timestamp', None)     # entered by hand: its timestamp is not known
+        NullableStringOption.set(self, value)
+        self._show_timestamp()
+
+    @objc.python_method
+    def restore(self):
+        NullableStringOption.restore(self)
+        self._show_timestamp()
+
+    @objc.python_method
+    def _show_timestamp(self):
+        cursor = self.get()
+        timestamp = getattr(self.object, 'history_last_id_timestamp', None)
+        if cursor and not timestamp:
+            timestamp = self._look_up(cursor)
+        if not cursor:
+            text = ''
+        elif not timestamp:
+            text = NSLocalizedString("Timestamp not known", "Label")
+        else:
+            try:
+                from sipsimple.util import ISOTimestamp
+                from dateutil.tz import tzutc
+                when = ISOTimestamp(timestamp)
+                if when.tzinfo is None:
+                    when = when.replace(tzinfo=tzutc())
+                text = when.astimezone().strftime('%Y-%m-%d %H:%M:%S %Z')
+            except Exception:
+                text = str(timestamp)
+        self.when.setStringValue_(text)
+        self.when.setToolTip_(NSLocalizedString("Journal timestamp of the last message synchronized", "Label") if text else '')
+
+    @objc.python_method
+    def _look_up(self, cursor):
+        try:
+            from HistoryManager import ChatHistory
+            rows = ChatHistory().get_messages(msgid=str(cursor), count=1)
+            row = next(iter(rows or ()), None)
+        except Exception as e:
+            BlinkLogger().log_debug('Journal cursor %s not looked up: %s' % (cursor, e))
+            return None
+        if row is None or not row.time:
+            return None
+        timestamp = row.time.isoformat() + 'Z'    # history times are UTC
+        setattr(self.object, 'history_last_id_timestamp', timestamp)
+        owner = getattr(self, 'owner', None)
+        if owner is not None:
+            owner.save()
+        return timestamp
 
 
 class UnicodeOption(Option):
@@ -2116,7 +2185,8 @@ PreferenceOptionTypes = {
 "audio.input_device" : AudioInputDeviceOption,
 "audio.output_device" : AudioOutputDeviceOption,
 "audio.per_device_aec": HiddenOption,
-"sms.history_last_id": NullableStringOption,
+"sms.history_last_id": JournalCursorOption,
+"sms.history_last_id_timestamp": HiddenOption,
 "chat.enable_encryption": BoolOption,
 "chat.font_size": HiddenOption,
 "contacts.missed_calls_period": HiddenOption,
