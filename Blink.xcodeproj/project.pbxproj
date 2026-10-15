@@ -529,6 +529,7 @@
 		261D209F613682E8862D6E7A /* KeyEscrow.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B068492C79CC554E4C527B0 /* KeyEscrow.py */; };
 		F7085178B5C24F7D1B428DE9 /* AccountStorage.py in Resources */ = {isa = PBXBuildFile; fileRef = F1E292A2EF0C3705AB554508 /* AccountStorage.py */; };
 		B199B0EA7AEFF92918BF5138 /* AvatarConflictPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 357D1EE3CE09B6CB0F7E08D5 /* AvatarConflictPanel.py */; };
+		098430272261EC76ECCC86FE /* sip_domain_check.py in Resources */ = {isa = PBXBuildFile; fileRef = 318DF6EF17EAC3B6BDC3BEBE /* sip_domain_check.py */; };
 		2B01284A1093922A009B2112 /* AccountSettings.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B0128481093922A009B2112 /* AccountSettings.py */; };
 		2B01284E10939236009B2112 /* AccountSettings.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B01284C10939236009B2112 /* AccountSettings.xib */; };
 		2B0132D5109E6256009B2112 /* FancyTabSwitcher.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B0132D4109E6256009B2112 /* FancyTabSwitcher.py */; };
@@ -758,6 +759,7 @@
 		E99293C0BD4A3709F776A2B4 /* KeyEscrow.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B068492C79CC554E4C527B0 /* KeyEscrow.py */; };
 		6891C4358F58D5C1BE764D8F /* AccountStorage.py in Resources */ = {isa = PBXBuildFile; fileRef = F1E292A2EF0C3705AB554508 /* AccountStorage.py */; };
 		6F4A2186383B4EC036556823 /* AvatarConflictPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 357D1EE3CE09B6CB0F7E08D5 /* AvatarConflictPanel.py */; };
+		8C6586F83A7C9D7705E882EA /* sip_domain_check.py in Resources */ = {isa = PBXBuildFile; fileRef = 318DF6EF17EAC3B6BDC3BEBE /* sip_domain_check.py */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -1403,6 +1405,7 @@
 		2B068492C79CC554E4C527B0 /* KeyEscrow.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = KeyEscrow.py; sourceTree = "<group>"; };
 		F1E292A2EF0C3705AB554508 /* AccountStorage.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AccountStorage.py; sourceTree = "<group>"; };
 		357D1EE3CE09B6CB0F7E08D5 /* AvatarConflictPanel.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AvatarConflictPanel.py; sourceTree = "<group>"; };
+		318DF6EF17EAC3B6BDC3BEBE /* sip_domain_check.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = sip_domain_check.py; sourceTree = "<group>"; };
 		2B06A429111CFE74001D41E5 /* SMSViewController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SMSViewController.py; sourceTree = "<group>"; };
 		2B0C2369107BB2FA008266C7 /* incoming_file.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = incoming_file.png; path = icons/incoming_file.png; sourceTree = "<group>"; };
 		2B0C236A107BB2FA008266C7 /* upfile.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = upfile.png; path = icons/upfile.png; sourceTree = "<group>"; };
@@ -2156,6 +2159,7 @@
 				2B068492C79CC554E4C527B0 /* KeyEscrow.py */,
 				F1E292A2EF0C3705AB554508 /* AccountStorage.py */,
 				357D1EE3CE09B6CB0F7E08D5 /* AvatarConflictPanel.py */,
+				318DF6EF17EAC3B6BDC3BEBE /* sip_domain_check.py */,
 				2B4CA92D10AA5F2F00D5F19E /* Group.xib */,
 				1F72E53916A027F600837311 /* MergeContactController.py */,
 				1F72E54316A02B3600837311 /* MergeContacts.xib */,
@@ -2810,6 +2814,7 @@
 				E99293C0BD4A3709F776A2B4 /* KeyEscrow.py in Resources */,
 				6891C4358F58D5C1BE764D8F /* AccountStorage.py in Resources */,
 				6F4A2186383B4EC036556823 /* AvatarConflictPanel.py in Resources */,
+				8C6586F83A7C9D7705E882EA /* sip_domain_check.py in Resources */,
 				1FCE2BE0166BABBC00090A86 /* time.png in Resources */,
 				1F9BE2E3167B7AC8006DFF3F /* lupa.png in Resources */,
 				1F2436801912B23700E71253 /* MyVideoLocalWindow.xib in Resources */,
@@ -3136,6 +3141,7 @@
 				261D209F613682E8862D6E7A /* KeyEscrow.py in Resources */,
 				F7085178B5C24F7D1B428DE9 /* AccountStorage.py in Resources */,
 				B199B0EA7AEFF92918BF5138 /* AvatarConflictPanel.py in Resources */,
+				098430272261EC76ECCC86FE /* sip_domain_check.py in Resources */,
 				1FCE2BDF166BABBC00090A86 /* time.png in Resources */,
 				1F9BE2E2167B7AC8006DFF3F /* lupa.png in Resources */,
 				1FD0808418C02DA800A3B313 /* busy.png in Resources */,
