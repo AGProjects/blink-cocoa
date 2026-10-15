@@ -48,7 +48,7 @@ from zope.interface import implementer
 from resources import ApplicationData
 
 from sipsimple.configuration import DuplicateIDError
-from sipsimple.addressbook import AddressbookManager, Group
+from sipsimple.addressbook import AddressbookManager, Contact, Group
 from sipsimple.account import AccountManager, BonjourAccount, Account
 from sipsimple.core import SIPURI, Message, FromHeader, ToHeader, RouteHeader, Route, Header
 from sipsimple.lookup import DNSLookup, DNSLookupError
@@ -874,6 +874,11 @@ class SMSWindowManagerClass(NSObject):
     # stays quiet instead of reprinting itself on every unrelated save
     _pending_save_logged = None
     new_contacts = set()
+    # The Messages group was made this run (none existed: e.g. a profile whose other devices never
+    # made one) or found empty once the addressbook was in: it holds nobody's decision to undo, so
+    # for the rest of the run history files the existing contacts of its conversations into it too
+    # (none in Deleted or Blocked). As Blink Qt does.
+    messages_group_takes_existing = False
     private_keys = {}
     # Decoded location payloads, keyed by the body they came from. Each
     # journal entry is decoded by two or three callers; only the first pays
@@ -3804,6 +3809,10 @@ class SMSWindowManagerClass(NSObject):
                 group.name = 'Messages'
                 group.position = 0
                 group.expanded = True
+                if not self.messages_group_takes_existing and self._addressbooksAnswered():
+                    self.messages_group_takes_existing = True
+                    BlinkLogger().log_info('[contacts] Created the Messages group: history files the existing '
+                                           'contacts of its conversations into it')
                 # Position 0 is not enough on its own -- every group with an
                 # unset position is also given 0, so the new group would be
                 # filed among them rather than above them. Ask the model to
@@ -3868,13 +3877,23 @@ class SMSWindowManagerClass(NSObject):
         brought back from Deleted or Blocked. Done at the end, once, after the
         whole journal has been applied."""
         created = 0
+        filed = 0
+        take_existing = self._messagesGroupTakesExisting()
+        set_aside = self._setAsideContactIds() if take_existing else set()
         for uri in sorted(set(uris)):
             try:
                 if self.illegal_uri(uri) or not self.isFileableAddress(uri):
                     continue
-                if self._findContactByCanonicalURI(uri) is not None:
-                    continue
-                if NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(uri) is not None:
+                contact = self._findContactByCanonicalURI(uri)
+                if contact is None:
+                    blink_contact = NSApp.delegate().contactsWindowController.getFirstContactMatchingURI(uri)
+                    if blink_contact is not None:
+                        contact = getattr(blink_contact, 'contact', None) or blink_contact
+                if contact is not None:
+                    # an existing contact: left where it is, unless the Messages group takes them
+                    if take_existing and isinstance(contact, Contact) and contact.id not in set_aside and contact not in self.new_contacts:
+                        self.new_contacts.add(contact)
+                        filed += 1
                     continue
                 if self.getContact(uri) is not None:      # creates it, and queues it for Messages
                     created += 1
@@ -3882,8 +3901,48 @@ class SMSWindowManagerClass(NSObject):
                 BlinkLogger().log_error('Cannot add a contact for %s: %s' % (uri, e))
         if created:
             BlinkLogger().log_info('%s: added %d missing contact(s) to the Messages group' % (why, created))
+        if filed:
+            BlinkLogger().log_info('%s: filing %d existing contact(s) into the Messages group made or found empty this run' % (why, filed))
         self.addContactsToMessagesGroup()
         return created
+
+    @objc.python_method
+    def _addressbooksAnswered(self):
+        """Whether the addressbook of every enabled account using XCAP has been fetched: only
+        then does a missing or empty Messages group mean there is none on the server."""
+        try:
+            accounts = [account for account in AccountManager().iter_accounts()
+                        if account is not BonjourAccount() and account.enabled]
+        except Exception:
+            return False
+        return all(self.addressbookAnswered(account) for account in accounts)
+
+    @objc.python_method
+    def _messagesGroupTakesExisting(self):
+        """See messages_group_takes_existing. Decided once the addressbooks are in, sticky for the run."""
+        if self.messages_group_takes_existing:
+            return True
+        if not self._addressbooksAnswered():
+            return False
+        from ContactListModel import MESSAGES_GROUP_ID
+        group = self._conversationGroup(MESSAGES_GROUP_ID, create=False)
+        if group is None or not list(group.contacts):
+            self.messages_group_takes_existing = True
+            BlinkLogger().log_info('[contacts] The Messages group is %s: history files the existing contacts of its '
+                                   'conversations into it' % ('missing' if group is None else 'empty'))
+        return self.messages_group_takes_existing
+
+    @objc.python_method
+    def _setAsideContactIds(self):
+        """Ids of the contacts in Deleted or Blocked: never filed into Messages from history."""
+        from ContactListModel import DELETED_GROUP_ID
+        from HistoryManager import BLOCKED_GROUP_KIND, BLOCKED_GROUP_NAME, BLOCKED_GROUP_ID, _find_group
+        ids = set()
+        for group in (_find_group('deleted', 'Deleted', DELETED_GROUP_ID),
+                      _find_group(BLOCKED_GROUP_KIND, BLOCKED_GROUP_NAME, BLOCKED_GROUP_ID)):
+            if group is not None:
+                ids |= {member.id for member in group.contacts}
+        return ids
 
     @objc.python_method
     def isFileableAddress(self, uri):
