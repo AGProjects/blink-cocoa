@@ -13,7 +13,12 @@ Contact avatars are stored in SylkServer account storage. That is a private per-
 |---|---|
 | `sylk/applications/webrtcgateway/account_storage.py` | New. File and Cassandra backends, validation, ETags, quota |
 | `sylk/applications/webrtcgateway/web.py` | `/storage/...` routes, change notification, admin purge also clears storage |
-| `sylk/applications/webrtcgateway/sip_handlers.py` | `application/sylk-storage-changed` excluded from the journal (sender and receiver) |
+| `sylk/applications/webrtcgateway/sip_handlers.py` | `application/sylk-storage-changed` excluded from the journal (sender and receiver), but still delivered to the account's WebSocket clients |
+| `sylk/applications/webrtcgateway/contact_avatars.py` | New. Avatars on the addressbook of WebSocket clients: attach on fetch, store/remove on contact update, delete with the contact, garbage collection |
+| `sylk/applications/webrtcgateway/models/xcap.py` | `ContactAvatar`, `Contact.avatar` (never written to XCAP) |
+| `sylk/applications/webrtcgateway/models/sylkrtc.py` | `avatars` (cached etags) on `account-fetch-addressbook` |
+| `sylk/applications/webrtcgateway/addressbook.py` | `avatar` stripped from every contact written to XCAP |
+| `sylk/applications/webrtcgateway/handler.py` | Fetch, xcap-diff refresh and contact update go through `contact_avatars` |
 | `sylk/applications/webrtcgateway/configuration.py` | `[AccountStorage]` section |
 | `sylk/applications/webrtcgateway/models/storage/cassandra.py` | `AccountObject` model |
 | `tools/sylk-create-cassandra-tables` | Creates missing SylkServer Cassandra tables and brings existing ones to the schema of the models (dry-run by default, `--apply`) |
@@ -59,7 +64,8 @@ Not logged: reads and the 400/404/412/413/507 rejections.
 
 ### Authentication and URL
 - **Token:** the same API token and the same mechanism as the message journal fetch and file uploads. Nothing is specific to storage: every request carries `Authorization: Apikey <token>`, and a 401 is handled as for the journal.
-- **URL:** derived from the same base as the journal and file transfers: `storage_url = <base>/webrtcgateway/storage/<account>`. The server does not announce it.
+- **URL:** derived from the same base as the journal and file transfers: `storage_url = <base>/webrtcgateway/storage/<account>`. The token reply also carries `storage_url`, but clients derive it from the server they are connected to and do not follow a URL found in a message.
+- **WebSocket clients** (Sylk Mobile, sylk-desktop) use neither the token nor these URLs: their pictures travel on the addressbook contacts (see "WebSocket clients: avatars on the addressbook" below).
   - `<account>` is `user@domain`, lowercase, without `sip:`.
 
 ### Endpoints
@@ -106,7 +112,30 @@ After every successful PUT or DELETE, SylkServer sends a MESSAGE from `sip:<acco
   - For a delete, the meta fields are those of the removed object.
   - `device_id` is present only if the writer sent `X-Sylk-Device-Id`.
 - It is **not stored in the journal**, so an offline device never sees it and must resync at startup (see below).
+- WebSocket clients receive it as an ordinary account `message` event (sender: the account itself). SylkServer must skip only the journal write for it: dropping it outright, as for `application/im-iscomposing+xml`, keeps it from every WebSocket client.
 - It must not be shown, notified, or counted as unread.
+
+### WebSocket clients: avatars on the addressbook
+Sylk Mobile and sylk-desktop never talk to `/storage`. The gateway carries the pictures on the addressbook contacts it already sends them (`contact_avatars.py`). The avatar is never part of the XCAP document: the gateway adds it to what it sends and takes it out of what it writes.
+
+**Fetch.** `account-fetch-addressbook` may carry `avatars: [{id, etag}]`, the pictures the client has cached.
+- Present, even empty: every contact with a stored picture comes back with `avatar` = `{etag, content_type, size, modified, device_id}`, plus `data` (base64) only where the client's etag differs. Contacts without a picture have no `avatar`.
+- Absent: no avatars, as before. Older clients are unaffected.
+- The gateway remembers, per connection, which etags the client holds. Refreshes it pushes on its own (xcap-diff) carry avatars the same way.
+- **Garbage collection** runs here: an object with no contact, older than 7 days, is deleted. Not on an empty document, which may be a failed fetch.
+
+**Update.** `account-update-addressbook` for a contact may carry:
+- `avatar: {data, content_type, device_id}` to store a picture;
+- `avatar: {remove: true, device_id}` to delete it.
+
+Any other `avatar` (the metadata a client echoes back) is ignored. The picture is stored after the XCAP write succeeded. The `addressbook-updated` echo, sent to every device of the account, carries:
+- the stored avatar **with its data**, so the other devices update without a fetch;
+- `{code: 204}` after a removal;
+- `{code, error}` when storing failed (413, 507, 500).
+
+Deleting a contact deletes its picture. Every change is announced with `application/sylk-storage-changed`, as for the HTTP routes, so Blink sees it.
+
+**Changes made over HTTP** (Blink) reach WebSocket clients as `application/sylk-storage-changed`. A `put` with an etag the client does not have makes it fetch the addressbook again, which brings the data. A `delete` drops the cached picture.
 
 ### Testing with curl
 ```sh
@@ -125,6 +154,7 @@ curl -s -H "$H" -X DELETE -H 'If-Match: "<etag>"' $B/avatars/0f3c...
 - Square centre crop, **96×96** pixels (not points), metadata stripped.
 - **WebP** at quality ~75, or JPEG at quality ~70 (4:2:0), about 2–4 KB each. Blink Cocoa writes JPEG (AppKit has no WebP encoder).
 - Encode consistently across clients. Decoding must accept both WebP and JPEG.
+- Sylk Mobile encodes in JavaScript (jpeg-js), which writes 4:4:4 chroma: a few hundred bytes more at 96×96, readable everywhere.
 
 #### Building the avatar
 Every client builds the uploaded bytes the same way:
@@ -217,6 +247,12 @@ On every sync, each picture the user set on this device (in Blink Cocoa: set in 
 
 A picture with an upload or delete pending is left to that retry in both cases.
 
+**Phonebook photos** (Sylk Mobile; any client with a system address book). The photo the phone's address book has for a contact is a picture of this device, like one set in the editor, and goes to the server by the same rules. The presence icon is only what Blink publishes in its presence document; a phonebook photo is not one.
+- Only contacts on the server, not the own contact, and only photos the device can read (no remote URLs, so no gravatars).
+- A picture set in the editor wins over the phonebook photo of the same contact.
+- Each photo version is taken in once: the device keeps a hash of the source per contact. Once that version is uploaded, kept against the server picture in the choice, refused for size, or overridden by a choice or removal in the editor, it is not taken in again. A changed phonebook photo is a new version, newer than the server copy, and is uploaded.
+- The phonebook has its own first-pass marker, `phonebook_first_done`, set only once the phonebook has been read or cannot be read (no permission). Until then the first sync is not finished. A device that synced before phonebook photos counted therefore still gets the choice once for contacts that have a server picture and a phonebook photo.
+
 ### Sync
 After the XCAP addressbook has been fetched and is stable (same rule as the journal), and again on re-registration (at most every 10 minutes) to catch notifications missed while disconnected:
 1. `GET {storage_url}/avatars`
@@ -278,7 +314,8 @@ What every client implements, independently of its toolkit. Blink Qt should matc
 
 ### Device id
 - `X-Sylk-Device-Id` is the device's own instance id: the bare uuid, without `urn:uuid:`, the same id the client uses everywhere else.
-- It is how a device recognises its own changes in notifications, and how the UI names the uploader: "This Mac" / "This computer" for our own id, otherwise "Device" plus the first 8 characters of the id.
+- It is how a device recognises its own changes in notifications, and how the UI names the uploader: "This Mac" / "This computer" / "This device" for our own id, otherwise "Device" plus the first 8 characters of the id.
+- Sylk Mobile uses its existing device id (`getUniqueId()` of react-native-device-info: the Android id, or the iOS identifier for vendor), the one it already sends as `deviceId` with push tokens and message metadata. It is not a uuid on Android; the server stores the header as given.
 
 ### Per-contact local state
 Never written to XCAP:
@@ -287,7 +324,7 @@ Never written to XCAP:
   - Presence must not overwrite the local picture while it is set.
 - **avatar_pending**: a user-set picture not uploaded yet.
 - **avatar_delete_pending**: a removed picture whose DELETE has not succeeded yet.
-- **first_sync_done** (per account, not per contact): this device has been through its first avatar sync with the account (see "Pictures set on this device"). Blink Cocoa and Blink Qt: `account_storage/<account>/state.json` (`AccountStorage.first_sync_done`, set by `_first_sync_finished`).
+- **first_sync_done** (per account, not per contact): this device has been through its first avatar sync with the account (see "Pictures set on this device"). Blink Cocoa and Blink Qt: `account_storage/<account>/state.json` (`AccountStorage.first_sync_done`, set by `_first_sync_finished`). Sylk Mobile: `state.first_sync_done` in the avatar `index.json`.
 - The local picture file is shared between a user-set picture and the presence icon. The flag says which one it is.
 
 ### Contact editor
@@ -364,3 +401,39 @@ Qt specifics:
 - **First sync marker:** `first_sync_done` in `account_storage/<account>/state.json`, set by `_first_sync_finished` after a sync with nothing to choose, or after the choice is confirmed.
 - **Device label:** "This computer" for our own id.
 - **Notifications:** 413 and 507 are told through `org.freedesktop.Notifications`, or through a non-modal message box when there is no notification service.
+
+## Sylk Mobile implementation
+
+| Requirement | Where |
+|---|---|
+| Cache, display, reconcile with the fetched addressbook, first-sync marker, choice, upload and removal through contact updates, live changes, logging | `app/accountStorage.js` (`AvatarStore`): no React Native imports; file system, transport, clock and app callbacks are injected, so it runs under node |
+| File system for it (RNFS), the shared instance, view hooks | `app/avatars.js` (`avatarPhotoFor`, `avatarInfoFor`, `useAvatarVersion`, `setContactResolver`) |
+| Encoding (EXIF orientation, centre crop, 96×96 area average, flattened onto white, JPEG 70) | `app/avatarImage.js` (`encodeAvatarBase64`), pure JavaScript: jpeg-js, and pako for PNG |
+| Etags on the fetch, picture data taken off the contacts into an `avatars` event, avatar metadata kept across XCAP-only writes | react-native-sylkrtc `Addressbook.setAvatarCache`, `_takeAvatars`, `_keepAvatar`; `Account._fetchAddressbook` (`patches/react-native-sylkrtc+2.1.0.patch`) |
+| Server-or-local choice window | `app/components/AvatarConflictModal.js` |
+| Display precedence | `UserIcon` (every avatar in the app goes through it), `AvatarOrGravatar` in `UserIcon.js` for the contact list and the chat header |
+| Editor: explicit change only, uploader caption | `EditContactModal.js` (`avatarChange`: tap the picture or *Add/Change picture* to pick from the library, *Remove* to clear; applied only on Save) |
+| Editor save | `saveContactByUser` → `_applyAvatarChange` (after `saveSylkContact`, when the row has its final `contact_id`) |
+| Upload and removal | `_avatarSend`: `updateContact({...serverContact, avatar})` through `_abExecWhy('avatar', …)`, with no addressbook-update tick (the echo reaches the other devices) |
+| Contact deleted | the gateway deletes the picture; `_deleteSylkContactImpl` drops the local copy (`avatarStore.expunge`) |
+| `application/sylk-storage-changed` intake | first thing in `incomingMessageFromWebSocket` → `_handleAccountStorageMessage`; it and `application/sylk-api-token` (Blink's, forked to every device) are also dropped in `outgoingMessage`, `handleIncomingMessage`, `incomingMessageFromPush`, the journal replay, `outgoingMessageFromJournal` and `saveOutgoingMessageSql` |
+| Refetch (missing data, a change made over HTTP) | `_avatarRefetch`, through the addressbook-update `FetchScheduler` (jittered, throttled) |
+| Settle trigger | the end of `_abRunReconcile`, after a pass that applied a freshly fetched document with no rerun pending → `_avatarOnAddressbookSettled` → `reconcile(ab.contacts)` |
+| Retries | on settle, on `registered`, and every 5 minutes; an upload whose echo does not come within 60 s is sent again |
+| Account switch, logout | `_avatarBindAccount` (from `componentDidUpdate`), `avatarStore.reset()` in the account teardown |
+
+Mobile specifics:
+- **Storage account:** the current account (mobile has one at a time), when the server publishes `addressBookServer`. Otherwise pictures set in the editor stay on the device.
+- **No token, no HTTP:** everything goes over the authenticated WebSocket, on the addressbook (see "WebSocket clients").
+- **Sync** is a comparison, not a request: on every settle the cache is made equal to the `avatar` metadata of the fetched contacts. A picture whose data did not come (the gateway's memory of our etags was wrong) triggers a refetch, at most every 10 minutes.
+- **Contact id:** the row's `remote_id`, the XCAP contact id. A picture set before the contact reached the server stays pending until it has one.
+- **Per-contact local state** is not in the contacts table: it lives in the avatar index, keyed by the local `contact_id`, as `{file, userSet, pending, setAt}` or `{deletePending, remoteId}`.
+- **Cache:** `<Documents>/account_storage/<account>/avatars/`, one file per object named `<id>.<etag>.<ext>` (a new name per version, so image views never show a stale copy), plus `index.json` (with `state.first_sync_done`). File names, not paths, are stored: the iOS container path changes on every update.
+- **Phonebook photos go to the server** (see "Phonebook photos" above). The store reads them through `readPhoto` (RNFS: `content://` on Android, the Caches file on iOS, `data:` uris), encodes them with `encodeAvatarBase64`, and keeps them in the index as `{file, userSet, source: 'phonebook', srcHash}`. The pass runs on every settle and whenever `_abApplyPhotosToContacts` re-applies the phonebook. Each photo is read once per run; only a new version is encoded. The phonebook counts as ready after `_abAdoptPhonebookNames`, read or not (`_abPhonebookChecked`).
+- **Gravatars** are shown when a contact has no picture at all, and never uploaded.
+- **Choice window:** the local column says *Phonebook* or *This device*.
+- **Picking:** react-native-image-picker shrinks the photo to 512 px first (decoding a full camera frame in JavaScript would take seconds). On Android it does not rotate the pixels, it copies the EXIF orientation, which the encoder applies.
+- **The own contact** is not offered a picture (see Open decisions).
+- **Choice window:** opened only when no other modal or call is on screen and the app is in the foreground; otherwise tried again every 5 seconds.
+- **Notifications:** 413 and 507 through the in-app notification banner.
+- **Dependencies:** `jpeg-js` and `pako` in `package.json`.
