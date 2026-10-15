@@ -141,6 +141,7 @@ from SylkLocation import (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE,
                           bubble_id as location_bubble_id, location_payload,
                           merge_location_bodies, storable_envelope)
 from FileTransferCache import FILE_TRANSFER_PATH, base_url_from_transfer
+from AccountStorage import AccountStorage, STORAGE_CHANGED_CONTENT_TYPE
 from util import active_account_uris, format_identity_to_string, run_in_gui_thread, call_later, canonical_pstn_uri, pstn_e164
 
 # Requests addressed to SylkServer, not to a person. The server answers each
@@ -3205,6 +3206,10 @@ class SMSWindowManagerClass(NSObject):
                     self.handleCallRecord(account, msg['content'],
                                           sender_uri=None,
                                           metadata=msg.get('metadata'))
+                elif content_type == STORAGE_CHANGED_CONTENT_TYPE:
+                    # Not journalled by the server; a replayed one is stale
+                    # anyway -- the startup diff covers what was missed.
+                    pass
                 elif content_type == AddressbookNotify.CONTENT_TYPE:
                     # Sent with X-Sylk-Skip-Journal, so this should not exist at
                     # all; a replayed one is a stale "refetch now" that would
@@ -7979,6 +7984,17 @@ class SMSWindowManagerClass(NSObject):
         # about it would put a line in the log for every key lookup anyone
         # makes. The line above already recorded that it arrived.
         if content_type in SERVER_API_REQUEST_CONTENT_TYPES:
+            return
+
+        # Account storage changed (contact avatars). Sent by the server from
+        # the account to itself and never journalled: not a message, never
+        # shown, notified or counted as unread. docs/CONTACT-AVATARS.md
+        if content_type == STORAGE_CHANGED_CONTENT_TYPE:
+            if account is not None and account is not BonjourAccount():
+                try:
+                    AccountStorage().handle_changed(account, content)
+                except Exception as e:
+                    BlinkLogger().log_error('[avatar] Cannot apply a storage change: %s' % e)
             return
 
         if content_type == MESSAGES_BULK_DELETE_CONTENT_TYPE:

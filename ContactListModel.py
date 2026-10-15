@@ -610,7 +610,32 @@ class PresenceContactAvatar(Avatar):
 
     @classmethod
     def from_contact(cls, contact):
+        """The picture a contact is drawn with. docs/CONTACT-AVATARS.md, "Display".
+
+        A picture the user set has priority; without one, the icon learned
+        from presence; without that, the initials (DefaultUserAvatar):
+
+          1. a picture the user just set, waiting to be uploaded (local file,
+             avatar_pending)
+          2. the picture in account storage -- only user-set pictures are
+             ever uploaded
+          3. the local file: a user-set picture on an account without
+             storage, otherwise the presence icon (presence does not write it
+             while icon_info.local says the user set one)
+          4. the initials
+        """
         path = cls.path_for_contact(contact)
+        if not getattr(contact, 'avatar_pending', False):
+            try:
+                from AccountStorage import AccountStorage
+                stored = AccountStorage().avatar_path(contact)
+            except Exception as e:
+                BlinkLogger().log_error('[avatar] Cannot look up the stored avatar of %s: %s' % (contact.id, e))
+                stored = None
+            if stored:
+                icon = NSImage.alloc().initWithContentsOfFile_(stored)
+                if icon:
+                    return StoredContactAvatar(icon, stored)
         if not os.path.isfile(path):
             return DefaultUserAvatar()
         icon = NSImage.alloc().initWithContentsOfFile_(path)
@@ -629,6 +654,20 @@ class PresenceContactAvatar(Avatar):
 
     def delete(self):
         unlink(self.path)
+
+
+class StoredContactAvatar(PresenceContactAvatar):
+    """A picture out of the account storage cache.
+
+    The file belongs to the cache, not to the contact: saving or deleting
+    it is AccountStorage's business, never the editor's.
+    """
+
+    def save(self):
+        pass
+
+    def delete(self):
+        pass
 
 
 def presence_note_text(note):
@@ -4629,6 +4668,8 @@ class ContactListModel(CustomListModel):
         self.nc.add_observer(self, name="AddressbookContactWasActivated")
         self.nc.add_observer(self, name="AddressbookContactWasDeleted")
         self.nc.add_observer(self, name="AddressbookContactDidChange")
+        # A stored avatar arrived, was replaced or went away (AccountStorage).
+        self.nc.add_observer(self, name="BlinkContactAvatarDidChange")
         self.nc.add_observer(self, name="AddressbookGroupWasCreated")
         # The moment the addressbook can be trusted to reflect the server,
         # and so the only moment at which "there is no Calls group" is a
@@ -4651,6 +4692,11 @@ class ContactListModel(CustomListModel):
         self.nc.add_observer(self, name="AudioCallLoggedToHistory")
         self.nc.add_observer(self, name="SIPAccountGotPresenceWinfo")
         self.nc.add_observer(self, name="BlinkAccountGotMessageSummary")
+
+        # Stored contact avatars: startup diff on BlinkAddressbookDidSettle,
+        # pending uploads when a token arrives. docs/CONTACT-AVATARS.md
+        from AccountStorage import AccountStorage
+        AccountStorage().start()
 
         ns_nc = NSNotificationCenter.defaultCenter()
         ns_nc.addObserver_selector_name_object_(self, "groupExpanded:", NSOutlineViewItemDidExpandNotification, self.contactOutline)
@@ -5468,20 +5514,37 @@ class ContactListModel(CustomListModel):
             contact.dialog.subscribe = new_contact['subscriptions']['dialog']['subscribe']
 
             icon = new_contact['icon']
-            if icon is not None and icon is not DefaultUserAvatar().icon:
+            upload = False
+            if icon is not None and icon is not DefaultUserAvatar().icon and new_contact.get('icon_changed', True):
                 avatar = PresenceContactAvatar(icon)
                 avatar.path = avatar.path_for_contact(contact)
                 avatar.save()
                 contact.icon_info.url = None
                 contact.icon_info.etag = None
                 contact.icon_info.local = True
+                upload = self._avatarStorageAvailable(contact)
+                contact.avatar_pending = upload
 
             contact.save()
 
             self.removePolicyForContactURIs(contact)
             self.addGroupsForContact(contact, new_contact['groups'] or [])
 
+        if upload:
+            from AccountStorage import AccountStorage
+            AccountStorage().upload_avatar(contact, icon, reason='set in the contact editor')
+
         return True
+
+    @objc.python_method
+    def _avatarStorageAvailable(self, contact):
+        """Whether a new picture of this contact goes to account storage."""
+        try:
+            from AccountStorage import storage_account, valid_name
+            return storage_account() is not None and valid_name(contact.id)
+        except Exception as e:
+            BlinkLogger().log_error('[avatar] Cannot tell whether account storage is available: %s' % e)
+            return False
 
     @objc.python_method
     def editContact(self, item):
@@ -5516,7 +5579,14 @@ class ContactListModel(CustomListModel):
             contact.dialog.subscribe = new_contact['subscriptions']['dialog']['subscribe']
 
             icon = new_contact['icon']
-            if icon is None and item.avatar is not DefaultUserAvatar() or icon is not item.avatar.icon:
+            upload = False
+            remove_stored = False
+            # Only a picture the user chose or cleared in the well counts.
+            # Telling it from the picture already shown by object identity
+            # could take the contact's presence icon for a new picture of
+            # the user's, and upload it -- presence icons never go to the
+            # server.
+            if new_contact.get('icon_changed', icon is None and item.avatar is not DefaultUserAvatar() or icon is not item.avatar.icon):
                 item.avatar.delete()
                 contact.icon_info.url = None
                 contact.icon_info.etag = None
@@ -5525,8 +5595,17 @@ class ContactListModel(CustomListModel):
                     avatar.path = avatar.path_for_contact(contact)
                     avatar.save()
                     contact.icon_info.local = True
+                    # Uploaded under the contact's id once the transaction
+                    # is out; shown from the local file until then.
+                    upload = self._avatarStorageAvailable(contact)
+                    contact.avatar_pending = upload
+                    contact.avatar_delete_pending = False
                 else:
                     contact.icon_info.local = False
+                    unlink(PresenceContactAvatar.path_for_contact(contact))
+                    contact.avatar_pending = False
+                    remove_stored = self._avatarStorageAvailable(contact)
+                    contact.avatar_delete_pending = remove_stored
 
             if 'no_mediaproxy' in new_contact:
                 contact.no_mediaproxy = new_contact['no_mediaproxy']
@@ -5539,6 +5618,13 @@ class ContactListModel(CustomListModel):
             new_groups = set(new_contact['groups'])
             self.removeContactFromGroups(item, old_groups - new_groups)
             self.addGroupsForContact(contact, new_groups)
+
+        if upload or remove_stored:
+            from AccountStorage import AccountStorage
+            if upload:
+                AccountStorage().upload_avatar(contact, icon, reason='set in the contact editor')
+            else:
+                AccountStorage().remove_avatar(contact)
 
     @objc.python_method
     def deleteDuplicateContacts(self, blink_contacts, selected_item=None):
@@ -5834,6 +5920,15 @@ class ContactListModel(CustomListModel):
             for b, contact in pairs:
                 BlinkLogger().log_info('[trash] Contact %s deleted permanently' % (contact.name or contact.id))
                 contact.delete()
+
+        # Its stored picture goes with it; a failure is left to the
+        # garbage collection of the next avatar sync.
+        try:
+            from AccountStorage import AccountStorage
+            for b, contact in pairs:
+                AccountStorage().remove_avatar(contact.id)
+        except Exception as e:
+            BlinkLogger().log_error('[avatar] Cannot delete the avatars of expunged contacts: %s' % e)
 
         for key in kept:
             BlinkLogger().log_info('[trash] Keeping the conversation with %s: another contact lists it' % key)
@@ -6828,11 +6923,30 @@ class ContactListModel(CustomListModel):
             BlinkLogger().log_error('Cannot purge the data of a deleted contact: %s' % e)
 
     @objc.python_method
+    def _NH_BlinkContactAvatarDidChange(self, notification):
+        ids = getattr(notification.data, 'ids', None) or set()
+        if not ids:
+            return
+        changed = []
+        for blink_group in self.groupsList:
+            for blink_contact in blink_group.contacts:
+                if not isinstance(blink_contact, BlinkPresenceContact):
+                    continue
+                contact = blink_contact.contact
+                if contact is None or contact.id not in ids:
+                    continue
+                blink_contact.avatar = PresenceContactAvatar.from_contact(contact)
+                changed.append(blink_contact)
+        for blink_contact in changed:
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=blink_contact)
+
+    @objc.python_method
     def _NH_AddressbookContactDidChange(self, notification):
         contact = notification.sender
 
         uri_attributes = set(['uris.default', 'uris', 'name'])
-        icon_attributes = set(['icon_info.url', 'icon_info.etag', 'icon_info.local'])
+        icon_attributes = set(['icon_info.url', 'icon_info.etag', 'icon_info.local',
+                               'avatar_pending'])
 
         if set(uri_attributes | icon_attributes).intersection(notification.data.modified):
             groups = [blink_group for blink_group in self.groupsList if any(isinstance(item, BlinkPresenceContact) and item.contact == contact for item in blink_group.contacts)]

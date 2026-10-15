@@ -60,6 +60,13 @@ class BlinkContactExtension(ContactExtension):
     modified_at = SharedSetting(type=str, default='')
     modified_reason = SharedSetting(type=str, default='')
     modified_hash = SharedSetting(type=str, default='')
+    # The contact's picture lives in SylkServer account storage as
+    # avatars/<contact id> -- see docs/CONTACT-AVATARS.md. Nothing about it is
+    # in XCAP; these two only remember work this device still owes the server.
+    # A new picture saved locally whose upload has not succeeded yet:
+    avatar_pending = Setting(type=Boolean, default=False)
+    # A removed picture whose DELETE has not succeeded yet:
+    avatar_delete_pending = Setting(type=Boolean, default=False)
     disable_chat_history = Setting(type=Boolean, nillable=True)
     # Which language this contact's composer spell checks in.
     #

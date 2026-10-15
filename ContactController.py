@@ -315,6 +315,10 @@ class AddContactController(NSObject):
             self.belonging_groups.append(group)
         self.nameText.setStringValue_(name or "")
         self.clearContactPhoto()
+        # Set only by the user choosing or clearing a picture in the well.
+        # What decides whether a picture is the user's -- and so whether it
+        # goes to account storage, which presence icons never do.
+        self.photoChanged = False
         self.defaultButton.setEnabled_(False)
         self.updateSubscriptionMenus()
         self.loadGroupNames()
@@ -336,6 +340,22 @@ class AddContactController(NSObject):
             if value:
                 return value
         return ''
+
+    @objc.python_method
+    def storedAvatarDescription(self, blink_contact):
+        """'Uploaded by <device> on <time>' for a picture from account storage."""
+        try:
+            from AccountStorage import AccountStorage
+            from AvatarConflictPanel import describe_time
+            contact = getattr(blink_contact, 'contact', None)
+            info = AccountStorage().avatar_info(contact) if contact is not None else None
+        except Exception as e:
+            BlinkLogger().log_error('[avatar] Cannot describe the stored avatar: %s' % e)
+            return None
+        if not info:
+            return None
+        device, modified = info
+        return NSLocalizedString("Uploaded by %s on %s", "Tooltip") % (device, describe_time(modified))
 
     @objc.python_method
     def setContactPhoto(self, image):
@@ -377,6 +397,7 @@ class AddContactController(NSObject):
             # Cancelled. The well keeps whatever it was showing.
             return
         self.setContactPhoto(image)
+        self.photoChanged = True
 
     def controlTextDidChange_(self, notification):
         # The initials in the well are the name being typed a field away.
@@ -451,6 +472,7 @@ class AddContactController(NSObject):
                        'organization'    : str(self.organizationText.stringValue()),
                        'groups'          : self.belonging_groups,
                        'icon'            : self.photoImage.image() if self.photoImage.hasPhoto else None,
+                       'icon_changed'    : bool(getattr(self, 'photoChanged', False)),
                        'preferred_media' : self.preferred_media,
                        'subscriptions'   : self.subscriptions
                         }
@@ -640,6 +662,7 @@ class AddContactController(NSObject):
                 self.setPhotoFromFile(str(panel.filename()))
         elif sender.tag() == 21: # clear icon
             self.clearContactPhoto()
+            self.photoChanged = True
         elif sender.tag() == 10:
             self.startDeallocTimer()
             NSApp.stopModalWithCode_(NSOKButton)
@@ -1293,6 +1316,11 @@ class EditContactController(AddContactController):
             self.clearContactPhoto()
         else:
             self.setContactPhoto(blink_contact.icon)
+        # Where a stored picture came from: which device uploaded it, and when.
+        self.photoImage.setToolTip_(self.storedAvatarDescription(blink_contact) or '')
+        # What the well shows now -- possibly a presence icon -- is not a
+        # choice the user made.
+        self.photoChanged = False
         self.preferred_media = blink_contact.preferred_media
         address_types = list(item.title() for item in self.addressTypesPopUpButton.itemArray())
         for item in blink_contact.contact.uris:
@@ -1348,6 +1376,7 @@ class EditContactController(AddContactController):
                     'groups'          : self.belonging_groups,
                     'auto_answer'     : True if self.autoanswerCheckbox.state() == NSOnState else False,
                     'icon'            : self.photoImage.image() if self.photoImage.hasPhoto else None,
+                    'icon_changed'    : bool(getattr(self, 'photoChanged', False)),
                     'preferred_media' : self.preferred_media,
                     'subscriptions'   : self.subscriptions
                     }

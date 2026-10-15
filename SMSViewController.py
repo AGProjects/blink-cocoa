@@ -128,6 +128,8 @@ CONTROL_CONTENT_TYPES = frozenset((
     # "My other device is exporting its data". Answered by the window
     # manager with the Data import panel; never a message.
     'application/sylk-data-export',
+    # Account storage changed (contact avatars); handled by AccountStorage.
+    'application/sylk-storage-changed',
     'text/pgp-public-key',
     'text/pgp-private-key',
 ))
@@ -4118,7 +4120,7 @@ class SMSViewController(NSObject):
         if isinstance(message, OTRInternalMessage):
             return False
             
-        if message.content_type in (IsComposingDocument.content_type, IMDNDocument.content_type, 'text/pgp-public-key', 'text/pgp-private-key', 'application/sylk-api-pgp-key-lookup', 'application/sylk-api-message-remove', 'application/sylk-api-conversation-read', 'application/sylk-api-conversation-remove', 'application/sylk-conversation-read', 'application/sylk-conversation-remove', 'application/sylk-message-remove', 'application/sylk-addressbook-update', 'application/sylk-data-export'):
+        if message.content_type in (IsComposingDocument.content_type, IMDNDocument.content_type, 'text/pgp-public-key', 'text/pgp-private-key', 'application/sylk-api-pgp-key-lookup', 'application/sylk-api-message-remove', 'application/sylk-api-conversation-read', 'application/sylk-api-conversation-remove', 'application/sylk-conversation-read', 'application/sylk-conversation-remove', 'application/sylk-message-remove', 'application/sylk-addressbook-update', 'application/sylk-data-export', 'application/sylk-storage-changed'):
             return False
 
         if message.content_type == LEGACY_LOCATION_CONTENT_TYPE:
