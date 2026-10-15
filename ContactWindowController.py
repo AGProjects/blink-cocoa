@@ -6515,12 +6515,36 @@ class ContactWindowController(NSWindowController):
                     try:
                         media_type = _split[0].split("=")[1]
                     except IndexError:
-                        media_type = 'audio'
+                        media_type = None
+
+                    if media_type is None and self.mainTabView.selectedTabViewItem().identifier() != "dialpad":
+                        # Enter opens a conversation in the message pane, as Blink Qt does (calls start
+                        # from their own buttons): the selected result, else the first one, else the
+                        # typed address. An explicit ;session-type= still starts that session
+                        uri = self._searchEnterTarget() or text
+                        self.resetWidgets()
+                        self.openMessagesForURI(uri)
+                        return
 
                     self.resetWidgets()
-                    self.startSessionWithTarget(text, media_type=media_type)
+                    self.startSessionWithTarget(text, media_type=media_type or 'audio')
 
             self.searchContacts()
+
+    @objc.python_method
+    def _searchEnterTarget(self):
+        """The address of the selected search result, else of the first one, or None."""
+        try:
+            row = self.searchOutline.selectedRow() if self.searchOutline.numberOfSelectedRows() == 1 else -1
+            item = self.searchOutline.itemAtRow_(row) if row >= 0 else None
+            if item is None:
+                results = self.searchResultsModel.groupsList or []
+                item = results[0] if results else None
+            uri = getattr(item, 'uri', None) if item is not None else None
+            return str(uri) if uri else None
+        except Exception as e:
+            BlinkLogger().log_debug('No search result for Enter: %s' % e)
+            return None
 
     @objc.IBAction
     def backupContacts_(self, sender):
