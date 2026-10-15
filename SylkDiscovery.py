@@ -252,14 +252,14 @@ class SylkServerDiscovery(object, metaclass=Singleton):
         knows its infrastructure): conference.sipBridge as its conference server address, and the
         PSTN rule replacePlus (pstn.rules, as mobile reads it, or a top-level rules) as its IDD prefix.
         A SylkServer account always encrypts its messages with OpenPGP (sms.enable_pgp) and sends
-        them in a CPIM envelope, which SylkServer requires (sms.use_cpim). Its address book is
+        them in a CPIM envelope, which SylkServer requires (sms.enable_cpim). Its address book is
         always stored with XCAP (xcap.enabled) and it does not subscribe to xcap-diff
         (xcap.xcap_diff: the SDK's XCAPManager stops the subscription as soon as it is turned off).
         As Blink Qt does."""
         if not configuration:
             return
         for name, value, what in (('sms.enable_pgp', True, 'OpenPGP message encryption'),
-                                  ('sms.use_cpim', True, 'the CPIM envelope'),
+                                  ('sms.enable_cpim', True, 'the CPIM envelope'),
                                   ('xcap.enabled', True, 'XCAP storage'),
                                   ('xcap.xcap_diff', False, 'the xcap-diff subscription')):
             cls._force(account, name, value, what)

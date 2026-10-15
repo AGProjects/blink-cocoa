@@ -62,9 +62,10 @@ from zope.interface import implementer
 from BlinkLogger import BlinkLogger, FileLogger
 
 from EnrollmentController import EnrollmentController
-# Settings a SylkServer account cannot change (SylkDiscovery forces them)
+# Settings a SylkServer account cannot change: forced by SylkDiscovery (OpenPGP, CPIM, XCAP, no
+# xcap-diff), or given by the server with the history token (the history URL and the token)
 SYLKSERVER_HIDDEN_OPTIONS = {'sms.enable_pgp', 'xcap.enabled', 'xcap.xcap_diff'}
-SYLKSERVER_LOCKED_OPTIONS = {'sms.use_cpim'}
+SYLKSERVER_LOCKED_OPTIONS = {'sms.enable_cpim', 'sms.history_url', 'sms.history_token'}
 
 from PreferenceOptions import AccountSectionOrder, AccountSettingsOrder, AecSliderOption, AdvancedGeneralSectionOrder, BonjourAccountSectionOrder, DisabledAccountPreferenceSections, DisabledPreferenceSections, GeneralSettingsOrder, HiddenOption, PreferenceOptionTypes, SampleRateOption, SettingDescription, StaticPreferenceSections, SectionNames, ToolTips, Placeholders, formatName
 from SIPManager import SIPManager
@@ -745,10 +746,15 @@ class PreferencesController(NSWindowController, object):
             control.restore()
 
             if sylkserver and section_name + '.' + option_name in SYLKSERVER_LOCKED_OPTIONS:
-                try:
+                # shown, read only: a checkbox disabled, a text field selectable but not editable
+                tooltip = NSLocalizedString("Set by SylkServer", "Tooltip")
+                if getattr(control, 'check', None) is not None:
                     control.check.setEnabled_(False)
-                except AttributeError:
-                    pass
+                    control.check.setToolTip_(tooltip)
+                elif getattr(control, 'text', None) is not None:
+                    control.text.setEditable_(False)
+                    control.text.setSelectable_(True)
+                    control.text.setToolTip_(tooltip)
 
         # DNS Information, as Blink Qt has it: what DNS says about the domain of the account and its
         # servers (SIP Signaling), its MSRP relay and its STUN servers (NAT Traversal)
