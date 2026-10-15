@@ -125,6 +125,9 @@ class GUISettings(SettingsGroup):
     use_default_web_browser_for_alerts = Setting(type=bool, default=False)
     idle_threshold = Setting(type=NonNegativeInteger, default=600)
     extended_debug = Setting(type=bool, default=False)
+    # Open the contact picture choice window once, with no conflict, to
+    # check its layout (AccountStorage.preview_choice). Clears itself.
+    avatar_choice_preview = Setting(type=bool, default=False)
     rtt_threshold = Setting(type=NonNegativeInteger, default=200)
     language = Setting(type=str, default='system_default', nillable=False)
     media_support_detection = Setting(type=bool, default=False)

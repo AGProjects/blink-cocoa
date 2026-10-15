@@ -364,6 +364,9 @@ class AccountStorage(object, metaclass=Singleton):
         if first or time.time() - self.last_sync.get(account.id, 0) >= SYNC_MIN_INTERVAL:
             self.sync(account)
         self.retry_pending_uploads()
+        if first and self._preview_wanted():
+            from util import call_later
+            call_later(3, self.preview_choice, account)
 
     def _NH_SIPAccountRegistrationDidSucceed(self, notification):
         # A reconnect: change notifications sent while we were away are not
@@ -377,6 +380,12 @@ class AccountStorage(object, metaclass=Singleton):
 
     def _NH_CFGSettingsObjectDidChange(self, notification):
         modified = getattr(notification.data, 'modified', None) or {}
+        if 'gui.avatar_choice_preview' in modified and self._preview_wanted():
+            # ticked in Preferences: show it now, on the storage account
+            account = storage_account()
+            if account is not None and account.id in self.settled:
+                self.preview_choice(account)
+            return
         if 'sms.history_token' in modified or 'sms.history_url' in modified:
             account = notification.sender
             if account is storage_account() and _token(account):
@@ -761,6 +770,66 @@ class AccountStorage(object, metaclass=Singleton):
                                   sum(1 for side in choice.values() if side != 'server')))
         self._first_sync_finished(account)
         self._post_changed(list(choice))
+
+    @staticmethod
+    def _preview_wanted():
+        try:
+            from sipsimple.configuration.settings import SIPSimpleSettings
+            return bool(SIPSimpleSettings().gui.avatar_choice_preview)
+        except Exception:
+            return False
+
+    @run_in_gui_thread
+    def preview_choice(self, account):
+        """The server-or-local window with no conflict at all, to check its
+        layout: one row per cached avatar, the stored picture in both
+        columns. Nothing is applied. Turned on with Preferences > Advanced >
+        GUI > Preview Picture Choice, which turns itself off as it shows."""
+        try:
+            from sipsimple.configuration.settings import SIPSimpleSettings
+            settings = SIPSimpleSettings()
+            settings.gui.avatar_choice_preview = False
+            settings.save()
+        except Exception:
+            pass
+        if self.asking or NSApp.modalWindow() is not None:
+            return
+        contacts = dict((c.id, c) for c in self._contacts())
+        items = []
+        now = time.time()
+        for index, object_id in enumerate(sorted(self.cache.ids(account.id))):
+            cached = self.cache.get(account.id, object_id)
+            contact = contacts.get(object_id)
+            if cached is None or contact is None:
+                continue
+            meta = self.cache.meta(account.id, object_id)
+            try:
+                detail = str(contact.uris.default.uri if contact.uris.default else next(iter(contact.uris)).uri)
+            except Exception:
+                detail = ''
+            items.append({'contact_id': object_id,
+                          'name': contact.name or detail or object_id,
+                          'detail': detail,
+                          'server_path': cached[1],
+                          'server_device': self.device_label(meta.get('device_id')),
+                          'server_time': meta.get('modified'),
+                          'local_path': cached[1],
+                          'local_time': now - 3600 * index,
+                          'default': 'local' if index % 2 else 'server'})
+        if not items:
+            BlinkLogger().log_info('[avatar] Choice preview: no cached avatars to show')
+            return
+        items.sort(key=lambda item: item['name'].lower())
+        BlinkLogger().log_info('[avatar] Choice preview with %d rows (nothing is applied)' % len(items))
+        self.asking = True
+        try:
+            from AvatarConflictPanel import AvatarConflictPanel
+            choice = AvatarConflictPanel(items, str(account.id)).runModal()
+        finally:
+            self.asking = False
+        BlinkLogger().log_info('[avatar] Choice preview closed: %d from the server, %d from this Mac (discarded)'
+                               % (sum(1 for side in choice.values() if side == 'server'),
+                                  sum(1 for side in choice.values() if side != 'server')))
 
     def device_label(self, device_id):
         """Who uploaded a picture, for a human: this Mac, or another device by its id."""
