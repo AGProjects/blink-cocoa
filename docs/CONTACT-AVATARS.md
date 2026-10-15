@@ -5,7 +5,7 @@ Contact avatars are stored in SylkServer account storage. That is a private per-
 ## Why
 - Inline base64 avatars in the XCAP addressbook would inflate the single resource-lists document: 1–3 MB for a few hundred contacts, re-uploaded on every contact edit and re-fetched by every device.
 - OMA pres-content is for publishing one's own icon to watchers, not for private avatars.
-- So the XCAP contact carries only a short reference. The image lives in account storage, fetched lazily and cached by ETag.
+- So the image lives in account storage under the contact's id, and XCAP carries nothing about it. Clients cache it by ETag.
 
 ## Server side (SylkServer)
 
@@ -16,7 +16,7 @@ Contact avatars are stored in SylkServer account storage. That is a private per-
 | `sylk/applications/webrtcgateway/sip_handlers.py` | `application/sylk-storage-changed` excluded from the journal (sender and receiver) |
 | `sylk/applications/webrtcgateway/configuration.py` | `[AccountStorage]` section |
 | `sylk/applications/webrtcgateway/models/storage/cassandra.py` | `AccountObject` model |
-| `tools/sylk-create-cassandra-tables` | Creates missing SylkServer Cassandra tables (dry-run by default, `--apply`) |
+| `tools/sylk-create-cassandra-tables` | Creates missing SylkServer Cassandra tables and brings existing ones to the schema of the models (dry-run by default, `--apply`) |
 | `webrtcgateway.ini.sample` | Documentation and CQL |
 
 ### Configuration (`webrtcgateway.ini`, section `[AccountStorage]`)
@@ -33,10 +33,14 @@ Contact avatars are stored in SylkServer account storage. That is a private per-
   - Table `account_storage`, one partition per account:
     ```sql
     CREATE TABLE IF NOT EXISTS account_storage (account text, namespace text, object_id text,
-        etag text, size int, content_type text, modified bigint, data blob,
+        etag text, size int, content_type text, modified bigint, device_id text, data blob,
         PRIMARY KEY (account, namespace, object_id));
     ```
-  - SylkServer does not create tables. Create it before deploying with `sylk-create-cassandra-tables --apply`, or with the CQL above. Until it exists, storage requests return 500; nothing else is affected.
+  - SylkServer does not create or alter tables. Before deploying, run `sylk-create-cassandra-tables` (a dry run that prints the plan), then again with `--apply`.
+    - The tool compares every table with the models in `models/storage/cassandra.py`. It creates missing tables, adds missing columns, drops columns the model lacks, and fixes TTL/gc_grace with `ALTER TABLE`, all keeping the rows.
+    - A table whose key, column type or clustering order differs is recreated (DROP + CREATE, all rows lost), after a second confirmation.
+    - An existing `account_storage` only gets `device_id` added.
+    - Until the table matches, storage requests return 500; nothing else is affected.
   - Writes and deletes are conditional (LWT on etag), so a concurrent writer on another server gets 412.
   - The quota check is not atomic across servers, so it is a soft limit.
 - **Files**: `<storage_dir>/<first char>/<account>/<namespace>/<id>`, with metadata in `.meta-<id>` and atomic writes. Single-server topology only.
@@ -54,20 +58,17 @@ Not logged: reads and the 400/404/412/413/507 rejections.
 ## Protocol
 
 ### Authentication and URL
-1. Get the API token as today. Send a MESSAGE with `Content-Type: application/sylk-api-token` to the server. The reply is a MESSAGE of the same type with body `{"token": "...", "url": "<base>/webrtcgateway/messages/history/<account>"}`.
-2. **Derive** the storage URL from the same base as file transfers: `storage_url = <base>/webrtcgateway/storage/<account>`. The server does not announce it.
-   - `<account>` is `user@domain`, lowercase, without `sip:`.
-3. Every request carries `Authorization: Apikey <token>`.
-   - On 401, request a new token once and retry.
-   - The token has a TTL of 31 days and is refreshed whenever re-requested.
+- **Token:** the same API token and the same mechanism as the message journal fetch and file uploads. Nothing is specific to storage: every request carries `Authorization: Apikey <token>`, and a 401 is handled as for the journal.
+- **URL:** derived from the same base as the journal and file transfers: `storage_url = <base>/webrtcgateway/storage/<account>`. The server does not announce it.
+  - `<account>` is `user@domain`, lowercase, without `sip:`.
 
 ### Endpoints
 | Method | Path | Result |
 |---|---|---|
 | GET | `{storage_url}` | `{account, namespaces:[{namespace, objects, size}], usage:{size, objects}, limits:{max_object_size, max_account_size, max_objects}}` |
-| GET | `{storage_url}/<ns>` | `{account, namespace, objects:[{id, etag, size, content_type, modified}]}` (an empty list if the namespace does not exist) |
-| GET / HEAD | `{storage_url}/<ns>/<id>` | Raw bytes, `Content-Type` as stored, `ETag: "<etag>"`, `Cache-Control: private, no-cache`. A matching `If-None-Match` returns 304 |
-| PUT | `{storage_url}/<ns>/<id>` | Body is the raw bytes; `Content-Type` is stored. Returns 201 (created) or 200 (replaced) with JSON `{id, etag, size, content_type, modified}` and an `ETag` header |
+| GET | `{storage_url}/<ns>` | `{account, namespace, objects:[{id, etag, size, content_type, modified, device_id}]}` (an empty list if the namespace does not exist) |
+| GET / HEAD | `{storage_url}/<ns>/<id>` | Raw bytes, `Content-Type` as stored, `ETag: "<etag>"`, `X-Sylk-Device-Id: <uploader>` (if known), `Cache-Control: private, no-cache`. A matching `If-None-Match` returns 304 |
+| PUT | `{storage_url}/<ns>/<id>` | Body is the raw bytes; `Content-Type` is stored. Returns 201 (created) or 200 (replaced) with JSON `{id, etag, size, content_type, modified, device_id}` and an `ETag` header |
 | DELETE | `{storage_url}/<ns>/<id>` | 204 |
 
 Rules:
@@ -76,7 +77,9 @@ Rules:
   - `If-Match: "<etag>"` replaces only if unchanged (412 otherwise).
   - With neither header the write is unconditional.
 - **Conditional DELETE**: optional `If-Match: "<etag>"`.
-- **Optional header `X-Sylk-Device-Id: <device id>`** on PUT and DELETE. It is echoed in the change notification so the writing device can ignore its own change.
+- **Optional header `X-Sylk-Device-Id: <device id>`** on PUT and DELETE. Every device has a unique id. It is echoed in the change notification so the writing device can ignore its own change.
+  - **On PUT it is stored with the object** as `device_id`, the uploader, and returned in the listing, the PUT response and the `X-Sylk-Device-Id` header of GET/HEAD. Together with `modified` (the upload time) it tells which device uploaded an object and when. Absent if the writer sent no header.
+  - Stored in the object metadata (file backend: `.meta-<id>`; Cassandra: the `device_id` column of `account_storage`). Objects uploaded before this, or without the header, have none; clients show "unknown device".
 - **Names**: `ns` and `id` must match `[A-Za-z0-9_-][A-Za-z0-9._-]{0,127}` (no leading dot, no slash).
 - **ETag**: the first 40 hex characters of the content's sha256.
 - **`modified`**: milliseconds since the epoch, server time.
@@ -119,59 +122,127 @@ curl -s -H "$H" -X DELETE -H 'If-Match: "<etag>"' $B/avatars/0f3c...
 ## Avatars (client convention)
 
 ### Image
-- Square centre crop, **96×96**, metadata stripped.
-- **WebP** at quality ~75, or JPEG at quality ~70 (4:2:0), about 2–4 KB each.
+- Square centre crop, **96×96** pixels (not points), metadata stripped.
+- **WebP** at quality ~75, or JPEG at quality ~70 (4:2:0), about 2–4 KB each. Blink Cocoa writes JPEG (AppKit has no WebP encoder).
 - Encode consistently across clients. Decoding must accept both WebP and JPEG.
 
-### Reference in XCAP
-- The contact gets a shared (XCAP-replicated) attribute **`avatar = <id>`**.
-- `<id>` is a fresh random uuid4 hex per upload. Never a content hash, so paths leak nothing about the image.
-- Changing the picture:
-  1. upload under a new id;
-  2. update the contact's `avatar` attribute;
-  3. delete the old object.
+#### Building the avatar
+Every client builds the uploaded bytes the same way:
+1. **Crop:** take the largest centred square of the source: `side = min(w, h)`, origin `((w - side) / 2, (h - side) / 2)`. The contact editor already lets the user frame a square; the centre crop then changes nothing.
+2. **Scale:** draw that square into a new **96×96** bitmap with high-quality interpolation. Drawing into a fresh bitmap is what strips every piece of metadata (EXIF, GPS, colour profile names, thumbnails).
+3. **Flatten:** fill the bitmap white first, so transparent sources come out on white rather than black. JPEG has no alpha.
+4. **Encode:** JPEG at quality 0.70 (or WebP at ~75). Upload with `Content-Type: image/jpeg` (or `image/webp`).
 
-  Using a new id instead of overwriting avoids races with devices that still reference the old one.
-- Removing the picture: clear the attribute, then delete the object.
+Blink Cocoa (`AccountStorage.encode_avatar`, main thread):
+```python
+AVATAR_PIXELS = 96
+AVATAR_JPEG_QUALITY = 0.70
+
+def encode_avatar(image):            # NSImage -> bytes, or None
+    size = image.size()
+    if size.width <= 0 or size.height <= 0:
+        return None
+    px = AVATAR_PIXELS
+    rep = NSBitmapImageRep.alloc().initWithBitmapDataPlanes_pixelsWide_pixelsHigh_bitsPerSample_samplesPerPixel_hasAlpha_isPlanar_colorSpaceName_bytesPerRow_bitsPerPixel_(
+        None, px, px, 8, 4, True, False, NSDeviceRGBColorSpace, 0, 0)
+    rep.setSize_((px, px))                       # 96 points == 96 pixels, no Retina doubling
+    context = NSGraphicsContext.graphicsContextWithBitmapImageRep_(rep)
+    NSGraphicsContext.saveGraphicsState()
+    try:
+        NSGraphicsContext.setCurrentContext_(context)
+        context.setImageInterpolation_(NSImageInterpolationHigh)
+        NSColor.whiteColor().set()
+        NSRectFill(NSMakeRect(0, 0, px, px))     # flatten onto white
+        side = min(size.width, size.height)      # centre square crop
+        source = NSMakeRect((size.width - side) / 2.0, (size.height - side) / 2.0, side, side)
+        image.drawInRect_fromRect_operation_fraction_(NSMakeRect(0, 0, px, px), source,
+                                                     NSCompositeSourceOver, 1.0)
+        context.flushGraphics()
+    finally:
+        NSGraphicsContext.restoreGraphicsState()
+    data = rep.representationUsingType_properties_(NSJPEGFileType,
+                                                   {NSImageCompressionFactor: AVATAR_JPEG_QUALITY})
+    return bytes(data) if data is not None else None
+```
+
+Equivalent with Pillow, for Blink Qt or tools:
+```python
+from PIL import Image, ImageOps
+import io
+
+def encode_avatar(path):
+    with Image.open(path) as source:
+        source = ImageOps.exif_transpose(source)               # honour the camera rotation
+        image = ImageOps.fit(source.convert('RGBA'), (96, 96), Image.LANCZOS, centering=(0.5, 0.5))
+    flat = Image.new('RGB', image.size, (255, 255, 255))
+    flat.paste(image, mask=image.getchannel('A'))              # flatten onto white
+    out = io.BytesIO()
+    flat.save(out, 'JPEG', quality=70, subsampling='4:2:0', optimize=True)   # no exif= -> no metadata
+    return out.getvalue()
+```
+
+### Object id
+- The object id is the **contact id**: one object per contact, `avatars/<contact id>`. No separate avatar id.
+  - Contact ids already match the name rule (`id` + digits). A contact whose id does not keeps its avatar local only.
+- **Nothing is written to XCAP.** Whether a contact has a picture, and which version, is what the storage says. The namespace listing gives every id with its etag in one request, and the change notification covers the time in between.
+  - No XCAP write per picture change, no addressbook-update tick, and no race between the object and an XCAP reference.
+- Changing the picture: `PUT avatars/<contact id>` (unconditional, last writer wins), replacing the object in place.
+- Removing the picture: `DELETE avatars/<contact id>`.
+- Permanently deleting a contact (expunge from Deleted) also deletes its object. If that fails, garbage collection removes it later.
 
 ### Local cache
-- Keyed by `id`, storing `{etag, content_type, bytes}` per account.
-- On display: if `avatar` is set and the id is not cached, GET it.
-- Cached avatars are shown without a network request. They are refreshed only by notifications or the startup diff.
-- A 404 means the object is gone: show the default picture and do not retry until the next startup diff or notification.
+- Keyed by contact id, storing `{etag, content_type, bytes}` per account.
+- It mirrors the server: a contact has a stored picture exactly when the cache holds one under its id. Displaying never makes a request.
+- A 404 means the object is gone: drop it and show the default picture. Do not retry until the next listing or notification.
 
-### Startup sync
-After the XCAP addressbook has been fetched and is stable (same rule as the journal):
+### Pictures set on this device
+On every sync, each picture the user set on this device (in Blink Cocoa: set in the contact editor, `icon_info.local`) that is not yet on the server is reconciled. Presence and bundled icons never count: on the server they would be a copy that goes stale.
+- **Nothing on the server:** the local picture is pushed. This is also how pictures from before account storage get uploaded, and pictures set while storage was unreachable.
+- **A picture on the server too:** the user chooses. The server copies are fetched first, so both can be shown.
+  - A modal lists one row per contact with two columns, **On the server** and **On this device**. Each shows the picture, a **Keep** tick box, and where it comes from: the uploader (this device, or another device by its id) and the upload time (`modified`) for the server; the file's time for the local one.
+  - In each row exactly one box is ticked. Ticking one unticks the other. The default is the newer picture.
+  - **Select All** above each column ticks that whole column. **Confirm** is the only way out.
+  - Keeping the server picture deletes the local one. Keeping the local picture uploads it, replacing the server copy for all devices.
+- Either way the local file goes away (after a successful upload, or when the server copy is kept), so each contact is handled once. If the app quits before Confirm, the next sync asks again.
+- A picture with an upload or delete pending is left to that retry.
+
+### Sync
+After the XCAP addressbook has been fetched and is stable (same rule as the journal), and again on re-registration (at most every 10 minutes) to catch notifications missed while disconnected:
 1. `GET {storage_url}/avatars`
-2. For each id referenced by a contact:
-   - missing from the cache, or with a different etag → GET it;
-   - absent on the server → treat as no avatar.
-3. Drop cached ids that no contact references.
-4. **Garbage collection** of server objects that no contact references:
-   - Proposed: a device deletes an unreferenced object only if it is older than 7 days (`modified`).
-   - It runs after a stable addressbook fetch. The age limit protects uploads whose XCAP update has not propagated yet.
+2. For each object whose id is a contact id: if it is missing from the cache or has a different etag, GET it.
+3. Drop cached ids that are no longer on the server, or whose contact is gone.
+4. **Garbage collection**: an object whose id is not a contact id is deleted once it is older than 7 days (`modified`), with `If-Match` on its etag. The age limit protects a fresh upload whose contact has not yet reached this device's addressbook.
+- Contacts with an upload or a delete still pending on this device are skipped, so the old picture does not overwrite the new one and a removed picture does not come back.
+- The re-list never runs before the addressbook has settled: the garbage collection decides on which contacts exist.
 
 ### Live sync
 On `application/sylk-storage-changed` with `namespace == "avatars"`:
 - Ignore it if `device_id` is our own.
-- `op == "put"`: if a contact references `id` and the cached etag differs, GET it.
-- `op == "delete"`: drop `id` from the cache and refresh the views showing it.
-- The XCAP change (the new `avatar` attribute) arrives separately through the normal XCAP notification, so the two can arrive in either order. A contact pointing at an id not yet fetched simply fetches it.
+- `op == "put"`: if the cached etag differs, GET it. This applies even when the contact has not arrived yet; an orphan is dropped by the next sync.
+- `op == "delete"`: drop the id from the cache and refresh the views showing it.
 
 ### Upload (contact editor)
-1. Crop and scale the picture, then encode it.
-2. `PUT {storage_url}/avatars/<new uuid>` with `If-None-Match: *` and `X-Sylk-Device-Id`.
-3. On 201: cache the bytes under the new id, set the contact's `avatar` attribute, and save the contact to XCAP.
-4. DELETE the old id, if any (best effort).
-5. Errors:
-   - 413 or 507: tell the user (size or quota) and keep the old avatar.
-   - 401: refresh the token once.
-   - Network error: keep the picture locally and retry later. Do not set the XCAP attribute until the upload has succeeded.
+1. Crop and scale the picture, then encode it. Keep it locally and mark the upload as pending, so it shows at once.
+2. `PUT {storage_url}/avatars/<contact id>` with `X-Sylk-Device-Id`.
+3. On 200 or 201: cache the bytes under the contact id, clear the pending mark, and drop the local copy.
+4. Errors:
+   - 413 or 507: tell the user (size or quota), clear the pending mark, and keep the old stored avatar.
+   - 401: handled by the common token mechanism, as for the journal.
+   - Network error: keep the picture locally and pending, and retry later (when the addressbook settles, when a new token arrives, and every 5 minutes).
+- A removal whose DELETE fails stays pending the same way and is retried.
 
 ### Accounts without SylkServer
-Avatars stay local only, as before. No `avatar` attribute is written.
+Avatars stay local only, as before.
 
-### UI
+### Display
+A picture the user set has priority. Without one, the icon learned from presence is shown. Without that, the synthetic avatar (initials on a colour derived from the name).
+1. A picture the user just set that is still waiting to be uploaded.
+2. The stored picture. Only user-set pictures are ever uploaded; presence icons never go to the server.
+3. The local picture: a user-set picture on an account without account storage, otherwise the presence icon.
+4. Initials.
+
+Removing the picture (here or on another device) therefore falls back to the presence icon, if the contact publishes one.
+
 The contact list, contact editor and Alert panel (incoming call) show the same avatar, from the same cache.
 
 ## Open decisions
@@ -179,10 +250,80 @@ The contact list, contact editor and Alert panel (incoming call) show the same a
   - Costs a decrypt per avatar, and the key must be present before avatars can be shown.
   - Not decided. Start unencrypted; the content type tells clients which form they got.
 - **Own avatar**: stored the same way on the own contact, or also published via presence? Not decided.
-- **Migration** of existing local avatars: upload them on the first run with storage available, only for contacts without an `avatar` attribute. Proposed, not decided.
 - **Other namespaces** (preferences, drafts, group metadata): possible later.
 
 ## Implementation order
 1. Blink Cocoa.
 2. Blink Qt, ported from Cocoa so both behave the same.
 3. Sylk Mobile and sylk-desktop.
+
+## Client requirements
+What every client implements, independently of its toolkit. Blink Qt should match Blink Cocoa on each point.
+
+### Which account
+- The addressbook is replicated to every XCAP account, but an avatar object lives in one storage: the **storage account**.
+- Storage account: the default account when it is enabled, has XCAP enabled and has a SylkServer (a storage URL can be derived); otherwise the first account that qualifies. None: avatars stay local only.
+- Uploads, deletes, listings and notifications use the storage account only. A notification for another account is ignored.
+
+### Device id
+- `X-Sylk-Device-Id` is the device's own instance id: the bare uuid, without `urn:uuid:`, the same id the client uses everywhere else.
+- It is how a device recognises its own changes in notifications, and how the UI names the uploader: "This Mac" / "This computer" for our own id, otherwise "Device" plus the first 8 characters of the id.
+
+### Per-contact local state
+Never written to XCAP:
+- **user-set picture**: a flag saying the local picture was set by the user (Blink Cocoa: `icon_info.local`).
+  - Set when the user picks a picture in the editor. Cleared after a successful upload, and when the user removes the picture.
+  - Presence must not overwrite the local picture while it is set.
+- **avatar_pending**: a user-set picture not uploaded yet.
+- **avatar_delete_pending**: a removed picture whose DELETE has not succeeded yet.
+- The local picture file is shared between a user-set picture and the presence icon. The flag says which one it is.
+
+### Contact editor
+- Only an explicit action in the photo well counts as a change: choosing a picture (file panel, drag and drop) or clearing it.
+- Saving a contact whose well shows a presence icon must not upload it. Do not detect a change by comparing images.
+- New picture: save it locally, set user-set and pending, save the contact, then upload after the addressbook transaction.
+- Picture cleared: delete the local file, clear user-set, set delete-pending, drop the cache entry at once, then DELETE.
+
+### When things run
+- **Sync** (listing, fetch, drop, GC, push, choice): when the XCAP addressbook has settled after a fetch (the same point the journal and call history wait for). Again on re-registration, at most every 10 minutes, and only after the first settle, because GC decides on which contacts exist.
+- **Pending retries** (uploads and deletes): on settle, when a new token arrives, and every 5 minutes.
+- **Expunging a contact** (permanent delete from the Deleted group): DELETE its object, best effort; GC covers a failure.
+- All HTTP off the GUI thread, serialised on one worker. Contact and UI updates back on the GUI thread.
+- Only one choice window at a time. If another modal is open, wait for it to close.
+
+### `application/sylk-storage-changed`
+- Handled at the very start of incoming MESSAGE processing, before anything stores, displays, notifies or counts it, the same way as other control types.
+- Skipped if it ever appears in a journal replay.
+- Listed among the control content types, so it is never rendered or acknowledged.
+
+### Cache
+- Private to the device, layout free. Blink Cocoa: `<app data>/account_storage/<account>/avatars/<contact id>` plus an `index.json` with `etag`, `content_type`, `size`, `device_id` and `modified` per id.
+- Showing a contact never makes a request; only sync, notifications and uploads change the cache. Views refresh when an id in the cache changes.
+
+### Notifications to the user
+- 413: "Contact picture not saved — The picture is too large for the server".
+- 507: "Contact picture not saved — The account storage on the server is full".
+- Nothing else is surfaced. Network errors are retried silently.
+
+### Logging
+Every line starts with `[avatar]`, so `grep '\[avatar\]'` gives the whole story. It includes:
+- storage URL in use (once);
+- per sync: counts on server / to fetch / dropped / orphans deleted;
+- **one line per contact uploaded**: name, URI, id, reason (`set in the contact editor`, `set on this Mac, none on the server`, `kept over the server picture`, `retry`), size, etag;
+- one line per failed upload (413 / 507 / postponed), per delete, and per remote change applied;
+- the number of contacts in a choice and the totals chosen.
+
+## Blink Cocoa implementation
+Reference for the port.
+
+| Requirement | Where |
+|---|---|
+| Storage URL, HTTP client, cache, encoding, sync, GC, push, live sync, upload, delete, logging | `AccountStorage.py` |
+| Server-or-local choice window | `AvatarConflictPanel.py` |
+| `avatar_pending`, `avatar_delete_pending` (local settings) | `configuration/contact.py` |
+| Display precedence | `ContactListModel.py`, `PresenceContactAvatar.from_contact` |
+| Add/edit contact upload or remove, expunge delete, view refresh on `BlinkContactAvatarDidChange` | `ContactListModel.py` (`addContact`, `editContact`, `expungeContacts`) |
+| Editor: explicit change flag (`photoChanged` → `icon_changed`), uploader tooltip | `ContactController.py` |
+| Presence must not overwrite a user-set picture | `ContactListModel.py`, presence icon handling checks `icon_info.local` |
+| `application/sylk-storage-changed` intake, journal skip | `SMSWindowManager.py`; control types in `SMSViewController.py` |
+| Settle trigger | `BlinkAddressbookDidSettle` (posted by `ContactListModel` after the post-reload pass) |
