@@ -750,6 +750,16 @@ class PreferencesController(NSWindowController, object):
                 except AttributeError:
                     pass
 
+        # DNS Information, as Blink Qt has it: what DNS says about the domain of the account and its
+        # servers (SIP Signaling), its MSRP relay and its STUN servers (NAT Traversal)
+        if forAccount and storage_object is not BonjourAccount():
+            from DNSInformationPanel import DNSInformationButton
+            if section_name == 'sip':
+                settings_box_view.addSubview_(DNSInformationButton(storage_object, NSLocalizedString("DNS Information...", "Button title")))
+            elif section_name == 'nat_traversal':
+                settings_box_view.addSubview_(DNSInformationButton(storage_object, NSLocalizedString("MSRP Relay DNS Information...", "Button title"), nat_traversal='msrp'))
+                settings_box_view.addSubview_(DNSInformationButton(storage_object, NSLocalizedString("STUN DNS Information...", "Button title"), nat_traversal='stun'))
+
         return section_view
 
     @objc.python_method
