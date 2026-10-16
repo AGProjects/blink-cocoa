@@ -1169,20 +1169,14 @@ class ContactWindowController(NSWindowController):
         sylkserver_exists = True
 
         self.blinkMenu.itemWithTag_(2).setHidden_(bool(NSApp.delegate().updater is None))
-        if NSApp.delegate().applicationName in ('Blink Pro', 'Blink Lite'):
-            self.blinkMenu.itemWithTag_(3).setHidden_(True)
-            self.blinkMenu.itemWithTag_(7).setHidden_(True)
-            self.blinkMenu.itemWithTag_(8).setHidden_(True)
-            self.blinkMenu.itemWithTag_(9).setHidden_(True)
-        elif NSApp.delegate().applicationName == 'SIP2SIP':
-            self.blinkMenu.itemWithTag_(3).setHidden_(True)
-            self.blinkMenu.itemWithTag_(7).setHidden_(False)
+        # Donate (3) and Get Blink Pro (7) are never shown; the separator (8) only goes with Get SylkServer (9)
+        self.blinkMenu.itemWithTag_(3).setHidden_(True)
+        self.blinkMenu.itemWithTag_(7).setHidden_(True)
+        if NSApp.delegate().applicationName == 'SIP2SIP':
             self.blinkMenu.itemWithTag_(8).setHidden_(sylkserver_exists)
             self.blinkMenu.itemWithTag_(9).setHidden_(sylkserver_exists)
         else:
-            self.blinkMenu.itemWithTag_(3).setHidden_(True)
-            self.blinkMenu.itemWithTag_(7).setHidden_(False)
-            self.blinkMenu.itemWithTag_(8).setHidden_(False)
+            self.blinkMenu.itemWithTag_(8).setHidden_(True)
             self.blinkMenu.itemWithTag_(9).setHidden_(True)
 
         if settings.service_provider.name:
