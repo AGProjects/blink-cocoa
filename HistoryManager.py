@@ -5383,6 +5383,59 @@ def file_contacts_into_kind_groups():
             _log('[!] cannot file into %s: %s' % (_quote(name), e))
 
 
+@AddressbookOrigin.with_reason('file-into-kind-group')
+def refile_contact_by_addresses(contact, old_addresses):
+    """Tel and Conference follow a user edit of a contact's addresses, both ways.
+
+    Joined when the edit brings the first phone number (conference room),
+    left when it takes the last one away. file_contacts_into_kind_groups only
+    ever adds and runs once per run; this is the other half, and only on an
+    explicit edit: pstn_e164 depends on the default account's dial rules, which
+    may differ between devices, so a background pass that removed would have
+    two devices taking a contact in and out of Tel. A blocked or deleted
+    contact is left where it is.
+
+    Called inside the editor's transaction; each changed group is saved here.
+    """
+    if contact.id in _set_aside_ids():
+        return
+    try:
+        from sipsimple.account import AccountManager
+        default_account = AccountManager().default_account
+        new_addresses = [str(uri.uri) for uri in contact.uris]
+    except Exception as e:
+        _log('[!] cannot read the addresses of %s: %s' % (_quote(str(getattr(contact, 'name', '') or contact.id)), e))
+        return
+
+    kinds = (
+        (TEL_GROUP_KIND, TEL_GROUP_NAME, TEL_GROUP_ID, lambda a: pstn_e164(a, default_account)),
+        (CONFERENCE_GROUP_KIND, CONFERENCE_GROUP_NAME, CONFERENCE_GROUP_ID, lambda a: is_conference_uri(a)),
+    )
+    for kind, name, reserved_id, test in kinds:
+        try:
+            had = any(test(a) for a in old_addresses)
+            has = any(test(a) for a in new_addresses)
+            if has:
+                group = ensure_group(kind, name, reserved_id)
+                if group is None or contact.id in group.contacts:
+                    continue
+                group.contacts.add(contact)
+                group.save()
+                _log('filed %s into %s: it has an address of that kind now'
+                     % (_quote(str(contact.name or contact.id)), _describe_group(group)))
+            elif had:
+                group = _find_group(kind, name, reserved_id)
+                if group is None or contact.id not in group.contacts:
+                    continue
+                group.contacts.remove(contact)
+                group.save()
+                _log('took %s out of %s: its last address of that kind was removed'
+                     % (_quote(str(contact.name or contact.id)), _describe_group(group)))
+        except Exception as e:
+            _log('[!] cannot update %s membership of %s: %s'
+                 % (_quote(name), _quote(str(getattr(contact, 'name', '') or contact.id)), e))
+
+
 def _xcap_is_expected():
     """Whether the addressbook is going to be filled from a server.
 

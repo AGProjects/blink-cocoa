@@ -113,6 +113,7 @@ from HistoryManager import SessionHistory, ChatHistory
 from HistoryManager import calls_group_startup_check
 from HistoryManager import ensure_call_contact
 from HistoryManager import backfill_call_contacts
+from HistoryManager import refile_contact_by_addresses
 from HistoryManager import BLOCKED_GROUP_KIND, BLOCKED_GROUP_NAME, is_blocked_party, blocked_sync_done, sync_blocked_policy, block_contacts, unblock_contacts
 from SIPManager import MWIData
 from MergeContactController import MergeContactController
@@ -5529,6 +5530,7 @@ class ContactListModel(CustomListModel):
 
             self.removePolicyForContactURIs(contact)
             self.addGroupsForContact(contact, new_contact['groups'] or [])
+            refile_contact_by_addresses(contact, [])
 
         if upload:
             from AccountStorage import AccountStorage
@@ -5567,6 +5569,8 @@ class ContactListModel(CustomListModel):
         addressbook_manager = AddressbookManager()
         with addressbook_manager.transaction():
             contact = item.contact
+            # Tel and Conference follow the edit (refile_contact_by_addresses)
+            old_addresses = [str(uri.uri) for uri in contact.uris]
             contact.name = new_contact['name']
             contact.organization = new_contact['organization']
             contact.uris = new_contact['uris']
@@ -5618,6 +5622,7 @@ class ContactListModel(CustomListModel):
             new_groups = set(new_contact['groups'])
             self.removeContactFromGroups(item, old_groups - new_groups)
             self.addGroupsForContact(contact, new_groups)
+            refile_contact_by_addresses(contact, old_addresses)
 
         if upload or remove_stored:
             from AccountStorage import AccountStorage
