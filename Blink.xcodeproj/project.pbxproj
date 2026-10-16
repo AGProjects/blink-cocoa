@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		098430272261EC76ECCC86FE /* sip_domain_check.py in Resources */ = {isa = PBXBuildFile; fileRef = 318DF6EF17EAC3B6BDC3BEBE /* sip_domain_check.py */; };
 		1A2B3C4D5E6F70020000000A /* VideoMirrorController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F70010000000A /* VideoMirrorController.py */; };
 		1A2B3C4D5E6F70030000000A /* VideoMirrorController.py in Resources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F70010000000A /* VideoMirrorController.py */; };
 		1F06174212D09C18007A68F4 /* audio_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1F06174112D09C18007A68F4 /* audio_16.png */; };
@@ -527,10 +528,6 @@
 		1FFB38D8143209E0003B29ED /* display_red_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FFB38D6143209E0003B29ED /* display_red_16.png */; };
 		1FFB38D9143209E0003B29ED /* display_red_16.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FFB38D6143209E0003B29ED /* display_red_16.png */; };
 		261D209F613682E8862D6E7A /* KeyEscrow.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B068492C79CC554E4C527B0 /* KeyEscrow.py */; };
-		F7085178B5C24F7D1B428DE9 /* AccountStorage.py in Resources */ = {isa = PBXBuildFile; fileRef = F1E292A2EF0C3705AB554508 /* AccountStorage.py */; };
-		B199B0EA7AEFF92918BF5138 /* AvatarConflictPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 357D1EE3CE09B6CB0F7E08D5 /* AvatarConflictPanel.py */; };
-		098430272261EC76ECCC86FE /* sip_domain_check.py in Resources */ = {isa = PBXBuildFile; fileRef = 318DF6EF17EAC3B6BDC3BEBE /* sip_domain_check.py */; };
-		F433C9382B6BB67B4C892183 /* DNSInformationPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 45397DEE96ABB5F308EF4D7E /* DNSInformationPanel.py */; };
 		2B01284A1093922A009B2112 /* AccountSettings.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B0128481093922A009B2112 /* AccountSettings.py */; };
 		2B01284E10939236009B2112 /* AccountSettings.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B01284C10939236009B2112 /* AccountSettings.xib */; };
 		2B0132D5109E6256009B2112 /* FancyTabSwitcher.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B0132D4109E6256009B2112 /* FancyTabSwitcher.py */; };
@@ -665,12 +662,16 @@
 		5A1E00010000000000000013 /* ShareController.py in Resources */ = {isa = PBXBuildFile; fileRef = 5A1E00010000000000000012 /* ShareController.py */; };
 		5A1E000200000000000000F2 /* VideoFrameSource.py in Resources */ = {isa = PBXBuildFile; fileRef = 5A1E000200000000000000F1 /* VideoFrameSource.py */; };
 		5A1E000200000000000000F4 /* VideoCallRecorder.py in Resources */ = {isa = PBXBuildFile; fileRef = 5A1E000200000000000000F3 /* VideoCallRecorder.py */; };
+		6891C4358F58D5C1BE764D8F /* AccountStorage.py in Resources */ = {isa = PBXBuildFile; fileRef = F1E292A2EF0C3705AB554508 /* AccountStorage.py */; };
+		6F4A2186383B4EC036556823 /* AvatarConflictPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 357D1EE3CE09B6CB0F7E08D5 /* AvatarConflictPanel.py */; };
+		82E9002A6E2F6878C83E86C4 /* DNSInformationPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 45397DEE96ABB5F308EF4D7E /* DNSInformationPanel.py */; };
 		8547A6C8114EB6E200AD84BF /* __init__.py in Copy Interfaces Package */ = {isa = PBXBuildFile; fileRef = 8547A6C6114EB6E200AD84BF /* __init__.py */; };
 		8547A6C9114EB6E200AD84BF /* itunes.py in Copy Interfaces Package */ = {isa = PBXBuildFile; fileRef = 8547A6C7114EB6E200AD84BF /* itunes.py */; };
 		85E8550710F643350083D346 /* __init__.py in Copy Configuration Package */ = {isa = PBXBuildFile; fileRef = 85E8550310F643350083D346 /* __init__.py */; };
 		85E8550810F643350083D346 /* account.py in Copy Configuration Package */ = {isa = PBXBuildFile; fileRef = 85E8550410F643350083D346 /* account.py */; };
 		85E8550910F643350083D346 /* datatypes.py in Copy Configuration Package */ = {isa = PBXBuildFile; fileRef = 85E8550510F643350083D346 /* datatypes.py */; };
 		85E8550A10F643350083D346 /* settings.py in Copy Configuration Package */ = {isa = PBXBuildFile; fileRef = 85E8550610F643350083D346 /* settings.py */; };
+		8C6586F83A7C9D7705E882EA /* sip_domain_check.py in Resources */ = {isa = PBXBuildFile; fileRef = 318DF6EF17EAC3B6BDC3BEBE /* sip_domain_check.py */; };
 		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
 		AD00000000000000004B0001 /* MessageBubbleView.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000004B0000 /* MessageBubbleView.py */; };
@@ -739,6 +740,7 @@
 		AD000000000000009A0003 /* MediaCompression.py in Resources */ = {isa = PBXBuildFile; fileRef = AD000000000000009A0000 /* MediaCompression.py */; };
 		ADFEED000000000000000001 /* PlaybackMonitor.py in Resources */ = {isa = PBXBuildFile; fileRef = ADFEED000000000000000000 /* PlaybackMonitor.py */; };
 		ADFEED000000000000000003 /* PlaybackMonitor.py in Resources */ = {isa = PBXBuildFile; fileRef = ADFEED000000000000000000 /* PlaybackMonitor.py */; };
+		B199B0EA7AEFF92918BF5138 /* AvatarConflictPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 357D1EE3CE09B6CB0F7E08D5 /* AvatarConflictPanel.py */; };
 		DD1A00000000000000000002 /* DataImport.py in Resources */ = {isa = PBXBuildFile; fileRef = DD1A00000000000000000001 /* DataImport.py */; };
 		DD1A00000000000000000004 /* DataImportPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = DD1A00000000000000000003 /* DataImportPanel.py */; };
 		DD1A00000000000000000006 /* DataManage.py in Resources */ = {isa = PBXBuildFile; fileRef = DD1A00000000000000000005 /* DataManage.py */; };
@@ -758,10 +760,8 @@
 		DEFD8C5F135DD6CD00456E86 /* resources.py in Resources */ = {isa = PBXBuildFile; fileRef = DEFD8C5E135DD6CD00456E86 /* resources.py */; };
 		DEFD8CA2135DF34400456E86 /* resources.py in Resources */ = {isa = PBXBuildFile; fileRef = DEFD8C5E135DD6CD00456E86 /* resources.py */; };
 		E99293C0BD4A3709F776A2B4 /* KeyEscrow.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B068492C79CC554E4C527B0 /* KeyEscrow.py */; };
-		6891C4358F58D5C1BE764D8F /* AccountStorage.py in Resources */ = {isa = PBXBuildFile; fileRef = F1E292A2EF0C3705AB554508 /* AccountStorage.py */; };
-		6F4A2186383B4EC036556823 /* AvatarConflictPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 357D1EE3CE09B6CB0F7E08D5 /* AvatarConflictPanel.py */; };
-		8C6586F83A7C9D7705E882EA /* sip_domain_check.py in Resources */ = {isa = PBXBuildFile; fileRef = 318DF6EF17EAC3B6BDC3BEBE /* sip_domain_check.py */; };
-		82E9002A6E2F6878C83E86C4 /* DNSInformationPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 45397DEE96ABB5F308EF4D7E /* DNSInformationPanel.py */; };
+		F433C9382B6BB67B4C892183 /* DNSInformationPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 45397DEE96ABB5F308EF4D7E /* DNSInformationPanel.py */; };
+		F7085178B5C24F7D1B428DE9 /* AccountStorage.py in Resources */ = {isa = PBXBuildFile; fileRef = F1E292A2EF0C3705AB554508 /* AccountStorage.py */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -1405,10 +1405,6 @@
 		2B01284D10939236009B2112 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/AccountSettings.xib; sourceTree = "<group>"; };
 		2B0132D4109E6256009B2112 /* FancyTabSwitcher.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = FancyTabSwitcher.py; sourceTree = "<group>"; };
 		2B068492C79CC554E4C527B0 /* KeyEscrow.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = KeyEscrow.py; sourceTree = "<group>"; };
-		F1E292A2EF0C3705AB554508 /* AccountStorage.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AccountStorage.py; sourceTree = "<group>"; };
-		357D1EE3CE09B6CB0F7E08D5 /* AvatarConflictPanel.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AvatarConflictPanel.py; sourceTree = "<group>"; };
-		318DF6EF17EAC3B6BDC3BEBE /* sip_domain_check.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = sip_domain_check.py; sourceTree = "<group>"; };
-		45397DEE96ABB5F308EF4D7E /* DNSInformationPanel.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = DNSInformationPanel.py; sourceTree = "<group>"; };
 		2B06A429111CFE74001D41E5 /* SMSViewController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SMSViewController.py; sourceTree = "<group>"; };
 		2B0C2369107BB2FA008266C7 /* incoming_file.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = incoming_file.png; path = icons/incoming_file.png; sourceTree = "<group>"; };
 		2B0C236A107BB2FA008266C7 /* upfile.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = upfile.png; path = icons/upfile.png; sourceTree = "<group>"; };
@@ -1535,6 +1531,9 @@
 		2BFB33E3101674BD002D79FB /* srtp.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = srtp.png; path = icons/srtp.png; sourceTree = "<group>"; };
 		2BFB34B210178A99002D79FB /* AlertPanel.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AlertPanel.py; sourceTree = "<group>"; };
 		2BFB35531017E363002D79FB /* blink.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = blink.icns; sourceTree = "<group>"; };
+		318DF6EF17EAC3B6BDC3BEBE /* sip_domain_check.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = sip_domain_check.py; sourceTree = "<group>"; };
+		357D1EE3CE09B6CB0F7E08D5 /* AvatarConflictPanel.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AvatarConflictPanel.py; sourceTree = "<group>"; };
+		45397DEE96ABB5F308EF4D7E /* DNSInformationPanel.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = DNSInformationPanel.py; sourceTree = "<group>"; };
 		5A1E00010000000000000001 /* ShareViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ShareViewController.swift; path = ShareExtension/ShareViewController.swift; sourceTree = "<group>"; };
 		5A1E00010000000000000002 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = ShareExtension/Info.plist; sourceTree = "<group>"; };
 		5A1E00010000000000000003 /* BlinkShare.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.entitlements; name = BlinkShare.entitlements; path = ShareExtension/BlinkShare.entitlements; sourceTree = "<group>"; };
@@ -1598,6 +1597,7 @@
 		DE6E8BB41D9AB92E00E0A80E /* memory_debug.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = memory_debug.py; sourceTree = "<group>"; };
 		DE9790F815B41BC7005BBAD7 /* VirtualGroups.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VirtualGroups.py; sourceTree = "<group>"; };
 		DEFD8C5E135DD6CD00456E86 /* resources.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = resources.py; sourceTree = "<group>"; };
+		F1E292A2EF0C3705AB554508 /* AccountStorage.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AccountStorage.py; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -4014,7 +4014,7 @@
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 966;
+				CURRENT_PROJECT_VERSION = 967;
 				DEVELOPMENT_TEAM = 4DFEFUDLKZ;
 				ENABLE_HARDENED_RUNTIME = YES;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
@@ -4041,7 +4041,7 @@
 					"$(PROJECT_DIR)/Distribution/Frameworks/libs",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 9.9.0;
+				MARKETING_VERSION = 9.9.1;
 				ONLY_ACTIVE_ARCH = NO;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				OTHER_CODE_SIGN_FLAGS = "";
@@ -4065,7 +4065,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 966;
+				CURRENT_PROJECT_VERSION = 967;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 4DFEFUDLKZ;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -4091,7 +4091,7 @@
 					"$(PROJECT_DIR)/Distribution/Frameworks/libs",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 9.9.0;
+				MARKETING_VERSION = 9.9.1;
 				ONLY_ACTIVE_ARCH = NO;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				OTHER_CODE_SIGN_FLAGS = "";
