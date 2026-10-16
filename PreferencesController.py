@@ -673,11 +673,16 @@ class PreferencesController(NSWindowController, object):
         # A SylkServer account always uses OpenPGP, XCAP storage and no xcap-diff, and always
         # sends CPIM (SylkDiscovery forces them): those are not shown for it, and the CPIM
         # checkbox is shown ticked and locked. As Blink Qt does.
+        # The conference server address is locked too when the domain publishes one
+        # (conference.sipBridge, which SylkDiscovery writes into the account).
         sylkserver = False
+        locked_options = SYLKSERVER_LOCKED_OPTIONS
         if forAccount and storage_object is not BonjourAccount():
             try:
-                from SylkDiscovery import has_sylkserver
+                from SylkDiscovery import has_sylkserver, conference_server
                 sylkserver = bool(has_sylkserver(storage_object))
+                if sylkserver and conference_server(storage_object):
+                    locked_options = SYLKSERVER_LOCKED_OPTIONS | {'conference.server_address'}
             except Exception:
                 sylkserver = False
 
@@ -745,7 +750,7 @@ class PreferencesController(NSWindowController, object):
             control.owner = storage_object
             control.restore()
 
-            if sylkserver and section_name + '.' + option_name in SYLKSERVER_LOCKED_OPTIONS:
+            if sylkserver and section_name + '.' + option_name in locked_options:
                 # shown, read only: a checkbox disabled, a text field selectable but not editable
                 tooltip = NSLocalizedString("Set by SylkServer", "Tooltip")
                 if getattr(control, 'check', None) is not None:

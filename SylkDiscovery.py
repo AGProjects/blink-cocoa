@@ -27,7 +27,7 @@ PGP messaging works only for Bonjour and for accounts whose domain runs
 SylkServer: has_sylkserver(account) tells.
 """
 
-__all__ = ['SylkServerDiscovery', 'has_sylkserver', 'server_http_url', 'test_numbers']
+__all__ = ['SylkServerDiscovery', 'conference_server', 'has_sylkserver', 'server_http_url', 'test_numbers']
 
 import json
 import os
@@ -66,6 +66,24 @@ def has_sylkserver(account):
         return bool(SylkServerDiscovery().configuration(account.id.domain))
     except Exception:
         return False
+
+
+def _conference_bridge(configuration):
+    """conference.sipBridge of a configuration, lower case, or None."""
+    conference = (configuration or {}).get('conference')
+    bridge = conference.get('sipBridge') if isinstance(conference, dict) else None
+    return bridge.strip().lower() if isinstance(bridge, str) and bridge.strip() else None
+
+
+def conference_server(account):
+    """The conference server the account's domain publishes (conference.sipBridge), or None:
+    when there is one it is the account's conference server address and cannot be changed."""
+    if account is None or account is BonjourAccount():
+        return None
+    try:
+        return _conference_bridge(SylkServerDiscovery().configuration(account.id.domain))
+    except Exception:
+        return None
 
 
 def server_http_url(account):
@@ -263,10 +281,9 @@ class SylkServerDiscovery(object, metaclass=Singleton):
                                   ('xcap.enabled', True, 'XCAP storage'),
                                   ('xcap.xcap_diff', False, 'the xcap-diff subscription')):
             cls._force(account, name, value, what)
-        conference = configuration.get('conference')
-        bridge = conference.get('sipBridge') if isinstance(conference, dict) else None
-        if isinstance(bridge, str) and bridge.strip():
-            cls._set(account, 'conference.server_address', bridge.strip().lower(), 'conference.sipBridge', 'Conference server')
+        bridge = _conference_bridge(configuration)
+        if bridge:
+            cls._set(account, 'conference.server_address', bridge, 'conference.sipBridge', 'Conference server')
         pstn = configuration.get('pstn')
         rules = pstn.get('rules') if isinstance(pstn, dict) else None
         if not isinstance(rules, dict):
