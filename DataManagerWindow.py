@@ -3,10 +3,12 @@
 
 """The Data manager: the message history in bulk.
 
-Four sections, switched at the top: Messages (below); File Transfers
+Five sections, switched at the top: Messages (below); File Transfers
 (FileTransfersPanel): the transfers whose file is on the server and not on
 this computer, drilled into the same way, and downloaded in bulk through
-FileTransferCache, as a click on each bubble would; and Import
+FileTransferCache, as a click on each bubble would; Compact journal
+(CompactJournalPanel): removing from the journal on the server the entries
+no longer worth downloading (receipts, location tracks), as Blink Qt; Import
 (DataImportPanel.DataImportController): a Sylk Mobile export, hosted here
 when the phone announces it; and Export to device
 (DataExportPanel.DataExportController): this computer serving its history to
@@ -34,7 +36,7 @@ import uuid
 from collections import deque
 from functools import partial
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import objc
 
@@ -49,6 +51,7 @@ from AppKit import (NSAlert,
                     NSColor,
                     NSFont,
                     NSLineBreakByTruncatingTail,
+                    NSLineBreakByWordWrapping,
                     NSMenuItem,
                     NSMiniaturizableWindowMask,
                     NSOffState,
@@ -56,13 +59,16 @@ from AppKit import (NSAlert,
                     NSPopUpButton,
                     NSProgressIndicator,
                     NSResizableWindowMask,
+                    NSRightTextAlignment,
                     NSRoundedBezelStyle,
                     NSScrollView,
                     NSSegmentedControl,
                     NSSplitView,
+                    NSStepper,
                     NSSwitchButton,
                     NSTableColumn,
                     NSTableView,
+                    NSTableViewFirstColumnOnlyAutoresizingStyle,
                     NSTableViewLastColumnOnlyAutoresizingStyle,
                     NSTextField,
                     NSTextView,
@@ -76,7 +82,7 @@ from AppKit import (NSAlert,
                     NSViewMinYMargin,
                     NSViewWidthSizable,
                     NSWindow)
-from Foundation import NSLocalizedString, NSMakeRect, NSMakeSize, NSObject
+from Foundation import NSIndexSet, NSLocalizedString, NSMakeRect, NSMakeSize, NSNumberFormatter, NSNumberFormatterNoStyle, NSObject
 
 from sipsimple.account import AccountManager, BonjourAccount
 from sipsimple.configuration.settings import SIPSimpleSettings
@@ -87,7 +93,9 @@ from twisted.internet.threads import blockingCallFromThread
 from DataManage import (CATEGORY_LABELS, REMOVE_BATCH, JournalRemoveError, JournalRemoveRefused, JournalRemoveUnsupported,
                         action_label, aggregate_days, build_rows, bulk_delete_payload, count_by, remove_from_journal, row_label,
                         select, type_label, with_related,
-                        DOWNLOADABLE, FILE_KINDS, build_file_rows, scan_transfer_storage, status_label)
+                        DOWNLOADABLE, FILE_KINDS, build_file_rows, scan_transfer_storage, status_label,
+                        COMPACTION_RULES, JournalScanError, compaction_content_types, compaction_ids, compaction_rule, contact_breakdown,
+                        purge_journal, scan_journal)
 from BlinkLogger import BlinkLogger
 from DataExportPanel import DataExportController
 from DataImportPanel import DataImportController
@@ -249,6 +257,8 @@ class DataManagerController(NSObject):
         self.refresh()
         if self.sectionControl.selectedSegment() == 1:
             self.filesPanel.refresh(keep_status=True)
+        elif self.sectionControl.selectedSegment() == 2:
+            self.compactPanel.refreshAccounts()
 
     def sectionChanged_(self, sender):
         self._showSection(sender.selectedSegment())
@@ -258,9 +268,12 @@ class DataManagerController(NSObject):
         self.sectionControl.setSelectedSegment_(index)
         self.messagesView.setHidden_(index != 0)
         self.filesPanel.view.setHidden_(index != 1)
-        self.importView.setHidden_(index != 2)
-        self.exportPanel.view.setHidden_(index != 3)
-        if index == 3 and self.exportPanel.server is None:
+        self.compactPanel.view.setHidden_(index != 2)
+        self.importView.setHidden_(index != 3)
+        self.exportPanel.view.setHidden_(index != 4)
+        if index == 2:
+            self.compactPanel.refreshAccounts()
+        if index == 4 and self.exportPanel.server is None:
             self.exportPanel.refreshAccounts()
         # the storage is listed when the section is looked at, not every time the window opens
         if index == 1 and not self.filesPanel.busy and not self.filesPanel.loading:
@@ -295,7 +308,7 @@ class DataManagerController(NSObject):
 
     @objc.python_method
     def _showImport(self):
-        self._showSection(2)
+        self._showSection(3)
         self.window.makeKeyAndOrderFront_(None)
         NSApp.activateIgnoringOtherApps_(True)
         self.refresh()
@@ -372,9 +385,9 @@ class DataManagerController(NSObject):
         window_content = self.window.contentView()
 
         # the sections, switched at the top
-        self.sectionControl = NSSegmentedControl.alloc().initWithFrame_(NSMakeRect((WIDTH - 640) / 2.0, HEIGHT + TAB_H - 34, 640, 24))
-        self.sectionControl.setSegmentCount_(4)
-        for index, (title, width) in enumerate(((_t("Local Messages"), 140), (_t("File transfers on server"), 190),
+        self.sectionControl = NSSegmentedControl.alloc().initWithFrame_(NSMakeRect((WIDTH - 760) / 2.0, HEIGHT + TAB_H - 34, 760, 24))
+        self.sectionControl.setSegmentCount_(5)
+        for index, (title, width) in enumerate(((_t("Local Messages"), 130), (_t("File transfers on server"), 180), (_t("Compact journal"), 130),
                                                 (_t("Import from device"), 150), (_t("Export to device"), 140))):
             self.sectionControl.setLabel_forSegment_(title, index)
             self.sectionControl.setWidth_forSegment_(width, index)
@@ -388,6 +401,9 @@ class DataManagerController(NSObject):
         window_content.addSubview_(self.messagesView)
         self.filesPanel = FileTransfersPanel.alloc().init().setupInView(window_content, NSMakeRect(0, 0, WIDTH, HEIGHT))
         self.filesPanel.view.setHidden_(True)
+        # Compact journal: what the journal on the server no longer needs to keep
+        self.compactPanel = CompactJournalPanel.alloc().init().setupInView(window_content, NSMakeRect(0, 0, WIDTH, HEIGHT))
+        self.compactPanel.view.setHidden_(True)
         # Import: a session with a phone that announced its export, else how to start one
         self.importView = NSView.alloc().initWithFrame_(NSMakeRect(0, 0, WIDTH, HEIGHT))
         self.importView.setAutoresizingMask_(NSViewWidthSizable | NSViewHeightSizable)
@@ -1805,6 +1821,493 @@ class FileTransfersPanel(NSObject):
 
 
 # Blink > Data Manager...
+
+class CompactJournalPanel(NSObject):
+    """The Compact journal section of the Data manager: remove from the account's journal on the server
+    the entries that stopped being worth downloading, rule by rule (DataManage.COMPACTION_RULES). The
+    journal is read once (Count), each rule tells how many of its entries are older than its age, the
+    breakdown tells them contact by contact (choosing one compacts only that contact), and Compact
+    removes those of the rules ticked. Nothing on any device is changed. As Blink Qt."""
+
+    view = None
+
+    @objc.python_method
+    def setupInView(self, parent, frame):
+        self.accounts = []          # account ids with a journal
+        self.account_id = None
+        self.entries = None         # the journal as read by the last Count, for account_id
+        self.counted = frozenset()  # the names of the rules that Count read the journal for
+        self.contact = None         # the contact chosen in the breakdown (None: all of them)
+        self.busy = False
+        self.cancelled = False
+        self.status_text = ''
+        self.progress_text = None   # what a running Count or Compact says
+        self.breakdown_rows = []    # [(contact or None, cells)], All contacts first
+        self.rule_widgets = {}      # rule name: (check box, days field, stepper, count label)
+        self.view = NSView.alloc().initWithFrame_(frame)
+        self.view.setAutoresizingMask_(NSViewWidthSizable | NSViewHeightSizable)
+        parent.addSubview_(self.view)
+        self._build()
+        self.refreshControls()
+        return self
+
+    # -- the panel ----------------------------------------------------------------------
+
+    @objc.python_method
+    def _label(self, frame, text='', size=12, bold=False, color=None, mask=0, wraps=False):
+        label = NSTextField.alloc().initWithFrame_(frame)
+        label.setBezeled_(False)
+        label.setDrawsBackground_(False)
+        label.setEditable_(False)
+        label.setSelectable_(False)
+        label.setFont_(NSFont.boldSystemFontOfSize_(size) if bold else NSFont.systemFontOfSize_(size))
+        if color is not None:
+            label.setTextColor_(color)
+        if wraps:
+            label.cell().setWraps_(True)
+            label.cell().setLineBreakMode_(NSLineBreakByWordWrapping)
+        label.setStringValue_(text)
+        label.setAutoresizingMask_(mask)
+        self.view.addSubview_(label)
+        return label
+
+    @objc.python_method
+    def _button(self, frame, title, action, mask):
+        button = NSButton.alloc().initWithFrame_(frame)
+        button.setBezelStyle_(NSRoundedBezelStyle)
+        button.setTitle_(title)
+        button.setTarget_(self)
+        button.setAction_(action)
+        button.setAutoresizingMask_(mask)
+        self.view.addSubview_(button)
+        return button
+
+    @objc.python_method
+    def _build(self):
+        secondary = NSColor.secondaryLabelColor()
+        top = NSViewWidthSizable | NSViewMinYMargin
+        height = self.view.frame().size.height
+        x = PAD + LABEL_W
+        field_w = WIDTH - 2 * PAD - LABEL_W
+
+        y = height - PAD - ROW_H
+        self._label(NSMakeRect(PAD, y + 4, LABEL_W - 6, 17), _t("Account"), color=secondary, mask=NSViewMinYMargin)
+        self.accountPopup = NSPopUpButton.alloc().initWithFrame_pullsDown_(NSMakeRect(x, y, field_w, ROW_H), False)
+        self.accountPopup.setTarget_(self)
+        self.accountPopup.setAction_('accountChanged:')
+        self.accountPopup.setAutoresizingMask_(top)
+        self.view.addSubview_(self.accountPopup)
+
+        y -= 8 + 62
+        self._label(NSMakeRect(PAD, y, WIDTH - 2 * PAD, 62),
+                    _t("The journal on the server keeps every entry of the account: it is what a new device downloads to start, "
+                       "and what a device that was offline downloads to catch up. Compacting removes from it the entries that "
+                       "stopped being worth that download. Nothing is changed on any device: the devices that have them keep "
+                       "what they made of them. Count reads the journal first; nothing is removed before Compact."),
+                    size=11, mask=top, wraps=True)
+
+        formatter = NSNumberFormatter.alloc().init()
+        formatter.setNumberStyle_(NSNumberFormatterNoStyle)
+        formatter.setMinimum_(0)
+        formatter.setMaximum_(3650)
+        formatter.setAllowsFloats_(False)
+        for rule in COMPACTION_RULES:
+            y -= 8 + ROW_H
+            check = NSButton.alloc().initWithFrame_(NSMakeRect(PAD, y + 2, 230, 20))
+            check.setButtonType_(NSSwitchButton)
+            check.setTitle_(_t(rule.title))
+            check.setState_(NSOnState)
+            check.setTarget_(self)
+            check.setAction_('ruleChanged:')
+            check.setAutoresizingMask_(NSViewMinYMargin)
+            self.view.addSubview_(check)
+            self._label(NSMakeRect(PAD + 236, y + 4, 70, 17), _t("older than"), size=11, color=secondary, mask=NSViewMinYMargin).setAlignment_(NSRightTextAlignment)
+            days = NSTextField.alloc().initWithFrame_(NSMakeRect(PAD + 310, y + 2, 50, 22))
+            days.setFormatter_(formatter)
+            days.setIntegerValue_(rule.age.days)
+            days.setAlignment_(NSRightTextAlignment)
+            days.setDelegate_(self)
+            days.setAutoresizingMask_(NSViewMinYMargin)
+            days.setToolTip_(_t("0: of any age"))
+            self.view.addSubview_(days)
+            stepper = NSStepper.alloc().initWithFrame_(NSMakeRect(PAD + 362, y + 1, 19, 24))
+            stepper.setMinValue_(0)
+            stepper.setMaxValue_(3650)
+            stepper.setIncrement_(1)
+            stepper.setValueWraps_(False)
+            stepper.setIntegerValue_(rule.age.days)
+            stepper.setTarget_(self)
+            stepper.setAction_('stepperChanged:')
+            stepper.setAutoresizingMask_(NSViewMinYMargin)
+            self.view.addSubview_(stepper)
+            self._label(NSMakeRect(PAD + 386, y + 4, 40, 17), _t("days"), size=11, color=secondary, mask=NSViewMinYMargin)
+            count = self._label(NSMakeRect(PAD + 430, y + 4, WIDTH - 2 * PAD - 430, 17), '', size=11, bold=True, mask=top)
+            y -= 44
+            self._label(NSMakeRect(PAD + 18, y, WIDTH - 2 * PAD - 18, 44), _t(rule.description), size=11, color=secondary, mask=top, wraps=True)
+            self.rule_widgets[rule.name] = (check, days, stepper, count)
+        table_top = y - 10
+
+        bottom = NSViewWidthSizable | NSViewMaxYMargin
+        self.countButton = self._button(NSMakeRect(PAD - 6, 12, 100, BUTTON_H), _t("Count"), 'countClicked:', NSViewMaxXMargin | NSViewMaxYMargin)
+        self.countButton.setToolTip_(_t("Read the journal on the server and count what each rule would remove"))
+        self.compactButton = self._button(NSMakeRect(WIDTH - PAD + 6 - 160, 12, 160, BUTTON_H), _t("Compact"), 'compactClicked:', NSViewMinXMargin | NSViewMaxYMargin)
+        self.stopButton = self._button(NSMakeRect(WIDTH - PAD + 6 - 160 - BUTTON_W, 12, BUTTON_W, BUTTON_H), _t("Stop"), 'stopClicked:', NSViewMinXMargin | NSViewMaxYMargin)
+
+        self.statusLabel = self._label(NSMakeRect(PAD, 48, WIDTH - 2 * PAD, 30), '', size=11, mask=bottom)
+        self.statusLabel.setAlignment_(NSCenterTextAlignment)
+
+        self.progressBar = NSProgressIndicator.alloc().initWithFrame_(NSMakeRect(PAD, 82, WIDTH - 2 * PAD, 16))
+        self.progressBar.setIndeterminate_(False)
+        self.progressBar.setHidden_(True)
+        self.progressBar.setAutoresizingMask_(bottom)
+        self.view.addSubview_(self.progressBar)
+        table_bottom = 106
+
+        # what the rules ticked remove, contact by contact: choosing one compacts only that contact
+        scroll = NSScrollView.alloc().initWithFrame_(NSMakeRect(PAD, table_bottom, WIDTH - 2 * PAD, table_top - table_bottom))
+        scroll.setHasVerticalScroller_(True)
+        scroll.setAutohidesScrollers_(True)
+        scroll.setBorderType_(NSBezelBorder)
+        scroll.setAutoresizingMask_(NSViewWidthSizable | NSViewHeightSizable)
+        self.table = NSTableView.alloc().initWithFrame_(scroll.contentView().bounds())
+        columns = [('contact', _t("Contact"), WIDTH - 2 * PAD - 22 - 150 * len(COMPACTION_RULES) - 80)]
+        columns += [(rule.name, _t(rule.title), 150) for rule in COMPACTION_RULES] + [('total', _t("Total"), 80)]
+        for identifier, title, column_width in columns:
+            column = NSTableColumn.alloc().initWithIdentifier_(identifier)
+            column.headerCell().setStringValue_(title)
+            column.setWidth_(column_width)
+            column.setEditable_(False)
+            column.dataCell().setFont_(NSFont.systemFontOfSize_(11))
+            column.dataCell().setLineBreakMode_(NSLineBreakByTruncatingTail)
+            if identifier != 'contact':
+                column.dataCell().setAlignment_(NSRightTextAlignment)
+                column.headerCell().setAlignment_(NSRightTextAlignment)
+            self.table.addTableColumn_(column)
+        self.table.setUsesAlternatingRowBackgroundColors_(True)
+        self.table.setColumnAutoresizingStyle_(NSTableViewFirstColumnOnlyAutoresizingStyle)
+        self.table.setRowHeight_(16)
+        self.table.setAllowsMultipleSelection_(False)
+        self.table.setAllowsEmptySelection_(True)
+        self.table.setToolTip_(_t("Choose a contact to compact only its entries"))
+        self.table.setDataSource_(self)
+        self.table.setDelegate_(self)
+        scroll.setDocumentView_(self.table)
+        self.view.addSubview_(scroll)
+
+    # -- state ------------------------------------------------------------------------
+
+    @objc.python_method
+    def _age(self, rule):
+        return timedelta(days=max(0, min(3650, int(self.rule_widgets[rule.name][1].integerValue()))))
+
+    @objc.python_method
+    def _ticked(self):
+        return [rule for rule in COMPACTION_RULES if self.rule_widgets[rule.name][0].state() == NSOnState]
+
+    @objc.python_method
+    def _matches(self):
+        """{rule name: [ids]} of the rules ticked that the last Count read the journal for: a rule
+        ticked since has no count yet, and Compact leaves it out until Count is pressed again."""
+        if self.entries is None:
+            return {}
+        return {rule.name: compaction_ids(self.entries, rule, self._age(rule), contact=self.contact) for rule in self._ticked() if rule.name in self.counted}
+
+    @objc.python_method
+    def _fillBreakdown(self):
+        """The contacts with something to remove, the most first, under All contacts; the chosen one stays chosen."""
+        rules = [(rule, self._age(rule)) for rule in self._ticked() if rule.name in self.counted] if self.entries is not None else []
+        found = contact_breakdown(self.entries, rules) if rules else []
+        shown = {rule.name for rule, age in rules}
+        self.breakdown_rows = []
+        if found:
+            totals = {name: sum(per_rule.get(name, 0) for contact, per_rule, total in found) for name in shown}
+            cells = {'contact': _t("All contacts (%d)") % len(found), 'total': str(sum(total for contact, per_rule, total in found))}
+            cells.update((rule.name, str(totals[rule.name]) if rule.name in shown else '') for rule in COMPACTION_RULES)
+            self.breakdown_rows.append((None, cells))
+            for contact, per_rule, total in found:
+                cells = {'contact': mangled_uri(contact) if contact else _t("(no contact)"), 'total': str(total)}
+                cells.update((rule.name, str(per_rule.get(rule.name, 0)) if rule.name in shown else '') for rule in COMPACTION_RULES)
+                self.breakdown_rows.append((contact, cells))
+        contacts = [contact for contact, cells in self.breakdown_rows]
+        if self.contact not in contacts[1:]:
+            self.contact = None
+        self.table.reloadData()
+        if self.breakdown_rows:
+            index = contacts.index(self.contact) if self.contact is not None else 0
+            self.table.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(index), False)
+        else:
+            self.table.deselectAll_(None)
+
+    @objc.python_method
+    def refreshAccounts(self):
+        if self.busy:
+            return
+        self.accounts = sorted(str(account.id).lower() for account in AccountManager().iter_accounts()
+                               if account is not BonjourAccount() and _journal_of(str(account.id).lower()) is not None)
+        if self.account_id not in self.accounts:
+            self.account_id = self.accounts[0] if self.accounts else None
+            self.entries = None
+            self.contact = None
+            self.status_text = ''
+        menu = self.accountPopup.menu()
+        menu.removeAllItems()
+        for account_id in self.accounts:
+            menu.addItem_(NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(mangled_account_label(account_id), None, ""))
+        if self.account_id is not None:
+            self.accountPopup.selectItemAtIndex_(self.accounts.index(self.account_id))
+        self.refreshControls()
+
+    @objc.python_method
+    def refreshControls(self):
+        journal = self.account_id is not None
+        self.accountPopup.setEnabled_(journal and not self.busy and len(self.accounts) > 1)
+        self.countButton.setEnabled_(journal and not self.busy and bool(self._ticked()))
+        self.stopButton.setHidden_(not self.busy)
+        self.stopButton.setEnabled_(self.busy and not self.cancelled)
+        self.table.setEnabled_(not self.busy)
+        self._fillBreakdown()
+        self._refreshCounts()
+        if not journal:
+            text = _t("No account has a journal: it comes with a SylkServer account that synchronized once.")
+        elif self.busy and self.progress_text:
+            text = self.progress_text
+        elif self.status_text:
+            text = self.status_text
+        elif self.entries is None:
+            text = _t("Press Count to read the journal of %s") % mangled_account_label(self.account_id)
+        else:
+            text = _t("The journal holds %d entries of the types of the rules counted") % len(self.entries)
+        self.statusLabel.setStringValue_(text)
+
+    @objc.python_method
+    def _refreshCounts(self):
+        """Each rule's count and the Compact button, for the contact chosen (all of them when none is)."""
+        journal = self.account_id is not None
+        matches = self._matches()
+        total = len({message_id for ids in matches.values() for message_id in ids})
+        for rule in COMPACTION_RULES:
+            check, days, stepper, count = self.rule_widgets[rule.name]
+            check.setEnabled_(not self.busy)
+            days.setEnabled_(not self.busy)
+            stepper.setEnabled_(not self.busy)
+            if check.state() != NSOnState:
+                count.setStringValue_('')
+            elif self.entries is None or rule.name not in self.counted:
+                count.setStringValue_(_t("press Count") if self.entries is not None else '')
+            else:
+                count.setStringValue_(_t("%d entries") % len(matches.get(rule.name, ())))
+        self.compactButton.setEnabled_(journal and not self.busy and total > 0)
+        self.compactButton.setTitle_(_t("Compact (%d)") % total if total else _t("Compact"))
+
+    # -- actions ------------------------------------------------------------------------
+
+    def accountChanged_(self, sender):
+        index = sender.indexOfSelectedItem()
+        if 0 <= index < len(self.accounts) and self.accounts[index] != self.account_id:
+            self.account_id = self.accounts[index]
+            self.contact = None
+            self.entries = None
+            self.counted = frozenset()
+            self.status_text = ''
+            self.refreshControls()
+
+    def ruleChanged_(self, sender):
+        self.refreshControls()
+
+    def stepperChanged_(self, sender):
+        for check, days, stepper, count in self.rule_widgets.values():
+            if stepper is sender:
+                days.setIntegerValue_(stepper.integerValue())
+        self.refreshControls()
+
+    def controlTextDidChange_(self, notification):
+        for check, days, stepper, count in self.rule_widgets.values():
+            if days is notification.object():
+                stepper.setIntegerValue_(max(0, min(3650, int(days.integerValue()))))
+        self.refreshControls()
+
+    def stopClicked_(self, sender):
+        self.cancelled = True
+        self.refreshControls()
+
+    # the breakdown
+
+    def numberOfRowsInTableView_(self, table):
+        return len(self.breakdown_rows)
+
+    def tableView_objectValueForTableColumn_row_(self, table, column, row):
+        if 0 <= row < len(self.breakdown_rows):
+            return self.breakdown_rows[row][1].get(str(column.identifier()), '')
+        return ''
+
+    def tableView_willDisplayCell_forTableColumn_row_(self, table, cell, column, row):
+        cell.setFont_(NSFont.boldSystemFontOfSize_(11) if row == 0 else NSFont.systemFontOfSize_(11))
+
+    def tableViewSelectionDidChange_(self, notification):
+        index = self.table.selectedRow()
+        contact = self.breakdown_rows[index][0] if 0 <= index < len(self.breakdown_rows) else None
+        if contact != self.contact:
+            self.contact = contact
+            self._refreshCounts()
+
+    # -- reading the journal ------------------------------------------------------------
+
+    def countClicked_(self, sender):
+        journal = _journal_of(self.account_id) if self.account_id else None
+        if journal is None or self.busy:
+            return
+        rules = self._ticked()
+        self.busy = True
+        self.cancelled = False
+        self.entries = None
+        self.counted = frozenset()
+        self.status_text = ''
+        self.progress_text = _t("Reading the journal on the server...")
+        self.progressBar.setIndeterminate_(True)
+        self.progressBar.setHidden_(False)
+        self.progressBar.startAnimation_(None)
+        self.refreshControls()
+        self._scan(self.account_id, journal, rules)
+
+    @objc.python_method
+    @run_in_thread('data-manage')
+    def _scan(self, account_id, journal, rules):
+        verify = SIPSimpleSettings().tls.verify_server
+        error = None
+        entries = None
+        started = time.monotonic()
+        # only the content types of the rules ticked: the server sends nothing else (an older one sends all)
+        content_types = compaction_content_types(rules)
+        stats = {}
+        _log('Reading the journal of %s for compacting (%s), only the content types %s'
+             % (account_id, ', '.join(rule.name for rule in rules), ', '.join(sorted(content_types))))
+        try:
+            entries = scan_journal(journal[0], journal[1], verify=verify, stop=lambda: self.cancelled, content_types=content_types, stats=stats,
+                                   progress=lambda pages, count: self._scanProgress(pages, count))
+        except JournalRemoveRefused:
+            error = _t("The server refused the API token of the account; try again once the account has a new token.")
+        except JournalScanError as e:
+            error = _t("Reading the journal failed: %s") % e
+        if stats.get('first_url'):
+            _log('Journal request of %s: GET %s' % (account_id, stats['first_url']))
+        if entries is not None:
+            filtered = ('filtered by the server' if stats.get('server_filtered') else
+                        'the server does not filter by content type: %d entries received, %d kept' % (stats.get('received', 0), len(entries)))
+            _log('Read %d journal entries of %s in %d pages, %.1fs (%s)%s' % (len(entries), account_id, stats.get('pages', 0), time.monotonic() - started,
+                                                                         filtered, ' (stopped)' if self.cancelled else ''))
+        self._scanned(account_id, entries, error, frozenset(rule.name for rule in rules))
+
+    @objc.python_method
+    @run_in_gui_thread
+    def _scanProgress(self, pages, count):
+        if self.busy:
+            self.progress_text = _t("Reading the journal on the server: %d pages, %d entries") % (pages, count)
+            self.statusLabel.setStringValue_(self.progress_text)
+
+    @objc.python_method
+    @run_in_gui_thread
+    def _scanned(self, account_id, entries, error, counted):
+        self.busy = False
+        self.progress_text = None
+        self.progressBar.stopAnimation_(None)
+        self.progressBar.setHidden_(True)
+        if account_id == self.account_id:
+            self.entries = entries if not self.cancelled else None
+            self.counted = counted if self.entries is not None else frozenset()
+        self.status_text = error or (_t("Stopped") if self.cancelled else '')
+        self.cancelled = False
+        self.refreshControls()
+
+    # -- compacting ---------------------------------------------------------------------
+
+    def compactClicked_(self, sender):
+        journal = _journal_of(self.account_id) if self.account_id else None
+        matches = self._matches()
+        ids = list(dict.fromkeys(message_id for found in matches.values() for message_id in found))
+        if journal is None or self.busy or not ids:
+            return
+        lines = []
+        for rule in COMPACTION_RULES:
+            if matches.get(rule.name):
+                age = self._age(rule)
+                when = _t("older than %d days") % age.days if age else _t("of any age")
+                lines.append('%s %s: %d' % (_t(rule.title), when, len(matches[rule.name])))
+        who = mangled_uri(self.contact) if self.contact else _t("all contacts")
+        alert = NSAlert.alloc().init()
+        alert.setMessageText_(_t("Compact Journal"))
+        alert.setInformativeText_(_t("Remove %d entries from the journal of %s on the server?") % (len(ids), mangled_account_label(self.account_id))
+                                  + '\n\n' + _t("Contact: %s") % who + '\n' + '\n'.join(lines)
+                                  + '\n\n' + _t("This cannot be undone. Nothing is changed on any device."))
+        alert.addButtonWithTitle_(_t("Compact"))
+        alert.addButtonWithTitle_(_t("Cancel"))
+        if alert.runModal() != NSAlertFirstButtonReturn:
+            return
+        self.busy = True
+        self.cancelled = False
+        self.status_text = ''
+        self.progress_text = _t("Removing %d entries from the journal on the server...") % len(ids)
+        self.progressBar.setIndeterminate_(False)
+        self.progressBar.setMinValue_(0)
+        self.progressBar.setMaxValue_(len(ids))
+        self.progressBar.setDoubleValue_(0)
+        self.progressBar.setHidden_(False)
+        self.refreshControls()
+        _log('Compacting the journal of %s (%s): ' % (self.account_id, self.contact or 'all contacts')
+             + ', '.join('%s %d older than %d days' % (name, len(found), self._age(compaction_rule(name)).days) for name, found in matches.items() if found))
+        self._compact(self.account_id, journal, ids)
+
+    @objc.python_method
+    @run_in_thread('data-manage')
+    def _compact(self, account_id, journal, ids):
+        verify = SIPSimpleSettings().tls.verify_server
+        removed = requested = 0
+        error = None
+        started = time.monotonic()
+        progress = {'removed': 0, 'requested': 0}
+
+        def report(done, removed, total):
+            progress.update(removed=removed, requested=done)
+            self._compactProgress(done, removed, total)
+        try:
+            removed, requested = purge_journal(journal[0], journal[1], ids, verify=verify, stop=lambda: self.cancelled, progress=report)
+        except JournalRemoveUnsupported:
+            error = _t("The server cannot remove journal entries in bulk (SylkServer needs updating).")
+        except JournalRemoveRefused:
+            error = _t("The server refused the API token of the account; try again once the account has a new token.")
+        except JournalRemoveError as e:
+            error = _t("Removing from the server failed: %s") % e
+        if error is not None:
+            removed, requested = progress['removed'], progress['requested']
+        _log('Compacted the journal of %s: %d of %d entries removed in %.1fs%s' % (account_id, removed, len(ids), time.monotonic() - started,
+             ' (%s)' % error if error else ' (stopped)' if self.cancelled and requested < len(ids) else ''))
+        self._compacted(account_id, removed, requested, len(ids), error)
+
+    @objc.python_method
+    @run_in_gui_thread
+    def _compactProgress(self, done, removed, total):
+        if self.busy:
+            self.progressBar.setDoubleValue_(done)
+            self.progress_text = _t("Removing from the journal on the server: %d of %d done, %d removed") % (done, total, removed)
+            self.statusLabel.setStringValue_(self.progress_text)
+
+    @objc.python_method
+    @run_in_gui_thread
+    def _compacted(self, account_id, removed, requested, total, error):
+        self.busy = False
+        self.progress_text = None
+        self.progressBar.setHidden_(True)
+        result = _t("Removed %d of %d entries from the journal") % (removed, total)
+        if requested > removed:
+            result += _t(" (%d were no longer in it)") % (requested - removed)
+        if self.cancelled and requested < total:
+            result += _t(", stopped")
+        self.cancelled = False
+        self.status_text = result + ('. %s' % error if error else '') + '. ' + _t("Press Count to read it again.")
+        if account_id == self.account_id:
+            self.entries = None     # what was read no longer is the journal
+            self.counted = frozenset()
+        self.refreshControls()
+
 
 class _MenuTarget(NSObject):
     def showDataManager_(self, sender):
