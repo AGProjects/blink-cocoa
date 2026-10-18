@@ -50,7 +50,7 @@ from application.notification import IObserver, NotificationCenter, Notification
 from application.python import Null
 from collections import deque
 from zope.interface import implementer
-from util import sip_prefix_pattern, format_size
+from util import sip_prefix_pattern, format_size, wait_for_thread
 
 from sipsimple.account import BonjourAccount, AccountManager
 from sipsimple.application import SIPApplication
@@ -1557,26 +1557,28 @@ class AudioController(MediaStream):
         from AudioRecorder import (wait_for_wave, wave_duration, finalise_wave,
                                    to_recording_format)
         from AudioPlayback import derive_peaks
+        # all of it blocks (polling the file, rewriting its header, afconvert): in a thread of its
+        # own, not in this green thread, which runs in the reactor thread (SIP, DNS lookups)
         try:
-            wait_for_wave(filename)
+            wait_for_thread(wait_for_wave, filename)
             # Whatever the wait concluded: finalise_wave hands back the
             # path unchanged when the header was already right, so this
             # costs a header read on the builds where the recorder does
             # come back to write it.
-            recording = finalise_wave(filename)
+            recording = wait_for_thread(finalise_wave, filename)
             if recording is None:
                 self.sessionController.log_error(
                     'Not sharing %s: it is not a recording this can read' % filename)
                 if fallback is not None:
                     self._writeRecordingHistoryEntry(fallback)
                 return
-            duration = wave_duration(recording)
+            duration = wait_for_thread(wave_duration, recording)
             # Measured from the PCM, before the conversion: it is the same
             # sound either way, and reading the file we already have beats
             # decoding the AAC back again. Blocking, which is why this
             # runs here rather than anywhere near the GUI thread.
-            peaks = derive_peaks(recording)
-            converted = to_recording_format(recording)
+            peaks = wait_for_thread(derive_peaks, recording)
+            converted = wait_for_thread(to_recording_format, recording)
             # Only what WE made is ours to delete afterwards: the repair
             # usually happens in the user's own file, which stays.
             repaired = recording if recording != filename else None

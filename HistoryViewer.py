@@ -52,7 +52,7 @@ from BlinkLogger import BlinkLogger
 from MessageHost import pgp_plaintext
 from ContactListModel import BlinkHistoryViewerContact, BlinkPresenceContact
 from HistoryManager import ChatHistory, SessionHistory
-from util import is_anonymous, log_gui_exception, sipuri_components_from_string, run_in_gui_thread
+from util import is_anonymous, log_gui_exception, sipuri_components_from_string, run_in_gui_thread, wait_for_thread
 
 
 SQL_LIMIT=1000
@@ -515,7 +515,8 @@ class HistoryViewer(NSWindowController):
             results = self.chat_history.get_messages(count=count, local_uri=local_uri, remote_uri=remote_uri, media_type=media_type, date=date, search_text=search_text, after_date=after_date, before_date=before_date)
             # Pre-decrypt PGP messages off the GUI thread so pagination and the
             # initial render don't block while pgpy decrypts every message.
-            self._decrypted_bodies = self._decrypt_history_messages(results)
+            # in a thread: this green thread runs in the reactor thread (SIP, DNS lookups)
+            self._decrypted_bodies = wait_for_thread(self._decrypt_history_messages, results)
             self.renderMessages(results)
             self.updateBusyIndicator(False)
 

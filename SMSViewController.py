@@ -89,7 +89,7 @@ from SylkLocation import (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE,
                           row_metadata, session_bubble_ids, storable_envelope,
                           system_note)
 from util import active_account_uris, format_identity_to_string, html2txt, otr_enabled_for_account, pgp_enabled_for_account, sipuri_components_from_string, run_in_gui_thread
-from util import pstn_uri_spellings_for_accounts
+from util import pstn_uri_spellings_for_accounts, wait_for_thread
 from ChatOTR import ChatOtrSmp
 import SMSWindowManager
 
@@ -3351,7 +3351,8 @@ class SMSViewController(NSObject):
             if self._canEncryptFile(meta):
                 cache.note_upload_phase(meta, 'encrypt')
                 self._noteTransferProgress(meta)
-                encrypted = self._encryptFileForUpload(path, meta)
+                # in a thread: this green thread runs in the reactor thread (SIP, DNS lookups)
+                encrypted = wait_for_thread(self._encryptFileForUpload, path, meta)
                 if encrypted is not None:
                     upload_path = encrypted
                     # Both the name and the URL gain the suffix: that is

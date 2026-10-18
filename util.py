@@ -1053,6 +1053,26 @@ def call_later(delay, func, *args, **kw):
     call_in_gui_thread(wrap)
 
 
+def wait_for_thread(func, *args, **kw):
+    """Run blocking work in a thread of twisted's pool, the green thread calling this waiting for it.
+
+    A green thread (run_in_green_thread) runs in the twisted reactor thread: whatever blocks in
+    it -- decoding audio or a movie, PGP over a whole file, sleeping -- stops SIP, DNS lookups,
+    timers and every other green thread until it is over, so DNS lookups time out and
+    registrations wait. Here only the waiting green thread waits.
+    """
+    from eventlib.twistedutil import block_on
+    from twisted.internet.threads import deferToThread
+
+    def call():
+        pool = NSAutoreleasePool.alloc().init()     # Cocoa objects made in the pool's thread
+        try:
+            return func(*args, **kw)
+        finally:
+            del pool
+    return block_on(deferToThread(call))
+
+
 @decorator
 def allocate_autorelease_pool(func):
     @preserve_signature(func)

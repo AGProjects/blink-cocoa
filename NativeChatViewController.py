@@ -268,7 +268,7 @@ from FileTransferCache import (FileTransferCache, display_name, tile_pixels,
                                MAX_AUTO_IMAGE_BYTES, MAX_AUTO_VIDEO_BYTES,
                                MAX_AUTO_PDF_BYTES)
 from sipsimple.threading.green import run_in_green_thread
-from util import run_in_gui_thread, window_corner_inset
+from util import run_in_gui_thread, wait_for_thread, window_corner_inset
 
 
 class NativeChatViewController(ChatViewController):
@@ -2741,8 +2741,9 @@ class NativeChatViewController(ChatViewController):
         # generator is working, and a stamp taken afterwards would pin the
         # truncated file's verdict onto the complete one.
         stamp = self._fileStamp(path)
-        image = poster_image(path)
-        duration = movie_duration(path)
+        # decoding blocks: in a thread, not in this green thread (the reactor thread: SIP, DNS lookups)
+        image = wait_for_thread(poster_image, path)
+        duration = wait_for_thread(movie_duration, path)
         if image is None and not duration:
             # Neither a frame nor a length: this is what a file
             # AVFoundation cannot open looks like from here, whatever its
@@ -3005,8 +3006,8 @@ class NativeChatViewController(ChatViewController):
     @objc.python_method
     @run_in_green_thread
     def measureWaveform(self, path):
-        """Measure a waveform off the GUI thread, then show it."""
-        peaks = derive_peaks(path)
+        """Measure a waveform off the GUI thread (and off the reactor's), then show it."""
+        peaks = wait_for_thread(derive_peaks, path)
         if peaks:
             self._applyMeasuredWaveform(path, peaks)
 
