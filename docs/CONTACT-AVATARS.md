@@ -119,14 +119,14 @@ After every successful PUT or DELETE, SylkServer sends a MESSAGE from `sip:<acco
 Sylk Mobile and sylk-desktop never talk to `/storage`. The gateway carries the pictures on the addressbook contacts it already sends them (`contact_avatars.py`). The avatar is never part of the XCAP document: the gateway adds it to what it sends and takes it out of what it writes.
 
 **Fetch.** `account-fetch-addressbook` may carry `avatars: [{id, etag}]`, the pictures the client has cached.
-- Present, even empty: every contact with a stored picture comes back with `avatar` = `{etag, content_type, size, modified, device_id}`, plus `data` (base64) only where the client's etag differs. Contacts without a picture have no `avatar`.
+- Present, even empty: every contact with a stored picture comes back with `avatar` = `{etag, contentType, size, modified, deviceId}`, plus `data` (base64) only where the client's etag differs. Contacts without a picture have no `avatar`.
 - Absent: no avatars, as before. Older clients are unaffected.
 - The gateway remembers, per connection, which etags the client holds. Refreshes it pushes on its own (xcap-diff) carry avatars the same way.
 - **Garbage collection** runs here: an object with no contact, older than 7 days, is deleted. Not on an empty document, which may be a failed fetch.
 
 **Update.** `account-update-addressbook` for a contact may carry:
-- `avatar: {data, content_type, device_id}` to store a picture;
-- `avatar: {remove: true, device_id}` to delete it.
+- `avatar: {data, contentType, deviceId}` to store a picture;
+- `avatar: {remove: true, deviceId}` to delete it.
 
 Any other `avatar` (the metadata a client echoes back) is ignored. The picture is stored after the XCAP write succeeded. The `addressbook-updated` echo, sent to every device of the account, carries:
 - the stored avatar **with its data**, so the other devices update without a fetch;

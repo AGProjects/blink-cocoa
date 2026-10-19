@@ -2691,6 +2691,23 @@ class ChatHistory(object, metaclass=Singleton):
         """Total stored messages for a conversation, ignoring paging."""
         return block_on(self._count_messages(local_uri, remote_uri, media_type))
 
+    @run_in_db_thread
+    def count_conversation_messages(self, remote_uris):
+        """A Deferred: how many messages (not calls) are stored with these
+        addresses, the hidden ones included -- the conversations of a contact
+        in Deleted are hidden, and Delete Permanently deletes them."""
+        uris = [str(uri) for uri in remote_uris or () if uri]
+        if not uris:
+            return 0
+        query = ("select count(*) from %s where content_type != %s"
+                 % (ChatMessage.sqlmeta.table, ChatMessage.sqlrepr(CALL_CONTENT_TYPE)))
+        query += self._uri_in_sql('remote_uri', uris)
+        try:
+            return int(self.db.queryAll(query)[0][0] or 0)
+        except Exception as e:
+            BlinkLogger().log_error("Error counting the messages of %s: %s" % (', '.join(uris), e))
+            return 0
+
     @staticmethod
     def _media_type_sql(media_type):
         """The WHERE clause for the last-message queries.

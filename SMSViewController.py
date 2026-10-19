@@ -1552,6 +1552,9 @@ class SMSViewController(NSObject):
         try:
             require_delivered_notification = imdn_timestamp and cpim_imdn_events and 'positive-delivery' in cpim_imdn_events and direction == 'incoming' and content_type != IMDNDocument.content_type
             require_displayed_notification = imdn_timestamp and cpim_imdn_events and 'display' in cpim_imdn_events and direction == 'incoming' and content_type != IMDNDocument.content_type
+            if (require_delivered_notification or require_displayed_notification) and not self._receiptAllowed(timestamp):
+                # older than this device's first sync minus its recent days: an archive, never confirmed from here
+                require_delivered_notification = require_displayed_notification = False
             
             is_html = content_type == 'text/html'
             encrypted = False
@@ -1721,7 +1724,8 @@ class SMSViewController(NSObject):
                     nc_title, nc_icon = SMSWindowManager().notificationIdentity(
                         nc_uri, self.peer_display_name())
                     NSApp.delegate().notify_new_message(nc_title, nc_body, None,
-                                                        uri=nc_uri, icon=nc_icon)
+                                                        uri=nc_uri, icon=nc_icon,
+                                                        timestamp=timestamp)
 
             if encrypted:
                 encryption = 'verified' if self.encryption.verified or self.pgp_encrypted else 'unverified'
@@ -3561,6 +3565,18 @@ class SMSViewController(NSObject):
                 self.log_debug('Cannot record the conversation time for %s: %s' % (remote_uri, e))
 
     @objc.python_method
+    def _receiptAllowed(self, timestamp):
+        """Whether a receipt may be sent for a message sent at timestamp: not
+        for one older than this device's first sync of the account minus its
+        recent days (SMSWindowManager.receiptAllowed)."""
+        try:
+            from SMSWindowManager import SMSWindowManager
+            return SMSWindowManager().receiptAllowed(self.account, timestamp)
+        except Exception as e:
+            self.log_debug('Cannot tell whether a receipt may be sent: %s' % e)
+            return True
+
+    @objc.python_method
     def sendIMDNNotification(self, message_id, event):
         if not self.account.sms.enable_imdn:
             return
@@ -4062,6 +4078,8 @@ class SMSViewController(NSObject):
         # addressed to the peer was also delivered to the peer's devices.
         manager = SMSWindowManager.SMSWindowManager()
         manager.noteOwnConversationRead(self.remote_uri)
+        # read here while a first sync is running: what it inserts later is read too
+        manager.noteSnapshotRead(self.account, self.remote_uri)
         manager.sendMessage(self.account, payload, 'application/sylk-api-conversation-read')
 
     @objc.python_method
@@ -5541,7 +5559,8 @@ class SMSViewController(NSObject):
                     self.note_media_label(caption)
                     continue
 
-                if message.direction == 'incoming' and message.status != MSG_STATE_DISPLAYED and message.media_type == '':
+                if (message.direction == 'incoming' and message.status != MSG_STATE_DISPLAYED and message.media_type == ''
+                        and self._receiptAllowed(message.time)):
                     self.not_read_queue.put(message.msgid)
 
                 if message.sip_callid and message.media_type == 'sms':

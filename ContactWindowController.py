@@ -2065,6 +2065,39 @@ class ContactWindowController(NSWindowController):
         self.searchContacts()
 
     @objc.python_method
+    def logContactContextMenu(self, menu):
+        """One Activity log line per right click on a contact: who, and the
+        menu items offered, the disabled ones in brackets. A debugging aid."""
+        try:
+            names = []
+            rows = []
+            indexes = self.contactOutline.selectedRowIndexes()
+            index = indexes.firstIndex() if indexes is not None else NSNotFound
+            while index != NSNotFound and len(rows) < 20:
+                rows.append(index)
+                index = indexes.indexGreaterThanIndex_(index)
+            for row in rows:
+                item = self.contactOutline.itemAtRow_(row)
+                name = getattr(item, 'name', None) or str(getattr(item, 'uri', '') or '')
+                if name:
+                    names.append(str(name))
+            autoenables = menu.autoenablesItems()
+            offered = []
+            for item in menu.itemArray():
+                if item.isSeparatorItem():
+                    continue
+                title = str(item.title() or '').strip()
+                if not title:
+                    continue
+                enabled = item.isEnabled()
+                if enabled and autoenables and item.action() is None and not item.hasSubmenu():
+                    enabled = False     # AppKit greys an item with no action
+                offered.append(title if enabled else '[%s]' % title)
+            BlinkLogger().log_info('Contact menu for %s: %s' % (', '.join(names) or '-', ', '.join(offered) or '(empty)'))
+        except Exception as e:
+            BlinkLogger().log_debug('Cannot describe the contact menu: %s' % e)
+
+    @objc.python_method
     def updateContactContextMenu(self):
         from ContactMangler import mangled_name, mangled_uri
         settings = SIPSimpleSettings()
@@ -2180,6 +2213,14 @@ class ContactWindowController(NSWindowController):
                     NSLocalizedString("Delete Permanently...", "Menu item"), "expungeDeletedContacts:", "")
                 mitem.setEnabled_(getattr(item, "deletable", False))
                 mitem.setRepresentedObject_(item)
+                # Still editable (its groups and presence subscription stay as
+                # they are until it is restored)
+                if isinstance(item, BlinkPresenceContact):
+                    self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+                    mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(
+                        NSLocalizedString("Edit", "Menu item"), "editContact:", "")
+                    mitem.setEnabled_(bool(getattr(item, "editable", False)))
+                    mitem.setRepresentedObject_(item)
                 return
             if self.blockedContactsForItems([item]):
                 # Blocked, wherever it shows: unblocked or deleted, nothing
@@ -7216,6 +7257,7 @@ class ContactWindowController(NSWindowController):
             self.updateRecordingsMenu()
         elif menu == self.contactContextMenu:
             self.updateContactContextMenu()
+            self.logContactContextMenu(menu)
         elif menu == self.presenceWatchersMenu:
             self.updatePresenceWatchersMenu(menu)
         elif menu == self.presenceMenu:

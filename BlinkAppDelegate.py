@@ -63,7 +63,7 @@ import SMSWindowManager
 import ChatWindowController
 
 from resources import ApplicationData
-from util import call_later, external_url_pattern, run_in_gui_thread
+from util import call_later, external_url_pattern, run_in_gui_thread, message_from_the_past
 
 
 def fourcharToInt(fourCharCode):
@@ -130,6 +130,7 @@ def _register_notification_metadata():
 
 
 _register_notification_metadata()
+
 
 
 @implementer(IObserver)
@@ -332,8 +333,13 @@ class BlinkAppDelegate(NSObject):
             return False
 
     @objc.python_method
-    def notify_new_message(self, title, body, subtitle=None, uri=None, icon=None):
+    def notify_new_message(self, title, body, subtitle=None, uri=None, icon=None, timestamp=None):
         """A banner about an incoming message, unless alerts are silenced.
+
+        timestamp: when the message was sent. A message older than the start
+        of the application is history, whatever path brought it (a decryption
+        finishing late, a message stored on the server while this device was
+        offline, the journal): no banner for it.
 
         Separate from gui_notify because not everything that posts a
         banner is an interruption to be silenced: a PGP key arriving is a
@@ -347,6 +353,10 @@ class BlinkAppDelegate(NSObject):
         if self.alerts_silenced():
             BlinkLogger().log_debug('Alerts are silenced: no banner for %s'
                                     % (uri or title))
+            return False
+        if message_from_the_past(timestamp):
+            BlinkLogger().log_debug('No banner for %s: the message (%s) is older than the start of the application'
+                                    % (uri or title, timestamp))
             return False
         self.gui_notify(title, body, subtitle, uri=uri, icon=icon)
         return True

@@ -32,6 +32,7 @@ import pgpy
 from pgpy.constants import PubKeyAlgorithm, KeyFlags, HashAlgorithm, SymmetricKeyAlgorithm, CompressionAlgorithm
 import json
 import socket
+import threading
 import time
 from time import monotonic
 import string
@@ -142,7 +143,7 @@ from SylkLocation import (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE,
                           merge_location_bodies, storable_envelope)
 from FileTransferCache import FILE_TRANSFER_PATH, base_url_from_transfer
 from AccountStorage import AccountStorage, STORAGE_CHANGED_CONTENT_TYPE
-from util import active_account_uris, format_identity_to_string, run_in_gui_thread, call_later, canonical_pstn_uri, pstn_e164
+from util import active_account_uris, format_identity_to_string, run_in_gui_thread, call_later, canonical_pstn_uri, pstn_e164, message_from_the_past
 
 # Requests addressed to SylkServer, not to a person. The server answers each
 # of them on its own content type -- a key lookup comes back as
@@ -763,7 +764,10 @@ class SMSWindowManagerClass(NSObject):
     # PGP keys from disc, queries history and renders a page of bubbles on the
     # GUI thread -- 14 of them during one sync is what made the app unusable.
     # Messages still reach any viewer the user already has open.
-    _journal_bulk = False
+    # Per thread (the threads applying a journal in bulk): the background import
+    # of the older history runs alongside the normal sync and the GUI, and what
+    # they do must not be batched for it.
+    _journal_bulk_threads = set()
     # Set when the application is ending: the journal download and apply stop
     # at the next page or entry and leave the cached pages for the next start.
     quitting = False
@@ -1004,6 +1008,19 @@ class SMSWindowManagerClass(NSObject):
             self.loadDeletedConversations()
 
         return self
+
+    @objc.python_method
+    def _journalBulkBegin(self):
+        self._journal_bulk_threads.add(threading.get_ident())
+
+    @objc.python_method
+    def _journalBulkEnd(self):
+        self._journal_bulk_threads.discard(threading.get_ident())
+
+    @objc.python_method
+    def _inJournalBulk(self):
+        """Whether the calling thread is applying a journal in bulk."""
+        return threading.get_ident() in self._journal_bulk_threads
 
     def heartbeatTimer_(self, timer):
         # Guarded per viewer. One conversation raising used to end the whole
@@ -1603,7 +1620,7 @@ class SMSWindowManagerClass(NSObject):
         cpim_from, cpim_to), msg shaped like a journal entry.
         """
         contacts = set()
-        self._journal_bulk = True
+        self._journalBulkBegin()
         try:
             for msg, direction, status, encryption, cpim_from, cpim_to in entries:
                 try:
@@ -1615,7 +1632,7 @@ class SMSWindowManagerClass(NSObject):
                     BlinkLogger().log_error('[import] Cannot store message %s: %s'
                                             % (msg.get('message_id'), e))
         finally:
-            self._journal_bulk = False
+            self._journalBulkEnd()
         try:
             self._finishJournalApply(account, contacts, {})
         except Exception as e:
@@ -1883,6 +1900,11 @@ class SMSWindowManagerClass(NSObject):
             self.escrowImportedKey(account)
         except Exception as e:
             BlinkLogger().log_error('Key escrow of the imported key of %s failed: %s' % (account.id, e))
+
+        # the checks of the address book that ask the user (contacts in Deleted
+        # and in other groups, presence shared but not subscribed to)
+        from AddressbookChecks import AddressbookChecks
+        AddressbookChecks().schedule()
 
     AB_ORIGIN_CAP = 50
 
@@ -2746,22 +2768,28 @@ class SMSWindowManagerClass(NSObject):
 
     @objc.python_method
     def _syncLog(self, account=None):
-        """log_info, or log_debug while a first sync of the account (any account
-        when None) is being applied: a first sync replays the whole journal, and a
-        line per entry buries everything else. _logJournalSummary has the counts."""
+        """For a line about one journal entry: log_debug while a journal is
+        being applied by this thread, or while a first sync of the account (any
+        account when None) is; log_info otherwise (the same thing arriving
+        live). A line per entry buries everything else; the Activity log keeps
+        the summaries (_logJournalSummary has the counts) and the errors."""
+        if self._inJournalBulk():
+            return BlinkLogger().log_debug
         accounts = _history_module.first_sync_accounts
         quiet = bool(accounts) if account is None else getattr(account, 'id', None) in accounts
         return BlinkLogger().log_debug if quiet else BlinkLogger().log_info
 
     @objc.python_method
-    def journalSinceWindow(self):
-        """The `since` a cursor-less first sync asks from, as an ISO timestamp.
+    def journalSinceWindow(self, when=None):
+        """The `since` a cursor-less sync asks from, as an ISO timestamp:
+        `when` (a naive UTC datetime), by default JOURNAL_SINCE_YEARS ago.
 
         Shaped like the timestamps the websocket clients send (a JavaScript
         Date through JSON), because that is the format the storage layer has
         always been fed.
         """
-        when = datetime.datetime.utcnow() - datetime.timedelta(days=365 * self.JOURNAL_SINCE_YEARS)
+        if when is None:
+            when = datetime.datetime.utcnow() - datetime.timedelta(days=365 * self.JOURNAL_SINCE_YEARS)
         return when.isoformat(timespec='milliseconds') + 'Z'
 
     @objc.python_method
@@ -2854,15 +2882,20 @@ class SMSWindowManagerClass(NSObject):
         return messages, 'ok'
 
     @objc.python_method
-    def _downloadJournal(self, account):
+    def _downloadJournal(self, account, directory=None, since=None):
         """Stage 1: page through the server journal, caching each page on disc.
+
+        directory: where the pages go (the journal directory of the account,
+        the snapshot directory in a first sync); since: the naive UTC datetime
+        a cursor-less download asks from (JOURNAL_SINCE_YEARS ago when None).
 
         Nothing is processed here -- no DB writes, no GUI work, no per-entry
         logging -- so the download runs at network speed. The stored cursor
         advances only once a page is safely written, so an interruption costs
         at most the page in flight rather than the whole journal.
         """
-        directory = self.journalDirectory(account)
+        if directory is None:
+            directory = self.journalDirectory(account)
         base_url = account.sms.history_url.replace("@", "%40")
         pages = 0
         entries = 0
@@ -2890,7 +2923,7 @@ class SMSWindowManagerClass(NSObject):
             if cursor:
                 url = "%s/%s" % (base_url, cursor)
             else:
-                url = "%s?since=%s" % (base_url, self.journalSinceWindow())
+                url = "%s?since=%s" % (base_url, self.journalSinceWindow(since))
             BlinkLogger().log_debug('Sync conversations from %s' % url)
 
             messages, status = self._fetchJournalPage(account, url)
@@ -2969,7 +3002,7 @@ class SMSWindowManagerClass(NSObject):
         total = sum(self._journalPageCount(directory, name) for name in names)
         self._journal_apply_progress = (account, 0, total)
         self._journalProgress(account, 'apply', 0, total, force=True)
-        self._journal_bulk = True
+        self._journalBulkBegin()
         if first_sync:
             _history_module.first_sync_accounts.add(account.id)
         try:
@@ -2977,7 +3010,7 @@ class SMSWindowManagerClass(NSObject):
                 complete = self._applyJournalFiles(account, directory, names, all_contacts, all_incoming,
                                                    first_sync=first_sync)
             finally:
-                self._journal_bulk = False
+                self._journalBulkEnd()
                 self._journal_apply_progress = None
 
             # On a quit the receipts and the rest of the finish are dropped; the
@@ -3074,7 +3107,7 @@ class SMSWindowManagerClass(NSObject):
 
     @objc.python_method
     def _applyJournalEntries(self, account, messages, cursor, label='', first_sync=False,
-                             incoming=None):
+                             incoming=None, snapshot=None, progress=True):
         """Dispatch one cached journal page. No network, no file I/O.
 
         `cursor` is the sync cursor as it stood before this page was
@@ -3085,6 +3118,13 @@ class SMSWindowManagerClass(NSObject):
         one run so that entries and the conversation-read markers that
         cancel them keep their journal order regardless of which page each
         of them landed in.
+
+        `snapshot`: the read points ({conversation: naive UTC datetime}) of a
+        first sync, which applies the journal as a snapshot: every message is
+        inserted with its final state, the events (receipts, reads, removals,
+        bulk deletes, public keys) are skipped, nothing is counted for a badge
+        or a banner, and the order of the entries does not matter.
+        `progress`: whether to move the import progress (_journal_apply_progress).
         """
         sync_contacts = set()
         sync_incoming = incoming if incoming is not None else {}
@@ -3092,6 +3132,9 @@ class SMSWindowManagerClass(NSObject):
         sync_unhandled = {}
         last_message_id = None
         skipped_imdn = 0
+        skipped_snapshot = 0
+        # what a first sync applies is logged per entry at debug level only
+        log_progress = BlinkLogger().log_debug if snapshot is not None else BlinkLogger().log_info
 
         total = len(messages)
         started = datetime.datetime.now()
@@ -3112,7 +3155,7 @@ class SMSWindowManagerClass(NSObject):
             if self.quitting:
                 raise JournalInterrupted()
             i = i + 1
-            if self._journal_apply_progress is not None:
+            if progress and self._journal_apply_progress is not None:
                 progress_account, base, progress_total = self._journal_apply_progress
                 self._journalProgress(progress_account, 'apply', base + i, progress_total)
 
@@ -3126,7 +3169,7 @@ class SMSWindowManagerClass(NSObject):
                     left = '  %.0fs left' % ((total - i) / overall)
                 else:
                     left = ''
-                BlinkLogger().log_info(
+                log_progress(
                     'Journal %s: %d/%d (%d%%) %s entries/s, %.1fs working%s'
                     % (label or 'page', i, total, (100 * i) // total,
                        ('%.0f' % rate) if rate else '-', working, left))
@@ -3145,6 +3188,21 @@ class SMSWindowManagerClass(NSObject):
                 summary_contact = msg.get('contact') or '(no contact)'
                 per_contact = sync_summary.setdefault(summary_contact, {})
                 per_contact[content_type] = per_contact.get(content_type, 0) + 1
+
+                if snapshot is not None:
+                    if self.journalSnapshotSkipped(content_type):
+                        # an event: what it acted on is in the journal with its final state
+                        skipped_snapshot += 1
+                        continue
+                    if msg.get('direction') == 'incoming' and (
+                            content_type.startswith('text/')
+                            or content_type in (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE)
+                            or content_type in FILE_TRANSFER_CONTENT_TYPES):
+                        sync_contacts.add(msg['contact'])
+                        self._snapshotIncomingMessage(account, msg, snapshot)
+                        continue
+                    # outgoing messages (persisted with their state, no cursor),
+                    # call records and unknown types: as in any sync
 
                 if content_type == 'application/sylk-conversation-remove':
                     BlinkLogger().log_debug('Remove conversation with %s' % msg['content'])
@@ -3332,6 +3390,11 @@ class SMSWindowManagerClass(NSObject):
                             notable = self._journal_message_is_notable(account, msg)
                         except Exception:
                             notable = False     # never lose the sync over a count
+                        # And only what was sent since the application started:
+                        # an older message is history, never a banner, also when
+                        # it is unread (the badge says so).
+                        if notable and message_from_the_past(msg.get('timestamp')):
+                            notable = False
                         if notable:
                             sync_incoming[msg['contact']] = \
                                 sync_incoming.get(msg['contact'], 0) + 1
@@ -3362,7 +3425,7 @@ class SMSWindowManagerClass(NSObject):
 
         elapsed = (datetime.datetime.now() - started).total_seconds()
         working = max(elapsed - slept, 0.0)
-        BlinkLogger().log_info(
+        log_progress(
             'Journal %s applied: %d entries in %.1fs (%.1fs working, %.1fs throttled%s)'
             % (label or 'page', total, elapsed, working, slept,
                ', %.0f entries/s' % (total / working) if working > 0.001 else ''))
@@ -3370,6 +3433,9 @@ class SMSWindowManagerClass(NSObject):
             BlinkLogger().log_info('Journal %s: skipped %d delivery receipt(s) -- on a first sync '
                                    'every message arrives with its own state'
                                    % (label or 'page', skipped_imdn))
+        if skipped_snapshot:
+            BlinkLogger().log_debug('Journal %s: skipped %d event(s) -- a first sync applies the journal as a snapshot'
+                                    % (label or 'page', skipped_snapshot))
         return last_message_id, sync_contacts, sync_incoming, sync_summary, sync_unhandled
 
     @objc.python_method
@@ -3455,6 +3521,13 @@ class SMSWindowManagerClass(NSObject):
 
         self.addContactsToMessagesGroup()
 
+        self._flushJournalBulk()
+
+    @objc.python_method
+    def _flushJournalBulk(self):
+        """Tell the GUI what a bulk apply changed: the conversation order, the
+        previews, the badges -- once, not once per message. Called with the
+        bulk mode of the calling thread ended."""
         if self._order_changed_during_bulk:
             self._order_changed_during_bulk = False
             self._postConversationOrderChanged(None)
@@ -3467,6 +3540,730 @@ class SMSWindowManagerClass(NSObject):
             self.loadMessagePreviews(None if len(stale) > 200 else stale)
 
         self._flushUnreadChanged()
+
+    # The first sync of an account on this device: the journal is a snapshot.
+    #
+    # Every message in it has its final state and removed messages are not in
+    # it any more, so a first sync only inserts. It is done in two phases: the
+    # last JOURNAL_RECENT_DAYS first, after which the client is usable, then
+    # the older history in a background thread, paced so that the user does not
+    # notice. The rules are the same for every client (Blink Qt's
+    # docs/messaging/journal-first-sync.md).
+    #
+    # Files in journal/<account>/:
+    #   first-sync.marker    the recent phase is running
+    #   first-sync.date      T0, when the first sync started; kept for ever (receipts)
+    #   snapshot/*.json      the pages of the recent days
+    #   snapshot/complete    the recent days are downloaded
+    #   snapshot/read-points {conversation: read point}
+    #   snapshot/backfill    the state of the older phase
+    #   snapshot/older/*.json the pages of the older history
+    JOURNAL_RECENT_DAYS = 30
+    FIRST_SYNC_DATE = 'first-sync.date'
+    SNAPSHOT_DIRECTORY = 'snapshot'
+    first_sync_dates = {}           # account id -> T0 (naive UTC datetime), or None when there is none
+    snapshot_read_points = {}       # account id -> {conversation: read point}, while a first sync runs
+    snapshot_unread = {}            # account id -> incoming messages stored unread by a first sync
+    snapshot_backlogs = set()       # accounts whose older history is being imported (thread journal-backlog)
+
+    # Pace of the older history: entries per batch, then a pause that is
+    # `factor` times the time the batch took, or `fixed` seconds.
+    JOURNAL_IMPORT_SPEEDS = {'fast':   (250, 0, 0.05),
+                             'normal': (50, 2, 0),
+                             'gentle': (20, 6, 0)}
+    journal_import_speed_names = [('fast', 'Fast'), ('normal', 'Normal'), ('gentle', 'Gentle'), ('paused', 'Pause')]
+    journal_import_speed_descriptions = {'fast': 'Import the older messages as fast as possible',
+                                         'normal': 'Import the older messages a third of the time',
+                                         'gentle': 'Import the older messages a seventh of the time',
+                                         'paused': 'Stop importing the older messages until resumed'}
+    JOURNAL_IMPORT_SPEED_FILE = 'journal_import_speed'
+    _journal_import_speed = {}      # 'speed': (speed, speed to resume with), read from the file once
+
+    @objc.python_method
+    def journalSnapshotSkipped(self, content_type):
+        """Whether a first sync skips a journal entry of this type: an event
+        whose effect is already in the snapshot, or a key asked from the
+        server at the end."""
+        return content_type in ('message/imdn',
+                                'application/sylk-message-remove',
+                                'application/sylk-conversation-remove',
+                                MESSAGES_BULK_DELETE_CONTENT_TYPE,
+                                'application/sylk-conversation-read',
+                                'text/pgp-public-key',
+                                'application/sylk-contact-update',
+                                STORAGE_CHANGED_CONTENT_TYPE,
+                                AddressbookNotify.CONTENT_TYPE,
+                                DATA_EXPORT_CONTENT_TYPE)
+
+    # T0 and the receipts
+
+    @objc.python_method
+    def firstSyncDate(self, account):
+        """When the first sync of the account started on this device (naive
+        UTC), or None when this device never did one in this version."""
+        try:
+            return self.first_sync_dates[account.id]
+        except KeyError:
+            pass
+        when = None
+        try:
+            with open(os.path.join(ApplicationData.get('journal/%s' % account.id), self.FIRST_SYNC_DATE)) as f:
+                when = self._normalized_timestamp(f.read().strip())
+        except OSError:
+            pass
+        self.first_sync_dates[account.id] = when
+        return when
+
+    @objc.python_method
+    def _recordFirstSyncDate(self, account):
+        when = self.firstSyncDate(account)
+        if when is not None:
+            return when
+        when = datetime.datetime.utcnow()
+        path = os.path.join(self.journalDirectory(account), self.FIRST_SYNC_DATE)
+        try:
+            with open(path, 'w') as f:
+                f.write(when.isoformat() + 'Z\n')
+        except OSError as e:
+            BlinkLogger().log_error('Cannot write %s: %s' % (path, e))
+        self.first_sync_dates[account.id] = when
+        return when
+
+    @objc.python_method
+    def receiptAllowed(self, account, timestamp):
+        """Whether this device may send a delivery or display receipt for a
+        message sent at timestamp: never for one older than its first sync
+        minus JOURNAL_RECENT_DAYS. That history is an archive; its senders
+        were answered by the devices that were there."""
+        if account is None or account is BonjourAccount():
+            return True
+        started = self.firstSyncDate(account)
+        if started is None:
+            return True
+        when = self._normalized_timestamp(timestamp)
+        if when is None:
+            return True
+        return when >= started - datetime.timedelta(days=self.JOURNAL_RECENT_DAYS)
+
+    # Read points: a conversation is read up to the later of its latest
+    # conversation-read marker and the user's latest outgoing message in it
+
+    @objc.python_method
+    def snapshotDirectory(self, account, *parts):
+        path = os.path.join(self.journalDirectory(account), self.SNAPSHOT_DIRECTORY, *parts)
+        makedirs(path)
+        return path
+
+    @objc.python_method
+    def _snapshotReadPoints(self, directory):
+        """The read points of all the pages in directory."""
+        points = {}
+        answered = ('text/plain', 'text/html') + tuple(FILE_TRANSFER_CONTENT_TYPES)
+        for name in sorted(os.listdir(directory)):
+            if not name.endswith('.json'):
+                continue
+            try:
+                with open(os.path.join(directory, name)) as f:
+                    messages = json.load(f).get('messages') or []
+            except Exception as e:
+                BlinkLogger().log_error('Cannot read journal page %s for its read points: %s' % (name, e))
+                continue
+            for msg in messages:
+                content_type = msg.get('content_type') or ''
+                if content_type == 'application/sylk-conversation-read':
+                    contact = self._conversationReadContact(msg.get('content'))
+                elif msg.get('direction') == 'outgoing' and content_type in answered:
+                    contact = msg.get('contact')
+                else:
+                    continue
+                key = self._canonical_uri(contact) if contact else ''
+                when = self._normalized_timestamp(msg.get('timestamp'))
+                if key and when is not None and (key not in points or when > points[key]):
+                    points[key] = when
+        return points
+
+    @staticmethod
+    def _mergeReadPoints(*sets):
+        merged = {}
+        for points in sets:
+            for key, when in (points or {}).items():
+                if when is not None and (key not in merged or when > merged[key]):
+                    merged[key] = when
+        return merged
+
+    @objc.python_method
+    def _loadReadPoints(self, account):
+        path = os.path.join(ApplicationData.get('journal/%s' % account.id), self.SNAPSHOT_DIRECTORY, 'read-points')
+        try:
+            with open(path) as f:
+                stored = json.load(f)
+        except (OSError, ValueError):
+            return {}
+        points = {}
+        for key, value in (stored or {}).items():
+            when = self._normalized_timestamp(value)
+            if when is not None:
+                points[key] = when
+        return points
+
+    @objc.python_method
+    def _saveReadPoints(self, account, points):
+        path = os.path.join(self.snapshotDirectory(account), 'read-points')
+        try:
+            with open(path + '.part', 'w') as f:
+                json.dump(dict((key, when.isoformat()) for key, when in points.items()), f)
+            os.replace(path + '.part', path)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot write %s: %s' % (path, e))
+
+    @objc.python_method
+    def noteSnapshotRead(self, account, contact):
+        """A conversation read (on any device) while a first sync is running
+        moves its read point on: what it inserts afterwards is stored read."""
+        points = self.snapshot_read_points.get(getattr(account, 'id', None))
+        key = self._canonical_uri(contact) if contact else ''
+        if points is None or not key:
+            return
+        now = datetime.datetime.utcnow()
+        if key not in points or points[key] < now:
+            points[key] = now
+            self._saveReadPoints(account, points)
+            self._syncLog(account)('First sync of %s: read point of %s moved to %s' % (account.id, key, now.isoformat()))
+
+    @objc.python_method
+    def _snapshotIncomingMessage(self, account, msg, points):
+        """Insert an incoming message of a first sync, read or unread by its
+        conversation's read point. No badge, no banner, no receipt."""
+        if msg.get('content_type') == LEGACY_LOCATION_CONTENT_TYPE:
+            self.noteCallRecording(account, msg.get('content'))
+        if self._isJournalEchoOfOwnTransfer(account, msg):
+            return
+        self._redirectToRecordingParty(msg)
+        BlinkLogger().log_debug(self._describe_journal_message(msg, 'incoming'))
+
+        content = msg['content'] or ''
+        if content.startswith('-----BEGIN PGP MESSAGE-----') and content.endswith('-----END PGP MESSAGE-----'):
+            encryption = 'pgp_encrypted'
+        else:
+            encryption = ''
+
+        try:
+            notable = self._journal_message_is_notable(account, msg)
+        except Exception:
+            notable = False
+        unread = False
+        if notable:
+            point = points.get(self._canonical_uri(msg['contact']))
+            when = self._normalized_timestamp(msg.get('timestamp'))
+            unread = point is None or when is None or when > point
+        # An unread message whose sender asked for a display receipt waits
+        # for one (sent when it is read here, if receiptAllowed); everything
+        # else is settled.
+        if unread and 'display' in (msg.get('disposition') or []):
+            status = MSG_STATE_DELIVERED
+        else:
+            status = MSG_STATE_DISPLAYED
+        self._persist_journal_message(account, msg, 'incoming', status, encryption,
+                                      cpim_from=msg['contact'], cpim_to=str(account.id),
+                                      unread=unread)
+        if unread:
+            self.snapshot_unread[account.id] = self.snapshot_unread.get(account.id, 0) + 1
+
+    @objc.python_method
+    def _applySnapshotPages(self, account, directory, names, points, phase, paced=False, page_done=None):
+        """Apply the pages (in the order given) as a snapshot; each is deleted
+        once applied. Returns (complete, contacts). paced: in batches with
+        pauses, at the speed chosen by the user (the older history).
+        page_done(name, contacts, entries) after each page."""
+        complete = True
+        contacts = set()
+        applied = 0
+        for index, name in enumerate(names, 1):
+            if self.quitting:
+                raise JournalInterrupted()
+            path = os.path.join(directory, name)
+            payload = None
+            try:
+                with open(path) as f:
+                    payload = json.load(f)
+                messages = payload.get('messages') or []
+                page_contacts = set()
+                if paced:
+                    position = 0
+                    while position < len(messages):
+                        size, factor, fixed = self._waitForJournalImportSpeed()
+                        batch = messages[position:position + size]
+                        started = time.monotonic()
+                        _, batch_contacts, _, _, _ = self._applyJournalEntries(
+                            account, batch, None, label=name, snapshot=points, progress=False)
+                        took = time.monotonic() - started
+                        page_contacts |= batch_contacts
+                        position += len(batch)
+                        applied += len(batch)
+                        self._backlogProgress(account, 'apply', applied, self._backlog_total.get(account.id))
+                        self._journalImportPause(fixed or factor * took)
+                else:
+                    _, page_contacts, _, _, _ = self._applyJournalEntries(
+                        account, messages, None, label=name, snapshot=points)
+                    applied += len(messages)
+                    if self._journal_apply_progress is not None:
+                        progress_account, base, total = self._journal_apply_progress
+                        self._journal_apply_progress = (progress_account, base + len(messages), total)
+                contacts |= page_contacts
+                self._syncLog(account)('First sync of %s: snapshot page %s applied (%s, %d/%d, %d entries)'
+                                       % (account.id, name, phase, index, len(names), len(messages)))
+            except JournalInterrupted:
+                BlinkLogger().log_info('First sync of %s interrupted by quitting in page %s; '
+                                       'the page is kept and applied again at the next start' % (account.id, name))
+                raise
+            except Exception as e:
+                complete = False
+                BlinkLogger().log_error('Error applying journal %s: %s' % (name, e))
+                import traceback
+                traceback.print_exc()
+                self._journalPageFailed(account, directory, name, payload)
+                continue
+            try:
+                os.unlink(path)
+            except OSError as e:
+                BlinkLogger().log_error('Cannot delete applied journal %s: %s' % (path, e))
+            if page_done is not None:
+                page_done(name, page_contacts, len(messages))
+            # the contact list and an open conversation, once per page
+            self._journalBulkEnd()
+            try:
+                self._flushJournalBulk()
+            finally:
+                self._journalBulkBegin()
+        return complete, contacts
+
+    # Phase 1: the recent days
+
+    @objc.python_method
+    def _firstSyncRecent(self, account, resumed):
+        """Download the journal since T0 - JOURNAL_RECENT_DAYS, apply it newest
+        first as a snapshot and finish the first sync. True when it is done."""
+        first = self._recordFirstSyncDate(account)     # T0 of the receipts: the first one ever
+        # This run's start, from the marker: a first sync done again (the
+        # cursor was reset) reaches back from now, not from the first one.
+        started = None
+        try:
+            with open(self.firstSyncMarker(account)) as f:
+                started = self._normalized_timestamp(f.read().strip())
+        except OSError:
+            pass
+        started = started or datetime.datetime.utcnow()
+        since = started - datetime.timedelta(days=self.JOURNAL_RECENT_DAYS)
+        directory = self.snapshotDirectory(account)
+        complete_path = os.path.join(directory, 'complete')
+        if not resumed:
+            # what an earlier first sync of this account left
+            for name in os.listdir(directory):
+                if name in ('backfill', 'read-points', 'complete') or name.endswith(('.json', '.part')):
+                    try:
+                        os.unlink(os.path.join(directory, name))
+                    except OSError:
+                        pass
+            older = os.path.join(directory, 'older')
+            for name in (os.listdir(older) if os.path.isdir(older) else []):
+                try:
+                    os.unlink(os.path.join(older, name))
+                except OSError:
+                    pass
+        clock = time.time()
+        BlinkLogger().log_info('First sync of %s: %s the last %d days (since %s), first sync date %s'
+                               % (account.id, 'resuming' if resumed else 'downloading',
+                                  self.JOURNAL_RECENT_DAYS, since.isoformat(), first.isoformat()))
+
+        pages = entries = 0
+        if not os.path.exists(complete_path):
+            pages, entries, downloaded = self._downloadJournal(account, directory=directory, since=since)
+            if not downloaded:
+                BlinkLogger().log_info('First sync of %s not complete yet (download stopped); it continues at the next sync'
+                                       % account.id)
+                return False
+            try:
+                with open(complete_path, 'w') as f:
+                    f.write(datetime.datetime.utcnow().isoformat() + 'Z\n')
+            except OSError as e:
+                BlinkLogger().log_error('Cannot write %s: %s' % (complete_path, e))
+
+        try:
+            names = sorted(n for n in os.listdir(directory) if n.endswith('.json'))
+        except OSError as e:
+            BlinkLogger().log_error('Cannot list %s: %s' % (directory, e))
+            return False
+
+        # From all the pages before any is applied: no badge counts a message
+        # that a later page marks read. A read since then moved them on.
+        points = self._mergeReadPoints(self._snapshotReadPoints(directory), self._loadReadPoints(account))
+        self._saveReadPoints(account, points)
+        self.snapshot_read_points[account.id] = points
+        BlinkLogger().log_info('First sync of %s: read points made for %d conversation(s) from %d page(s)'
+                               % (account.id, len(points), len(names)))
+
+        total = sum(self._journalPageCount(directory, name) for name in names)
+        self._journal_apply_progress = (account, 0, total)
+        self._journalProgress(account, 'apply', 0, total, force=True)
+        _history_module.first_sync_accounts.add(account.id)
+        self._journalBulkBegin()
+        try:
+            # newest first: the conversations the user is most likely to open
+            complete, contacts = self._applySnapshotPages(account, directory, list(reversed(names)), points, 'recent')
+        finally:
+            self._journalBulkEnd()
+            self._journal_apply_progress = None
+            _history_module.first_sync_accounts.discard(account.id)
+        # no banner: all of it is history
+        self._finishJournalApply(account, contacts, {})
+        if not complete:
+            BlinkLogger().log_info('First sync of %s not complete yet (a page failed); it continues at the next sync'
+                                   % account.id)
+            return False
+
+        # The older phase starts from here, with what this one learned.
+        state = self._loadBackfillState(account) or {}
+        if not state:
+            state = {'since': self.journalSinceWindow(started - datetime.timedelta(days=365 * self.JOURNAL_SINCE_YEARS)),
+                     'until': since.isoformat(),
+                     'cursor': None, 'fetched': 0, 'downloaded': False, 'points': False, 'done': False,
+                     'total': 0, 'recent': total}
+        state['contacts'] = sorted(set(state.get('contacts') or []) | set(contacts))
+        self._saveBackfillState(account, state)
+
+        try:
+            os.unlink(self.firstSyncMarker(account))
+        except OSError:
+            pass
+        try:
+            os.unlink(complete_path)
+        except OSError:
+            pass
+        unread = self.snapshot_unread.pop(account.id, 0)
+        BlinkLogger().log_info('First sync of %s finished in %.1fs: %d entries of the last %d days, %d unread message(s); '
+                               'the older history follows in the background'
+                               % (account.id, time.time() - clock, total, self.JOURNAL_RECENT_DAYS, unread))
+        # The badges, once, from what is stored.
+        self.reloadConversationState()
+        # The Messages group has just been filled with everyone the journal
+        # mentioned, so put it where the user will look.
+        self.promoteMessagesGroup()
+        self.announceActivation(account)
+        # what the journal stored armoured is decrypted in the background
+        self.notification_center.post_notification('BlinkJournalDidApply', sender=account,
+                                                   data=NotificationData(first_sync=True, pages=pages, entries=entries))
+        return True
+
+    # Phase 2: the older history, in the background
+
+    @objc.python_method
+    def _backfillPath(self, account):
+        return os.path.join(ApplicationData.get('journal/%s' % account.id), self.SNAPSHOT_DIRECTORY, 'backfill')
+
+    @objc.python_method
+    def _loadBackfillState(self, account):
+        try:
+            with open(self._backfillPath(account)) as f:
+                return json.load(f)
+        except (OSError, ValueError):
+            return None
+
+    @objc.python_method
+    def _saveBackfillState(self, account, state):
+        self.snapshotDirectory(account)
+        path = self._backfillPath(account)
+        try:
+            with open(path + '.part', 'w') as f:
+                json.dump(state, f)
+            os.replace(path + '.part', path)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot write %s: %s' % (path, e))
+
+    @objc.python_method
+    def snapshotBacklogPending(self, account):
+        state = self._loadBackfillState(account)
+        return bool(state) and not state.get('done')
+
+    @objc.python_method
+    def startSnapshotBacklog(self, account):
+        """Start (or resume, after a quit or a network error) importing the
+        older history of the account, unless it is done or running."""
+        if account.id in self.snapshot_backlogs:
+            return
+        if self.quitting or not self.snapshotBacklogPending(account):
+            return
+        self.snapshot_backlogs.add(account.id)
+        self._runSnapshotBacklog(account)
+
+    _backlog_total = {}             # account id -> entries of the older history, when known
+    _backlog_last = {}              # account id -> (phase, done, total) last posted
+    _backlog_progress_posted = 0.0
+
+    @objc.python_method
+    def _backlogProgress(self, account, phase, done=None, total=None, force=False):
+        """'download' or 'apply', done of total entries, then 'done'
+        (BlinkJournalBacklogProgress, for the progress strip)."""
+        if phase == 'done':
+            self._backlog_last.pop(account.id, None)
+        else:
+            self._backlog_last[account.id] = (phase, done, total)
+        now = time.monotonic()
+        if not force and phase != 'done' and now - self._backlog_progress_posted < self.JOURNAL_PROGRESS_INTERVAL:
+            return
+        self._backlog_progress_posted = now
+        self.notification_center.post_notification('BlinkJournalBacklogProgress', sender=account,
+                                                   data=NotificationData(phase=phase, done=done, total=total,
+                                                                         speed=self.journalImportSpeed()))
+
+    @staticmethod
+    def _lowerThreadPriority():
+        """The older history is imported at utility QoS: the GUI goes first."""
+        try:
+            import ctypes
+            import ctypes.util
+            libc = ctypes.CDLL(ctypes.util.find_library('c'))
+            QOS_CLASS_UTILITY = 0x11
+            libc.pthread_set_qos_class_self_np(QOS_CLASS_UTILITY, 0)
+        except Exception as e:
+            BlinkLogger().log_debug('Cannot lower the priority of the journal import thread: %s' % e)
+
+    @objc.python_method
+    @run_in_thread('journal-backlog')
+    def _runSnapshotBacklog(self, account):
+        self._lowerThreadPriority()
+        clock = time.time()
+        try:
+            state = self._loadBackfillState(account)
+            if not state or state.get('done'):
+                return
+            older = self.snapshotDirectory(account, 'older')
+            if not state.get('downloaded'):
+                BlinkLogger().log_info('First sync of %s: downloading the older history (from %s until %s)'
+                                       % (account.id, state.get('since'), state.get('until')))
+                if not self._downloadSnapshotOlder(account, state, older):
+                    BlinkLogger().log_info('First sync of %s: the download of the older history stopped; '
+                                           'it resumes at the next sync' % account.id)
+                    return
+            names = sorted(n for n in os.listdir(older) if n.endswith('.json'))
+            if not state.get('points'):
+                points = self._mergeReadPoints(self._loadReadPoints(account), self._snapshotReadPoints(older))
+                self._saveReadPoints(account, points)
+                state['points'] = True
+                state['total'] = sum(self._journalPageCount(older, name) for name in names)
+                self._saveBackfillState(account, state)
+                BlinkLogger().log_info('First sync of %s: read points made (older history) for %d conversation(s)'
+                                       % (account.id, len(points)))
+            else:
+                points = self._loadReadPoints(account)
+            self.snapshot_read_points[account.id] = points
+            self._backlog_total[account.id] = sum(self._journalPageCount(older, name) for name in names)
+            BlinkLogger().log_info('First sync of %s: importing %d entries of older history in %d page(s), speed %s'
+                                   % (account.id, self._backlog_total[account.id], len(names), self.journalImportSpeed()))
+            self._backlogProgress(account, 'apply', 0, self._backlog_total[account.id], force=True)
+
+            def page_done(name, contacts, entries):
+                if contacts:
+                    state['contacts'] = sorted(set(state.get('contacts') or []) | set(contacts))
+                    self._saveBackfillState(account, state)
+
+            _history_module.first_sync_accounts.add(account.id)
+            self._journalBulkBegin()
+            try:
+                complete, contacts = self._applySnapshotPages(account, older, list(reversed(names)), points,
+                                                              'older', paced=True, page_done=page_done)
+            finally:
+                self._journalBulkEnd()
+                _history_module.first_sync_accounts.discard(account.id)
+            contacts = set(state.get('contacts') or []) | contacts
+            self._finishJournalApply(account, contacts, {})
+            if not complete:
+                BlinkLogger().log_info('First sync of %s: a page of the older history failed; it is tried again at the next sync'
+                                       % account.id)
+                return
+
+            state['done'] = True
+            self._saveBackfillState(account, state)
+            self.snapshot_read_points.pop(account.id, None)
+            unread = self.snapshot_unread.pop(account.id, 0)
+            BlinkLogger().log_info('First sync of %s: older history complete in %.1fs, %d entries, %d unread message(s)'
+                                   % (account.id, time.time() - clock, state.get('total') or 0, unread))
+            # The badges again: an old message nobody ever read counts.
+            self.reloadConversationState()
+            # The only key lookup of a first sync.
+            self._lookupMissingPublicKeys(account, contacts)
+            self.notification_center.post_notification('BlinkJournalDidApply', sender=account,
+                                                       data=NotificationData(first_sync=True, pages=len(names),
+                                                                             entries=state.get('total') or 0))
+        except JournalInterrupted:
+            BlinkLogger().log_info('First sync of %s: the older history import was interrupted by quitting; '
+                                   'it resumes at the next start' % account.id)
+        except Exception as e:
+            BlinkLogger().log_error('First sync of %s: the older history import failed: %s' % (account.id, e))
+            import traceback
+            traceback.print_exc()
+        finally:
+            self._backlog_total.pop(account.id, None)
+            self._backlogProgress(account, 'done')
+            self.snapshot_backlogs.discard(account.id)
+
+    @objc.python_method
+    def _downloadSnapshotOlder(self, account, state, directory):
+        """Page through the journal from state['since'] up to state['until'];
+        network only. The position is saved per page. True when all of it is in."""
+        base_url = account.sms.history_url.replace("@", "%40")
+        until = self._normalized_timestamp(state.get('until'))
+        for name in os.listdir(directory):
+            if name.endswith('.part'):
+                try:
+                    os.unlink(os.path.join(directory, name))
+                except OSError:
+                    pass
+        fetched = int(state.get('fetched') or 0)
+        self._backlogProgress(account, 'download', fetched, None, force=True)
+        while True:
+            if self.quitting:
+                raise JournalInterrupted()
+            while self.journalImportSpeed() == 'paused' and not self.quitting:
+                time.sleep(0.5)
+            cursor = state.get('cursor')
+            if cursor:
+                url = "%s/%s" % (base_url, cursor)
+            else:
+                url = "%s?since=%s" % (base_url, state.get('since'))
+            messages, status = self._fetchJournalPage(account, url)
+            if status == 'auth':
+                BlinkLogger().log_info('History token rejected for %s (401), requesting a new one in 30s' % account.id)
+                reactor.callLater(30, self.request_token, account)
+                return False
+            if status != 'ok':
+                return False
+            if not messages:
+                break
+            keep = []
+            reached = False
+            for msg in messages:
+                when = self._normalized_timestamp(msg.get('timestamp'))
+                if until is not None and when is not None and when >= until:
+                    reached = True      # the recent phase has the rest
+                    continue
+                keep.append(msg)
+            if keep:
+                name = self._journalFileName(keep)
+                path = os.path.join(directory, name)
+                try:
+                    with open(path + '.part', 'w') as f:
+                        json.dump({'cursor': cursor or '', 'messages': keep}, f)
+                    os.replace(path + '.part', path)
+                except Exception as e:
+                    BlinkLogger().log_error('Cannot write journal file %s: %s' % (path, e))
+                    return False
+            fetched += len(keep)
+            state['cursor'] = messages[-1].get('message_id') or cursor
+            state['fetched'] = fetched
+            self._saveBackfillState(account, state)
+            self._syncLog(account)('First sync of %s: older history page downloaded (%d entries, %d so far)'
+                                   % (account.id, len(keep), fetched))
+            self._backlogProgress(account, 'download', fetched, None)
+            if reached or not state['cursor'] or state['cursor'] == cursor:
+                break
+        state['downloaded'] = True
+        self._saveBackfillState(account, state)
+        BlinkLogger().log_info('First sync of %s: older history downloaded, %d entries' % (account.id, fetched))
+        return True
+
+    @objc.python_method
+    def _lookupMissingPublicKeys(self, account, contacts):
+        """Ask the server for the public key of every contact the history
+        mentions that has none. The answers come as text/pgp-public-key."""
+        if not pgp_messaging_possible(account):
+            return
+        manager = AccountManager()
+        missing = []
+        for uri in sorted(set(contacts or ())):
+            uri = str(uri)
+            if '@' not in uri or uri == str(account.id) or manager.has_account(uri):
+                continue
+            if os.path.exists('%s/%s.pubkey' % (self.keys_path, uri)):
+                continue
+            missing.append(uri)
+        if not missing:
+            BlinkLogger().log_info('First sync of %s: every contact has a public key' % account.id)
+            return
+        BlinkLogger().log_info('First sync of %s: asking the server for the public keys of %d contact(s)'
+                               % (account.id, len(missing)))
+        for uri in missing:
+            if self.quitting:
+                return
+            try:
+                self.sendMessage(account, 'Public key lookup', 'application/sylk-api-pgp-key-lookup', recipient=uri)
+            except Exception as e:
+                BlinkLogger().log_error('Cannot ask the public key of %s: %s' % (uri, e))
+            time.sleep(0.2)
+
+    # The speed of the older history import, chosen by its progress bar
+
+    @objc.python_method
+    def _loadJournalImportSpeed(self):
+        if 'speed' not in self._journal_import_speed:
+            parts = []
+            try:
+                with open(ApplicationData.get(self.JOURNAL_IMPORT_SPEED_FILE)) as f:
+                    parts = f.read().split()
+            except OSError:
+                pass
+            speed = parts[0] if parts and (parts[0] in self.JOURNAL_IMPORT_SPEEDS or parts[0] == 'paused') else 'gentle'
+            resume = parts[1] if len(parts) > 1 and parts[1] in self.JOURNAL_IMPORT_SPEEDS else 'gentle'
+            self._journal_import_speed['speed'] = (speed, resume)
+        return self._journal_import_speed['speed']
+
+    @objc.python_method
+    def journalImportSpeed(self):
+        return self._loadJournalImportSpeed()[0]
+
+    @objc.python_method
+    def setJournalImportSpeed(self, speed):
+        """fast, normal, gentle; paused, and back to the speed it had."""
+        current, resume = self._loadJournalImportSpeed()
+        if speed == 'paused':
+            if current == 'paused':
+                speed = resume              # Resume
+            else:
+                resume = current
+        elif speed in self.JOURNAL_IMPORT_SPEEDS:
+            resume = speed
+        else:
+            return
+        self._journal_import_speed['speed'] = (speed, resume)
+        try:
+            with open(ApplicationData.get(self.JOURNAL_IMPORT_SPEED_FILE), 'w') as f:
+                f.write('%s %s\n' % (speed, resume))
+        except OSError as e:
+            BlinkLogger().log_error('Cannot save the journal import speed: %s' % e)
+        BlinkLogger().log_info('Older history import speed: %s' % speed)
+        for account_id, (phase, done, total) in list(self._backlog_last.items()):
+            try:
+                account = AccountManager().get_account(account_id)
+            except KeyError:
+                continue
+            self._backlogProgress(account, phase, done, total, force=True)
+
+    @objc.python_method
+    def _waitForJournalImportSpeed(self):
+        """The batch size and the pause of the current speed, waiting while paused."""
+        while self.journalImportSpeed() == 'paused':
+            if self.quitting:
+                raise JournalInterrupted()
+            time.sleep(0.5)
+        return self.JOURNAL_IMPORT_SPEEDS[self.journalImportSpeed()]
+
+    @objc.python_method
+    def _journalImportPause(self, seconds):
+        deadline = time.monotonic() + seconds
+        while not self.quitting:
+            left = deadline - time.monotonic()
+            if left <= 0:
+                break
+            time.sleep(min(left, 0.5))
 
     @objc.python_method
     @run_in_thread('sms_sync')
@@ -3521,6 +4318,29 @@ class SMSWindowManagerClass(NSObject):
                     f.write(datetime.datetime.utcnow().isoformat() + 'Z\n')
             except OSError as e:
                 BlinkLogger().log_error('Cannot write the first sync marker %s: %s' % (marker, e))
+
+        # A first sync applies the journal as a snapshot, the last days first
+        # (_firstSyncRecent), the older history in the background. One begun
+        # by an earlier version (its pages in the journal directory, no
+        # snapshot directory) is finished the way it was begun.
+        legacy = resumed and not os.path.isdir(os.path.join(self.journalDirectory(account), self.SNAPSHOT_DIRECTORY))
+        if first_sync and not legacy:
+            done = False
+            try:
+                done = self._firstSyncRecent(account, resumed)
+            except JournalInterrupted:
+                return
+            except Exception as e:
+                BlinkLogger().log_error('First sync of %s failed: %s' % (account.id, e))
+                import traceback
+                traceback.print_exc()
+            finally:
+                self._journalProgress(account, 'done')
+                self.syncConversationsInProgress.pop(account.id, None)
+            if done:
+                self.startSnapshotBacklog(account)
+            return
+
         started = time.time()
         if resumed:
             BlinkLogger().log_info('Journal sync for %s resumes an interrupted first sync from %s (after %s)'
@@ -3561,6 +4381,8 @@ class SMSWindowManagerClass(NSObject):
                                    % (account.id, time.time() - started))
 
         if not first_sync:
+            # the older history of a first sync, if a quit or an error stopped it
+            self.startSnapshotBacklog(account)
             return
         if not (downloaded and applied):
             BlinkLogger().log_info('First sync of %s not complete yet (%s); it continues as a first sync at the next sync'
@@ -3691,7 +4513,7 @@ class SMSWindowManagerClass(NSObject):
                     setattr(contact, a, value)
             contact.save()
         elif create:
-            BlinkLogger().log_info("No contact found to save the public key for %s" % uri)
+            self._syncLog()("No contact found to save the public key for %s" % uri)
         else:
             BlinkLogger().log_debug("No contact for %s, its public key is kept in the keys folder only" % uri)
 
@@ -3750,7 +4572,7 @@ class SMSWindowManagerClass(NSObject):
                     BlinkLogger().log_info('Not adding an address book contact for %s: '
                                            'not an address anybody can be written to' % uri)
                     return None
-                self._syncLog()('Adding contact for %s' % uri)
+                BlinkLogger().log_info('Adding contact for %s' % uri)
                 contact = NSApp.delegate().contactsWindowController.model.addContactForUri(uri)
                 self.new_contacts.add(contact)
 
@@ -4260,10 +5082,10 @@ class SMSWindowManagerClass(NSObject):
         """
         names, key_id = self._describe_public_key(public_key)
         if names is None:
-            BlinkLogger().log_info('Public key stored for %s (unreadable key)' % uri)
+            self._syncLog()('Public key stored for %s (unreadable key)' % uri)
             return
 
-        BlinkLogger().log_info(
+        self._syncLog()(
             'Public key stored for %s: key id %s, identifies as %s'
             % (uri, key_id, ', '.join(names)))
 
@@ -4950,7 +5772,7 @@ class SMSWindowManagerClass(NSObject):
         """Re-read one conversation's preview after its messages changed."""
         if not remote_uri:
             return
-        if self._journal_bulk:
+        if self._inJournalBulk():
             self._previews_stale_during_bulk.add(str(remote_uri))
             return
         self.loadMessagePreviews([str(remote_uri)])
@@ -5093,7 +5915,7 @@ class SMSWindowManagerClass(NSObject):
         # A journal apply walks thousands of messages; announcing each one
         # would re-sort and redraw the contact list thousands of times. The
         # burst collapses into a single notification when the apply ends.
-        if self._journal_bulk:
+        if self._inJournalBulk():
             self._order_changed_during_bulk = True
             return
         self.notification_center.post_notification(
@@ -5259,7 +6081,7 @@ class SMSWindowManagerClass(NSObject):
         self._postConversationOrderChanged(key)
         # live or from the journal: the addressbook from the server says where its contact lives
         self._syncLog(account)('Conversation with %s removed%s (contact left where the addressbook has it)'
-                               % (remote_uri, ' from the journal' if self._journal_bulk else ''))
+                               % (remote_uri, ' from the journal' if self._inJournalBulk() else ''))
 
     @objc.python_method
     def _removalContact(self, content):
@@ -5284,7 +6106,7 @@ class SMSWindowManagerClass(NSObject):
         removed_at = self.deleted_conversations.get(key)
         if removed_at is None:
             return False
-        if self._journal_bulk:
+        if self._inJournalBulk():
             # journal entries do not change the addressbook: a contact the
             # server's addressbook has in Deleted stays there
             return False
@@ -5294,7 +6116,7 @@ class SMSWindowManagerClass(NSObject):
             return False
         if stamp <= removed_at:
             return False
-        BlinkLogger().log_info('Conversation with %s came back: a message from %s is '
+        self._syncLog()('Conversation with %s came back: a message from %s is '
                                'newer than the removal' % (key, when))
         # A contact deleted here comes back whole -- every address of it --
         # like Sylk Mobile's _reviveDeletedContactForActivity.
@@ -6225,7 +7047,7 @@ class SMSWindowManagerClass(NSObject):
         # would redraw the contact list thousands of times. The burst
         # collapses into one notification per affected contact at the end,
         # which is a handful.
-        if self._journal_bulk:
+        if self._inJournalBulk():
             self._unread_changed_during_bulk.add(key)
             return
         total = sum(self.unread_counts.values())
@@ -6780,7 +7602,7 @@ class SMSWindowManagerClass(NSObject):
         transfer_id = note['transfer_id']
         party = note['uri']
         self.callRecordingParties[transfer_id] = party
-        BlinkLogger().log_info('Recording %s belongs to the conversation with %s'
+        self._syncLog()('Recording %s belongs to the conversation with %s'
                                % (transfer_id, party))
         # The transfer may already be here, filed under our own address --
         # the two messages cross, and the note is not always the first to
@@ -6844,7 +7666,7 @@ class SMSWindowManagerClass(NSObject):
             party = self.callRecordingParties.get(transfer_id)
             if not party or party == msg.get('contact'):
                 return
-            BlinkLogger().log_info('Transfer %s belongs to the conversation with %s, '
+            self._syncLog()('Transfer %s belongs to the conversation with %s, '
                                    'not %s' % (transfer_id, party, msg.get('contact')))
             msg['contact'] = party
         except Exception as e:
@@ -6870,7 +7692,7 @@ class SMSWindowManagerClass(NSObject):
             transfer_id = str(msg.get('message_id') or '')
             if transfer_id not in self.ownSelfTransfers:
                 return False
-            BlinkLogger().log_info('Swallowed the journal echo of our own transfer %s' % transfer_id)
+            self._syncLog()('Swallowed the journal echo of our own transfer %s' % transfer_id)
             return True
         except Exception as e:
             BlinkLogger().log_error('Cannot check for the echo of our own transfer: %s' % e)
@@ -6888,7 +7710,7 @@ class SMSWindowManagerClass(NSObject):
         self._redirectToRecordingParty(msg)
         direction = 'incoming'
         BlinkLogger().log_debug(self._describe_journal_message(msg, direction))
-        if not self._journal_bulk:
+        if not self._inJournalBulk():
             # bulk apply has its own progress counter; tracking every save
             # here only adds dict churn and a log line per message
             self.pendingSaveMessage[msg['message_id']] = True
@@ -6981,6 +7803,8 @@ class SMSWindowManagerClass(NSObject):
 
         self._syncLog(account)('Conversation with %s was read on another device' % contact)
         self.clearUnreadMessages(contact)
+        # what a first sync still has to insert of it is read too
+        self.noteSnapshotRead(account, contact)
 
         # If this device has the conversation open, settle it there too: the
         # receipts are owed by the account, not by the device, and another
@@ -7332,7 +8156,7 @@ class SMSWindowManagerClass(NSObject):
         direction = 'outgoing'
         BlinkLogger().log_debug(self._describe_journal_message(msg, direction))
 
-        if not self._journal_bulk:
+        if not self._inJournalBulk():
             self.pendingSaveMessage[msg['message_id']] = True
 
         if msg['state'] == 'delivered':
@@ -8453,7 +9277,8 @@ class SMSWindowManagerClass(NSObject):
                     name, icon = self.notificationIdentity(
                         remote_uri, window_tab_identity.display_name)
                     NSApp.delegate().notify_new_message(
-                        name, nc_body, None, uri=remote_uri, icon=icon)
+                        name, nc_body, None, uri=remote_uri, icon=icon,
+                        timestamp=imdn_timestamp)
             return
 
         # The conversation continues over whichever account the two of

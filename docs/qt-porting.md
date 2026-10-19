@@ -27,7 +27,24 @@ Still different from Blink Qt here: deleting a contact that is in Blocked does
 not remove its presence-block policy (Blink Qt's `ContactTrash._soft_delete`
 does, in the same XCAP update).
 
-## How the first sync works here today
+## Ported on 19 October (to test, one patch per item)
+
+| Item | Where |
+|---|---|
+| 8 | `util.message_from_the_past`, `notify_new_message(timestamp=)` (`BlinkAppDelegate`), the live and `gotMessage` paths, the journal "while you were away" count |
+| 1–7 | `SMSWindowManager`: `_firstSyncRecent`, `_applyJournalEntries(snapshot=)`, `_snapshotIncomingMessage`, `_snapshotReadPoints`, `noteSnapshotRead`, `startSnapshotBacklog` / `_runSnapshotBacklog` (thread `journal-backlog`, utility QoS), `_downloadSnapshotOlder`, `_lookupMissingPublicKeys`, `receiptAllowed` (checked in `SMSViewController._receive_message` and the history replay), `journalImportSpeed` / `setJournalImportSpeed`; the bulk mode is per thread (`_inJournalBulk`) |
+| 10 | `JournalProgressStrip.py`: `ProgressLine`, one line per job |
+| 11 | `AddressbookChecks.py` (`checklist_dialog`), scheduled from `_NH_XCAPManagerDidReloadData` |
+| 12 | `lastMessagePreviewForRow` (address in Deleted), Edit in the Deleted menu with `EditContactController.lockForDeletedContact`, `editContact` leaves groups and subscription alone, counts in `expungeContacts` (`ChatHistory.count_conversation_messages`) |
+| 9 | `_syncLog` is debug while a journal is applied by the thread; the per-entry lines use it |
+| 13 | `ContactWindowController.logContactContextMenu` |
+
+A first sync begun by the earlier code (marker, no `snapshot/`) is finished the
+old way. Files: as in Blink Qt (`first-sync.marker`, `first-sync.date`,
+`snapshot/`, `snapshot/older/`, `snapshot/read-points`, `snapshot/backfill`);
+the speed is in `journal_import_speed`.
+
+## How the first sync worked here before
 
 `journalSinceWindow()` asks for five years, the pages are applied oldest first
 in bulk (`_journal_bulk`, `_applyCachedJournals`), and the first sync is

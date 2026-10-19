@@ -3617,6 +3617,8 @@ class CustomListModel(NSObject):
         try:
             group = outline.parentForItem_(item)
             if isinstance(group, BlinkGroup):
+                if group.isDeletedGroup():
+                    return None     # a deleted contact shows its address
                 return group.lastMessagePreviewForContact(item)
         except Exception:
             pass
@@ -5566,6 +5568,11 @@ class ContactListModel(CustomListModel):
         if not new_contact:
             return
 
+        # A contact in Deleted keeps its groups and its presence subscription
+        # (none) until it is restored; the editor does not offer them.
+        from SMSWindowManager import SMSWindowManager
+        deleted = SMSWindowManager()._isInDeletedGroup(item.contact)
+
         addressbook_manager = AddressbookManager()
         with addressbook_manager.transaction():
             contact = item.contact
@@ -5578,7 +5585,8 @@ class ContactListModel(CustomListModel):
             contact.uris.default = new_contact['default_uri']
             contact.preferred_media = new_contact['preferred_media']
             contact.presence.policy = new_contact['subscriptions']['presence']['policy']
-            contact.presence.subscribe = new_contact['subscriptions']['presence']['subscribe']
+            if not deleted:
+                contact.presence.subscribe = new_contact['subscriptions']['presence']['subscribe']
             contact.dialog.policy = new_contact['subscriptions']['dialog']['policy']
             contact.dialog.subscribe = new_contact['subscriptions']['dialog']['subscribe']
 
@@ -5618,11 +5626,12 @@ class ContactListModel(CustomListModel):
 
             self.removePolicyForContactURIs(contact)
 
-            old_groups = set(self.getBlinkGroupsForBlinkContact(item))
-            new_groups = set(new_contact['groups'])
-            self.removeContactFromGroups(item, old_groups - new_groups)
-            self.addGroupsForContact(contact, new_groups)
-            refile_contact_by_addresses(contact, old_addresses)
+            if not deleted:
+                old_groups = set(self.getBlinkGroupsForBlinkContact(item))
+                new_groups = set(new_contact['groups'])
+                self.removeContactFromGroups(item, old_groups - new_groups)
+                self.addGroupsForContact(contact, new_groups)
+                refile_contact_by_addresses(contact, old_addresses)
 
         if upload or remove_stored:
             from AccountStorage import AccountStorage
@@ -5686,6 +5695,36 @@ class ContactListModel(CustomListModel):
                 if key in owners and key not in neighbours and key not in shared:
                     shared[key] = sorted(owners[key])
         return shared
+
+    @objc.python_method
+    def _contactKeys(self, contact):
+        from SMSWindowManager import SMSWindowManager
+        return SMSWindowManager()._contactURIKeys(contact)
+
+    @objc.python_method
+    def _messageCountsForKeys(self, going, shared):
+        """(messages of the going addresses, messages of the shared ones), the
+        hidden ones included, or None when the history does not answer."""
+        from PGPDecryptor import _wait
+        from SMSWindowManager import SMSWindowManager
+        history = SMSWindowManager().history
+
+        def spellings(keys):
+            result = set()
+            for key in keys:
+                result.add(key)
+                try:
+                    result.update(pstn_uri_spellings_for_accounts(key))
+                except Exception:
+                    pass
+            return sorted(result)
+        try:
+            going_count = _wait(history.count_conversation_messages(spellings(set(going))), timeout=5) if going else 0
+            shared_count = _wait(history.count_conversation_messages(spellings(set(shared))), timeout=5) if shared else 0
+        except Exception as e:
+            BlinkLogger().log_error('[trash] Cannot count the messages of the contacts: %s' % e)
+            return None
+        return int(going_count or 0), int(shared_count or 0)
 
     @objc.python_method
     def _askAboutSharedMessages(self, title, message, shared, warning=False):
@@ -5868,6 +5907,19 @@ class ContactListModel(CustomListModel):
         except Exception as e:
             BlinkLogger().log_error('Cannot check which addresses are still in use: %s' % e)
             return
+        # how many messages go, and how many more if those of the shared addresses go too
+        counts = self._messageCountsForKeys(
+            [key for c in (c for b, c in pairs) for key in self._contactKeys(c) if key not in shared],
+            list(shared))
+        if counts is not None:
+            going_count, shared_count = counts
+            if going_count == 1:
+                line = NSLocalizedString("1 message is deleted.", "Label")
+            else:
+                line = NSLocalizedString("%d messages are deleted.", "Label") % going_count
+            if shared_count:
+                line += ' ' + NSLocalizedString("%d more belong to addresses other contacts list too.", "Label") % shared_count
+            message = '%s\n\n%s' % (message, line)
         shared_messages = False
         if shared:
             choice = self._askAboutSharedMessages(title, message, shared, warning=True)

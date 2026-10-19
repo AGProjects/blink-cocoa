@@ -1351,6 +1351,28 @@ class EditContactController(AddContactController):
         self.defaultButton.setEnabled_(False)
         self.updateSubscriptionMenus()
         self.loadGroupNames()
+        self.lockForDeletedContact(blink_contact)
+
+    @objc.python_method
+    def lockForDeletedContact(self, blink_contact):
+        """A contact in Deleted can be edited, but its groups and its presence
+        subscription stay as they are until it is restored: in Deleted it is
+        in no other group and not subscribed to."""
+        try:
+            from SMSWindowManager import SMSWindowManager
+            self.deleted = SMSWindowManager()._isInDeletedGroup(blink_contact.contact)
+        except Exception:
+            self.deleted = False
+        if not self.deleted:
+            return
+        tooltip = NSLocalizedString("Restore the contact from the Deleted group to change this", "Tooltip")
+        self.groupPopUp.setEnabled_(False)
+        self.groupPopUp.setToolTip_(tooltip)
+        self.subscribePopUp.menu().setAutoenablesItems_(False)
+        item = self.subscribePopUp.itemAtIndex_(3)
+        if item is not None:
+            item.setEnabled_(False)
+            item.setToolTip_(tooltip)
 
     @objc.python_method
     def runModal(self):

@@ -703,7 +703,9 @@
 		AD0000000000000000610001 /* Profiles.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000610000 /* Profiles.py */; };
 		AD0000000000000000610003 /* Profiles.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000610000 /* Profiles.py */; };
 		AD00000000000000006A0001 /* JournalProgressStrip.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000006A0000 /* JournalProgressStrip.py */; };
+		AD00000000000000AC5A0001 /* AddressbookChecks.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000AC5A0000 /* AddressbookChecks.py */; };
 		AD00000000000000006A0003 /* JournalProgressStrip.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000006A0000 /* JournalProgressStrip.py */; };
+		AD00000000000000AC5A0003 /* AddressbookChecks.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000AC5A0000 /* AddressbookChecks.py */; };
 		AD00000000000000006B0001 /* PGPDecryptor.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000006B0000 /* PGPDecryptor.py */; };
 		AD00000000000000006B0003 /* PGPDecryptor.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000006B0000 /* PGPDecryptor.py */; };
 		AD00000000000000006F0001 /* FileTransferCache.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000006F0000 /* FileTransferCache.py */; };
@@ -1564,6 +1566,7 @@
 		AD0000000000000000600000 /* ContactMangler.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ContactMangler.py; sourceTree = "<group>"; };
 		AD0000000000000000610000 /* Profiles.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = Profiles.py; sourceTree = "<group>"; };
 		AD00000000000000006A0000 /* JournalProgressStrip.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = JournalProgressStrip.py; sourceTree = "<group>"; };
+		AD00000000000000AC5A0000 /* AddressbookChecks.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AddressbookChecks.py; sourceTree = "<group>"; };
 		AD00000000000000006B0000 /* PGPDecryptor.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = PGPDecryptor.py; sourceTree = "<group>"; };
 		AD00000000000000006F0000 /* FileTransferCache.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = FileTransferCache.py; sourceTree = "<group>"; };
 		AD0000000000000000700000 /* AudioRecorder.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AudioRecorder.py; sourceTree = "<group>"; };
@@ -1950,6 +1953,7 @@
 				AD00000000000000007A0000 /* PGPWorker.py */,
 				AD00000000000000006B0000 /* PGPDecryptor.py */,
 				AD00000000000000006A0000 /* JournalProgressStrip.py */,
+				AD00000000000000AC5A0000 /* AddressbookChecks.py */,
 				AD00000000000000005E0000 /* SylkDiscovery.py */,
 				AD0000000000000000AB0000 /* AddressbookNotify.py */,
 				AD0000000000000000AB0010 /* AddressbookOrigin.py */,
@@ -2702,6 +2706,7 @@
 				AD00000000000000007A0001 /* PGPWorker.py in Resources */,
 				AD00000000000000006B0001 /* PGPDecryptor.py in Resources */,
 				AD00000000000000006A0001 /* JournalProgressStrip.py in Resources */,
+				AD00000000000000AC5A0001 /* AddressbookChecks.py in Resources */,
 				AD00000000000000005E0001 /* SylkDiscovery.py in Resources */,
 				AD0000000000000000AB0001 /* AddressbookNotify.py in Resources */,
 				AD0000000000000000AB0011 /* AddressbookOrigin.py in Resources */,
@@ -3033,6 +3038,7 @@
 				AD00000000000000007A0003 /* PGPWorker.py in Resources */,
 				AD00000000000000006B0003 /* PGPDecryptor.py in Resources */,
 				AD00000000000000006A0003 /* JournalProgressStrip.py in Resources */,
+				AD00000000000000AC5A0003 /* AddressbookChecks.py in Resources */,
 				AD00000000000000005E0003 /* SylkDiscovery.py in Resources */,
 				AD0000000000000000AB0003 /* AddressbookNotify.py in Resources */,
 				AD0000000000000000AB0013 /* AddressbookOrigin.py in Resources */,
