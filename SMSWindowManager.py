@@ -5218,8 +5218,12 @@ class SMSWindowManagerClass(NSObject):
     def applyConversationRemoval(self, account, payload, before_time=None):
         """A conversation was removed on another device.
 
-        Marks it, files the contact under Deleted and takes it off the
-        screen. `before_time` is when the removal was performed: rows newer
+        Marks it and takes it off the screen; the address book is left alone.
+        The device that removed it moved the contact to Deleted on the
+        server itself, and that reaches every device through XCAP: filing it
+        again here re-deleted a contact restored since, whenever an old
+        removal arrived late (missed while offline, delivered at register).
+        `before_time` is when the removal was performed: rows newer
         than that are left alone, so a notice replayed out of the journal
         cannot hide a conversation that has since come back to life.
 
@@ -5253,16 +5257,9 @@ class SMSWindowManagerClass(NSObject):
         if self.unread_counts.pop(key, None):
             self._postUnreadChanged(key, 0)
         self._postConversationOrderChanged(key)
-        if self._journal_bulk:
-            # replayed from the journal: the conversation is hidden, but the
-            # addressbook fetched from the server already says where its
-            # contact lives and is left alone
-            self._syncLog(account)('Conversation with %s removed (from the journal, contact left where it is)'
-                                   % remote_uri)
-            return
-        self.fileConversationAsDeleted(remote_uri, True)
-        self._syncLog(account)('Conversation with %s removed and filed under Deleted'
-                               % remote_uri)
+        # live or from the journal: the addressbook from the server says where its contact lives
+        self._syncLog(account)('Conversation with %s removed%s (contact left where the addressbook has it)'
+                               % (remote_uri, ' from the journal' if self._journal_bulk else ''))
 
     @objc.python_method
     def _removalContact(self, content):
@@ -5373,11 +5370,13 @@ class SMSWindowManagerClass(NSObject):
 
     @objc.python_method
     def fileContactAsDeleted(self, contact, deleted, label=None, to_messages=True):
-        """Move one address book contact between Messages and Deleted.
+        """Move one address book contact into Deleted, or out of it.
 
-        GUI thread only. Membership of Deleted is what hides the contact in
-        every other group of the list; its other group memberships are left
-        exactly as they were, so a restore puts it back where it lived.
+        GUI thread only. A contact in Deleted is in no other group: deleting
+        takes it out of every one (Messages, Calls, Tel, Conference and the
+        user's own), as Sylk Mobile and Blink Qt do. A restore files it back
+        into Tel and Conference by its addresses, and into Messages when it
+        has a conversation.
         """
         uri = label or getattr(contact, 'name', '') or contact.id
         # Imported here rather than at module scope: ContactListModel
@@ -5390,10 +5389,19 @@ class SMSWindowManagerClass(NSObject):
                 if target is not None and contact not in set(target.contacts):
                     target.contacts.add(contact)
                     target.save()
-                source = self._conversationGroup(MESSAGES_GROUP_ID, create=False)
-                if source is not None and contact in set(source.contacts):
-                    source.contacts.remove(contact)
-                    source.save()
+                left = []
+                for group in AddressbookManager().get_groups():
+                    if group.id == DELETED_GROUP_ID:
+                        continue
+                    try:
+                        if contact in set(group.contacts):
+                            group.contacts.remove(contact)
+                            group.save()
+                            left.append(group.name or group.id)
+                    except Exception as e:
+                        BlinkLogger().log_error('Cannot take %s out of %s: %s' % (uri, group.name or group.id, e))
+                if left:
+                    BlinkLogger().log_info('[trash] %s taken out of %s' % (uri, ', '.join(left)))
                 self._setPresenceSubscription(contact, False, uri)
             else:
                 source = self._conversationGroup(DELETED_GROUP_ID, create=False)
@@ -5401,6 +5409,8 @@ class SMSWindowManagerClass(NSObject):
                     source.contacts.remove(contact)
                     source.save()
                 self._setPresenceSubscription(contact, True, uri)
+                # back into Tel and Conference by its addresses (as if they had just been added)
+                _history_module.refile_contact_by_addresses(contact, [])
                 # Back into Messages through the one place that knows how to
                 # make that group -- including promoting it to the top, which
                 # a plain create does not do.
