@@ -6359,6 +6359,43 @@ class MessageBubbleView(NSView):
 
     def mouseDown_(self, event):
         point = self.convertPoint_fromView_(event.locationInWindow(), None)
+        renderer = self.renderer
+        # A tick only where a grid is actually showing. grid_mode left on a
+        # bubble in the plain transcript turned a press on the actions
+        # button into a tick and brought the Forward/Delete bar up; that is
+        # repaired here and said out loud, so its origin can be found.
+        if (self.grid_mode and renderer is not None
+                and hasattr(renderer, 'bubbleGridIsActive')
+                and not renderer.bubbleGridIsActive()):
+            BlinkLogger().log_error('Bubble %s: grid_mode set outside a grid (kind %s), reset'
+                                    % (self.msgid, self.kind))
+            self.grid_mode = False
+            self.invalidateLayout()
+            self.setNeedsDisplay_(True)
+            try:
+                self.superview().setNeedsMessageLayout()
+            except Exception:
+                pass
+        header = self.kind not in (self.KIND_SYSTEM, self.KIND_DATE) and not self._tileMode()
+
+        # The actions button before the checkbox: the box's slop reaches past
+        # the gap onto the button wherever both exist (a location in a grid),
+        # and a press on a drawn button means the button.
+        if self.msgid and self._hits(point, self._more_rect, header):
+            menu = self.messageMenu()
+            if menu is not None:
+                BlinkLogger().log_debug('Bubble %s: actions menu' % self.msgid)
+                # attached to the button: it opens just under it, and the button
+                # stays while it is open
+                anchor = (self._more_rect.origin.x, self._more_rect.origin.y + self._more_rect.size.height)     # a flipped view
+                self._menu_open = True
+                self.setNeedsDisplayInRect_(self._more_rect)
+                try:
+                    menu.popUpMenuPositioningItem_atLocation_inView_(None, anchor, self)
+                finally:
+                    self._menu_open = False
+                    self.setNeedsDisplayInRect_(self._more_rect)
+            return
         # The checkbox before every other affordance, and before the drag
         # is armed: a press on the box ticks the cell, and a press that
         # lands anywhere else on it goes on meaning what it always meant.
@@ -6376,24 +6413,6 @@ class MessageBubbleView(NSView):
         if NSPointInRect(point, self._tileInfoHitRect()):
             BlinkLogger().log_debug('Bubble %s: tile info' % self.msgid)
             self.performSelector_withObject_afterDelay_('showMessageInfo:', None, 0.0)
-            return
-        renderer = self.renderer
-        header = self.kind not in (self.KIND_SYSTEM, self.KIND_DATE) and not self._tileMode()
-
-        if self.msgid and self._hits(point, self._more_rect, header):
-            menu = self.messageMenu()
-            if menu is not None:
-                BlinkLogger().log_debug('Bubble %s: actions menu' % self.msgid)
-                # attached to the button: it opens just under it, and the button
-                # stays while it is open
-                anchor = (self._more_rect.origin.x, self._more_rect.origin.y + self._more_rect.size.height)     # a flipped view
-                self._menu_open = True
-                self.setNeedsDisplayInRect_(self._more_rect)
-                try:
-                    menu.popUpMenuPositioningItem_atLocation_inView_(None, anchor, self)
-                finally:
-                    self._menu_open = False
-                    self.setNeedsDisplayInRect_(self._more_rect)
             return
         if self.msgid and self._hits(point, self._delete_rect, header):
             if renderer is not None and hasattr(renderer, 'bubbleDidRequestDelete'):

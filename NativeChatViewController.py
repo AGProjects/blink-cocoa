@@ -6051,6 +6051,12 @@ class NativeChatViewController(ChatViewController):
                 view.setNeedsDisplay_(True)
 
     @objc.python_method
+    def bubbleGridIsActive(self):
+        """Whether the transcript is a grid now. Asked by a bubble before it
+        takes a press as a tick, so a stale grid_mode cannot select."""
+        return self.message_filter in GRID_CATEGORIES
+
+    @objc.python_method
     def bubbleDidToggleSelection(self, msgid, extend=False):
         """A checkbox was clicked. Shift extends from the last plain tick.
 
