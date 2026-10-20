@@ -27,6 +27,7 @@ def setup(delegate):
     delegate.history_enabled = True
     delegate.answering_machine_enabled = True
     delegate.recording_enabled = True
+    delegate.location_sharing_enabled = True
     delegate.file_logging_enabled = True
     delegate.advanced_options_enabled = True
     delegate.external_alert_enabled = True

@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>BlinkVersionDate</key>
-	<string>Aug 30th, 2026</string>
+	<string>Oct 20th, 2026</string>
 	<key>BrandingFile</key>
 	<string>branding-pro</string>
 	<key>CFBundleDevelopmentRegion</key>
@@ -42,6 +42,14 @@
 				<string>tel</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>Blink internal URI</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>blink</string>
+			</array>
+		</dict>
 	</array>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
@@ -55,6 +63,8 @@
 	<string>Required for VoIP calls</string>
 	<key>NSContactsUsageDescription</key>
 	<string>Required for calling your contacts. No data is collected. Privacy policy available at http://icanblink.com/privacy</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Blink connects to your other devices on the local network to import the messages and files they export.</string>
 	<key>NSMainNibFile</key>
 	<string>MainWindow</string>
 	<key>NSMicrophoneUsageDescription</key>

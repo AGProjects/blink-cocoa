@@ -1731,18 +1731,19 @@ class MessagePaneController(NSObject):
         menu = NSMenu.alloc().init()
         menu.setAutoenablesItems_(False)
 
-        send = menu.addItemWithTitle_action_keyEquivalent_(
-            NSLocalizedString("Send Current Location", "Menu item"),
-            'sendCurrentLocation:', '')
-        send.setTarget_(self)
+        if self._locationSharingEnabled():
+            send = menu.addItemWithTitle_action_keyEquivalent_(
+                NSLocalizedString("Send Current Location", "Menu item"),
+                'sendCurrentLocation:', '')
+            send.setTarget_(self)
 
-        # A reason, in the item's own tooltip, rather than an item that is
-        # simply dead: "greyed out and no explanation" is the version of
-        # this people report as broken.
-        reason = self._locationUnavailableReason()
-        if reason:
-            send.setEnabled_(False)
-            send.setToolTip_(reason)
+            # A reason, in the item's own tooltip, rather than an item that is
+            # simply dead: "greyed out and no explanation" is the version of
+            # this people report as broken.
+            reason = self._locationUnavailableReason()
+            if reason:
+                send.setEnabled_(False)
+                send.setToolTip_(reason)
 
         request = menu.addItemWithTitle_action_keyEquivalent_(
             NSLocalizedString("Request Location", "Menu item"),
@@ -1754,6 +1755,12 @@ class MessagePaneController(NSObject):
             menu.popUpMenuPositioningItem_atLocation_inView_(None, origin, sender)
         except Exception as e:
             BlinkLogger().log_error('Cannot show the location menu: %s' % e)
+
+    @objc.python_method
+    def _locationSharingEnabled(self):
+        """Whether this build may send our own location (off in Blink Pro,
+        which can still ask the other side for theirs)."""
+        return getattr(NSApp.delegate(), 'location_sharing_enabled', True)
 
     @objc.python_method
     def _locationUnavailableReason(self):
@@ -1784,7 +1791,7 @@ class MessagePaneController(NSObject):
         to that one.
         """
         viewer = self._selected
-        if viewer is None:
+        if viewer is None or not self._locationSharingEnabled():
             return
         try:
             from MacLocation import current_location

@@ -1908,6 +1908,9 @@ class SMSViewController(NSObject):
         message to this account's OTHER devices, not to the one that sent
         it, so nothing would ever arrive to draw.
         """
+        if not getattr(NSApp.delegate(), 'location_sharing_enabled', True):
+            self.log_info('Location sharing is disabled in this build; not sent')
+            return None
         if not self.confirmOutgoingAccount():
             return None
         msgid = str(uuid.uuid4())

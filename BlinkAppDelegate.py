@@ -199,6 +199,7 @@ class BlinkAppDelegate(NSObject):
     screen_sharing_ui_enabled = False
     history_enabled = True
     recording_enabled = True
+    location_sharing_enabled = True
     file_logging_enabled = True
     advanced_options_enabled = True
     hidden_account_preferences_sections = ()

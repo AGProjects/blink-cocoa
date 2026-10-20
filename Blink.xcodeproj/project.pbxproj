@@ -662,6 +662,18 @@
 		5A1E00010000000000000013 /* ShareController.py in Resources */ = {isa = PBXBuildFile; fileRef = 5A1E00010000000000000012 /* ShareController.py */; };
 		5A1E000200000000000000F2 /* VideoFrameSource.py in Resources */ = {isa = PBXBuildFile; fileRef = 5A1E000200000000000000F1 /* VideoFrameSource.py */; };
 		5A1E000200000000000000F4 /* VideoCallRecorder.py in Resources */ = {isa = PBXBuildFile; fileRef = 5A1E000200000000000000F3 /* VideoCallRecorder.py */; };
+		5B1E00010000000000000001 /* DataExport.py in Resources */ = {isa = PBXBuildFile; fileRef = DD1A00000000000000000009 /* DataExport.py */; };
+		5B1E00010000000000000002 /* DataExportPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = DD1A0000000000000000000B /* DataExportPanel.py */; };
+		5B1E00010000000000000003 /* DataImport.py in Resources */ = {isa = PBXBuildFile; fileRef = DD1A00000000000000000001 /* DataImport.py */; };
+		5B1E00010000000000000004 /* DataImportPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = DD1A00000000000000000003 /* DataImportPanel.py */; };
+		5B1E00010000000000000005 /* DataManage.py in Resources */ = {isa = PBXBuildFile; fileRef = DD1A00000000000000000005 /* DataManage.py */; };
+		5B1E00010000000000000006 /* DataManagerWindow.py in Resources */ = {isa = PBXBuildFile; fileRef = DD1A00000000000000000007 /* DataManagerWindow.py */; };
+		5B1E00010000000000000007 /* ScreenPointer.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000EF0000 /* ScreenPointer.py */; };
+		5B1E00010000000000000008 /* ScreenPointerController.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000EF0100 /* ScreenPointerController.py */; };
+		5B1E00010000000000000009 /* ShareController.py in Resources */ = {isa = PBXBuildFile; fileRef = 5A1E00010000000000000012 /* ShareController.py */; };
+		5B1E0001000000000000000A /* VideoCallRecorder.py in Resources */ = {isa = PBXBuildFile; fileRef = 5A1E000200000000000000F3 /* VideoCallRecorder.py */; };
+		5B1E0001000000000000000B /* VideoFrameSource.py in Resources */ = {isa = PBXBuildFile; fileRef = 5A1E000200000000000000F1 /* VideoFrameSource.py */; };
+		5B1E00010000000000000100 /* BlinkShare.appex in Embed Share Extension */ = {isa = PBXBuildFile; fileRef = 5A1E00010000000000000004 /* BlinkShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		6891C4358F58D5C1BE764D8F /* AccountStorage.py in Resources */ = {isa = PBXBuildFile; fileRef = F1E292A2EF0C3705AB554508 /* AccountStorage.py */; };
 		6F4A2186383B4EC036556823 /* AvatarConflictPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 357D1EE3CE09B6CB0F7E08D5 /* AvatarConflictPanel.py */; };
 		82E9002A6E2F6878C83E86C4 /* DNSInformationPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 45397DEE96ABB5F308EF4D7E /* DNSInformationPanel.py */; };
@@ -768,6 +780,13 @@
 
 /* Begin PBXContainerItemProxy section */
 		5A1E00010000000000000011 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 29B97313FDCFA39411CA2CEA /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 5A1E0001000000000000000C;
+			remoteInfo = BlinkShare;
+		};
+		5B1E00010000000000000102 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 29B97313FDCFA39411CA2CEA /* Project object */;
 			proxyType = 1;
@@ -964,6 +983,17 @@
 			dstSubfolderSpec = 13;
 			files = (
 				5A1E00010000000000000007 /* BlinkShare.appex in Embed Share Extension */,
+			);
+			name = "Embed Share Extension";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5B1E00010000000000000101 /* Embed Share Extension */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				5B1E00010000000000000100 /* BlinkShare.appex in Embed Share Extension */,
 			);
 			name = "Embed Share Extension";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2425,10 +2455,12 @@
 				1F22735D12B554F50010A8B2 /* Copy Interfaces Package */,
 				1F22736D12B555550010A8B2 /* Copy Libraries */,
 				1F22738C12B555C70010A8B2 /* Copy Frameworks */,
+				5B1E00010000000000000101 /* Embed Share Extension */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				5B1E00010000000000000103 /* PBXTargetDependency */,
 			);
 			name = "Blink Pro";
 			productInstallPath = "$(HOME)/Applications";
@@ -2546,6 +2578,17 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5B1E00010000000000000001 /* DataExport.py in Resources */,
+				5B1E00010000000000000002 /* DataExportPanel.py in Resources */,
+				5B1E00010000000000000003 /* DataImport.py in Resources */,
+				5B1E00010000000000000004 /* DataImportPanel.py in Resources */,
+				5B1E00010000000000000005 /* DataManage.py in Resources */,
+				5B1E00010000000000000006 /* DataManagerWindow.py in Resources */,
+				5B1E00010000000000000007 /* ScreenPointer.py in Resources */,
+				5B1E00010000000000000008 /* ScreenPointerController.py in Resources */,
+				5B1E00010000000000000009 /* ShareController.py in Resources */,
+				5B1E0001000000000000000A /* VideoCallRecorder.py in Resources */,
+				5B1E0001000000000000000B /* VideoFrameSource.py in Resources */,
 				1F2C06F225DC3490004701ED /* mime.types in Resources */,
 				1F762C321D9C75FA00F3D455 /* memory_debug.py in Resources */,
 				1F22729612B554F50010A8B2 /* ContactWindowController.py in Resources */,
@@ -3227,6 +3270,11 @@
 			target = 5A1E0001000000000000000C /* BlinkShare */;
 			targetProxy = 5A1E00010000000000000011 /* PBXContainerItemProxy */;
 		};
+		5B1E00010000000000000103 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 5A1E0001000000000000000C /* BlinkShare */;
+			targetProxy = 5B1E00010000000000000102 /* PBXContainerItemProxy */;
+		};
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
@@ -3822,7 +3870,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 27289;
+				CURRENT_PROJECT_VERSION = 27290;
 				DEVELOPMENT_TEAM = 4DFEFUDLKZ;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = YES;
@@ -3855,7 +3903,7 @@
 					"$(PROJECT_DIR)/Distribution/Frameworks/libs",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 7.2.0;
+				MARKETING_VERSION = 7.3.0;
 				ONLY_ACTIVE_ARCH = NO;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				PRODUCT_BUNDLE_IDENTIFIER = com.agprojects.Blink;
@@ -3886,7 +3934,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 27289;
+				CURRENT_PROJECT_VERSION = 27290;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 4DFEFUDLKZ;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -3919,7 +3967,7 @@
 					"$(PROJECT_DIR)/Distribution/Frameworks/libs",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 7.2.0;
+				MARKETING_VERSION = 7.3.0;
 				ONLY_ACTIVE_ARCH = NO;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				OTHER_CPLUSPLUSFLAGS = "-IDistribution/Frameworks/Python.framework/Headers";
