@@ -75,6 +75,7 @@ from Foundation import (NSArray,
                         NSMakeRect,
                         NSMakeSize,
                         NSPointInRect,
+                        NSInsetRect,
                         NSURL,
                         NSWorkspace,
                         NSZeroRect)
@@ -467,6 +468,13 @@ GLYPH_INFO      = chr(9432)
 # a right click -- rather than a row of small glyphs in the header.
 MORE_BUTTON_SIZE = 22.0
 MORE_BUTTON_GAP  = 6.0
+# How long after one actions menu closes before another is opened. A menu
+# opened while the previous one is still fading out is tracked but never
+# drawn: the log said "opening ... closed after 2s" and nothing was on
+# screen. Shared by every bubble -- it is the previous MENU that matters,
+# whichever bubble it belonged to.
+MENU_SETTLE_SECONDS = 0.4
+_last_menu_closed = [0.0]
 # Which way the call went. Direction is the arrow's whole job: whether it
 # was answered is carried by the colour and said outright in the words, so
 # a missed call is the same arrow in the attention colour rather than a
@@ -1813,6 +1821,21 @@ class BubbleTextField(NSTextField):
             return
         bubble.mouseDown_(event)
 
+    def menuForEvent_(self, event):
+        # A deletable system note is all text field: without this a right
+        # click on its words got the field's Copy/Look Up menu and never
+        # the note's own.
+        # The message's menu for a right click on its words, the same one
+        # the ⋯ opens. A field with no menu of its own answered nothing, and
+        # the click looked swallowed. With text selected the field editor
+        # is what was clicked, and it keeps its Copy/Look Up menu.
+        bubble = self.superview()
+        if hasattr(bubble, 'menuForEvent_'):
+            menu = bubble.menuForEvent_(event)
+            if menu is not None:
+                return menu
+        return objc.super(BubbleTextField, self).menuForEvent_(event)
+
     def mouseDragged_(self, event):
         # The drag and the release follow the press: AppKit keeps sending
         # them to whichever view took mouseDown, so handing over the press
@@ -1874,6 +1897,10 @@ class MessageBubbleView(NSView):
             self.encryption = None
             self.is_error = False
             self.grouped = False
+            # A system note that stands for a stored message of its own --
+            # a location request, a share stopped -- and so can be deleted
+            # like one. Plain notes ("Message not sent") are nobody's row.
+            self.deletable_note = False
             self.continued_below = False
             self.expand_smileys = True
             self.font_size = transcript_font_size()
@@ -3785,6 +3812,18 @@ class MessageBubbleView(NSView):
             renderer.bubbleDidRequestSeek(self.msgid, fraction)
 
     def mouseUp_(self, event):
+        if getattr(self, '_more_armed', False):
+            self._more_armed = False
+            point = self.convertPoint_fromView_(event.locationInWindow(), None)
+            if NSPointInRect(point, NSInsetRect(self._currentMoreRect(), -4.0, -4.0)):
+                # After this event is done with, so the menu opens with no
+                # button held and stays until the user picks or dismisses it.
+                self._more_event = event
+                self.performSelector_withObject_afterDelay_('openActionsMenu:', None, 0.0)
+            else:
+                BlinkLogger().log_info('Bubble %s: actions button released outside it, not opening'
+                                       % self.msgid)
+            return
         # Let go of whatever was held down first, and unconditionally: the
         # branches below return early, and a key left drawn pressed after
         # the mouse came up is a key that looks stuck.
@@ -4549,6 +4588,10 @@ class MessageBubbleView(NSView):
                 self._drawSelection()
             if self._showsTileInfo():
                 self._drawTileInfo()
+        elif self.deletable_note:
+            self._drawMoreButton(bubble)
+        else:
+            self._more_rect = NSZeroRect
 
     @objc.python_method
     def _ensureTileImage(self, width=0.0, height=0.0):
@@ -5413,8 +5456,43 @@ class MessageBubbleView(NSView):
         self._more_rect = NSZeroRect
 
     @objc.python_method
+    def _currentMoreRect(self):
+        """Where the actions button is NOW, or an empty rect for none.
+
+        From the current layout, not from the last draw: the rect kept by
+        drawing is only as fresh as the last repaint, and a click on a
+        button that had not been repainted since the layout moved landed
+        on nothing -- a ⋯ that sometimes worked and sometimes did not.
+        """
+        if not self.msgid or self._tileMode() or self.kind == self.KIND_DATE:
+            return NSZeroRect
+        if self.kind == self.KIND_SYSTEM and not self.deletable_note:
+            return NSZeroRect
+        if self._bubble_rect.size.width <= 0:
+            return NSZeroRect
+        return self._moreButtonRect(self._bubble_rect)
+
+    @objc.python_method
     def _moreButtonRect(self, bubble):
         """Beside the bubble, on the side facing the middle, level with its top."""
+        if self.kind == self.KIND_SYSTEM:
+            # A note spans the pane with its words centred in it: the
+            # button goes right after the words, not out at the pane's edge
+            # where it reads as belonging to nothing.
+            y = bubble.origin.y + max((bubble.size.height - MORE_BUTTON_SIZE) / 2.0, 0.0)
+            right_limit = bubble.origin.x + bubble.size.width - MORE_BUTTON_SIZE - 2.0
+            x = right_limit
+            field = getattr(self, '_body_field', None)
+            if field is not None:
+                try:
+                    frame = field.frame()
+                    text_w = min(field.attributedStringValue().size().width + 4.0,
+                                 frame.size.width)
+                    middle = frame.origin.x + frame.size.width / 2.0
+                    x = min(middle + text_w / 2.0 + MORE_BUTTON_GAP, right_limit)
+                except Exception:
+                    pass
+            return NSMakeRect(x, y, MORE_BUTTON_SIZE, MORE_BUTTON_SIZE)
         if self.direction == 'outgoing':
             x = bubble.origin.x - MORE_BUTTON_GAP - MORE_BUTTON_SIZE
         else:
@@ -5424,7 +5502,7 @@ class MessageBubbleView(NSView):
     @objc.python_method
     def _drawMoreButton(self, bubble):
         """The actions button: drawn while the pointer is over the message (or its menu is open)."""
-        self._more_rect = self._moreButtonRect(bubble) if self.msgid else NSZeroRect
+        self._more_rect = self._currentMoreRect()
         if not self.msgid or not (getattr(self, '_hovered', False) or getattr(self, '_menu_open', False)):
             return
         rect = self._more_rect
@@ -5440,6 +5518,38 @@ class MessageBubbleView(NSView):
         for offset in (-5.0, 0.0, 5.0):
             NSBezierPath.bezierPathWithOvalInRect_(
                 NSMakeRect(middle_x + offset - radius, middle_y - radius, radius * 2, radius * 2)).fill()
+
+    def hitTest_(self, point):
+        """The actions button is the bubble's, whatever lies under it.
+
+        Beside a message nothing does; on a system note the button sits
+        inside the note, over the text field that spans it, and the field
+        took every click on it -- the ⋯ showed and did nothing.
+        """
+        near = False
+        try:
+            rect = self._currentMoreRect()
+            if rect.size.width > 0 and not self.isHidden():
+                local = self.convertPoint_fromView_(point, self.superview())
+                if NSPointInRect(local, rect):
+                    return self
+                near = NSPointInRect(local, NSInsetRect(rect, -24.0, -12.0))
+        except Exception:
+            pass
+        view = objc.super(MessageBubbleView, self).hitTest_(point)
+        if near and view is not self:
+            # A press near the button that goes to someone else: the case
+            # that never reaches mouseDown_ and so never logs there.
+            try:
+                from AppKit import NSApp
+                event = NSApp.currentEvent()
+                if event is not None and event.type() == 1:      # NSEventTypeLeftMouseDown
+                    BlinkLogger().log_info('Bubble %s: press near the actions button goes to %s'
+                                           % (self.msgid,
+                                              view.className() if view is not None else 'nothing'))
+            except Exception:
+                pass
+        return view
 
     def updateTrackingAreas(self):
         objc.super(MessageBubbleView, self).updateTrackingAreas()
@@ -6192,7 +6302,104 @@ class MessageBubbleView(NSView):
         """
         return bool(allowed) and rect.size.width > 0 and NSPointInRect(point, rect)
 
+    def openActionsMenu_(self, sender):
+        wait = _last_menu_closed[0] + MENU_SETTLE_SECONDS - time.time()
+        if wait > 0.02:
+            BlinkLogger().log_info('Bubble %s: actions menu deferred %.2fs, the last one is still closing'
+                                   % (self.msgid, wait))
+            self.performSelector_withObject_afterDelay_('openActionsMenu:', None, wait)
+            return
+        menu = self.messageMenu()
+        if menu is None:
+            BlinkLogger().log_error('Bubble %s: actions button pressed, but no menu was built'
+                                    % self.msgid)
+            return
+        self._more_rect = self._currentMoreRect()
+        BlinkLogger().log_info('Bubble %s: actions menu with %d item(s) opening'
+                               % (self.msgid, menu.numberOfItems()))
+        # attached to the button: it opens just under it, and the button
+        # stays while it is open
+        anchor = (self._more_rect.origin.x, self._more_rect.origin.y + self._more_rect.size.height)     # a flipped view
+        self._menu_open = True
+        self.setNeedsDisplayInRect_(self._more_rect)
+        opened = time.time()
+        try:
+            import AppKit
+            from AppKit import NSApp, NSEvent
+            NSEventTypeRightMouseDown = getattr(AppKit, 'NSEventTypeRightMouseDown', 3)
+            window = self.window()
+            in_window = self.convertPoint_toView_(anchor, None)
+            screen_point = window.convertPointToScreen_(in_window) if window is not None else None
+            screen = window.screen() if window is not None else None
+            BlinkLogger().log_info(
+                'Bubble %s: actions menu at view (%.0f,%.0f) window (%.0f,%.0f) screen %s; '
+                'window frame %s key=%s visible=%s; screen %s; app active=%s'
+                % (self.msgid, anchor[0], anchor[1], in_window.x, in_window.y,
+                   '(%.0f,%.0f)' % (screen_point.x, screen_point.y) if screen_point is not None else '-',
+                   _rect_text(window.frame()) if window is not None else '-',
+                   bool(window.isKeyWindow()) if window is not None else '-',
+                   bool(window.isVisible()) if window is not None else '-',
+                   _rect_text(screen.frame()) if screen is not None else '-',
+                   bool(NSApp.isActive())))
+            # The context-menu path, aimed at the button with a synthesized
+            # event: AppKit places and tracks it the way it does every
+            # right-click menu, rather than at a computed location that was
+            # sometimes opened and never drawn.
+            event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
+                NSEventTypeRightMouseDown, in_window, 0,
+                NSApp.currentEvent().timestamp() if NSApp.currentEvent() is not None else 0,
+                window.windowNumber(), None, 0, 1, 1.0)
+            NSMenu.popUpContextMenu_withEvent_forView_(menu, event, self)
+            _last_menu_closed[0] = time.time()
+            BlinkLogger().log_info('Bubble %s: actions menu closed after %.2fs'
+                                   % (self.msgid, time.time() - opened))
+        except Exception as e:
+            BlinkLogger().log_error('Bubble %s: actions menu failed to open: %s'
+                                    % (self.msgid, e))
+        finally:
+            self._menu_open = False
+            self.setNeedsDisplayInRect_(self._more_rect)
+
+    @objc.python_method
+    def _repairStaleGridMode(self):
+        """Clear grid_mode on a bubble in a transcript that is not a grid.
+
+        Left on, it turned a press on the actions button into a tick and
+        sent a right click down the tile path. Repaired where it is found
+        and said out loud, so its origin can be traced.
+        """
+        renderer = self.renderer
+        if (self.grid_mode and renderer is not None
+                and hasattr(renderer, 'bubbleGridIsActive')
+                and not renderer.bubbleGridIsActive()):
+            BlinkLogger().log_error('Bubble %s: grid_mode set outside a grid (kind %s), reset'
+                                    % (self.msgid, self.kind))
+            self.grid_mode = False
+            self.invalidateLayout()
+            self.setNeedsDisplay_(True)
+            try:
+                self.superview().setNeedsMessageLayout()
+            except Exception:
+                pass
+
     def menuForEvent_(self, event):
+        self._repairStaleGridMode()
+        menu = self._contextMenu(event)
+        quiet = (self.kind == self.KIND_DATE
+                 or (self.kind == self.KIND_SYSTEM and not self.deletable_note))
+        if menu is None and not quiet:
+            # Said, because "the right click did nothing" has several causes
+            # and the state that picks between them is gone by the time
+            # anybody looks.
+            BlinkLogger().log_info('Bubble %s: no menu for a right click (kind=%s grid_mode=%s '
+                                   'tile=%s note=%s transfer=%s)'
+                                   % (self.msgid, self.kind, bool(self.grid_mode),
+                                      self._tileMode(), bool(self.deletable_note),
+                                      self.transfer_meta is not None))
+        return menu
+
+    @objc.python_method
+    def _contextMenu(self, event):
         """The right-click menu on a tile.
 
         A tile has no room for the header the transcript hangs its copy and
@@ -6212,6 +6419,8 @@ class MessageBubbleView(NSView):
         if not self._tileMode() and self.kind not in (self.KIND_SYSTEM, self.KIND_DATE):
             # in the transcript: the message's own menu, the one the ⋯ opens
             return self.messageMenu()
+        if self.kind == self.KIND_SYSTEM:
+            return self.messageMenu() if self.deletable_note else None
         category = self.transferCategory()
         picture = self.media_image is not None or bool(self.media_path)
         info_only = category is None and not picture
@@ -6333,7 +6542,7 @@ class MessageBubbleView(NSView):
                     add(title, selector)
             if menu.numberOfItems():
                 menu.addItem_(NSMenuItem.separatorItem())
-            if self._showsInfo():
+            if self._showsInfo() or (self.kind == self.KIND_SYSTEM and self.deletable_note):
                 add(NSLocalizedString("Info\u2026", "Menu item"), "menuInfo:")
             add(NSLocalizedString("Delete\u2026", "Menu item"), "menuDeletePicture:")
             return menu
@@ -6454,37 +6663,35 @@ class MessageBubbleView(NSView):
         # bubble in the plain transcript turned a press on the actions
         # button into a tick and brought the Forward/Delete bar up; that is
         # repaired here and said out loud, so its origin can be found.
-        if (self.grid_mode and renderer is not None
-                and hasattr(renderer, 'bubbleGridIsActive')
-                and not renderer.bubbleGridIsActive()):
-            BlinkLogger().log_error('Bubble %s: grid_mode set outside a grid (kind %s), reset'
-                                    % (self.msgid, self.kind))
-            self.grid_mode = False
-            self.invalidateLayout()
-            self.setNeedsDisplay_(True)
-            try:
-                self.superview().setNeedsMessageLayout()
-            except Exception:
-                pass
-        header = self.kind not in (self.KIND_SYSTEM, self.KIND_DATE) and not self._tileMode()
+        self._repairStaleGridMode()
+        header = ((self.kind not in (self.KIND_SYSTEM, self.KIND_DATE) and not self._tileMode())
+                  or (self.kind == self.KIND_SYSTEM and self.deletable_note))
 
         # The actions button before the checkbox: the box's slop reaches past
         # the gap onto the button wherever both exist (a location in a grid),
         # and a press on a drawn button means the button.
-        if self.msgid and self._hits(point, self._more_rect, header):
-            menu = self.messageMenu()
-            if menu is not None:
-                BlinkLogger().log_debug('Bubble %s: actions menu' % self.msgid)
-                # attached to the button: it opens just under it, and the button
-                # stays while it is open
-                anchor = (self._more_rect.origin.x, self._more_rect.origin.y + self._more_rect.size.height)     # a flipped view
-                self._menu_open = True
-                self.setNeedsDisplayInRect_(self._more_rect)
-                try:
-                    menu.popUpMenuPositioningItem_atLocation_inView_(None, anchor, self)
-                finally:
-                    self._menu_open = False
-                    self.setNeedsDisplayInRect_(self._more_rect)
+        self._more_rect = self._currentMoreRect()
+        hit = bool(self.msgid) and self._hits(point, self._more_rect, header)
+        # Every press on or near the button, hit or not: "the ⋯ did nothing"
+        # is a press that landed outside the rect, one that was taken for
+        # something else, or a menu that did not open, and only the
+        # geometry at the moment of the press tells them apart.
+        near = self._more_rect.size.width > 0 and NSPointInRect(
+            point, NSInsetRect(self._more_rect, -24.0, -12.0))
+        if hit or near:
+            BlinkLogger().log_info(
+                'Bubble %s: press %s the actions button at (%.0f,%.0f) button=%s '
+                'kind=%s header=%s grid_mode=%s hovered=%s'
+                % (self.msgid, 'ON' if hit else 'near', point.x, point.y,
+                   _rect_text(self._more_rect), self.kind, header,
+                   bool(self.grid_mode), bool(getattr(self, '_hovered', False))))
+        if hit:
+            # Armed on the press, opened on the release -- the way a button
+            # works. Opened on the press, the menu's own tracking took over
+            # a click that was still going on, and the release that ended
+            # it sometimes closed the menu the instant it appeared: "closed,
+            # nothing chosen" in the log and nothing on screen.
+            self._more_armed = True
             return
         # The checkbox before every other affordance, and before the drag
         # is armed: a press on the box ticks the cell, and a press that

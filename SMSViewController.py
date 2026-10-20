@@ -2356,7 +2356,15 @@ class SMSViewController(NSObject):
         if key in self.location_notes:
             return
         self.location_notes.add(key)
-        self.chatViewController.showSystemMessage(note, timestamp, before=before)
+        # A coordinate-free signal is stored as a row of its own under its
+        # own id (_persist_location_message), so its note is that message
+        # and can be deleted. A note announcing a share is not: the share's
+        # row is the map bubble.
+        if payload.get('is_signal'):
+            self.chatViewController.showSystemMessage(note, timestamp, before=before,
+                                                      msgid=msgid, direction=direction)
+        else:
+            self.chatViewController.showSystemMessage(note, timestamp, before=before)
 
     @objc.python_method
     def _stamp_location_ended(self, payload, msgid):

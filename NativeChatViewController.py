@@ -3853,8 +3853,23 @@ class NativeChatViewController(ChatViewController):
 
     @objc.python_method
     @run_in_gui_thread
-    def showSystemMessage(self, content, timestamp=None, is_error=False, call_id='0', before=False):
-        msgid = str(uuid.uuid1())
+    def showSystemMessage(self, content, timestamp=None, is_error=False, call_id='0', before=False,
+                          msgid=None, direction=None):
+        """A note across the transcript.
+
+        With `msgid` the note stands for a stored message of its own (a
+        location request, a share stopped): it is drawn under that id, so
+        it can be deleted like any message and is drawn once however many
+        times history replays it. Without one it is a remark of ours and
+        gets a throwaway id.
+        """
+        deletable = bool(msgid)
+        if deletable:
+            msgid = str(msgid)
+            if self.hasRenderedMessage(msgid):
+                return
+        else:
+            msgid = str(uuid.uuid1())
         self.rendered_messages.append(ChatMessageObject(call_id, msgid, content, False, timestamp))
 
         bubble = self._newBubble()
@@ -3864,6 +3879,12 @@ class NativeChatViewController(ChatViewController):
                          is_error=bool(is_error),
                          timestamp_text=self._format_timestamp(timestamp),
                          expand_smileys=self.expandSmileys)
+        if deletable:
+            bubble.deletable_note = True
+            if direction:
+                # What the delete panel reads to offer removing it on the
+                # other side too: only for something this account sent.
+                bubble.direction = direction
         self._insert(bubble, msgid, before)
 
     @objc.python_method

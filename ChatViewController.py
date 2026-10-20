@@ -1036,7 +1036,8 @@ class ChatViewController(NSObject):
         self._notRendered('clear')
 
     @objc.python_method
-    def showSystemMessage(self, content, timestamp=None, is_error=False, call_id='0', before=False):
+    def showSystemMessage(self, content, timestamp=None, is_error=False, call_id='0', before=False,
+                          msgid=None, direction=None):
         self._notRendered('showSystemMessage')
 
     @objc.python_method
