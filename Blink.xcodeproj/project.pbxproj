@@ -89,6 +89,8 @@
 		1F2272C512B554F50010A8B2 /* PhotoPicker.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B240B761023CFAF00079580 /* PhotoPicker.py */; };
 		1F2272C712B554F50010A8B2 /* SoundSetting.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B2392AD1039E69C00D9023B /* SoundSetting.xib */; };
 		1F2272C812B554F50010A8B2 /* audio.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B239607103B1C6600D9023B /* audio.png */; };
+		A0D10F7000000000000000F4 /* radio_ptt_tx.png in Resources */ = {isa = PBXBuildFile; fileRef = A0D10F7000000000000000F3 /* radio_ptt_tx.png */; };
+		A0D10F7000000000000000F1 /* radio_ptt.png in Resources */ = {isa = PBXBuildFile; fileRef = A0D10F7000000000000000F0 /* radio_ptt.png */; };
 		1F2272C912B554F50010A8B2 /* display.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B23991E103C823D00D9023B /* display.png */; };
 		1F2272CA12B554F50010A8B2 /* record.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B5F4A441040EC0F00BEE04E /* record.png */; };
 		1F2272CB12B554F50010A8B2 /* recording1.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B5F4A541040FF0C00BEE04E /* recording1.png */; };
@@ -544,6 +546,8 @@
 		2B1FC09D10B104F8004C7355 /* pencil.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B1FC09C10B104F8004C7355 /* pencil.png */; };
 		2B2392AF1039E69C00D9023B /* SoundSetting.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B2392AD1039E69C00D9023B /* SoundSetting.xib */; };
 		2B239608103B1C6600D9023B /* audio.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B239607103B1C6600D9023B /* audio.png */; };
+		A0D10F7000000000000000F5 /* radio_ptt_tx.png in Resources */ = {isa = PBXBuildFile; fileRef = A0D10F7000000000000000F3 /* radio_ptt_tx.png */; };
+		A0D10F7000000000000000F2 /* radio_ptt.png in Resources */ = {isa = PBXBuildFile; fileRef = A0D10F7000000000000000F0 /* radio_ptt.png */; };
 		2B23991F103C823D00D9023B /* display.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B23991E103C823D00D9023B /* display.png */; };
 		2B2400FF1018AB9400079580 /* util.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B2400FE1018AB9400079580 /* util.py */; };
 		2B24083A102117F200079580 /* SessionRinger.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B240839102117F200079580 /* SessionRinger.py */; };
@@ -669,6 +673,7 @@
 		5B1E00010000000000000005 /* DataManage.py in Resources */ = {isa = PBXBuildFile; fileRef = DD1A00000000000000000005 /* DataManage.py */; };
 		5B1E00010000000000000006 /* DataManagerWindow.py in Resources */ = {isa = PBXBuildFile; fileRef = DD1A00000000000000000007 /* DataManagerWindow.py */; };
 		5B1E00010000000000000007 /* ScreenPointer.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000EF0000 /* ScreenPointer.py */; };
+		A0D10F7000000000000000E1 /* RadioPTT.py in Resources */ = {isa = PBXBuildFile; fileRef = A0D10F7000000000000000E0 /* RadioPTT.py */; };
 		5B1E00010000000000000008 /* ScreenPointerController.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000EF0100 /* ScreenPointerController.py */; };
 		5B1E00010000000000000009 /* ShareController.py in Resources */ = {isa = PBXBuildFile; fileRef = 5A1E00010000000000000012 /* ShareController.py */; };
 		5B1E0001000000000000000A /* VideoCallRecorder.py in Resources */ = {isa = PBXBuildFile; fileRef = 5A1E000200000000000000F3 /* VideoCallRecorder.py */; };
@@ -739,6 +744,7 @@
 		AD0000000000000000DE0001 /* MessageDetailsPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000DE0000 /* MessageDetailsPanel.py */; };
 		AD0000000000000000DE0003 /* MessageDetailsPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000DE0000 /* MessageDetailsPanel.py */; };
 		AD0000000000000000EF0003 /* ScreenPointer.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000EF0000 /* ScreenPointer.py */; };
+		A0D10F7000000000000000E2 /* RadioPTT.py in Resources */ = {isa = PBXBuildFile; fileRef = A0D10F7000000000000000E0 /* RadioPTT.py */; };
 		AD0000000000000000EF0103 /* ScreenPointerController.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000EF0100 /* ScreenPointerController.py */; };
 		AD0000000000000000F00001 /* ClamshellMonitor.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000F00000 /* ClamshellMonitor.py */; };
 		AD0000000000000000F00003 /* ClamshellMonitor.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000F00000 /* ClamshellMonitor.py */; };
@@ -1450,6 +1456,8 @@
 		2B1FC09C10B104F8004C7355 /* pencil.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = pencil.png; path = icons/pencil.png; sourceTree = "<group>"; };
 		2B2392AE1039E69C00D9023B /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/SoundSetting.xib; sourceTree = "<group>"; };
 		2B239607103B1C6600D9023B /* audio.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = audio.png; path = icons/audio.png; sourceTree = "<group>"; };
+		A0D10F7000000000000000F3 /* radio_ptt_tx.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = radio_ptt_tx.png; path = icons/radio_ptt_tx.png; sourceTree = "<group>"; };
+		A0D10F7000000000000000F0 /* radio_ptt.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = radio_ptt.png; path = icons/radio_ptt.png; sourceTree = "<group>"; };
 		2B23991E103C823D00D9023B /* display.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = display.png; path = icons/display.png; sourceTree = "<group>"; };
 		2B2400FE1018AB9400079580 /* util.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = util.py; sourceTree = "<group>"; };
 		2B240839102117F200079580 /* SessionRinger.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SessionRinger.py; sourceTree = "<group>"; };
@@ -1608,6 +1616,7 @@
 		AD0000000000000000CD0000 /* CallDetailsPanel.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = CallDetailsPanel.py; sourceTree = "<group>"; };
 		AD0000000000000000DE0000 /* MessageDetailsPanel.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MessageDetailsPanel.py; sourceTree = "<group>"; };
 		AD0000000000000000EF0000 /* ScreenPointer.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ScreenPointer.py; sourceTree = "<group>"; };
+		A0D10F7000000000000000E0 /* RadioPTT.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = RadioPTT.py; sourceTree = "<group>"; };
 		AD0000000000000000EF0100 /* ScreenPointerController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ScreenPointerController.py; sourceTree = "<group>"; };
 		AD0000000000000000F00000 /* ClamshellMonitor.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ClamshellMonitor.py; sourceTree = "<group>"; };
 		AD00000000000000740000 /* AttachmentPreview.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AttachmentPreview.py; sourceTree = "<group>"; };
@@ -1988,6 +1997,7 @@
 				AD0000000000000000AB0000 /* AddressbookNotify.py */,
 				AD0000000000000000AB0010 /* AddressbookOrigin.py */,
 				AD0000000000000000EF0000 /* ScreenPointer.py */,
+				A0D10F7000000000000000E0 /* RadioPTT.py */,
 				AD0000000000000000F00000 /* ClamshellMonitor.py */,
 				AD0000000000000000EF0100 /* ScreenPointerController.py */,
 				AD00000000000000004D0000 /* MessageHost.py */,
@@ -2110,6 +2120,8 @@
 				2B5F4A441040EC0F00BEE04E /* record.png */,
 				2B23991E103C823D00D9023B /* display.png */,
 				2B239607103B1C6600D9023B /* audio.png */,
+				A0D10F7000000000000000F3 /* radio_ptt_tx.png */,
+				A0D10F7000000000000000F0 /* radio_ptt.png */,
 				2BFB33E2101674BD002D79FB /* muted.png */,
 				2BFB33E3101674BD002D79FB /* srtp.png */,
 				2B11B1CE0FF735FB007FC176 /* paused.png */,
@@ -2585,6 +2597,7 @@
 				5B1E00010000000000000005 /* DataManage.py in Resources */,
 				5B1E00010000000000000006 /* DataManagerWindow.py in Resources */,
 				5B1E00010000000000000007 /* ScreenPointer.py in Resources */,
+				A0D10F7000000000000000E1 /* RadioPTT.py in Resources */,
 				5B1E00010000000000000008 /* ScreenPointerController.py in Resources */,
 				5B1E00010000000000000009 /* ShareController.py in Resources */,
 				5B1E0001000000000000000A /* VideoCallRecorder.py in Resources */,
@@ -2640,6 +2653,8 @@
 				1F2272C512B554F50010A8B2 /* PhotoPicker.py in Resources */,
 				1F2272C712B554F50010A8B2 /* SoundSetting.xib in Resources */,
 				1F2272C812B554F50010A8B2 /* audio.png in Resources */,
+				A0D10F7000000000000000F4 /* radio_ptt_tx.png in Resources */,
+				A0D10F7000000000000000F1 /* radio_ptt.png in Resources */,
 				1F2272C912B554F50010A8B2 /* display.png in Resources */,
 				1F2272CA12B554F50010A8B2 /* record.png in Resources */,
 				1F774C6819CB169800240DC1 /* video-active.png in Resources */,
@@ -2974,6 +2989,8 @@
 				2B240B771023CFAF00079580 /* PhotoPicker.py in Resources */,
 				2B2392AF1039E69C00D9023B /* SoundSetting.xib in Resources */,
 				2B239608103B1C6600D9023B /* audio.png in Resources */,
+				A0D10F7000000000000000F5 /* radio_ptt_tx.png in Resources */,
+				A0D10F7000000000000000F2 /* radio_ptt.png in Resources */,
 				2B23991F103C823D00D9023B /* display.png in Resources */,
 				1FCDE5AE2D539BC100140B1F /* libs in Resources */,
 				2B5F4A451040EC0F00BEE04E /* record.png in Resources */,
@@ -3086,6 +3103,7 @@
 				AD0000000000000000AB0003 /* AddressbookNotify.py in Resources */,
 				AD0000000000000000AB0013 /* AddressbookOrigin.py in Resources */,
 				AD0000000000000000EF0003 /* ScreenPointer.py in Resources */,
+				A0D10F7000000000000000E2 /* RadioPTT.py in Resources */,
 				AD0000000000000000F00003 /* ClamshellMonitor.py in Resources */,
 				AD0000000000000000EF0103 /* ScreenPointerController.py in Resources */,
 				AD00000000000000004D0003 /* MessageHost.py in Resources */,

@@ -2614,8 +2614,19 @@ class SMSViewController(NSObject):
             return False
 
     @objc.python_method
+    def isConferenceRoom(self):
+        try:
+            return NSApp.delegate().contactsWindowController.isConferenceAddress(
+                getattr(self, 'remote_uri', None), self.account)
+        except Exception:
+            return False
+
+    @objc.python_method
     def sendFiles(self, paths):
         """Send one or more files, in the order they were given."""
+        if self.isConferenceRoom():
+            self.log_info('Not sending files to conference room %s from the message pane' % getattr(self, 'remote_uri', None))
+            return 0
         if paths and not self.confirmOutgoingAccount():
             return 0
         sent = 0
@@ -3006,6 +3017,9 @@ class SMSViewController(NSObject):
         recording read as one on the local row, the only copy of this
         envelope that anything ever reads.
         """
+        if self.isConferenceRoom():
+            self.log_info('Not sending a file to conference room %s from the message pane' % getattr(self, 'remote_uri', None))
+            return None
         from SMSWindowManager import SMSWindowManager
         from FileTransferCache import (FileTransferCache, guess_filetype,
                                        new_transfer_id, upload_url)
@@ -3711,6 +3725,10 @@ class SMSViewController(NSObject):
         link goes out just before the reply, so the peer has it in hand
         when the reply arrives.
         """
+        if self.isConferenceRoom():
+            # a room is joined over MSRP, never sent SIP MESSAGEs
+            self.log_debug('Not sending %s to conference room %s' % (content_type, getattr(self, 'remote_uri', None)))
+            return None
         # entry point for sending messages, they will be added to self.outgoing_queue
         status = MSG_STATE_FAILED_LOCAL if self.paused else 'queued'
 

@@ -2834,6 +2834,10 @@ class SessionController(NSObject):
         self.mustCloseAudioDrawer = True
         self.changeSessionState(STATE_CONNECTED)
         self.log_info("Session started with %s" % ", ".join(stream.type for stream in data.streams))
+        if self.session.remote_focus:
+            self.log_info("Remote party is a conference focus (isfocus in its Contact), subscribing to its conference-info")
+        elif self.is_conference:
+            self.log_info("Remote party is not a conference focus (no isfocus in its Contact), no conference-info subscription")
         if self.session.direction == 'incoming' and any(stream.type == 'audio' for stream in data.streams):
             # Accepted call on the dead built-in mic: the call goes on, but
             # the user is told and offered another microphone.
@@ -3397,11 +3401,22 @@ class SessionController(NSObject):
 
     @objc.python_method
     def _NH_SIPSessionGotConferenceInfo(self, sender, data):
+        try:
+            self._applyConferenceInfo(data)
+        except Exception:
+            self.log_error("Cannot apply conference-info: %s" % traceback.format_exc())
+
+    @objc.python_method
+    def _applyConferenceInfo(self, data):
         # Skip processing if session has ended
         if self.state == STATE_FINISHED:
             return
 
-        self.log_debug("Received conference-info update")
+        users = [sip_prefix_pattern.sub("", str(user.entity)) for user in data.conference_info.users]
+        if users != getattr(self, '_logged_conference_users', None):
+            self._logged_conference_users = users
+            info = data.conference_info
+            self.log_info("Conference-info version %s, state %s, %d users: %s" % (info.version, info.state, len(users), ", ".join(users)))
         self.pending_removal_participants = set()
         self.failed_to_join_participants = {}
         self.conference_shared_files = []

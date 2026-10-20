@@ -756,6 +756,11 @@ class ChatViewController(NSObject):
 
     def awakeFromNib(self):
         """Wire the composer. The transcript view is the subclass's business."""
+        # The tab switcher shows a per-tab spinner; the centred connecting
+        # spinner and its label are not used.
+        for view in (self.loadingProgressIndicator, self.loadingTextIndicator):
+            if view is not None:
+                view.setHidden_(True)
         if self.inputText:
             self.inputText.registerForDraggedTypes_(NSArray.arrayWithObject_(NSFilenamesPboardType))
             self.inputText.setOwner(self)

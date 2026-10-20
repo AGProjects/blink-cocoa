@@ -62,6 +62,7 @@ def format_last_message_time(stamp):
         return ''
 
 from BlinkLogger import BlinkLogger
+import RadioPTT
 from Avatars import GLYPH_AVATARS, NO_PHOTO_AVATAR, draw_avatar
 
 from sipsimple.configuration.settings import SIPSimpleSettings
@@ -266,7 +267,9 @@ class ContactCell(NSTextFieldCell):
             self.drawActiveMedia()
             self.drawFirstLine()
             self.drawSecondLine()
-            self.drawPresenceIcon()
+            # No presence bar in the conference participants list.
+            if type(self.contact) not in (BlinkConferenceContact, BlinkMyselfConferenceContact):
+                self.drawPresenceIcon()
         except Exception:
             pass
 
@@ -476,7 +479,18 @@ class ContactCell(NSTextFieldCell):
 
         padding = 16
         left = self.frame.size.width - 8
-        if 'audio-onhold' in self.contact.active_media:
+        radio_icon = None
+        if 'radio' in self.contact.active_media:
+            # Radio PTT: the radio stands in for the audio icon, glowing red
+            # while the radio is on air.
+            radio_icon = RadioPTT.radio_toolbar_image(getattr(self.contact, 'radio_state', None) == 'transmitting')
+
+        if radio_icon is not None:
+            # Larger than the other media icons: the picture is tall and
+            # narrow, and at 16 pt it is a speck.
+            left = left - 26
+            self.drawIcon(radio_icon, left, self.frame.origin.y + 6, 28, 28)
+        elif 'audio-onhold' in self.contact.active_media:
             left = left - padding
             self.drawIcon(self.audioHoldIcon, left, self.frame.origin.y +14, 16, 16)
         elif 'audio' in self.contact.active_media:

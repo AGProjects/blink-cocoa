@@ -176,7 +176,7 @@ from VideoMirrorController import VideoMirrorController
 from configuration.datatypes import UserIcon
 from resources import ApplicationData, Resources
 from util import allocate_autorelease_pool, format_date, format_identity_to_string, format_uri_type, is_anonymous, is_sip_aor_format, normalize_sip_uri_for_outgoing_session
-from util import pstn_uri_spellings_for_accounts
+from util import pstn_uri_spellings_for_accounts, is_conference_uri
 from HistoryManager import block_contacts, unblock_contacts, _blocked_group
 from util import log_gui_exception, run_in_gui_thread, sip_prefix_pattern, sipuri_components_from_string, translate_alpha2digit, AccountInfo, utc_to_local
 
@@ -1848,6 +1848,123 @@ class ContactWindowController(NSWindowController):
             except Exception:
                 continue
         return None
+
+    @objc.python_method
+    def isConferenceAddress(self, uri, account=None):
+        """Whether an address is a conference room: by its domain, or by
+        being filed in the Conference group (a focus on a foreign domain)."""
+        if not uri:
+            return False
+        if is_conference_uri(uri, account or self.activeAccount()):
+            return True
+        text = sip_prefix_pattern.sub("", str(uri)).lower()
+        for group in self.model.groupsList:
+            is_conference_group = getattr(group, 'isConferenceGroup', None)
+            if not (is_conference_group and is_conference_group()):
+                continue
+            for contact in group.contacts:
+                uris = [u.uri for u in (getattr(contact, 'uris', None) or [])] or [getattr(contact, 'uri', None)]
+                if any(u and sip_prefix_pattern.sub("", str(u)).lower() == text for u in uris):
+                    return True
+        return False
+
+    @objc.python_method
+    def conferenceTargetForContact(self, item):
+        """The room address of a contact row, or None if it is not a room."""
+        if item is None or isinstance(item, BlinkGroup):
+            return None
+        uris = [u.uri for u in (getattr(item, 'uris', None) or [])
+                if not (u.type is not None and u.type.lower() == 'url')]
+        uris = uris or [getattr(item, 'uri', None)]
+        group = self.groupForContact(item)
+        in_conference_group = bool(group is not None and getattr(group, 'isConferenceGroup', None) and group.isConferenceGroup())
+        for uri in uris:
+            if uri and (in_conference_group or self.isConferenceAddress(uri)):
+                return str(uri)
+        return None
+
+    @objc.python_method
+    def connectToConference(self, target, media_type):
+        """Join a room the way the Join Conference panel does."""
+        account = self.activeAccount()
+        nickname = account.conference.nickname if account is not None and account is not BonjourAccount() else None
+        self.joinConference(target, media_type, (), nickname)
+
+    @objc.IBAction
+    def connectToConference_(self, sender):
+        target, media_type = sender.representedObject()
+        self.connectToConference(target, media_type)
+
+    @objc.python_method
+    def adaptContactContextMenuForConference(self):
+        """A room is not called or written to: it is joined.
+
+        Start Audio Call becomes Connect with Audio + Chat, the MSRP chat
+        item becomes Connect with Chat, video is disabled and Send Short
+        Message is not offered.
+        """
+        if self.mainTabView.selectedTabViewItem().identifier() == "contacts":
+            if self.contactOutline.numberOfSelectedRows() != 1:
+                return
+            outline = self.contactOutline
+        else:
+            outline = self.searchOutline
+        sel = outline.selectedRow()
+        if sel < 0:
+            return
+        item = outline.itemAtRow_(sel)
+        if isinstance(item, HistoryBlinkContact) and isinstance(item.contact, BlinkContact):
+            item = item.contact
+        if not isinstance(item, BlinkContact) or isinstance(item, BonjourBlinkContact):
+            return
+        if self.isRowInDeletedGroup(item) or self.blockedContactsForItems([item]):
+            return
+        target = self.conferenceTargetForContact(item)
+        if target is None:
+            return
+
+        menu = self.contactContextMenu
+        audio_title = NSLocalizedString("Start Audio Call", "Menu item")
+        video_title = NSLocalizedString("Start Video Call", "Menu item")
+        sms_title = NSLocalizedString("Send Short Message...", "Menu item")
+        chat_title = NSLocalizedString("Invite to Chat...", "Menu item")
+
+        insert_at = None
+        for mitem in list(menu.itemArray()):
+            title = mitem.title()
+            action = mitem.action()
+            action = action.decode() if isinstance(action, bytes) else (str(action) if action else '')
+            if title == audio_title or action == 'startAudioToSelected:':
+                if insert_at is None:
+                    insert_at = menu.indexOfItem_(mitem)
+                menu.removeItem_(mitem)
+            elif title in (sms_title, chat_title) or action in ('sendMessageToSelected:', 'startChatToSelected:'):
+                if insert_at is None:
+                    insert_at = menu.indexOfItem_(mitem)
+                menu.removeItem_(mitem)
+            elif title == video_title or action == 'startVideoToSelected:':
+                mitem.setEnabled_(False)
+                if mitem.hasSubmenu():
+                    menu.setSubmenu_forItem_(None, mitem)
+                mitem.setAction_(None)
+
+        if insert_at is None:
+            # after the name and its separator
+            insert_at = min(2, menu.numberOfItems())
+
+        chat_item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(
+            NSLocalizedString("Connect with Chat", "Menu item"), "connectToConference:", "")
+        chat_item.setTarget_(self)
+        chat_item.setRepresentedObject_((target, "chat"))
+        chat_item.setEnabled_(True)
+        menu.insertItem_atIndex_(chat_item, insert_at)
+
+        audio_item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(
+            NSLocalizedString("Connect with Audio + Chat", "Menu item"), "connectToConference:", "")
+        audio_item.setTarget_(self)
+        audio_item.setRepresentedObject_((target, ("chat", "audio")))
+        audio_item.setEnabled_(True)
+        menu.insertItem_atIndex_(audio_item, insert_at + 1)
 
     @objc.python_method
     def isRowInDeletedGroup(self, item):
@@ -6808,6 +6925,12 @@ class ContactWindowController(NSWindowController):
                 # A deleted or blocked contact is not written to.
                 if self.isRowInDeletedGroup(contact) or self.blockedContactsForItems([contact]):
                     return
+                # A room is joined, as the Join Conference panel does, never
+                # written to from the message pane.
+                conference_target = self.conferenceTargetForContact(contact)
+                if conference_target is not None:
+                    self.connectToConference(conference_target, ("chat", "audio"))
+                    return
                 media_type = "sms"
             elif sender.selectedSegment() == video_segment:
                 media_type = ("audio", "video")
@@ -7257,6 +7380,10 @@ class ContactWindowController(NSWindowController):
             self.updateRecordingsMenu()
         elif menu == self.contactContextMenu:
             self.updateContactContextMenu()
+            try:
+                self.adaptContactContextMenuForConference()
+            except Exception as e:
+                BlinkLogger().log_error('Cannot adapt the contact menu for a conference room: %s' % e)
             self.logContactContextMenu(menu)
         elif menu == self.presenceWatchersMenu:
             self.updatePresenceWatchersMenu(menu)

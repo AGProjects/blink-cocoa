@@ -78,6 +78,7 @@ from sipsimple.application import SIPApplication
 from sipsimple.util import ISOTimestamp
 
 import ChatWindowController
+import RadioPTT
 from BlinkLogger import BlinkLogger
 from ChatViewController import ChatViewController, MSG_STATE_FAILED, MSG_STATE_SENDING, MSG_STATE_DELIVERED
 from ChatOTR import ChatOtrSmp
@@ -991,6 +992,27 @@ class ChatController(MediaStream):
             return self.sessionController.canProposeMediaStreamChanges() or self.sessionController.canStartSession()
 
     @objc.python_method
+    def radioButtonEnabled(self):
+        return (self.status == STREAM_CONNECTED and self.stream is not None and
+                bool(RadioPTT.conference_radios(self.sessionController.conference_info)))
+
+    @objc.python_method
+    def pressConferenceRadios(self):
+        """Send a radio PTT press to the room for every participant that
+        drives a radio and has audio in the conference (docs/radio-ptt.md in
+        sylkserver). The room forwards it; the on-air state comes back in
+        conference-info."""
+        if not self.radioButtonEnabled():
+            return
+        for radio in RadioPTT.conference_radios(self.sessionController.conference_info):
+            try:
+                self.stream.send_message(RadioPTT.press_message(radio['entity']), content_type=RadioPTT.CONTENT_TYPE)
+            except Exception as e:
+                self.sessionController.log_info("Cannot send radio PTT press to %s: %s" % (radio['entity'], e))
+            else:
+                self.sessionController.log_info("Radio PTT press sent for %s (%s)" % (radio['user'], radio['entity']))
+
+    @objc.python_method
     def updateToolbarButtons(self, toolbar, got_proposal=False):
         """Called by ChatWindowController when receiving various middleware notifications"""
         audio_stream = self.sessionController.streamHandlerOfType("audio")
@@ -1075,9 +1097,18 @@ class ChatController(MediaStream):
                         item.setImage_(NSImage.imageNamed_("record"))
                 else:
                     item.setToolTip_(NSLocalizedString("Start Recording", "Tooltip"))
-            elif identifier == 'smileys':
-                item.setImage_(NSImage.imageNamed_("smiley_on" if self.chatViewController.expandSmileys else "smiley_off"))
-                item.setEnabled_(True)
+            elif identifier == 'radio':
+                radios = RadioPTT.conference_radios(self.sessionController.conference_info)
+                on_air = [radio for radio in radios if radio['state'] == 'transmitting']
+                image = RadioPTT.radio_toolbar_image(transmitting=bool(on_air))
+                if image is not None:
+                    item.setImage_(image)
+                item.setLabel_(NSLocalizedString("Push to Talk", "Toolbar item"))
+                if on_air:
+                    item.setToolTip_(NSLocalizedString("Radio on air, press to extend", "Tooltip"))
+                else:
+                    item.setToolTip_(NSLocalizedString("Key the radio of conference participants", "Tooltip"))
+                item.setEnabled_(self.radioButtonEnabled())
             elif identifier == 'screenshot':
                 item.setEnabled_(self.sessionControllersManager.isMediaTypeSupported('file-transfer'))
             elif identifier == 'sendfile':
@@ -1126,8 +1157,8 @@ class ChatController(MediaStream):
                 return _video_enabled
             elif identifier == 'sendfile' and self.sessionControllersManager.isMediaTypeSupported('file-transfer'):
                 return self.fileTransferButtonEnabled()
-            elif identifier == 'smileys':
-                return True
+            elif identifier == 'radio':
+                return self.radioButtonEnabled()
             elif identifier == 'history' and NSApp.delegate().history_enabled:
                 return True
             elif identifier == 'screenshot':
@@ -1239,14 +1270,8 @@ class ChatController(MediaStream):
             elif identifier == 'sendfile':
                 openFileTransferSelectionDialog(self.sessionController.account, self.sessionController.target_uri)
 
-            elif identifier == 'smileys':
-                self.chatViewController.expandSmileys = not self.chatViewController.expandSmileys
-                sender.setImage_(NSImage.imageNamed_("smiley_on" if self.chatViewController.expandSmileys else "smiley_off"))
-                self.chatViewController.toggleSmileys(self.chatViewController.expandSmileys)
-                blink_contact = self.sessionController.contact
-                if blink_contact:
-                    blink_contact.contact.disable_smileys = not blink_contact.contact.disable_smileys
-                    blink_contact.contact.save()
+            elif identifier == 'radio':
+                self.pressConferenceRadios()
 
             elif identifier == 'history' and NSApp.delegate().history_enabled:
                 contactWindow = NSApp.delegate().contactsWindowController
@@ -1454,6 +1479,19 @@ class ChatController(MediaStream):
             BlinkLogger().log_info('Update chat controller %s -> %s' % (self.local_uri, self.remote_uri))
 
     @objc.python_method
+    def isStatusMessage(self, message):
+        for header in message.additional_headers or []:
+            try:
+                name, value = header.name, header.value
+            except AttributeError:
+                continue
+            if isinstance(value, bytes):
+                value = value.decode('utf-8', 'replace')
+            if str(name).lower() == 'message-type' and str(value).strip().lower() == 'status':
+                return True
+        return False
+
+    @objc.python_method
     def _NH_ChatStreamGotMessage(self, stream, data):
         message = data.message
         if message.content_type == 'application/blink-logging-status':
@@ -1540,6 +1578,18 @@ class ChatController(MediaStream):
                     pass
 
         if not message.content_type.startswith("text/"):
+            return
+
+        # Conference room notices (joined/left, welcome, ...) carry
+        # agp:Message-Type: status. They are shown as system messages, not as
+        # chat bubbles, and are not saved to history.
+        if self.sessionController.remote_focus and self.isStatusMessage(message):
+            content = message.content
+            if isinstance(content, bytes):
+                content = content.decode('utf-8', 'replace')
+            content = content.strip()
+            if content:
+                self.showSystemMessage(content, message.timestamp or ISOTimestamp.now())
             return
 
         hash = hashlib.sha1()
@@ -1756,6 +1806,11 @@ class ChatController(MediaStream):
         endpoint = str(self.stream.msrp.full_remote_path[0])
         self.sessionController.log_info("Chat session established to %s" % endpoint)
         self.showSystemMessage(NSLocalizedString("Connection established", "Label"), ISOTimestamp.now())
+        if self.sessionController.remote_focus:
+            # Now known to be a conference: drop the message filter bar.
+            rebuild = getattr(self.chatViewController, 'rebuildMessageFilter', None)
+            if rebuild is not None:
+                rebuild()
 
         # Set nickname if available
         nickname = self.sessionController.nickname

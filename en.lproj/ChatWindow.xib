@@ -200,11 +200,11 @@
                         </popUpButton>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="NSToolbarSeparatorItem" id="99"/>
-                    <toolbarItem implicitItemIdentifier="10454448-2EEC-4B2B-91D8-6B6BCDA3C4AB" explicitItemIdentifier="smileys" label="Smileys" paletteLabel="Smileys" toolTip="Toggle the display of smileys" tag="106" image="smiley_on" id="443">
+                    <toolbarItem implicitItemIdentifier="7B1C2D3E-4F50-4A61-8B72-93A4B5C6D7E8" explicitItemIdentifier="radio" label="Push to Talk" paletteLabel="Push to Talk" toolTip="Key the radio of conference participants" tag="109" image="radio_ptt" id="Rdo-Pt-T01">
                         <size key="minSize" width="22" height="22"/>
                         <size key="maxSize" width="22" height="22"/>
                         <connections>
-                            <action selector="userClickedToolbarButton:" target="-2" id="444"/>
+                            <action selector="userClickedToolbarButton:" target="-2" id="Rdo-Pt-T02"/>
                         </connections>
                     </toolbarItem>
                     <toolbarItem implicitItemIdentifier="F3F27C08-83DC-4837-8C62-FE767578E229" explicitItemIdentifier="history" label="History" paletteLabel="History" toolTip="Show previously exchanged messages" tag="107" image="time" id="253">
@@ -235,7 +235,6 @@
                     <toolbarItem reference="666"/>
                     <toolbarItem reference="99"/>
                     <toolbarItem reference="78"/>
-                    <toolbarItem reference="443"/>
                     <toolbarItem reference="253"/>
                     <toolbarItem reference="449"/>
                     <toolbarItem reference="208"/>
@@ -607,12 +606,12 @@
         <image name="NSActionTemplate" width="20" height="20"/>
         <image name="NSEveryone" width="32" height="32"/>
         <image name="audio" width="240" height="240"/>
+        <image name="radio_ptt" width="90" height="90"/>
         <image name="mute" width="24" height="24"/>
         <image name="muted" width="24" height="24"/>
         <image name="pause" width="48" height="48"/>
         <image name="record" width="48" height="48"/>
         <image name="screenshot" width="128" height="128"/>
-        <image name="smiley_on" width="32" height="32"/>
         <image name="start_chat" width="26.399999618530273" height="26.399999618530273"/>
         <image name="time" width="128" height="128"/>
         <image name="unlocked-darkgray" width="171" height="170"/>

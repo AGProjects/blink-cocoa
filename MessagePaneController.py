@@ -1626,13 +1626,44 @@ class MessagePaneController(NSObject):
         button = getattr(self, 'locationButton', None)
         if button is None:
             return
-        show = viewer is not None and self.sylkServerDetected(viewer)
+        show = viewer is not None and self.sylkServerDetected(viewer) and not self.isConferenceViewer(viewer)
         if bool(button.isHidden()) != (not show):
             BlinkLogger().log_debug(
                 'Location pin %s for %s' % ('shown' if show else 'hidden',
                                             getattr(viewer, 'remote_uri', None)))
         button.setHidden_(not show)
         self._layoutHeaderButtons()
+
+    @objc.python_method
+    def isConferenceViewer(self, viewer):
+        if viewer is None:
+            return False
+        check = getattr(viewer, 'isConferenceRoom', None)
+        try:
+            return bool(check()) if check is not None else False
+        except Exception:
+            return False
+
+    @objc.python_method
+    def updateConferenceRoomMode(self, viewer):
+        """A conference room keeps its transcript here, but it is joined over
+        MSRP, so the composer is disabled, the pin hidden and the handset
+        joins the room with audio and chat (no video)."""
+        conference = self.isConferenceViewer(viewer)
+        controller = getattr(viewer, 'chatViewController', None) if viewer is not None else None
+        set_read_only = getattr(controller, 'setComposerReadOnly', None)
+        if set_read_only is not None:
+            set_read_only(conference, NSLocalizedString("Conference rooms are joined from the contact list (Connect with Chat)", "Tooltip"))
+        if not conference:
+            return
+        control = getattr(self, 'callSegment', None)
+        if control is not None:
+            control.setEnabled_forSegment_(False, 1)
+            control.cell().setToolTip_forSegment_(NSLocalizedString("Connect with Audio + Chat", "Tooltip"), 0)
+        button = getattr(self, 'locationButton', None)
+        if button is not None and not button.isHidden():
+            button.setHidden_(True)
+            self._layoutHeaderButtons()
 
     @objc.python_method
     def updateCallButton(self, viewer):
@@ -1697,6 +1728,10 @@ class MessagePaneController(NSObject):
 
         account = getattr(viewer, 'account', None)
         target = getattr(viewer, 'remote_uri', None)
+        if self.isConferenceViewer(viewer):
+            if media_type == 'audio' and target:
+                NSApp.delegate().contactsWindowController.connectToConference(target, ("chat", "audio"))
+            return
         if account is BonjourAccount():
             # A neighbour is addressed by the whole URI: their user@host is
             # a link-local address carrying a port, and the bare pair would
@@ -2269,6 +2304,7 @@ class MessagePaneController(NSObject):
         self.updateEncryptionWidgets(viewer)
         self.updateLocationButton(viewer)
         self.updateCallButton(viewer)
+        self.updateConferenceRoomMode(viewer)
         self.placeHistoryButton(viewer)
         load_trace_bucket('- header widgets', _t)
         _t = load_trace_tick()

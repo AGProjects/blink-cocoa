@@ -398,6 +398,7 @@ class NativeChatViewController(ChatViewController):
     # The last thing the composer layout declined to do, so a gate that
     # closes on every pass says so once instead of on every redraw.
     _composer_note = None
+    _composer_read_only = False
 
     # The grab in flight: the task, where it is writing, and the window
     # that was pushed out of its way.
@@ -425,6 +426,11 @@ class NativeChatViewController(ChatViewController):
     def awakeFromNib(self):
         # Deliberately does NOT call super: the base sets up only the
         # composer, and the transcript side of the wiring is all here.
+        # The tab switcher shows a per-tab spinner; the centred connecting
+        # spinner and its label are not used.
+        for view in (self.loadingProgressIndicator, self.loadingTextIndicator):
+            if view is not None:
+                view.setHidden_(True)
         self.messageQueue = []
         self.rendered_messages = []
         self._last_sender_key = _UNSET
@@ -660,6 +666,34 @@ class NativeChatViewController(ChatViewController):
         # out before it returns its button, so the last one ran against a
         # row that did not have itself in it yet.
         self._layoutComposerRow()
+        self._applyComposerReadOnly()
+
+    @objc.python_method
+    def setComposerReadOnly(self, read_only, reason=None):
+        """Keep the transcript, take the composer away (a conference room:
+        it is joined over MSRP, not written to from here)."""
+        read_only = bool(read_only)
+        if read_only == self._composer_read_only:
+            return
+        self._composer_read_only = read_only
+        self._composer_read_only_reason = reason
+        self._applyComposerReadOnly()
+
+    @objc.python_method
+    def _applyComposerReadOnly(self):
+        read_only = self._composer_read_only
+        try:
+            if self.inputText is not None:
+                if read_only:
+                    self.inputText.setString_('')
+                self.inputText.setEditable_(not read_only)
+                self.inputText.setSelectable_(not read_only)
+                self.inputText.setToolTip_(getattr(self, '_composer_read_only_reason', None) if read_only else None)
+            for button in (self._attach_button, self._smiley_button, self._record_button):
+                if button is not None:
+                    button.setEnabled_(not read_only)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot change the composer state: %s' % e)
 
     @objc.python_method
     def _noteComposer(self, message):
@@ -5489,6 +5523,11 @@ class NativeChatViewController(ChatViewController):
         control.setAction_('filterMessages:')
 
         categories = self.presentCategories()
+        # A conference room's chat gets no filter bar at all.
+        session = getattr(self.delegate, 'sessionController', None)
+        if session is not None and getattr(session, 'remote_focus', False):
+            BlinkLogger().log_debug('Filter bar hidden: conference chat')
+            categories = []
         # One type on its own is not a choice; the bar only earns its row
         # when there is something to switch between.
         if len(categories) < 2:

@@ -2,6 +2,11 @@
 #
 
 from AppKit import (NSAlertDefaultReturn,
+                    NSDrawerOpenState,
+                    NSDrawerOpeningState,
+                    NSToolbarPrintItemIdentifier,
+                    NSToolbarFlexibleSpaceItemIdentifier,
+                    NSTableViewLastColumnOnlyAutoresizingStyle,
                     NSApp,
                     NSCommandKeyMask,
                     NSDragOperationAll,
@@ -68,6 +73,7 @@ from zope.interface import implementer
 
 import FancyTabSwitcher
 import ParticipantsTableView
+import RadioPTT
 from BlinkLogger import BlinkLogger
 from ChatPrivateMessageController import ChatPrivateMessageController
 from MediaStream import STREAM_CONNECTED, STREAM_WAITING_DNS_LOOKUP
@@ -188,6 +194,22 @@ class ChatWindowController(NSWindowController):
             ns_nc.addObserver_selector_name_object_(self, "participantSelectionChanged:", NSTableViewSelectionDidChangeNotification, self.participantsTableView)
             ns_nc.addObserver_selector_name_object_(self, "sharedFileSelectionChanged:", NSTableViewSelectionDidChangeNotification, self.conferenceFilesTableView)
             ns_nc.addObserver_selector_name_object_(self, "drawerSplitViewDidResize:", NSSplitViewDidResizeSubviewsNotification, self.drawerSplitView)
+
+            # Title on its own row above the toolbar (NSWindowToolbarStyleExpanded):
+            # the unified style puts the long "Chat with ..." title in the
+            # toolbar row and squeezes the buttons out.
+            self.window().setToolbarStyle_(1)
+            self.window().setTitleVisibility_(0)  # NSWindowTitleVisible
+
+            # The single column fills the drawer: no empty header cell to the
+            # right of "Participants" / the shared files column.
+            for table in (self.participantsTableView, self.conferenceFilesTableView):
+                if table is None:
+                    continue
+                for column in table.tableColumns():
+                    column.setResizingMask_(1)  # NSTableColumnAutoresizingMask
+                table.setColumnAutoresizingStyle_(NSTableViewLastColumnOnlyAutoresizingStyle)
+                table.sizeLastColumnToFit()
 
             self.refresh_drawer_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(0.3, self, "refreshDrawerTimer:", None, True)
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.refresh_drawer_timer, NSModalPanelRunLoopMode)
@@ -390,7 +412,13 @@ class ChatWindowController(NSWindowController):
         title = self.getConferenceTitle()
         icon = None
         if title:
-            self.window().setTitle_(NSLocalizedString("Chat with %s", "Window title") % title)
+            session = self.selectedSessionController()
+            if session is not None and session.remote_focus:
+                # The room's name from the contacts list, else its address
+                room = session.remoteAOR
+                self.window().setTitle_(NSLocalizedString("Conference room: %s", "Window title") % (self.conferenceRoomName(session) or room))
+            else:
+                self.window().setTitle_(NSLocalizedString("Chat with %s", "Window title") % title)
             self.window().setRepresentedURL_(NSURL.fileURLWithPath_(title))
             session = self.selectedSessionController()
             if session:
@@ -401,6 +429,30 @@ class ChatWindowController(NSWindowController):
                 except AttributeError:
                     pass
             self.window().standardWindowButton_(NSWindowDocumentIconButton).setImage_(icon)
+
+    @objc.python_method
+    def conferenceRoomName(self, session):
+        """Display name of the conference room from the contacts list, or
+        None. A name that is only the room's address or its username is not
+        a display name."""
+        room = session.remoteAOR
+        username = room.split('@', 1)[0]
+        contacts_window = NSApp.delegate().contactsWindowController
+        candidates = [session.contact]
+        for lookup in ('getFirstContactMatchingURI', 'getFirstContactFromAllContactsGroupMatchingURI'):
+            method = getattr(contacts_window, lookup, None)
+            if method is not None:
+                try:
+                    candidates.append(method(room))
+                except Exception:
+                    pass
+        for contact in candidates:
+            name = getattr(contact, 'name', None) if contact is not None else None
+            if name:
+                name = str(name).strip()
+            if name and name.lower() not in (room.lower(), username.lower(), 'sip:' + room.lower()):
+                return name
+        return None
 
     def window_shouldDragDocumentWithEvent_from_withPasteboard_(self, window, event, point, pasteboard):
         return False
@@ -611,6 +663,9 @@ class ChatWindowController(NSWindowController):
 
     @objc.python_method
     def _NH_BlinkConferenceGotUpdate(self, sender, data):
+        # radio PTT state and the presence of the Radio button follow
+        # conference-info
+        self.revalidateToolbar()
         self.refreshDrawer()
 
     @objc.python_method
@@ -687,6 +742,7 @@ class ChatWindowController(NSWindowController):
 
     def windowWillClose_(self, sender):
         self.removeContactTimer()
+        self.setRadioPulsing(False)
 
     def windowShouldClose_(self, sender):
         active = len([s for s in list(self.sessions.values()) if s.hasStreamOfType("chat") and s.state == STATE_CONNECTED])
@@ -1339,6 +1395,111 @@ class ChatWindowController(NSWindowController):
             self.muteButton.setImage_(NSImage.imageNamed_("mute"))
 
     @objc.python_method
+    def setToolbarItemPresent(self, identifier, present, after=()):
+        """Add or remove a toolbar item that only some sessions need. The
+        window's tabs share one toolbar, so this runs for the selected tab
+        on every revalidation. A new item goes right after the first of
+        `after` that is visible, else at the end."""
+        all_identifiers = [item.itemIdentifier() for item in self.toolbar.items()]
+        if present and identifier not in all_identifiers:
+            index = len(all_identifiers)
+            for anchor in after:
+                if anchor in all_identifiers:
+                    index = all_identifiers.index(anchor) + 1
+                    break
+            self.toolbar.insertItemWithItemIdentifier_atIndex_(identifier, index)
+            self.rebindToolbarItem(identifier)
+        elif not present and identifier in all_identifiers:
+            self.toolbar.removeItemAtIndex_(all_identifiers.index(identifier))
+
+    @objc.python_method
+    def rebindToolbarItem(self, identifier):
+        """An item inserted at runtime may be a copy of the nib prototype:
+        point actions and outlets at the copy that is now in the toolbar."""
+        try:
+            item = next(item for item in self.toolbar.items() if item.itemIdentifier() == identifier)
+        except StopIteration:
+            return
+        if identifier == 'encryption':
+            popup = item.view()
+            if popup is None:
+                return
+            menu = popup.menu()
+            menu.setDelegate_(self)
+            for menu_item in menu.itemArray():
+                if menu_item.action() in ('userClickedEncryptionMenu:', b'userClickedEncryptionMenu:'):
+                    menu_item.setTarget_(self)
+            self.encryptionMenu = menu
+            self.encryptionIconMenuItem = menu.itemAtIndex_(0)
+        elif identifier == 'participants':
+            item.setTarget_(self.drawer)
+            item.setAction_('toggle:')
+        else:
+            item.setTarget_(self)
+            item.setAction_('userClickedToolbarButton:')
+
+    @objc.python_method
+    def syncSessionToolbarItems(self, session):
+        # Encryption (OTR) does not apply to a conference focus.
+        is_focus = bool(session is not None and session.remote_focus)
+        self.setToolbarItemPresent('encryption', not is_focus, after=('screenshot', 'sendfile'))
+        # Audio recording and the history viewer are not offered from the
+        # chat window toolbar.
+        self.setToolbarItemPresent('record', False)
+        self.setToolbarItemPresent('history', False)
+        # Participants only toggles the drawer open; hide it while the
+        # drawer is already showing.
+        drawer_visible = self.drawer.state() in (NSDrawerOpenState, NSDrawerOpeningState)
+        self.setToolbarItemPresent('participants', not drawer_visible, after=(NSToolbarPrintItemIdentifier, 'history'))
+        # Everything is left aligned, except Radio PTT: alone at the right
+        # edge, after a flexible space, and only when a conference
+        # participant drives a radio and has audio in the conference.
+        has_radio = bool(is_focus and RadioPTT.conference_radios(session.conference_info))
+        identifiers = [item.itemIdentifier() for item in self.toolbar.items()]
+        tail = [NSToolbarFlexibleSpaceItemIdentifier, 'radio']
+        if has_radio:
+            if identifiers[-2:] != tail:
+                for identifier in tail:
+                    self.setToolbarItemPresent(identifier, False)
+                for identifier in tail:
+                    self.setToolbarItemPresent(identifier, True)   # appended at the end
+        else:
+            self.setToolbarItemPresent('radio', False)
+            self.setToolbarItemPresent(NSToolbarFlexibleSpaceItemIdentifier, False)
+        on_air = has_radio and any(radio['state'] == 'transmitting' for radio in RadioPTT.conference_radios(session.conference_info))
+        self.setRadioPulsing(on_air)
+
+    @objc.python_method
+    def setRadioPulsing(self, pulsing):
+        """Pulse the radio icons (toolbar and participants) while a radio
+        is on air."""
+        timer = getattr(self, 'radio_pulse_timer', None)
+        if pulsing and timer is None:
+            self.radio_pulse_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(0.5, self, "radioPulseTimer:", None, True)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.radio_pulse_timer, NSRunLoopCommonModes)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.radio_pulse_timer, NSEventTrackingRunLoopMode)
+        elif not pulsing and timer is not None:
+            timer.invalidate()
+            self.radio_pulse_timer = None
+            RadioPTT.set_pulse(True)
+            self.redrawRadioIcons()
+
+    def radioPulseTimer_(self, timer):
+        RadioPTT.toggle_pulse()
+        self.redrawRadioIcons()
+
+    @objc.python_method
+    def redrawRadioIcons(self):
+        session = self.selectedSessionController()
+        on_air = bool(session is not None and any(radio['state'] == 'transmitting' for radio in RadioPTT.conference_radios(session.conference_info)))
+        for item in self.toolbar.items():
+            if item.itemIdentifier() == 'radio':
+                image = RadioPTT.radio_toolbar_image(transmitting=on_air)
+                if image is not None:
+                    item.setImage_(image)
+        self.participantsTableView.setNeedsDisplay_(True)
+
+    @objc.python_method
     def revalidateToolbar(self, got_proposal=False):
         # update the toolbar buttons depending on session and stream state
         if self.tabView.selectedTabViewItem():
@@ -1348,6 +1509,10 @@ class ChatWindowController(NSWindowController):
             except KeyError:
                 pass
             else:
+                try:
+                    self.syncSessionToolbarItems(selectedSession)
+                except Exception as e:
+                    BlinkLogger().log_error("Cannot update conference toolbar items: %s" % e)
                 chatStream = selectedSession.streamHandlerOfType("chat")
                 if chatStream:
                     chatStream.updateToolbarButtons(self.toolbar, got_proposal)
@@ -1357,7 +1522,11 @@ class ChatWindowController(NSWindowController):
     def refreshDrawerTimer_(self, timer):
         if self.refresh_drawer_counter:
             self.refresh_drawer_counter = 0
-            self.refreshDrawerIfNecessary()
+            try:
+                self.refreshDrawerIfNecessary()
+            except Exception:
+                import traceback
+                BlinkLogger().log_error("Cannot refresh the participants drawer: %s" % traceback.format_exc())
 
     @objc.python_method
     @run_in_gui_thread
@@ -1524,7 +1693,8 @@ class ChatWindowController(NSWindowController):
                     uri = sip_prefix_pattern.sub("", user.entity)
                     if uri == own_uri:
                         # Add ourselves
-                        contact = BlinkMyselfConferenceContact(session.account, name=user.display_text.value)
+                        own_name = user.display_text.value if user.display_text is not None and user.display_text.value else None
+                        contact = BlinkMyselfConferenceContact(session.account, name=own_name)
                     else:
                          # Add remote party
                         presence_contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(uri)
@@ -1546,6 +1716,18 @@ class ChatWindowController(NSWindowController):
                         active_media.append('audio')
                     elif audio_endpoints and user_on_hold:
                         active_media.append('audio-onhold')
+
+                    # Radio PTT: an endpoint that drives a radio and has
+                    # audio; the most active state of its radios wins.
+                    radio_states = [radio[0] for radio in (RadioPTT.endpoint_radio(endpoint) for endpoint in user) if radio is not None and radio[1]]
+                    if radio_states:
+                        active_media.append('radio')
+                        for state in ('transmitting', 'keying', 'error', 'idle'):
+                            if state in radio_states:
+                                contact.radio_state = state
+                                break
+                        else:
+                            contact.radio_state = radio_states[0]
 
                     contact.active_media = active_media
                     # detail will be reset on receival of next conference-info update
@@ -1662,11 +1844,13 @@ class ChatWindowController(NSWindowController):
         session = self.selectedSessionController()
         if session:
             session.mustCloseAudioDrawer = True
+        self.revalidateToolbar()
 
     def drawerDidClose_(self, notification):
         session = self.selectedSessionController()
         if session:
             session.mustCloseAudioDrawer = False
+        self.revalidateToolbar()
 
     def tabViewDidChangeNumberOfTabViewItems_(self, tabView):
         if tabView.numberOfTabViewItems() == 0 and not self.closing:

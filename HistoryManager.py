@@ -1612,7 +1612,10 @@ class ChatHistory(object, metaclass=Singleton):
         # actually ran and how it really ended. Merge them instead.
         if content_type == CALL_CONTENT_TYPE and call_id:
             try:
-                existing = ChatMessage.selectBy(local_uri=local_uri, sip_callid=call_id)
+                # Only the call record: the chat messages of an MSRP session
+                # carry the same Call-ID.
+                existing = ChatMessage.selectBy(local_uri=local_uri, sip_callid=call_id,
+                                                content_type=CALL_CONTENT_TYPE)
                 row = existing.getOne(None)
             except Exception as e:
                 BlinkLogger().log_error('Cannot look up call %s: %s' % (call_id, e))
@@ -4518,6 +4521,45 @@ def _lookup_contact(uri):
         return None
 
 
+def _lookup_addressbook_contact(uri):
+    """The stored (XCAP) contact holding a URI, or None. Pure lookup.
+
+    _lookup_contact asks the contact list, whose first match can be a row
+    with no stored contact behind it (a history or other virtual row); a
+    caller that then creates a contact breeds a duplicate of one that
+    exists. This asks the address book itself. A contact only in Deleted is
+    returned last, so a live one wins.
+    """
+    def _norm(value):
+        value = str(value or '').strip().lower()
+        for prefix in ('sip:', 'sips:', 'tel:'):
+            if value.startswith(prefix):
+                value = value[len(prefix):]
+        return value.split(';', 1)[0]
+    wanted = _norm(uri)
+    if not wanted:
+        return None
+    try:
+        from sipsimple.addressbook import AddressbookManager
+        manager = AddressbookManager()
+        deleted_ids = set()
+        for group in manager.get_groups():
+            if getattr(group, 'id', None) == '_deleted':
+                deleted_ids = set(group.contacts.ids() if hasattr(group.contacts, 'ids') else (c.id for c in group.contacts))
+        fallback = None
+        for contact in manager.get_contacts():
+            try:
+                if any(_norm(contact_uri.uri) == wanted for contact_uri in contact.uris):
+                    if contact.id not in deleted_ids:
+                        return contact
+                    fallback = fallback or contact
+            except Exception:
+                continue
+        return fallback
+    except Exception:
+        return None
+
+
 def _find_group(kind, name, reserved_id=None):
     """Resolve a group by kind, then name, then a reserved id.
 
@@ -5747,6 +5789,10 @@ def ensure_call_contact(remote_uri, account=None, xcap_loaded=True):
 
         blink_contact = _lookup_contact(address)
         contact = getattr(blink_contact, 'contact', None) if blink_contact is not None else None
+        if not isinstance(contact, Contact):
+            # The contact list's first match may have no stored contact
+            # behind it: look in the address book before creating one.
+            contact = _lookup_addressbook_contact(address)
         created = False
 
         if contact is None:
