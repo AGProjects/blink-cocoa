@@ -703,9 +703,7 @@
 		AD0000000000000000610001 /* Profiles.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000610000 /* Profiles.py */; };
 		AD0000000000000000610003 /* Profiles.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000610000 /* Profiles.py */; };
 		AD00000000000000006A0001 /* JournalProgressStrip.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000006A0000 /* JournalProgressStrip.py */; };
-		AD00000000000000AC5A0001 /* AddressbookChecks.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000AC5A0000 /* AddressbookChecks.py */; };
 		AD00000000000000006A0003 /* JournalProgressStrip.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000006A0000 /* JournalProgressStrip.py */; };
-		AD00000000000000AC5A0003 /* AddressbookChecks.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000AC5A0000 /* AddressbookChecks.py */; };
 		AD00000000000000006B0001 /* PGPDecryptor.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000006B0000 /* PGPDecryptor.py */; };
 		AD00000000000000006B0003 /* PGPDecryptor.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000006B0000 /* PGPDecryptor.py */; };
 		AD00000000000000006F0001 /* FileTransferCache.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000006F0000 /* FileTransferCache.py */; };
@@ -740,6 +738,8 @@
 		AD00000000000000760003 /* Avatars.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000760000 /* Avatars.py */; };
 		AD000000000000009A0001 /* MediaCompression.py in Resources */ = {isa = PBXBuildFile; fileRef = AD000000000000009A0000 /* MediaCompression.py */; };
 		AD000000000000009A0003 /* MediaCompression.py in Resources */ = {isa = PBXBuildFile; fileRef = AD000000000000009A0000 /* MediaCompression.py */; };
+		AD00000000000000AC5A0001 /* AddressbookChecks.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000AC5A0000 /* AddressbookChecks.py */; };
+		AD00000000000000AC5A0003 /* AddressbookChecks.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000AC5A0000 /* AddressbookChecks.py */; };
 		ADFEED000000000000000001 /* PlaybackMonitor.py in Resources */ = {isa = PBXBuildFile; fileRef = ADFEED000000000000000000 /* PlaybackMonitor.py */; };
 		ADFEED000000000000000003 /* PlaybackMonitor.py in Resources */ = {isa = PBXBuildFile; fileRef = ADFEED000000000000000000 /* PlaybackMonitor.py */; };
 		B199B0EA7AEFF92918BF5138 /* AvatarConflictPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 357D1EE3CE09B6CB0F7E08D5 /* AvatarConflictPanel.py */; };
@@ -1566,7 +1566,6 @@
 		AD0000000000000000600000 /* ContactMangler.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ContactMangler.py; sourceTree = "<group>"; };
 		AD0000000000000000610000 /* Profiles.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = Profiles.py; sourceTree = "<group>"; };
 		AD00000000000000006A0000 /* JournalProgressStrip.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = JournalProgressStrip.py; sourceTree = "<group>"; };
-		AD00000000000000AC5A0000 /* AddressbookChecks.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AddressbookChecks.py; sourceTree = "<group>"; };
 		AD00000000000000006B0000 /* PGPDecryptor.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = PGPDecryptor.py; sourceTree = "<group>"; };
 		AD00000000000000006F0000 /* FileTransferCache.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = FileTransferCache.py; sourceTree = "<group>"; };
 		AD0000000000000000700000 /* AudioRecorder.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AudioRecorder.py; sourceTree = "<group>"; };
@@ -1585,6 +1584,7 @@
 		AD00000000000000750000 /* CameraCapture.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = CameraCapture.py; sourceTree = "<group>"; };
 		AD00000000000000760000 /* Avatars.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = Avatars.py; sourceTree = "<group>"; };
 		AD000000000000009A0000 /* MediaCompression.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MediaCompression.py; sourceTree = "<group>"; };
+		AD00000000000000AC5A0000 /* AddressbookChecks.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AddressbookChecks.py; sourceTree = "<group>"; };
 		ADFEED000000000000000000 /* PlaybackMonitor.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = PlaybackMonitor.py; sourceTree = "<group>"; };
 		DD1A00000000000000000001 /* DataImport.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = DataImport.py; sourceTree = "<group>"; };
 		DD1A00000000000000000003 /* DataImportPanel.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = DataImportPanel.py; sourceTree = "<group>"; };
@@ -4020,7 +4020,7 @@
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 967;
+				CURRENT_PROJECT_VERSION = 970;
 				DEVELOPMENT_TEAM = 4DFEFUDLKZ;
 				ENABLE_HARDENED_RUNTIME = YES;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
@@ -4047,7 +4047,7 @@
 					"$(PROJECT_DIR)/Distribution/Frameworks/libs",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 9.9.1;
+				MARKETING_VERSION = 9.9.4;
 				ONLY_ACTIVE_ARCH = NO;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				OTHER_CODE_SIGN_FLAGS = "";
@@ -4071,7 +4071,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 967;
+				CURRENT_PROJECT_VERSION = 970;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 4DFEFUDLKZ;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -4097,7 +4097,7 @@
 					"$(PROJECT_DIR)/Distribution/Frameworks/libs",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 9.9.1;
+				MARKETING_VERSION = 9.9.4;
 				ONLY_ACTIVE_ARCH = NO;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				OTHER_CODE_SIGN_FLAGS = "";

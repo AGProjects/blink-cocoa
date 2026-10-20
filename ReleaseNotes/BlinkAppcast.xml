@@ -6,6 +6,48 @@
       <description>Most recent changes with links to updates</description>
       <language>en</language>
          <item>
+            <title>Version 9.9.4</title>
+            <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog-classic.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Mon Oct 19 18:00:52 -03 2026</pubDate>
+            <enclosure url="https://download.ag-projects.com/Blink/MacOSX/Blink.dmg"
+                       sparkle:version="970"
+                       length="139372639"
+                       sparkle:shortVersionString="9.9.4"
+                       type="application/octet-stream"
+                       />
+         </item>
+         <item>
+            <title>Version 9.9.3</title>
+            <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog-classic.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Mon Oct 19 13:41:16 -03 2026</pubDate>
+            <enclosure url="https://download.ag-projects.com/Blink/MacOSX/Blink.dmg"
+                       sparkle:version="969"
+                       length="139373042"
+                       sparkle:shortVersionString="9.9.3"
+                       type="application/octet-stream"
+                       />
+         </item>
+         <item>
+            <title>Version 9.9.2</title>
+            <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog-classic.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Sun Oct 18 15:21:40 -03 2026</pubDate>
+            <enclosure url="https://download.ag-projects.com/Blink/MacOSX/Blink.dmg"
+                       sparkle:version="968"
+                       length="139382973"
+                       sparkle:shortVersionString="9.9.2"
+                       type="application/octet-stream"
+                       />
+         </item>
+         <item>
             <title>Version 9.9.1</title>
             <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
 		<sparkle:releaseNotesLink>
