@@ -102,6 +102,18 @@ pgpOptions = {'cipher': 'aes256',
 }
 
 MAX_MESSAGE_LENGTH = 16000
+
+# A MESSAGE the far side answered with one of these is worth sending again:
+# a timeout, or the server saying it could not handle it right now. Every
+# other answer -- 404, 403, 488, 6xx -- is about the message or the address
+# and will be the same answer next time.
+RETRIABLE_SEND_CODES = frozenset((408, 500, 502, 503, 504))
+# How many times such a message is tried before it is marked failed for
+# good, and the wait before each retry: 30 s doubling, at most 15 minutes,
+# which puts the last try about 45 minutes after the first.
+MAX_SEND_ATTEMPTS = 8
+SEND_RETRY_FIRST = 30.0
+SEND_RETRY_MAX = 900.0
 # How much of the original fits on the one line above the composer. The
 # bubble's quote gets three lines; this is a reminder of what is being
 # answered, not the message itself.
@@ -159,6 +171,30 @@ OTR_WIRE_PREFIX = '?OTR'
 _PLACEHOLDER_HOSTS = ('bonjour.local', '127.0.0.1', 'localhost')
 
 
+def pgp_key_problem(key):
+    """None if a message can be encrypted to `key`, otherwise why not.
+
+    Asked when a key is loaded, so that a key we can parse but not use --
+    no subkey flagged for encryption, one that is revoked or expired, an
+    algorithm pgpy cannot encrypt to -- is treated as no key at all, and
+    a failure inside a real encrypt() can only be a bug. The probe is a
+    real encryption of a few bytes, so it fails exactly where a message
+    would.
+    """
+    if key is None:
+        return 'no key'
+    try:
+        if key.is_expired:
+            return 'the key expired on %s' % key.expires_at
+    except Exception:
+        pass
+    try:
+        key.encrypt(pgpy.PGPMessage.new('probe'), cipher=SymmetricKeyAlgorithm.AES256)
+    except Exception as e:
+        return '%s: %s' % (e.__class__.__name__, e)
+    return None
+
+
 def is_placeholder_uri(uri):
     text = str(uri or '')
     for scheme in ('sips:', 'sip:'):
@@ -211,7 +247,7 @@ def _row_details(row, body=True):
               'cpim_to', 'cpim_timestamp', 'content_type', 'status', 'media_type',
               'encryption', 'read', 'uuid', 'journal_id', 'sip_callid',
               'metadata', 'related_msg_id', 'related_action', 'category', 'private',
-              'encryption_keys')
+              'encryption_keys', 'failure_reason')
     result = {}
     for name in fields:
         try:
@@ -254,6 +290,15 @@ class MessageInfo(object):
         self.encryption = encryption
         self.require_delivered_notification = require_delivered_notification
         self.require_displayed_notification = require_displayed_notification
+        # Retry bookkeeping for answers worth trying again (RETRIABLE_SEND_CODES):
+        # how many attempts were answered that way, when the next one is due
+        # (time.time(), 0 = now), and what the last answer said.
+        self.attempts = 0
+        self.next_attempt = 0.0
+        self.failure_reason = None
+
+    def retry_due(self):
+        return time.time() >= (self.next_attempt or 0.0)
 
 
 class OTRInternalMessage(MessageInfo):
@@ -759,11 +804,21 @@ class SMSViewController(NSObject):
             return
 
         try:
-            self.public_key, _ = pgpy.PGPKey.from_file(public_key_path)
+            key, _ = pgpy.PGPKey.from_file(public_key_path)
         except Exception as e:
             self.log_info('Cannot import PGP public key: %s' % str(e))
-        else:
-            self.log_info('PGP public key of %s imported from %s' % (self.remote_uri, public_key_path))
+            return
+        problem = pgp_key_problem(key)
+        if problem:
+            # Not kept: a key we cannot encrypt to is no key, and keeping
+            # it made every send try, fail, and fall through.
+            self.log_error('PGP public key of %s in %s cannot be encrypted to (%s); '
+                           'messages to %s will not be encrypted'
+                           % (self.remote_uri, public_key_path, problem, self.remote_uri))
+            self.public_key = None
+            return
+        self.public_key = key
+        self.log_info('PGP public key of %s imported from %s' % (self.remote_uri, public_key_path))
 
     @objc.python_method
     def load_private_key(self):
@@ -789,11 +844,21 @@ class SMSViewController(NSObject):
         public_key_path = "%s/%s.pubkey" % (self.keys_path, self.account.id)
 
         try:
-            self.my_public_key, _ = pgpy.PGPKey.from_file(public_key_path)
+            key, _ = pgpy.PGPKey.from_file(public_key_path)
         except Exception as e:
             self.log_info('Cannot import my own PGP public key: %s' % str(e))
-        else:
-            self.log_info('My PGP public key imported from %s' % public_key_path)
+            return
+        problem = pgp_key_problem(key)
+        if problem:
+            # Messages still go out encrypted to the other party; only the
+            # copy for this account's own devices is lost, and that is said.
+            self.log_error('My PGP public key in %s cannot be encrypted to (%s); '
+                           'sent messages will not be readable on my other devices'
+                           % (public_key_path, problem))
+            self.my_public_key = None
+            return
+        self.my_public_key = key
+        self.log_info('My PGP public key imported from %s' % public_key_path)
 
     @property
     def enableIsComposing(self):
@@ -867,7 +932,9 @@ class SMSViewController(NSObject):
             # the flag this ticked once every ten seconds and each tick
             # added another copy of the same message, all of which went out
             # the moment a route came back.
-            if message.status == MSG_STATE_FAILED_LOCAL and not message.pjsip_id and not message.queued and ISOTimestamp.now() - message.timestamp > datetime.timedelta(seconds=20):
+            if (message.status == MSG_STATE_FAILED_LOCAL and not message.pjsip_id and not message.queued
+                    and ISOTimestamp.now() - message.timestamp > datetime.timedelta(seconds=20)
+                    and (not hasattr(message, 'retry_due') or message.retry_due())):
                 if host.default_ip is not None:
                     if self.account is BonjourAccount():
                         if self.bonjour_lookup_enabled:
@@ -2070,7 +2137,11 @@ class SMSViewController(NSObject):
                                'encryption': info.encryption,
                                'content_type': info.content_type,
                                'call_id': info.call_id,
-                               'pjsip_id': getattr(info, 'pjsip_id', None)}
+                               'pjsip_id': getattr(info, 'pjsip_id', None),
+                               'attempts': getattr(info, 'attempts', 0),
+                               'next_attempt': (getattr(info, 'next_attempt', 0.0)
+                                                if info.status == MSG_STATE_FAILED_LOCAL else 0.0),
+                               'failure_reason': getattr(info, 'failure_reason', None)}
         details['reply_to'] = self.reply_targets.get(msgid)
         details['replies_live'] = sorted(reply for reply, original in self.reply_targets.items()
                                          if original == msgid)
@@ -2478,9 +2549,10 @@ class SMSViewController(NSObject):
             traceback.print_exc()
 
     @objc.python_method
-    def update_message_status(self, id, status, direction='outgoing'):
-        self.log_info("Message %s is %s" % (id, status))
-        self.history.update_message_status(id, status)
+    def update_message_status(self, id, status, direction='outgoing', failure_reason=None):
+        self.log_info("Message %s is %s%s" % (id, status,
+                                             ': %s' % failure_reason if failure_reason else ''))
+        self.history.update_message_status(id, status, failure_reason=failure_reason)
         if direction == 'outgoing':
             self.chatViewController.markMessage(id, status)
 
@@ -3351,12 +3423,15 @@ class SMSViewController(NSObject):
 
         cache = FileTransferCache()
         upload_path = path
+        encryption_failure = None
         try:
             if self._canEncryptFile(meta):
                 cache.note_upload_phase(meta, 'encrypt')
                 self._noteTransferProgress(meta)
                 # in a thread: this green thread runs in the reactor thread (SIP, DNS lookups)
                 encrypted = wait_for_thread(self._encryptFileForUpload, path, meta)
+                if encrypted is None:
+                    raise RuntimeError('no encrypted copy was made')
                 if encrypted is not None:
                     upload_path = encrypted
                     # Both the name and the URL gain the suffix: that is
@@ -3370,9 +3445,15 @@ class SMSViewController(NSObject):
                     except OSError:
                         pass
         except Exception as e:
-            self.log_error('Cannot encrypt %s: %s' % (meta.get('filename'), e))
+            encryption_failure = 'Encryption failed: %s: %s' % (e.__class__.__name__, e)
+            self.log_error('Cannot encrypt %s, not uploading it: %s' % (meta.get('filename'), e))
 
         self._persistOutgoingTransfer(meta, timestamp)
+
+        if encryption_failure:
+            # Not uploaded in the clear: the same rule as a text message.
+            self._transferFinished(meta, False, encryption_failure, path, path)
+            return
 
         def finished(ok, detail):
             self._transferFinished(meta, ok, detail, upload_path, path)
@@ -3518,7 +3599,8 @@ class SMSViewController(NSObject):
                     SMSWindowManager().requestUploadToken(self.account)
                 except Exception as e:
                     self.log_error('Cannot request a new API token: %s' % e)
-        self.history.update_message_status(meta['transfer_id'], state)
+        self.history.update_message_status(meta['transfer_id'], state,
+                                           failure_reason=None if ok else detail)
         self.chatViewController.markMessage(meta['transfer_id'], state)
         self.chatViewController.clearTransferProgress(meta['transfer_id'])
         if not ok:
@@ -3856,6 +3938,60 @@ class SMSViewController(NSObject):
             self.startEncryption()
 
     @objc.python_method
+    @run_in_green_thread
+    def resend_message(self, msgid):
+        """Send a failed outgoing message again, at the user's request.
+
+        Under its own id and its original moment: the bubble it is already
+        drawn as is the one that turns into a clock and then a tick, and a
+        far end that did get it after all sees the same id twice and keeps
+        one.
+        """
+        msgid = str(msgid)
+        try:
+            rows, _replies, _related = self.history.message_details(msgid)
+        except Exception as e:
+            self.log_error('Cannot read message %s to resend it: %s' % (msgid, e))
+            return
+        row = next((row for row in rows if row.direction == 'outgoing'), None)
+        if row is None:
+            self.log_error('Cannot resend message %s: no outgoing row for it' % msgid)
+            return
+        self._requeue_for_resend(msgid, row.body, row.content_type, row.time)
+
+    @objc.python_method
+    @run_in_gui_thread
+    def _requeue_for_resend(self, msgid, body, content_type, when):
+        if content_type == FILE_TRANSFER_CONTENT_TYPE:
+            self.log_info('Not resending %s as a message: it is a file transfer' % msgid)
+            return
+        existing = self.messages.get(msgid)
+        if existing is not None and (existing.queued or existing.pjsip_id):
+            self.log_info('Message %s is already on its way' % msgid)
+            return
+        timestamp = getattr(existing, 'timestamp', None)
+        if timestamp is None:
+            try:
+                timestamp = ISOTimestamp(when)
+            except Exception:
+                timestamp = ISOTimestamp.now()
+        recipient = ChatIdentity(self.target_uri, self.display_name)
+        info = MessageInfo(msgid, sender=self.account, recipient=recipient, timestamp=timestamp,
+                           content=body or '', content_type=content_type or 'text/plain',
+                           status=MSG_STATE_FAILED_LOCAL,
+                           encryption='verified' if self.pgp_encrypted else '')
+        self.messages[msgid] = info
+        self.log_info('Resending message %s on request' % msgid)
+        self.update_message_status(msgid, 'queued')
+        info.status = 'queued'
+        info.queued = True
+        self.outgoing_queue.put(info)
+        if self.last_route:
+            self.start_queue()
+        elif not self.dns_lookup_in_progress:
+            self.lookup_destination(self.target_uri)
+
+    @objc.python_method
     def resend_pending(self):
         """Put back on the queue whatever a dead route left behind.
 
@@ -3876,6 +4012,12 @@ class SMSViewController(NSObject):
                 continue
 
             if message.content_type in (IsComposingDocument.content_type, IMDNDocument.content_type):
+                continue
+
+            # A message the server itself refused a moment ago waits its
+            # turn: the route coming back says nothing about the server, and
+            # resending on every re-resolve is what made one 500 a storm.
+            if hasattr(message, 'retry_due') and not message.retry_due():
                 continue
 
             self.log_info('Resending message %s' % message.id)
@@ -4291,11 +4433,25 @@ class SMSViewController(NSObject):
                         self.notification_center.post_notification('PGPEncryptionStateChanged', sender=self)
                         self.pgp_encrypted = True
                 except Exception as e:
+                    # Held, never sent in the clear. The keys were checked
+                    # when they were loaded, so this is a bug, and a bug is
+                    # no reason to put words meant to be private on the wire.
                     import traceback
-                    self.log_error('Failed to encrypt message: %s' % traceback.format_exc())
-                    if self.pgp_encrypted:
-                        self.notification_center.post_notification('PGPEncryptionStateChanged', sender=self)
-                        self.pgp_encrypted = False
+                    self.log_error('Failed to encrypt message %s, not sending it: %s'
+                                   % (message.id, traceback.format_exc()))
+                    failure = 'Encryption failed: %s: %s' % (e.__class__.__name__, e)
+                    message.status = MSG_STATE_FAILED
+                    message.failure_reason = failure
+                    message.pjsip_id = None
+                    self.messages.pop(message.id, None)
+                    self.update_message_status(message.id, MSG_STATE_FAILED, failure_reason=failure)
+                    try:
+                        self.chatViewController.showSystemMessage(
+                            NSLocalizedString("Message not sent: it could not be encrypted", "Label"),
+                            ISOTimestamp.now(), True)
+                    except Exception:
+                        pass
+                    return
                 else:
                     #self.log_info('Message %s encrypted using PGP' % message.id)
                     pgp_encrypted = True
@@ -4473,8 +4629,31 @@ class SMSViewController(NSObject):
 
             if (data.code == 408 and entity == 'local') or data.code >= 500:
                 self.setRoutesFailed(reason)
-            
-            message.status = MSG_STATE_FAILED if entity != 'local' and self.account is not BonjourAccount() else MSG_STATE_FAILED_LOCAL
+
+            failure = '%s from %s' % (reason, entity) if entity != 'local' else '%s (local)' % reason
+            message.failure_reason = failure
+            retriable = (entity != 'local' and self.account is not BonjourAccount()
+                         and data.code in RETRIABLE_SEND_CODES)
+            if retriable:
+                message.attempts = getattr(message, 'attempts', 0) + 1
+                if message.attempts >= MAX_SEND_ATTEMPTS:
+                    retriable = False
+                    failure = '%s, gave up after %d attempts' % (failure, message.attempts)
+                    message.failure_reason = failure
+
+            if entity == 'local' or self.account is BonjourAccount():
+                message.status = MSG_STATE_FAILED_LOCAL
+            elif retriable:
+                # Kept pending, not failed: the far end said "not now", not
+                # "no". The wait doubles each time so a server that stays
+                # broken is asked a handful of times, not once per lookup.
+                delay = min(SEND_RETRY_FIRST * (2 ** (message.attempts - 1)), SEND_RETRY_MAX)
+                message.next_attempt = time.time() + delay
+                message.status = MSG_STATE_FAILED_LOCAL
+                self.log_info('Message %s will be tried again in %ds (attempt %d of %d): %s'
+                              % (message.id, delay, message.attempts, MAX_SEND_ATTEMPTS, failure))
+            else:
+                message.status = MSG_STATE_FAILED
 
             if message.status == MSG_STATE_FAILED:
                 try:
@@ -4485,14 +4664,16 @@ class SMSViewController(NSObject):
                 message.pjsip_id = None
                 self.messages[message.id] = message
 
-            if self.last_failure_reason != reason:
+            # The red line in the transcript only for a final answer: a
+            # message that will be tried again has not failed yet.
+            if self.last_failure_reason != reason and message.status == MSG_STATE_FAILED:
                 if data.code == 480 or 'not online' in reason:
                     reason = 'User not online'
 
                 if entity != 'local':
                     self.chatViewController.showSystemMessage(reason, ISOTimestamp.now(), True)
 
-            self.update_message_status(message.id, message.status)
+            self.update_message_status(message.id, message.status, failure_reason=failure)
 
             self.last_failure_reason = reason
 

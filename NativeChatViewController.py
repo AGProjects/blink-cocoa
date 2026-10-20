@@ -302,7 +302,7 @@ def _haversine(lat1, lon1, lat2, lon2):
         return 0.0
 from ChatViewController import (ChatViewController, ChatMessageObject,
                                 pasteboard_attachments, pasteboard_can_attach)
-from MessageBubbleView import MessageBubbleView, _url_re, transcript_font_size
+from MessageBubbleView import MessageBubbleView, _url_re, plain_text, transcript_font_size
 from FileTransferCache import (FileTransferCache, display_name, tile_pixels,
                                envelope as transfer_envelope,
                                is_encrypted, is_pdf_transfer, AUTO_VIDEO_MAX_AGE_DAYS,
@@ -2630,6 +2630,15 @@ class NativeChatViewController(ChatViewController):
             return None
 
     @objc.python_method
+    def bubbleDidRequestResend(self, msgid):
+        resend = getattr(self.delegate, 'resend_message', None)
+        if resend is None:
+            BlinkLogger().log_info('Cannot resend %s: this view has no conversation to send it on'
+                                   % msgid)
+            return
+        resend(msgid)
+
+    @objc.python_method
     def bubbleDidRequestEdit(self, msgid, text, timestamp=None):
         if hasattr(self.delegate, 'begin_editing_message'):
             self.delegate.begin_editing_message(msgid, text, timestamp)
@@ -3441,9 +3450,20 @@ class NativeChatViewController(ChatViewController):
             delivery.append((NSLocalizedString("Shown as", "Message info"), shown))
         if session and session != status:
             delivery.append((NSLocalizedString("Session status", "Message info"), session))
+        failure = live.get('failure_reason') or row.get('failure_reason')
+        if failure:
+            delivery.append((NSLocalizedString("Last failure", "Message info"), text(failure)))
         if live:
             if live.get('queued'):
                 delivery.append((NSLocalizedString("In send queue", "Message info"), text(True)))
+            if live.get('attempts'):
+                delivery.append((NSLocalizedString("Attempts refused", "Message info"),
+                                 text(live.get('attempts'))))
+            if live.get('next_attempt'):
+                import time as _time
+                wait = max(0, int(live.get('next_attempt') - _time.time()))
+                delivery.append((NSLocalizedString("Next attempt", "Message info"),
+                                 NSLocalizedString("in %ds", "Message info") % wait))
             delivery.append((NSLocalizedString("PJSIP id", "Message info"), text(live.get('pjsip_id'))))
         if not outgoing and 'read' in row:
             delivery.append((NSLocalizedString("Read", "Message info"), text(bool(row.get('read')))))
@@ -6224,6 +6244,75 @@ class NativeChatViewController(ChatViewController):
         name = getattr(contact, 'name', None) if contact is not None else None
         return str(name) if name else None
 
+    @objc.python_method
+    def _addForwardTargets(self, menu, recents, payload):
+        """One item per recent conversation, each carrying what to send."""
+        for uri, name in recents:
+            item = menu.addItemWithTitle_action_keyEquivalent_(
+                '%s (%s)' % (name, uri) if name != uri else uri,
+                "forwardSelectionToContact:", "")
+            item.setIndentationLevel_(1)
+            item.setTarget_(self)
+            chosen = dict(payload)
+            chosen['uri'] = uri
+            item.setRepresentedObject_(chosen)
+
+    @objc.python_method
+    def bubbleDidRequestForward(self, msgid, bubble, anchor=None):
+        """Forward one message, from its own menu.
+
+        A file goes the way a ticked set does, through the contact list's
+        drop path. Text opens the chosen conversation with the words in its
+        composer: the user sees what is about to go and to whom, and can
+        say why before pressing Return.
+        """
+        if bubble is None:
+            return
+        payload = None
+        if getattr(bubble, 'transfer_meta', None) is not None:
+            path = getattr(bubble, 'media_path', None)
+            if not path or not os.path.exists(path):
+                fetching = self.fetchMediaForBubble(bubble, force=True)
+                BlinkLogger().log_info('Forward %s: the file is not on this computer%s'
+                                       % (msgid, ', fetching it' if fetching else ''))
+                try:
+                    self.showSystemMessage(
+                        NSLocalizedString("The file is still on the server; forward it "
+                                          "again once it has downloaded", "Label")
+                        if fetching else
+                        NSLocalizedString("The file is not on this computer and cannot "
+                                          "be forwarded", "Label"),
+                        ISOTimestamp.now())
+                except Exception as e:
+                    BlinkLogger().log_debug('Cannot report the file left behind: %s' % e)
+                return
+            payload = {'filenames': [path], 'selection': False}
+            heading = NSLocalizedString("Forward file to", "Menu item")
+        else:
+            text = (plain_text(getattr(bubble, 'content', '') or '',
+                               getattr(bubble, 'is_html', False)) or '').strip()
+            if not text:
+                return
+            payload = {'text': text, 'selection': False}
+            heading = NSLocalizedString("Forward message to", "Menu item")
+
+        recents = self._recentConversations()
+        if not recents:
+            BlinkLogger().log_info('Nothing to forward to: no other conversation is known')
+            return
+        menu = NSMenu.alloc().init()
+        menu.setAutoenablesItems_(False)
+        menu.addItemWithTitle_action_keyEquivalent_(heading, "", "").setEnabled_(False)
+        self._addForwardTargets(menu, recents, payload)
+        try:
+            if anchor is None:
+                from AppKit import NSEvent
+                point = bubble.window().convertPointFromScreen_(NSEvent.mouseLocation())
+                anchor = bubble.convertPoint_fromView_(point, None)
+            menu.popUpMenuPositioningItem_atLocation_inView_(None, anchor, bubble)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot show the forward menu: %s' % e)
+
     @objc.IBAction
     def forwardSelection_(self, sender):
         """Offer the ticked files to somebody else.
@@ -6256,13 +6345,7 @@ class NativeChatViewController(ChatViewController):
              else NSLocalizedString("Forward %d files to", "Menu item") % len(paths)),
             "", "")
         heading.setEnabled_(False)
-        for uri, name in recents:
-            item = menu.addItemWithTitle_action_keyEquivalent_(
-                '%s (%s)' % (name, uri) if name != uri else uri,
-                "forwardSelectionToContact:", "")
-            item.setIndentationLevel_(1)
-            item.setTarget_(self)
-            item.setRepresentedObject_({'uri': uri, 'filenames': paths})
+        self._addForwardTargets(menu, recents, {'filenames': paths})
         if missing:
             note = menu.addItemWithTitle_action_keyEquivalent_(
                 (NSLocalizedString("1 more is still downloading", "Menu item")
@@ -6293,7 +6376,8 @@ class NativeChatViewController(ChatViewController):
         chosen = sender.representedObject()
         uri = str(chosen.get('uri') or '')
         filenames = list(chosen.get('filenames') or [])
-        if not uri or not filenames:
+        text = str(chosen.get('text') or '')
+        if not uri or not (filenames or text):
             return
         try:
             from AppKit import NSApp
@@ -6308,6 +6392,9 @@ class NativeChatViewController(ChatViewController):
         if contact is None:
             BlinkLogger().log_error('Cannot forward to %s: no contact row for it' % uri)
             return
+        if text:
+            self._forwardTextToContact(controller, contact, uri, text)
+            return
         account = (BonjourAccount() if isinstance(contact, BonjourBlinkContact)
                    else model.accountForDroppedFiles(contact))
         if account is None:
@@ -6321,7 +6408,58 @@ class NativeChatViewController(ChatViewController):
             BlinkLogger().log_error('Cannot forward %d file(s) to %s: %s'
                                     % (len(filenames), uri, e))
             return
-        self.clearSelection()
+        if chosen.get('selection', True):
+            self.clearSelection()
+
+    @objc.python_method
+    def _forwardTextToContact(self, controller, contact, uri, text):
+        """Open the conversation with `contact` and leave `text` in its
+        composer, the way the contact list's Send Message opens one."""
+        try:
+            from ContactListModel import BonjourBlinkContact
+            from sipsimple.account import BonjourAccount
+            from SMSWindowManager import SMSWindowManager
+            from util import normalize_sip_uri_for_outgoing_session
+            manager = SMSWindowManager()
+            instance_id = None
+            if isinstance(contact, BonjourBlinkContact):
+                account = BonjourAccount()
+                target = contact.uri
+                instance_id = contact.id
+            else:
+                account = controller.messagingAccountFor(controller.activeAccount(), contact)
+                if account is None:
+                    controller.reportNoMessagingAccount(contact.name or uri)
+                    return
+                target = manager.messageURIForContact(contact) or uri
+            target = normalize_sip_uri_for_outgoing_session(target, account)
+            if not target:
+                BlinkLogger().log_error('Cannot forward to %s: not a usable address' % uri)
+                return
+            viewer = manager.getWindow(target, contact.name, account, focusTab=True,
+                                       instance_id=instance_id, selected_contact=contact)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot open the conversation with %s to forward: %s'
+                                    % (uri, e))
+            return
+        input_text = None
+        try:
+            input_text = viewer.chatViewController.inputText
+        except AttributeError:
+            pass
+        if input_text is None:
+            BlinkLogger().log_error('Cannot forward to %s: the conversation has no composer'
+                                    % uri)
+            return
+        BlinkLogger().log_info('Forwarding %d character(s) to %s on %s, in the composer'
+                               % (len(text), target, account.id))
+        input_text.setString_(text)
+        input_text.didChangeText()
+        input_text.setSelectedRange_((len(text), 0))
+        window = input_text.window()
+        if window is not None:
+            window.makeKeyAndOrderFront_(None)
+            window.makeFirstResponder_(input_text)
 
     @objc.python_method
     def deleteSelectedMessages(self):

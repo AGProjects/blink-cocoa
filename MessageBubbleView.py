@@ -2637,6 +2637,34 @@ class MessageBubbleView(NSView):
             BlinkLogger().log_error('Cannot copy message %s: %s' % (self.msgid, e))
 
     @objc.python_method
+    def _isFileCopyable(self):
+        """A file that is on this computer, whatever kind it is."""
+        return (bool(self.msgid) and self.transfer_meta is not None
+                and bool(self.media_path) and os.path.exists(str(self.media_path)))
+
+    @objc.python_method
+    def copyFileToPasteboard(self):
+        """The file itself on the pasteboard, as a file URL: what the
+        Finder pastes as a copy and Mail or another chat as an attachment."""
+        if not self._isFileCopyable():
+            return
+        try:
+            board = NSPasteboard.generalPasteboard()
+            board.clearContents()
+            url = NSURL.fileURLWithPath_(str(self.media_path))
+            written = bool(board.writeObjects_(NSArray.arrayWithObject_(url)))
+            BlinkLogger().log_info('Copied the file %s: %s'
+                                   % (self.media_path, 'ok' if written else 'FAILED'))
+            if written:
+                self.noteCopied()
+        except Exception as e:
+            BlinkLogger().log_error('Cannot copy the file of message %s: %s' % (self.msgid, e))
+
+    def menuCopyFile_(self, sender):
+        BlinkLogger().log_debug('Bubble %s: copy file, from the menu' % self.msgid)
+        self.copyFileToPasteboard()
+
+    @objc.python_method
     def noteCopied(self):
         """Turn the copy affordance green for a moment."""
         self.copied_feedback = True
@@ -6204,6 +6232,10 @@ class MessageBubbleView(NSView):
                 item = menu.addItemWithTitle_action_keyEquivalent_(
                     NSLocalizedString("Copy", "Menu item"), "menuCopyPicture:", "")
                 item.setTarget_(self)
+            if self._isFileCopyable():
+                item = menu.addItemWithTitle_action_keyEquivalent_(
+                    NSLocalizedString("Copy File", "Menu item"), "menuCopyFile:", "")
+                item.setTarget_(self)
             if self.media_path:
                 item = menu.addItemWithTitle_action_keyEquivalent_(
                     NSLocalizedString("Open", "Menu item"), "menuOpenFile:", "")
@@ -6224,6 +6256,10 @@ class MessageBubbleView(NSView):
                 item = menu.addItemWithTitle_action_keyEquivalent_(
                     NSLocalizedString("Edit Caption\u2026", "Menu item"),
                     "menuEditCaption:", "")
+                item.setTarget_(self)
+            if self._isForwardable():
+                item = menu.addItemWithTitle_action_keyEquivalent_(
+                    NSLocalizedString("Forward\u2026", "Menu item"), "menuForward:", "")
                 item.setTarget_(self)
             item = menu.addItemWithTitle_action_keyEquivalent_(
                 NSLocalizedString("Delete\u2026", "Menu item"), "menuDeletePicture:", "")
@@ -6266,6 +6302,8 @@ class MessageBubbleView(NSView):
 
             if self._isCopyable():
                 add(NSLocalizedString("Copy", "Menu item"), "menuCopyBody:")
+            if self._isFileCopyable():
+                add(NSLocalizedString("Copy File", "Menu item"), "menuCopyFile:")
             if self._showsOpen() or self.media_path:
                 add(NSLocalizedString("Open", "Menu item"), "menuOpenFile:")
                 if self.media_path:
@@ -6273,12 +6311,16 @@ class MessageBubbleView(NSView):
             if self._showsSaveAs() or self.transfer_meta is not None:
                 add(NSLocalizedString("Save As\u2026", "Menu item"), "menuSaveAs:")
             group = []
+            if self._isResendable():
+                group.append((NSLocalizedString("Resend", "Menu item"), "menuResend:"))
             if self._isRepliable():
                 group.append((NSLocalizedString("Reply", "Menu item"), "menuReply:"))
             if self._isEditable():
                 group.append((NSLocalizedString("Edit", "Menu item"), "menuEdit:"))
             if self._showsEditCaption():
                 group.append((NSLocalizedString("Edit Caption\u2026", "Menu item"), "menuEditCaption:"))
+            if self._isForwardable():
+                group.append((NSLocalizedString("Forward\u2026", "Menu item"), "menuForward:"))
             if group:
                 if menu.numberOfItems():
                     menu.addItem_(NSMenuItem.separatorItem())
@@ -6303,6 +6345,49 @@ class MessageBubbleView(NSView):
         if renderer is not None and hasattr(renderer, 'bubbleDidRequestReply'):
             BlinkLogger().log_debug('Bubble %s: reply, from the menu' % self.msgid)
             renderer.bubbleDidRequestReply(self.msgid)
+
+    @objc.python_method
+    def _isResendable(self):
+        """Your own words that did not get there. A file transfer has its
+        own way back onto the wire (resend_pending_transfers) and is not
+        offered here."""
+        return (self.direction == 'outgoing' and bool(self.msgid)
+                and self.kind == self.KIND_TEXT
+                and self.transfer_meta is None
+                and self.state in (MSG_STATE_FAILED, MSG_STATE_FAILED_LOCAL,
+                                   MSG_STATE_DEFERRED))
+
+    def menuResend_(self, sender):
+        renderer = self.renderer
+        if renderer is not None and hasattr(renderer, 'bubbleDidRequestResend'):
+            BlinkLogger().log_info('Bubble %s: resend, from the menu' % self.msgid)
+            renderer.bubbleDidRequestResend(self.msgid)
+
+    @objc.python_method
+    def _isForwardable(self):
+        """A file, or a message with words in it. Not a date rule, a system
+        note or a call record -- none of those is something somebody sent --
+        and not a location: a coordinate pasted into another conversation
+        would arrive as a string, not as a share."""
+        if not self.msgid or self.kind in (self.KIND_DATE, self.KIND_SYSTEM,
+                                           self.KIND_CALL, self.KIND_LOCATION):
+            return False
+        if self.transfer_meta is not None:
+            return True
+        return bool((plain_text(self.content, self.is_html) or '').strip())
+
+    def menuForward_(self, sender):
+        renderer = self.renderer
+        if renderer is None or not hasattr(renderer, 'bubbleDidRequestForward'):
+            return
+        BlinkLogger().log_debug('Bubble %s: forward, from the menu' % self.msgid)
+        # Under the actions button when the menu came from there; where the
+        # pointer is when it came from a right click.
+        anchor = None
+        if self._more_rect.size.width > 0:
+            anchor = (self._more_rect.origin.x,
+                      self._more_rect.origin.y + self._more_rect.size.height)
+        renderer.bubbleDidRequestForward(self.msgid, self, anchor)
 
     def menuEdit_(self, sender):
         renderer = self.renderer
