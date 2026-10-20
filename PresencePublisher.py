@@ -359,7 +359,10 @@ class PresencePublisher(object):
 
         pidf_doc = pidf.PIDF(str(account.uri))
         person = pidf.Person("PID-%s" % hashlib.md5(account.id.encode()).hexdigest())
-        person.timestamp = pidf.PersonTimestamp(settings.presence_state.timestamp)
+        # Settings changes can trigger a publish before SIPApplicationDidStart has
+        # initialised the timestamp, so never hand None to the PIDF timestamp types
+        timestamp = settings.presence_state.timestamp or ISOTimestamp.now()
+        person.timestamp = pidf.PersonTimestamp(timestamp)
         if not account.presence.disable_timezone and not offline:
             person.time_offset = rpid.TimeOffset()
         pidf_doc.add(person)
@@ -370,7 +373,7 @@ class PresencePublisher(object):
         person.activities = rpid.Activities()
         person.activities.add(str(status.extended))
         service = pidf.Service("SID-%s" % instance_id, status=status)
-        service.timestamp = pidf.ServiceTimestamp(settings.presence_state.timestamp)
+        service.timestamp = pidf.ServiceTimestamp(timestamp)
 
         if offline:
             note = settings.presence_state.offline_note
@@ -426,7 +429,7 @@ class PresencePublisher(object):
         pidf_doc.add(service)
 
         device = pidf.Device("DID-%s" % instance_id, device_id=pidf.DeviceID(instance_id))
-        device.timestamp = pidf.DeviceTimestamp(settings.presence_state.timestamp)
+        device.timestamp = pidf.DeviceTimestamp(timestamp)
         device.notes.add('%s at %s' % (settings.user_agent, self.hostname))
         pidf_doc.add(device)
         self.last_service_timestamp[account.id] = service.timestamp
