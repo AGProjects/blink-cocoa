@@ -770,6 +770,12 @@ class ChatMessage(SQLObject):
     # again (the private key changed since).
     decrypted         = StringCol(default='0')
     decryption_error  = StringCol(default=None)
+    # Why the last attempt to send an outgoing message failed, as the far
+    # end or the stack put it ("Server error occurred (7/SL) (500) from
+    # OpenSIPS"). Kept after a later success too: it is what the info panel
+    # shows, and a message that took three tries is worth being able to
+    # explain.
+    failure_reason    = StringCol(default=None)
     # Every category page is "the newest rows of THIS type for these
     # addresses", which is remote_uri + category + an ORDER BY time. Without
     # the index SQLite finds the address's rows and then sorts the whole
@@ -818,7 +824,7 @@ NOT_DELETED_SQL = "(deleted is null or deleted = 0)"
 
 
 class ChatHistory(object, metaclass=Singleton):
-    __version__ = 25
+    __version__ = 26
 
     def __init__(self):
         path = ApplicationData.get('history')
@@ -1181,6 +1187,17 @@ class ChatHistory(object, metaclass=Singleton):
             except Exception as e:
                 BlinkLogger().log_error("Error adding index decrypted_index: %s" % e)
 
+        if next_upgrade_version < 26:
+            # Why an outgoing message failed (message info: Last failure).
+            query = "alter table chat_messages add column 'failure_reason' TEXT"
+            try:
+                self.db.queryAll(query)
+                BlinkLogger().log_info("Added column 'failure_reason' to table %s" % ChatMessage.sqlmeta.table)
+            except dberrors.OperationalError as e:
+                if not str(e).startswith('duplicate column name'):
+                    BlinkLogger().log_error("Error adding column failure_reason to table %s: %s"
+                                            % (ChatMessage.sqlmeta.table, e))
+
         TableVersions().set_table_version(ChatMessage.sqlmeta.table, self.__version__)
 
     def _backfill_categories(self):
@@ -1338,11 +1355,16 @@ class ChatHistory(object, metaclass=Singleton):
         return block_on(self._unread_counts(local_uri))
 
     @run_in_db_thread
-    def update_message_status(self, msgid, status, direction='outgoing'):
+    def update_message_status(self, msgid, status, direction='outgoing', failure_reason=None):
         try:
             results = ChatMessage.selectBy(msgid=msgid, direction=direction)
             message = results.getOne()
             if message:
+                if failure_reason:
+                    try:
+                        message.failure_reason = str(failure_reason)[:500]
+                    except Exception:
+                        pass
                 if direction == 'outgoing' and status == 'failed' and message.status == 'delivered':
                     # the peer's devices answer each on its own: one that cannot show it does not undo one that did
                     BlinkLogger().log_info("Message %s failed disposition ignored, already delivered" % msgid)
