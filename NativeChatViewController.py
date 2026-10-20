@@ -44,6 +44,7 @@ from AppKit import (NSAlert,
                     NSViewMaxYMargin,
                     NSViewMinXMargin,
                     NSViewMinYMargin,
+                    NSView,
                     NSViewWidthSizable)
 from Foundation import (NSArray, NSAttributedString, NSIntersectsRect,
                         NSLocalizedString, NSMakeRect, NSNotFound, NSPoint,
@@ -118,6 +119,46 @@ SELECTION_BAR_BOTTOM = 14.0
 # How many conversations the Forward menu offers before it stops being a
 # menu and starts being the contact list.
 FORWARD_RECENTS      = 12
+
+
+class BlinkSelectionActionBar(NSView):
+    """The floating selection bar's backing view.
+
+    Its colours are set in updateLayer, not once at install: a CGColor is a
+    snapshot of a dynamic NSColor in whatever appearance was current when it
+    was asked for, so a bar built under one appearance keeps that one's
+    colours after the window changes. AppKit calls updateLayer with the
+    view's own effective appearance current, and again whenever it changes.
+
+    The fill is controlBackgroundColor, not windowBackgroundColor: the
+    latter is the very grey the pane is drawn in, and in Light mode the bar
+    melted into it. A soft shadow lifts it off pictures of any colour.
+    """
+
+    def wantsUpdateLayer(self):
+        return True
+
+    def isOpaque(self):
+        return False
+
+    def updateLayer(self):
+        layer = self.layer()
+        if layer is None:
+            return
+        try:
+            layer.setCornerRadius_(SELECTION_BAR_H / 2.0)
+            layer.setBackgroundColor_(NSColor.controlBackgroundColor().CGColor())
+            layer.setBorderColor_(NSColor.separatorColor().CGColor())
+            layer.setBorderWidth_(1.0)
+            layer.setShadowColor_(NSColor.shadowColor().CGColor())
+            layer.setShadowOpacity_(0.18)
+            layer.setShadowRadius_(6.0)
+            layer.setShadowOffset_((0.0, -1.0))
+        except Exception as e:
+            BlinkLogger().log_debug('Cannot colour the selection bar: %s' % e)
+
+    def viewDidChangeEffectiveAppearance(self):
+        self.setNeedsDisplay_(True)
 
 
 def grid_spacing_for(category):
@@ -5816,23 +5857,15 @@ class NativeChatViewController(ChatViewController):
         if parent is None:
             return
         try:
-            from AppKit import NSControlSizeSmall, NSTextField, NSView
+            from AppKit import NSControlSizeSmall, NSTextField
         except ImportError:
             return
         try:
-            bar = NSView.alloc().initWithFrame_(
+            bar = BlinkSelectionActionBar.alloc().initWithFrame_(
                 NSMakeRect(0, 0, 240, SELECTION_BAR_H))
             bar.setWantsLayer_(True)
-            layer = bar.layer()
-            if layer is not None:
-                layer.setCornerRadius_(SELECTION_BAR_H / 2.0)
-                try:
-                    layer.setBackgroundColor_(
-                        NSColor.windowBackgroundColor().colorWithAlphaComponent_(0.97).CGColor())
-                    layer.setBorderColor_(NSColor.separatorColor().CGColor())
-                    layer.setBorderWidth_(1.0)
-                except Exception as e:
-                    BlinkLogger().log_debug('Cannot colour the selection bar: %s' % e)
+            bar.setLayerContentsRedrawPolicy_(2)   # NSViewLayerContentsRedrawOnSetNeedsDisplay
+            bar.setNeedsDisplay_(True)
             # Centred over the bottom of the transcript, and staying there:
             # both side margins flexible so it stays centred, the vertical
             # one fixed to whichever edge the parent counts from.
