@@ -4284,8 +4284,8 @@ class SMSViewController(NSObject):
                         encrypted_content = self.my_public_key.encrypt(encrypted_content, cipher=cipher, sessionkey=sessionkey)
                         del sessionkey
                     else:
-                        encrypted_content = self.public_key.encrypt(pgp_message, cipher=cipher, sessionkey=sessionkey)
-                        
+                        encrypted_content = self.public_key.encrypt(pgp_message, cipher=cipher)
+
                     content = str(encrypted_content).encode()
                     if not self.pgp_encrypted:
                         self.notification_center.post_notification('PGPEncryptionStateChanged', sender=self)
