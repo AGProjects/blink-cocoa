@@ -136,6 +136,10 @@ MARGIN_RIGHT  = 11.0
 MARGIN_TOP    = 2.0
 MARGIN_BOTTOM = 2.0
 BUBBLE_FRAC   = 0.97
+# Incoming bubbles stop shorter. At 97% a long incoming message ran the
+# width of the pane, and nothing but its colour said which side it came
+# from; the gap on the right is what reads as "theirs" at a glance.
+INCOMING_BUBBLE_FRAC = 0.85
 # Breathing room kept on the edge *opposite* the avatar. A fixed gutter
 # reads better than a fraction: in a narrow drawer a percentage throws
 # away width the text badly needs, while in a wide one it leaves a gap
@@ -4147,7 +4151,8 @@ class MessageBubbleView(NSView):
             # A whole bubble in a cell: it keeps everything it has in the
             # transcript, but it does not share the cell with anyone.
             avail = max(width - GRID_CELL_MARGIN * 2, 40.0)
-        container_w = min(avail - OPPOSITE_GUTTER, avail * BUBBLE_FRAC)
+        frac = INCOMING_BUBBLE_FRAC if self.direction != 'outgoing' else BUBBLE_FRAC
+        container_w = min(avail - OPPOSITE_GUTTER, avail * frac)
         container_w = max(container_w, min(avail, MIN_BUBBLE_W))
 
         avatar_slot = (AVATAR_SIZE + 4.0) if self._showsAvatar() else 0.0
