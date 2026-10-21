@@ -6378,7 +6378,14 @@ class ContactListModel(CustomListModel):
                     account = AccountManager().get_account(local_party)
                 except KeyError:
                     account = None
-            ensure_call_contact(notification.data.remote_party, account)
+            # Not while quitting: calls ended by the shutdown arrive here
+            # after the contact list has been torn down, the lookup finds
+            # nothing and a duplicate contact was created on every quit
+            # during a call. The next call files the party instead.
+            if getattr(NSApp.delegate(), 'terminating', False):
+                BlinkLogger().log_info('[cdr] not filing %s: the application is quitting' % notification.data.remote_party)
+            else:
+                ensure_call_contact(notification.data.remote_party, account)
         except Exception as e:
             BlinkLogger().log_error('[cdr] cannot file the caller: %s' % e)
 

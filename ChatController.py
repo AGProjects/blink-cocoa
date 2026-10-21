@@ -997,20 +997,25 @@ class ChatController(MediaStream):
                 bool(RadioPTT.conference_radios(self.sessionController.conference_info)))
 
     @objc.python_method
-    def pressConferenceRadios(self):
-        """Send a radio PTT press to the room for every participant that
-        drives a radio and has audio in the conference (docs/radio-ptt.md in
-        sylkserver). The room forwards it; the on-air state comes back in
+    def toggleConferenceRadios(self):
+        """Push to Talk / Push to Stop (docs/radio-ptt.md in sylkserver).
+
+        While any radio is keying or on air, release those radios; otherwise
+        press every participant's radio that has audio in the conference.
+        The room forwards the commands; the on-air state comes back in
         conference-info."""
         if not self.radioButtonEnabled():
             return
-        for radio in RadioPTT.conference_radios(self.sessionController.conference_info):
+        radios = RadioPTT.conference_radios(self.sessionController.conference_info)
+        active = [radio for radio in radios if radio['state'] in ('keying', 'transmitting')]
+        action, targets = ('release', active) if active else ('press', radios)
+        for radio in targets:
             try:
-                self.stream.send_message(RadioPTT.press_message(radio['entity']), content_type=RadioPTT.CONTENT_TYPE)
+                self.stream.send_message(RadioPTT.press_message(radio['entity'], action=action), content_type=RadioPTT.CONTENT_TYPE)
             except Exception as e:
-                self.sessionController.log_info("Cannot send radio PTT press to %s: %s" % (radio['entity'], e))
+                self.sessionController.log_info("Cannot send radio PTT %s to %s: %s" % (action, radio['entity'], e))
             else:
-                self.sessionController.log_info("Radio PTT press sent for %s (%s)" % (radio['user'], radio['entity']))
+                self.sessionController.log_info("Radio PTT %s sent for %s (%s)" % (action, radio['user'], radio['entity']))
 
     @objc.python_method
     def updateToolbarButtons(self, toolbar, got_proposal=False):
@@ -1100,13 +1105,16 @@ class ChatController(MediaStream):
             elif identifier == 'radio':
                 radios = RadioPTT.conference_radios(self.sessionController.conference_info)
                 on_air = [radio for radio in radios if radio['state'] == 'transmitting']
+                active = [radio for radio in radios if radio['state'] in ('keying', 'transmitting')]
                 image = RadioPTT.radio_toolbar_image(transmitting=bool(on_air))
                 if image is not None:
                     item.setImage_(image)
-                item.setLabel_(NSLocalizedString("Push to Talk", "Toolbar item"))
-                if on_air:
-                    item.setToolTip_(NSLocalizedString("Radio on air, press to extend", "Tooltip"))
+                if active:
+                    # Toggles: while a radio is keyed the button releases it
+                    item.setLabel_(NSLocalizedString("Push to Stop", "Toolbar item"))
+                    item.setToolTip_(NSLocalizedString("Release the radio", "Tooltip"))
                 else:
+                    item.setLabel_(NSLocalizedString("Push to Talk", "Toolbar item"))
                     item.setToolTip_(NSLocalizedString("Key the radio of conference participants", "Tooltip"))
                 item.setEnabled_(self.radioButtonEnabled())
             elif identifier == 'screenshot':
@@ -1271,7 +1279,7 @@ class ChatController(MediaStream):
                 openFileTransferSelectionDialog(self.sessionController.account, self.sessionController.target_uri)
 
             elif identifier == 'radio':
-                self.pressConferenceRadios()
+                self.toggleConferenceRadios()
 
             elif identifier == 'history' and NSApp.delegate().history_enabled:
                 contactWindow = NSApp.delegate().contactsWindowController

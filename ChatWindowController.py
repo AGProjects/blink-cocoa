@@ -1793,7 +1793,9 @@ class ChatWindowController(NSWindowController):
                 self.conference_shared_files.append(item)
 
             if chat_stream.status == STREAM_CONNECTED:
-                if session.remote_focus or self.conference_shared_files:
+                # Only when the room actually shares files: an empty list
+                # takes 170 pt of the drawer for nothing.
+                if self.conference_shared_files:
                     if chat_stream.drawerSplitterPosition is None or bottom_frame.size.height == 0:
                         bottom_frame.size.height = 170
                         top_frame.size.height = parent_frame.size.height - bottom_frame.size.height
