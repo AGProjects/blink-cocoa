@@ -3896,7 +3896,7 @@ class ContactWindowController(NSWindowController):
         return (target, display_name, account, instance_id)
 
     @objc.python_method
-    def openMessagesForURI(self, uri, prefill=None, attachments=None):
+    def openMessagesForURI(self, uri, prefill=None, attachments=None, defer_contact=False):
         """Reveal the messages pane showing the conversation with one address.
 
         Unlike switchMessagePaneToSelectedContact this DOES open the pane:
@@ -3912,6 +3912,10 @@ class ContactWindowController(NSWindowController):
         the conversation is up -- the same gate the file panel, the camera
         and Cmd-V go through, so a picture shared from Finder can still be
         cropped or made smaller before it goes anywhere.
+
+        defer_contact leaves an unknown address out of the address book
+        until something is sent to it (the search box: typing an address
+        and pressing Enter is looking, not yet writing).
         """
         uri = str(uri or '').strip()
         if not uri:
@@ -3980,7 +3984,8 @@ class ContactWindowController(NSWindowController):
             if viewer is None:
                 viewer = manager.viewerForTarget(target, display_name, account,
                                                  instance_id=instance_id,
-                                                 selected_contact=contact)
+                                                 selected_contact=contact,
+                                                 defer_contact=defer_contact)
             if viewer is None:
                 return False
             manager.presentViewer(viewer, focus=True, note_new_message=False)
@@ -6671,11 +6676,30 @@ class ContactWindowController(NSWindowController):
 
                     if media_type is None and self.mainTabView.selectedTabViewItem().identifier() != "dialpad":
                         # Enter opens a conversation in the message pane, as Blink Qt does (calls start
-                        # from their own buttons): the selected result, else the first one, else the
-                        # typed address. An explicit ;session-type= still starts that session
-                        uri = self._searchEnterTarget() or text
-                        self.resetWidgets()
-                        self.openMessagesForURI(uri)
+                        # from their own buttons): the selected result, else the typed string. An
+                        # explicit ;session-type= still starts that session. The typed string goes
+                        # through the same dial plan as a call -- "alice" or a phone number has no
+                        # '@', and openMessagesForURI takes a bare token for a Bonjour instance id.
+                        # No contact is created here: the viewer files one on the first send.
+                        BlinkLogger().log_info('Search Enter: typed %r' % text)
+                        try:
+                            uri = self._searchEnterTarget()
+                            if uri:
+                                BlinkLogger().log_info('Search Enter: using the selected result %s' % uri)
+                            else:
+                                uri = self._searchEnterAddress(text)
+                                BlinkLogger().log_info('Search Enter: typed %r resolved to %s' % (text, uri))
+                            if not uri:
+                                BlinkLogger().log_info('Search Enter: nothing to open for %r' % text)
+                                return
+                            self.resetWidgets()
+                            opened = self.openMessagesForURI(uri, defer_contact=True)
+                            BlinkLogger().log_info('Search Enter: %s the conversation with %s'
+                                                   % ('opened' if opened else 'could not open', uri))
+                        except Exception as e:
+                            BlinkLogger().log_error('Search Enter: failed for %r: %s' % (text, e))
+                            import traceback
+                            BlinkLogger().log_error(traceback.format_exc())
                         return
 
                     self.resetWidgets()
@@ -6684,14 +6708,31 @@ class ContactWindowController(NSWindowController):
             self.searchContacts()
 
     @objc.python_method
+    def _searchEnterAddress(self, text):
+        """The typed string as a full address on the messaging account, or None.
+
+        normalize_sip_uri_for_outgoing_session reports what it refuses itself.
+        """
+        from sipsimple.account import AccountManager
+        account = self.messagingAccountFor(AccountManager().default_account)
+        if account is None:
+            BlinkLogger().log_info('Search Enter: no account can send messages')
+            self.reportNoMessagingAccount(text)
+            return None
+        target = normalize_sip_uri_for_outgoing_session(text, account)   # a SIPURI, or None
+        if target is None:
+            BlinkLogger().log_info('Search Enter: %r is not a valid address on %s' % (text, account.id))
+            return None
+        user = target.user.decode() if isinstance(target.user, bytes) else target.user
+        host = target.host.decode() if isinstance(target.host, bytes) else target.host
+        return '%s@%s' % (user, host) if user else host
+
+    @objc.python_method
     def _searchEnterTarget(self):
-        """The address of the selected search result, else of the first one, or None."""
+        """The address of the selected search result, or None."""
         try:
             row = self.searchOutline.selectedRow() if self.searchOutline.numberOfSelectedRows() == 1 else -1
             item = self.searchOutline.itemAtRow_(row) if row >= 0 else None
-            if item is None:
-                results = self.searchResultsModel.groupsList or []
-                item = results[0] if results else None
             uri = getattr(item, 'uri', None) if item is not None else None
             return str(uri) if uri else None
         except Exception as e:

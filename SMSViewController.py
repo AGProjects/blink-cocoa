@@ -594,7 +594,7 @@ class SMSViewController(NSObject):
     def host(self, value):
         self.windowController = value
 
-    def initWithAccount_target_name_instance_(self, account, target, display_name, instance_id, selected_contact=None, is_replication_message=False):
+    def initWithAccount_target_name_instance_(self, account, target, display_name, instance_id, selected_contact=None, is_replication_message=False, defer_contact=False):
         _t = load_trace_tick()
         self = objc.super(SMSViewController, self).init()
         if self:
@@ -693,6 +693,11 @@ class SMSViewController(NSObject):
                     self.log_debug('Cannot find the Bonjour contact for %s: %s'
                                    % (self.instance_id, e))
                     self.contact = None
+            elif defer_contact:
+                # Opened from the search box: an existing contact is used,
+                # a missing one is created by ensureContactForOutgoing on
+                # the first send, not merely for having looked.
+                self.contact = SMSWindowManager.SMSWindowManager().getContact(self.remote_uri, create=False)
             else:
                 self.contact = SMSWindowManager.SMSWindowManager().getContact(self.remote_uri, addGroup=True)
 
@@ -3020,6 +3025,9 @@ class SMSViewController(NSObject):
         if self.isConferenceRoom():
             self.log_info('Not sending a file to conference room %s from the message pane' % getattr(self, 'remote_uri', None))
             return None
+        if receiver is None:
+            # not a call recording addressed to our own devices
+            self.ensureContactForOutgoing()
         from SMSWindowManager import SMSWindowManager
         from FileTransferCache import (FileTransferCache, guess_filetype,
                                        new_transfer_id, upload_url)
@@ -3716,6 +3724,23 @@ class SMSViewController(NSObject):
             self.sendMessage(public_key.decode(), 'text/pgp-public-key')
 
     @objc.python_method
+    def ensureContactForOutgoing(self):
+        """File the address book contact a conversation opened without one.
+
+        A conversation opened from the search box has no contact until the
+        user sends something; this is that moment. Machinery (receipts,
+        typing, key exchange) never comes through here.
+        """
+        if self.contact is not None or self.account is BonjourAccount() or self.isConferenceRoom():
+            return
+        if self.remote_uri == self.local_uri:
+            return
+        try:
+            self.contact = SMSWindowManager.SMSWindowManager().getContact(self.remote_uri, addGroup=True)
+        except Exception as e:
+            self.log_error('Cannot add a contact for %s: %s' % (self.remote_uri, e))
+
+    @objc.python_method
     @run_in_gui_thread
     def sendMessage(self, content, content_type="text/plain", timestamp=None,
                     reply_to=None):
@@ -3729,6 +3754,10 @@ class SMSViewController(NSObject):
             # a room is joined over MSRP, never sent SIP MESSAGEs
             self.log_debug('Not sending %s to conference room %s' % (content_type, getattr(self, 'remote_uri', None)))
             return None
+        if (not isinstance(content, OTRInternalMessage)
+                and content_type not in CONTROL_CONTENT_TYPES
+                and content_type not in (IMDNDocument.content_type, IsComposingDocument.content_type)):
+            self.ensureContactForOutgoing()
         # entry point for sending messages, they will be added to self.outgoing_queue
         status = MSG_STATE_FAILED_LOCAL if self.paused else 'queued'
 

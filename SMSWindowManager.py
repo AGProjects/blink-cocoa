@@ -8273,7 +8273,7 @@ class SMSWindowManagerClass(NSObject):
         return None
 
     @objc.python_method
-    def viewerForTarget(self, target, display_name, account, create_if_needed=True, instance_id=None, selected_contact=None, is_replication_message=False):
+    def viewerForTarget(self, target, display_name, account, create_if_needed=True, instance_id=None, selected_contact=None, is_replication_message=False, defer_contact=False):
         """Find or create the SMSViewController for a conversation.
 
         Pure model work: never creates, raises or touches a window. Call
@@ -8299,7 +8299,7 @@ class SMSWindowManagerClass(NSObject):
         viewer = self._findViewer(target, instance_id, account)
         load_trace_bucket('-- find viewer', _t)
         if viewer is None and create_if_needed:
-            viewer = SMSViewController.alloc().initWithAccount_target_name_instance_(account, target, display_name, instance_id, selected_contact, is_replication_message=is_replication_message)
+            viewer = SMSViewController.alloc().initWithAccount_target_name_instance_(account, target, display_name, instance_id, selected_contact, is_replication_message=is_replication_message, defer_contact=defer_contact)
         return viewer
 
     @objc.python_method
