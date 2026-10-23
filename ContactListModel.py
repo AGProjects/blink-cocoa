@@ -692,7 +692,7 @@ class BlinkContact(NSObject):
     editable = True
     deletable = True
     auto_answer = False
-    default_preferred_media = 'audio'
+    default_preferred_media = 'messages'
     dealloc_timer = None
     destroyed = False
     contact = None
@@ -4961,7 +4961,7 @@ class ContactListModel(CustomListModel):
                             contact = Contact()
                             contact.uris.add(ContactURI(uri=backup_contact['uri'], type='SIP'))
                             contact.name = backup_contact['name'] or ''
-                            contact.preferred_media = backup_contact['preferred_media'] or 'audio'
+                            contact.preferred_media = backup_contact['preferred_media'] or 'messages'
                             contact.save()
 
                             icon = decode_icon(backup_contact['icon'])
@@ -5289,7 +5289,7 @@ class ContactListModel(CustomListModel):
             if contact is None:
                 contact = Contact()
                 contact.name = name or uri
-                contact.preferred_media = 'audio'
+                contact.preferred_media = 'messages'
                 contact.uris = [ContactURI(uri=uri, type='SIP')]
                 icon_path = NSBundle.mainBundle().pathForImageResource_("%s.tiff" % uri)
                 if icon_path:
@@ -6126,7 +6126,7 @@ class ContactListModel(CustomListModel):
                             'name'            : contact_data.get('name', ''),
                             'default_uri'     : None,
                             'uris'            : [(contact_id, 'SIP')],
-                            'preferred_media' : contact_data.get('prefered_media', 'audio'),
+                            'preferred_media' : contact_data.get('prefered_media', 'messages'),
                             'icon'            : contact_data.get('icon', None),
                             'presence'        : {'policy': 'default', 'subscribe': False},
                             'dialog'          : {'policy': 'default', 'subscribe': False}

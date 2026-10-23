@@ -50,7 +50,7 @@ class IconSettings(SettingsGroup):
 class BlinkContactExtension(ContactExtension):
     organization = SharedSetting(type=str, default='')
     auto_answer = SharedSetting(type=Boolean, default=False)
-    preferred_media = SharedSetting(type=str, default='audio')
+    preferred_media = SharedSetting(type=str, default='messages')    # what double click / Enter does: messages, audio or video
     disable_smileys = SharedSetting(type=Boolean, default=False)
     # Who last changed this entry and when -- see AddressbookOrigin.py. Shared,
     # so every device reads the same answer; written by AddressbookOrigin's

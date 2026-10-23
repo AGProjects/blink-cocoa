@@ -1431,3 +1431,16 @@ def message_from_the_past(timestamp):
     application. A timestamp that cannot be read is taken as new."""
     seconds = _timestamp_seconds(timestamp)
     return seconds is not None and seconds < APPLICATION_STARTED
+
+
+def preferred_media_choice(value):
+    """A contact's preferred media reduced to what double click / Enter does:
+    'messages', 'audio' or 'video'. Values left from older versions (chat,
+    audio+chat) map to the call they included, else messages. Same rule as
+    Blink Qt."""
+    streams = set(str(value or 'messages').split('+'))
+    if 'video' in streams:
+        return 'video'
+    if 'audio' in streams:
+        return 'audio'
+    return 'messages'

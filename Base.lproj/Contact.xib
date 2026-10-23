@@ -19,6 +19,7 @@
                 <outlet property="organizationText" destination="DDa-EM-8ae" id="xJ4-8B-CND"/>
                 <outlet property="photoImage" destination="61" id="65"/>
                 <outlet property="publicKey" destination="yFk-Ql-DYT" id="LHf-Wr-hAb"/>
+                <outlet property="preferredMediaPopUp" destination="Pm2-Pu-aaa" id="Pm9-Ou-aaa"/>
                 <outlet property="subscribePopUp" destination="163" id="187"/>
                 <outlet property="window" destination="3" id="23"/>
             </connections>
@@ -310,6 +311,30 @@ Gw
                         <connections>
                             <action selector="subscribePopUpClicked:" target="-2" id="189"/>
                         </connections>
+                    </popUpButton>
+                    <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Pm1-Lb-aaa">
+                        <rect key="frame" x="18" y="89" width="147" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Preferred Media:" id="Pm1-Ce-aaa">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <popUpButton toolTip="What double click or Enter on this contact does" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Pm2-Pu-aaa">
+                        <rect key="frame" x="166" y="84" width="342" height="26"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <popUpButtonCell key="cell" type="push" title="Send Messages" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="Pm5-Mi-aaa" id="Pm3-Ce-aaa">
+                            <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="menu"/>
+                            <menu key="menu" title="OtherViews" id="Pm4-Mn-aaa">
+                                <items>
+                                    <menuItem title="Send Messages" state="on" id="Pm5-Mi-aaa"/>
+                                    <menuItem title="Start Audio Call" tag="1" id="Pm6-Mi-aaa"/>
+                                    <menuItem title="Start Video Call" tag="2" id="Pm7-Mi-aaa"/>
+                                </items>
+                            </menu>
+                        </popUpButtonCell>
                     </popUpButton>
                     <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="LX8-ek-Wr8">
                         <rect key="frame" x="147" y="56" width="361" height="18"/>

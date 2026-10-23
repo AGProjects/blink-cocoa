@@ -176,7 +176,7 @@ from VideoMirrorController import VideoMirrorController
 from configuration.datatypes import UserIcon
 from resources import ApplicationData, Resources
 from util import allocate_autorelease_pool, format_date, format_identity_to_string, format_uri_type, is_anonymous, is_sip_aor_format, normalize_sip_uri_for_outgoing_session
-from util import pstn_uri_spellings_for_accounts, is_conference_uri
+from util import pstn_uri_spellings_for_accounts, is_conference_uri, preferred_media_choice
 from HistoryManager import block_contacts, unblock_contacts, _blocked_group
 from util import log_gui_exception, run_in_gui_thread, sip_prefix_pattern, sipuri_components_from_string, translate_alpha2digit, AccountInfo, utc_to_local
 
@@ -6918,11 +6918,12 @@ class ContactWindowController(NSWindowController):
                 return
 
             if sender == self.contactOutline or sender == self.searchOutline:
-                # Double-click / Return opens the contact's conversation in the
-                # message pane, for every contact, Bonjour neighbours included:
-                # there is no per-contact preferred media any more (as on Blink
-                # Qt). Calling is a click away in the menu and the call buttons.
-                # A deleted or blocked contact is not written to.
+                # Double-click / Return does what the contact's preferred media
+                # says (as on Blink Qt): open its conversation in the message pane
+                # (the default), or start an audio or a video call. Only
+                # addressbook contacts carry the preference; Bonjour neighbours and
+                # the rest open the conversation. A deleted or blocked contact is
+                # neither written to nor called.
                 if self.isRowInDeletedGroup(contact) or self.blockedContactsForItems([contact]):
                     return
                 # A room is joined, as the Join Conference panel does, never
@@ -6932,6 +6933,15 @@ class ContactWindowController(NSWindowController):
                     self.connectToConference(conference_target, ("chat", "audio"))
                     return
                 media_type = "sms"
+                sip_contact = getattr(contact, 'contact', None)
+                if isinstance(contact, BlinkPresenceContact) and sip_contact is not None:
+                    preferred = preferred_media_choice(sip_contact.preferred_media)
+                    if preferred == 'audio':
+                        media_type = "audio"
+                    elif preferred == 'video' and self.sessionControllersManager.isMediaTypeSupported('video'):
+                        media_type = ("audio", "video")
+                    elif preferred == 'video':
+                        media_type = "audio"
             elif sender.selectedSegment() == video_segment:
                 media_type = ("audio", "video")
             elif sender.selectedSegment() == chat_segment:

@@ -5808,7 +5808,7 @@ def ensure_call_contact(remote_uri, account=None, xcap_loaded=True):
             contact.name = name or address
             contact.uris.add(ContactURI(uri=address,
                                         type=format_uri_type('phone' if e164 else 'SIP')))
-            contact.preferred_media = 'audio'
+            contact.preferred_media = 'messages'
             contact.save()
             _publish_contact_for_groups(contact)
             created = True

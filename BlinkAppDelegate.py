@@ -1217,6 +1217,11 @@ class BlinkAppDelegate(NSObject):
         except Exception as e:
             BlinkLogger().log_error('Cannot start the background decryption: %s' % e)
 
+        try:
+            self.migratePreferredMedia()
+        except Exception as e:
+            BlinkLogger().log_error('Cannot migrate the contacts preferred media: %s' % e)
+
         # One-time migration: HD 720p capture has been removed from the
         # video preferences, only VGA is offered, the framerate /
         # resolution / max-bitrate / container controls are hidden
@@ -1278,6 +1283,39 @@ class BlinkAppDelegate(NSObject):
                 settings.save()
         except Exception:
             pass
+
+    PREFERRED_MEDIA_VERSION = 1
+
+    @objc.python_method
+    def migratePreferredMedia(self):
+        """Once, contacts that prefer audio go to messages: double click / Enter
+        follows the preferred media again, and 'audio' was what contacts made
+        from the call history and imports got, and the old default, not a choice
+        made in the contact editor. Same migration as Blink Qt; whichever client
+        runs first does it for the shared addressbook."""
+        settings = SIPSimpleSettings()
+        if settings.contacts.preferred_media_version >= self.PREFERRED_MEDIA_VERSION:
+            return
+        from sipsimple.addressbook import AddressbookManager
+        contacts = [contact for contact in AddressbookManager().get_contacts() if contact.preferred_media == 'audio']
+        if contacts:
+            self._resetPreferredMedia(contacts)
+            BlinkLogger().log_info('Preferred media of %d contacts changed from audio to messages' % len(contacts))
+        settings.contacts.preferred_media_version = self.PREFERRED_MEDIA_VERSION
+        settings.save()
+
+    @objc.python_method
+    @run_in_thread('file-io')
+    def _resetPreferredMedia(self, contacts):
+        # in one XCAP update: from the file-io thread the saves run between the two ends of the transaction
+        from sipsimple.addressbook import AddressbookManager
+        try:
+            with AddressbookManager.transaction():
+                for contact in contacts:
+                    contact.preferred_media = 'messages'
+                    contact.save()
+        except Exception as e:
+            BlinkLogger().log_error('Cannot reset the contacts preferred media: %s' % e)
 
     @objc.python_method
     def _NH_SIPApplicationDidEnd(self, notification):

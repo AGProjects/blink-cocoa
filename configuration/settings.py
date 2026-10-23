@@ -175,6 +175,7 @@ class ContactsSettings(SettingsGroup):
     missed_calls_period = Setting(type=NonNegativeInteger, default=7)
     incoming_calls_period = Setting(type=NonNegativeInteger, default=7)
     outgoing_calls_period = Setting(type=NonNegativeInteger, default=7)
+    preferred_media_version = Setting(type=int, default=0)     # see BlinkAppDelegate.migratePreferredMedia
 
 
 class PresenceStateSettings(SettingsGroup):

@@ -55,7 +55,7 @@ from AppKit import NSButton, NSSwitchButton
 from zope.interface import implementer
 
 from VirtualGroups import VirtualGroup
-from util import checkValidPhoneNumber, format_uri_type, log_gui_exception, run_in_gui_thread, canonical_pstn_uri, pstn_e164
+from util import checkValidPhoneNumber, format_uri_type, log_gui_exception, run_in_gui_thread, canonical_pstn_uri, pstn_e164, preferred_media_choice
 
 
 # PNG, spelled out rather than imported: AppKit renamed the file-type
@@ -278,6 +278,7 @@ class AddContactController(NSObject):
     addressTableDatasource = NSMutableArray.array()
     defaultPhotoImage = None
     autoanswerCheckbox = objc.IBOutlet()
+    preferredMediaPopUp = objc.IBOutlet()
 
     def __new__(cls, *args, **kwargs):
         from ContactListModel import DefaultUserAvatar
@@ -290,7 +291,7 @@ class AddContactController(NSObject):
         self.dealloc_timer = None
 
         self.default_uri = None
-        self.preferred_media = 'audio'
+        self.preferred_media = 'messages'
         self.uris = []
         # Every "Add to contacts" entry point (a call, a chat, a conference
         # participant, a message banner) hands over the address the session was
@@ -320,9 +321,26 @@ class AddContactController(NSObject):
         # goes to account storage, which presence icons never do.
         self.photoChanged = False
         self.defaultButton.setEnabled_(False)
+        self.selectPreferredMedia(self.preferred_media)
         self.updateSubscriptionMenus()
         self.loadGroupNames()
         self.addButton.setEnabled_(True if self.uris else False)
+
+    PREFERRED_MEDIA_TAGS = ('messages', 'audio', 'video')     # the popup item tags, in order
+
+    @objc.python_method
+    def selectPreferredMedia(self, value):
+        if self.preferredMediaPopUp is not None:
+            self.preferredMediaPopUp.selectItemWithTag_(self.PREFERRED_MEDIA_TAGS.index(preferred_media_choice(value)))
+
+    @objc.python_method
+    def chosenPreferredMedia(self):
+        """What the popup says; a legacy value (audio+chat) is kept while the choice it maps to is not changed."""
+        if self.preferredMediaPopUp is None:
+            return self.preferred_media
+        tag = self.preferredMediaPopUp.selectedTag()
+        choice = self.PREFERRED_MEDIA_TAGS[tag] if 0 <= tag < len(self.PREFERRED_MEDIA_TAGS) else 'messages'
+        return self.preferred_media if choice == preferred_media_choice(self.preferred_media) else choice
 
     @objc.python_method
     def avatarName(self):
@@ -473,7 +491,7 @@ class AddContactController(NSObject):
                        'groups'          : self.belonging_groups,
                        'icon'            : self.photoImage.image() if self.photoImage.hasPhoto else None,
                        'icon_changed'    : bool(getattr(self, 'photoChanged', False)),
-                       'preferred_media' : self.preferred_media,
+                       'preferred_media' : self.chosenPreferredMedia(),
                        'subscriptions'   : self.subscriptions
                         }
             return contact
@@ -776,7 +794,6 @@ class AddContactController(NSObject):
                     if domain in ('jit.si', 'gmail.com', 'comm.unicate.me') or 'jabb' in domain or 'xmpp' in domain or domain.endswith('.im') or domain.startswith('im.'):
                         contact_uri.type = 'XMPP'
                         if len(self.uris) == 1:
-                            self.preferred_media = 'chat'
                             self.updateSubscriptionMenus()
 
             elif column == 1:
@@ -1321,7 +1338,9 @@ class EditContactController(AddContactController):
         # What the well shows now -- possibly a presence icon -- is not a
         # choice the user made.
         self.photoChanged = False
-        self.preferred_media = blink_contact.preferred_media
+        sip_contact = getattr(blink_contact, 'contact', None)
+        self.preferred_media = sip_contact.preferred_media if sip_contact is not None else 'messages'
+        self.selectPreferredMedia(self.preferred_media)
         address_types = list(item.title() for item in self.addressTypesPopUpButton.itemArray())
         for item in blink_contact.contact.uris:
             type = format_uri_type(item.type)
@@ -1399,7 +1418,7 @@ class EditContactController(AddContactController):
                     'auto_answer'     : True if self.autoanswerCheckbox.state() == NSOnState else False,
                     'icon'            : self.photoImage.image() if self.photoImage.hasPhoto else None,
                     'icon_changed'    : bool(getattr(self, 'photoChanged', False)),
-                    'preferred_media' : self.preferred_media,
+                    'preferred_media' : self.chosenPreferredMedia(),
                     'subscriptions'   : self.subscriptions
                     }
             if self.noMediaRelayCheckbox is not None:
