@@ -179,6 +179,8 @@ class ChatWindowController(NSWindowController):
             self.notification_center.add_observer(self, name="BlinkSentRemoveProposal")
             self.notification_center.add_observer(self, name="BlinkProposalGotRejected")
             self.notification_center.add_observer(self, name="BlinkMuteChangedState")
+            self.notification_center.add_observer(self, name="VideoroomSessionAudioMutedDidChange")
+            self.notification_center.add_observer(self, name="VideoroomSessionDidChangeState")
             self.notification_center.add_observer(self, name="BlinkSessionChangedState")
             self.notification_center.add_observer(self, name="BlinkStreamHandlerChangedState")
             self.notification_center.add_observer(self, name="BlinkStreamHandlersChanged")
@@ -675,12 +677,44 @@ class ChatWindowController(NSWindowController):
 
     @objc.python_method
     def _NH_BlinkMuteChangedState(self, sender, data):
+        if self.selectedVideoRoom() is not None:
+            self.updateMuteButton()
+            return
         if self.backend.is_muted():
             self.muteButton.setImage_(NSImage.imageNamed_("muted"))
             self.muteButton.setState_(NSOnState)
         else:
             self.muteButton.setState_(NSOffState)
             self.muteButton.setImage_(NSImage.imageNamed_("mute"))
+
+    # The video room of the selected conference (WebRTC): the microphone button mutes the room, in step
+    # with its window and a moderator
+
+    @objc.python_method
+    def selectedVideoRoom(self):
+        session = self.selectedSessionController()
+        if session is None or session.target_uri is None:
+            return None
+        from WebRTCSupport import active_videoroom
+        return active_videoroom(session.target_uri)
+
+    @objc.python_method
+    def updateMuteButton(self):
+        room = self.selectedVideoRoom()
+        muted = room.audio_muted if room is not None else self.backend.is_muted()
+        self.muteButton.setState_(NSOnState if muted else NSOffState)
+        self.muteButton.setImage_(NSImage.imageNamed_("muted" if muted else "mute"))
+
+    @objc.python_method
+    def _NH_VideoroomSessionAudioMutedDidChange(self, sender, data):
+        if sender is self.selectedVideoRoom():
+            self.updateMuteButton()
+
+    @objc.python_method
+    def _NH_VideoroomSessionDidChangeState(self, sender, data):
+        if data.state in ('connecting', 'terminated'):
+            self.updateMuteButton()
+            self.revalidateToolbar()
 
     @objc.python_method
     def stepTranscriptFontSize(self, delta):
@@ -1382,6 +1416,11 @@ class ChatWindowController(NSWindowController):
 
     @objc.IBAction
     def muteClicked_(self, sender):
+        room = self.selectedVideoRoom()
+        if room is not None:
+            room.set_audio_muted(not room.audio_muted)
+            self.updateMuteButton()
+            return
         if sender != self.muteButton:
             if self.backend.is_muted():
                 self.muteButton.setState_(NSOffState)
@@ -1868,6 +1907,7 @@ class ChatWindowController(NSWindowController):
             self.revalidateToolbar()
             self.refreshDrawer()
             self.updateTitle()
+            self.updateMuteButton()
             session = self.sessions[item.identifier()]
             chat_stream = session.streamHandlerOfType("chat")
             if chat_stream:
@@ -2088,7 +2128,13 @@ class ChatWindowController(NSWindowController):
             session.participants_log.add(uri)
             self.refreshDrawer()
             session.log_info("Invite %s to conference" % uri)
-            session.session.conference.add_participant(uri)
+            from WebRTCSupport import active_videoroom
+            room = active_videoroom(session.target_uri)
+            if room is not None and (session.session is None or session.state != STATE_CONNECTED):
+                # no MSRP session to REFER through: the video room invites
+                room.invite([uri])
+            else:
+                session.session.conference.add_participant(uri)
         elif not isinstance(session.account, BonjourAccount):
             self.joinConferenceWindow(session, [uri])
 

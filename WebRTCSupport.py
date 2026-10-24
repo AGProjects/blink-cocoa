@@ -21,18 +21,20 @@ defaultConferenceDomain (the video rooms, at videoconference.<domain>) and
 defaultGuestDomain. The same room's MSRP switch is room@conference.<domain>.
 """
 
-__all__ = ['ws_server', 'media_missing', 'media_available', 'media_report', 'conference_video_available', 'join_video_conference', 'webrtc_classes', 'webrtc_bundle',
+__all__ = ['ws_server', 'media_missing', 'media_available', 'media_report', 'conference_video_available', 'join_video_conference',
+           'active_videoroom', 'drop_sip_audio', 'room_chat_session', 'show_videoroom_window', 'webrtc_classes', 'webrtc_bundle',
            'parse_room', 'split_uri', 'local_room_host', 'RoomTarget', 'room_target', 'room_video', 'resolve_room',
            'VideoConferenceAvailability', 'DISCOVERY_TIMEOUT']
 
 import os
 import re
+import sys
 
 from urllib.parse import unquote, urlsplit
 
 import objc
 
-from AppKit import NSBundle
+from AppKit import NSApp, NSBundle
 
 from application.notification import IObserver, NotificationCenter
 from application.python import Null
@@ -175,7 +177,69 @@ def join_video_conference(account, room, audio=True, video=True, target=None):
     elif not conference_video_available(account):
         return None
     from Videoroom import VideoroomManager
-    return VideoroomManager().join(account, room, audio=audio, video=video, target=target)
+    video_room = VideoroomManager().join(account, room, audio=audio, video=video, target=target)
+    if video_room is not None:
+        drop_sip_audio(video_room)
+    return video_room
+
+
+def active_videoroom(uri):
+    """The video room joined to uri (a room address in any form: video room or MSRP switch), or None;
+    never loads the WebRTC code."""
+    module = sys.modules.get('Videoroom')
+    if module is None or uri is None:
+        return None
+    user, host = split_uri(uri)
+    if not user or not host:
+        return None
+    return module.VideoroomManager().find('%s@%s' % (user, host))
+
+
+def _room_sessions(video_room):
+    """The SIP sessions (SessionControllers) to the room of video_room, in any of its address forms, not ending."""
+    from MediaStream import STATE_FAILED, STATE_FINISHED
+    try:
+        controllers = list(NSApp.delegate().contactsWindowController.sessionControllersManager.sessionControllers)
+    except AttributeError:
+        return
+    for controller in controllers:
+        if getattr(controller, 'finished', False) or controller.state in (STATE_FAILED, STATE_FINISHED) or controller.target_uri is None:
+            continue
+        if active_videoroom(controller.target_uri) is video_room:
+            yield controller
+
+
+def drop_sip_audio(video_room):
+    """The room's audio and video go over WebRTC now: SIP audio (and video) to the same room would loop
+    through it, so it is removed from the sessions that have it; a session with nothing else is ended."""
+    from MediaStream import STATE_CONNECTED
+    for controller in _room_sessions(video_room):
+        media = [kind for kind in ('audio', 'video') if controller.hasStreamOfType(kind)]
+        if not media:
+            continue
+        what = ' and '.join(media)
+        if not controller.hasStreamOfType('chat'):
+            BlinkLogger().log_info('[conference] %s: hanging up the SIP %s, the room has it over WebRTC now' % (controller.remoteAOR, what))
+            controller.end()
+        elif controller.state == STATE_CONNECTED:
+            BlinkLogger().log_info('[conference] %s: removing SIP %s, the room has it over WebRTC now' % (controller.remoteAOR, what))
+            if 'video' in media:
+                controller.removeVideoFromSession()
+            if 'audio' in media:
+                controller.removeAudioFromSession()
+        else:
+            BlinkLogger().log_warning('[conference] %s: SIP %s kept, the session is %s' % (controller.remoteAOR, what, controller.state))
+
+
+def room_chat_session(video_room):
+    """A SIP session to the room of video_room that has (or is getting) its chat, or None."""
+    return next((controller for controller in _room_sessions(video_room) if controller.hasStreamOfType('chat')), None)
+
+
+def show_videoroom_window(video_room):
+    """Bring the window of a video room in front."""
+    from VideoroomWindowController import window_for_session
+    window_for_session(video_room).show()
 
 
 def conference_video_available(account=None):

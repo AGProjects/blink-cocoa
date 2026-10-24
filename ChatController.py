@@ -1017,6 +1017,83 @@ class ChatController(MediaStream):
             else:
                 self.sessionController.log_info("Radio PTT %s sent for %s (%s)" % (action, radio['user'], radio['entity']))
 
+    # The video room of a conference (WebRTC, SylkServer): the room's audio and video go there, never over this
+    # session, so while it is open Audio and Video only bring its window up; Video joins it otherwise.
+
+    @objc.python_method
+    def videoRoom(self):
+        """The video room joined for this session's room (WebRTCSupport), or None."""
+        from WebRTCSupport import active_videoroom
+        return active_videoroom(self.sessionController.target_uri)
+
+    @objc.python_method
+    def conferenceVideo(self):
+        """(video room address, RoomTarget or None) when this session is to a room that can have video over
+        WebRTC (a foreign SylkServer room included, before its isfocus is known), else None."""
+        session = self.sessionController
+        if session.account is BonjourAccount() or session.target_uri is None:
+            return None
+        from WebRTCSupport import room_video, split_uri
+        user, host = split_uri(session.target_uri)
+        if not (session.remote_focus or session.is_conference or (host or '').startswith(('conference.', 'videoconference.'))):
+            return None
+        return room_video(session.target_uri, session.account)
+
+    @objc.python_method
+    def joinVideoRoom(self):
+        """Header Video: bring up the video room, or join it with audio and video over WebRTC (which removes
+        this session's SIP audio and video)."""
+        from WebRTCSupport import join_video_conference, show_videoroom_window
+        room = self.videoRoom()
+        if room is not None:
+            show_videoroom_window(room)
+            return
+        video = self.conferenceVideo()
+        if video is None:
+            self.sessionController.log_info("No video room for this conference")
+            return
+        room = join_video_conference(self.sessionController.account, video[0], audio=True, video=True, target=video[1])
+        if room is None:
+            self.sessionController.log_info("Cannot join the video room %s" % video[0])
+        else:
+            self.sessionController.log_info("Joined the video room %s over WebRTC" % room.room)
+
+    @objc.python_method
+    def videoRoomHandlesClick(self, identifier):
+        if identifier not in ('audio', 'video'):
+            return False
+        if self.videoRoom() is not None or (identifier == 'video' and self.conferenceVideo() is not None):
+            self.joinVideoRoom()
+            return True
+        return False
+
+    @objc.python_method
+    def videoRoomToolbarState(self, identifier, item):
+        """Whether Audio or Video is enabled when the video room decides it, else None."""
+        if identifier not in ('audio', 'video'):
+            return None
+        if self.videoRoom() is not None:
+            if identifier == 'video':
+                item.setImage_(NSImage.imageNamed_("video-active"))
+            return True
+        if identifier == 'video' and self.conferenceVideo() is not None:
+            item.setImage_(NSImage.imageNamed_("video"))
+            return self.status not in (STREAM_WAITING_DNS_LOOKUP, STREAM_CONNECTING, STREAM_DISCONNECTING)
+        return None
+
+    @objc.python_method
+    def updateVideoRoomToolbarItem(self, identifier, item):
+        if identifier not in ('audio', 'video'):
+            return False
+        if self.videoRoom() is not None:
+            item.setToolTip_(NSLocalizedString("Show the video conference", "Tooltip"))
+            item.setImage_(NSImage.imageNamed_("audio" if identifier == 'audio' else "video-active"))
+            return True
+        if identifier == 'video' and self.conferenceVideo() is not None:
+            item.setToolTip_(NSLocalizedString("Join with audio and video over WebRTC", "Tooltip"))
+            return True
+        return False
+
     @objc.python_method
     def updateToolbarButtons(self, toolbar, got_proposal=False):
         """Called by ChatWindowController when receiving various middleware notifications"""
@@ -1024,6 +1101,8 @@ class ChatController(MediaStream):
 
         for item in toolbar.visibleItems():
             identifier = item.itemIdentifier()
+            if self.updateVideoRoomToolbarItem(identifier, item):
+                continue
             if identifier == 'encryption':
                 self.updateEncryptionWidgets()
                 item.setEnabled_(True)
@@ -1136,6 +1215,10 @@ class ChatController(MediaStream):
             if identifier == NSToolbarPrintItemIdentifier and NSApp.delegate().chat_print_enabled:
                 return True
 
+            video_room_state = self.videoRoomToolbarState(identifier, item)
+            if video_room_state is not None:
+                return video_room_state
+
             if identifier == 'encryption':
                 self.updateEncryptionWidgets()
                 return True
@@ -1189,6 +1272,9 @@ class ChatController(MediaStream):
 
             if self.sessionController.hasStreamOfType("video"):
                 video_stream = self.sessionController.streamHandlerOfType("video")
+
+            if self.videoRoomHandlesClick(identifier):
+                return
 
             if identifier == 'connect_button':
                 if self.status in (STREAM_CONNECTED, STREAM_CONNECTING, STREAM_PROPOSING, STREAM_WAITING_DNS_LOOKUP):
@@ -1901,6 +1987,10 @@ class ChatController(MediaStream):
     @objc.python_method
     def end(self, closeTab=False):
         #self.sessionController.log_info("End %s in state %s" % (self, self.status))
+        # hanging up the room's chat leaves its video room too (the video window's Leave keeps the chat)
+        room = self.videoRoom()
+        if room is not None:
+            room.leave()
         if self.status == STREAM_PROPOSING:
             self.sessionController.cancelProposal(self)
             self.changeStatus(STREAM_CANCELLING)
