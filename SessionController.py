@@ -2904,6 +2904,9 @@ class SessionController(NSObject):
             self.failureReason = "failed"
 
         self.log_info("Session cancelled by %s" % data.originator if data.code == 487 else "Session failed %sly: %s, %s (%s)" % (data.originator or 'loca', data.reason, data.failure_reason, data.code))
+        from MSRPDiagnostics import explain_msrp_failure, looks_like_msrp_failure
+        if data.code != 487 and looks_like_msrp_failure(data.reason, data.failure_reason):
+            explain_msrp_failure(self.remoteAOR, data.failure_reason or data.reason, session=sender)
         
         if data.code != 487:
             nc_title = 'Call failed'

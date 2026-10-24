@@ -1931,6 +1931,8 @@ class ChatController(MediaStream):
 
     @objc.python_method
     def _NH_MediaStreamDidNotInitialize(self, sender, data):
+        from MSRPDiagnostics import explain_msrp_failure
+        explain_msrp_failure(self.sessionController.remoteAOR, data.reason, streams=[sender])
         if data.reason == 'MSRPRelayAuthError':
             reason = NSLocalizedString("MSRP relay authentication failed", "Label")
         else:
@@ -1949,6 +1951,9 @@ class ChatController(MediaStream):
         if data.error is not None and 'was closed cleanly' not in data.error:
             self.mediastream_error = data.error
             self.sessionController.log_info("Chat session failed: %s" % data.error)
+            from MSRPDiagnostics import explain_msrp_failure, looks_like_msrp_failure
+            if not self.media_started or looks_like_msrp_failure(data.error):
+                explain_msrp_failure(self.sessionController.remoteAOR, data.error, streams=[sender])
             reason = NSLocalizedString("Connection failed", "Label")+ " (%s)" % data.error
             self.showSystemMessage(reason, ISOTimestamp.now(), True)
             self.changeStatus(STREAM_FAILED, data.error)

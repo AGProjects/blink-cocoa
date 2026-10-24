@@ -390,6 +390,18 @@ class FileLogger(object, metaclass=Singleton):
             self._msrptrace_file.write('%s [%s %d]: %s\n' % (notification.datetime, os.path.basename(sys.argv[0]).rstrip('.py'), os.getpid(), message))
             self._msrptrace_file.flush()
 
+    def msrp_note(self, text):
+        """A line of our own in the MSRP trace file (why a stream did not start, MSRPDiagnostics), when it is kept."""
+        settings = SIPSimpleSettings()
+        if not settings.logs.trace_msrp or not settings.logs.trace_msrp_to_file:
+            return
+        try:
+            self._init_log_file('msrptrace')
+        except Exception:
+            return
+        self._msrptrace_file.write('%s [%s %d]: NOTE %s\n' % (datetime.datetime.now(), os.path.basename(sys.argv[0]).rstrip('.py'), os.getpid(), text))
+        self._msrptrace_file.flush()
+
     # private methods
     #
 
