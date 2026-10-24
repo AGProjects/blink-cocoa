@@ -973,13 +973,16 @@ class VideoroomManager(object, metaclass=Singleton):
         return next((session for session in self.sessions if room in (session.room.lower(), session.sip_room.lower()) and session.state != 'terminated'), None)
 
     def join(self, account, room, audio=True, video=True, target=None):
-        """Join room from account, or return the session already in it."""
+        """Join room from account (its window shown), or bring forward the session already in it."""
+        from VideoroomWindowController import window_for_session
         session = self.find(room)
         if session is not None:
+            window_for_session(session).show()
             return session
         session = VideoroomSession(account, room, audio=audio, video=video, target=target)
         self.sessions.append(session)
         NotificationCenter().post_notification('VideoroomManagerDidAddSession', sender=self, data=NotificationData(session=session))
+        window_for_session(session).show()
         session.join()
         return session
 

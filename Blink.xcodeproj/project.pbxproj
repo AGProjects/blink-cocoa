@@ -666,6 +666,7 @@
 		5C1E00040000000000000002 /* WebRTCSupport.py in Resources */ = {isa = PBXBuildFile; fileRef = 5C1E00040000000000000001 /* WebRTCSupport.py */; };
 		5C1E00050000000000000002 /* SylkRTC.py in Resources */ = {isa = PBXBuildFile; fileRef = 5C1E00050000000000000001 /* SylkRTC.py */; };
 		5C1E00060000000000000002 /* Videoroom.py in Resources */ = {isa = PBXBuildFile; fileRef = 5C1E00060000000000000001 /* Videoroom.py */; };
+		5C1E00070000000000000002 /* VideoroomWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 5C1E00070000000000000001 /* VideoroomWindowController.py */; };
 		5A1E000200000000000000F4 /* VideoCallRecorder.py in Resources */ = {isa = PBXBuildFile; fileRef = 5A1E000200000000000000F3 /* VideoCallRecorder.py */; };
 		5B1E00010000000000000001 /* DataExport.py in Resources */ = {isa = PBXBuildFile; fileRef = DD1A00000000000000000009 /* DataExport.py */; };
 		5B1E00010000000000000002 /* DataExportPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = DD1A0000000000000000000B /* DataExportPanel.py */; };
@@ -681,6 +682,7 @@
 		5C1E00040000000000000003 /* WebRTCSupport.py in Resources */ = {isa = PBXBuildFile; fileRef = 5C1E00040000000000000001 /* WebRTCSupport.py */; };
 		5C1E00050000000000000003 /* SylkRTC.py in Resources */ = {isa = PBXBuildFile; fileRef = 5C1E00050000000000000001 /* SylkRTC.py */; };
 		5C1E00060000000000000003 /* Videoroom.py in Resources */ = {isa = PBXBuildFile; fileRef = 5C1E00060000000000000001 /* Videoroom.py */; };
+		5C1E00070000000000000003 /* VideoroomWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 5C1E00070000000000000001 /* VideoroomWindowController.py */; };
 		5B1E00010000000000000100 /* BlinkShare.appex in Embed Share Extension */ = {isa = PBXBuildFile; fileRef = 5A1E00010000000000000004 /* BlinkShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		6891C4358F58D5C1BE764D8F /* AccountStorage.py in Resources */ = {isa = PBXBuildFile; fileRef = F1E292A2EF0C3705AB554508 /* AccountStorage.py */; };
 		6F4A2186383B4EC036556823 /* AvatarConflictPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 357D1EE3CE09B6CB0F7E08D5 /* AvatarConflictPanel.py */; };
@@ -1592,6 +1594,7 @@
 		5C1E00040000000000000001 /* WebRTCSupport.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = WebRTCSupport.py; sourceTree = "<group>"; };
 		5C1E00050000000000000001 /* SylkRTC.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SylkRTC.py; sourceTree = "<group>"; };
 		5C1E00060000000000000001 /* Videoroom.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = Videoroom.py; sourceTree = "<group>"; };
+		5C1E00070000000000000001 /* VideoroomWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoroomWindowController.py; sourceTree = "<group>"; };
 		5A1E000200000000000000F3 /* VideoCallRecorder.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoCallRecorder.py; sourceTree = "<group>"; };
 		8547A6C6114EB6E200AD84BF /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
 		8547A6C7114EB6E200AD84BF /* itunes.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = itunes.py; sourceTree = "<group>"; };
@@ -1863,6 +1866,7 @@
 				5C1E00040000000000000001 /* WebRTCSupport.py */,
 				5C1E00050000000000000001 /* SylkRTC.py */,
 				5C1E00060000000000000001 /* Videoroom.py */,
+				5C1E00070000000000000001 /* VideoroomWindowController.py */,
 				5A1E000200000000000000F3 /* VideoCallRecorder.py */,
 				DD1A00000000000000000001 /* DataImport.py */,
 				DD1A00000000000000000003 /* DataImportPanel.py */,
@@ -2623,6 +2627,7 @@
 				5C1E00040000000000000003 /* WebRTCSupport.py in Resources */,
 				5C1E00050000000000000003 /* SylkRTC.py in Resources */,
 				5C1E00060000000000000003 /* Videoroom.py in Resources */,
+				5C1E00070000000000000003 /* VideoroomWindowController.py in Resources */,
 				1F2C06F225DC3490004701ED /* mime.types in Resources */,
 				1F762C321D9C75FA00F3D455 /* memory_debug.py in Resources */,
 				1F22729612B554F50010A8B2 /* ContactWindowController.py in Resources */,
@@ -2950,6 +2955,7 @@
 				5C1E00040000000000000002 /* WebRTCSupport.py in Resources */,
 				5C1E00050000000000000002 /* SylkRTC.py in Resources */,
 				5C1E00060000000000000002 /* Videoroom.py in Resources */,
+				5C1E00070000000000000002 /* VideoroomWindowController.py in Resources */,
 				5A1E000200000000000000F4 /* VideoCallRecorder.py in Resources */,
 				DD1A00000000000000000002 /* DataImport.py in Resources */,
 				DD1A00000000000000000004 /* DataImportPanel.py in Resources */,
