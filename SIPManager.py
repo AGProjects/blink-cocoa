@@ -161,6 +161,9 @@ class SIPManager(object, metaclass=Singleton):
         # loaded before the accounts activate so has_sylkserver() answers at once
         from SylkDiscovery import SylkServerDiscovery
         SylkServerDiscovery().start()
+        # whether video conferences (WebRTC, WebRTCSupport) can be joined, in the Activity log
+        from WebRTCSupport import VideoConferenceAvailability
+        VideoConferenceAvailability().start()
         self._app.start(FileStorage(ApplicationData.directory))
 
         # start session mgr
