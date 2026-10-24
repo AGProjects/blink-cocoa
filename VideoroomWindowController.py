@@ -509,7 +509,9 @@ class VideoroomWindowController(NSObject):
         self.cameraButton = add('video.fill', _t("Camera off"), 'userClickedCameraButton:')
         self.shareButton = add('square.and.arrow.up', _t("Share"), 'userClickedShareButton:')
         self.shareButton.setToolTip_(_t("The addresses others can join this conference at"))
-        self.shareButton.setHidden_(True)       # the share dialog comes in its own patch
+        from ConferenceShareDialog import share_available
+        self.shareButton.setHidden_(not share_available(self.session.sip_room, self.session.account, self.session.target))
+        self.shareDialog = None
         self.fullScreenButton = add('arrow.up.left.and.arrow.down.right', _t("Full screen"), 'userClickedFullScreenButton:')
         self.hangupButton = add('phone.down.fill', _t("Leave"), 'userClickedHangupButton:', destructive=True)
         bar.tile()
@@ -643,7 +645,11 @@ class VideoroomWindowController(NSObject):
         self.session.set_video_muted(not self.session.video_muted)
 
     def userClickedShareButton_(self, sender):
-        pass
+        from ConferenceShareDialog import ConferenceShareDialog
+        self.shareDialog = ConferenceShareDialog.alloc().initWithRoom_account_target_title_(self.session.sip_room, self.session.account,
+                                                                                            self.session.target, self.title)
+        self.shareDialog.runSheetForWindow(self.window)
+        self.showControls()
 
     def userClickedFullScreenButton_(self, sender):
         self.toggleFullScreen()
