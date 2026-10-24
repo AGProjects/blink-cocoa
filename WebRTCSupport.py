@@ -21,7 +21,7 @@ defaultConferenceDomain (the video rooms, at videoconference.<domain>) and
 defaultGuestDomain. The same room's MSRP switch is room@conference.<domain>.
 """
 
-__all__ = ['ws_server', 'media_missing', 'media_available', 'media_report', 'conference_video_available', 'webrtc_classes',
+__all__ = ['ws_server', 'media_missing', 'media_available', 'media_report', 'conference_video_available', 'webrtc_classes', 'webrtc_bundle',
            'parse_room', 'split_uri', 'local_room_host', 'RoomTarget', 'room_target', 'room_video', 'resolve_room',
            'VideoConferenceAvailability', 'DISCOVERY_TIMEOUT']
 
@@ -128,6 +128,11 @@ def media_available():
 def webrtc_classes():
     """The classes of WebRTC.framework by name (empty until media_missing() has loaded it)."""
     return _classes
+
+
+def webrtc_bundle():
+    """The NSBundle of WebRTC.framework (None until media_missing() has loaded it), for its C functions."""
+    return _framework
 
 
 def _video_codecs():
