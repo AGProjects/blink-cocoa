@@ -108,7 +108,7 @@ def _verify_tls():
 
 try:
     _delegate_protocols = [objc.protocolNamed('NSURLSessionWebSocketDelegate')]
-except objc.ProtocolError:
+except Exception:
     _delegate_protocols = []     # not registered in the runtime: the Foundation metadata gives the signatures
 
 

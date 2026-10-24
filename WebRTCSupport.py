@@ -21,7 +21,7 @@ defaultConferenceDomain (the video rooms, at videoconference.<domain>) and
 defaultGuestDomain. The same room's MSRP switch is room@conference.<domain>.
 """
 
-__all__ = ['ws_server', 'media_missing', 'media_available', 'media_report', 'conference_video_available', 'webrtc_classes', 'webrtc_bundle',
+__all__ = ['ws_server', 'media_missing', 'media_available', 'media_report', 'conference_video_available', 'join_video_conference', 'webrtc_classes', 'webrtc_bundle',
            'parse_room', 'split_uri', 'local_room_host', 'RoomTarget', 'room_target', 'room_video', 'resolve_room',
            'VideoConferenceAvailability', 'DISCOVERY_TIMEOUT']
 
@@ -163,6 +163,19 @@ def media_report():
              'echo cancellation built in',
              'WebSockets NSURLSession']
     return ', '.join(parts)
+
+
+def join_video_conference(account, room, audio=True, video=True, target=None):
+    """Join room (user@host) over WebRTC from account, its window shown, the microphone muted without audio
+    and the camera off without video (both can be turned on in the room); the VideoroomSession, or None
+    when that cannot be done. target (a RoomTarget) is a room of another SylkServer: joined through its server."""
+    if target is not None and target.remote:
+        if not media_available():
+            return None
+    elif not conference_video_available(account):
+        return None
+    from Videoroom import VideoroomManager
+    return VideoroomManager().join(account, room, audio=audio, video=video, target=target)
 
 
 def conference_video_available(account=None):

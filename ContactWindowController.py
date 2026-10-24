@@ -5026,7 +5026,7 @@ class ContactWindowController(NSWindowController):
                     start_now = False
 
         if start_now:
-            self.joinConference(conference.target, conference.media_type, conference.participants, conference.nickname)
+            self.joinConference(conference.target, conference.media_type, conference.participants, conference.nickname, video_room=getattr(conference, 'video_room', None))
             return True
         else:
             settings = SIPSimpleSettings()
@@ -5294,7 +5294,7 @@ class ContactWindowController(NSWindowController):
         return session_controller
 
     @objc.python_method
-    def joinConference(self, target, media_type, participants=(), nickname=None):
+    def joinConference(self, target, media_type, participants=(), nickname=None, video_room=None):
         BlinkLogger().log_info("Join conference %s with media %s" % (target, media_type))
         if participants:
             BlinkLogger().log_info("Inviting participants: %s" % participants)
@@ -5309,6 +5309,10 @@ class ContactWindowController(NSWindowController):
         if account.conference.nickname != nickname:
             account.conference.nickname = nickname
             account.save()
+
+        if type(media_type) in (tuple, list) and 'video' in media_type:
+            # video over WebRTC (SylkServer video rooms): the room's audio and video go there, its chat over MSRP
+            media_type = self.joinVideoConference(account, target, media_type, video_room)
 
         target = normalize_sip_uri_for_outgoing_session(target, account)
         if not target:
@@ -5344,6 +5348,27 @@ class ContactWindowController(NSWindowController):
         else:
             if not session_controller.startSessionWithStreamOfType(media_type):
                 BlinkLogger().log_error("Failed to start session with stream of type %s" % media_type)
+
+    @objc.python_method
+    def joinVideoConference(self, account, target, media_type, video_room=None):
+        """Join the video room of target over WebRTC (audio muted when media_type has no audio); the media
+        left for the SIP session: chat only when the video room was joined, else the media without video."""
+        from WebRTCSupport import join_video_conference, room_video
+        from util import call_later
+        video_room = video_room or room_video(target, account)
+        session = None
+        if video_room is not None:
+            video_uri, room_target = video_room
+            session = join_video_conference(account, video_uri, audio='audio' in media_type, video=True, target=room_target)
+        if session is None:
+            BlinkLogger().log_warning("[conference] %s: no video room can be joined, joining without video" % target)
+            remaining = tuple(media for media in media_type if media != 'video')
+            return remaining if len(remaining) > 1 else (remaining[0] if remaining else 'chat')
+        BlinkLogger().log_info("[conference] %s: audio and video over WebRTC in %s, chat over MSRP" % (target, session.room))
+        # the chat window opens behind the video conference window
+        from VideoroomWindowController import window_for_session
+        call_later(1.5, lambda: window_for_session(session).show() if session.state != 'terminated' else None)
+        return 'chat'
 
     @objc.python_method
     def focusSearchTextField(self):

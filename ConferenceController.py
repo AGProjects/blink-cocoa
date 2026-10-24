@@ -2,7 +2,13 @@
 #
 
 from AppKit import (NSApp,
+                    NSButton,
                     NSCancelButton,
+                    NSColor,
+                    NSControlTextDidChangeNotification,
+                    NSFont,
+                    NSMakeRect,
+                    NSTextField,
                     NSDragOperationNone,
                     NSDragOperationGeneric,
                     NSLeftMouseUp,
@@ -18,7 +24,11 @@ from Foundation import (NSArray,
                         NSLocalizedString,
                         NSMenu,
                         NSMenuItem,
-                        NSObject)
+                        NSNotificationCenter,
+                        NSObject,
+                        NSRunLoop,
+                        NSRunLoopCommonModes,
+                        NSTimer)
 import objc
 
 import pickle
@@ -47,8 +57,10 @@ default_conference_server = 'conference.sip2sip.info'
 
 
 class ServerConferenceRoom(object):
-    def __init__(self, target, media_type=None, participants=None, nickname=None, start_when_participants_available=False):
+    def __init__(self, target, media_type=None, participants=None, nickname=None, start_when_participants_available=False, video_room=None):
         self.target = target
+        # (the video room address, its WebRTCSupport.RoomTarget or None) when joined with video over WebRTC
+        self.video_room = video_room
         self.media_type = media_type
         self.participants = participants
         self.nickname = nickname
@@ -140,9 +152,16 @@ class JoinConferenceWindowController(NSObject):
             self.audio.setState_(NSOnState if "audio" in media_type else NSOffState)
             self.chat.setState_(NSOnState if "chat" in media_type else NSOffState)
 
+        # the room's chat always goes with it: Chat is checked and cannot be changed
+        self.chat.setState_(NSOnState)
+        self.chat.setEnabled_(False)
+        self._addVideoControls(media_type)
+
         self.updatePopupButtons()
+        self.lookupRoom()
 
     def dealloc(self):
+        NSNotificationCenter.defaultCenter().removeObserver_(self)
         self.notification_center.remove_observer(self, name='BonjourConferenceServicesDidRemoveServer')
         self.notification_center.remove_observer(self, name='BonjourConferenceServicesDidUpdateServer')
         self.notification_center.remove_observer(self, name='BonjourConferenceServicesDidAddServer')
@@ -175,6 +194,116 @@ class JoinConferenceWindowController(NSObject):
         if account is not None:
             self.nickname_textfield.setStringValue_(account.conference.nickname or account.display_name)
         self.updatePopupButtons()
+        self.lookupRoom()
+
+    # Video over WebRTC (SylkServer video rooms, WebRTCSupport)
+    #
+    # Video is offered when the default account's domain runs SylkServer and the media can be done
+    # here, or when the room is one of another SylkServer domain: a room typed as room@host or pasted
+    # as a link https://host/conference/room is looked up (its domain's SylkServer configuration)
+    # 0.4 seconds after the typing stops, and OK waits for the answer.
+
+    @objc.python_method
+    def _addVideoControls(self, media_type):
+        self.remote_target = None       # the RoomTarget of a room of another SylkServer, once looked up
+        self.resolved_room = None       # (room, host) that remote_target is the answer for
+        self.lookup_pending = None      # (room, host) being looked up
+        self.lookup_timer = None
+        self.video_room = None
+        audio_frame = self.audio.frame()
+        self.video = NSButton.checkboxWithTitle_target_action_(NSLocalizedString("Video", "Checkbox title"), self, "videoClicked:")
+        self.video.setFrame_(NSMakeRect(audio_frame.origin.x + audio_frame.size.width + 7, audio_frame.origin.y, 100, audio_frame.size.height))
+        self.video.setState_(NSOnState if media_type and "video" in media_type else NSOffState)
+        self.video.setHidden_(True)
+        self.audio.superview().addSubview_(self.video)
+        ok_frame = self.ok_button.frame()
+        self.providerLabel = NSTextField.wrappingLabelWithString_('')
+        self.providerLabel.setFont_(NSFont.systemFontOfSize_(NSFont.smallSystemFontSize()))
+        self.providerLabel.setTextColor_(NSColor.secondaryLabelColor())
+        self.providerLabel.setFrame_(NSMakeRect(20, ok_frame.origin.y + 2, max(100, ok_frame.origin.x - 97 - 30), 30))
+        self.ok_button.superview().addSubview_(self.providerLabel)
+        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, "roomTextDidChange:", NSControlTextDidChangeNotification, self.room)
+
+    @objc.IBAction
+    def videoClicked_(self, sender):
+        pass
+
+    def roomTextDidChange_(self, notification):
+        if self.lookup_timer is not None:
+            self.lookup_timer.invalidate()
+        self.lookup_timer = NSTimer.timerWithTimeInterval_repeats_block_(0.4, False, lambda timer: self.lookupRoom())
+        NSRunLoop.mainRunLoop().addTimer_forMode_(self.lookup_timer, NSRunLoopCommonModes)
+
+    @objc.python_method
+    def _typedRoom(self):
+        """(room, host) of what is in the room field; host None for a bare room name."""
+        from WebRTCSupport import parse_room
+        return parse_room(self.room.stringValue()) or (None, None)
+
+    @objc.python_method
+    def _foreignHost(self, account, host):
+        from WebRTCSupport import local_room_host
+        return host is not None and account is not None and not isinstance(account, BonjourAccount) and not local_room_host(host, account)
+
+    @objc.python_method
+    def lookupRoom(self):
+        """Look up the SylkServer of a room of another domain, then say what conferencing there is."""
+        self.lookup_timer = None
+        account = AccountManager().default_account
+        room, host = self._typedRoom()
+        if room and self._foreignHost(account, host):
+            key = (room.lower(), host)
+            if key != self.resolved_room and key != self.lookup_pending:
+                from WebRTCSupport import resolve_room
+                self.lookup_pending = key
+
+                def resolved(target, key=key):
+                    if self.lookup_pending != key:
+                        return
+                    self.lookup_pending = None
+                    self.resolved_room = key
+                    self.remote_target = target
+                    self.updateVideoControls()
+
+                self.updateVideoControls()
+                resolve_room(room, host, account, resolved)
+                return
+        else:
+            self.lookup_pending = None
+        self.updateVideoControls()
+
+    @objc.python_method
+    def updateVideoControls(self):
+        from WebRTCSupport import conference_video_available, media_available
+        account = AccountManager().default_account
+        room, host = self._typedRoom()
+        video, text = False, ''
+        if account is None or isinstance(account, BonjourAccount):
+            pass
+        elif room and self._foreignHost(account, host):
+            if self.lookup_pending is not None:
+                text = NSLocalizedString("Looking up the SylkServer of %s…", "Label") % host
+            elif self.resolved_room == (room.lower(), host):
+                target = self.remote_target
+                if target is not None and target.remote:
+                    video = media_available()
+                    text = NSLocalizedString("Conferencing provided by SylkServer at %s", "Label") % target.sip_uri.partition('@')[2]
+                elif target is not None:
+                    text = NSLocalizedString("Conferencing provided by SylkServer at %s", "Label") % (account.conference.server_address or host)
+                    video = conference_video_available(account)
+                else:
+                    text = NSLocalizedString("No SylkServer found for %s: the room is joined over SIP", "Label") % host
+        elif conference_video_available(account):
+            video = True
+            text = NSLocalizedString("Conferencing provided by SylkServer at %s", "Label") % (account.conference.server_address or default_conference_server)
+        self.video.setHidden_(not video)
+        self.providerLabel.setStringValue_(text)
+        if not isinstance(account, BonjourAccount):
+            self.ok_button.setEnabled_(self.lookup_pending is None)
+
+    @objc.python_method
+    def videoChecked(self):
+        return self.video is not None and not self.video.isHidden() and self.video.state() == NSOnState
 
     @objc.python_method
     def loadConfigurations(self):
@@ -211,7 +340,9 @@ class JoinConferenceWindowController(NSObject):
                     configurationPanel = ConferenceConfigurationPanel.alloc().init()
                     configuration_name = configurationPanel.runModal()
 
-                if self.audio.state() == NSOnState and self.chat.state() == NSOnState:
+                if self.videoChecked():
+                    media_type = ("chat", "audio", "video") if self.audio.state() == NSOnState else ("chat", "video")
+                elif self.audio.state() == NSOnState and self.chat.state() == NSOnState:
                     media_type = ("chat", "audio")
                 elif self.chat.state() == NSOnState:
                     media_type = "chat"
@@ -263,10 +394,12 @@ class JoinConferenceWindowController(NSObject):
                 self.removeAllParticipants.setHidden_(False if len(self._participants) > 1 else True)
                 if hasattr(configuration, 'media_type'):
                     self.audio.setState_(NSOnState if "audio" in configuration.media_type else NSOffState)
-                    self.chat.setState_(NSOnState if "chat" in configuration.media_type else NSOffState)
+                    self.video.setState_(NSOnState if "video" in configuration.media_type else NSOffState)
                 else:
                     self.audio.setState_(NSOnState)
-                    self.chat.setState_(NSOnState)
+                    self.video.setState_(NSOffState)
+                self.chat.setState_(NSOnState)
+                self.lookupRoom()
                 self.startWhenParticipantsAvailable.setEnabled_(bool(len(self._participants)))
                 if len(self._participants) == 0:
                     self.startWhenParticipantsAvailable.setState_(NSOffState)
@@ -346,6 +479,8 @@ class JoinConferenceWindowController(NSObject):
         self.participantsTable.reloadData()
         self.audio.setState_(NSOnState)
         self.chat.setState_(NSOnState)
+        self.video.setState_(NSOffState)
+        self.lookupRoom()
         self.startWhenParticipantsAvailable.setEnabled_(False)
         self.startWhenParticipantsAvailable.setState_(NSOffState)
 
@@ -444,9 +579,16 @@ class JoinConferenceWindowController(NSObject):
             rc = NSApp.runModalForWindow_(self.window)
         self.window.orderOut_(self)
         contactsWindow.setWorksWhenModal_(worksWhenModal)
+        NSNotificationCenter.defaultCenter().removeObserver_name_object_(self, NSControlTextDidChangeNotification, self.room)
+        if self.lookup_timer is not None:
+            self.lookup_timer.invalidate()
+            self.lookup_timer = None
 
         if (self.autostart and self.validateConference()) or rc == NSOKButton:
-            if self.audio.state() == NSOnState and self.chat.state() == NSOnState:
+            if self.video_room is not None:
+                # the room's audio and video over WebRTC, its chat over MSRP
+                media_type = ("chat", "audio", "video") if self.audio.state() == NSOnState else ("chat", "video")
+            elif self.audio.state() == NSOnState and self.chat.state() == NSOnState:
                 media_type = ("chat", "audio")
             elif self.chat.state() == NSOnState:
                 media_type = "chat"
@@ -463,7 +605,8 @@ class JoinConferenceWindowController(NSObject):
             # prevent loops
             if self.target in participants:
                 participants.remove(self.target)
-            return ServerConferenceRoom(self.target, media_type=media_type, participants=participants, nickname=self.nickname, start_when_participants_available=bool(self.startWhenParticipantsAvailable.state()))
+            return ServerConferenceRoom(self.target, media_type=media_type, participants=participants, nickname=self.nickname,
+                                        start_when_participants_available=bool(self.startWhenParticipantsAvailable.state()), video_room=self.video_room)
         else:
             return None
 
@@ -542,7 +685,12 @@ class JoinConferenceWindowController(NSObject):
         if not self.room.stringValue().strip() and allow_random_room:
             room = random_room()
         else:
-            room=self.room.stringValue().lower().strip()
+            room = self.room.stringValue().lower().strip()
+            if re.match('^https?://', room):
+                # a link to the room (https://host/conference/room, as the Sylk web app shares it)
+                from WebRTCSupport import parse_room
+                parsed = parse_room(room)
+                room = '%s@%s' % parsed if parsed and parsed[0] and parsed[1] else room
 
         if not re.match("^[+1-9a-z][0-9a-z_.-]{0,65}[0-9a-z]", room):
             NSRunAlertPanel(NSLocalizedString("Start New Conference", "Window title"),
@@ -595,12 +743,23 @@ class JoinConferenceWindowController(NSObject):
                 else:
                     self.target = '%s@%s' % (room, default_conference_server)
 
+        account = AccountManager().default_account
+        room_name, host = self._typedRoom()
+        target = self.remote_target if self.resolved_room == ((room_name or '').lower(), host) else None
+        if target is not None and target.remote:
+            self.target = target.sip_uri        # the room's MSRP switch at the other SylkServer
+
         if not validateParticipant(self.target):
             NSRunAlertPanel(NSLocalizedString("Start New Conference", "Window title"),
                             NSLocalizedString("Invalid conference SIP address: %s", "Label") % self.target,
                             NSLocalizedString("OK", "Button title"),
                             None, None)
             return False
+
+        self.video_room = None
+        if self.videoChecked():
+            from WebRTCSupport import room_video
+            self.video_room = room_video(self.target, account)
 
         return True
 
