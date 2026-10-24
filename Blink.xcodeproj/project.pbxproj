@@ -431,6 +431,8 @@
 		1FBD0E0112EB705E00087347 /* trash.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FBD0E0012EB705E00087347 /* trash.png */; };
 		1FBD0E0212EB705E00087347 /* trash.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FBD0E0012EB705E00087347 /* trash.png */; };
 		1FC02DF025EBCE470031AB93 /* Sparkle.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 1FBF2B3D179151D9002E110B /* Sparkle.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		5C1E00030000000000000002 /* WebRTC.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 5C1E00030000000000000001 /* WebRTC.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		5C1E00030000000000000003 /* WebRTC.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 5C1E00030000000000000001 /* WebRTC.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		1FC38F02192234E1007B0340 /* layers.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC38F01192234E1007B0340 /* layers.png */; };
 		1FC38F03192234E1007B0340 /* layers.png in Resources */ = {isa = PBXBuildFile; fileRef = 1FC38F01192234E1007B0340 /* layers.png */; };
 		1FC6343118F9D3650098945F /* ScriptingBridge.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC6342F18F9D3450098945F /* ScriptingBridge.framework */; };
@@ -901,6 +903,7 @@
 			files = (
 				1FCDCF3A2D7CE8EE0050A35C /* libs in Copy Frameworks */,
 				DE4E6F10174F9C0900E1D5F9 /* Python.framework in Copy Frameworks */,
+				5C1E00030000000000000003 /* WebRTC.framework in Copy Frameworks */,
 			);
 			name = "Copy Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -978,6 +981,7 @@
 				1FCDE5B12D539C5B00140B1F /* libs in Copy Frameworks */,
 				1FD066BB1753800700957876 /* Python.framework in Copy Frameworks */,
 				1FC02DF025EBCE470031AB93 /* Sparkle.framework in Copy Frameworks */,
+				5C1E00030000000000000002 /* WebRTC.framework in Copy Frameworks */,
 			);
 			name = "Copy Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1343,6 +1347,7 @@
 		1FBBF2E612E9B3500077E766 /* HistoryManager.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = HistoryManager.py; sourceTree = "<group>"; };
 		1FBD0E0012EB705E00087347 /* trash.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = trash.png; path = icons/trash.png; sourceTree = "<group>"; };
 		1FBF2B3D179151D9002E110B /* Sparkle.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Sparkle.framework; path = Distribution/Frameworks/Sparkle.framework; sourceTree = "<group>"; };
+		5C1E00030000000000000001 /* WebRTC.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebRTC.framework; path = Distribution/Frameworks/WebRTC.framework; sourceTree = "<group>"; };
 		1FBF2B4417915410002E110B /* Updater.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = Updater.py; sourceTree = "<group>"; };
 		1FC38F01192234E1007B0340 /* layers.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = layers.png; path = icons/layers.png; sourceTree = SOURCE_ROOT; };
 		1FC6342F18F9D3450098945F /* ScriptingBridge.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ScriptingBridge.framework; path = System/Library/Frameworks/ScriptingBridge.framework; sourceTree = SDKROOT; };
@@ -1738,6 +1743,7 @@
 			children = (
 				1FBF2B3D179151D9002E110B /* Sparkle.framework */,
 				DE4E6F0F174F9C0900E1D5F9 /* Python.framework */,
+				5C1E00030000000000000001 /* WebRTC.framework */,
 			);
 			name = CustomFrameworks;
 			sourceTree = "<group>";
