@@ -70,7 +70,7 @@ from itertools import chain
 from zope.interface import implementer
 
 from sipsimple.account import BonjourAccount
-from sipsimple.core import SDPAttribute, SIPURI
+from sipsimple.core import SDPAttribute, SIPURI, SIPCoreError
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.streams.msrp.chat import ChatStream, ChatStreamError, ChatIdentity, SMPStatus
 from sipsimple.threading.green import run_in_green_thread
@@ -246,6 +246,10 @@ class ChatController(MediaStream):
         self.notification_center.add_observer(self, name='BonjourAccountDidAddNeighbour')
         self.notification_center.add_observer(self, name='BonjourAccountDidUpdateNeighbour')
         self.notification_center.add_observer(self, name='BonjourAccountDidRemoveNeighbour')
+        # the room's chat over its video room (WebRTC) when the MSRP chat to it is not connected
+        self.videoroom_chat = None
+        for name in VIDEOROOM_CHAT_NOTIFICATIONS:
+            self.notification_center.add_observer(self, name=name)
 
         # Registers the two classes ChatView.xib names as custom classes with
         # the ObjC runtime. Without the import the nib has nothing to
@@ -657,7 +661,7 @@ class ChatController(MediaStream):
                 if self.outgoing_message_handler.send(content, recipient=self.remote_identity, content_type=content_type):
                     NotificationCenter().post_notification('ChatViewControllerDidDisplayMessage', sender=self, data=NotificationData(direction='outgoing', history_entry=False, remote_party=self.sessionController.remoteAOR, local_party=format_identity_to_string(self.sessionController.account) if self.sessionController.account is not BonjourAccount() else 'bonjour@local', check_contact=True))
 
-            if not self.stream or self.status in [STREAM_FAILED, STREAM_IDLE]:
+            if (not self.stream or self.status in [STREAM_FAILED, STREAM_IDLE]) and self.videoroom_chat is None:
                 self.sessionController.log_info("Session not established, starting it")
                 if self.outgoing_message_handler.messages:
                     # save unsend messages and pass them to the newly spawned handler
@@ -1655,7 +1659,7 @@ class ChatController(MediaStream):
 
                         # In a conference, attribute the image to the actual
                         # participant (CPIM From) rather than the focus/room.
-                        if self.sessionController.remote_focus and message.sender:
+                        if (self.sessionController.remote_focus or self.videoroom_chat is not None) and message.sender:
                             sender_identity = format_identity_to_string(message.sender, format='compact')
                         else:
                             sender_identity = self.sessionController.titleLong
@@ -1677,7 +1681,7 @@ class ChatController(MediaStream):
         # Conference room notices (joined/left, welcome, ...) carry
         # agp:Message-Type: status. They are shown as system messages, not as
         # chat bubbles, and are not saved to history.
-        if self.sessionController.remote_focus and self.isStatusMessage(message):
+        if (self.sessionController.remote_focus or self.videoroom_chat is not None) and self.isStatusMessage(message):
             content = message.content
             if isinstance(content, bytes):
                 content = content.decode('utf-8', 'replace')
@@ -1696,7 +1700,7 @@ class ChatController(MediaStream):
             # (the room), so using it would attribute every message to the
             # conference instead of the actual participant. Prefer message.sender
             # when joined to a focus; keep remote_identity for 1-to-1 chats.
-            if self.sessionController.remote_focus:
+            if self.sessionController.remote_focus or self.videoroom_chat is not None:
                 sender_identity = message.sender or self.remote_identity
             else:
                 sender_identity = self.remote_identity or message.sender
@@ -1912,6 +1916,7 @@ class ChatController(MediaStream):
         self.setNickname(nickname)
 
         self.outgoing_message_handler.setConnected(self.stream)
+        self.updateVideoRoomChat()
 
         # needed to set the Audio button state after session has started
         self.notification_center.post_notification("BlinkStreamHandlersChanged", sender=self)
@@ -1935,6 +1940,7 @@ class ChatController(MediaStream):
         self.showSystemMessage(reason, ISOTimestamp.now(), True)
         self.changeStatus(STREAM_FAILED, data.reason)
         self.outgoing_message_handler.setDisconnected()
+        self.updateVideoRoomChat()
 
     @objc.python_method
     def _NH_MediaStreamDidEnd(self, sender, data):
@@ -1955,6 +1961,69 @@ class ChatController(MediaStream):
 
         self.outgoing_message_handler.setDisconnected()
         self.chatViewController.hideEncryptionFinishedConfirmationDialog()
+        self.updateVideoRoomChat()
+
+    # The room's chat over the video room (WebRTC): when the MSRP chat to the room cannot connect (a proxy
+    # refusing to relay, an MSRP port that cannot be reached) the messages go with videoroom-message and
+    # the room's come in through the same transcript, kept in history like MSRP ones. When the MSRP chat
+    # is connected it carries the chat and the WebRTC copies are ignored.
+
+    @objc.python_method
+    def updateVideoRoomChat(self):
+        if self.outgoing_message_handler is None:
+            return
+        room = self.videoRoom()
+        wanted = room is not None and room.state == 'established' and self.status != STREAM_CONNECTED
+        if wanted and self.videoroom_chat is None:
+            self.videoroom_chat = VideoroomChatStream(room)
+            self.sessionController.log_info("The room's chat goes over the video room %s (WebRTC)" % room.room)
+            self.showSystemMessage(NSLocalizedString("Chat over the video conference connection", "Label"), ISOTimestamp.now())
+            self.outgoing_message_handler.setConnected(self.videoroom_chat)
+        elif not wanted and self.videoroom_chat is not None:
+            stream, self.videoroom_chat = self.videoroom_chat, None
+            if self.outgoing_message_handler.stream is stream:
+                self.outgoing_message_handler.setDisconnected()
+
+    @objc.python_method
+    def _NH_VideoroomSessionDidChangeState(self, sender, data):
+        if self.closed:
+            return
+        room = self.videoRoom()
+        if sender is room or (self.videoroom_chat is not None and sender is self.videoroom_chat.room):
+            self.updateVideoRoomChat()
+
+    @objc.python_method
+    def _NH_VideoroomSessionGotMessage(self, sender, data):
+        chat = self.videoroom_chat
+        if self.closed or chat is None or sender is not chat.room:
+            return
+        if not data.sender_uri or data.sender_uri.lower() == sender.identity.lower():
+            return      # nobody, or our own message played back by the room
+        try:
+            identity = ChatIdentity(SIPURI.parse('sip:%s' % data.sender_uri), display_name=data.sender_name or None)
+        except SIPCoreError:
+            self.sessionController.log_info("Room chat message from an unreadable address: %r" % data.sender_uri)
+            return
+        try:
+            timestamp = ISOTimestamp(data.timestamp) if data.timestamp else ISOTimestamp.now()
+        except (TypeError, ValueError):
+            timestamp = ISOTimestamp.now()
+        content = data.content
+        if not data.content_type.startswith('text/') and isinstance(content, str):
+            content = content.encode('latin1')      # binary comes as latin1 over JSON
+        headers = [VideoroomChatHeader('Message-Type', 'status')] if data.type == 'status' else []
+        message = VideoroomChatMessage(content, data.content_type, identity, timestamp, headers)
+        self._NH_ChatStreamGotMessage(chat, NotificationData(message=message, private=False, encrypted=False))
+
+    @objc.python_method
+    def _NH_VideoroomSessionDidDeliverMessage(self, sender, data):
+        chat = self.videoroom_chat
+        if self.closed or chat is None or sender is not chat.room:
+            return
+        if data.delivered:
+            self.notification_center.post_notification('ChatStreamDidDeliverMessage', sender=chat, data=NotificationData(message_id=data.message_id))
+        else:
+            self.notification_center.post_notification('ChatStreamDidNotDeliverMessage', sender=chat, data=NotificationData(message_id=data.message_id, code=data.code, reason=data.reason))
 
     @objc.python_method
     def _NH_CFGSettingsObjectDidChange(self, sender, data):
@@ -2027,6 +2096,9 @@ class ChatController(MediaStream):
         self.notification_center.discard_observer(self, name='BonjourAccountDidAddNeighbour')
         self.notification_center.discard_observer(self, name='BonjourAccountDidUpdateNeighbour')
         self.notification_center.discard_observer(self, name='BonjourAccountDidRemoveNeighbour')
+        for name in VIDEOROOM_CHAT_NOTIFICATIONS:
+            self.notification_center.discard_observer(self, name=name)
+        self.videoroom_chat = None
 
 
         # remove GUI observers
@@ -2123,6 +2195,44 @@ class ChatController(MediaStream):
         objc.super(ChatController, self).dealloc()
 
 
+VIDEOROOM_CHAT_NOTIFICATIONS = ('VideoroomSessionDidChangeState', 'VideoroomSessionGotMessage', 'VideoroomSessionDidDeliverMessage')
+
+
+class VideoroomChatStream(object):
+    """Stands in for the chat stream of a room while its chat goes over the video room (WebRTC): what
+    OutgoingMessageHandler sends with, and the sender of the delivery reports it observes."""
+
+    def __init__(self, room):
+        self.room = room
+
+    def __repr__(self):
+        return '<VideoroomChatStream %s>' % self.room.room
+
+    def send_message(self, content, content_type='text/plain', timestamp=None, recipients=None, **kwargs):
+        return self.room.send_chat_message(content, content_type)
+
+    def send_composing_indication(self, *args, **kwargs):
+        pass        # not over the video room
+
+
+class VideoroomChatHeader(object):
+    def __init__(self, name, value):
+        self.name = name
+        self.value = value
+
+
+class VideoroomChatMessage(object):
+    """A message of the room's chat that came over the video room, shaped as the ChatStream's."""
+
+    def __init__(self, content, content_type, sender, timestamp, additional_headers):
+        self.content = content
+        self.content_type = content_type
+        self.sender = sender
+        self.recipients = None
+        self.timestamp = timestamp
+        self.additional_headers = additional_headers
+
+
 class MessageInfo(object):
     def __init__(self, msgid, direction='outgoing', sender=None, recipient=None, timestamp=None, content=None, private=False, status=None, content_type='text', pending=False, encryption=''):
         self.msgid = msgid
@@ -2207,7 +2317,8 @@ class OutgoingMessageHandler(NSObject):
         else:
             try:
                 newmsg = message.content
-                if self.delegate.delegate.stream.encryption.active:
+                msrp_stream = self.delegate.delegate.stream
+                if self.stream is msrp_stream and msrp_stream is not None and msrp_stream.encryption.active:
                     if self.delegate.delegate.stream.encryption.verified:
                         message.encryption = 'verified'
                     else:
@@ -2280,6 +2391,8 @@ class OutgoingMessageHandler(NSObject):
 
     @objc.python_method
     def setConnected(self, stream):
+        if self.stream is not None and self.stream is not stream:
+            NotificationCenter().discard_observer(self, sender=self.stream)
         self.stream = stream
         self.no_report_received_messages = {}
         self.connected = True
