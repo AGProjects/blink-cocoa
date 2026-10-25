@@ -85,7 +85,7 @@ from SessionInfoController import SessionInfoController
 from SIPManager import SIPManager
 from VideoController import VideoController
 from interfaces.itunes import MusicApplications
-from util import format_identity_to_string, normalize_sip_uri_for_outgoing_session, sip_prefix_pattern, sipuri_components_from_string, run_in_gui_thread, checkValidPhoneNumber, local_to_utc, osx_version, canonical_pstn_uri
+from util import format_identity_to_string, normalize_sip_uri_for_outgoing_session, sip_prefix_pattern, sipuri_components_from_string, run_in_gui_thread, checkValidPhoneNumber, local_to_utc, osx_version, canonical_pstn_uri, is_conference_uri
 
 
 SessionIdentifierSerial = 0
@@ -2684,7 +2684,15 @@ class SessionController(NSObject):
                 extra_headers.append(Header('X-No-MediaProxy', 'true'))
                 self.log_info('Requesting no media relay (X-No-MediaProxy) per contact setting')
 
-        self.session.connect(ToHeader(target_uri), self.routes, streams, extra_headers=extra_headers)
+        contact_parameters = None
+        if self.session.account is not BonjourAccount() and (self.is_conference or self.remote_focus or is_conference_uri(str(target_uri), self.session.account)):
+            # our device id (RFC 5626 +sip.instance, as on REGISTER): the focus uses it as this endpoint's
+            # participant_id, and the video room's gateway, told the same on join (Videoroom), knows this
+            # chat leg is us and shows us neither twice nor, once we leave the video room, as a SIP caller
+            instance_id = SIPSimpleSettings().instance_id
+            if instance_id:
+                contact_parameters = {'+sip.instance': '"<%s>"' % instance_id}
+        self.session.connect(ToHeader(target_uri), self.routes, streams, extra_headers=extra_headers, contact_parameters=contact_parameters)
         self.changeSessionState(STATE_CONNECTING)
         self.notification_center.post_notification("BlinkSessionWillStart", sender=self)
 

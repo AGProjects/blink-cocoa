@@ -58,7 +58,7 @@ import uuid
 import traceback
 
 from otr import OTRState
-from util import call_later
+from util import call_later, log_gui_exception
 
 from dateutil.tz import tzlocal
 from gnutls.errors import GNUTLSError
@@ -488,7 +488,16 @@ class ChatController(MediaStream):
         else:
             self.chatWindowController.selectSession_(self.sessionController)
 
-        self.chatWindowController.window().makeKeyAndOrderFront_(None)
+        window = self.chatWindowController.window()
+        if getattr(self.sessionController, 'open_chat_window_minimized', False):
+            # the chat of a video room joined with video: its window in front of the chat would only hide it,
+            # so the chat window opens minimized, or is left as it is when it is already there
+            self.sessionController.open_chat_window_minimized = False
+            if not window.isVisible():
+                window.orderBack_(None)
+                window.miniaturize_(None)
+        else:
+            window.makeKeyAndOrderFront_(None)
         self.chatWindowController.closing = False
         self.chatWindowController.addTimer()
 
@@ -1066,8 +1075,12 @@ class ChatController(MediaStream):
     def videoRoomHandlesClick(self, identifier):
         if identifier not in ('audio', 'video'):
             return False
-        if self.videoRoom() is not None or (identifier == 'video' and self.conferenceVideo() is not None):
-            self.joinVideoRoom()
+        try:
+            if self.videoRoom() is not None or (identifier == 'video' and self.conferenceVideo() is not None):
+                self.joinVideoRoom()
+                return True
+        except Exception:
+            log_gui_exception('the %s button of a conference with a video room' % identifier)
             return True
         return False
 
@@ -1076,6 +1089,14 @@ class ChatController(MediaStream):
         """Whether Audio or Video is enabled when the video room decides it, else None."""
         if identifier not in ('audio', 'video'):
             return None
+        try:
+            return self._videoRoomToolbarState(identifier, item)
+        except Exception:
+            log_gui_exception('validating the %s button of a conference' % identifier)
+            return None
+
+    @objc.python_method
+    def _videoRoomToolbarState(self, identifier, item):
         if self.videoRoom() is not None:
             if identifier == 'video':
                 item.setImage_(NSImage.imageNamed_("video-active"))

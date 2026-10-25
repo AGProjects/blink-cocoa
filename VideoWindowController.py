@@ -1508,9 +1508,14 @@ def make_call_bar_segment(symbol_name, label, action, target, destructive=False)
 
 
 class VideoCallBar(NSView):
-    """The translucent capsule the segments sit in, centred at the bottom."""
+    """The translucent capsule the segments sit in, centred at the bottom.
+
+    scale draws it smaller (the video conference window has it at 75 %) and
+    bottom is the gap under it; a flipped container has it at its foot too."""
     segments = ()
     compact = False
+    scale = 1.0
+    bottom = CALL_BAR_BOTTOM
 
     def initWithFrame_(self, frame):
         self = objc.super(VideoCallBar, self).initWithFrame_(frame)
@@ -1547,8 +1552,9 @@ class VideoCallBar(NSView):
     def tile(self):
         container = self.superview()
         available = NSWidth(container.bounds()) if container is not None else None
+        scale = self.scale or 1.0
         self.compact = bool(available is not None
-                            and self.widthFor(False) + CALL_BAR_MARGIN > available)
+                            and self.widthFor(False) * scale + CALL_BAR_MARGIN > available)
         height = CALL_BAR_COMPACT_HEIGHT if self.compact else CALL_BAR_HEIGHT
         x = CALL_BAR_PADDING
         for segment in self._visible():
@@ -1560,8 +1566,13 @@ class VideoCallBar(NSView):
         width = x + CALL_BAR_PADDING
         origin_x = self.frame().origin.x
         if available is not None:
-            origin_x = floor((available - width) / 2.0)
-        self.setFrame_(NSMakeRect(origin_x, CALL_BAR_BOTTOM, width, height))
+            origin_x = floor((available - width * scale) / 2.0)
+        origin_y = self.bottom
+        if container is not None and container.isFlipped():
+            origin_y = NSHeight(container.bounds()) - self.bottom - height * scale
+        self.setFrame_(NSMakeRect(origin_x, origin_y, width * scale, height * scale))
+        if scale != 1.0:
+            self.setBoundsSize_(NSMakeSize(width, height))      # the segments laid out above, drawn smaller
         self.setNeedsDisplay_(True)
 
     def resizeWithOldSuperviewSize_(self, old_size):

@@ -53,6 +53,7 @@ from AppKit import (NSAttributedString,
                     NSImage,
                     NSImageInterpolationHigh,
                     NSPNGFileType,
+                    NSLineBreakByTruncatingTail,
                     NSLineBreakByWordWrapping,
                     NSMutableAttributedString,
                     NSMutableParagraphStyle,
@@ -4048,8 +4049,11 @@ class MessageBubbleView(NSView):
         if self.lockIconPath():
             right += LOCK_SIZE + 4.0
 
-        # enough of the sender's name to be recognisable, not all of it
-        sender = 36.0 if self._showsSender() else 0.0
+        # the sender's whole name (a display name or an address): in a conference it is the only way to
+        # tell who wrote what, and a name cut to its first letters names nobody. Capped for very long ones.
+        sender = 0.0
+        if self._showsSender():
+            sender = min(width_of(self.sender_label, NSFont.boldSystemFontOfSize_(META_FONT_SIZE + 1)) + 8.0, 280.0)
         return left + sender + right
 
     @objc.python_method
@@ -5650,7 +5654,9 @@ class MessageBubbleView(NSView):
         if self._showsSender():
             color = COLOR_SENDER_SELF if self.direction == 'outgoing' else COLOR_SENDER_PEER
             style = NSMutableParagraphStyle.alloc().init()
-            style.setLineBreakMode_(NSLineBreakByWordWrapping)
+            # one line, cut at the end if it must be: word wrapping into a one-line rect showed the start of
+            # an address and nothing else
+            style.setLineBreakMode_(NSLineBreakByTruncatingTail)
             attrs = {NSFontAttributeName: sender_font,
                      NSForegroundColorAttributeName: color,
                      NSParagraphStyleAttributeName: style}

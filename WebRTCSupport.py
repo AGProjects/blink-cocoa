@@ -209,6 +209,13 @@ def _room_sessions(video_room):
             yield controller
 
 
+def _silent_media_end(controller):
+    """The audio moved to the video room, it did not end: no hangup tone (SessionRinger)."""
+    controller.silent_media_end = True
+    if controller.session is not None:
+        controller.session.blink_silent_media_end = True
+
+
 def drop_sip_audio(video_room):
     """The room's audio and video go over WebRTC now: SIP audio (and video) to the same room would loop
     through it, so it is removed from the sessions that have it; a session with nothing else is ended."""
@@ -220,9 +227,11 @@ def drop_sip_audio(video_room):
         what = ' and '.join(media)
         if not controller.hasStreamOfType('chat'):
             BlinkLogger().log_info('[conference] %s: hanging up the SIP %s, the room has it over WebRTC now' % (controller.remoteAOR, what))
+            _silent_media_end(controller)
             controller.end()
         elif controller.state == STATE_CONNECTED:
             BlinkLogger().log_info('[conference] %s: removing SIP %s, the room has it over WebRTC now' % (controller.remoteAOR, what))
+            _silent_media_end(controller)
             if 'video' in media:
                 controller.removeVideoFromSession()
             if 'audio' in media:

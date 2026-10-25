@@ -81,6 +81,24 @@
                             <action selector="userClickedToolbarButton:" target="-2" id="245"/>
                         </connections>
                     </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="5E2B7C1A-3D4F-4A6B-9C8D-0E1F2A3B4C5D" explicitItemIdentifier="font_size" label="Text Size" paletteLabel="Text Size" toolTip="Smaller or larger text" autovalidates="NO" id="Fnt-Sz-T01">
+                        <size key="minSize" width="70" height="24"/>
+                        <size key="maxSize" width="70" height="24"/>
+                        <segmentedControl key="view" verticalHuggingPriority="750" id="Fnt-Sg-C01">
+                            <rect key="frame" x="0.0" y="14" width="70" height="24"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                            <segmentedCell key="cell" borderStyle="border" alignment="left" style="rounded" trackingMode="momentary" id="Fnt-Sg-Cl1">
+                                <font key="font" metaFont="system"/>
+                                <segments>
+                                    <segment label="A−" toolTip="Smaller text" width="32"/>
+                                    <segment label="A+" toolTip="Larger text" width="32" tag="1"/>
+                                </segments>
+                            </segmentedCell>
+                            <connections>
+                                <action selector="fontSegmentClicked:" target="-2" id="Fnt-Sg-Ac1"/>
+                            </connections>
+                        </segmentedControl>
+                    </toolbarItem>
                     <toolbarItem implicitItemIdentifier="NSToolbarFlexibleSpaceItem" id="78"/>
                     <toolbarItem implicitItemIdentifier="58831C47-CC9F-4CA5-B45A-C67305AECC89" explicitItemIdentifier="sendfile" label="Enviar Arquivo" paletteLabel="Enviar Arquivo" toolTip="Enviar arquivos" tag="105" image="upfile" id="92">
                         <connections>
@@ -205,6 +223,7 @@
                     <toolbarItem reference="224"/>
                     <toolbarItem reference="244"/>
                     <toolbarItem reference="GX1-4M-M8b"/>
+                    <toolbarItem reference="Fnt-Sz-T01"/>
                     <toolbarItem reference="92"/>
                     <toolbarItem reference="666"/>
                     <toolbarItem reference="78"/>

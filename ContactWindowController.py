@@ -5310,9 +5310,14 @@ class ContactWindowController(NSWindowController):
             account.conference.nickname = nickname
             account.save()
 
+        for_videoroom = False
         if type(media_type) in (tuple, list) and 'video' in media_type:
             # video over WebRTC (SylkServer video rooms): the room's audio and video go there, its chat over MSRP
-            media_type = self.joinVideoConference(account, target, media_type, video_room)
+            try:
+                media_type, for_videoroom = self.joinVideoConference(account, target, media_type, video_room)
+            except Exception:
+                log_gui_exception('joining the video room of %s' % target)
+                media_type = tuple(media for media in media_type if media != 'video') or 'chat'
 
         target = normalize_sip_uri_for_outgoing_session(target, account)
         if not target:
@@ -5320,6 +5325,11 @@ class ContactWindowController(NSWindowController):
 
         session_controller = self.sessionControllersManager.addControllerWithAccount_target_displayName_contact_(account, target, str(target), None)
         session_controller.nickname = nickname
+        if for_videoroom:
+            # the video room's chat: leaving the video room ends it too, and its window opens minimized
+            # (or stays as it is when in use): the video conference window is in front
+            session_controller.opened_for_videoroom = True
+            session_controller.open_chat_window_minimized = True
         # A room's chat rides the MSRP plane just like a one-to-one chat, but
         # it is not one -- chat.enable_msrp_chat must not be able to break
         # joining a conference. remote_focus is not known yet (it arrives with
@@ -5349,10 +5359,13 @@ class ContactWindowController(NSWindowController):
             if not session_controller.startSessionWithStreamOfType(media_type):
                 BlinkLogger().log_error("Failed to start session with stream of type %s" % media_type)
 
+        return session_controller
+
     @objc.python_method
     def joinVideoConference(self, account, target, media_type, video_room=None):
-        """Join the video room of target over WebRTC (audio muted when media_type has no audio); the media
-        left for the SIP session: chat only when the video room was joined, else the media without video."""
+        """Join the video room of target over WebRTC (audio muted when media_type has no audio); (the media
+        left for the SIP session, whether the video room was joined): chat only when it was, else the media
+        without video."""
         from WebRTCSupport import join_video_conference, room_video
         from util import call_later
         video_room = video_room or room_video(target, account)
@@ -5363,12 +5376,12 @@ class ContactWindowController(NSWindowController):
         if session is None:
             BlinkLogger().log_warning("[conference] %s: no video room can be joined, joining without video" % target)
             remaining = tuple(media for media in media_type if media != 'video')
-            return remaining if len(remaining) > 1 else (remaining[0] if remaining else 'chat')
+            return (remaining if len(remaining) > 1 else (remaining[0] if remaining else 'chat')), False
         BlinkLogger().log_info("[conference] %s: audio and video over WebRTC in %s, chat over MSRP" % (target, session.room))
         # the chat window opens behind the video conference window
         from VideoroomWindowController import window_for_session
         call_later(1.5, lambda: window_for_session(session).show() if session.state != 'terminated' else None)
-        return 'chat'
+        return 'chat', True
 
     @objc.python_method
     def focusSearchTextField(self):
@@ -5429,6 +5442,15 @@ class ContactWindowController(NSWindowController):
         if not account:
             BlinkLogger().log_info("Account %s is not active, using default account" % account)
             account = self.activeAccount()
+
+        if account is not BonjourAccount() and is_conference_uri(str(target_uri), account):
+            # a room is joined again as a conference, with the media it had (video over WebRTC when it had video)
+            media = [media for media in ('chat', 'audio', 'video') if media in streams]
+            if 'chat' not in media:
+                media.insert(0, 'chat')
+            BlinkLogger().log_info("Redialing the conference %s with %s" % (target_uri, ', '.join(media)))
+            self.joinConference(str(target_uri), tuple(media) if len(media) > 1 else media[0], nickname=account.conference.nickname)
+            return
 
         target_uri = normalize_sip_uri_for_outgoing_session(target_uri, account)
 

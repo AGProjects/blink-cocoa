@@ -56,6 +56,7 @@ from Foundation import (CFURLCreateStringByAddingPercentEscapes,
                         NSZeroPoint)
 
 import objc
+import re
 
 import os
 import time
@@ -1415,6 +1416,11 @@ class ChatWindowController(NSWindowController):
             transfer_handler.start()
 
     @objc.IBAction
+    def fontSegmentClicked_(self, sender):
+        """Toolbar A- A+: smaller or larger text in every open transcript, as the message pane's."""
+        self.stepTranscriptFontSize(-FONT_SIZE_STEP if sender.selectedSegment() == 0 else FONT_SIZE_STEP)
+
+    @objc.IBAction
     def muteClicked_(self, sender):
         room = self.selectedVideoRoom()
         if room is not None:
@@ -1473,6 +1479,11 @@ class ChatWindowController(NSWindowController):
         elif identifier == 'participants':
             item.setTarget_(self.drawer)
             item.setAction_('toggle:')
+        elif identifier == 'font_size':
+            control = item.view()
+            if control is not None:
+                control.setTarget_(self)
+                control.setAction_('fontSegmentClicked:')
         else:
             item.setTarget_(self)
             item.setAction_('userClickedToolbarButton:')
@@ -1490,6 +1501,31 @@ class ChatWindowController(NSWindowController):
         # drawer is already showing.
         drawer_visible = self.drawer.state() in (NSDrawerOpenState, NSDrawerOpeningState)
         self.setToolbarItemPresent('participants', not drawer_visible, after=(NSToolbarPrintItemIdentifier, 'history'))
+        # A- A+: the transcript's text size, as in the message pane header (even when a saved toolbar left it out)
+        self.setToolbarItemPresent('font_size', True, after=('video', 'record', 'hold', 'audio'))
+        # Video joins a conference's video room (WebRTC): there whenever the room can have one, even when the
+        # saved toolbar left it out
+        chat_stream = session.streamHandlerOfType("chat") if session is not None else None
+        try:
+            room_video = chat_stream is not None and (chat_stream.videoRoom() is not None or chat_stream.conferenceVideo() is not None)
+        except Exception:
+            log_gui_exception('the Video button of a conference')
+            room_video = False
+        if room_video:
+            self.setToolbarItemPresent('video', True, after=('record', 'hold', 'audio'))
+        # Audio: not while the room's video room is up, whose audio it is (only Chat and Video then);
+        # back when it ends
+        try:
+            in_video_room = chat_stream is not None and chat_stream.videoRoom() is not None
+        except Exception:
+            in_video_room = False
+        if in_video_room:
+            if 'audio' in [item.itemIdentifier() for item in self.toolbar.items()]:
+                self.audio_removed_for_videoroom = True
+                self.setToolbarItemPresent('audio', False)
+        elif getattr(self, 'audio_removed_for_videoroom', False):
+            self.audio_removed_for_videoroom = False
+            self.setToolbarItemPresent('audio', True, after=('NSToolbarSeparatorItem', 'connect_button'))
         # Everything is left aligned, except Radio PTT: alone at the right
         # edge, after a flexible space, and only when a conference
         # participant drives a radio and has audio in the conference.
@@ -1665,6 +1701,9 @@ class ChatWindowController(NSWindowController):
             if session.hasStreamOfType("video"):
                 video_stream = session.streamHandlerOfType("video")
 
+            # the room's video room: our audio and video are there, over WebRTC
+            video_room = self.selectedVideoRoom()
+
             if session.conference_info is None or (session.conference_info is not None and not session.conference_info.users):
                 active_media = []
 
@@ -1673,6 +1712,9 @@ class ChatWindowController(NSWindowController):
 
                 if session.hasStreamOfType("audio") and audio_stream.status == STREAM_CONNECTED:
                     active_media.append('audio' if not audio_stream.holdByLocal else 'audio-onhold')
+
+                if video_room is not None:
+                    active_media.extend(media for media in ('audio', 'video') if media not in active_media)
 
                 # Add ourselves
                 contact = BlinkMyselfConferenceContact(session.account)
@@ -1729,6 +1771,8 @@ class ChatWindowController(NSWindowController):
             elif session.conference_info is not None:
                 # Add conference participants if any
                 for user in session.conference_info.users:
+                    if re.search(r';app=[^;]*bridge', str(user.entity)):
+                        continue    # the room's audio bridge (sylk-janus-audio-bridge, the WebRTC side) is plumbing, not a participant
                     uri = sip_prefix_pattern.sub("", user.entity)
                     if uri == own_uri:
                         # Add ourselves
@@ -1755,6 +1799,9 @@ class ChatWindowController(NSWindowController):
                         active_media.append('audio')
                     elif audio_endpoints and user_on_hold:
                         active_media.append('audio-onhold')
+
+                    if uri == own_uri and video_room is not None:
+                        active_media.extend(media for media in ('audio', 'video') if media not in active_media)
 
                     # Radio PTT: an endpoint that drives a radio and has
                     # audio; the most active state of its radios wins.

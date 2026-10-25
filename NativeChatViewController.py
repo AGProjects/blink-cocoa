@@ -1706,6 +1706,17 @@ class NativeChatViewController(ChatViewController):
                                       avatar_initials(name)))
 
     @objc.python_method
+    def _isConferenceTranscript(self):
+        """Whether this transcript is a conference room's (MSRP to a focus, or its chat over the video room)."""
+        session = getattr(self.delegate, 'sessionController', None)
+        if session is None:
+            return False
+        try:
+            return bool(session.remote_focus or session.is_conference or getattr(self.delegate, 'videoroom_chat', None) is not None)
+        except Exception:
+            return False
+
+    @objc.python_method
     def _senderIdentity(self, direction, sender, recipient, is_private, icon_path):
         """Resolve display name, avatar name and icon ONCE per conversation side.
 
@@ -1723,6 +1734,19 @@ class NativeChatViewController(ChatViewController):
             return self._mangled_identity(
                 (self._sender_label(sender, recipient, is_private, direction),
                  self._avatar_name(sender), icon_path), direction)
+
+        if self._isConferenceTranscript():
+            # A conference: every message is labelled with its own author (display name or address), never
+            # with the room, and the avatar is that person's initials -- the room's picture belongs to none
+            # of them. Mine are labelled with my display name or address, not a nickname.
+            if direction == 'outgoing':
+                account = self.account
+                label = sender or (account.display_name or str(account.id) if account is not None else '')
+                icon = icon_path
+            else:
+                label = sender or ''
+                icon = None
+            return self._mangled_identity((label, label, icon), direction)
 
         # The cache holds the REAL identity. Mangling is applied on the way
         # out, so that turning the setting on or off can re-apply it to
@@ -3958,7 +3982,8 @@ class NativeChatViewController(ChatViewController):
         # them from cpim_from, and the same person shows up as a display name
         # on one row and a bare URI on the next, which restarted the run on
         # every message and put an avatar on all of them.
-        key = direction
+        # A conference has many speakers: there a run is one person's (by sender), not one direction's.
+        key = (direction, sender or '') if self._isConferenceTranscript() else direction
         grouped = (getattr(self, '_last_sender_key', _UNSET) == key)
         self._last_sender_key = key
         self.last_sender = sender

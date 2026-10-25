@@ -32,6 +32,7 @@ from Foundation import (NSBezierPath,
 import objc
 
 import random
+import re
 import time
 import datetime
 
@@ -47,8 +48,38 @@ from zope.interface import implementer
 from BlinkLogger import BlinkLogger
 from SIPManager import SIPManager
 
-from util import format_identity_to_string, format_size, run_in_gui_thread, is_anonymous
+from util import format_identity_to_string, format_size, run_in_gui_thread, is_anonymous, is_conference_uri
 from functools import reduce
+
+
+def _conference_inviter(session):
+    """(name, address, icon, room) of who invited us, for an INVITE from a conference focus that carries
+    Referred-By (RFC 3892: SylkServer's focus copies it from the REFER of the inviter), or None."""
+    referred_by = getattr(getattr(session, 'transfer_info', None), 'referred_by', None)
+    if not referred_by:
+        return None
+    try:
+        uri = session.remote_identity.uri
+        remote = '%s@%s' % (uri.user.decode(), uri.host.decode())
+    except Exception:
+        return None
+    if not (getattr(session, 'remote_focus', False) or is_conference_uri(remote, session.account)):
+        return None
+    text = referred_by.decode() if isinstance(referred_by, bytes) else str(referred_by)
+    match = re.search(r'<([^>]+)>', text)
+    address = (match.group(1) if match else text.split(';', 1)[0]).strip()
+    address = re.sub(r'^sips?:', '', address, flags=re.IGNORECASE).split(';', 1)[0]
+    if '@' not in address:
+        return None
+    contact = None
+    try:
+        contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(address)
+    except Exception:
+        pass
+    name = getattr(contact, 'name', None) if contact is not None else None
+    if not name and match is not None:
+        name = text[:match.start()].strip().strip('"') or None
+    return str(name or address), address, getattr(contact, 'icon', None), remote.partition('@')[0]
 
 
 ACCEPT = 0
@@ -248,6 +279,9 @@ class AlertPanel(NSObject, object):
         self.sessions[session] = view
         settings = SIPSimpleSettings()
         stream_type_list = list(set(stream.type for stream in streams))
+        # a conference focus calling because someone invited us (REFER): shown as that person inviting
+        # us to the room
+        inviter = None if is_update_proposal else _conference_inviter(session)
 
         if len(self.sessions) == 1:
             if "screen-sharing" in stream_type_list:
@@ -265,6 +299,8 @@ class AlertPanel(NSObject, object):
 
             from ContactMangler import mangled_text
             title = base_text % mangled_text(format_identity_to_string(session.remote_identity, check_contact=True, format='compact'))
+            if inviter is not None:
+                title = NSLocalizedString("Conference Invitation", "Window title")
             self.panel.setTitle_(title)
 
             if settings.sounds.enable_speech_synthesizer:
@@ -391,6 +427,8 @@ class AlertPanel(NSObject, object):
             only_button_title = ""
         else:
             subject, only_button_title, only_button_object = self.format_subject_for_incoming_invite(session, streams)
+        if inviter is not None:
+            subject = NSLocalizedString("invites you to conference %s", "Label") % inviter[3]
         subjectLabel.setStringValue_(subject)
         accepyOnlyButton.cell().setRepresentedObject_(NSNumber.numberWithInt_(only_button_object))
         frame = subjectLabel.frame()
@@ -422,6 +460,13 @@ class AlertPanel(NSObject, object):
 
         from ContactMangler import mangled_text
         label = mangled_text(format_identity_to_string(session.remote_identity, check_contact=True, format='full'))
+        if inviter is not None:
+            name, address, icon, room = inviter
+            label = mangled_text('%s <%s>' % (name, address) if name != address else address)
+            if icon is not None:
+                callerIcon.setImage_(icon)
+            view.setToolTip_(NSLocalizedString("Conference %s, invited by %s", "Tooltip") % (format_identity_to_string(session.remote_identity), address))
+            BlinkLogger().log_info("[conference] %s invites us to %s" % (address, format_identity_to_string(session.remote_identity)))
 
         fromLabel.setStringValue_("%s" % label)
         fromLabel.sizeToFit()

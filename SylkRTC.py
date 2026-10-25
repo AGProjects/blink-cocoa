@@ -67,6 +67,19 @@ CLOSE_NORMAL = 1000             # NSURLSessionWebSocketCloseCodeNormalClosure
 MESSAGE_TYPE_STRING = 1         # NSURLSessionWebSocketMessageTypeString
 
 
+# PyObjC 10 has no metadata for the WebSocket API (macOS 10.15): the signatures of its completion handlers
+# (blocks; the first argument of a block is the block) and of the delegate's challenge handler.
+_BLOCK_ERROR = {'callable': {'retval': {'type': b'v'}, 'arguments': {0: {'type': b'^v'}, 1: {'type': b'@'}}}}
+_BLOCK_MESSAGE_ERROR = {'callable': {'retval': {'type': b'v'}, 'arguments': {0: {'type': b'^v'}, 1: {'type': b'@'}, 2: {'type': b'@'}}}}
+_BLOCK_CHALLENGE = {'callable': {'retval': {'type': b'v'}, 'arguments': {0: {'type': b'^v'}, 1: {'type': b'q'}, 2: {'type': b'@'}}}}
+for _selector, _index, _block in ((b'receiveMessageWithCompletionHandler:', 2, _BLOCK_MESSAGE_ERROR),
+                                  (b'sendMessage:completionHandler:', 3, _BLOCK_ERROR),
+                                  (b'sendPingWithPongReceiveHandler:', 2, _BLOCK_ERROR)):
+    # on NSObject: the task is an instance of a private class that need not inherit from NSURLSessionWebSocketTask
+    objc.registerMetaDataForSelector(b'NSObject', _selector, {'arguments': {_index: dict(_block, type=b'@?')}})
+objc.registerMetaDataForSelector(b'NSObject', b'URLSession:didReceiveChallenge:completionHandler:', {'arguments': {4: dict(_BLOCK_CHALLENGE, type=b'@?')}})
+
+
 def _log_info(text):
     BlinkLogger().log_info(text)
 
@@ -128,6 +141,7 @@ class SylkRTCSocketDelegate(NSObject):
         if connection is not None and task == connection.task:
             connection._opened(str(protocol) if protocol else None)
 
+    @objc.typedSelector(b'v@:@@q@')
     def URLSession_webSocketTask_didCloseWithCode_reason_(self, session, task, code, reason):
         connection = self.connection
         if connection is not None and task == connection.task:

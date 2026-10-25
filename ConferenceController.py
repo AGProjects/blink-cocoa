@@ -53,6 +53,26 @@ from util import log_gui_exception, run_in_gui_thread, sip_prefix_pattern
 def random_room():
     return random.choice('123456789') + ''.join(random.choice('0123456789') for x in range(6))
 
+
+# The rooms joined from Join Conference, as typed, most recent first (the room field's drop-down)
+RECENT_ROOMS_KEY = 'ConferenceRecentRooms'
+MAX_RECENT_ROOMS = 20
+
+
+def recent_rooms():
+    from Foundation import NSUserDefaults
+    value = NSUserDefaults.standardUserDefaults().arrayForKey_(RECENT_ROOMS_KEY) or []
+    return [str(room) for room in value if room]
+
+
+def remember_room(room):
+    from Foundation import NSUserDefaults
+    room = (room or '').strip()
+    if not room:
+        return
+    rooms = [room] + [other for other in recent_rooms() if other.lower() != room.lower()]
+    NSUserDefaults.standardUserDefaults().setObject_forKey_(rooms[:MAX_RECENT_ROOMS], RECENT_ROOMS_KEY)
+
 default_conference_server = 'conference.sip2sip.info'
 
 
@@ -128,6 +148,8 @@ class JoinConferenceWindowController(NSObject):
 
         self.default_domain = default_domain
 
+        self._makeRoomComboBox()
+
         self.nickname = None
 
         if target is not None and "@" not in target and self.default_domain:
@@ -195,6 +217,37 @@ class JoinConferenceWindowController(NSObject):
             self.nickname_textfield.setStringValue_(account.conference.nickname or account.display_name)
         self.updatePopupButtons()
         self.lookupRoom()
+
+    @objc.python_method
+    def _makeRoomComboBox(self):
+        """The room field becomes a combo box of the rooms joined before (recent_rooms), in the same place:
+        a choice fills the field and is looked up as typing would be."""
+        from AppKit import NSComboBox, NSComboBoxSelectionDidChangeNotification
+        field = self.room
+        if field is None or isinstance(field, NSComboBox):
+            return
+        combo = NSComboBox.alloc().initWithFrame_(field.frame())
+        combo.setAutoresizingMask_(field.autoresizingMask())
+        combo.setFont_(field.font())
+        combo.setPlaceholderString_(field.placeholderString())
+        combo.setToolTip_(field.toolTip())
+        combo.setDelegate_(field.delegate())
+        combo.setTarget_(field.target())
+        combo.setAction_(field.action())
+        combo.setUsesDataSource_(False)
+        combo.setCompletes_(True)
+        combo.setNumberOfVisibleItems_(10)
+        combo.addItemsWithObjectValues_(recent_rooms())
+        combo.setNextKeyView_(field.nextKeyView())
+        superview = field.superview()
+        for view in superview.subviews():
+            if view.nextKeyView() is field:
+                view.setNextKeyView_(combo)
+        if self.window.initialFirstResponder() is field:
+            self.window.setInitialFirstResponder_(combo)
+        superview.replaceSubview_with_(field, combo)
+        self.room = combo
+        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, "roomTextDidChange:", NSComboBoxSelectionDidChangeNotification, combo)
 
     # Video over WebRTC (SylkServer video rooms, WebRTCSupport)
     #
@@ -659,6 +712,7 @@ class JoinConferenceWindowController(NSObject):
     @objc.IBAction
     def okClicked_(self, sender):
         if self.validateConference():
+            remember_room(self.room.stringValue())      # as typed, for the room field's drop-down
             NSApp.stopModalWithCode_(NSOKButton)
 
     @objc.IBAction

@@ -27,7 +27,22 @@ the process:
     by it: the frames of a feed's track come upright to their renderer.
 
 A feed's video is its participant's video_track (an RTCVideoTrack), which the
-video conference window renders.
+video conference window renders. Whether a feed carries video at all is read
+from its offer (an m=video that is rejected, inactive or recvonly has none):
+those participants are audio only, as the SIP callers are.
+
+While the screen is the video device (ScreenPointer.is_screen_device) it goes
+at 1280x720, 15 fps and 1800 kbit/s, the camera at 640x480, 24 fps and 1024
+kbit/s; the source is adapted in place when the device changes.
+
+The PeerConnections' statistics are read a few times a second: the audio level
+of our microphone and of every feed (who speaks), the video bytes received of
+every feed (the window's video loss check) and its codec. SIP callers speak by
+the room's conference-audio-levels.
+
+The room's controls are Sylk Mobile's (react-native-sylkrtc): the speakers
+(videoroom-configure, the configure event), raised hands, muting everyone or one
+participant, removing SIP participants, inviting (with invite-status back).
 
 Publishers of type sip are callers behind the room's audio bridge: they have no
 feed, they are shown by name only. The bridge itself (type bridge) carries their
@@ -48,6 +63,13 @@ Notifications (sender the VideoroomSession):
   VideoroomSessionParticipantsDidChange   -
   VideoroomSessionGotMessage              type, content, content_type, sender_uri, sender_name, timestamp
   VideoroomSessionDidDeliverMessage       message_id, delivered, code, reason
+  VideoroomSessionSpeakersDidChange       speakers (publisher ids, ours is the session id), originator (a name, or '')
+  VideoroomSessionRaisedHandsDidChange    raised_hands (publisher ids, ours is the session id)
+  VideoroomSessionWasMutedByOther         originator (a name)
+  VideoroomSessionGotInviteStatus         uri, state (progress, success, failed), code, reason
+  VideoroomSessionSpeakingDidChange       speaking (our own microphone, after mute)
+  VideoroomSessionParticipantSpeakingDidChange  participant
+  VideoroomSessionLocalVideoDidChange     track (our video track was replaced: the screen or the camera)
 """
 
 __all__ = ['VideoroomManager', 'VideoroomSession', 'Participant']
@@ -61,6 +83,7 @@ from hashlib import md5
 
 import objc
 
+from AppKit import NSApp
 from Foundation import NSObject, NSRunLoop, NSRunLoopCommonModes, NSTimer
 from Quartz import (CVPixelBufferGetBaseAddress,
                     CVPixelBufferGetBytesPerRow,
@@ -89,7 +112,14 @@ from util import call_in_gui_thread, run_in_gui_thread
 
 VIDEO_WIDTH, VIDEO_HEIGHT, VIDEO_FPS = 640, 480, 24     # as the SIP video calls (VGA, 24 fps)
 VIDEO_BITRATE = 1024 * 1000     # bit/s
+# the screen: 720p is the largest frame of H264 level 3.1 (42e01f), what the rooms negotiate
+SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_FPS = 1280, 720, 15
+SCREEN_BITRATE = 1800 * 1000    # bit/s
 PUBLISHER_TIMEOUT = 20          # seconds from join to established
+STATS_INTERVAL = 0.3            # seconds between reads of the PeerConnections' statistics
+SPEAKING_LEVEL = 10 ** (-38 / 20.0)     # audioLevel (0-1, linear) above which someone speaks: -38 dBFS
+SPEAKING_SIP_LEVEL = 25         # the same for the room's audio levels of SIP participants (the mixer's 0-255 scale)
+SPEAKING_HOLD = 0.6             # seconds speaking lasts after the last loud level, so a tile does not flicker between words
 
 # libwebrtc's enums (RTCPeerConnection.h, RTCConfiguration.h, RTCRtpTransceiver.h, ...)
 SDP_OFFER, SDP_ANSWER = 0, 2                            # RTCSdpType
@@ -102,17 +132,38 @@ ICE_GATHERING_COMPLETE = 2                              # RTCIceGatheringState
 ICE_STATES = ['new', 'checking', 'connected', 'completed', 'failed', 'disconnected', 'closed']
 ICE_FAILED = 4
 ROTATION_0 = 0                                          # RTCVideoRotation
+DEGRADATION_MAINTAIN_RESOLUTION = 2                     # RTCDegradationPreference
 
 
 def _log(text, level='info'):
     getattr(BlinkLogger(), 'log_%s' % level)(text)
 
 
-def _timer(interval, function):
-    """A one-shot timer on the main run loop calling function(); invalidate() it to cancel."""
-    timer = NSTimer.timerWithTimeInterval_repeats_block_(interval, False, lambda timer: function())
+def _timer(interval, function, repeats=False):
+    """A timer on the main run loop calling function(), once or repeatedly; invalidate() it to cancel."""
+    timer = NSTimer.timerWithTimeInterval_repeats_block_(interval, repeats, lambda timer: function())
     NSRunLoop.mainRunLoop().addTimer_forMode_(timer, NSRunLoopCommonModes)
     return timer
+
+
+def _contact(uri):
+    """The contact (not a passer-by) that has uri in the contacts list, or None."""
+    if not uri or '@' not in uri:
+        return None
+    try:
+        return NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(uri)
+    except Exception:
+        return None
+
+
+def sending_screen_device():
+    """Whether Blink's video device is the screen ("My screen", ScreenPointer)."""
+    from sipsimple.application import SIPApplication
+    try:
+        from ScreenPointer import is_screen_device
+        return bool(is_screen_device(SIPApplication.video_device.real_name))
+    except Exception:
+        return False
 
 
 def _error_text(error):
@@ -139,6 +190,8 @@ def _register_block_metadata():
                             (b'setRemoteDescription:completionHandler:', error_only),
                             (b'addIceCandidate:completionHandler:', error_only)):
         objc.registerMetaDataForSelector(b'RTCPeerConnection', selector, {'arguments': {3: block}})
+    # statisticsWithCompletionHandler: has the block as its only argument
+    objc.registerMetaDataForSelector(b'RTCPeerConnection', b'statisticsWithCompletionHandler:', {'arguments': {2: error_only}})
 
 
 def peer_connection_factory():
@@ -180,6 +233,33 @@ def _media_summary(sdp):
             codec = rtpmap.group(1) if rtpmap else payloads[0]
         parts.append('%s %s' % (media, codec) if codec else media)
     return ', '.join(parts) or 'no media'
+
+
+def _offers_video(sdp):
+    """Whether a feed's offer carries video: an m=video that is not rejected nor inactive."""
+    for match in re.finditer(r'^m=video (\d+) [^\r\n]*', sdp, re.M):
+        section_end = re.search(r'^m=', sdp[match.end():], re.M)
+        section = sdp[match.end():match.end() + section_end.start()] if section_end else sdp[match.end():]
+        if match.group(1) == '0' and 'a=bundle-only' not in section:
+            continue
+        if re.search(r'^a=(inactive|recvonly)\s*$', section, re.M):
+            continue
+        return True
+    return False
+
+
+def _stats_entries(report):
+    """(type, id, values) of every statistic of an RTCStatisticsReport, values a dict."""
+    entries = []
+    try:
+        statistics = report.statistics()
+        for key in statistics:
+            statistic = statistics[key]
+            values = statistic.values()
+            entries.append((str(statistic.type()), str(statistic.id()), {str(name): values[name] for name in values}))
+    except Exception:
+        pass
+    return entries
 
 
 def _chosen_video_codec(sdp):
@@ -230,6 +310,7 @@ class VideoroomPeerConnectionDelegate(NSObject):
             self.label = label
         return self
 
+    @objc.python_method
     def _hand(self, name, *args):
         session = self.session
         if session is not None:
@@ -288,6 +369,16 @@ class Participant(object):
         self.display_name = publisher.get('display_name') or ''
         self.type = publisher.get('type') or 'webrtc'
         self.muted = bool(publisher.get('muted'))
+        self._contact = None        # looked up once, on first use
+        self._contact_looked_up = False
+        # whether the feed carries video: None until its offer comes; a SIP caller never has any
+        self.video = False if self.type == 'sip' else None
+        self.video_bytes = 0        # video bytes received (statistics), for the bitrate shown on the tile
+        self.video_frames = None    # video frames decoded (statistics), whether video flows; None until known
+        self.video_size = None      # (width, height) of the frames received (statistics)
+        self.video_codec = None     # the feed's video codec, for the tile's statistics
+        self.speaking = False
+        self._speaking_until = 0.0
         self.feed = None            # feed id once attached
         self.state = None           # None, attaching, connecting, established, failed
         self.peer_connection = None
@@ -299,12 +390,38 @@ class Participant(object):
         return '<Participant %s %s %s>' % (self.uri, self.type, self.state)
 
     @property
+    def contact(self):
+        """The contact with this address in our contacts list, or None."""
+        if not self._contact_looked_up:
+            self._contact_looked_up = True
+            self._contact = _contact(self.uri)
+        return self._contact
+
+    @property
     def name(self):
-        return self.display_name or self.uri
+        """The name of the contact with this address in our contacts, else the one the room gives, else the address."""
+        name = getattr(self.contact, 'name', None)
+        return str(name) if name else (self.display_name or self.uri)
+
+    @property
+    def icon(self):
+        return getattr(self.contact, 'icon', None)
 
     @property
     def has_video(self):
         return self.video_track is not None
+
+    def set_level(self, loud):
+        """loud is whether this level counts as speech; speaking holds for SPEAKING_HOLD after the
+        last loud one. Whether speaking changed."""
+        now = time.monotonic()
+        if loud:
+            self._speaking_until = now + SPEAKING_HOLD
+        speaking = now < self._speaking_until
+        if speaking == self.speaking:
+            return False
+        self.speaking = speaking
+        return True
 
     @property
     def subscribable(self):
@@ -368,6 +485,17 @@ class VideoroomSession(object):
         self._trickle_pending = {}
         self._join_sent = False
         self._invitees = []         # to invite once the room is joined
+        self.video_paused = False   # the feeds' video is not wanted (the window cannot be seen): audio only
+        self.speakers = []          # publisher ids the room shows large, for everyone (videoroom-configure); [] is the grid
+        self.raised_hands = []      # publisher ids with a raised hand, in the order raised
+        self.speaking = False       # our own microphone (after mute)
+        self._speaking_until = 0.0
+        self._muting_everyone = False   # we asked: the room's mute-audio is not for us
+        self._sending_screen = None     # the video profile in use: the screen's or the camera's
+        self._stats_timer = None
+        self._stats_pending = set()     # labels whose statistics are being collected
+        self._stats_failed = False
+        self._levels_at = None          # when the room last sent its audio levels (SIP participants)
 
     def __repr__(self):
         return '<VideoroomSession %s %s>' % (self.room, self.state)
@@ -445,6 +573,9 @@ class VideoroomSession(object):
         if self._establish_timer is not None:
             self._establish_timer.invalidate()
             self._establish_timer = None
+        if self._stats_timer is not None:
+            self._stats_timer.invalidate()
+            self._stats_timer = None
         self._stop_camera()
         for participant in list(self.participants.values()):
             self._close_feed(participant)
@@ -505,8 +636,8 @@ class VideoroomSession(object):
         self.peer_connection.addTransceiverWithTrack_init_(self._audio_track, init)
 
         # camera: the SDK's frames go into the source, which scales them to what the room gets
-        self._video_source = factory.videoSource()
-        self._video_source.adaptOutputFormatToWidth_height_fps_(VIDEO_WIDTH, VIDEO_HEIGHT, VIDEO_FPS)
+        self._video_source = self._make_video_source(sending_screen_device())
+        self._apply_video_profile()
         self._capturer = _cls('RTCVideoCapturer').alloc().initWithDelegate_(self._video_source)
         self.local_video_track = factory.videoTrackWithSource_trackId_(self._video_source, 'video-%s' % self.id)
         self.local_video_track.setIsEnabled_(not self.video_muted)
@@ -537,8 +668,18 @@ class VideoroomSession(object):
         self.peer_connection.setLocalDescription_completionHandler_(description, local_set)
         self.log('sending the offer (%s)' % _media_summary(sdp))
         _log('[videoroom] %s: offer\n%s' % (self.room, sdp), 'debug')
-        self.connection.request(dict(sylkrtc='videoroom-join', account=self.identity, session=self.id, uri=self.room,
-                                     sdp=sdp, audio=True, video=True), self._join_answered)
+        request = dict(sylkrtc='videoroom-join', account=self.identity, session=self.id, uri=self.room, sdp=sdp, audio=True, video=True)
+        if not self._guest:
+            # our MSRP chat leg to the room carries the same +sip.instance (SessionController): the gateway
+            # then knows that endpoint of the focus is this device, not another participant
+            try:
+                from sipsimple.configuration.settings import SIPSimpleSettings
+                instance_id = SIPSimpleSettings().instance_id
+            except Exception:
+                instance_id = None
+            if instance_id:
+                request['sip_instance'] = str(instance_id)
+        self.connection.request(request, self._join_answered)
         self._join_sent = True
         self._flush_trickle(self.id)
 
@@ -572,15 +713,66 @@ class VideoroomSession(object):
     def _limit_video_bitrate(self):
         if self._video_transceiver is None:
             return
+        bitrate, fps = (SCREEN_BITRATE, SCREEN_FPS) if self._sending_screen else (VIDEO_BITRATE, VIDEO_FPS)
         try:
             sender = self._video_transceiver.sender()
             parameters = sender.parameters()
             for encoding in parameters.encodings():
-                encoding.setMaxBitrateBps_(VIDEO_BITRATE)
-                encoding.setMaxFramerate_(VIDEO_FPS)
+                encoding.setMaxBitrateBps_(bitrate)
+                encoding.setMaxFramerate_(fps)
+            try:
+                # the screen keeps its resolution (readable text) and gives up frames instead; a camera the default
+                parameters.setDegradationPreference_(DEGRADATION_MAINTAIN_RESOLUTION if self._sending_screen else None)
+            except Exception:
+                pass
             sender.setParameters_(parameters)
         except Exception as e:
             self.log('cannot limit the video bitrate: %s' % e, 'debug')
+
+    @staticmethod
+    def _make_video_source(screen):
+        """A video source; for the screen a screencast one (libwebrtc treats it as screen content)."""
+        factory = peer_connection_factory()
+        if screen and factory.respondsToSelector_(b'videoSourceForScreenCast:'):
+            return factory.videoSourceForScreenCast_(True)
+        return factory.videoSource()
+
+    def _replace_video_source(self, screen):
+        """The video device went to or from the screen: a new source of the right kind, with its track
+        on the same sender (no renegotiation)."""
+        if self._video_transceiver is None or self.peer_connection is None:
+            return
+        factory = peer_connection_factory()
+        source = self._make_video_source(screen)
+        capturer = _cls('RTCVideoCapturer').alloc().initWithDelegate_(source)
+        self._track_serial = getattr(self, '_track_serial', 0) + 1
+        track = factory.videoTrackWithSource_trackId_(source, 'video-%s-%d' % (self.id, self._track_serial))
+        track.setIsEnabled_(not self.video_muted)
+        try:
+            self._video_transceiver.sender().setTrack_(track)
+        except Exception as e:
+            self.log('cannot change the video source: %s' % e, 'warning')
+            return
+        self._capturer, self._video_source, self.local_video_track = capturer, source, track
+        self._post('VideoroomSessionLocalVideoDidChange', track=track)
+
+    def _apply_video_profile(self):
+        """The screen goes at 720p, 15 fps and a higher bitrate, the camera at VGA, 24 fps (adapted in place)."""
+        if self._video_source is None:
+            return
+        screen = sending_screen_device()
+        if screen == self._sending_screen:
+            return
+        first = self._sending_screen is None
+        self._sending_screen = screen
+        width, height, fps, bitrate = (SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_FPS, SCREEN_BITRATE) if screen else (VIDEO_WIDTH, VIDEO_HEIGHT, VIDEO_FPS, VIDEO_BITRATE)
+        if not first:
+            self._replace_video_source(screen)
+        self._video_source.adaptOutputFormatToWidth_height_fps_(width, height, fps)
+        if not first:
+            self._limit_video_bitrate()
+        if screen or not first:
+            self.log('sending the %s at %dx%d, %d fps, %d kbit/s' % ('screen' if screen else 'camera', width, height, fps, bitrate // 1000))
 
     # The camera
 
@@ -612,8 +804,11 @@ class VideoroomSession(object):
                 pass
 
     def camera_changed(self):
-        """The camera device was switched in Blink: read the new one."""
-        if self.peer_connection is None or self.video_muted:
+        """The camera device was switched in Blink (the screen included): read the new one."""
+        if self.peer_connection is None:
+            return
+        self._apply_video_profile()
+        if self.video_muted:
             return
         self._stop_camera()
         self._attach_camera()
@@ -670,6 +865,79 @@ class VideoroomSession(object):
 
     # Controls
 
+    def set_speakers(self, ids):
+        """Make these publishers (ours is self.id; none, one or two) the room's speakers: shown large to
+        everyone, as Sylk desktop's and Sylk Mobile's speaker selection does. The room's configure event
+        changes the layout, for us too."""
+        ids = [str(id) for id in ids][:2]
+        if self.connection is None or self.state != 'established':
+            return
+        self.log('setting the speakers to %s' % (', '.join(self.speaker_name(id) for id in ids) or 'nobody (grid)'))
+
+        def configured(error):
+            if error is not None:
+                self.log('setting the speakers failed: %s' % error, 'warning')
+
+        self.connection.request(dict(sylkrtc='videoroom-configure', session=self.id, active_participants=ids), configured)
+
+    # Moderation, as Sylk Mobile does it (react-native-sylkrtc Conference)
+
+    def toggle_hand(self, session_id=None):
+        """Raise or lower our hand; with session_id, lower someone else's."""
+        if self.connection is None or self.state != 'established':
+            return
+        request = dict(sylkrtc='videoroom-toggle-hand', session=self.id)
+        if session_id is not None:
+            request['session_id'] = session_id
+            self.log('lowering the hand of %s' % self.speaker_name(session_id))
+        else:
+            self.log('lowering our hand' if self.id in self.raised_hands else 'raising our hand')
+        self.connection.request(request)
+
+    def mute_everyone(self):
+        """Ask everyone in the room to mute their microphone (not us)."""
+        if self.connection is None or self.state != 'established':
+            return
+        self.log('muting everyone')
+        self._muting_everyone = True
+        _timer(3.0, lambda: setattr(self, '_muting_everyone', False))
+        self.connection.request(dict(sylkrtc='videoroom-mute-audio-participants', session=self.id))
+
+    def mute_participant(self, participant, muted=True):
+        """Mute or unmute one participant: a WebRTC one is asked (mute-request), a SIP one is muted at the mix."""
+        if self.connection is None or self.state != 'established':
+            return
+        self.log('%s %s' % ('muting' if muted else 'unmuting', participant.uri))
+        self.connection.request(dict(sylkrtc='videoroom-mute-participant', session=self.id, participant_id=participant.id, muted=bool(muted)))
+
+    def remove_participants(self, uris):
+        """Remove SIP participants from the room (the server asks the focus to end their sessions)."""
+        uris = [uri if uri.startswith('sip:') else 'sip:' + uri for uri in uris]
+        if not uris or self.connection is None or self.state != 'established':
+            return
+        self.log('removing %s' % ', '.join(uris))
+        self.connection.request(dict(sylkrtc='videoroom-remove', session=self.id, participants=uris))
+
+    def speaker_name(self, id):
+        if id == self.id:
+            return 'you'
+        participant = self.participants.get(id)
+        return participant.name if participant is not None else str(id)
+
+    def refresh_video(self, participant):
+        """Pause and resume a feed's video, as Sylk Mobile does on a stall: Janus then sends a new keyframe."""
+        feed = participant.feed
+        if self.connection is None or feed not in self.feeds:
+            return
+        self.log('%s video stalled, asking for it again' % participant.uri)
+
+        def resume():
+            if self.connection is not None and participant.feed == feed and not self.video_paused:
+                self.connection.request(dict(sylkrtc='videoroom-session-update', session=feed, options=dict(video=True)))
+
+        self.connection.request(dict(sylkrtc='videoroom-session-update', session=feed, options=dict(video=False)))
+        _timer(0.3, resume)
+
     def invite(self, uris):
         """Invite people to the room (the server calls them)."""
         uris = [uri.replace('sip:', '', 1) for uri in uris]
@@ -685,6 +953,89 @@ class VideoroomSession(object):
             self._audio_track.setIsEnabled_(not self.audio_muted)
         self.log('microphone muted' if self.audio_muted else 'microphone unmuted')
         self._post('VideoroomSessionAudioMutedDidChange', muted=self.audio_muted, room=self.room)
+        if self.audio_muted:
+            self._own_level(False)
+
+    # Statistics: who speaks (audio levels), how much video comes (the window's video loss check)
+
+    def _start_stats(self):
+        if self._stats_timer is None and not self._stats_failed:
+            self._stats_timer = _timer(STATS_INTERVAL, self._poll_stats, repeats=True)
+
+    def _poll_stats(self):
+        if self.state != 'established' or self._stats_failed:
+            return
+        if self.peer_connection is not None:
+            self._request_stats(self.id, self.peer_connection)
+        for participant in list(self.feeds.values()):
+            if participant.peer_connection is not None:
+                self._request_stats(participant.feed, participant.peer_connection)
+        # SIP callers speak by the room's audio levels: when they stop coming, nobody of them speaks
+        if self._levels_at is not None and time.monotonic() - self._levels_at > 2.0:
+            self._levels_at = None
+            for participant in list(self.participants.values()):
+                if participant.type == 'sip' and participant.speaking:
+                    participant._speaking_until = 0.0
+                    if participant.set_level(False):
+                        self._post('VideoroomSessionParticipantSpeakingDidChange', participant=participant)
+        if self._speaking_until and time.monotonic() >= self._speaking_until:
+            self._own_level(False)
+
+    def _request_stats(self, label, peer_connection):
+        if label in self._stats_pending:
+            return
+        self._stats_pending.add(label)
+
+        def collected(report):
+            entries = _stats_entries(report)
+            call_in_gui_thread(self._stats_collected, label, entries)
+
+        try:
+            peer_connection.statisticsWithCompletionHandler_(collected)
+        except Exception as e:
+            self._stats_pending.discard(label)
+            self._stats_failed = True
+            self.log('cannot read the media statistics: %s (no speaking highlight, no video loss check)' % e, 'warning')
+
+    def _stats_collected(self, label, entries):
+        self._stats_pending.discard(label)
+        if self.state == 'terminated':
+            return
+        if label == self.id:
+            levels = [values.get('audioLevel') for kind, id, values in entries if kind == 'media-source' and values.get('kind') == 'audio']
+            levels = [float(level) for level in levels if level is not None]
+            if levels:
+                self._own_level(max(levels) > SPEAKING_LEVEL and not self.audio_muted)
+            return
+        participant = self.feeds.get(label)
+        if participant is None:
+            return
+        codecs = dict((id, values) for kind, id, values in entries if kind == 'codec')
+        for kind, id, values in entries:
+            if kind != 'inbound-rtp':
+                continue
+            media = values.get('kind') or values.get('mediaType')
+            if media == 'audio' and values.get('audioLevel') is not None:
+                if participant.set_level(float(values['audioLevel']) > SPEAKING_LEVEL):
+                    self._post('VideoroomSessionParticipantSpeakingDidChange', participant=participant)
+            elif media == 'video':
+                participant.video_bytes = int(values.get('bytesReceived') or 0)
+                if values.get('framesDecoded') is not None:
+                    participant.video_frames = int(values['framesDecoded'])
+                if values.get('frameWidth') and values.get('frameHeight'):
+                    participant.video_size = (int(values['frameWidth']), int(values['frameHeight']))
+                codec = codecs.get(str(values.get('codecId')))
+                if codec is not None and codec.get('mimeType'):
+                    participant.video_codec = str(codec['mimeType']).rpartition('/')[2].upper()
+
+    def _own_level(self, loud):
+        now = time.monotonic()
+        if loud:
+            self._speaking_until = now + SPEAKING_HOLD
+        speaking = now < self._speaking_until
+        if speaking != self.speaking:
+            self.speaking = speaking
+            self._post('VideoroomSessionSpeakingDidChange', speaking=speaking)
 
     def set_video_muted(self, muted):
         self.video_muted = bool(muted)
@@ -696,6 +1047,30 @@ class VideoroomSession(object):
             self._attach_camera()
         self.log('camera off' if self.video_muted else 'camera on')
         self._post('VideoroomSessionVideoMutedDidChange', muted=self.video_muted, room=self.room)
+
+    def set_video_paused(self, paused):
+        """Stop or start receiving the video of every feed (the server stops sending it; audio goes on), as
+        Sylk Mobile's pauseVideo/resumeVideo: for when the window showing it cannot be seen."""
+        paused = bool(paused)
+        if paused == self.video_paused:
+            return
+        self.video_paused = paused
+        if self.connection is None or self.state == 'terminated':
+            return
+        feeds = [participant for participant in self.feeds.values() if participant.peer_connection is not None]
+        self.log('%s the video of %d participant(s): the window is %s' % ('pausing' if paused else 'resuming', len(feeds), 'not visible' if paused else 'visible'))
+        for participant in feeds:
+            self._update_feed(participant, video=not paused)
+
+    def _update_feed(self, participant, video):
+        if self.connection is None or participant.feed is None:
+            return
+
+        def answered(error, participant=participant):
+            if error is not None:
+                self.log('cannot %s the video of %s: %s' % ('resume' if video else 'pause', participant.uri, error), 'warning')
+
+        self.connection.request(dict(sylkrtc='videoroom-session-update', session=participant.feed, options=dict(video=bool(video))), answered)
 
     # ICE (from the delegates, in the GUI thread)
 
@@ -774,6 +1149,7 @@ class VideoroomSession(object):
                 self._establish_timer = None
             self.log('media established')
             self._set_state('established')
+            self._start_stats()
             invitees, self._invitees = self._invitees, []
             if invitees:
                 self.invite(invitees)
@@ -796,6 +1172,72 @@ class VideoroomSession(object):
             self._remove_feed(participant)
             self._post('VideoroomSessionParticipantDidLeave', participant=participant)
         self._post('VideoroomSessionParticipantsDidChange')
+
+    def _EH_configure(self, message):
+        ids = [str(id) for id in message.get('active_participants') or []]
+        originator = message.get('originator')
+        if originator == 'videoroom':
+            who = 'the room'
+        elif originator:
+            who = self.speaker_name(str(originator))
+        else:
+            who = ''
+        self.speakers = ids
+        self.log('speakers set to %s%s' % (', '.join(self.speaker_name(id) for id in ids) or 'nobody (grid)', ' by %s' % who if who else ''))
+        self._post('VideoroomSessionSpeakersDidChange', speakers=list(ids), originator=who)
+
+    def _EH_invite_status(self, message):
+        # the outcome of the REFER the server sent the focus for an invite of ours
+        uri = str(message.get('participant') or '').replace('sip:', '', 1)
+        state = str(message.get('state') or '')
+        try:
+            code = int(message.get('code') or 0)
+        except (TypeError, ValueError):
+            code = 0
+        reason = str(message.get('reason') or '')
+        self.log('invite of %s: %s%s' % (uri, state, (' (%d %s)' % (code, reason)).rstrip() if code else ''), 'warning' if state == 'failed' else 'info')
+        self._post('VideoroomSessionGotInviteStatus', uri=uri, state=state, code=code, reason=reason)
+
+    def _EH_raised_hands(self, message):
+        ids = [str(id) for id in message.get('raised_hands') or []]
+        if ids == self.raised_hands:
+            return
+        for id in ids:
+            if id not in self.raised_hands:
+                self.log('%s raised %s hand' % (self.speaker_name(id), 'our' if id == self.id else 'a'))
+        self.raised_hands = ids
+        self._post('VideoroomSessionRaisedHandsDidChange', raised_hands=list(ids))
+
+    def _EH_mute_audio(self, message):
+        originator = str(message.get('originator') or '')
+        if self._muting_everyone or originator == self.id:
+            self._muting_everyone = False
+            return      # our own mute everyone
+        who = self.speaker_name(originator) if originator else 'someone'
+        self.log('%s muted everyone' % who)
+        if not self.audio_muted:
+            self.set_audio_muted(True)
+            self._post('VideoroomSessionWasMutedByOther', originator=who)
+
+    def _EH_conference_audio_levels(self, message):
+        # SIP participants: the mixer's levels, rx being what comes from them (their speech)
+        levels = message.get('levels') or []
+        self._levels_at = time.monotonic()
+        if isinstance(levels, dict):
+            levels = [dict(entry, participant_id=pid) for pid, entry in levels.items()]
+        for entry in levels:
+            if not isinstance(entry, dict):
+                continue
+            participant = self.participants.get(str(entry.get('participant_id') or ''))
+            if participant is None:
+                continue
+            level = entry.get('rx_peak') if entry.get('rx_peak') is not None else entry.get('rx', 0)
+            try:
+                loud = float(level) > SPEAKING_SIP_LEVEL
+            except (TypeError, ValueError):
+                continue
+            if participant.set_level(loud):
+                self._post('VideoroomSessionParticipantSpeakingDidChange', participant=participant)
 
     def _EH_publisher_updated(self, message):
         participant = self.participants.get(message.get('publisher'))
@@ -882,6 +1324,7 @@ class VideoroomSession(object):
 
     def _answer_feed(self, participant, sdp):
         participant.state = 'connecting'
+        participant.video = _offers_video(sdp)      # without video: audio only, in the carousel
         self._post('VideoroomSessionParticipantDidChange', participant=participant)
         self.log('offer from %s: %s' % (participant.uri, _media_summary(sdp)))
         _log('[videoroom] %s: offer from %s\n%s' % (self.room, participant.uri, sdp), 'debug')
@@ -931,8 +1374,12 @@ class VideoroomSession(object):
                 call_in_gui_thread(self.log, 'cannot use our answer to %s: %s' % (participant.uri, _error_text(error)), 'error')
 
         participant.peer_connection.setLocalDescription_completionHandler_(description, local_set)
-        self.connection.request(dict(sylkrtc='videoroom-feed-answer', session=self.id, feed=feed, sdp=str(description.sdp())))
+        sdp = str(description.sdp())
+        participant.video_codec = participant.video_codec or _chosen_video_codec(sdp)
+        self.connection.request(dict(sylkrtc='videoroom-feed-answer', session=self.id, feed=feed, sdp=sdp))
         self._flush_trickle(feed)
+        if self.video_paused:
+            self._update_feed(participant, video=False)
         self._post('VideoroomSessionParticipantDidChange', participant=participant)
 
     def _close_feed(self, participant):

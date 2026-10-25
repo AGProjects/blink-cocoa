@@ -377,9 +377,9 @@ class Ringer(object):
         else:
             stream_types = [s.type for s in streams]
             has_audio = 'audio' in stream_types
-        # play hangup tone
+        # play hangup tone, unless the audio moved to the room's video room (WebRTCSupport.drop_sip_audio)
 
-        if has_audio:
+        if has_audio and not getattr(session, 'blink_silent_media_end', False):
             self.play_hangup()
             
         self.handle_session_end(notification.sender)
@@ -424,6 +424,11 @@ class Ringer(object):
 
     def _NH_SIPSessionDidRenegotiateStreams(self, notification):
         data = notification.data
+        removed_audio = any(s.type == 'audio' for s in data.removed_streams)
+        if getattr(notification.sender, 'blink_silent_media_end', False):
+            if removed_audio:
+                notification.sender.blink_silent_media_end = False     # the audio moved to the video room: no hangup tone
+            return
         for stream in (s for s in data.removed_streams if s.type=='audio'):
             self.play_hangup()
 

@@ -149,6 +149,7 @@ class ContactCell(NSTextFieldCell):
     audioHoldIcon = NSImage.imageNamed_("paused_16")
     chatIcon = NSImage.imageNamed_("pencil_16")
     screenIcon = NSImage.imageNamed_("display_16")
+    videoIcon = NSImage.imageNamed_("video")
     locationIcon = NSImage.imageNamed_("location")
     nightIcon = NSImage.imageNamed_("moon")
 
@@ -496,6 +497,11 @@ class ContactCell(NSTextFieldCell):
         elif 'audio' in self.contact.active_media:
             left = left - padding
             self.drawIcon(self.audioIcon, left, self.frame.origin.y +14, 16, 16)
+
+        if 'video' in self.contact.active_media and self.videoIcon is not None:
+            # our own row while the room's video room is up (its audio and video over WebRTC)
+            left = left - padding - 2
+            self.drawIcon(self.videoIcon, left, self.frame.origin.y +14, 16, 16)
 
         if 'message' in self.contact.active_media:
             left = left - padding
