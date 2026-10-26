@@ -31,6 +31,13 @@ the grid and the thumbnail. Camera and More are menus. Raising hands and muting
 are there with three people or more, speaker selection with four or more
 (distinct addresses, us included); Stop sharing while the screen is shared.
 
+Our extra videos (ExtraVideo.py: a second camera, with a gateway that takes
+several videos per participant) are tiles of their own, drawn from their own
+track: More -> Add video, and on their tile Send at and Stop this video. While
+the screen is shared with nobody chosen as speaker, the speakers follow our
+videos: the screen alone, or the screen and our one other video; with more
+than two videos of ours, nobody.
+
 The title is "Room <name> · <n> participants · mm:ss" once connected; a status
 pill says what is happening while connecting, why the room ended, and short
 notes ("X raised a hand", "Muted by X", "Calling X…"). The window is listed in
@@ -150,7 +157,8 @@ SESSION_NOTIFICATIONS = ('VideoroomSessionDidChangeState', 'VideoroomSessionAudi
                          'VideoroomSessionParticipantDidJoin', 'VideoroomSessionParticipantDidLeave', 'VideoroomSessionParticipantDidChange',
                          'VideoroomSessionParticipantsDidChange', 'VideoroomSessionSpeakersDidChange', 'VideoroomSessionRaisedHandsDidChange',
                          'VideoroomSessionWasMutedByOther', 'VideoroomSessionGotInviteStatus', 'VideoroomSessionSpeakingDidChange',
-                         'VideoroomSessionParticipantSpeakingDidChange', 'VideoroomSessionLocalVideoDidChange')
+                         'VideoroomSessionParticipantSpeakingDidChange', 'VideoroomSessionLocalVideoDidChange',
+                         'VideoroomSessionExtraVideoDidChangeState')
 
 _windows = {}       # session -> VideoroomWindowController
 
@@ -644,8 +652,8 @@ class VideoroomTileView(NSView):
     def check_video(self, now):
         """Sample the video, once a second, and degrade, demote or recover the tile."""
         participant = self.participant
-        if participant is None:
-            return
+        if participant is None or participant.extra_video is not None:
+            return      # ours: its picture comes from here, not from a feed
         if participant.video is not True or participant.state != 'established':
             self.since = self._sample = self.last_bytes = None
             self.bitrate = 0.0
@@ -736,7 +744,11 @@ class VideoroomTileView(NSView):
         if self.speaking() and not (self.picked or self.replaceable):
             _draw_speaking(rect, compact)
         participant = self.participant
-        if participant is not None and not compact and self.hovering and not self.replaceable and participant.video is True:
+        if participant is not None and participant.extra_video is not None:
+            if not compact and self.hovering and not self.replaceable:
+                extra = participant.extra_video
+                _draw_stats(rect, '%dx%d · %d kbit/s' % (extra.size + (extra.bitrate,)))
+        elif participant is not None and not compact and self.hovering and not self.replaceable and participant.video is True:
             parts = [participant.video_codec or '', '%d kbit/s' % round(self.bitrate / 1000) if self._sample is not None else '',
                      _t("weak video") if self.degraded is not None else '']
             text = ' · '.join(part for part in parts if part)
@@ -1242,7 +1254,8 @@ class VideoroomWindowController(NSObject):
         self.drag = None            # the offset of the press in the floating thumbnail, while dragging it
         self.last_hands = []
         self.invite_names = {}
-        self.speaker_for_screen = False     # we made ourselves the speaker while sharing the screen
+        self.speaker_for_screen = False     # we made our videos the speakers while sharing the screen
+        self.auto_issued = []               # the speakers we set for it (the room's answer to one may come after the next)
         self.sharing_screen = _sending_screen()
         self.device_before_screen = None
         self.minimized_for_screen = False
@@ -1853,13 +1866,28 @@ class VideoroomWindowController(NSObject):
                 menu.addItem_(NSMenuItem.separatorItem())
                 self._item(menu, _t("Lower hand") if tile.hand else _t("Raise hand"), lambda: session.toggle_hand(), enabled=established)
             can_speak = True
+        elif tile.participant.extra_video is not None:
+            # one of our extra videos: what it is sent at, stopping it
+            participant = tile.participant
+            extra = participant.extra_video
+            id = participant.id
+            self._item(menu, participant.name)
+            menu.addItem_(NSMenuItem.separatorItem())
+            from ExtraVideo import RESOLUTIONS
+            sizes = self._menu()
+            for name, width, height, bitrate in RESOLUTIONS:
+                self._item(sizes, _t("%dx%d, about %d kbit/s") % (width, height, bitrate), lambda name=name: extra.set_resolution(name), state=extra.resolution == name)
+            menu.addItemWithTitle_action_keyEquivalent_(_t("Send at"), None, '').setSubmenu_(sizes)
+            self._item(menu, _t("Stop this video"), lambda: extra.stop())
+            can_speak = extra.state == 'established'
         else:
             participant = tile.participant
             id = participant.id
             self._item(menu, participant.name)
-            if room_controls or tile.hand:
+            own_controls = not participant.parent      # someone's extra video has no microphone nor hand of its own
+            if (room_controls and own_controls) or tile.hand:
                 menu.addItem_(NSMenuItem.separatorItem())
-            if room_controls:
+            if room_controls and own_controls:
                 self._item(menu, _t("Unmute") if participant.muted else _t("Mute"), lambda: session.mute_participant(participant, not participant.muted), enabled=established)
             if tile.hand:
                 self._item(menu, _t("Lower hand"), lambda: session.toggle_hand(id), enabled=established)
@@ -2031,10 +2059,11 @@ class VideoroomWindowController(NSObject):
         # while it is shared, and the grid comes back after (unless someone changed it)
         if screen and not self.session.speakers:
             self.speaker_for_screen = True
-            self.session.set_speakers([self.session.id])
+            self.auto_issued = []
+            self.updateAutoSpeakers()
         elif not screen and self.speaker_for_screen:
             self.speaker_for_screen = False
-            if self.session.speakers == [self.session.id]:
+            if self.session.speakers and list(self.session.speakers) in self.auto_issued:
                 self.session.set_speakers([])
         if screen:
             # out of the way of what is shared; back as it was when the sharing ends
@@ -2080,6 +2109,8 @@ class VideoroomWindowController(NSObject):
             self._item(menu, _t("Hide myself"), lambda: self.setSelfHidden(True), tooltip=_t("Your own video goes from this window; the others still see you"))
         if not self.self_hidden and self.localTile.thumbnail_enabled:
             self._item(menu, _t("Put me back in the grid") if self.floating else _t("Show me as a thumbnail"), self.toggleLocalPlacement)
+        if established and session.multiple_video_feeds:
+            self._addVideoMenu(menu)
         menu.addItem_(NSMenuItem.separatorItem())
         self._item(menu, _t("Invite participants…"), self.inviteParticipants)
         from ConferenceShareDialog import share_available
@@ -2092,6 +2123,59 @@ class VideoroomWindowController(NSObject):
         if hands:
             self._item(menu, _t("Lower all hands"), lambda: [session.toggle_hand(id) for id in hands], enabled=established)
         self._popUpOverSegment(menu, sender)
+
+    # Our extra videos (ExtraVideo.py): a second camera of this computer
+
+    @objc.python_method
+    def _addVideoMenu(self, menu):
+        """More -> Add video: the cameras of this computer other than the one our own video sends."""
+        from ExtraVideo import MAX_EXTRA_VIDEOS, extra_videos_available, local_cameras
+        submenu = self._menu()
+        busy = set(extra.source.get('unique_id') for extra in self.session.extra_videos.values())
+        full = len(self.session.extra_videos) >= MAX_EXTRA_VIDEOS
+        cameras = local_cameras() if extra_videos_available() else []
+        for name, unique_id in cameras:
+            self._item(submenu, name, lambda name=name, unique_id=unique_id: self.startExtraVideo(dict(kind='camera', name=name, unique_id=unique_id), name),
+                       enabled=unique_id not in busy and not full)
+        if not cameras:
+            self._item(submenu, _t("No other camera"))
+        elif full:
+            submenu.addItem_(NSMenuItem.separatorItem())
+            self._item(submenu, _t("At most %d videos besides your own") % MAX_EXTRA_VIDEOS)
+        item = menu.addItemWithTitle_action_keyEquivalent_(_t("Add video"), None, '')
+        item.setSubmenu_(submenu)
+        item.setToolTip_(_t("Send another camera too, shown under your name"))
+
+    @objc.python_method
+    def startExtraVideo(self, source, label):
+        from ExtraVideo import ExtraVideo
+        extra = ExtraVideo(self.session, source, label)
+        try:
+            extra.start()
+        except Exception as e:
+            BlinkLogger().log_warning('[videoroom] %s: cannot add %s: %s' % (self.session.room, label, e))
+            self.flash('%s: %s' % (label, e), duration=5.0)
+            extra.stop(str(e))
+            return None
+        return extra
+
+    @objc.python_method
+    def updateAutoSpeakers(self):
+        """While our screen is shared with nobody chosen as speaker: the screen is the speaker, and with one
+        more video of ours both are; with more than two videos of ours, nobody is made speaker. Followed as
+        our extra videos come and go, until someone chooses the speakers."""
+        if not self.speaker_for_screen or self.session.state != 'established':
+            return
+        current = list(self.session.speakers)
+        if current and current not in self.auto_issued:
+            self.speaker_for_screen = False     # chosen by someone: left alone from now on
+            return
+        extras = [extra.id for extra in self.session.extra_videos.values() if extra.state == 'established']
+        feeds = [self.session.id] + extras
+        wanted = feeds if len(feeds) <= 2 else []
+        self.auto_issued.append(wanted)
+        if wanted != current:
+            self.session.set_speakers(wanted)
 
     @objc.python_method
     def shareAddress(self):
@@ -2231,7 +2315,9 @@ class VideoroomWindowController(NSObject):
             if id == self.session.id:
                 tiles.append(self.localTile)
             else:
-                participant = self.session.participants.get(id)
+                # someone's video, or one of our extra videos (not among the room's participants: we publish it)
+                extra = self.session.extra_videos.get(id)
+                participant = extra.participant if extra is not None else self.session.participants.get(id)
                 tile = self.tiles.get(participant) if participant is not None else None
                 if tile is not None:
                     tiles.append(tile)
@@ -2354,6 +2440,21 @@ class VideoroomWindowController(NSObject):
         others = [self.session.speaker_name(id) for id in newly if id != self.session.id]
         if others:
             self.flash(_t("%s raised a hand") % ', '.join(others))
+
+    @objc.python_method
+    def _NH_VideoroomSessionExtraVideoDidChangeState(self, notification):
+        extra, state, reason = notification.data.extra, notification.data.state, notification.data.reason
+        if state == 'connecting':
+            self.addParticipant(extra.participant)
+            self.flash(_t("Adding %s…") % extra.label)
+        elif state == 'established':
+            self.flash(_t("%s added") % extra.label)
+            self.updateAutoSpeakers()
+        elif state == 'ended':
+            self.removeParticipant(extra.participant)
+            self.updateAutoSpeakers()
+            if reason not in ('stopped', 'left'):
+                self.flash('%s: %s' % (extra.label, reason), duration=6.0)
 
     @objc.python_method
     def _NH_VideoroomSessionWasMutedByOther(self, notification):

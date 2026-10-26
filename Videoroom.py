@@ -70,6 +70,14 @@ Notifications (sender the VideoroomSession):
   VideoroomSessionSpeakingDidChange       speaking (our own microphone, after mute)
   VideoroomSessionParticipantSpeakingDidChange  participant
   VideoroomSessionLocalVideoDidChange     track (our video track was replaced: the screen or the camera)
+  VideoroomSessionExtraVideoDidChangeState  extra, state, reason (ExtraVideo.py: one of our extra videos)
+
+Several videos per participant (gateway feature multiple-video-feeds): a participant
+publishes one audio and video, and up to 4 extra videos, each a publisher of its own
+with parent (the owner's publisher id) and label. Someone else's are participants
+named "<owner> · <label>" (no microphone, no hand of their own); ours are ExtraVideo
+objects (session.extra_videos), shown from their own track, and the room's publishers
+event for them is skipped.
 """
 
 __all__ = ['VideoroomManager', 'VideoroomSession', 'Participant']
@@ -368,6 +376,10 @@ class Participant(object):
         self.uri = (publisher.get('uri') or '').replace('sip:', '', 1)
         self.display_name = publisher.get('display_name') or ''
         self.type = publisher.get('type') or 'webrtc'
+        self.parent = publisher.get('parent') or None   # an extra video of another participant: that participant's publisher id
+        self.label = publisher.get('label') or None     # and its name ("Camera 2")
+        self.session = None                             # the room session it is in (set when added), for its parent's name
+        self.extra_video = None                         # one of our own extra videos: its ExtraVideo
         self.muted = bool(publisher.get('muted'))
         self._contact = None        # looked up once, on first use
         self._contact_looked_up = False
@@ -399,7 +411,13 @@ class Participant(object):
 
     @property
     def name(self):
-        """The name of the contact with this address in our contacts, else the one the room gives, else the address."""
+        """The name of the contact with this address in our contacts, else the one the room gives, else the address.
+        An extra video: its participant's name and its label, "Adrian · Camera 2"; one of ours: its label."""
+        if self.parent:
+            owner = self.session.participants.get(self.parent) if self.session is not None else None
+            if owner is not None:
+                return '%s · %s' % (owner.name, self.label or 'Camera')
+            return self.display_name or '%s · %s' % (self.uri, self.label or 'Camera')
         name = getattr(self.contact, 'name', None)
         return str(name) if name else (self.display_name or self.uri)
 
@@ -470,6 +488,8 @@ class VideoroomSession(object):
         self.ice_servers = []
         self.peer_connection = None     # the publisher's
         self.local_video_track = None   # what we send, for the "Me" tile
+        self.video_codec = None         # the video codec the answer chose for us
+        self.extra_videos = {}          # session id -> ExtraVideo: our extra videos in the room (ExtraVideo.py)
         self._delegate = None
         self._audio_track = None
         self._video_source = None
@@ -499,6 +519,17 @@ class VideoroomSession(object):
 
     def __repr__(self):
         return '<VideoroomSession %s %s>' % (self.room, self.state)
+
+    @property
+    def features(self):
+        """What the room's gateway announced (SylkRTC: sip-instance, multiple-video-feeds)."""
+        return set(getattr(self.connection, 'features', ()) or ())
+
+    @property
+    def multiple_video_feeds(self):
+        """Whether the room's gateway takes more videos of ours (child publishers)."""
+        from SylkRTC import FEATURE_MULTIPLE_VIDEO_FEEDS
+        return FEATURE_MULTIPLE_VIDEO_FEEDS in self.features
 
     def log(self, text, level='info'):
         _log('[videoroom] %s: %s' % (self.room, text), level)
@@ -570,6 +601,8 @@ class VideoroomSession(object):
         if self.state == 'terminated':
             return
         self.reason = reason
+        for extra in list(self.extra_videos.values()):
+            extra.stop('left')      # our extra videos go with us (the server ends them too)
         if self._establish_timer is not None:
             self._establish_timer.invalidate()
             self._establish_timer = None
@@ -708,6 +741,7 @@ class VideoroomSession(object):
             return
         if codec is not None:
             self.log('sending video %s' % codec)
+        self.video_codec = codec
         self._limit_video_bitrate()
 
     def _limit_video_bitrate(self):
@@ -921,6 +955,9 @@ class VideoroomSession(object):
     def speaker_name(self, id):
         if id == self.id:
             return 'you'
+        extra = self.extra_videos.get(id)
+        if extra is not None:
+            return 'your %s' % extra.label
         participant = self.participants.get(id)
         return participant.name if participant is not None else str(id)
 
@@ -1103,6 +1140,10 @@ class VideoroomSession(object):
             return
         if label == self.id:
             self._terminate('the media connection failed (ICE)')
+            return
+        extra = self.extra_videos.get(label)
+        if extra is not None:
+            extra.ice_failed()
             return
         participant = self.feeds.get(label)
         if participant is not None:
@@ -1298,9 +1339,10 @@ class VideoroomSession(object):
             if participant.update(publisher):
                 self._post('VideoroomSessionParticipantDidChange', participant=participant)
             return
-        if publisher_id == self.id:
-            return      # ourselves
+        if publisher_id == self.id or publisher_id in self.extra_videos or publisher.get('parent') == self.id:
+            return      # ourselves, or one of our extra videos (shown from its own track)
         participant = Participant(publisher)
+        participant.session = self
         participant.is_self = participant.type == 'sip' and participant.uri.lower() in (str(self.account.id).lower(), self.identity.lower())
         self.participants[publisher_id] = participant
         self.log('%s is in the room (%s)' % (participant.uri, participant.type))
