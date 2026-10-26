@@ -146,6 +146,19 @@ def _button(title, target, action, key=''):
     return button
 
 
+def _finish(panel, view, form, buttons, width):
+    """The bottom buttons (default first, at the right) under the last row, and the panel sized to its content:
+    nothing is laid out from a fixed height. The height."""
+    y = form.y + 12
+    for index, button in enumerate(buttons):
+        button.setFrame_(NSMakeRect(width - form.MARGIN - 92 * (index + 1) + 6, y, 88, 32))
+        button.setAutoresizingMask_(1)      # NSViewMinXMargin: they follow the right edge
+        view.addSubview_(button)
+    height = y + 32 + 16
+    panel.setContentSize_(NSMakeSize(width, height))
+    return height
+
+
 def _panel(title, width, height, resizable=False):
     style = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | (NSWindowStyleMaskResizable if resizable else 0)
     panel = NSPanel.alloc().initWithContentRect_styleMask_backing_defer_(NSMakeRect(0, 0, width, height), style, NSBackingStoreBuffered, False)

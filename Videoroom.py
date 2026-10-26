@@ -270,6 +270,25 @@ def _stats_entries(report):
     return entries
 
 
+def _stats_by_kind(entries):
+    """{(type, kind): values} of the RTP statistics (inbound-rtp, outbound-rtp, remote-inbound-rtp, media-source)
+    of a report, the codec's mimeType added as codec; the first of a kind when there are several."""
+    codecs = dict((id, values) for kind, id, values in entries if kind == 'codec')
+    result = {}
+    for kind, id, values in entries:
+        if kind not in ('inbound-rtp', 'outbound-rtp', 'remote-inbound-rtp', 'media-source'):
+            continue
+        media = values.get('kind') or values.get('mediaType')
+        if media is None or (kind, str(media)) in result:
+            continue
+        values = dict(values)
+        codec = codecs.get(str(values.get('codecId')))
+        if codec is not None and codec.get('mimeType'):
+            values['codec'] = str(codec['mimeType']).rpartition('/')[2].upper()
+        result[(kind, str(media))] = values
+    return result
+
+
 def _chosen_video_codec(sdp):
     """The encoding name of the first codec of m=video in an answer, or None."""
     match = re.search(r'^m=video (\d+) [^ ]+ ([^\r\n]*)', sdp, re.M)
@@ -389,6 +408,7 @@ class Participant(object):
         self.video_frames = None    # video frames decoded (statistics), whether video flows; None until known
         self.video_size = None      # (width, height) of the frames received (statistics)
         self.video_codec = None     # the feed's video codec, for the tile's statistics
+        self.stats = {}             # (type, kind) -> values, the last statistics of its PeerConnection (Conference info)
         self.speaking = False
         self._speaking_until = 0.0
         self.feed = None            # feed id once attached
@@ -490,6 +510,7 @@ class VideoroomSession(object):
         self.local_video_track = None   # what we send, for the "Me" tile
         self.video_codec = None         # the video codec the answer chose for us
         self.extra_videos = {}          # session id -> ExtraVideo: our extra videos in the room (ExtraVideo.py)
+        self.stats = {}                 # (type, kind) -> values, the publisher's last statistics (Conference info)
         self.pending_extra_sources = [] # [(source, label)] from Join Conference, started by the window once joined
         self.pending_screen = None      # the screen device Join Conference chose, shared once joined
         self._delegate = None
@@ -1009,6 +1030,9 @@ class VideoroomSession(object):
         for participant in list(self.feeds.values()):
             if participant.peer_connection is not None:
                 self._request_stats(participant.feed, participant.peer_connection)
+        for extra in list(self.extra_videos.values()):
+            if extra.peer_connection is not None:
+                self._request_stats(extra.id, extra.peer_connection)
         # SIP callers speak by the room's audio levels: when they stop coming, nobody of them speaks
         if self._levels_at is not None and time.monotonic() - self._levels_at > 2.0:
             self._levels_at = None
@@ -1040,6 +1064,14 @@ class VideoroomSession(object):
         self._stats_pending.discard(label)
         if self.state == 'terminated':
             return
+        stats = _stats_by_kind(entries)
+        if label == self.id:
+            self.stats = stats
+        elif label in self.extra_videos:
+            self.extra_videos[label].participant.stats = stats
+            return
+        elif label in self.feeds:
+            self.feeds[label].stats = stats
         if label == self.id:
             levels = [values.get('audioLevel') for kind, id, values in entries if kind == 'media-source' and values.get('kind') == 'audio']
             levels = [float(level) for level in levels if level is not None]

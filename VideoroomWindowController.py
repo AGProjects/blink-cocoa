@@ -46,6 +46,7 @@ the Window menu while it is open. Contacts dragged onto it are invited.
 
 __all__ = ['VideoroomWindowController', 'window_for_session', 'room_title']
 
+import sys
 import time
 
 from math import ceil, floor
@@ -1413,6 +1414,8 @@ class VideoroomWindowController(NSObject):
         notification_center.discard_observer(self, name='VideoDeviceDidChangeCamera')
         if self.sharing_screen and self.device_before_screen is not None:
             self.stopSharingScreen()        # the room is over: the camera is the device again
+        if 'ConferenceInfoPanel' in sys.modules:
+            sys.modules['ConferenceInfoPanel'].close_conference_info(self)      # it closes with the room's window
         self.localTile.teardown()
         for tile in self.tiles.values():
             tile.teardown()
@@ -2114,6 +2117,7 @@ class VideoroomWindowController(NSObject):
             self._addVideoMenu(menu)
         menu.addItem_(NSMenuItem.separatorItem())
         self._item(menu, _t("Invite participants…"), self.inviteParticipants)
+        self._item(menu, _t("Conference info…"), self.showInfo, tooltip=_t("Every participant with what comes from them and what we send"))
         from ConferenceShareDialog import share_available
         if share_available(session.sip_room, session.account, session.target):
             self._item(menu, _t("Share conference address…"), self.shareAddress, tooltip=_t("The addresses others can join this conference at"))
@@ -2208,6 +2212,11 @@ class VideoroomWindowController(NSObject):
         self.auto_issued.append(wanted)
         if wanted != current:
             self.session.set_speakers(wanted)
+
+    @objc.python_method
+    def showInfo(self):
+        from ConferenceInfoPanel import show_conference_info
+        show_conference_info(self)
 
     @objc.python_method
     def shareAddress(self):
