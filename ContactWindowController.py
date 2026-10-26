@@ -154,7 +154,7 @@ from AlertPanel import AlertPanel
 from AudioSession import AudioSession
 from BlinkLogger import BlinkLogger
 from Avatars import NO_PHOTO_AVATAR, draw_avatar
-from HistoryManager import SessionHistory
+from HistoryManager import SessionHistory, ChatHistory
 from HistoryViewer import HistoryViewer
 from ContactCell import ContactCell  # this is used from the UI
 from ContactListModel import presence_status_for_contact, BlinkContact, BlinkBlockedPresenceContact, BonjourBlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup, AllContactsBlinkGroupBlinkPresenceContact
@@ -176,7 +176,7 @@ from VideoMirrorController import VideoMirrorController
 from configuration.datatypes import UserIcon
 from resources import ApplicationData, Resources
 from util import allocate_autorelease_pool, format_date, format_identity_to_string, format_uri_type, is_anonymous, is_sip_aor_format, normalize_sip_uri_for_outgoing_session
-from util import pstn_uri_spellings_for_accounts, is_conference_uri, preferred_media_choice
+from util import pstn_uri_spellings_for_accounts, is_conference_uri
 from HistoryManager import block_contacts, unblock_contacts, _blocked_group
 from util import log_gui_exception, run_in_gui_thread, sip_prefix_pattern, sipuri_components_from_string, translate_alpha2digit, AccountInfo, utc_to_local
 
@@ -550,6 +550,7 @@ class ContactWindowController(NSWindowController):
 
         self.searchOutline.setTarget_(self)
         self.searchOutline.setDoubleAction_("actionButtonClicked:")
+        self.installSearchModeMenu()
         self.contactOutline.setDraggingSourceOperationMask_forLocal_(NSDragOperationCopy, True)
         self.searchOutline.registerForDraggedTypes_(NSArray.arrayWithObjects_("dragged-contact", "x-blink-audio-session", NSFilenamesPboardType))
 
@@ -3291,8 +3292,7 @@ class ContactWindowController(NSWindowController):
 
         else:
             self.addContactButtonDialPad.setHidden_(False)
-            self.searchBox.cell().setPlaceholderString_(NSLocalizedString("Search Contacts or Enter Address", "Search box placeholder"))
-            self.searchBox.setToolTip_(NSLocalizedString("You may type text to search for contacts or press enter to start a call to an arbitrary address or phone number", "Search box tooltip"))
+            self.updateSearchModeChrome()
 
             frame.size.height = 132
             self.window().setContentMinSize_(frame.size)
@@ -4149,7 +4149,18 @@ class ContactWindowController(NSWindowController):
         trace_t0 = load_trace_now()
         trace_key = None
 
+        searched = None
+        if self.searchingMessages and self.mainTabView.selectedTabViewItem().identifier() == "search":
+            searched = self.searchBox.stringValue().strip()
+            if len(searched) < ChatHistory().search_min_length:
+                searched = None
+
         if not self.isMessagesPaneVisible():
+            # A message search result is looked at in its conversation.
+            # Revealing the pane switches it to the selection, which comes
+            # back through here with the pane visible.
+            if searched and self.getSelectedContacts():
+                self.showMessagesPane()
             return
 
         pane = self.messagePane()
@@ -4196,6 +4207,8 @@ class ContactWindowController(NSWindowController):
             load_trace_mark(trace_key, 'present')
             pane.selectViewer(viewer)
             load_trace_mark(trace_key, 'select')
+            if searched:
+                self.applyMessageSearchToViewer(viewer, searched)
             if trace_warm:
                 # Already built and rendered -- say how much was on screen, so
                 # a 'warm' line that is somehow slow can still be read.
@@ -5092,6 +5105,194 @@ class ContactWindowController(NSWindowController):
         participants = self.addParticipantsWindow.run()
         return participants
 
+    # Searching messages (as Blink Qt): the search box searches either
+    # contacts, or the text of every message of the enabled accounts, picked
+    # from the menu under the search field's magnifier. In messages mode the
+    # results are the contacts with a conversation that contains the text,
+    # the most recent match first, and selecting one opens its conversation
+    # in the message pane already searched for the same text.
+    searchingMessages = False
+    _message_searched = None            # (viewer, text) the search box searched in the pane
+    _message_search_token = 0
+    _message_search_answered = None
+    MESSAGE_SEARCH_DELAY = 0.3          # typing pauses this long before the query runs
+
+    @objc.python_method
+    def installSearchModeMenu(self):
+        self.updateSearchModeChrome()
+
+    @objc.python_method
+    def updateSearchModeChrome(self):
+        """The search field's magnifier menu, placeholder and tooltip for the mode.
+
+        The menu is rebuilt rather than updated: the field shows a copy of
+        its template, so the tick has to be on the template itself.
+        """
+        menu = NSMenu.alloc().initWithTitle_(NSLocalizedString("Search", "Menu title"))
+        for tag, title in ((0, NSLocalizedString("Search Contacts", "Search box menu item")),
+                           (1, NSLocalizedString("Search Messages", "Search box menu item"))):
+            item = menu.addItemWithTitle_action_keyEquivalent_(title, "setSearchMode:", "")
+            item.setTag_(tag)
+            item.setTarget_(self)
+            item.setState_(NSOnState if bool(tag) == self.searchingMessages else NSOffState)
+        self.searchBox.cell().setSearchMenuTemplate_(menu)
+        if self.mainTabView.selectedTabViewItem().identifier() == "dialpad":
+            return
+        if self.searchingMessages:
+            self.searchBox.cell().setPlaceholderString_(NSLocalizedString("Search Messages (at least 4 letters)", "Search box placeholder"))
+            self.searchBox.setToolTip_(NSLocalizedString("Searching the text of the messages of the enabled accounts. Click the magnifier to search contacts", "Search box tooltip"))
+        else:
+            self.searchBox.cell().setPlaceholderString_(NSLocalizedString("Search Contacts or Enter Address", "Search box placeholder"))
+            self.searchBox.setToolTip_(NSLocalizedString("You may type text to search for contacts or press enter to start a call to an arbitrary address or phone number", "Search box tooltip"))
+
+    @objc.IBAction
+    def setSearchMode_(self, sender):
+        messages = bool(sender.tag())
+        if messages == self.searchingMessages:
+            return
+        self.searchingMessages = messages
+        self._message_search_answered = None
+        if not messages:
+            self.clearMessageSearchInViewer()
+        self._message_search_token += 1
+        BlinkLogger().log_info('Search box: searching %s' % ('messages' if messages else 'contacts'))
+        self.updateSearchModeChrome()
+        self.searchOutline.deselectAll_(None)
+        self.searchContacts()
+
+    @objc.python_method
+    def searchMessagesFor(self, text):
+        """Run the message search once typing pauses; the list is empty meanwhile."""
+        self.addContactButtonSearch.setEnabled_(False)
+        self._message_search_token += 1
+        token = self._message_search_token
+        if len(text) < ChatHistory().search_min_length:
+            self._message_search_answered = None
+            self._showMessageSearchResults([])
+            return
+        if text == self._message_search_answered:
+            return
+        call_later(self.MESSAGE_SEARCH_DELAY, self._runMessageSearch, token, text)
+
+    @objc.python_method
+    def _runMessageSearch(self, token, text):
+        if token != self._message_search_token or not self.searchingMessages:
+            return      # typed on since, or the mode changed
+        try:
+            deferred = ChatHistory().search_conversations(text, local_uri=active_account_uris())
+        except Exception as e:
+            BlinkLogger().log_error('Cannot search the messages for %r: %s' % (text, e))
+            return
+        deferred.addCallback(lambda matches: self._messageSearchFinished(token, text, matches))
+        deferred.addErrback(lambda failure: BlinkLogger().log_error('Message search failed: %s' % failure.getErrorMessage()))
+
+    @objc.python_method
+    @run_in_gui_thread
+    def _messageSearchFinished(self, token, text, matches):
+        if token != self._message_search_token or not self.searchingMessages:
+            return
+        if text != self.searchBox.stringValue().strip():
+            return
+        self._message_search_answered = text
+        manager = SMSWindowManager.SMSWindowManager()
+        canonical = manager._canonical_uri
+        found = {}
+        for remote_uri, (count, last) in matches.items():
+            key = canonical(remote_uri)
+            if not key:
+                continue
+            had = found.get(key)
+            found[key] = (count + (had[0] if had else 0), max(last, had[1]) if had else last)
+
+        # The rows the contact search would show for the same people: All
+        # Contacts (deleted ones hidden) and the Bonjour neighbours, one row
+        # per contact however many of its addresses matched.
+        results = []
+        used = set()
+        seen_contacts = set()
+        for group in self.model.groupsList:
+            if group.ignore_search is not False:
+                continue
+            for item in self.model.displayedContacts(group):
+                if not isinstance(item, BlinkContact):
+                    continue
+                keys = set(canonical(str(uri.uri)) for uri in getattr(item, 'uris', ()))
+                identifier = getattr(item, 'id', None)
+                if identifier and '@' not in str(identifier):
+                    keys.add(canonical(str(identifier)))      # a Bonjour neighbour's instance id
+                keys &= set(found)
+                if not keys:
+                    continue
+                contact = getattr(item, 'contact', None)
+                identity = getattr(contact, 'id', None) if contact is not None else ('row', id(item))
+                if identity in seen_contacts:
+                    used |= keys
+                    continue
+                seen_contacts.add(identity)
+                used |= keys
+                results.append((max(found[key][1] for key in keys), item))
+        # a conversation nobody in the address book holds still shows, as its address
+        for key in set(found) - used:
+            if '@' in key:
+                results.append((found[key][1], SearchResultContact(key, name=key)))
+        results.sort(key=lambda entry: entry[0], reverse=True)
+        BlinkLogger().log_info('Message search for %r: %d conversation(s), %d message(s)'
+                               % (text, len(results), sum(count for count, last in found.values())))
+        self._showMessageSearchResults([item for last, item in results])
+
+    @objc.python_method
+    def _showMessageSearchResults(self, items):
+        self.local_found_contacts = items
+        self.searchResultsModel.groupsList = items
+        self.searchOutline.reloadData()
+
+    @objc.python_method
+    def applyMessageSearchToViewer(self, viewer, text):
+        """Search the opened conversation for the text searched in the main
+        search box: the transcript shows the days with matches, whole, the
+        matches highlighted (NativeChatViewController.beginSearch)."""
+        chat = getattr(viewer, 'chatViewController', None)
+        if chat is None:
+            return
+        try:
+            box = getattr(chat, 'searchMessagesBox', None)
+            if box is not None and str(box.stringValue()).strip() != text:
+                box.setStringValue_(text)
+            begin = getattr(chat, 'beginSearch', None)
+            if begin is not None:
+                begin(text)
+                previous = self._message_searched
+                self._message_searched = (viewer, text)
+                if previous is not None and previous[0] is not viewer:
+                    self.clearMessageSearchInViewer(*previous)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot search the conversation for %r: %s' % (text, e))
+
+    @objc.python_method
+    def clearMessageSearchInViewer(self, viewer=None, text=None):
+        """Take back the search the search box put in a conversation.
+
+        Only if it is still that search: one the user has since typed into the
+        pane's own field is theirs, and stays.
+        """
+        if viewer is None:
+            if self._message_searched is None:
+                return
+            viewer, text = self._message_searched
+            self._message_searched = None
+        chat = getattr(viewer, 'chatViewController', None)
+        if chat is None or getattr(chat, 'search_text', None) != text:
+            return
+        try:
+            box = getattr(chat, 'searchMessagesBox', None)
+            if box is not None:
+                box.setStringValue_('')
+            begin = getattr(chat, 'beginSearch', None)
+            if begin is not None:
+                begin(None)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot clear the conversation search: %s' % e)
+
     @objc.python_method
     def searchContacts(self):
         # BlinkLogger().log_info('startup: searchContacts(noarg) body enter')
@@ -5108,6 +5309,8 @@ class ContactWindowController(NSWindowController):
             # hottest frame in the py-spy startup profile (~18% of CPU
             # samples). Running it for an empty query produced an empty
             # result set anyway.
+            # the conversation the search box searched shows itself again
+            self.clearMessageSearchInViewer()
             self.mainTabView.selectTabViewItemWithIdentifier_("contacts")
             self.updateStartSessionButtons()
             # BlinkLogger().log_info('startup: searchContacts(noarg) body exit (empty query)')
@@ -5117,6 +5320,10 @@ class ContactWindowController(NSWindowController):
             self.mainTabView.selectTabViewItemWithIdentifier_("search")
 
         self.updateStartSessionButtons()
+
+        if self.mainTabView.selectedTabViewItem().identifier() == "search" and self.searchingMessages:
+            self.searchMessagesFor(text)
+            return
 
         if self.mainTabView.selectedTabViewItem().identifier() == "search":
             self.local_found_contacts = []
@@ -6776,6 +6983,15 @@ class ContactWindowController(NSWindowController):
                         media_type = _split[0].split("=")[1]
                     except IndexError:
                         media_type = None
+
+                    if media_type is None and self.searchingMessages and self.mainTabView.selectedTabViewItem().identifier() == "search":
+                        # searched text, not an address: the selected result, else the first
+                        if self.searchOutline.numberOfRows() and self.searchOutline.numberOfSelectedRows() == 0:
+                            # selecting it opens it (contactSelectionChanged_)
+                            self.searchOutline.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(0), False)
+                        elif self.searchOutline.numberOfSelectedRows() == 1:
+                            self.switchMessagePaneToSelectedContact()
+                        return
 
                     if media_type is None and self.mainTabView.selectedTabViewItem().identifier() != "dialpad":
                         # Enter opens a conversation in the message pane, as Blink Qt does (calls start

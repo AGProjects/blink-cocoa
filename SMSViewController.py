@@ -4961,6 +4961,10 @@ class SMSViewController(NSObject):
          # The renderer has already started the spinner and written its own
          # scroll note by the time this is reached; this logs the start and
          # arms the watchdog over it, and leaves the note alone.
+         if self.chatViewController.search_text:
+             # a search shows whole days, all of them at once: nothing to page
+             self._noteOlderMessagesAvailable(False)
+             return
          self.startLoadingSpinner('scrolled back for older messages')
          self.replay_history()
 
@@ -5197,6 +5201,9 @@ class SMSViewController(NSObject):
             replay_started = time.time()
             remote_uris = self.history_remote_uris()
             local_uris = self.history_local_uris()
+            if self.chatViewController.search_text:
+                self._replay_search(remote_uris, local_uris, self.chatViewController.search_text)
+                return
 
             # How far back the newest `showHistoryEntries` BUBBLES reach. The
             # page is then fetched by time rather than by row count, so the
@@ -5367,6 +5374,81 @@ class SMSViewController(NSObject):
                 self.log_info('Cannot read the categories present: %s' % e)
             else:
                 self._noteAvailableCategories(categories)
+
+    # A search shows the days on which the conversation has text messages
+    # containing the text, each day whole, so the hits are read in their
+    # context (as Blink Qt): the newest SEARCH_HIT_LIMIT hits, on at most the
+    # newest SEARCH_DAY_LIMIT such days, at most SEARCH_CONTEXT_LIMIT rows of
+    # those days. Nothing pages while searching.
+    SEARCH_HIT_LIMIT = 200
+    SEARCH_DAY_LIMIT = 30
+    SEARCH_CONTEXT_LIMIT = 3000
+
+    @objc.python_method
+    def _replay_search(self, remote_uris, local_uris, text):
+        """replay_history while searching, in its green thread."""
+        category = self.active_category()
+        started = time.time()
+        try:
+            hits = self.history.get_messages(
+                remote_uri=remote_uris, local_uri=local_uris, media_type=CONVERSATION_MEDIA_TYPES,
+                search_text=text, category='text', count=self.SEARCH_HIT_LIMIT,
+                exclude_related_actions=LOCATION_TICK_ACTIONS)
+            hit_ids = set()
+            day_counts = {}
+            for row in hits:
+                if not row.msgid or row.msgid in hit_ids or _is_armoured_body(row.body):
+                    continue
+                hit_ids.add(row.msgid)
+                # stored as naive UTC; a day is a local date, as the dividers show it
+                day = row.time.replace(tzinfo=datetime.timezone.utc).astimezone().date().isoformat()
+                day_counts[day] = day_counts.get(day, 0) + 1
+            days = sorted(day_counts, reverse=True)[:self.SEARCH_DAY_LIMIT]
+            rows = []
+            if days:
+                rows = self.history.get_messages(
+                    remote_uri=remote_uris, local_uri=local_uris, media_type=CONVERSATION_MEDIA_TYPES,
+                    days=days, category=category, count=self.SEARCH_CONTEXT_LIMIT,
+                    exclude_related_actions=LOCATION_TICK_ACTIONS)
+            context_rows = len(rows)
+            rows = self._withRelatedRows(rows, category)
+            messages = [row for row in reversed(rows)]
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            self.log_error('Cannot search the conversation for %r: %s' % (text, e))
+            self._noteReplayFailed(str(e))
+            return
+        truncated = (len(hits) >= self.SEARCH_HIT_LIMIT or len(day_counts) > len(days)
+                     or context_rows >= self.SEARCH_CONTEXT_LIMIT)
+        self.log_info('Search for %r: %d message(s) on %d day(s), %d row(s) of those days in %.2fs%s%s'
+                      % (text, len(hit_ids), len(days), len(messages), time.time() - started,
+                         '' if not category else ', filtered by %s' % category,
+                         ' (the newest only)' if truncated else ''))
+
+        decrypted_bodies = {}
+        if any(_is_armoured_body(message.body) for message in messages):
+            from eventlib.twistedutil import block_on
+            from PGPDecryptor import decrypt_in_thread, note_view_decrypt
+            note_view_decrypt()
+            try:
+                decrypted_bodies = block_on(decrypt_in_thread(self._decrypt_history_messages, messages)) or {}
+            except Exception as e:
+                self.log_error('Cannot decrypt the searched days: %s' % e)
+            note_view_decrypt()
+        self.render_history_messages(messages, decrypted_bodies)
+        self._noteOlderMessagesAvailable(False)
+        self._applySearchResults(text, hit_ids, dict((day, day_counts[day]) for day in days), truncated)
+
+    @objc.python_method
+    @run_in_gui_thread
+    def _applySearchResults(self, text, hit_ids, day_counts, truncated):
+        # after render_history_messages, which is queued on the GUI thread first
+        if self.chatViewController.search_text != text:
+            return      # searched for something else since
+        apply = getattr(self.chatViewController, 'applySearchResults', None)
+        if apply is not None:
+            apply(text, hit_ids, day_counts, truncated)
 
     @objc.python_method
     @run_in_gui_thread

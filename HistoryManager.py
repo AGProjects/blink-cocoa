@@ -1346,6 +1346,37 @@ class ChatHistory(object, metaclass=Singleton):
             BlinkLogger().log_error("Error reading the unread counts: %s" % e)
             return {}
 
+    # Shorter text would match half the database (as Blink Qt).
+    search_min_length = 4
+
+    @run_in_db_thread
+    def search_conversations(self, text, local_uri=None):
+        """{remote uri: (matches, last match time)} of the conversations
+        holding a message whose text contains `text` (case insensitive), over
+        the whole database but only for the accounts named (local_uri follows
+        _uri_in_sql). Text messages only, as Blink Qt searches: armoured
+        ciphertext not decrypted yet can not match, and a tombstoned message
+        is not found. Runs in the db thread; the caller gets a deferred.
+        """
+        text = str(text or '').strip()
+        if len(text) < self.search_min_length:
+            return {}
+        pattern = '%' + text.replace('!', '!!').replace('%', '!%').replace('_', '!_') + '%'
+        query = ("select remote_uri, count(*), max(time) from chat_messages"
+                 " where %s and category = 'text'"
+                 " and body not like '-----BEGIN PGP%%'"
+                 " and body like %s escape '!'"
+                 % (NOT_DELETED_SQL, ChatMessage.sqlrepr(pattern)))
+        query += self._uri_in_sql('local_uri', local_uri)
+        query += " group by remote_uri"
+        try:
+            rows = self.db.queryAll(query)
+        except Exception as e:
+            BlinkLogger().log_error('Searching the messages failed: %s' % e)
+            return {}
+        return dict((str(remote_uri), (int(count), str(last or '')))
+                    for remote_uri, count, last in rows if remote_uri)
+
     def unread_counts(self, local_uri=None):
         """Badges per address, optionally only for the accounts named.
 
@@ -2414,7 +2445,7 @@ class ChatHistory(object, metaclass=Singleton):
         return " and %s in (%s)" % (column, ','.join(ChatMessage.sqlrepr(uri) for uri in values))
 
     @run_in_db_thread
-    def _get_messages(self, msgid, call_id, local_uri, remote_uri, media_type, date, after_date, before_date, search_text, orderBy, orderType, count, exclude_related_actions=None, category=None):
+    def _get_messages(self, msgid, call_id, local_uri, remote_uri, media_type, date, after_date, before_date, search_text, orderBy, orderType, count, exclude_related_actions=None, category=None, days=None):
         query = NOT_DELETED_SQL
         query += self._category_sql(category)
         if exclude_related_actions:
@@ -2452,6 +2483,10 @@ class ChatHistory(object, metaclass=Singleton):
             query += " and body like %s" % ChatMessage.sqlrepr('%'+search_text+'%')
         if date:
             query += " and time like %s" % ChatMessage.sqlrepr(date+'%')
+        if days is not None:
+            # local dates ('YYYY-MM-DD'); time is stored as naive UTC
+            listed = ', '.join(ChatMessage.sqlrepr(str(day)) for day in days) or "''"
+            query += " and date(time, 'localtime') in (%s)" % listed
         if after_date:
             query += " and time >= %s" % ChatMessage.sqlrepr(after_date)
         if before_date:
@@ -2464,8 +2499,8 @@ class ChatHistory(object, metaclass=Singleton):
             BlinkLogger().log_error("Error getting chat messages from chat history table: %s" % e)
             return []
 
-    def get_messages(self, msgid=None, call_id=None, local_uri=None, remote_uri=None, media_type=None, date=None, after_date=None, before_date=None, search_text=None, orderBy='time', orderType='desc', count=100, exclude_related_actions=None, category=None):
-        return block_on(self._get_messages(msgid, call_id, local_uri, remote_uri, media_type, date, after_date, before_date, search_text, orderBy, orderType, count, exclude_related_actions, category))
+    def get_messages(self, msgid=None, call_id=None, local_uri=None, remote_uri=None, media_type=None, date=None, after_date=None, before_date=None, search_text=None, orderBy='time', orderType='desc', count=100, exclude_related_actions=None, category=None, days=None):
+        return block_on(self._get_messages(msgid, call_id, local_uri, remote_uri, media_type, date, after_date, before_date, search_text, orderBy, orderType, count, exclude_related_actions, category, days))
 
     @run_in_db_thread
     def _present_categories(self, local_uri, remote_uri, media_type):

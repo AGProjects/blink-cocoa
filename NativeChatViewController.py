@@ -322,6 +322,10 @@ class NativeChatViewController(ChatViewController):
     # a remark about the history itself ("there are no previous messages"),
     # shown next to the loaded range rather than instead of it
     history_note = ''
+    # While searching: what the label says instead of the loaded range
+    # ("12 messages contain ..., on 3 days"), and the ids of the hits
+    search_summary = ''
+    search_hits = frozenset()
     # Whether the conversation has anything older than what is drawn. True
     # until a probe says otherwise: offering to fetch more and finding none
     # is a smaller fault than hiding messages that are there.
@@ -1876,6 +1880,9 @@ class NativeChatViewController(ChatViewController):
         if bool(getattr(bubble, 'grid_mode', False)) != grid:
             bubble.grid_mode = grid
             bubble.invalidateLayout()
+        if getattr(bubble, 'highlight_text', None) != (self.search_text or None):
+            bubble.highlight_text = self.search_text or None
+            bubble.invalidateLayout()
         # A page fetched by scrolling back arrives into a grid that may
         # already have ticks in it. It draws its own empty checkbox from
         # grid_mode alone; all it needs is to arrive unticked.
@@ -2288,7 +2295,7 @@ class NativeChatViewController(ChatViewController):
             stored = 0
         searchable = has_messages or bool(self.search_text) or stored > 0
         if self.lastMessagesLabel is not None:
-            self.lastMessagesLabel.setHidden_(not has_messages)
+            self.lastMessagesLabel.setHidden_(not has_messages and not (self.search_text and self.search_summary))
         if self.searchMessagesBox is not None:
             self.searchMessagesBox.setHidden_(not searchable)
         # Whatever just hid or came back, the strip has to be re-stacked:
@@ -2314,9 +2321,14 @@ class NativeChatViewController(ChatViewController):
             self.lastMessagesLabel.setTextColor_(NSColor.labelColor())
         except Exception as e:
             BlinkLogger().log_debug('Cannot set the history label colour: %s' % e)
-        range_text = self.loadedRangeLabel()
-        parts = [text for text in (range_text, self.history_note,
-                                   self.scrollBackHint()) if text]
+        if self.search_text and self.search_summary:
+            # what was found stands in for the loaded range (and is logged as it)
+            range_text = self.search_summary
+            parts = [range_text]
+        else:
+            range_text = self.loadedRangeLabel()
+            parts = [text for text in (range_text, self.history_note,
+                                       self.scrollBackHint()) if text]
         text = u' \u2014 '.join(parts)
         try:
             self.lastMessagesLabel.setStringValue_(text)
@@ -6803,6 +6815,103 @@ class NativeChatViewController(ChatViewController):
         self.updateHistoryChrome()
 
     # -- search ------------------------------------------------------------
+
+    _search_timer = None
+    SEARCH_DELAY = 0.3              # typing pauses this long before the reload
+
+    @objc.IBAction
+    def searchMessages_(self, sender):
+        """The search field: the transcript is fetched BY the text.
+
+        As the category filter is: the newest page of matching messages is
+        read from SQL and scrolling up pages through the older ones, instead
+        of hiding what happens to be loaded -- which found nothing in a long
+        conversation whose last fifty messages did not hold the text. A
+        renderer without a paging delegate (the history viewer, the old chat
+        window) keeps the inherited filter over what is loaded.
+        """
+        reload_for_category = getattr(self.delegate, 'reload_for_category', None)
+        if reload_for_category is None:
+            return objc.super(NativeChatViewController, self).searchMessages_(sender)
+        if self._search_timer is not None:
+            self._search_timer.invalidate()
+        self._search_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
+            self.SEARCH_DELAY, self, 'searchTimerFired:', None, False)
+
+    def searchTimerFired_(self, timer):
+        self._search_timer = None
+        box = self.searchMessagesBox
+        text = (str(box.stringValue()).strip() or None) if box is not None else None
+        self.beginSearch(text)
+
+    @objc.python_method
+    def beginSearch(self, text):
+        """Search the conversation for text (None: show it again).
+
+        As Blink Qt: the transcript is reloaded as the days on which a text
+        message contains the text, each day whole, the hits highlighted and
+        the newest of them scrolled to; clearing the search reloads the
+        newest page. The delegate does the fetching (SMSViewController).
+        """
+        text = (str(text).strip() or None) if text else None
+        if text == self.search_text:
+            return
+        self.search_text = text
+        self.search_hits = frozenset()
+        self.search_summary = NSLocalizedString("Searching\u2026", "Label") if text else ''
+        BlinkLogger().log_info('Transcript search %s' % (repr(text) if text else 'cleared: back to the newest page'))
+        reload_for_category = getattr(self.delegate, 'reload_for_category', None)
+        if reload_for_category is not None:
+            reload_for_category(self.message_filter)
+        self.updateHistoryChrome()
+
+    @objc.python_method
+    def applySearchResults(self, text, hit_ids, day_counts, truncated):
+        """The searched days are on screen: say what was found, go to the newest hit."""
+        hits = frozenset(msgid for msgid in hit_ids
+                         if self.messageListView is not None and self.messageListView.viewForMessageId_(msgid) is not None)
+        self.search_hits = hits
+        count, days = len(hits), len(day_counts)
+        if not count:
+            summary = NSLocalizedString("No messages contain \u201c%s\u201d", "Label") % text
+        else:
+            summary = (NSLocalizedString("1 message contains \u201c%s\u201d", "Label") % text if count == 1
+                       else NSLocalizedString("%d messages contain \u201c%s\u201d", "Label") % (count, text))
+            summary += (NSLocalizedString(", on 1 day", "Label") if days == 1
+                        else NSLocalizedString(", on %d days", "Label") % days)
+            if truncated:
+                summary += NSLocalizedString(" (the newest)", "Label")
+        self.search_summary = summary
+        self.history_note = ''
+        self.updateHistoryChrome()
+        self.scrollToNewestSearchHit()
+
+    @objc.python_method
+    def scrollToNewestSearchHit(self):
+        """The newest hit at the top of the transcript, its day after it (as Blink Qt)."""
+        listview = self.messageListView
+        if listview is None or not self.search_hits:
+            return
+        try:
+            listview.layoutMessages()       # real frames first: layout is coalesced
+            newest = None
+            for view in listview.subviews():
+                msgid = getattr(view, 'msgid', None)
+                if msgid in self.search_hits and not view.isHidden():
+                    if newest is None or view.frame().origin.y > newest.frame().origin.y:
+                        newest = view
+            if newest is None:
+                return
+            scrollview = listview.enclosingScrollView()
+            if scrollview is None:
+                return
+            clipview = scrollview.contentView()
+            visible = clipview.documentVisibleRect().size.height
+            top = max(0.0, min(newest.frame().origin.y - 8.0, listview.frame().size.height - visible))
+            clipview.scrollToPoint_((0.0, top))
+            scrollview.reflectScrolledClipView_(clipview)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot scroll to the newest search hit: %s' % e)
 
     @objc.python_method
     def markFound(self, msgid):

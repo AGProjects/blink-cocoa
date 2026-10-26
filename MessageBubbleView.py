@@ -1443,6 +1443,35 @@ def _restyle_html(result, font_size, text_color=None):
         index = max(int(rng[0]) + int(rng[1]), index + 1)
 
 
+def highlight_occurrences(body, text):
+    """The body with every occurrence of text (case-insensitive) marked, in
+    the colours Blink Qt uses: amber on light, dark gold on dark."""
+    try:
+        needle = str(text).casefold()
+        plain = str(body.string())
+        haystack = plain.casefold()
+        if not needle or needle not in haystack or len(haystack) != len(plain):
+            # casefold() can change the length (ß -> ss); then fall back to lower()
+            haystack = plain.lower()
+            needle = str(text).lower()
+            if not needle or needle not in haystack or len(haystack) != len(plain):
+                return body
+        dark = _is_dark_appearance()
+        color = (NSColor.colorWithSRGBRed_green_blue_alpha_(0x8a / 255.0, 0x6d / 255.0, 0.0, 1.0) if dark
+                 else NSColor.colorWithSRGBRed_green_blue_alpha_(1.0, 0xe0 / 255.0, 0x8a / 255.0, 1.0))
+        result = body.mutableCopy()
+        start = haystack.find(needle)
+        while start >= 0:
+            # Python indexes code points, NSString UTF-16 units
+            location = len(plain[:start].encode('utf-16-le')) // 2
+            length = len(plain[start:start + len(needle)].encode('utf-16-le')) // 2
+            result.addAttribute_value_range_(NSBackgroundColorAttributeName, color, (location, length))
+            start = haystack.find(needle, start + len(needle))
+        return result
+    except Exception:
+        return body
+
+
 def _trim_trailing_newlines(result):
     """Block elements end in a newline the bubble would otherwise pad for."""
     guard = 0
@@ -1916,6 +1945,9 @@ class MessageBubbleView(NSView):
             self.is_month = False
             self.renderer = None
             self.found = False
+            # The text the transcript is searched for: every occurrence in
+            # the body is highlighted (case-insensitive), as Blink Qt does.
+            self.highlight_text = None
             # Ticked in the grid's own checkbox, for the Delete that acts
             # on everything ticked at once. Only a grid draws a box: a
             # message in a column carries its own delete affordance in its
@@ -2559,6 +2591,8 @@ class MessageBubbleView(NSView):
                         NSForegroundColorAttributeName, NSColor.systemRedColor(), (0, body.length()))
                 except Exception:
                     pass
+            if self.highlight_text:
+                body = highlight_occurrences(body, self.highlight_text)
 
         self._body_field.setAttributedStringValue_(body)
 
