@@ -2388,6 +2388,10 @@ class BlinkGroup(NSObject):
         return getattr(self.group, 'id', None) == MESSAGES_GROUP_ID
 
     @objc.python_method
+    def isUnreadGroup(self):
+        return False
+
+    @objc.python_method
     def isFavoritesGroup(self):
         return is_favorites_group(self.group)
 
@@ -2400,7 +2404,8 @@ class BlinkGroup(NSObject):
         adding a fourth such group later is one line here rather than a hunt
         through the file.
         """
-        return self.isMessagesGroup() or self.isCallsGroup() or self.isTelGroup() or self.isConferenceGroup()
+        return (self.isMessagesGroup() or self.isUnreadGroup() or self.isCallsGroup()
+                or self.isTelGroup() or self.isConferenceGroup())
 
     @objc.python_method
     def isCallsGroup(self):
@@ -2454,7 +2459,7 @@ class BlinkGroup(NSObject):
                 key=lambda item: self.lastCallTimeForContact(item) or NO_MESSAGES,
                 reverse=True)
             return
-        if self.isMessagesGroup():
+        if self.isMessagesGroup() or self.isUnreadGroup():
             # Two passes, relying on sort being stable: alphabetical first,
             # then by recency. Contacts that share a timestamp -- and the
             # whole tail that has none -- stay in A..Z order underneath
@@ -2516,6 +2521,9 @@ class BlinkGroup(NSObject):
 
         newest = None
         try:
+            identifier = getattr(contact, 'id', None)
+            if identifier and '@' not in str(identifier):
+                newest = manager.lastMessageTimeForURI(str(identifier))   # Bonjour: keyed by instance id
             for uri in getattr(contact, 'uris', ()):
                 for spelling in pstn_uri_spellings_for_accounts(str(uri.uri)):
                     stamp = manager.lastMessageTimeForURI(spelling)
@@ -2828,6 +2836,52 @@ class AllContactsBlinkGroup(VirtualBlinkGroup):
 
     def __init__(self, name=NSLocalizedString("All Contacts", "Group name label"), expanded=True):
         objc.super(AllContactsBlinkGroup, self).__init__(name, expanded)
+
+
+class UnreadBlinkGroup(VirtualBlinkGroup):
+    """The conversations with messages waiting to be read.
+
+    Synthetic and local: the members are worked out from the unread counters
+    every time they change (ContactListModel.refreshUnreadGroup), nothing is
+    stored in the address book and nothing is synced, and the group is in
+    the list only while it has somebody in it. It exists so the conversations
+    behind the Dock badge can be found -- in Messages they sit wherever their
+    last message puts them, which for an old one is far down the list.
+
+    The VirtualGroup behind it keeps only what is local by nature: whether
+    it is expanded. Its position is always the top, never saved.
+    """
+    type = 'unread'
+    deletable = False
+    ignore_search = True
+
+    add_contact_allowed = False
+    remove_contact_allowed = False
+    delete_contact_allowed = False
+
+    def __init__(self, name=NSLocalizedString("Unread", "Group name label"), expanded=True):
+        objc.super(UnreadBlinkGroup, self).__init__(name, expanded)
+
+    @objc.python_method
+    def isUnreadGroup(self):
+        return True
+
+
+class UnreadBlinkContact(BlinkPresenceContact):
+    """A contact's row in the Unread group.
+
+    A wrapper of its own, as the Online group has: an outline view item can
+    have one parent only. Being a presence contact over the same Contact, it
+    is among the rows getBlinkContactsForURI finds, so presence reaching the
+    All Contacts row is cloned onto it like onto any other.
+    """
+    pass
+
+
+class UnreadAddressBlinkContact(BlinkContact):
+    """An Unread row for a conversation no address book contact holds."""
+    editable = False
+    deletable = False
 
 
 class HistoryBlinkGroup(VirtualBlinkGroup):
@@ -3318,7 +3372,7 @@ class CustomListModel(NSObject):
             return 0
 
     def outlineView_shouldEditTableColumn_item_(self, outline, column, item):
-        return isinstance(item, BlinkGroup)
+        return isinstance(item, BlinkGroup) and not isinstance(item, UnreadBlinkGroup)
 
     def outlineView_isItemExpandable_(self, outline, item):
         return item is None or isinstance(item, BlinkGroup)
@@ -3333,6 +3387,9 @@ class CustomListModel(NSObject):
             if isinstance(item, BlinkContact):
                 from ContactMangler import mangled_name
                 return mangled_name(item.name, uri=getattr(item, 'uri', None))
+            if isinstance(item, UnreadBlinkGroup):
+                total = sum(self.unreadCountForContact(row) for row in item.contacts)
+                return '%s (%d)' % (item.name, total) if total else item.name
             return item.name
         except Exception:
             log_gui_exception('the contact list data source (%s)' % type(item).__name__)
@@ -3544,6 +3601,165 @@ class CustomListModel(NSObject):
         collapses the scroll position under the user.
         """
         self._reloadRowsForKey(getattr(notification.data, 'key', None))
+        self.refreshUnreadGroup()
+
+    # What the Unread group was last built from: [(key, what the row
+    # stands for)], in no particular order. A rebuild that comes to the
+    # same answer touches nothing, which is what keeps the address book
+    # notifications it listens to from redrawing the list for nothing.
+    _unread_group_signature = None
+    # The Dock total this model last announced, see refreshUnreadGroup.
+    _unread_group_total = None
+
+    @objc.python_method
+    def _unreadSources(self, keys):
+        """{key: (signature part, source row or None)} for unread conversations.
+
+        The row in the Unread group wraps whatever the list already shows
+        for that address: the Bonjour neighbour (keyed by instance id), else
+        the first address book contact holding the address, else nothing but
+        the address itself. One walk over the contacts for all the keys: this
+        runs on every contact list change.
+        """
+        from SMSWindowManager import SMSWindowManager
+        canonical = SMSWindowManager()._canonical_uri
+        wanted = set(keys)
+        found = {}
+        for source in self.bonjour_group.contacts:
+            if isinstance(source, BonjourBlinkContact) and source.id in wanted and source.id not in found:
+                found[source.id] = (('bonjour', source.id), source)
+        for source in self.all_contacts_group.contacts:
+            if len(found) == len(wanted):
+                break
+            contact = getattr(source, 'contact', None)
+            if contact is None:
+                continue
+            try:
+                uris = list(source.uris)
+            except Exception:
+                continue
+            for uri in uris:
+                key = canonical(str(uri.uri))
+                if key in wanted and key not in found:
+                    found[key] = (('contact', contact.id), source)
+        for key in wanted:
+            if key not in found:
+                found[key] = (('address', key), None)
+        return found
+
+    @objc.python_method
+    def _unreadRow(self, key, source):
+        if isinstance(source, BonjourBlinkContact):
+            uri = getattr(source, 'aor', None) or bonjour_offline_uri(key)
+            row = BonjourBlinkContact(uri, source.bonjour_neighbour, source.id, name=source.name)
+            row.presence_state = getattr(source, 'presence_state', None)
+            row.detail = source.detail
+            row.avatar = source.avatar
+            # A neighbour is recognised everywhere by being a row of the
+            # Bonjour group -- that is what opens its conversation on the
+            # Bonjour account, keyed by instance id. The selection hands out
+            # this row instead of the copy (getSelectedContacts).
+            row.unread_source = source
+            return row
+        if source is not None:
+            row = UnreadBlinkContact(source.contact)
+            try:
+                row.clone_presence_state(other=source)
+            except Exception:
+                pass
+            return row
+        return UnreadAddressBlinkContact(key)
+
+    @objc.python_method
+    def refreshUnreadGroup(self):
+        """Rebuild the Unread group from the unread counters.
+
+        Its members are exactly the conversations the Dock badge counts
+        (SMSWindowManager.countedUnreadCounts), so the two can not tell
+        different stories. In the list only while it has members, and then
+        at the very top, below New Contact Requests when that is showing.
+        """
+        group = getattr(self, 'unread_group', None)
+        if group is None or group.group is None:
+            return
+        try:
+            from SMSWindowManager import SMSWindowManager
+            counts = SMSWindowManager().countedUnreadCounts()
+        except Exception:
+            log_gui_exception('the unread conversations')
+            return
+
+        outline = getattr(self, 'contactOutline', None)
+        existing = dict((getattr(row, 'unread_key', None), row) for row in group.contacts)
+        # The row being read stays until the selection leaves it. Reading
+        # clears its count, and a row taken away under the selection would
+        # hand the selection -- and the message pane -- to the next unread
+        # conversation, which would then be read too, and so on down.
+        keys = set(counts)
+        if outline is not None:
+            try:
+                rows = outline.selectedRowIndexes()
+                index = rows.firstIndex()
+                while index != NSNotFound:
+                    item = outline.itemAtRow_(index)
+                    if item is not None and getattr(item, 'unread_key', None) in existing \
+                            and existing[item.unread_key] is item:
+                        keys.add(item.unread_key)
+                    index = rows.indexGreaterThanIndex_(index)
+            except Exception:
+                pass
+
+        members = []
+        sources = self._unreadSources(keys)
+        for key in sorted(keys):
+            part, source = sources[key]
+            row = existing.get(key)
+            if (row is None or getattr(row, 'unread_part', None) != part
+                    or getattr(row, 'unread_source', source) is not source):
+                row = self._unreadRow(key, source)
+                row.unread_key = key
+                row.unread_part = part
+            members.append(row)
+
+        signature = sorted((row.unread_key, row.unread_part) for row in members)
+        listed = group in self.groupsList
+        if signature != self._unread_group_signature or listed != bool(members):
+            self._unread_group_signature = signature
+            for row in group.contacts:
+                if row not in members:
+                    row.destroy()
+            group.contacts = members
+            group.sortContacts()
+            sender = group
+            if members and not listed:
+                index = 1 if self.groupsList and self.groupsList[0] is self.pending_watchers_group else 0
+                self.groupsList.insert(index, group)
+                sender = self
+            elif not members and listed:
+                self.groupsList.remove(group)
+                sender = self
+            self.nc.post_notification("BlinkContactsHaveChanged", sender=sender)
+        elif listed and outline is not None and sum(counts.values()) != self._unread_group_total:
+            # same rows, other counts: the total in the group's title
+            outline.reloadItem_reloadChildren_(group, False)
+
+        # Deleted and Blocked going in or out changes what the Dock counts
+        # without any counter changing, and the manager announces a total
+        # only when a counter does.
+        total = sum(counts.values())
+        if total != self._unread_group_total:
+            self._unread_group_total = total
+            self.nc.post_notification('BlinkUnreadMessageCountChanged', sender=self,
+                                      data=NotificationData(key=None, count=0, total=total))
+
+    @objc.python_method
+    @run_in_gui_thread
+    def _NH_BlinkContactsHaveChanged(self, notification):
+        # contacts loaded, filed into Deleted or Blocked, or taken out: who
+        # the Unread rows stand for may have changed with them
+        if notification.sender is getattr(self, 'unread_group', None):
+            return
+        self.refreshUnreadGroup()
 
     @objc.python_method
     @run_in_gui_thread
@@ -3599,7 +3815,7 @@ class CustomListModel(NSObject):
                 return None
             if group.isCallsGroup() or group.isTelGroup() or group.isConferenceGroup():
                 return group.lastCallTimeForContact(item)
-            if group.isMessagesGroup():
+            if group.isMessagesGroup() or group.isUnreadGroup():
                 return group.lastMessageTimeForContact(item)
             return None
         except Exception:
@@ -4653,12 +4869,14 @@ class ContactListModel(CustomListModel):
         self.outgoing_calls_group = OutgoingCallsBlinkGroup()
         self.incoming_calls_group = IncomingCallsBlinkGroup()
         self.voicemail_group = VoicemailBlinkGroup()
+        self.unread_group = UnreadBlinkGroup()
         self.contact_backup_timer = None
 
         return self
 
     def awakeFromNib(self):
         self.nc.add_observer(self, name="BlinkUnreadMessageCountChanged")
+        self.nc.add_observer(self, name="BlinkContactsHaveChanged")
         self.nc.add_observer(self, name="BlinkComposingStateChanged")
         self.nc.add_observer(self, name="BlinkLocationSharingStateChanged")
         self.nc.add_observer(self, name="BlinkConversationOrderChanged")
@@ -5170,16 +5388,28 @@ class ContactListModel(CustomListModel):
         # save groups position
         addressbook_manager = AddressbookManager()
         vg_manager = VirtualGroupsManager()
+        # The Unread group comes and goes with the unread messages and is
+        # always on top: counting it would move every other group by one,
+        # in the address book, each time it does. A group moved above it
+        # is moved below it again.
+        groups = [grp for grp in self.groupsList if grp is not self.unread_group]
+        if self.unread_group in self.groupsList:
+            top = 1 if groups and groups[0] is self.pending_watchers_group else 0
+            if self.groupsList.index(self.unread_group) != top:
+                self.groupsList.remove(self.unread_group)
+                self.groupsList.insert(top, self.unread_group)
         with addressbook_manager.transaction():
             for group in addressbook_manager.get_groups()+vg_manager.get_groups():
+                if group is self.unread_group.group:
+                    continue
                 try:
-                    blink_group = next(grp for grp in self.groupsList if grp.group == group)
+                    blink_group = next(grp for grp in groups if grp.group == group)
                 except StopIteration:
                     group.position = None
                     group.save()
                 else:
-                    if group.position != self.groupsList.index(blink_group):
-                        group.position = self.groupsList.index(blink_group)
+                    if group.position != groups.index(blink_group):
+                        group.position = groups.index(blink_group)
                         group.save()
 
     # Test numbers: the SylkServer configuration's testNumbers ([{name, uri}])
@@ -6257,6 +6487,7 @@ class ContactListModel(CustomListModel):
         self.online_contacts_group.load_group()
         self.addressbook_group.load_group()
         self.voicemail_group.load_group()
+        self.unread_group.load_group()
 
         settings = SIPSimpleSettings()
 
@@ -7271,6 +7502,9 @@ class ContactListModel(CustomListModel):
                     group.position = max(len(self.groupsList)-1, 0)
                     group.save()
                 self.groupsList.insert(index, self.no_group)
+        elif group.id == "unread":
+            # put in and taken out by refreshUnreadGroup, never by its position
+            return
         elif group.id == "blocked_contacts":
             # the virtual presence-block group is gone: presence blocks are members
             # of the replicated Blocked group (HistoryManager.sync_blocked_with_policies)

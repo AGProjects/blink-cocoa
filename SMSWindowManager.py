@@ -6675,6 +6675,71 @@ class SMSWindowManagerClass(NSObject):
         return self.unread_counts.get(self._canonical_uri(remote_uri), 0)
 
     @objc.python_method
+    def countedUnreadCounts(self):
+        """{key: count} of the conversations the Dock badge counts.
+
+        Every one that has messages waiting, less those whose contact is in
+        Deleted or Blocked: the contact list shows such a contact nowhere
+        else, so its conversation can not be found to be read and would keep
+        the badge up for good. The Unread group is built from this same
+        answer, so what the Dock says and what the group lists agree.
+        """
+        counts = dict((key, count) for key, count in self.unread_counts.items() if count > 0)
+        if not counts:
+            return counts
+        set_aside = set()
+        try:
+            from ContactListModel import DELETED_GROUP_ID
+            from HistoryManager import BLOCKED_GROUP_KIND, BLOCKED_GROUP_NAME, BLOCKED_GROUP_ID, _find_group
+            for group in (_find_group('deleted', 'Deleted', DELETED_GROUP_ID),
+                          _find_group(BLOCKED_GROUP_KIND, BLOCKED_GROUP_NAME, BLOCKED_GROUP_ID)):
+                if group is None:
+                    continue
+                for contact in group.contacts:
+                    for uri in contact.uris:
+                        key = self._canonical_uri(uri.uri)
+                        if key:
+                            set_aside.add(key)
+        except Exception as e:
+            BlinkLogger().log_error('Cannot tell which unread conversations are set aside: %s' % e)
+        return dict((key, count) for key, count in counts.items() if key not in set_aside)
+
+    @objc.python_method
+    def markConversationsRead(self, keys):
+        """Mark these conversations read, here and on the other devices.
+
+        What reading each of them would do, minus the reading: the rows go
+        read in SQL, the badge goes, and every account with replication
+        announces sylk-api-conversation-read, which the server fans out as
+        the conversation-read marker the phone clears its own badge on. No
+        display notification goes to the senders -- nobody has seen the
+        messages. Bonjour conversations have no server and no other device.
+        """
+        cleared = 0
+        announced = 0
+        for key in keys:
+            if not key:
+                continue
+            try:
+                if not self.clearUnreadMessages(key):
+                    continue
+            except Exception as e:
+                BlinkLogger().log_error('Cannot mark the conversation with %s read: %s' % (key, e))
+                continue
+            cleared += 1
+            account = self.accountForRemoteURI(key)
+            if account is None or account is BonjourAccount() or not account.sms.enable_replication:
+                continue
+            payload = json.dumps({'contact': key, 'device_id': this_device_id()})
+            self.noteOwnConversationRead(key)
+            self.noteSnapshotRead(account, key)
+            self.sendMessage(account, payload, 'application/sylk-api-conversation-read')
+            announced += 1
+        BlinkLogger().log_info('Marked %d conversation(s) read, %d announced to the other devices'
+                               % (cleared, announced))
+        return cleared
+
+    @objc.python_method
     def noteMessageAccount(self, account, remote_uri):
         """Record which account a message to or from this person used."""
         key = self._canonical_uri(remote_uri)
@@ -7050,7 +7115,7 @@ class SMSWindowManagerClass(NSObject):
         if self._inJournalBulk():
             self._unread_changed_during_bulk.add(key)
             return
-        total = sum(self.unread_counts.values())
+        total = sum(self.countedUnreadCounts().values())
         self.notification_center.post_notification(
             'BlinkUnreadMessageCountChanged', sender=self,
             data=NotificationData(key=key, count=count, total=total))

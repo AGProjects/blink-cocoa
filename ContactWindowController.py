@@ -160,7 +160,7 @@ from ContactCell import ContactCell  # this is used from the UI
 from ContactListModel import presence_status_for_contact, BlinkContact, BlinkBlockedPresenceContact, BonjourBlinkContact, BlinkConferenceContact, BlinkPresenceContact, BlinkGroup, AllContactsBlinkGroupBlinkPresenceContact
 from ContactListModel import BlinkPendingWatcher, LdapSearchResultContact, HistoryBlinkContact, VoicemailBlinkContact, SearchResultContact, SystemAddressBookBlinkContact, Avatar
 from ContactListModel import DefaultUserAvatar, DefaultMultiUserAvatar, ICON_SIZE, HistoryBlinkGroup, MissedCallsBlinkGroup, IncomingCallsBlinkGroup, OutgoingCallsBlinkGroup, OnlineGroup
-from ContactListModel import bonjour_offline_uri
+from ContactListModel import bonjour_offline_uri, UnreadBlinkGroup
 from MediaStream import STREAM_CONNECTED, STREAM_RINGING, STREAM_PROPOSING
 from EnrollmentController import EnrollmentController
 from FileTransferWindowController import openFileTransferSelectionDialog, FileTransferWindowController
@@ -984,7 +984,8 @@ class ContactWindowController(NSWindowController):
         while item != NSNotFound:
             object = outline.itemAtRow_(item)
             if isinstance(object, BlinkContact):
-                contacts.append(object)
+                # an Unread group copy of a Bonjour neighbour stands for the neighbour
+                contacts.append(getattr(object, 'unread_source', None) or object)
             elif includeGroups and isinstance(object, BlinkGroup):
                 contacts.append(object)
             item = selection.indexGreaterThanIndex_(item)
@@ -2968,6 +2969,15 @@ class ContactWindowController(NSWindowController):
                 mitem.setEnabled_(bool(item.pidfs) if isinstance(item, BlinkPresenceContact) else False)
                 mitem.setRepresentedObject_(item)
 
+        elif isinstance(item, UnreadBlinkGroup):
+            # synthetic: not renamed, moved or deleted, it only lists
+            lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("%s Group", "Menu item") % item.name, "", "")
+            lastItem.setEnabled_(False)
+            self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
+            lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Mark All as Read", "Menu item"), "markUnreadGroupRead:", "")
+            lastItem.setEnabled_(bool(item.contacts))
+            lastItem.setRepresentedObject_(item)
+
         elif isinstance(item, BlinkGroup):
             lastItem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("%s Group", "Menu item") % item.name, "", "")
             lastItem.setEnabled_(False)
@@ -2997,7 +3007,7 @@ class ContactWindowController(NSWindowController):
             grp_item = grp_submenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("To First Position", "Menu item"), "moveGroupToIndex:", "")
             grp_item.setRepresentedObject_({'group': item, 'index': 0})
             for group in self.model.groupsList:
-                if group == item:
+                if group == item or isinstance(group, UnreadBlinkGroup):
                     continue
                 grp_item = grp_submenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("After %s", "Menu item") % group.name, "moveGroupToIndex:", "")
                 index = self.model.groupsList.index(group)
@@ -6086,6 +6096,9 @@ class ContactWindowController(NSWindowController):
 
     def contactSelectionChanged_(self, notification):
         self.updateStartSessionButtons()
+        # a read conversation's row in Unread stays only while it is selected
+        if notification.object() == self.contactOutline:
+            self.model.refreshUnreadGroup()
         # Extending the selection with shift is picking contacts to act on
         # together, not opening a conversation: the pane stays where it is.
         if len(self.getSelectedContacts()) <= 1:
@@ -6610,6 +6623,16 @@ class ContactWindowController(NSWindowController):
         self.model.editGroup(group)
         self.refreshContactsList()
         self.searchContacts()
+
+    @objc.IBAction
+    def markUnreadGroupRead_(self, sender):
+        """Unread group menu: every conversation in it is read, here and on
+        the account's other devices (SMSWindowManager.markConversationsRead)."""
+        manager = SMSWindowManager.SMSWindowManager()
+        try:
+            manager.markConversationsRead(list(manager.countedUnreadCounts()))
+        except Exception as e:
+            BlinkLogger().log_error('Cannot mark the unread conversations read: %s' % e)
 
     @objc.IBAction
     def moveGroupToIndex_(self, sender):
