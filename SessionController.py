@@ -2665,7 +2665,9 @@ class SessionController(NSObject):
         
         extra_headers = []
         if self.session.account is not BonjourAccount() and self.session.account.pstn and self.session.account.pstn.asserted_identity:
-            asserted_identity = asserted_identity if self.session.account.pstn.asserted_identity.startswith('sip:') else 'sip:%s' % self.session.account.pstn.asserted_identity
+            asserted_identity = str(self.session.account.pstn.asserted_identity)
+            if not asserted_identity.startswith('sip:'):
+                asserted_identity = 'sip:%s' % asserted_identity
             
             try:
                 SIPURI.parse(asserted_identity)
