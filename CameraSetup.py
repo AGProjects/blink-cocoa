@@ -207,8 +207,6 @@ class NetworkCameraPanel(_ModalPanel):
     def _build(self, label):
         self.panel, view = _panel(_t("Add network camera"), self.WIDTH, self.HEIGHT)
         self.panel.setDelegate_(self)
-        self.panel.setContentMinSize_(NSMakeSize(520, self.HEIGHT))
-        self.panel.setContentMaxSize_(NSMakeSize(720, self.HEIGHT))
         form = _Form(view, self.WIDTH)
         form.label(_t("Cameras on your network"), width=200)
         x = self.WIDTH - form.MARGIN
@@ -275,12 +273,12 @@ class NetworkCameraPanel(_ModalPanel):
         view.addSubview_(self.preview)
         form.gap(188)
         form.label(_t("Video only, 10 fps. The camera is remembered with its password."), small=True, secondary=True)
+        form.gap(17)
         cancel = _button(_t("Cancel"), self, 'cancel:', '\x1b')
         self.addButton = _button(_t("Add"), self, 'add:', '\r')
-        for index, button in enumerate((self.addButton, cancel)):
-            button.setFrame_(NSMakeRect(self.WIDTH - form.MARGIN - 92 * (index + 1) + 6, self.HEIGHT - 48, 88, 32))
-            button.setAutoresizingMask_(1)
-            view.addSubview_(button)
+        height = _finish(self.panel, view, form, (self.addButton, cancel), self.WIDTH)
+        self.panel.setContentMinSize_(NSMakeSize(520, height))
+        self.panel.setContentMaxSize_(NSMakeSize(720, height))
         self.updateButtons()
 
     @objc.python_method
@@ -584,11 +582,10 @@ class AddVideoPanel(_ModalPanel):
         self.resolutionPopup = form.row(_t("Send at"), _resolution_popup(), height=24)
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, 'fieldChanged:', 'NSControlTextDidChangeNotification', self.urlField)
         form.label(_t("Video only, 10 fps. A network camera that works is remembered here, with its password."), small=True, secondary=True, height=30, wraps=True)
+        form.gap(30)
         cancel = _button(_t("Cancel"), self, 'cancel:', '\x1b')
         self.addButton = _button(_t("Add"), self, 'add:', '\r')
-        for index, button in enumerate((self.addButton, cancel)):
-            button.setFrame_(NSMakeRect(self.WIDTH - form.MARGIN - 92 * (index + 1) + 6, self.HEIGHT - 48, 88, 32))
-            view.addSubview_(button)
+        _finish(self.panel, view, form, (self.addButton, cancel), self.WIDTH)
 
     @objc.python_method
     def fillSaved(self):
@@ -720,8 +717,8 @@ class PublishList(NSObject):
     """The videos Join Conference publishes with Video: one line each, checked to be published. With a gateway
     that announces multiple-video-feeds, three groups: Local cameras (the first checked one is our camera, the
     others go as extra feeds), Screens (at most one: shared as soon as the room is joined, every checked camera
-    then going as an extra feed) and RTSP cameras (the remembered ones: Add network camera…, Forget; right
-    click: Send at, Rename, Forget; double click renames). Without that feature: cameras and screens, one choice.
+    then going as an extra feed) and RTSP cameras (the remembered ones, and Add network camera… as the last line
+    of the group; Forget; right click: Send at, Rename, Forget; double click renames). Without that feature: cameras and screens, one choice.
 
     As it opens: an external camera is checked, else the one in use; no screen, no RTSP camera. One camera or
     screen always stays checked. Changing the room unchecks the RTSP cameras."""
@@ -735,7 +732,7 @@ class PublishList(NSObject):
         self.owner = owner              # told when the list's height matters (nothing for now)
         self.multiple = False
         self.checked = None             # keys of the checked lines (None: the defaults, as it opens)
-        self.rows = []                  # ('header', title) or ('source', data)
+        self.rows = []                  # ('header', title), ('source', data) or ('add', None): Add network camera…
         self._shown = set()             # the keys of the lines shown checked
         self.features_url = None
         self._build()
@@ -765,15 +762,13 @@ class PublishList(NSObject):
         self.table.setColumnAutoresizingStyle_(5)       # NSTableViewLastColumnOnlyAutoresizingStyle
         self.table.setDataSource_(self)
         self.table.setDelegate_(self)
+        self.table.setAction_('clicked:')
         self.table.setDoubleAction_('doubleClicked:')
         self.table.setTarget_(self)
         from AppKit import NSMenu
         self.table.setMenu_(NSMenu.alloc().init())
         self.table.menu().setDelegate_(self)
         self.scroll.setDocumentView_(self.table)
-        self.addButton = _button(_t("Add network camera…"), self, 'addNetworkCamera:')
-        self.addButton.setControlSize_(1)       # small
-        self.addButton.setFont_(NSFont.systemFontOfSize_(NSFont.smallSystemFontSize()))
         self.forgetButton = _button(_t("Forget"), self, 'forget:')
         self.forgetButton.setControlSize_(1)
         self.forgetButton.setFont_(NSFont.systemFontOfSize_(NSFont.smallSystemFontSize()))
@@ -781,18 +776,17 @@ class PublishList(NSObject):
 
     @objc.python_method
     def views(self):
-        return (self.label, self.scroll, self.addButton, self.forgetButton)
+        return (self.label, self.scroll, self.forgetButton)
 
     @objc.python_method
     def place(self, view, list_x, y, width, height):
-        """In view (not flipped): the label left of the list, the buttons under the label."""
+        """In view (not flipped): the label left of the list, Forget under the label."""
         for control in self.views():
             if control.superview() is not view:
                 view.addSubview_(control)
         self.scroll.setFrame_(NSMakeRect(list_x, y, width, height))
         self.label.setFrame_(NSMakeRect(list_x - 126, y + height - 19, 121, 17))
-        self.addButton.setFrame_(NSMakeRect(list_x - 152, y + height - 50, 150, 24))
-        self.forgetButton.setFrame_(NSMakeRect(list_x - 152, y + height - 76, 150, 24))
+        self.forgetButton.setFrame_(NSMakeRect(list_x - 152, y + height - 50, 150, 24))
         self.table.sizeLastColumnToFit()
 
     @objc.python_method
@@ -800,7 +794,6 @@ class PublishList(NSObject):
         for control in self.views():
             control.setHidden_(hidden)
         if not hidden:
-            self.addButton.setHidden_(not self.multiple)
             self.forgetButton.setHidden_(not self.multiple)
 
     # The lines
@@ -840,6 +833,7 @@ class PublishList(NSObject):
             for source in saved_sources():
                 self.rows.append(('source', dict(kind='rtsp', url=source['url'], user=source.get('user') or '', password=source.get('password') or '',
                                                  label=source.get('label') or '', resolution=source.get('resolution') or '')))
+            self.rows.append(('add', None))     # the group's last line: a camera found on the network, tested, then added here
         local = [data for data in self.sources() if data['kind'] in ('camera', 'screen')]
         checked = [data for data in local if self.key(data) in self.checked]
         shown = set(self.key(data) for data in self.sources() if self.key(data) in self.checked)
@@ -941,7 +935,14 @@ class PublishList(NSObject):
                 cell.setFont_(NSFont.boldSystemFontOfSize_(NSFont.smallSystemFontSize()))
                 return cell
             return None
+        if 0 <= row < len(self.rows) and self.rows[row][0] == 'add' and column.identifier() == 'check':
+            from AppKit import NSTextFieldCell
+            return NSTextFieldCell.alloc().initTextCell_('')        # no tick box on Add network camera…
         return column.dataCell()
+
+    def tableView_willDisplayCell_forTableColumn_row_(self, table, cell, column, row):
+        if column is not None and column.identifier() == 'title' and 0 <= row < len(self.rows):
+            cell.setTextColor_(NSColor.linkColor() if self.rows[row][0] == 'add' else NSColor.controlTextColor())
 
     def tableView_objectValueForTableColumn_row_(self, table, column, row):
         if not 0 <= row < len(self.rows):
@@ -949,6 +950,8 @@ class PublishList(NSObject):
         kind, data = self.rows[row]
         if kind == 'header':
             return data
+        if kind == 'add':
+            return '' if column is not None and column.identifier() == 'check' else _t("Add network camera…")
         if column is not None and column.identifier() == 'check':
             return NSOnState if self.is_checked(data) else NSOffState
         if data['kind'] == 'camera':
@@ -963,6 +966,8 @@ class PublishList(NSObject):
         return column.identifier() == 'check' or self.rows[row][1]['kind'] == 'rtsp'
 
     def tableView_toolTipForCell_rect_tableColumn_row_mouseLocation_(self, table, cell, rect, column, row, location):
+        if 0 <= row < len(self.rows) and self.rows[row][0] == 'add':
+            return _t("A camera of your network (ONVIF, Bonjour, or its RTSP address), tested before it is added"), rect
         if not 0 <= row < len(self.rows) or self.rows[row][0] != 'source':
             return None, rect
         data = self.rows[row][1]
@@ -1010,6 +1015,12 @@ class PublishList(NSObject):
         if 0 <= row < len(self.rows) and self.rows[row][0] == 'source' and self.rows[row][1]['kind'] == 'rtsp':
             return self.rows[row][1]
         return None
+
+    def clicked_(self, sender):
+        row = self.table.clickedRow()
+        if 0 <= row < len(self.rows) and self.rows[row][0] == 'add':
+            self.table.deselectAll_(None)
+            self.addNetworkCamera_(sender)
 
     def doubleClicked_(self, sender):
         row = self.table.clickedRow()

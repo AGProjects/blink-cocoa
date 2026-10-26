@@ -15,7 +15,8 @@ from AppKit import (NSApp,
                     NSOffState,
                     NSOKButton,
                     NSOnState,
-                    NSRunAlertPanel)
+                    NSRunAlertPanel,
+                    NSAlertDefaultReturn)
 
 from Foundation import (NSArray,
                         NSBundle,
@@ -133,12 +134,17 @@ class ServerConferenceRoom(object):
 
 
 class ConferenceConfiguration(object):
-    def __init__(self, name, target, participants=None, media_type=None, nickname=None):
+    """A saved composition of Join Conference (a profile): the room, the media, the invitees and, with Video,
+    the checked lines of the Publish list (keys camera:<device>, screen:<device>, rtsp:<url>; None when saved
+    without Video, or by an older Blink)."""
+
+    def __init__(self, name, target, participants=None, media_type=None, nickname=None, video_sources=None):
         self.name = name
         self.target = target
         self.participants = participants
         self.media_type = media_type
         self.nickname = nickname
+        self.video_sources = video_sources
 
 
 def validateParticipant(uri):
@@ -506,6 +512,13 @@ class JoinConferenceWindowController(NSObject):
                 else:
                     media_type = "audio"
 
+                video_sources = self.publish.checked_keys() if self.videoChecked() else None
+                if configuration_name and configuration_name != self.selected_configuration and configuration_name in self.conference_configurations:
+                    # another saved configuration of that name: replaced only when the user says so
+                    if NSRunAlertPanel(NSLocalizedString("Save configuration", "Window title"),
+                                       NSLocalizedString("Replace the configuration %s?", "Label") % configuration_name,
+                                       NSLocalizedString("Replace", "Button title"), NSLocalizedString("Cancel", "Button title"), None) != NSAlertDefaultReturn:
+                        configuration_name = None
                 if configuration_name:
                     if configuration_name in list(self.conference_configurations.keys()):
                         self.conference_configurations[configuration_name].name = configuration_name
@@ -513,8 +526,10 @@ class JoinConferenceWindowController(NSObject):
                         self.conference_configurations[configuration_name].participants = self._participants
                         self.conference_configurations[configuration_name].media_type = media_type
                         self.conference_configurations[configuration_name].nickname = self.nickname
+                        self.conference_configurations[configuration_name].video_sources = video_sources
                     else:
-                        configuration = ConferenceConfiguration(configuration_name, self.target, participants=self._participants, media_type=media_type, nickname=self.nickname)
+                        configuration = ConferenceConfiguration(configuration_name, self.target, participants=self._participants, media_type=media_type,
+                                                                nickname=self.nickname, video_sources=video_sources)
                         self.conference_configurations[configuration_name] = configuration
 
                     self.selected_configuration = configuration_name
@@ -534,9 +549,12 @@ class JoinConferenceWindowController(NSObject):
                 pickle.dump(self.conference_configurations, open(self.storage_path, "wb+"))
 
         elif sender.title() == self.deleteButtonTitle:
-           del self.conference_configurations[self.selected_configuration]
-           pickle.dump(self.conference_configurations, open(self.storage_path, "wb+"))
-           self.setDefaults()
+            if NSRunAlertPanel(NSLocalizedString("Delete configuration", "Window title"),
+                               NSLocalizedString("Delete the configuration %s?", "Label") % self.selected_configuration,
+                               NSLocalizedString("Delete", "Button title"), NSLocalizedString("Cancel", "Button title"), None) == NSAlertDefaultReturn:
+                del self.conference_configurations[self.selected_configuration]
+                pickle.dump(self.conference_configurations, open(self.storage_path, "wb+"))
+                self.setDefaults()
         else:
             configuration = sender.selectedItem().representedObject()
             if configuration:
@@ -556,6 +574,10 @@ class JoinConferenceWindowController(NSObject):
                     self.audio.setState_(NSOnState)
                     self.video.setState_(NSOffState)
                 self.chat.setState_(NSOnState)
+                # its videos are chosen with its room (setting the room from here does not uncheck its RTSP cameras)
+                keys = getattr(configuration, 'video_sources', None)
+                if keys is not None:
+                    self.publish.set_checked_keys(keys)
                 self.lookupRoom()
                 self.startWhenParticipantsAvailable.setEnabled_(bool(len(self._participants)))
                 if len(self._participants) == 0:
@@ -637,6 +659,7 @@ class JoinConferenceWindowController(NSObject):
         self.audio.setState_(NSOnState)
         self.chat.setState_(NSOnState)
         self.video.setState_(NSOffState)
+        self.publish.checked = None     # the default videos again, when Video is checked
         self.lookupRoom()
         self.startWhenParticipantsAvailable.setEnabled_(False)
         self.startWhenParticipantsAvailable.setState_(NSOffState)
