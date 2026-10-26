@@ -31,8 +31,8 @@ the grid and the thumbnail. Camera and More are menus. Raising hands and muting
 are there with three people or more, speaker selection with four or more
 (distinct addresses, us included); Stop sharing while the screen is shared.
 
-Our extra videos (ExtraVideo.py: a second camera, with a gateway that takes
-several videos per participant) are tiles of their own, drawn from their own
+Our extra videos (ExtraVideo.py: a second camera or an RTSP camera, with a
+gateway that takes several videos per participant) are tiles of their own, drawn from their own
 track: More -> Add video, and on their tile Send at and Stop this video. While
 the screen is shared with nobody chosen as speaker, the speakers follow our
 videos: the screen alone, or the screen and our one other video; with more
@@ -2124,27 +2124,88 @@ class VideoroomWindowController(NSObject):
             self._item(menu, _t("Lower all hands"), lambda: [session.toggle_hand(id) for id in hands], enabled=established)
         self._popUpOverSegment(menu, sender)
 
-    # Our extra videos (ExtraVideo.py): a second camera of this computer
+    # Our extra videos (ExtraVideo.py): a second camera of this computer, an RTSP camera
 
     @objc.python_method
     def _addVideoMenu(self, menu):
-        """More -> Add video: the cameras of this computer other than the one our own video sends."""
-        from ExtraVideo import MAX_EXTRA_VIDEOS, extra_videos_available, local_cameras
+        """More -> Add video: the cameras of this computer other than the one our own video sends, the RTSP
+        cameras used before, and RTSP camera… for a new one."""
+        from urllib.parse import urlsplit
+        from ExtraVideo import MAX_EXTRA_VIDEOS, extra_videos_available, local_cameras, saved_sources
+        from RtspSource import rtsp_available
         submenu = self._menu()
-        busy = set(extra.source.get('unique_id') for extra in self.session.extra_videos.values())
-        full = len(self.session.extra_videos) >= MAX_EXTRA_VIDEOS
+        extras = list(self.session.extra_videos.values())
+        busy = set(extra.source.get('unique_id') or extra.source.get('url') for extra in extras)
+        full = len(extras) >= MAX_EXTRA_VIDEOS
         cameras = local_cameras() if extra_videos_available() else []
         for name, unique_id in cameras:
             self._item(submenu, name, lambda name=name, unique_id=unique_id: self.startExtraVideo(dict(kind='camera', name=name, unique_id=unique_id), name),
                        enabled=unique_id not in busy and not full)
         if not cameras:
             self._item(submenu, _t("No other camera"))
-        elif full:
+        if rtsp_available():
+            submenu.addItem_(NSMenuItem.separatorItem())
+            for source in saved_sources():
+                host = urlsplit(source['url']).hostname or source['url']
+                label = source.get('label') or host
+                item = self._item(submenu, '%s (%s)' % (label, host), lambda source=dict(source, kind='rtsp'), label=label: self.startExtraVideo(source, label),
+                                  enabled=source['url'] not in busy and not full)
+                item.setToolTip_(source['url'])
+            self._item(submenu, _t("RTSP camera…"), self.askRtspCamera, enabled=not full)
+        if full:
             submenu.addItem_(NSMenuItem.separatorItem())
             self._item(submenu, _t("At most %d videos besides your own") % MAX_EXTRA_VIDEOS)
         item = menu.addItemWithTitle_action_keyEquivalent_(_t("Add video"), None, '')
         item.setSubmenu_(submenu)
         item.setToolTip_(_t("Send another camera too, shown under your name"))
+
+    @objc.python_method
+    def askRtspCamera(self):
+        """Name, address, user and password of an RTSP camera, then it is added (remembered once it works)."""
+        from AppKit import NSAlert, NSPopUpButton, NSSecureTextField, NSTextField, NSView
+        from ExtraVideo import DEFAULT_RESOLUTION, RESOLUTIONS
+        alert = NSAlert.alloc().init()
+        alert.setMessageText_(_t("Add an RTSP camera"))
+        alert.setInformativeText_(_t("Its video is sent to the room under your name. User and password are kept on this computer once it works."))
+        alert.addButtonWithTitle_(_t("Add"))
+        alert.addButtonWithTitle_(_t("Cancel"))
+        width, row = 360.0, 28.0
+        view = NSView.alloc().initWithFrame_(NSMakeRect(0, 0, width, row * 5))
+        fields = {}
+        number = len(self.session.extra_videos) + 1
+        rows = (('label', _t("Name"), NSTextField, _t("Camera %d") % number), ('url', _t("Address"), NSTextField, 'rtsp://'),
+                ('user', _t("User"), NSTextField, ''), ('password', _t("Password"), NSSecureTextField, ''))
+        for index, (key, title, field_class, value) in enumerate(rows):
+            y = row * (4 - index)
+            label = NSTextField.labelWithString_(title)
+            label.setFrame_(NSMakeRect(0, y + 3, 80, 18))
+            view.addSubview_(label)
+            field = field_class.alloc().initWithFrame_(NSMakeRect(86, y, width - 86, 22))
+            field.setStringValue_(value)
+            view.addSubview_(field)
+            fields[key] = field
+        label = NSTextField.labelWithString_(_t("Send at"))
+        label.setFrame_(NSMakeRect(0, 3, 80, 18))
+        view.addSubview_(label)
+        sizes = NSPopUpButton.alloc().initWithFrame_pullsDown_(NSMakeRect(84, 0, 220, 24), False)
+        for name, w, h, bitrate in RESOLUTIONS:
+            sizes.addItemWithTitle_(_t("%dx%d, about %d kbit/s") % (w, h, bitrate))
+            sizes.lastItem().setRepresentedObject_(name)
+            if name == DEFAULT_RESOLUTION:
+                sizes.selectItem_(sizes.lastItem())
+        view.addSubview_(sizes)
+        alert.setAccessoryView_(view)
+        alert.window().setInitialFirstResponder_(fields['url'])
+        if alert.runModal() != 1000:        # NSAlertFirstButtonReturn
+            return
+        url = str(fields['url'].stringValue()).strip()
+        if not url.lower().startswith(('rtsp://', 'rtsps://')) or len(url) <= len('rtsp://'):
+            self.flash(_t("An RTSP camera's address starts with rtsp://"), duration=5.0)
+            return
+        label = str(fields['label'].stringValue()).strip() or _t("Camera %d") % number
+        source = dict(kind='rtsp', url=url, user=str(fields['user'].stringValue()).strip(), password=str(fields['password'].stringValue()),
+                      resolution=str(sizes.selectedItem().representedObject()))
+        self.startExtraVideo(source, label)
 
     @objc.python_method
     def startExtraVideo(self, source, label):

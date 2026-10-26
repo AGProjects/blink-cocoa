@@ -1,7 +1,7 @@
 # Copyright (C) 2026 AG Projects. See LICENSE for details.
 #
 
-"""Extra videos of ours in a video room: a second camera (later an RTSP camera).
+"""Extra videos of ours in a video room: a second camera, or an RTSP camera (CCTV).
 
 Each is a publisher of its own in the room, video only, joined over the room's
 sylkRTC connection with parent (our own publisher's session id) and label
@@ -11,7 +11,12 @@ chat leg; it ends it with us. At most 4 per participant (the server's limit).
 
 One sendonly RTCPeerConnection each, with an RTCVideoSource of its own:
 
-  camera (RTCCameraVideoCapturer, AVFoundation) ─► RTCVideoSource (adapted to 640x360, 10 fps) ─► track ─► sender
+  camera (RTCCameraVideoCapturer, AVFoundation) ─┬─► RTCVideoSource (adapted to 640x360, 10 fps) ─► track ─► sender
+  RTSP camera (RtspSource: libavformat, ffmpeg) ─┘
+
+An RTSP camera that worked is remembered with its name, address, user, password
+and resolution (user defaults VideoroomVideoSources, newest first, 20) and offered
+again.
 
 The same track is its tile here (its Participant's video_track), so the window
 shows it like any other video. A camera of this computer must not be the SDK's
@@ -25,13 +30,15 @@ The session posts, with itself as sender,
   VideoroomSessionExtraVideoDidChangeState   extra, state (connecting, established, ended), reason
 """
 
-__all__ = ['ExtraVideo', 'RESOLUTIONS', 'DEFAULT_RESOLUTION', 'MAX_EXTRA_VIDEOS', 'FPS', 'local_cameras', 'extra_videos_available']
+__all__ = ['ExtraVideo', 'RESOLUTIONS', 'DEFAULT_RESOLUTION', 'MAX_EXTRA_VIDEOS', 'FPS', 'local_cameras', 'extra_videos_available',
+           'saved_sources', 'remember_source', 'rename_source', 'set_source_resolution', 'forget_source']
 
+import json
 import uuid
 
 import objc
 
-from Foundation import NSLocalizedString
+from Foundation import NSLocalizedString, NSUserDefaults
 
 from application.notification import IObserver, NotificationCenter, NotificationData
 from application.python import Null
@@ -50,6 +57,9 @@ MAX_EXTRA_VIDEOS = 4            # per participant, the gateway's limit
 JOIN_TIMEOUT = 25               # seconds from the offer to established
 CAPTURE_WIDTH, CAPTURE_HEIGHT = 1280, 720       # the camera is captured at least this large, so any resolution can be chosen later
 
+SOURCES_KEY = 'VideoroomVideoSources'      # user defaults: the RTSP cameras that worked, JSON
+MAX_SOURCES = 20
+
 DIRECTION_SEND_ONLY = 1         # RTCRtpTransceiverDirection
 SDP_ANSWER = 2                  # RTCSdpType
 
@@ -61,6 +71,49 @@ def _resolution(name):
 
 def _cls(name):
     return webrtc_classes().get(name)
+
+
+# Remembered RTSP cameras
+
+def saved_sources():
+    """The RTSP cameras that worked, newest first: [{label, url, user, password, resolution}]."""
+    try:
+        sources = json.loads(NSUserDefaults.standardUserDefaults().stringForKey_(SOURCES_KEY) or '[]')
+    except (TypeError, ValueError):
+        sources = []
+    return [source for source in sources if isinstance(source, dict) and source.get('url')]
+
+
+def _save_sources(sources):
+    NSUserDefaults.standardUserDefaults().setObject_forKey_(json.dumps(sources[:MAX_SOURCES]), SOURCES_KEY)
+
+
+def remember_source(source):
+    previous = next((other for other in saved_sources() if other.get('url') == source.get('url')), {})
+    sources = [other for other in saved_sources() if other.get('url') != source.get('url')]
+    sources.insert(0, dict(label=source.get('label') or '', url=source['url'], user=source.get('user') or '', password=source.get('password') or '',
+                           resolution=source.get('resolution') or previous.get('resolution') or DEFAULT_RESOLUTION))
+    _save_sources(sources)
+
+
+def rename_source(url, label):
+    sources = saved_sources()
+    for source in sources:
+        if source.get('url') == url:
+            source['label'] = label
+    _save_sources(sources)
+
+
+def set_source_resolution(url, resolution):
+    sources = saved_sources()
+    for source in sources:
+        if source.get('url') == url:
+            source['resolution'] = resolution
+    _save_sources(sources)
+
+
+def forget_source(url):
+    _save_sources([source for source in saved_sources() if source.get('url') != url])
 
 
 def _error_text(error):
@@ -141,7 +194,7 @@ def _capture_format(device):
 
 @implementer(IObserver)
 class ExtraVideo(object):
-    """One extra video of ours: source is dict(kind='camera', name, unique_id)."""
+    """One extra video of ours: source is dict(kind='camera', name, unique_id) or dict(kind='rtsp', url, user, password)."""
 
     def __init__(self, session, source, label):
         from Videoroom import Participant
@@ -159,6 +212,7 @@ class ExtraVideo(object):
         self._transceiver = None
         self._join_sent = False
         self._join_timer = None
+        self._reader = None         # an RTSP camera's RtspReader
         self.capture_size = None    # what the camera gives
         # its tile here: a participant of the window, its picture our own track
         self.participant = Participant(dict(id=self.id, uri=session.identity, display_name=label, type='webrtc', parent=session.id, label=label))
@@ -171,7 +225,10 @@ class ExtraVideo(object):
         return '<ExtraVideo %s %s %s>' % (self.label, self.describe(), self.state)
 
     def describe(self):
-        return self.source.get('url') if self.source.get('kind') == 'rtsp' else (self.source.get('name') or 'camera')
+        if self.source.get('kind') == 'rtsp':
+            from RtspSource import RtspReader
+            return RtspReader(self.source['url']).describe()      # without user and password
+        return self.source.get('name') or 'camera'
 
     def log(self, text, level='info'):
         getattr(BlinkLogger(), 'log_%s' % level)('[videoroom] %s: %s: %s' % (self.session.room, self.label, text))
@@ -192,17 +249,25 @@ class ExtraVideo(object):
         session = self.session
         if session.connection is None or session.state != 'established':
             raise RuntimeError(NSLocalizedString("the room is not connected yet", "Label"))
-        if self.source.get('kind') != 'camera':
-            raise RuntimeError('%s sources are not supported' % self.source.get('kind'))
-        if not extra_videos_available():
-            raise RuntimeError(NSLocalizedString("this WebRTC.framework cannot capture cameras", "Label"))
-        device = _capture_device(self.source.get('unique_id'))
-        if device is None:
-            raise RuntimeError(NSLocalizedString("the camera is not connected", "Label"))
-        format, self.capture_size, fps = _capture_format(device)
-        if format is None:
-            raise RuntimeError(NSLocalizedString("the camera has no usable format", "Label"))
-        _register_metadata()
+        kind = self.source.get('kind')
+        if kind == 'rtsp':
+            from RtspSource import rtsp_missing
+            reason = rtsp_missing()
+            if reason is not None:
+                raise RuntimeError(reason)
+            device = format = None
+        elif kind == 'camera':
+            if not extra_videos_available():
+                raise RuntimeError(NSLocalizedString("this WebRTC.framework cannot capture cameras", "Label"))
+            device = _capture_device(self.source.get('unique_id'))
+            if device is None:
+                raise RuntimeError(NSLocalizedString("the camera is not connected", "Label"))
+            format, self.capture_size, fps = _capture_format(device)
+            if format is None:
+                raise RuntimeError(NSLocalizedString("the camera has no usable format", "Label"))
+            _register_metadata()
+        else:
+            raise RuntimeError('%s sources are not supported' % kind)
         factory = peer_connection_factory()
         self._delegate = VideoroomPeerConnectionDelegate.alloc().initWithSession_label_(session, self.id)
         self.peer_connection = factory.peerConnectionWithConfiguration_constraints_delegate_(session._configuration(), session._constraints(), self._delegate)
@@ -222,20 +287,27 @@ class ExtraVideo(object):
         session.extra_videos[self.id] = self
         NotificationCenter().add_observer(self, sender=session.connection, name='SylkRTCConnectionGotEvent')
 
-        self._capturer = _cls('RTCCameraVideoCapturer').alloc().initWithDelegate_(self._video_source)
+        if kind == 'rtsp':
+            from RtspSource import RtspReader
+            self._reader = RtspReader(self.source['url'], self.source.get('user'), self.source.get('password'), source=self._video_source, fps=FPS,
+                                      on_started=self._rtsp_started, on_failed=lambda reason: self.stop(reason))
+            self._reader.start()
+        else:
+            self._capturer = _cls('RTCCameraVideoCapturer').alloc().initWithDelegate_(self._video_source)
 
-        def started(error):
-            if error is not None:
-                call_in_gui_thread(self.stop, 'the camera cannot be opened: %s' % _error_text(error))
+            def started(error):
+                if error is not None:
+                    call_in_gui_thread(self.stop, 'the camera cannot be opened: %s' % _error_text(error))
 
-        self._capturer.startCaptureWithDevice_format_fps_completionHandler_(device, format, fps, started)
+            self._capturer.startCaptureWithDevice_format_fps_completionHandler_(device, format, fps, started)
 
         def offered(description, error):
             call_in_gui_thread(self._offer_created, description, _error_text(error))
 
         self.peer_connection.offerForConstraints_completionHandler_(session._constraints(), offered)
         self._join_timer = _timer(JOIN_TIMEOUT, lambda: self.stop('no media connection'))
-        self.log('adding %s (captured at %dx%d, sent at %dx%d %d fps, %d kbit/s)' % (self.describe(), self.capture_size[0], self.capture_size[1], width, height, FPS, bitrate))
+        captured = ', captured at %dx%d' % self.capture_size if self.capture_size else ''
+        self.log('adding %s (sent at %dx%d %d fps, %d kbit/s%s)' % (self.describe(), width, height, FPS, bitrate, captured))
         self._post_state('connecting')
 
     def stop(self, reason='stopped'):
@@ -260,6 +332,9 @@ class ExtraVideo(object):
         session.extra_videos.pop(self.id, None)
         session._trickle_ready.discard(self.id)
         session._trickle_pending.pop(self.id, None)
+        reader, self._reader = self._reader, None
+        if reader is not None:
+            reader.stop()
         capturer, self._capturer = self._capturer, None
         if capturer is not None:
             try:
@@ -330,11 +405,19 @@ class ExtraVideo(object):
             self.state = 'established'
             self.participant.state = 'established'
             self.log('sending')
+            if self.source.get('kind') == 'rtsp':
+                remember_source(dict(label=self.label, url=self.source['url'], user=self.source.get('user'), password=self.source.get('password'), resolution=self.resolution))
             self._post_changed()
             self._post_state('established')
         elif state == 'terminated':
             self._join_sent = False     # nothing to leave
             self._end(message.get('reason') or 'ended by the server')
+
+    def _rtsp_started(self, width, height, codec):
+        if self.state == 'ended':
+            return
+        self.capture_size = (width, height)
+        self.log('RTSP %s %dx%d' % (codec.upper(), width, height))
 
     def _answer_set(self, error):
         if self.peer_connection is None:
@@ -368,6 +451,9 @@ class ExtraVideo(object):
         if name == self.resolution:
             return
         self.resolution = name
+        if self.source.get('kind') == 'rtsp':
+            self.source['resolution'] = name
+            set_source_resolution(self.source['url'], name)
         if self._video_source is not None:
             self._video_source.adaptOutputFormatToWidth_height_fps_(width, height, FPS)
             self._limit_bitrate()

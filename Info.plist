@@ -64,7 +64,7 @@
 	<key>NSContactsUsageDescription</key>
 	<string>Required for calling your contacts</string>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>Blink connects to your other devices on the local network to import the messages and files they export.</string>
+	<string>Blink connects to your other devices on the local network to import the messages and files they export, and to network (RTSP) cameras you add to a video conference.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Required to share your location in a conversation</string>
 	<key>NSMainNibFile</key>
