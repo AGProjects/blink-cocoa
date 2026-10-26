@@ -22,9 +22,17 @@ queue: everything here runs in the GUI thread. A connection posts
   SylkRTCConnectionDidEnd           data.reason: why it closed
 
 with the connection as sender.
+
+The ready-event carries the gateway's features (a list of strings, since 2026-10-26):
+sip-instance (videoroom-join takes sip_instance) and multiple-video-feeds (child
+publishers: videoroom-join with parent and label). An older gateway sends none and
+ignores request fields it does not know. They are kept on the connection and
+remembered per wsServer URL in the user defaults; known_features() answers from a
+live connection or what was seen last, probe_features() asks the gateway now.
 """
 
-__all__ = ['SylkRTCConnection', 'SylkRTCConnections', 'PROTOCOL']
+__all__ = ['SylkRTCConnection', 'SylkRTCConnections', 'known_features', 'probe_features', 'PROTOCOL',
+           'FEATURE_SIP_INSTANCE', 'FEATURE_MULTIPLE_VIDEO_FEEDS']
 
 import json
 import uuid
@@ -46,7 +54,8 @@ from Foundation import (NSObject,
                         NSURLSessionAuthChallengePerformDefaultHandling,
                         NSURLSessionAuthChallengeUseCredential,
                         NSURLSessionConfiguration,
-                        NSURLSessionWebSocketMessage)
+                        NSURLSessionWebSocketMessage,
+                        NSUserDefaults)
 
 from application.notification import NotificationCenter, NotificationData
 from application.python.types import Singleton
@@ -62,6 +71,10 @@ PING_INTERVAL = 30              # seconds, a WebSocket ping keeps NATs and proxi
 CONNECT_TIMEOUT = 15            # seconds until ready-event
 REQUEST_TIMEOUT = 20            # seconds without ack or error: the request failed
 MAXIMUM_MESSAGE_SIZE = 16 * 1024 * 1024     # a room's backlog of chat messages can be large
+
+FEATURES_KEY = 'WebRTCGatewayFeatures'     # user defaults: {wsServer URL: [feature]}, what each gateway announced last
+FEATURE_SIP_INSTANCE = 'sip-instance'
+FEATURE_MULTIPLE_VIDEO_FEEDS = 'multiple-video-feeds'
 
 CLOSE_NORMAL = 1000             # NSURLSessionWebSocketCloseCodeNormalClosure
 MESSAGE_TYPE_STRING = 1         # NSURLSessionWebSocketMessageTypeString
@@ -178,6 +191,9 @@ class SylkRTCConnection(object):
         self.state = 'idle'         # idle, connecting, ready, closed
         self.accounts = set()       # account ids added
         self.protocol = None        # what the server chose
+        self.features = set()       # what the gateway announced in its ready-event (sip-instance, multiple-video-feeds)
+        self.on_ready = None        # a probe's: called with no arguments on ready-event
+        self.on_end = None          # a probe's: called with the reason when the connection ends
         self.session = None
         self.task = None
         self._delegate = None
@@ -266,6 +282,9 @@ class SylkRTCConnection(object):
         for callback in pending:
             callback(reason)
         NotificationCenter().post_notification('SylkRTCConnectionDidEnd', sender=self, data=NotificationData(reason=reason))
+        on_end, self.on_ready, self.on_end = self.on_end, None, None
+        if on_end is not None:
+            on_end(reason)
 
     # The delegate's
 
@@ -341,11 +360,16 @@ class SylkRTCConnection(object):
                 self._connect_timer.invalidate()
                 self._connect_timer = None
             self.state = 'ready'
-            _log_info('[sylkrtc] %s is ready' % self.url)
+            features = message.get('features')
+            self.features = {feature for feature in features if isinstance(feature, str)} if isinstance(features, list) else set()
+            _remember_features(self.url, self.features)
+            _log_info('[sylkrtc] %s is ready' % self.url + (' (%s)' % ', '.join(sorted(self.features)) if self.features else ''))
             queued, self._queue = self._queue, []
             for data, callback in queued:
                 self._send(data, callback)
             NotificationCenter().post_notification('SylkRTCConnectionDidBecomeReady', sender=self)
+            if self.on_ready is not None:
+                self.on_ready()
         elif kind in ('ack', 'error'):
             transaction = message.get('transaction')
             name, callback, timer = self._transactions.pop(transaction, (None, None, None))
@@ -443,3 +467,51 @@ class SylkRTCConnections(object, metaclass=Singleton):
         if self._connections.get(connection.url) is connection:
             del self._connections[connection.url]
         connection.close('not used')
+
+
+# What a gateway can do (its ready-event features): remembered per server, asked again when it matters
+
+def _saved_features():
+    saved = NSUserDefaults.standardUserDefaults().dictionaryForKey_(FEATURES_KEY)
+    if saved is None:
+        return {}
+    return {str(url): [str(feature) for feature in features] for url, features in saved.items()}
+
+
+def _remember_features(url, features):
+    saved = _saved_features()
+    if saved.get(url) != sorted(features):
+        saved[url] = sorted(features)
+        NSUserDefaults.standardUserDefaults().setObject_forKey_(saved, FEATURES_KEY)
+
+
+def known_features(url):
+    """The features the gateway at url announced: from its connection when there is one, else as last seen; None when never seen."""
+    connection = SylkRTCConnections()._connections.get(url)
+    if connection is not None and connection.state == 'ready':
+        return set(connection.features)
+    features = _saved_features().get(url)
+    return set(features) if features is not None else None
+
+
+_probes = set()
+
+
+def probe_features(url, callback):
+    """Ask the gateway at url what it can do: callback(features) once it is ready (now, if a connection is); nothing when it cannot be reached."""
+    connection = SylkRTCConnections()._connections.get(url)
+    if connection is not None and connection.state == 'ready':
+        callback(set(connection.features))
+        return
+    probe = SylkRTCConnection(url)      # one of its own, closed once answered, not one a room may come to use
+
+    def ready():
+        _probes.discard(probe)
+        features = set(probe.features)
+        probe.close('features known')
+        callback(features)
+
+    probe.on_ready = ready
+    probe.on_end = lambda reason: _probes.discard(probe)
+    _probes.add(probe)
+    probe.open()
