@@ -2692,6 +2692,9 @@ class SessionController(NSObject):
             instance_id = SIPSimpleSettings().instance_id
             if instance_id:
                 contact_parameters = {'+sip.instance': '"<%s>"' % instance_id}
+            # the room Join Conference offers first next time
+            from ConferenceController import remember_conference
+            remember_conference(self.target_uri, self.session.account)
         self.session.connect(ToHeader(target_uri), self.routes, streams, extra_headers=extra_headers, contact_parameters=contact_parameters)
         self.changeSessionState(STATE_CONNECTING)
         self.notification_center.post_notification("BlinkSessionWillStart", sender=self)
@@ -2863,8 +2866,10 @@ class SessionController(NSObject):
             
             self.encryption['signaling']['type'] = 'TLS'
 
+        videoroom_invited = getattr(self, 'videoroom_invited', ())
         for contact in self.invited_participants:
-            self.session.conference.add_participant(contact.uri)
+            if contact.uri not in videoroom_invited:
+                self.session.conference.add_participant(contact.uri)
 
         self.notification_center.post_notification("BlinkSessionDidStart", sender=self)
 
@@ -3537,6 +3542,44 @@ class SessionController(NSObject):
 
             # notify controllers who need conference information
             self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
+
+    # Invitations through the room's video room (videoroom-invite): the server REFERs the focus for us and
+    # reports each step with invite-status, shown on the invited participants as REFER outcomes are
+
+    @objc.python_method
+    def inviteThroughVideoroom(self, room, uris):
+        """Invite uris (already in invited_participants) to the conference through its video room room."""
+        uris = [sip_prefix_pattern.sub('', str(uri)) for uri in uris]
+        if not uris:
+            return
+        if not hasattr(self, 'videoroom_invited'):
+            self.videoroom_invited = set()      # invited through a video room, not REFERred
+            self._invite_rooms = set()          # the video rooms whose invite-status we follow
+        if room not in self._invite_rooms:
+            self._invite_rooms.add(room)
+            self.notification_center.add_observer(self, sender=room, name='VideoroomSessionGotInviteStatus')
+            self.notification_center.add_observer(self, sender=room, name='VideoroomSessionDidChangeState')
+        self.videoroom_invited.update(uris)
+        self.log_info('Invite %s to conference through its video room' % ', '.join(uris))
+        room.invite(uris)
+
+    @objc.python_method
+    def _NH_VideoroomSessionGotInviteStatus(self, sender, data):
+        if data.uri not in getattr(self, 'videoroom_invited', ()):
+            return
+        if data.state == 'success':
+            self._NH_SIPConferenceDidAddParticipant(sender, NotificationData(participant=data.uri))
+        elif data.state == 'failed':
+            self._NH_SIPConferenceDidNotAddParticipant(sender, NotificationData(participant=data.uri, code=data.code, reason=data.reason or 'failed'))
+        else:
+            self._NH_SIPConferenceGotAddParticipantProgress(sender, NotificationData(participant=data.uri, code=data.code or 100, reason=data.reason))
+
+    @objc.python_method
+    def _NH_VideoroomSessionDidChangeState(self, sender, data):
+        if data.state == 'terminated' and sender in getattr(self, '_invite_rooms', ()):
+            self._invite_rooms.discard(sender)
+            self.notification_center.remove_observer(self, sender=sender, name='VideoroomSessionGotInviteStatus')
+            self.notification_center.remove_observer(self, sender=sender, name='VideoroomSessionDidChangeState')
 
     @objc.python_method
     def _NH_SIPSessionTransferNewIncoming(self, sender, data):

@@ -45,6 +45,7 @@ from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import SIPCoreError, SIPURI
 from zope.interface import implementer
 
+from BlinkLogger import BlinkLogger
 from SIPManager import SIPManager
 from ConferenceConfigurationPanel import ConferenceConfigurationPanel
 from util import log_gui_exception, run_in_gui_thread, sip_prefix_pattern
@@ -54,7 +55,8 @@ def random_room():
     return random.choice('123456789') + ''.join(random.choice('0123456789') for x in range(6))
 
 
-# The rooms joined from Join Conference, as typed, most recent first (the room field's drop-down)
+# The rooms joined, most recent first (the room field's drop-down; the panel opens with the first):
+# from Join Conference as typed, and every conference dialed from anywhere else
 RECENT_ROOMS_KEY = 'ConferenceRecentRooms'
 MAX_RECENT_ROOMS = 20
 
@@ -65,13 +67,53 @@ def recent_rooms():
     return [str(room) for room in value if room]
 
 
-def remember_room(room):
+def _room_key(room):
+    """A room as it is compared: its name alone when it is on the default account's own conference server;
+    the MSRP switch and the video rooms of a domain (conference.<domain>, videoconference.<domain>) are one room."""
+    room = room.strip().lower()
+    user, at, host = room.partition('@')
+    if at and '/' not in room:
+        try:
+            from WebRTCSupport import local_room_host
+            account = AccountManager().default_account
+            if account is not None and not isinstance(account, BonjourAccount) and local_room_host(host, account):
+                return user
+        except Exception:
+            pass
+        for prefix in ('conference.', 'videoconference.'):
+            if host.startswith(prefix):
+                return '%s@%s' % (user, host[len(prefix):])
+    return room
+
+
+def remember_room(room, keep_form=False):
+    """The room joined last goes first: from Join Conference as typed, or a conference dialed anywhere else
+    (keep_form: when it is first already, in another form, that form stays: the one typed)."""
     from Foundation import NSUserDefaults
     room = (room or '').strip()
     if not room:
         return
-    rooms = [room] + [other for other in recent_rooms() if other.lower() != room.lower()]
+    key = _room_key(room)
+    rooms = recent_rooms()
+    if keep_form and rooms[:1] and _room_key(rooms[0]) == key:
+        return
+    rooms = [room] + [other for other in rooms if _room_key(other) != key]
     NSUserDefaults.standardUserDefaults().setObject_forKey_(rooms[:MAX_RECENT_ROOMS], RECENT_ROOMS_KEY)
+
+
+def remember_conference(uri, account):
+    """A conference dialed (any outgoing session to a conference address): the room Join Conference offers
+    first next time, by its name alone on the account's own conference server."""
+    try:
+        if account is None or isinstance(account, BonjourAccount):
+            return
+        from WebRTCSupport import local_room_host
+        user, _, host = sip_prefix_pattern.sub('', str(uri)).partition('@')
+        host = host.partition(';')[0].partition(':')[0].lower()
+        if user and host:
+            remember_room(user if local_room_host(host, account) else '%s@%s' % (user, host), keep_form=True)
+    except Exception as e:
+        BlinkLogger().log_warning('Cannot remember the conference %s: %s' % (uri, e))
 
 default_conference_server = 'conference.sip2sip.info'
 
@@ -157,6 +199,8 @@ class JoinConferenceWindowController(NSObject):
 
         if target is not None and validateParticipant(target):
             self.room.setStringValue_(target)
+        elif target is None and recent_rooms():
+            self.room.setStringValue_(recent_rooms()[0])     # the room joined last; a random one at OK only with an empty field
 
         account = AccountManager().default_account
         if account is not None:
@@ -266,7 +310,7 @@ class JoinConferenceWindowController(NSObject):
         audio_frame = self.audio.frame()
         self.video = NSButton.checkboxWithTitle_target_action_(NSLocalizedString("Video", "Checkbox title"), self, "videoClicked:")
         self.video.setFrame_(NSMakeRect(audio_frame.origin.x + audio_frame.size.width + 7, audio_frame.origin.y, 100, audio_frame.size.height))
-        self.video.setState_(NSOnState if media_type and "video" in media_type else NSOffState)
+        self.video.setState_(NSOffState)       # Video starts unchecked every time the panel opens
         self.video.setHidden_(True)
         self.audio.superview().addSubview_(self.video)
         ok_frame = self.ok_button.frame()

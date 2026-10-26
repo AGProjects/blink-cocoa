@@ -1079,6 +1079,8 @@ class ChatWindowController(NSWindowController):
                     # prevent loops
                     if remote_uri in participants:
                         participants.remove(remote_uri)
+                    from WebRTCSupport import active_videoroom
+                    room = active_videoroom(session.target_uri)     # while we are in it, the video room invites
                     for uri in participants:
                         if uri and "@" not in uri:
                             uri='%s@%s' % (uri, session.account.id.domain)
@@ -1100,8 +1102,11 @@ class ChatWindowController(NSWindowController):
                         session.log_info('Adding %s to list of invited partipants' % uri)
                         session.invited_participants.append(contact)
                         session.participants_log.add(uri)
-                        session.log_info("Invite %s to conference" % uri)
-                        session.session.conference.add_participant(uri)
+                        if room is not None:
+                            session.inviteThroughVideoroom(room, [uri])
+                        else:
+                            session.log_info("Invite %s to conference" % uri)
+                            session.session.conference.add_participant(uri)
 
                 self.refreshDrawer()
             else:
@@ -2177,9 +2182,10 @@ class ChatWindowController(NSWindowController):
             session.log_info("Invite %s to conference" % uri)
             from WebRTCSupport import active_videoroom
             room = active_videoroom(session.target_uri)
-            if room is not None and (session.session is None or session.state != STATE_CONNECTED):
-                # no MSRP session to REFER through: the video room invites
-                room.invite([uri])
+            if room is not None:
+                # while we are in its video room, the video room invites (a WebRTC client gets the video
+                # conference, a SIP address a call with audio and chat); else a REFER over the MSRP session
+                session.inviteThroughVideoroom(room, [uri])
             else:
                 session.session.conference.add_participant(uri)
         elif not isinstance(session.account, BonjourAccount):

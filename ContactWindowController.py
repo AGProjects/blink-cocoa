@@ -5316,10 +5316,12 @@ class ContactWindowController(NSWindowController):
             account.save()
 
         for_videoroom = False
+        video_session = None
         if type(media_type) in (tuple, list) and 'video' in media_type:
             # video over WebRTC (SylkServer video rooms): the room's audio and video go there, its chat over MSRP
             try:
-                media_type, for_videoroom = self.joinVideoConference(account, target, media_type, video_room)
+                media_type, video_session = self.joinVideoConference(account, target, media_type, video_room)
+                for_videoroom = video_session is not None
             except Exception:
                 log_gui_exception('joining the video room of %s' % target)
                 media_type = tuple(media for media in media_type if media != 'video') or 'chat'
@@ -5353,6 +5355,10 @@ class ContactWindowController(NSWindowController):
                 contact.detail = NSLocalizedString("Invitation sent...", "Contact detail")
                 session_controller.invited_participants.append(contact)
                 session_controller.participants_log.add(uri)
+            if video_session is not None:
+                # with video the room invites them (videoroom-invite, once joined): a WebRTC client gets the
+                # video conference, a SIP address a call with audio and chat; invite-status reports each step
+                session_controller.inviteThroughVideoroom(video_session, participants)
 
         if not media_type:
             media_type = 'audio'
@@ -5369,8 +5375,8 @@ class ContactWindowController(NSWindowController):
     @objc.python_method
     def joinVideoConference(self, account, target, media_type, video_room=None):
         """Join the video room of target over WebRTC (audio muted when media_type has no audio); (the media
-        left for the SIP session, whether the video room was joined): chat only when it was, else the media
-        without video."""
+        left for the SIP session, the VideoroomSession or None when it was not joined): chat only when it
+        was, else the media without video."""
         from WebRTCSupport import join_video_conference, room_video
         from util import call_later
         video_room = video_room or room_video(target, account)
@@ -5381,12 +5387,12 @@ class ContactWindowController(NSWindowController):
         if session is None:
             BlinkLogger().log_warning("[conference] %s: no video room can be joined, joining without video" % target)
             remaining = tuple(media for media in media_type if media != 'video')
-            return (remaining if len(remaining) > 1 else (remaining[0] if remaining else 'chat')), False
+            return (remaining if len(remaining) > 1 else (remaining[0] if remaining else 'chat')), None
         BlinkLogger().log_info("[conference] %s: audio and video over WebRTC in %s, chat over MSRP" % (target, session.room))
         # the chat window opens behind the video conference window
         from VideoroomWindowController import window_for_session
         call_later(1.5, lambda: window_for_session(session).show() if session.state != 'terminated' else None)
-        return 'chat', True
+        return 'chat', session
 
     @objc.python_method
     def focusSearchTextField(self):
