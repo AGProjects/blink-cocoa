@@ -443,7 +443,20 @@ class Participant(object):
 
     @property
     def icon(self):
-        return getattr(self.contact, 'icon', None)
+        """The contact's photograph, or None: the stand-in pictures (the grey person, a group) are not one, and
+        without a photograph the avatar is the initials on the name's colour, as in the contact list."""
+        contact = self.contact
+        if contact is None:
+            return None
+        avatar = getattr(contact, 'avatar', None)
+        if avatar is not None:
+            from Avatars import is_placeholder_avatar
+            if is_placeholder_avatar(getattr(avatar, 'path', None)):
+                return None
+            icon = getattr(avatar, 'icon', None)
+            if icon is not None:
+                return icon
+        return getattr(contact, 'icon', None)
 
     @property
     def has_video(self):
