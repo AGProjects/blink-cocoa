@@ -63,6 +63,16 @@
 	<string>Required for VoIP calls</string>
 	<key>NSContactsUsageDescription</key>
 	<string>Required for calling your contacts. No data is collected. Privacy policy available at http://icanblink.com/privacy</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_sipuri._udp</string>
+		<string>_sipuri._tcp</string>
+		<string>_sipuri._tls</string>
+		<string>_sipfocus._udp</string>
+		<string>_sipfocus._tcp</string>
+		<string>_sipfocus._tls</string>
+		<string>_rtsp._tcp</string>
+	</array>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Blink connects to your other devices on the local network to import the messages and files they export, and to network (RTSP) cameras you add to a video conference.</string>
 	<key>NSMainNibFile</key>

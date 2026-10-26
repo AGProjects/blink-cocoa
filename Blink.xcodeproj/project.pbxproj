@@ -666,6 +666,9 @@
 		5C1E00040000000000000002 /* WebRTCSupport.py in Resources */ = {isa = PBXBuildFile; fileRef = 5C1E00040000000000000001 /* WebRTCSupport.py */; };
 		5C1E00050000000000000002 /* SylkRTC.py in Resources */ = {isa = PBXBuildFile; fileRef = 5C1E00050000000000000001 /* SylkRTC.py */; };
 		5C1E00060000000000000002 /* Videoroom.py in Resources */ = {isa = PBXBuildFile; fileRef = 5C1E00060000000000000001 /* Videoroom.py */; };
+		5C1E00F10000000000000002 /* ExtraVideo.py in Resources */ = {isa = PBXBuildFile; fileRef = 5C1E00F10000000000000001 /* ExtraVideo.py */; };
+		5C1E00F20000000000000002 /* RtspSource.py in Resources */ = {isa = PBXBuildFile; fileRef = 5C1E00F20000000000000001 /* RtspSource.py */; };
+		5C1E00F30000000000000002 /* CameraFinder.py in Resources */ = {isa = PBXBuildFile; fileRef = 5C1E00F30000000000000001 /* CameraFinder.py */; };
 		5C1E00070000000000000002 /* VideoroomWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 5C1E00070000000000000001 /* VideoroomWindowController.py */; };
 		5C1E00080000000000000002 /* MSRPDiagnostics.py in Resources */ = {isa = PBXBuildFile; fileRef = 5C1E00080000000000000001 /* MSRPDiagnostics.py */; };
 		5C1E00090000000000000002 /* ConferenceShareDialog.py in Resources */ = {isa = PBXBuildFile; fileRef = 5C1E00090000000000000001 /* ConferenceShareDialog.py */; };
@@ -684,6 +687,9 @@
 		5C1E00040000000000000003 /* WebRTCSupport.py in Resources */ = {isa = PBXBuildFile; fileRef = 5C1E00040000000000000001 /* WebRTCSupport.py */; };
 		5C1E00050000000000000003 /* SylkRTC.py in Resources */ = {isa = PBXBuildFile; fileRef = 5C1E00050000000000000001 /* SylkRTC.py */; };
 		5C1E00060000000000000003 /* Videoroom.py in Resources */ = {isa = PBXBuildFile; fileRef = 5C1E00060000000000000001 /* Videoroom.py */; };
+		5C1E00F10000000000000003 /* ExtraVideo.py in Resources */ = {isa = PBXBuildFile; fileRef = 5C1E00F10000000000000001 /* ExtraVideo.py */; };
+		5C1E00F20000000000000003 /* RtspSource.py in Resources */ = {isa = PBXBuildFile; fileRef = 5C1E00F20000000000000001 /* RtspSource.py */; };
+		5C1E00F30000000000000003 /* CameraFinder.py in Resources */ = {isa = PBXBuildFile; fileRef = 5C1E00F30000000000000001 /* CameraFinder.py */; };
 		5C1E00070000000000000003 /* VideoroomWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 5C1E00070000000000000001 /* VideoroomWindowController.py */; };
 		5C1E00080000000000000003 /* MSRPDiagnostics.py in Resources */ = {isa = PBXBuildFile; fileRef = 5C1E00080000000000000001 /* MSRPDiagnostics.py */; };
 		5C1E00090000000000000003 /* ConferenceShareDialog.py in Resources */ = {isa = PBXBuildFile; fileRef = 5C1E00090000000000000001 /* ConferenceShareDialog.py */; };
@@ -1598,6 +1604,9 @@
 		5C1E00040000000000000001 /* WebRTCSupport.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = WebRTCSupport.py; sourceTree = "<group>"; };
 		5C1E00050000000000000001 /* SylkRTC.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SylkRTC.py; sourceTree = "<group>"; };
 		5C1E00060000000000000001 /* Videoroom.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = Videoroom.py; sourceTree = "<group>"; };
+		5C1E00F10000000000000001 /* ExtraVideo.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ExtraVideo.py; sourceTree = "<group>"; };
+		5C1E00F20000000000000001 /* RtspSource.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = RtspSource.py; sourceTree = "<group>"; };
+		5C1E00F30000000000000001 /* CameraFinder.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = CameraFinder.py; sourceTree = "<group>"; };
 		5C1E00070000000000000001 /* VideoroomWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoroomWindowController.py; sourceTree = "<group>"; };
 		5C1E00080000000000000001 /* MSRPDiagnostics.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MSRPDiagnostics.py; sourceTree = "<group>"; };
 		5C1E00090000000000000001 /* ConferenceShareDialog.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ConferenceShareDialog.py; sourceTree = "<group>"; };
@@ -1872,6 +1881,9 @@
 				5C1E00040000000000000001 /* WebRTCSupport.py */,
 				5C1E00050000000000000001 /* SylkRTC.py */,
 				5C1E00060000000000000001 /* Videoroom.py */,
+				5C1E00F10000000000000001 /* ExtraVideo.py */,
+				5C1E00F20000000000000001 /* RtspSource.py */,
+				5C1E00F30000000000000001 /* CameraFinder.py */,
 				5C1E00070000000000000001 /* VideoroomWindowController.py */,
 				5C1E00080000000000000001 /* MSRPDiagnostics.py */,
 				5C1E00090000000000000001 /* ConferenceShareDialog.py */,
@@ -2635,6 +2647,9 @@
 				5C1E00040000000000000003 /* WebRTCSupport.py in Resources */,
 				5C1E00050000000000000003 /* SylkRTC.py in Resources */,
 				5C1E00060000000000000003 /* Videoroom.py in Resources */,
+				5C1E00F10000000000000003 /* ExtraVideo.py in Resources */,
+				5C1E00F20000000000000003 /* RtspSource.py in Resources */,
+				5C1E00F30000000000000003 /* CameraFinder.py in Resources */,
 				5C1E00070000000000000003 /* VideoroomWindowController.py in Resources */,
 				5C1E00080000000000000003 /* MSRPDiagnostics.py in Resources */,
 				5C1E00090000000000000003 /* ConferenceShareDialog.py in Resources */,
@@ -2965,6 +2980,9 @@
 				5C1E00040000000000000002 /* WebRTCSupport.py in Resources */,
 				5C1E00050000000000000002 /* SylkRTC.py in Resources */,
 				5C1E00060000000000000002 /* Videoroom.py in Resources */,
+				5C1E00F10000000000000002 /* ExtraVideo.py in Resources */,
+				5C1E00F20000000000000002 /* RtspSource.py in Resources */,
+				5C1E00F30000000000000002 /* CameraFinder.py in Resources */,
 				5C1E00070000000000000002 /* VideoroomWindowController.py in Resources */,
 				5C1E00080000000000000002 /* MSRPDiagnostics.py in Resources */,
 				5C1E00090000000000000002 /* ConferenceShareDialog.py in Resources */,
