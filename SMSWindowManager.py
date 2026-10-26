@@ -6681,8 +6681,7 @@ class SMSWindowManagerClass(NSObject):
         Every one that has messages waiting, less those whose contact is in
         Deleted or Blocked: the contact list shows such a contact nowhere
         else, so its conversation can not be found to be read and would keep
-        the badge up for good. The Unread group is built from this same
-        answer, so what the Dock says and what the group lists agree.
+        the badge up for good.
         """
         counts = dict((key, count) for key, count in self.unread_counts.items() if count > 0)
         if not counts:

@@ -28,6 +28,44 @@ import os
 import objc
 
 
+GROUP_SORT_ATTRIBUTES = NSDictionary.dictionaryWithObjectsAndKeys_(
+    NSColor.secondaryLabelColor(), NSForegroundColorAttributeName,
+    NSFont.systemFontOfSize_(NSFont.smallSystemFontSize()), NSFontAttributeName)
+GROUP_SORT_RIGHT_GUTTER = 12.0
+
+
+def group_sort_label(group):
+    """The header's sort control text, or None for a group without one."""
+    try:
+        # nothing to choose when A-Z is all the group can be sorted by
+        if group is None or len(group.availableSortModes()) < 2:
+            return None
+        return NSString.stringWithString_('%s \u25be' % group.sortLabel())
+    except Exception:
+        return None
+
+
+def group_sort_label_rect(frame, view, label):
+    """Where a group header draws its sort control, right-aligned.
+
+    Measured against the view as well as the cell: the column does not
+    always keep up with the outline, and a right-aligned label measured
+    against a narrow column lands in the middle of the row. The outline's
+    click handling asks the same question, so the two always agree.
+    """
+    size = label.sizeWithAttributes_(GROUP_SORT_ATTRIBUTES)
+    right_edge = frame.origin.x + frame.size.width
+    try:
+        visible = view.bounds().size.width
+        if visible > right_edge:
+            right_edge = visible
+    except Exception:
+        pass
+    x = right_edge - size.width - GROUP_SORT_RIGHT_GUTTER
+    y = frame.origin.y + (frame.size.height - size.height) / 2.0
+    return NSMakeRect(x, y, size.width, size.height)
+
+
 def format_last_message_time(stamp):
     """A conversation's last-activity stamp, shaped like the mobile list.
 
@@ -325,10 +363,19 @@ class ContactCell(NSTextFieldCell):
     @objc.python_method
     def drawGroup(self):
         #return objc.super(ContactCell, self).drawWithFrame_inView_(frame, view)
+        label = group_sort_label(getattr(self, 'group', None))
+        label_rect = None
+        if label is not None:
+            label_rect = group_sort_label_rect(self.frame, self.view, label)
+            label.drawInRect_withAttributes_(label_rect, GROUP_SORT_ATTRIBUTES)
         frame = self.frame
         frame.origin.x = 20
         frame.origin.y += 2
-        rect = NSMakeRect(frame.origin.x, frame.origin.y, frame.size.width, frame.size.height)
+        width = frame.size.width
+        if label_rect is not None:
+            # the name stops short of the sort control
+            width = max(0.0, label_rect.origin.x - 8.0 - frame.origin.x)
+        rect = NSMakeRect(frame.origin.x, frame.origin.y, width, frame.size.height)
         self.stringValue().drawInRect_withAttributes_(rect, self.groupAttributes)
 
     @objc.python_method

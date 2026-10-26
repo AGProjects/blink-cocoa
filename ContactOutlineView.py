@@ -5,15 +5,71 @@ from AppKit import (NSApp,
                     NSArray,
                     NSBeep,
                     NSIndexSet,
+                    NSMenu,
+                    NSMenuItem,
                     NSNotFound,
+                    NSOffState,
+                    NSOnState,
+                    NSPointInRect,
                     NSOutlineView,
                     NSPasteboard,
                     NSStringPboardType)
 
-from ContactListModel import BlinkContact, BlinkGroup
+from ContactListModel import BlinkContact, BlinkGroup, GROUP_SORT_NAME, GROUP_SORT_RECENT, GROUP_SORT_UNREAD
+from ContactCell import group_sort_label, group_sort_label_rect
+from Foundation import NSInsetRect, NSLocalizedString
+
+import objc
 
 
 class ContactOutlineView(NSOutlineView):
+    def mouseDown_(self, event):
+        # A click on a group header's sort control picks how the group is
+        # sorted; anywhere else on the header it expands and collapses as
+        # it always has.
+        point = self.convertPoint_fromView_(event.locationInWindow(), None)
+        row = self.rowAtPoint_(point)
+        item = self.itemAtRow_(row) if row >= 0 else None
+        if isinstance(item, BlinkGroup):
+            label = group_sort_label(item)
+            if label is not None:
+                rect = group_sort_label_rect(self.frameOfCellAtColumn_row_(0, row), self, label)
+                if NSPointInRect(point, NSInsetRect(rect, -4, -3)):
+                    self.showSortMenuForGroup(item, rect)
+                    return
+        NSOutlineView.mouseDown_(self, event)
+
+    @objc.python_method
+    def showSortMenuForGroup(self, group, rect):
+        menu = NSMenu.alloc().init()
+        menu.setAutoenablesItems_(False)
+        titles = {GROUP_SORT_NAME: NSLocalizedString("Alphabetically", "Group sort order menu item"),
+                  GROUP_SORT_RECENT: (NSLocalizedString("By Last Call", "Group sort order menu item")
+                                      if group.usesCallTimes()
+                                      else NSLocalizedString("By Last Message", "Group sort order menu item")),
+                  GROUP_SORT_UNREAD: NSLocalizedString("By Unread Messages", "Group sort order menu item")}
+        current = group.effectiveSortMode()
+        for mode in group.availableSortModes():
+            item = menu.addItemWithTitle_action_keyEquivalent_(titles[mode], "sortGroupBy:", "")
+            item.setTarget_(self)
+            item.setRepresentedObject_((group, mode))
+            item.setState_(NSOnState if mode == current else NSOffState)
+        menu.popUpMenuPositioningItem_atLocation_inView_(None, (rect.origin.x, rect.origin.y + rect.size.height + 2), self)
+
+    def sortGroupBy_(self, sender):
+        group, mode = sender.representedObject()
+        if mode == group.effectiveSortMode():
+            return
+        # Keep the selected contact selected: the rows move under it.
+        row = self.selectedRow()
+        selected = self.itemAtRow_(row) if row >= 0 else None
+        group.setSortMode(mode)
+        self.reloadItem_reloadChildren_(group, True)
+        if selected is not None:
+            row = self.rowForItem_(selected)
+            if row >= 0:
+                self.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(row), False)
+
     def menuForEvent_(self, event):
         self.window().makeFirstResponder_(self)
         point = self.convertPoint_fromView_(event.locationInWindow(), None)
