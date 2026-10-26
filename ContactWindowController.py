@@ -1900,8 +1900,10 @@ class ContactWindowController(NSWindowController):
         """A room is not called or written to: it is joined.
 
         Start Audio Call becomes Connect with Audio + Chat, the MSRP chat
-        item becomes Connect with Chat, video is disabled and Send Short
-        Message is not offered.
+        item becomes Connect with Chat and Send Short Message is not offered.
+        Start Video Call joins the room's video room (audio and video over
+        WebRTC, the chat over MSRP) when the selected account's SylkServer can
+        do it (WebRTCSupport.room_video); otherwise it is disabled.
         """
         if self.mainTabView.selectedTabViewItem().identifier() == "contacts":
             if self.contactOutline.numberOfSelectedRows() != 1:
@@ -1924,6 +1926,14 @@ class ContactWindowController(NSWindowController):
             return
 
         menu = self.contactContextMenu
+        account = self.activeAccount()
+        video_room = None
+        if account is not None and account is not BonjourAccount():
+            try:
+                from WebRTCSupport import room_video
+                video_room = room_video(target, account)
+            except Exception:
+                log_gui_exception('checking the video room of %s' % target)
         audio_title = NSLocalizedString("Start Audio Call", "Menu item")
         video_title = NSLocalizedString("Start Video Call", "Menu item")
         sms_title = NSLocalizedString("Send Short Message...", "Menu item")
@@ -1943,10 +1953,19 @@ class ContactWindowController(NSWindowController):
                     insert_at = menu.indexOfItem_(mitem)
                 menu.removeItem_(mitem)
             elif title == video_title or action == 'startVideoToSelected:':
-                mitem.setEnabled_(False)
                 if mitem.hasSubmenu():
                     menu.setSubmenu_forItem_(None, mitem)
-                mitem.setAction_(None)
+                if video_room is not None:
+                    # the room's video room: joined as Join Conference does with Video (WebRTC audio and video, MSRP chat)
+                    mitem.setTitle_(video_title)
+                    mitem.setAction_("connectToConference:")
+                    mitem.setTarget_(self)
+                    mitem.setRepresentedObject_((target, ("chat", "audio", "video")))
+                    mitem.setToolTip_(NSLocalizedString("Join the conference with audio and video, provided by SylkServer", "Tooltip"))
+                    mitem.setEnabled_(True)
+                else:
+                    mitem.setEnabled_(False)
+                    mitem.setAction_(None)
 
         if insert_at is None:
             # after the name and its separator
