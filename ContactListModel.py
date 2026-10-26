@@ -744,7 +744,7 @@ class BlinkContact(NSObject):
 
     def __init__(self, uri, uri_type=None, name=None, icon=None, start_time=None):
         self.id = None
-        self.uris = [ContactURI(uri=uri, type=format_uri_type(uri_type))]
+        self.uris = [ContactURI(uri=uri, type=(uri_type or 'sip').lower())]     # stored lowercase, shown through format_uri_type
         self.name = name or self.uri
         self.detail = self.uri
         self.start_time = start_time
@@ -2118,7 +2118,7 @@ class BonjourBlinkContact(BlinkContact):
     @objc.python_method
     def update_uri(self, uri):
         self.aor = uri
-        self.uris = [ContactURI(uri=str(uri), type='SIP')]
+        self.uris = [ContactURI(uri=str(uri), type='sip')]
         self._set_username_and_domain()
 
     @objc.python_method
@@ -4267,7 +4267,7 @@ class CustomListModel(NSObject):
             """One address, on the MSRP road -- the only one that asks."""
             from ContactMangler import mangled_uri
             entry = into.addItemWithTitle_action_keyEquivalent_(
-                '%s (%s)' % (mangled_uri(uri.uri), uri.type), "userDropedFileOnContact:", "")
+                '%s (%s)' % (mangled_uri(uri.uri), format_uri_type(uri.type)), "userDropedFileOnContact:", "")
             entry.setIndentationLevel_(indent)
             entry.setTarget_(self)
             entry.setRepresentedObject_({'account': account, 'uri': str(uri.uri),
@@ -4580,7 +4580,7 @@ class CustomListModel(NSObject):
                 titem.setEnabled_(False)
                 from ContactMangler import mangled_uri
                 for uri in item.uris:
-                    titem = transfer_menu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (mangled_uri(uri.uri), uri.type), "userClickedBlindTransferMenuItem:", "")
+                    titem = transfer_menu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (mangled_uri(uri.uri), format_uri_type(uri.type)), "userClickedBlindTransferMenuItem:", "")
                     titem.setIndentationLevel_(1)
                     titem.setTarget_(self)
                     titem.setRepresentedObject_({'source': source, 'destination': uri.uri})
@@ -4714,14 +4714,14 @@ class CustomListModel(NSObject):
                     if isinstance(sourceContact, BlinkPendingWatcher):
                         if sourceContact.uri not in target_uris:
                             uri = sourceContact.uris[0]
-                            targetContact.contact.uris.add(ContactURI(uri=uri.uri, type=uri.type))
+                            targetContact.contact.uris.add(ContactURI(uri=uri.uri, type=(uri.type or '').lower() or None))
                             targetContact.contact.presence.policy = 'allow'
                             targetContact.contact.presence.subscribe = True
                             target_changed = True
                     else:
                         if sourceContact.contact is not None:
                             for uri in (uri for uri in sourceContact.contact.uris if uri.uri not in target_uris):
-                                targetContact.contact.uris.add(ContactURI(uri=uri.uri, type=uri.type))
+                                targetContact.contact.uris.add(ContactURI(uri=uri.uri, type=(uri.type or '').lower() or None))
                                 target_changed = True
                         elif isinstance(sourceContact, BonjourBlinkContact):
                             targetContact.contact.uris.add(ContactURI(uri=sourceContact.id, type='Bonjour'))
@@ -5133,7 +5133,7 @@ class ContactListModel(CustomListModel):
                             if self.hasContactMatchingURI(backup_contact['uri']):
                                 continue
                             contact = Contact()
-                            contact.uris.add(ContactURI(uri=backup_contact['uri'], type='SIP'))
+                            contact.uris.add(ContactURI(uri=backup_contact['uri'], type='sip'))
                             contact.name = backup_contact['name'] or ''
                             contact.preferred_media = backup_contact['preferred_media'] or 'messages'
                             contact.save()
@@ -5464,7 +5464,7 @@ class ContactListModel(CustomListModel):
                 contact = Contact()
                 contact.name = name or uri
                 contact.preferred_media = 'messages'
-                contact.uris = [ContactURI(uri=uri, type='SIP')]
+                contact.uris = [ContactURI(uri=uri, type='sip')]
                 icon_path = NSBundle.mainBundle().pathForImageResource_("%s.tiff" % uri)
                 if icon_path:
                     try:
@@ -6523,7 +6523,7 @@ class ContactListModel(CustomListModel):
             if _sms is not None:
                 _sms.mergeMessagesGroupDuplicates()
         except Exception as e:
-            BlinkLogger().log_info('Messages group merge failed: %s' % e)
+            BlinkLogger().log_info('Duplicate contact merge failed: %s' % e)
 
         # The addressbook of this account reflects the server now: what waits
         # for that (the server call history, the test contacts) can go ahead.
@@ -6558,6 +6558,11 @@ class ContactListModel(CustomListModel):
             # during a call. The next call files the party instead.
             if getattr(NSApp.delegate(), 'terminating', False):
                 BlinkLogger().log_info('[cdr] not filing %s: the application is quitting' % notification.data.remote_party)
+            elif local_party == 'bonjour@local':
+                # The Bonjour account has no XCAP addressbook: its calls stay in the
+                # local history, keyed by the neighbour. Filed, the party's LAN
+                # address (user@192.168.x.x) went to the addressbook every device shares.
+                BlinkLogger().log_info('[cdr] not filing %s: a Bonjour call is not written to the addressbook' % notification.data.remote_party)
             else:
                 ensure_call_contact(notification.data.remote_party, account)
         except Exception as e:

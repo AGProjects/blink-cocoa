@@ -41,7 +41,7 @@ import unicodedata
 from sipsimple.threading import call_in_thread
 
 from VerticalBoxView import VerticalBoxView
-from util import format_identity_to_string
+from util import format_identity_to_string, format_uri_type
 
 
 class AudioSession(NSView):
@@ -325,7 +325,7 @@ class AudioSession(NSView):
                         titem.setEnabled_(False)
                         from ContactMangler import mangled_uri
                         for uri in sourceContact.uris:
-                            titem = invite_menu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (mangled_uri(uri.uri), uri.type), "userClickedInviteToConference:", "")
+                            titem = invite_menu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (mangled_uri(uri.uri), format_uri_type(uri.type)), "userClickedInviteToConference:", "")
                             titem.setIndentationLevel_(1)
                             titem.setTarget_(self)
                             titem.setRepresentedObject_(str(uri.uri))

@@ -4,7 +4,7 @@
 __all__ = ['message_from_the_past', 'window_corner_inset', 'audio_codecs', 'allocate_autorelease_pool', 'beautify_audio_codec', 'beautify_video_codec', 'call_in_gui_thread', 'call_later', 'run_in_gui_thread',
            'compare_identity_addresses', 'escape_html', 'external_url_pattern', 'format_uri_type', 'format_identity_to_string', 'format_date', 'format_size', 'format_size_rounded', 'is_sip_aor_format', 'is_anonymous', 'image_file_extension_pattern', 'html2txt', 'normalize_sip_uri_for_outgoing_session', 'osx_version',
            'sipuri_components_from_string', 'strip_addressbook_special_characters', 'sip_prefix_pattern', 'video_file_extension_pattern',  'translate_alpha2digit', 'checkValidPhoneNumber',
-           'pstn_apply_leading_zero_rule', 'pstn_home_country_code', 'pstn_strip_trunk_zero', 'pstn_e164', 'canonical_pstn_uri', 'same_phone_number', 'pstn_dial_username', 'pstn_uri_spellings', 'normalize_anonymous_uri', 'is_conference_uri', 'pstn_uri_spellings_for_accounts',
+           'pstn_apply_leading_zero_rule', 'pstn_home_country_code', 'pstn_strip_trunk_zero', 'pstn_e164', 'canonical_pstn_uri', 'same_phone_number', 'pstn_dial_username', 'pstn_uri_spellings', 'normalize_anonymous_uri', 'is_conference_uri', 'is_lan_address', 'pstn_uri_spellings_for_accounts',
            'AccountInfo', 'DictDiffer', 'local_to_utc', 'utc_to_local', 'execute_once', 'trusted_cas', 'otr_enabled_for_account',
            'pgp_enabled_for_account', 'log_gui_exception', 'abbreviate_for_alert']
 
@@ -538,6 +538,45 @@ def is_conference_uri(uri, account=None):
     except Exception:
         pass
     return False
+
+
+_INSTANCE_ID_RE = re.compile(r'^(urn:uuid:)?[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$', re.IGNORECASE)
+
+
+def is_lan_address(uri):
+    """Whether this address belongs to one network only: a Bonjour instance id
+    (bare, urn:uuid:, or as the user part of <id>@bonjour.local), or a host that
+    is a private, loopback or link-local IP address or a .local name.
+
+    The XCAP addressbook is shared by every device of the account, on any
+    network, and the Bonjour account has none: such an address is never
+    written to it, and one found there is removed (purge_lan_addresses). A
+    Bonjour conversation stays in the local history, keyed by the neighbour's
+    instance id. Public IP addresses are not LAN addresses. Blink Qt and
+    python3-sylkrtc (sylk-addressbook --check) use the same rule.
+    """
+    import ipaddress
+    if not uri:
+        return False
+    text = uri.decode() if isinstance(uri, bytes) else str(uri)
+    text = sip_prefix_pattern.sub("", text.strip()).split(';')[0]
+    if not text:
+        return False
+    user, at, host = text.rpartition('@')
+    if _INSTANCE_ID_RE.match(text) or (at and _INSTANCE_ID_RE.match(user) and host.lower() == 'bonjour.local'):
+        return True
+    host = (host if at else text).strip().lower()
+    if host.startswith('['):
+        address = host[1:].partition(']')[0]
+    elif host.count(':') == 1:
+        address = host.partition(':')[0]          # host:port
+    else:
+        address = host
+    try:
+        ip = ipaddress.ip_address(address)
+    except ValueError:
+        return at != '' and (address == 'local' or address.endswith('.local'))
+    return ip.is_private or ip.is_loopback or ip.is_link_local
 
 
 def normalize_anonymous_uri(uri):

@@ -5410,7 +5410,7 @@ class ContactWindowController(NSWindowController):
             if isinstance(selected_contact, VoicemailBlinkContact):
                 account = AccountManager().get_account(selected_contact.name)
                 BlinkLogger().log_info('Auto-selecting voicemail account %s' % account.id)
-            elif uri_type == 'XMPP' and isinstance(selected_contact, BlinkPresenceContact):
+            elif (uri_type or '').lower() == 'xmpp' and isinstance(selected_contact, BlinkPresenceContact):
                 try:
                     matched_accounts = list(selected_contact.pidfs_map['sip:%s' % str(uri)].keys())
                 except KeyError:

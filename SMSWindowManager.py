@@ -143,7 +143,7 @@ from SylkLocation import (LOCATION_CONTENT_TYPE, LEGACY_LOCATION_CONTENT_TYPE,
                           merge_location_bodies, storable_envelope)
 from FileTransferCache import FILE_TRANSFER_PATH, base_url_from_transfer
 from AccountStorage import AccountStorage, STORAGE_CHANGED_CONTENT_TYPE
-from util import active_account_uris, format_identity_to_string, run_in_gui_thread, call_later, canonical_pstn_uri, pstn_e164, message_from_the_past
+from util import active_account_uris, format_identity_to_string, run_in_gui_thread, call_later, canonical_pstn_uri, pstn_e164, message_from_the_past, is_conference_uri, is_lan_address
 
 # Requests addressed to SylkServer, not to a person. The server answers each
 # of them on its own content type -- a key lookup comes back as
@@ -4648,17 +4648,36 @@ class SMSWindowManagerClass(NSObject):
         # Only save when membership actually changed. This runs at the end
         # of every journal sync, and an unconditional save posts a group
         # change notification that rebuilds the group in the model each time.
+        #
+        # A conference room is never in Messages (the rule of every client):
+        # it is in Conference. Every path here -- a live message in a room's
+        # chat, the history audit, the journal, a restore from Deleted -- ends
+        # in this method, so it is refused here, and one filed before is
+        # taken out, as Blink Qt does.
+        def is_room(contact):
+            try:
+                return any(is_conference_uri(str(uri.uri)) for uri in contact.uris)
+            except Exception:
+                return False
+
         existing = set(group.contacts)
         added = 0
         for contact in self.new_contacts:
-            if contact in existing:
+            if contact in existing or is_room(contact):
                 continue
             group.contacts.add(contact)
             added += 1
+        rooms = [contact for contact in existing if is_room(contact)]
+        for contact in rooms:
+            group.contacts.remove(contact)
 
         self.new_contacts = set()
         if added:
             BlinkLogger().log_info('Added %d contact(s) to the Messages group' % added)
+        if rooms:
+            BlinkLogger().log_info('Took %d conference room(s) out of the Messages group: %s'
+                                   % (len(rooms), ', '.join(str(contact.name or contact.id) for contact in rooms)))
+        if added or rooms:
             group.save()
 
     @objc.python_method
@@ -4814,6 +4833,11 @@ class SMSWindowManagerClass(NSObject):
             return False
         if self._canonical_uri(key) in self._bonjourConversationKeys():
             BlinkLogger().log_debug('Not filing %s under Messages: a Bonjour neighbour' % key)
+            return False
+        if is_lan_address(key):
+            # a Bonjour neighbour no longer on the network, or any host on this
+            # network only: the addressbook is shared by every device, anywhere
+            BlinkLogger().log_debug('Not filing %s under Messages: an address on one network only' % key)
             return False
         return True
 
@@ -5126,8 +5150,11 @@ class SMSWindowManagerClass(NSObject):
 
     @objc.python_method
     def mergeMessagesGroupDuplicates(self):
-        """Merge Contacts in the 'Messages' (_messages) group that share a
-        canonical URI.
+        """Merge the contacts of the addressbook that share a canonical URI:
+        an address in two contacts makes them one contact, the rule of every
+        client (Blink Qt merge_duplicates, sylk-addressbook --check). Once
+        only the Messages group; a call filed before the document had the
+        other device's contact made the same duplicates outside it.
 
         Every client that merges duplicates must keep the SAME copy, or two
         of them each delete the copy the other kept and the contact is gone
@@ -5147,17 +5174,15 @@ class SMSWindowManagerClass(NSObject):
         Chat history is keyed by URI, not contact id, and the survivor ends
         up holding every URI of the cluster, so no timeline is orphaned.
 
+        The survivor takes over the groups of the copies (_mergeMembership):
+        not Deleted unless every copy was deleted, not Messages for a
+        conference room, and Blocked is not decided here.
+
         Returns the number of contacts deleted.
         """
         from sipsimple.addressbook import ContactURI
         log = BlinkLogger().log_info
-        group_id = '_messages'
-
-        try:
-            group = next(g for g in AddressbookManager().get_groups() if g.id == group_id)
-        except StopIteration:
-            log("Messages group merge: no '_messages' group exists yet")
-            return 0
+        groups = list(AddressbookManager().get_groups())
 
         def keys_of(contact):
             keys = set()
@@ -5185,7 +5210,8 @@ class SMSWindowManagerClass(NSObject):
             return x
 
         owner_of_key = {}
-        for c in list(group.contacts):
+        live = [c for c in AddressbookManager().get_contacts() if getattr(c, '__state__', None) != 'deleted']
+        for c in live:
             keys = keys_of(c)
             if not keys:
                 continue    # no URIs at all -- nothing to merge by
@@ -5205,6 +5231,7 @@ class SMSWindowManagerClass(NSObject):
         addressbook_manager = AddressbookManager()
         deleted_total = 0
         clusters_merged = 0
+        dirty = {}          # group id -> group, saved once at the end
         try:
             with addressbook_manager.transaction():
                 for members in clusters.values():
@@ -5226,9 +5253,15 @@ class SMSWindowManagerClass(NSObject):
                         for u in list(c.uris):
                             k = self._canonical_uri(u.uri)
                             if k and k not in have:
-                                survivor.uris.add(ContactURI(uri=u.uri, type=u.type))
+                                survivor.uris.add(ContactURI(uri=u.uri, type=(u.type or '').lower() or None))
                                 have.add(k)
                                 changed.append('+uri %s (from %s)' % (u.uri, c.id))
+
+                    join, leave, ask = self._mergeMembership(survivor, losers, groups)
+                    changed += ['+group %s' % g.name for g in join] + ['-group %s' % g.name for g in leave]
+                    for g in ask:
+                        log("  -> %s in %r, %s is not: not merged, block it by hand if it should be"
+                            % (','.join(c.id for c in losers if c.id in g.contacts), g.name, survivor.id))
 
                     log("MERGE keep id=%s name=%r drop=%s%s" % (
                         survivor.id, getattr(survivor, 'name', ''),
@@ -5243,16 +5276,19 @@ class SMSWindowManagerClass(NSObject):
                                 % (survivor.id, e))
                             continue
 
+                    for g in join:
+                        g.contacts.add(survivor)
+                        dirty[g.id] = g
+                    for g in leave:
+                        g.contacts.remove(survivor)
+                        dirty[g.id] = g
                     for c in losers:
                         try:
                             log("  -> delete id=%s name=%r" % (c.id, getattr(c, 'name', '')))
-                            try:
-                                group.contacts.discard(c)
-                            except Exception:
-                                try:
-                                    group.contacts.remove(c)
-                                except Exception:
-                                    pass
+                            for g in groups:
+                                if c.id in g.contacts:
+                                    g.contacts.remove(c)
+                                    dirty[g.id] = g
                             c.delete()
                             deleted_total += 1
                         except Exception as e:
@@ -5260,19 +5296,59 @@ class SMSWindowManagerClass(NSObject):
 
                     clusters_merged += 1
 
-                if deleted_total:
+                for g in dirty.values():
                     try:
-                        group.save()
+                        g.save()
                     except Exception as e:
-                        log("Failed to save _messages group after merge: %s" % e)
+                        log("Failed to save group %s after merge: %s" % (g.id, e))
         except Exception as e:
-            log("Messages group merge transaction failed: %s" % e)
+            log("Duplicate contact merge transaction failed: %s" % e)
             return 0
 
         if deleted_total:
-            log("Messages group merge: %d cluster(s), deleted %d duplicate "
+            log("Duplicate contact merge: %d cluster(s), deleted %d duplicate "
                 "contact(s)" % (clusters_merged, deleted_total))
         return deleted_total
+
+    @objc.python_method
+    def _mergeMembership(self, survivor, losers, groups):
+        """The groups the survivor of a merge joins, leaves, and is asked about.
+
+        A contact folded into another is in its groups, except:
+          - Deleted, unless every copy was deleted; a survivor in Deleted whose
+            copies were not leaves it
+          - Messages, for a conference room (no room is in Messages)
+          - Blocked, unless the survivor is blocked too: asked, not decided
+        Blink Qt's contact_repair.membership_plan is the same rule.
+        """
+        from ContactListModel import DELETED_GROUP_ID, MESSAGES_GROUP_ID
+        ids = set([survivor.id] + [c.id for c in losers])
+        deleted = next((g for g in groups if g.id == DELETED_GROUP_ID), None)
+        all_deleted = deleted is not None and all(i in deleted.contacts for i in ids)
+        try:
+            room = any(is_conference_uri(str(u.uri)) for u in survivor.uris)
+        except Exception:
+            room = False
+        try:
+            blocked = _history_module._blocked_group()
+        except Exception:
+            blocked = None
+        join, leave, ask = [], [], []
+        for g in groups:
+            members = set(g.contacts.ids()) if hasattr(g.contacts, 'ids') else set(c.id for c in g.contacts)
+            if survivor.id in members:
+                if g is deleted and not all_deleted:
+                    leave.append(g)
+                continue
+            if not members & ids or g is deleted:
+                continue
+            if g.id == MESSAGES_GROUP_ID and room:
+                continue
+            if blocked is not None and g.id == blocked.id:
+                ask.append(g)
+                continue
+            join.append(g)
+        return join, leave, ask
 
     @objc.python_method
     def _NH_BlinkMessagesDidDecryptInBackground(self, sender, data):

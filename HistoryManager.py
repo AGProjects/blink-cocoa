@@ -5160,9 +5160,11 @@ def calls_group_startup_check(xcap_loaded=False):
         # server: rewriting a uri against a half-loaded document would write
         # back whatever the reload is about to replace.
         if xcap_loaded:
+            purge_lan_addresses()
             repair_contact_addresses()
             sync_blocked_with_policies()
             file_contacts_into_kind_groups()
+            take_rooms_out_of_messages()
 
         # Last, and on every pass: who is actually in the two groups. The
         # startup pass shows what was loaded, the post-reload pass shows what
@@ -5310,6 +5312,109 @@ def echoed_name_replacement(contact):
 
 
 @AddressbookOrigin.with_reason('repair')
+def _is_url(uri, kind=None):
+    """A web address (type url, or http: or https:): it keeps its case."""
+    return str(kind or '').lower() == 'url' or str(uri or '').strip().lower().startswith(('http:', 'https:'))
+
+
+def _live_contacts(manager):
+    """The contacts, without those deleted earlier in this pass: a deleted contact leaves
+    AddressbookManager only once its deletion has been processed."""
+    return [contact for contact in manager.get_contacts() if getattr(contact, '__state__', None) != 'deleted']
+
+
+_lan_addresses_purged = [False]
+
+
+@AddressbookOrigin.with_reason('lan-address')
+def purge_lan_addresses():
+    """Remove what belongs to one network only (util.is_lan_address: a Bonjour
+    neighbour, a private, loopback or link-local IP, a .local host). Once per run.
+
+    The XCAP addressbook is shared by every device of the account, on any
+    network, and the Bonjour account has none; a Bonjour call filed into Calls
+    put user@192.168.x.x there. A contact left without an address is deleted
+    (and taken out of its groups), else only those addresses go. Public IP
+    addresses stay. The rule of every client (Blink Qt purge_lan_addresses).
+    """
+    if _lan_addresses_purged[0]:
+        return 0
+    _lan_addresses_purged[0] = True
+    try:
+        from sipsimple.addressbook import AddressbookManager
+        from util import is_lan_address
+        manager = AddressbookManager()
+        groups = list(manager.get_groups())
+    except Exception as e:
+        _log('[!] cannot read the addressbook to purge LAN addresses: %s' % e)
+        return 0
+    purged = 0
+    changed = {}
+    with manager.transaction():
+        for contact in _live_contacts(manager):
+            try:
+                local = [uri for uri in contact.uris if is_lan_address(str(uri.uri))]
+                if not local:
+                    continue
+                purged += len(local)
+                addresses = ', '.join(str(uri.uri) for uri in local)
+                if len(local) == len(list(contact.uris)):
+                    for group in groups:
+                        if contact.id in group.contacts:
+                            group.contacts.remove(contact)
+                            changed[group.id] = group
+                    contact.delete()
+                    _log_ab('deleted %s (%s): its addresses are on one network only: %s'
+                            % (_quote(str(contact.name)), contact.id, addresses))
+                    continue
+                default_id = getattr(contact.uris.default, 'id', None)
+                for uri in local:
+                    contact.uris.remove(uri)
+                if default_id is not None and any(getattr(uri, 'id', None) == default_id for uri in local):
+                    contact.uris.default = next(iter(contact.uris), None)
+                contact.save()
+                _log_ab('removed %s from %s (%s): on one network only'
+                        % (addresses, _quote(str(contact.name)), contact.id))
+            except Exception as e:
+                _log('[!] cannot purge the LAN addresses of %s: %s' % (_quote(str(getattr(contact, 'name', '?'))), e))
+        for group in changed.values():
+            try:
+                group.save()
+            except Exception as e:
+                _log('[!] cannot save %s: %s' % (_describe_group(group), e))
+    if purged:
+        _log_ab('purged %d LAN address(es)' % purged)
+    return purged
+
+
+@AddressbookOrigin.with_reason('messages')
+def take_rooms_out_of_messages():
+    """A conference room is never in Messages, the rule of every client: it is in
+    Conference. Rooms filed there before (by this client, until it refused them in
+    addContactsToMessagesGroup) are taken out. Every run, cheap when there are none."""
+    try:
+        from sipsimple.addressbook import AddressbookManager
+        from util import is_conference_uri
+        manager = AddressbookManager()
+        group = next((group for group in manager.get_groups() if group.id == '_messages'), None)
+    except Exception as e:
+        _log('[!] cannot read the Messages group: %s' % e)
+        return 0
+    if group is None:
+        return 0
+    rooms = [contact for contact in list(group.contacts)
+             if any(is_conference_uri(str(uri.uri)) for uri in contact.uris)]
+    if not rooms:
+        return 0
+    with manager.transaction():
+        for contact in rooms:
+            group.contacts.remove(contact)
+        group.save()
+    _log_ab('took %d conference room(s) out of Messages: %s'
+            % (len(rooms), ', '.join(_quote(str(contact.name or contact.id)) for contact in rooms)))
+    return len(rooms)
+
+
 def repair_contact_addresses():
     """Put conference rooms back on the bridge domain. Once per run.
 
@@ -5329,7 +5434,7 @@ def repair_contact_addresses():
     try:
         from sipsimple.addressbook import AddressbookManager
         manager = AddressbookManager()
-        contacts = list(manager.get_contacts())
+        contacts = _live_contacts(manager)
     except Exception as e:
         _log('[!] cannot read the addressbook to repair conference uris: %s' % e)
         return
@@ -5359,6 +5464,9 @@ def repair_contact_addresses():
                     e164 = pstn_e164(current, default_account)
                     if e164:
                         wanted = e164
+                if wanted == current and not _is_url(current, uri.type) and current != current.lower():
+                    # SIP addresses are stored lowercase, the rule of every client
+                    wanted = current.lower()
                 if wanted != current:
                     moved.append((uri, current, wanted))
             was = str(getattr(contact, 'name', '') or '')
@@ -5366,6 +5474,9 @@ def repair_contact_addresses():
             # old spelling is caught by the same pass rather than the next one.
             for uri, _current, wanted in moved:
                 uri.uri = wanted
+            # and so are the types: format_uri_type spells them for the screen
+            retyped = [(uri, str(uri.type), str(uri.type).lower()) for uri in contact.uris
+                       if uri.type and str(uri.type) != str(uri.type).lower()]
             renamed = echoed_name_replacement(contact)
             # Duplicate addresses WITHIN the contact, judged after the rewrites
             # above -- which is the point: two entries that were different
@@ -5388,11 +5499,14 @@ def repair_contact_addresses():
                     duplicates.append((uri, key))
                 else:
                     survivors[key] = uri
-            if not moved and not renamed and not duplicates:
+            if not moved and not retyped and not renamed and not duplicates:
                 continue
             with manager.transaction():
                 for _uri, current, wanted in moved:
                     _log_ab('address %s -> %s' % (_quote(current), _quote(wanted)))
+                for uri, current, wanted in retyped:
+                    uri.type = wanted
+                    _log_ab('type of %s %s -> %s' % (_quote(str(uri.uri)), current, wanted))
                 if renamed:
                     # Say WHERE the name came from. Both outcomes start from the
                     # same hole -- a name that was only the address -- but one
@@ -5668,11 +5782,14 @@ def block_party(uri, name=None, account=None, exclusive=False):
     """
     try:
         from sipsimple.addressbook import AddressbookManager, Contact, ContactURI
-        from util import canonical_pstn_uri, format_uri_type, pstn_e164
+        from util import canonical_pstn_uri, is_lan_address, pstn_e164
 
         address = canonical_pstn_uri(uri, account)
         if not address:
             _log('[!] refusing to block an empty address')
+            return False
+        if is_lan_address(address):
+            _log('[!] not blocking %s in the addressbook: an address on one network only is not written to it' % _quote(address))
             return False
 
         blink_contact = _lookup_contact(address)
@@ -5697,8 +5814,7 @@ def block_party(uri, name=None, account=None, exclusive=False):
         else:
             contact = Contact()
             contact.name = name or address
-            uri_type = 'phone' if pstn_e164(address, account) else 'SIP'
-            contact.uris.add(ContactURI(uri=address, type=format_uri_type(uri_type)))
+            contact.uris.add(ContactURI(uri=address, type='tel' if pstn_e164(address, account) else 'sip'))
             _set_blocked_policy(contact, save=False)
             contact.save()
             _publish_contact_for_groups(contact)
@@ -5804,8 +5920,8 @@ def ensure_call_contact(remote_uri, account=None, xcap_loaded=True):
         return None
     try:
         from sipsimple.addressbook import AddressbookManager, Contact, ContactURI
-        from util import (canonical_pstn_uri, format_uri_type, is_anonymous,
-                          is_conference_uri, pstn_e164)
+        from util import (canonical_pstn_uri, is_anonymous, is_conference_uri,
+                          is_lan_address, pstn_e164)
 
         conference = is_conference_uri(remote_uri, account)
 
@@ -5814,6 +5930,12 @@ def ensure_call_contact(remote_uri, account=None, xcap_loaded=True):
             # Neither an address nor a number we can file. Bonjour device ids
             # and half-formed URIs land here.
             _log('not filing %s: it is neither an address nor a number' % _quote(remote_uri))
+            return None
+        if is_lan_address(address):
+            # A Bonjour neighbour, or a host on this network only: the
+            # addressbook is shared by every device of the account, on any
+            # network, and such an address means nothing on the others.
+            _log('not filing %s: an address on one network only' % _quote(remote_uri))
             return None
 
         if is_blocked_party(address):
@@ -5841,8 +5963,8 @@ def ensure_call_contact(remote_uri, account=None, xcap_loaded=True):
             else:
                 name = _adopt_address_book_name(address)
             contact.name = name or address
-            contact.uris.add(ContactURI(uri=address,
-                                        type=format_uri_type('phone' if e164 else 'SIP')))
+            # types are stored lowercase, as every client stores them (shown through format_uri_type)
+            contact.uris.add(ContactURI(uri=address, type='tel' if e164 else 'sip'))
             contact.preferred_media = 'messages'
             contact.save()
             _publish_contact_for_groups(contact)

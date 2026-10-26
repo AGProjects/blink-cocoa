@@ -55,7 +55,7 @@ from AppKit import NSButton, NSSwitchButton
 from zope.interface import implementer
 
 from VirtualGroups import VirtualGroup
-from util import checkValidPhoneNumber, format_uri_type, log_gui_exception, run_in_gui_thread, canonical_pstn_uri, pstn_e164, preferred_media_choice
+from util import checkValidPhoneNumber, format_uri_type, log_gui_exception, run_in_gui_thread, canonical_pstn_uri, pstn_e164
 
 
 # PNG, spelled out rather than imported: AppKit renamed the file-type
@@ -302,11 +302,13 @@ class AddContactController(NSObject):
         _account = AccountManager().default_account
         for (uri, type) in uris:
             _uri = uri.strip()
+            if is_lan_address(_uri):
+                continue        # a Bonjour neighbour or a LAN host: not for the address book every device shares
             _e164 = pstn_e164(_uri, _account)
             if _e164:
                 self.uris.append(ContactURI(uri=_e164, type='tel'))
             else:
-                self.uris.append(ContactURI(uri=_uri, type=format_uri_type(type)))
+                self.uris.append(ContactURI(uri=_uri, type=(type or 'sip').lower()))      # stored lowercase, shown through format_uri_type
 
         self.update_default_uri()
         self.subscriptions = {'presence': {'subscribe': True, 'policy': 'allow'},  'dialog': {'subscribe': False, 'policy': 'block'}}
@@ -736,7 +738,7 @@ class AddContactController(NSObject):
             if column == 0:
                 return contact_uri.uri
             elif column == 1:
-                return cell.indexOfItemWithTitle_(contact_uri.type or 'SIP')
+                return cell.indexOfItemWithTitle_(format_uri_type(contact_uri.type))      # the menu shows SIP, Mobile...; the type is stored lowercase
         except Exception:
             log_gui_exception('the contact addresses data source (row %s)' % row)
             return ""
@@ -761,7 +763,7 @@ class AddContactController(NSObject):
             if column == 0:
                 has_empty_cell = any(value for value in self.uris if not value)
                 if not has_empty_cell:
-                    self.uris.append(ContactURI(uri="", type="SIP"))
+                    self.uris.append(ContactURI(uri="", type="sip"))
 
         try:
             contact_uri = self.uris[row]
@@ -772,6 +774,12 @@ class AddContactController(NSObject):
                 uri = str(object).strip().lower().replace(" ", "")
                 if not self.checkURI(uri):
                     NSRunAlertPanel(NSLocalizedString("Invalid Address", "Window title"), NSLocalizedString("Please enter an address containing alpha numeric characters", "Label"),
+                                    NSLocalizedString("OK", "Button title"), None, None)
+                    return
+                if is_lan_address(uri):
+                    # the addressbook is shared by every device of the account, on any network
+                    NSRunAlertPanel(NSLocalizedString("Address on This Network Only", "Window title"),
+                                    NSLocalizedString("A Bonjour neighbour or an address on a local network is reached from this network only, so it is not saved in the address book every device shares", "Label"),
                                     NSLocalizedString("OK", "Button title"), None, None)
                     return
                 # A phone number is stored bare, in E.164, whatever the user
@@ -786,18 +794,18 @@ class AddContactController(NSObject):
                 if _e164:
                     contact_uri.type = 'tel'
                 elif uri.startswith(('https:', 'http:')):
-                    contact_uri.type = 'URL'
+                    contact_uri.type = 'url'
 
                 elif '@' in uri:
                     domain = uri.partition("@")[-1]
                     domain = domain if ':' not in domain else domain.partition(":")[0]
                     if domain in ('jit.si', 'gmail.com', 'comm.unicate.me') or 'jabb' in domain or 'xmpp' in domain or domain.endswith('.im') or domain.startswith('im.'):
-                        contact_uri.type = 'XMPP'
+                        contact_uri.type = 'xmpp'
                         if len(self.uris) == 1:
                             self.updateSubscriptionMenus()
 
             elif column == 1:
-                contact_uri.type = str(cell.itemAtIndex_(object).title())
+                contact_uri.type = str(cell.itemAtIndex_(object).title()).lower()     # types are stored lowercase
 
             self.update_default_uri()
             table.reloadData()

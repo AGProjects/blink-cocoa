@@ -87,7 +87,7 @@ from NicknameController import NicknameController
 from SIPManager import SIPManager
 from SmileyManager import SmileyManager
 from SubjectController import SubjectController
-from util import format_identity_to_string, format_size_rounded, log_gui_exception, otr_enabled_for_account, sip_prefix_pattern, beautify_audio_codec, run_in_gui_thread
+from util import format_identity_to_string, format_uri_type, format_size_rounded, log_gui_exception, otr_enabled_for_account, sip_prefix_pattern, beautify_audio_codec, run_in_gui_thread
 from MessageBubbleView import (FONT_SIZE_STEP, set_transcript_font_size,
                                transcript_font_size)
 
@@ -2105,7 +2105,7 @@ class ChatWindowController(NSWindowController):
                     titem.setEnabled_(False)
                     from ContactMangler import mangled_uri
                     for uri in sourceContact.uris:
-                        titem = invite_menu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (mangled_uri(uri.uri), uri.type), "userClickedInviteToConference:", "")
+                        titem = invite_menu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (mangled_uri(uri.uri), format_uri_type(uri.type)), "userClickedInviteToConference:", "")
                         titem.setIndentationLevel_(1)
                         titem.setTarget_(self)
                         titem.setRepresentedObject_({'session': session, 'uri': uri.uri, 'contact':sourceContact})
