@@ -167,7 +167,7 @@ def media_report():
     return ', '.join(parts)
 
 
-def join_video_conference(account, room, audio=True, video=True, target=None):
+def join_video_conference(account, room, audio=True, video=True, target=None, extra_sources=None, screen=None):
     """Join room (user@host) over WebRTC from account, its window shown, the microphone muted without audio
     and the camera off without video (both can be turned on in the room); the VideoroomSession, or None
     when that cannot be done. target (a RoomTarget) is a room of another SylkServer: joined through its server."""
@@ -177,7 +177,7 @@ def join_video_conference(account, room, audio=True, video=True, target=None):
     elif not conference_video_available(account):
         return None
     from Videoroom import VideoroomManager
-    video_room = VideoroomManager().join(account, room, audio=audio, video=video, target=target)
+    video_room = VideoroomManager().join(account, room, audio=audio, video=video, target=target, extra_sources=extra_sources, screen=screen)
     if video_room is not None:
         drop_sip_audio(video_room)
     return video_room

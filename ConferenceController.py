@@ -119,10 +119,13 @@ default_conference_server = 'conference.sip2sip.info'
 
 
 class ServerConferenceRoom(object):
-    def __init__(self, target, media_type=None, participants=None, nickname=None, start_when_participants_available=False, video_room=None):
+    def __init__(self, target, media_type=None, participants=None, nickname=None, start_when_participants_available=False, video_room=None, video_sources=None):
         self.target = target
         # (the video room address, its WebRTCSupport.RoomTarget or None) when joined with video over WebRTC
         self.video_room = video_room
+        # with video: (our camera or None for the camera off, the screen to share once joined or None,
+        # [(source, label)] our other videos), from the Publish list (CameraSetup.PublishList)
+        self.video_sources = video_sources
         self.media_type = media_type
         self.participants = participants
         self.nickname = nickname
@@ -320,12 +323,67 @@ class JoinConferenceWindowController(NSObject):
         self.providerLabel.setFrame_(NSMakeRect(20, ok_frame.origin.y + 2, max(100, ok_frame.origin.x - 97 - 30), 30))
         self.ok_button.superview().addSubview_(self.providerLabel)
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, "roomTextDidChange:", NSControlTextDidChangeNotification, self.room)
+        # the videos to publish with Video: shown below the media line, the window growing to make room
+        from CameraSetup import PublishList
+        self.publish = PublishList.alloc().initWithOwner_(self)
+        self.publish_shown = False
+        self.publish.setHidden(True)
 
     @objc.IBAction
     def videoClicked_(self, sender):
-        pass
+        self.updatePublish()
+
+    @objc.python_method
+    def roomWsServer(self):
+        """The webrtcgateway the room in the field is joined at (None while a foreign room is looked up)."""
+        from WebRTCSupport import ws_server
+        account = AccountManager().default_account
+        room, host = self._typedRoom()
+        if room and self._foreignHost(account, host):
+            if self.lookup_pending is not None or self.resolved_room != (room.lower(), host):
+                return None
+            if self.remote_target is not None and self.remote_target.remote:
+                return self.remote_target.ws_server
+        return ws_server(account)
+
+    @objc.python_method
+    def updatePublish(self):
+        shown = self.videoChecked()
+        if shown:
+            if self.publish.checked is None:
+                self.publish.load()
+            self.publish.update_features(self.roomWsServer())
+        self.setPublishShown(shown)
+
+    @objc.python_method
+    def setPublishShown(self, shown):
+        """Grow the window by the list's height and move what is from the media line up with it (or the reverse)."""
+        if shown == self.publish_shown:
+            return
+        from CameraSetup import PublishList
+        self.publish_shown = shown
+        delta = PublishList.HEIGHT if shown else -PublishList.HEIGHT
+        content = self.window.contentView()
+        threshold = self.audio.frame().origin.y - 4      # the media line and everything above it
+        ours = self.publish.views()
+        frames = [(view, view.frame()) for view in content.subviews() if view not in ours]
+        frame = self.window.frame()
+        frame.origin.y -= delta
+        frame.size.height += delta
+        self.window.setFrame_display_animate_(frame, True, False)
+        for view, old in frames:
+            y = old.origin.y + delta if old.origin.y >= threshold else old.origin.y
+            view.setFrame_(NSMakeRect(old.origin.x, y, old.size.width, old.size.height))
+        if shown:
+            below = self.startWhenParticipantsAvailable.frame()
+            list_x = self.participantsTable.enclosingScrollView().frame().origin.x
+            width = self.participantsTable.enclosingScrollView().frame().size.width
+            self.publish.place(content, list_x, below.origin.y + below.size.height + 6, width, PublishList.HEIGHT - 8)
+        self.publish.setHidden(not shown)
+        content.setNeedsDisplay_(True)
 
     def roomTextDidChange_(self, notification):
+        self.publish.uncheck_rtsp()     # another room: its network cameras are chosen again
         if self.lookup_timer is not None:
             self.lookup_timer.invalidate()
         self.lookup_timer = NSTimer.timerWithTimeInterval_repeats_block_(0.4, False, lambda timer: self.lookupRoom())
@@ -397,6 +455,8 @@ class JoinConferenceWindowController(NSObject):
         self.providerLabel.setStringValue_(text)
         if not isinstance(account, BonjourAccount):
             self.ok_button.setEnabled_(self.lookup_pending is None)
+        if getattr(self, 'publish', None) is not None:
+            self.updatePublish()
 
     @objc.python_method
     def videoChecked(self):
@@ -674,7 +734,10 @@ class JoinConferenceWindowController(NSObject):
         if not self.autostart:
             self.window.makeKeyAndOrderFront_(None)
             rc = NSApp.runModalForWindow_(self.window)
+        # the chosen videos, then the window back to its height (its frame is saved: frameAutosaveName)
+        video_sources = self.publish.chosen() if self.video_room is not None and self.videoChecked() else None
         self.window.orderOut_(self)
+        self.setPublishShown(False)
         contactsWindow.setWorksWhenModal_(worksWhenModal)
         NSNotificationCenter.defaultCenter().removeObserver_name_object_(self, NSControlTextDidChangeNotification, self.room)
         if self.lookup_timer is not None:
@@ -703,7 +766,8 @@ class JoinConferenceWindowController(NSObject):
             if self.target in participants:
                 participants.remove(self.target)
             return ServerConferenceRoom(self.target, media_type=media_type, participants=participants, nickname=self.nickname,
-                                        start_when_participants_available=bool(self.startWhenParticipantsAvailable.state()), video_room=self.video_room)
+                                        start_when_participants_available=bool(self.startWhenParticipantsAvailable.state()), video_room=self.video_room,
+                                        video_sources=video_sources)
         else:
             return None
 

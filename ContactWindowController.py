@@ -5031,7 +5031,8 @@ class ContactWindowController(NSWindowController):
                     start_now = False
 
         if start_now:
-            self.joinConference(conference.target, conference.media_type, conference.participants, conference.nickname, video_room=getattr(conference, 'video_room', None))
+            self.joinConference(conference.target, conference.media_type, conference.participants, conference.nickname, video_room=getattr(conference, 'video_room', None),
+                                video_sources=getattr(conference, 'video_sources', None))
             return True
         else:
             settings = SIPSimpleSettings()
@@ -5299,7 +5300,7 @@ class ContactWindowController(NSWindowController):
         return session_controller
 
     @objc.python_method
-    def joinConference(self, target, media_type, participants=(), nickname=None, video_room=None):
+    def joinConference(self, target, media_type, participants=(), nickname=None, video_room=None, video_sources=None):
         BlinkLogger().log_info("Join conference %s with media %s" % (target, media_type))
         if participants:
             BlinkLogger().log_info("Inviting participants: %s" % participants)
@@ -5320,7 +5321,7 @@ class ContactWindowController(NSWindowController):
         if type(media_type) in (tuple, list) and 'video' in media_type:
             # video over WebRTC (SylkServer video rooms): the room's audio and video go there, its chat over MSRP
             try:
-                media_type, video_session = self.joinVideoConference(account, target, media_type, video_room)
+                media_type, video_session = self.joinVideoConference(account, target, media_type, video_room, video_sources)
                 for_videoroom = video_session is not None
             except Exception:
                 log_gui_exception('joining the video room of %s' % target)
@@ -5373,17 +5374,31 @@ class ContactWindowController(NSWindowController):
         return session_controller
 
     @objc.python_method
-    def joinVideoConference(self, account, target, media_type, video_room=None):
+    def joinVideoConference(self, account, target, media_type, video_room=None, video_sources=None):
         """Join the video room of target over WebRTC (audio muted when media_type has no audio); (the media
         left for the SIP session, the VideoroomSession or None when it was not joined): chat only when it
-        was, else the media without video."""
+        was, else the media without video. video_sources: (our camera or None for the camera off, the screen
+        to share once joined or None, [(source, label)] our other videos), from Join Conference's Publish list."""
         from WebRTCSupport import join_video_conference, room_video
         from util import call_later
         video_room = video_room or room_video(target, account)
         session = None
         if video_room is not None:
             video_uri, room_target = video_room
-            session = join_video_conference(account, video_uri, audio='audio' in media_type, video=True, target=room_target)
+            camera, screen, extras = video_sources or (None, None, [])
+            send_camera = True
+            if video_sources is not None:
+                from sipsimple.configuration.settings import SIPSimpleSettings
+                if camera and camera != str(SIPSimpleSettings().video.device or ''):
+                    from ScreenPointerController import select_video_device
+                    select_video_device(camera)     # the camera checked first: ours, as the room's Camera menu chooses it
+                send_camera = bool(camera)          # a screen alone: the camera stays off until it is shared
+                if screen:
+                    BlinkLogger().log_info("[conference] %s: sharing %s once joined" % (target, screen))
+                if extras:
+                    BlinkLogger().log_info("[conference] %s: publishing also %s" % (target, ', '.join(label for source, label in extras)))
+            session = join_video_conference(account, video_uri, audio='audio' in media_type, video=send_camera, target=room_target,
+                                            extra_sources=extras, screen=screen)
         if session is None:
             BlinkLogger().log_warning("[conference] %s: no video room can be joined, joining without video" % target)
             remaining = tuple(media for media in media_type if media != 'video')
@@ -7875,7 +7890,8 @@ class ContactWindowController(NSWindowController):
             return
         conference = self.showJoinConferenceWindow(target=target, participants=participants, media_type=media_type, default_domain=account.id.domain)
         if conference is not None:
-            self.joinConference(conference.target, conference.media_type, conference.participants)
+            self.joinConference(conference.target, conference.media_type, conference.participants, video_room=getattr(conference, 'video_room', None),
+                                video_sources=getattr(conference, 'video_sources', None))
 
         self.joinConferenceWindow.release()
         self.joinConferenceWindow = None

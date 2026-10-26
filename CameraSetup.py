@@ -17,9 +17,11 @@ pulls a picture and shows it: only what was tested can be added, and it is remem
 (ExtraVideo.remember_source) with its password. Renaming a tested camera saves it.
 
 Both are built in code and run modally; run() answers (source, label) or None.
+
+PublishList is Join Conference's list of the videos to publish with Video.
 """
 
-__all__ = ['AddVideoPanel', 'NetworkCameraPanel']
+__all__ = ['AddVideoPanel', 'NetworkCameraPanel', 'PublishList', 'sdk_video_devices']
 
 from urllib.parse import urlsplit
 
@@ -668,3 +670,406 @@ class AddVideoPanel(_ModalPanel):
 
     def cancel_(self, sender):
         self.done(0)
+
+
+# Join Conference: the videos to publish
+
+def _external_camera(name):
+    """Whether the camera called name is plugged in (USB, Thunderbolt, Continuity): not built into the Mac."""
+    try:
+        from AVFoundation import AVCaptureDevice, AVMediaTypeVideo
+        device = next((device for device in AVCaptureDevice.devicesWithMediaType_(AVMediaTypeVideo) or [] if str(device.localizedName()) == name), None)
+    except Exception:
+        device = None
+    if device is not None:
+        transport = int(device.transportType())
+        return transport not in (0, 0x626c746e, 0x76697274)        # unknown, 'bltn' (built in), 'virt' (virtual)
+    return not any(word in name for word in ('FaceTime', 'Built-in', 'Integrated'))
+
+
+def sdk_video_devices():
+    """(cameras, screens) of the SDK, as the room's Camera menu lists them: names, the screens by display."""
+    try:
+        from ScreenPointer import is_screen_device, screen_index
+    except ImportError:
+        is_screen_device, screen_index = (lambda device: False), (lambda device: 0)
+    try:
+        devices = [str(device) for device in NSApp.delegate().video_devices if device not in (None, 'system_default')]
+    except Exception:
+        devices = []
+    cameras = [device for device in devices if not is_screen_device(device)]
+    screens = sorted((device for device in devices if is_screen_device(device)), key=lambda device: screen_index(device) or 0)
+    return cameras, screens
+
+
+def _screen_title(device):
+    from AppKit import NSScreen
+    from ScreenPointer import screen_index
+    index = screen_index(device) or 0
+    screens = NSScreen.screens() or []
+    if index < len(screens):
+        screen = screens[index]
+        size = screen.frame().size
+        scale = screen.backingScaleFactor() or 1
+        name = str(screen.localizedName()) if screen.respondsToSelector_(b'localizedName') else ''
+        return '%s: %s%dx%d' % (device, name + ', ' if name else '', size.width * scale, size.height * scale)
+    return device
+
+
+class PublishList(NSObject):
+    """The videos Join Conference publishes with Video: one line each, checked to be published. With a gateway
+    that announces multiple-video-feeds, three groups: Local cameras (the first checked one is our camera, the
+    others go as extra feeds), Screens (at most one: shared as soon as the room is joined, every checked camera
+    then going as an extra feed) and RTSP cameras (the remembered ones: Add network camera…, Forget; right
+    click: Send at, Rename, Forget; double click renames). Without that feature: cameras and screens, one choice.
+
+    As it opens: an external camera is checked, else the one in use; no screen, no RTSP camera. One camera or
+    screen always stays checked. Changing the room unchecks the RTSP cameras."""
+
+    HEIGHT = 176.0
+
+    def initWithOwner_(self, owner):
+        self = objc.super(PublishList, self).init()
+        if self is None:
+            return None
+        self.owner = owner              # told when the list's height matters (nothing for now)
+        self.multiple = False
+        self.checked = None             # keys of the checked lines (None: the defaults, as it opens)
+        self.rows = []                  # ('header', title) or ('source', data)
+        self._shown = set()             # the keys of the lines shown checked
+        self.features_url = None
+        self._build()
+        return self
+
+    @objc.python_method
+    def _build(self):
+        self.label = NSTextField.labelWithString_(_t("Publish:"))
+        self.label.setAlignment_(2)
+        self.scroll = NSScrollView.alloc().initWithFrame_(NSMakeRect(0, 0, 100, 100))
+        self.scroll.setHasVerticalScroller_(True)
+        self.scroll.setAutohidesScrollers_(True)
+        self.scroll.setBorderType_(2)
+        self.table = NSTableView.alloc().initWithFrame_(self.scroll.bounds())
+        check = NSTableColumn.alloc().initWithIdentifier_('check')
+        check.setWidth_(22)
+        cell = NSButton.alloc().init().cell()
+        cell.setButtonType_(3)          # NSSwitchButton
+        cell.setTitle_('')
+        check.setDataCell_(cell)
+        self.table.addTableColumn_(check)
+        title = NSTableColumn.alloc().initWithIdentifier_('title')
+        title.setWidth_(300)
+        title.setResizingMask_(1)
+        self.table.addTableColumn_(title)
+        self.table.setHeaderView_(None)
+        self.table.setColumnAutoresizingStyle_(5)       # NSTableViewLastColumnOnlyAutoresizingStyle
+        self.table.setDataSource_(self)
+        self.table.setDelegate_(self)
+        self.table.setDoubleAction_('doubleClicked:')
+        self.table.setTarget_(self)
+        from AppKit import NSMenu
+        self.table.setMenu_(NSMenu.alloc().init())
+        self.table.menu().setDelegate_(self)
+        self.scroll.setDocumentView_(self.table)
+        self.addButton = _button(_t("Add network camera…"), self, 'addNetworkCamera:')
+        self.addButton.setControlSize_(1)       # small
+        self.addButton.setFont_(NSFont.systemFontOfSize_(NSFont.smallSystemFontSize()))
+        self.forgetButton = _button(_t("Forget"), self, 'forget:')
+        self.forgetButton.setControlSize_(1)
+        self.forgetButton.setFont_(NSFont.systemFontOfSize_(NSFont.smallSystemFontSize()))
+        self.forgetButton.setEnabled_(False)
+
+    @objc.python_method
+    def views(self):
+        return (self.label, self.scroll, self.addButton, self.forgetButton)
+
+    @objc.python_method
+    def place(self, view, list_x, y, width, height):
+        """In view (not flipped): the label left of the list, the buttons under the label."""
+        for control in self.views():
+            if control.superview() is not view:
+                view.addSubview_(control)
+        self.scroll.setFrame_(NSMakeRect(list_x, y, width, height))
+        self.label.setFrame_(NSMakeRect(list_x - 126, y + height - 19, 121, 17))
+        self.addButton.setFrame_(NSMakeRect(list_x - 152, y + height - 50, 150, 24))
+        self.forgetButton.setFrame_(NSMakeRect(list_x - 152, y + height - 76, 150, 24))
+        self.table.sizeLastColumnToFit()
+
+    @objc.python_method
+    def setHidden(self, hidden):
+        for control in self.views():
+            control.setHidden_(hidden)
+        if not hidden:
+            self.addButton.setHidden_(not self.multiple)
+            self.forgetButton.setHidden_(not self.multiple)
+
+    # The lines
+
+    @staticmethod
+    def key(data):
+        return 'rtsp:%s' % data['url'] if data['kind'] == 'rtsp' else '%s:%s' % (data['kind'], data['name'])
+
+    @objc.python_method
+    def sources(self):
+        return [row[1] for row in self.rows if row[0] == 'source']
+
+    @objc.python_method
+    def load(self):
+        """The cameras and screens the SDK has and, with multiple feeds, the RTSP cameras that worked before."""
+        from ExtraVideo import saved_sources
+        from RtspSource import rtsp_available
+        cameras, screens = sdk_video_devices()
+        if self.checked is None:
+            try:
+                from sipsimple.configuration.settings import SIPSimpleSettings
+                current = str(SIPSimpleSettings().video.device or '')
+            except Exception:
+                current = ''
+            camera = next((device for device in cameras if _external_camera(device)), None) or \
+                     (current if current in cameras else cameras[0] if cameras else None)
+            self.checked = {'camera:%s' % camera} if camera else set()
+        self.rows = []
+        if self.multiple:
+            self.rows.append(('header', _t("Local cameras")))
+        self.rows += [('source', dict(kind='camera', name=device)) for device in cameras]
+        if screens and self.multiple:
+            self.rows.append(('header', _t("Screens")))
+        self.rows += [('source', dict(kind='screen', name=device, title=_screen_title(device))) for device in screens]
+        if self.multiple and rtsp_available():
+            self.rows.append(('header', _t("RTSP cameras")))
+            for source in saved_sources():
+                self.rows.append(('source', dict(kind='rtsp', url=source['url'], user=source.get('user') or '', password=source.get('password') or '',
+                                                 label=source.get('label') or '', resolution=source.get('resolution') or '')))
+        local = [data for data in self.sources() if data['kind'] in ('camera', 'screen')]
+        checked = [data for data in local if self.key(data) in self.checked]
+        shown = set(self.key(data) for data in self.sources() if self.key(data) in self.checked)
+        if not self.multiple:
+            shown = set(self.key(data) for data in checked[:1])     # one video per participant: the first checked one
+        elif len([data for data in checked if data['kind'] == 'screen']) > 1:
+            screens_checked = [self.key(data) for data in checked if data['kind'] == 'screen']
+            shown -= set(screens_checked[1:])
+        if local and not any(self.key(data) in shown for data in local):
+            shown.add(self.key(local[0]))       # with Video, a camera (or screen) of ours is always sent
+        # with one video per participant only one line is checked, but what was chosen stays: the server's answer may allow more
+        self.checked = shown if self.multiple else (self.checked | shown)
+        self._shown = shown
+        self.table.reloadData()
+        self.setHidden(self.scroll.isHidden())
+        self.scroll.setToolTip_(_t("The checked videos are published to the conference: your camera or screen, and the others under your name. "
+                                   "Double click a network camera to rename it") if self.multiple else
+                                _t("The video you publish to the conference: this server takes one video per participant"))
+
+    @objc.python_method
+    def is_checked(self, data):
+        return self.key(data) in self._shown
+
+    @objc.python_method
+    def set_multiple(self, multiple):
+        if multiple != self.multiple:
+            self.multiple = multiple
+            self.load()
+
+    @objc.python_method
+    def update_features(self, url):
+        """Whether the room's gateway takes more than one video of ours: as last seen, then asked."""
+        from SylkRTC import FEATURE_MULTIPLE_VIDEO_FEEDS, known_features, probe_features
+        if url is None or url == self.features_url:
+            return
+        self.features_url = url
+        self.set_multiple(FEATURE_MULTIPLE_VIDEO_FEEDS in (known_features(url) or ()))
+        probe_features(url, lambda features, url=url: url == self.features_url and self.set_multiple(FEATURE_MULTIPLE_VIDEO_FEEDS in features))
+
+    @objc.python_method
+    def uncheck_rtsp(self):
+        """Another room: the network cameras are not sent there unless chosen again."""
+        if self.checked and any(key.startswith('rtsp:') for key in self.checked):
+            self.checked = set(key for key in self.checked if not key.startswith('rtsp:'))
+            self._shown = set(key for key in self._shown if not key.startswith('rtsp:'))
+            self.table.reloadData()
+
+    @objc.python_method
+    def set_checked_keys(self, keys):
+        """A saved configuration's lines: what is not here any more is left out; a camera stays checked."""
+        self.checked = set(keys)
+        self.load()
+
+    @objc.python_method
+    def checked_keys(self):
+        return [self.key(data) for data in self.sources() if self.is_checked(data)]
+
+    @objc.python_method
+    def chosen(self):
+        """(our camera: an SDK device or None for the camera off, the screen to share once joined or None,
+        [(source, label)] our other videos), from the checked lines."""
+        from ExtraVideo import camera_by_name
+        checked = [data for data in self.sources() if self.is_checked(data)]
+        screen = next((data['name'] for data in checked if data['kind'] == 'screen'), None)
+        cameras = [data['name'] for data in checked if data['kind'] == 'camera']
+        if not self.multiple:
+            return (None if screen else (cameras[0] if cameras else None)), screen, []
+        # with a screen, our publisher sends it and every camera is an extra feed; else the first camera is ours
+        camera = None if screen or not cameras else cameras.pop(0)
+        extras = []
+        for name in cameras:
+            device = camera_by_name(name)
+            if device is None:
+                BlinkLogger().log_warning('[conference] Camera %s not found by WebRTC: not published' % name)
+                continue
+            extras.append((dict(kind='camera', name=device[0], unique_id=device[1]), None))
+        for data in checked:
+            if data['kind'] == 'rtsp':
+                extras.append((dict(kind='rtsp', url=data['url'], user=data['user'], password=data['password'], resolution=data.get('resolution') or None),
+                               data.get('label') or None))
+        return camera, screen, [(source, label or _t("Camera %d") % number) for number, (source, label) in enumerate(extras, 1)]
+
+    # The table
+
+    def numberOfRowsInTableView_(self, table):
+        return len(self.rows)
+
+    def tableView_isGroupRow_(self, table, row):
+        return 0 <= row < len(self.rows) and self.rows[row][0] == 'header'
+
+    def tableView_heightOfRow_(self, table, row):
+        return 26.0 if self.tableView_isGroupRow_(table, row) and row > 0 else 18.0     # room above every group title but the first
+
+    def tableView_dataCellForTableColumn_row_(self, table, column, row):
+        if column is None:
+            if self.tableView_isGroupRow_(table, row):
+                from AppKit import NSTextFieldCell
+                cell = NSTextFieldCell.alloc().initTextCell_('')
+                cell.setFont_(NSFont.boldSystemFontOfSize_(NSFont.smallSystemFontSize()))
+                return cell
+            return None
+        return column.dataCell()
+
+    def tableView_objectValueForTableColumn_row_(self, table, column, row):
+        if not 0 <= row < len(self.rows):
+            return None
+        kind, data = self.rows[row]
+        if kind == 'header':
+            return data
+        if column is not None and column.identifier() == 'check':
+            return NSOnState if self.is_checked(data) else NSOffState
+        if data['kind'] == 'camera':
+            return data['name']
+        if data['kind'] == 'screen':
+            return data['title']
+        return data.get('label') or _host(data['url']) or data['url']
+
+    def tableView_shouldEditTableColumn_row_(self, table, column, row):
+        if not 0 <= row < len(self.rows) or self.rows[row][0] != 'source':
+            return False
+        return column.identifier() == 'check' or self.rows[row][1]['kind'] == 'rtsp'
+
+    def tableView_toolTipForCell_rect_tableColumn_row_mouseLocation_(self, table, cell, rect, column, row, location):
+        if not 0 <= row < len(self.rows) or self.rows[row][0] != 'source':
+            return None, rect
+        data = self.rows[row][1]
+        if data['kind'] == 'camera':
+            text = _t("A camera of this computer")
+        elif data['kind'] == 'screen':
+            text = _t("Shared once the conference is joined")
+        else:
+            text = _t("Network camera %s, sent at %s (right click to change)") % (data['url'], data.get('resolution') or '640x360')
+        return text, rect
+
+    def tableView_setObjectValue_forTableColumn_row_(self, table, value, column, row):
+        if not 0 <= row < len(self.rows) or self.rows[row][0] != 'source':
+            return
+        data = self.rows[row][1]
+        if column.identifier() == 'title':
+            label = str(value or '').strip()
+            if data['kind'] == 'rtsp' and label and label != data.get('label'):
+                from ExtraVideo import rename_source
+                data['label'] = label
+                rename_source(data['url'], label)
+            return
+        key = self.key(data)
+        if bool(value) and int(value) == NSOnState:
+            self._shown.add(key)
+            # one video when the server takes one; with more, still one screen (it is our publisher's video)
+            for other in self.sources():
+                other_key = self.key(other)
+                if other_key != key and other_key in self._shown and (not self.multiple or data['kind'] == other['kind'] == 'screen'):
+                    self._shown.discard(other_key)
+        else:
+            self._shown.discard(key)
+            # with Video, one camera (or screen) of ours stays checked: the last one cannot be unchecked
+            if data['kind'] in ('camera', 'screen') and not any(self.key(other) in self._shown for other in self.sources() if other['kind'] in ('camera', 'screen')):
+                self._shown.add(key)
+        self.checked = set(self._shown) if self.multiple else (set(self.checked or ()) | self._shown)
+        table.reloadData()
+
+    def tableViewSelectionDidChange_(self, notification):
+        self.forgetButton.setEnabled_(self.selectedRtsp() is not None)
+
+    @objc.python_method
+    def selectedRtsp(self, row=None):
+        row = self.table.selectedRow() if row is None else row
+        if 0 <= row < len(self.rows) and self.rows[row][0] == 'source' and self.rows[row][1]['kind'] == 'rtsp':
+            return self.rows[row][1]
+        return None
+
+    def doubleClicked_(self, sender):
+        row = self.table.clickedRow()
+        if self.selectedRtsp(row) is not None:
+            self.table.editColumn_row_withEvent_select_(1, row, None, True)
+
+    def menuNeedsUpdate_(self, menu):
+        """A network camera: the resolution it is sent at, renaming, forgetting."""
+        from AppKit import NSMenu
+        from ExtraVideo import DEFAULT_RESOLUTION, RESOLUTIONS
+        menu.removeAllItems()
+        row = self.table.clickedRow()
+        data = self.selectedRtsp(row)
+        if data is None:
+            return
+        sizes = NSMenu.alloc().init()
+        current = data.get('resolution') if data.get('resolution') in [name for name, w, h, b in RESOLUTIONS] else DEFAULT_RESOLUTION
+        for name, width, height, bitrate in RESOLUTIONS:
+            item = sizes.addItemWithTitle_action_keyEquivalent_(_t("%dx%d, about %d kbit/s") % (width, height, bitrate), 'sendAt:', '')
+            item.setTarget_(self)
+            item.setRepresentedObject_([data['url'], name])
+            item.setState_(NSOnState if name == current else NSOffState)
+        menu.addItemWithTitle_action_keyEquivalent_(_t("Send at"), None, '').setSubmenu_(sizes)
+        item = menu.addItemWithTitle_action_keyEquivalent_(_t("Rename"), 'rename:', '')
+        item.setTarget_(self)
+        item.setTag_(row)
+        item = menu.addItemWithTitle_action_keyEquivalent_(_t("Forget"), 'forgetRow:', '')
+        item.setTarget_(self)
+        item.setTag_(row)
+
+    def sendAt_(self, sender):
+        from ExtraVideo import set_source_resolution
+        url, name = sender.representedObject()
+        set_source_resolution(str(url), str(name))
+        self.load()
+
+    def rename_(self, sender):
+        self.table.editColumn_row_withEvent_select_(1, sender.tag(), None, True)
+
+    def forgetRow_(self, sender):
+        self.forgetData(self.selectedRtsp(sender.tag()))
+
+    def forget_(self, sender):
+        self.forgetData(self.selectedRtsp())
+
+    @objc.python_method
+    def forgetData(self, data):
+        from ExtraVideo import forget_source
+        if data is None:
+            return
+        forget_source(data['url'])
+        self._shown.discard(self.key(data))
+        self.checked.discard(self.key(data))
+        self.load()
+
+    def addNetworkCamera_(self, sender):
+        number = sum(1 for data in self.sources() if data['kind'] == 'rtsp') + 1
+        answer = NetworkCameraPanel.alloc().initWithLabel_(_t("Camera %d") % number).run()
+        # cameras may have been renamed there; an added camera is checked
+        self.checked = set(self._shown)
+        if answer is not None:
+            self.checked.add(self.key(answer[0]))
+        self.load()

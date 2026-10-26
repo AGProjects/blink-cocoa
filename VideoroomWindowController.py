@@ -152,6 +152,7 @@ SCREEN_GUESS_PIXELS = 1280 * 720
 # The room's controls by how many people (distinct addresses, us included) are in it
 ROOM_CONTROLS_AORS = 3              # raise hand, mute (everyone or one)
 SPEAKER_CONTROLS_AORS = 4           # speaker selection and the speaker items
+PENDING_CAMERA_WAIT = 30.0          # seconds the cameras chosen in Join Conference wait for the screen to free the SDK's camera
 
 SESSION_NOTIFICATIONS = ('VideoroomSessionDidChangeState', 'VideoroomSessionAudioMutedDidChange', 'VideoroomSessionVideoMutedDidChange',
                          'VideoroomSessionParticipantDidJoin', 'VideoroomSessionParticipantDidLeave', 'VideoroomSessionParticipantDidChange',
@@ -2162,6 +2163,35 @@ class VideoroomWindowController(NSObject):
         return extra
 
     @objc.python_method
+    def startPendingVideos(self, waited=0.0):
+        """What Join Conference chose besides our camera, once the room is joined: the screen to share, and our
+        other videos. The cameras of this computer wait for the screen to take the SDK's camera's place (it is
+        free then), at most PENDING_CAMERA_WAIT."""
+        session = self.session
+        if self.closing or session.state != 'established':
+            return
+        screen, session.pending_screen = session.pending_screen, None
+        if screen:
+            self.screen_pending = True
+            self.shareScreen(screen)
+        sources = list(session.pending_extra_sources or [])
+        if not sources:
+            return
+        if not session.multiple_video_feeds:
+            session.pending_extra_sources = []
+            BlinkLogger().log_warning('[videoroom] %s: the server takes one video per participant, not publishing %s' % (session.room, ', '.join(label for source, label in sources)))
+            self.flash(_t("This server takes one video per participant"), duration=5.0)
+            return
+        if getattr(self, 'screen_pending', False) and waited < PENDING_CAMERA_WAIT and not _sending_screen() and \
+                any(source.get('kind') == 'camera' for source, label in sources):
+            _timer(0.5, lambda: self.startPendingVideos(waited + 0.5))
+            return
+        self.screen_pending = False
+        session.pending_extra_sources = []
+        for source, label in sources:
+            self.startExtraVideo(source, label)
+
+    @objc.python_method
     def updateAutoSpeakers(self):
         """While our screen is shared with nobody chosen as speaker: the screen is the speaker, and with one
         more video of ours both are; with more than two videos of ours, nobody is made speaker. Followed as
@@ -2353,6 +2383,7 @@ class VideoroomWindowController(NSObject):
             self.setStatus(None)
             self.updateTitle()
             self.showControls()
+            self.startPendingVideos()
         elif state == 'terminated':
             if self.clock is not None:
                 self.clock.invalidate()

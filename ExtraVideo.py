@@ -31,7 +31,7 @@ The session posts, with itself as sender,
 """
 
 __all__ = ['ExtraVideo', 'RESOLUTIONS', 'DEFAULT_RESOLUTION', 'MAX_EXTRA_VIDEOS', 'FPS', 'local_cameras', 'extra_videos_available',
-           'saved_sources', 'remember_source', 'rename_source', 'set_source_resolution', 'forget_source']
+           'camera_by_name', 'saved_sources', 'remember_source', 'rename_source', 'set_source_resolution', 'forget_source']
 
 import json
 import uuid
@@ -164,6 +164,16 @@ def local_cameras():
             continue
         cameras.append((name, str(device.uniqueID())))
     return cameras
+
+
+def camera_by_name(name):
+    """(name, unique id) of the camera of this computer called name (as the SDK names its devices), or None."""
+    capturer = _cls('RTCCameraVideoCapturer')
+    if capturer is None or not name:
+        return None
+    devices = [(str(device.localizedName()), str(device.uniqueID())) for device in capturer.captureDevices() or []]
+    return next((device for device in devices if device[0] == name), None) or \
+           next((device for device in devices if device[0] in name or name in device[0]), None)
 
 
 def _capture_device(unique_id):

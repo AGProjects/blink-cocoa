@@ -490,6 +490,8 @@ class VideoroomSession(object):
         self.local_video_track = None   # what we send, for the "Me" tile
         self.video_codec = None         # the video codec the answer chose for us
         self.extra_videos = {}          # session id -> ExtraVideo: our extra videos in the room (ExtraVideo.py)
+        self.pending_extra_sources = [] # [(source, label)] from Join Conference, started by the window once joined
+        self.pending_screen = None      # the screen device Join Conference chose, shared once joined
         self._delegate = None
         self._audio_track = None
         self._video_source = None
@@ -1461,14 +1463,18 @@ class VideoroomManager(object, metaclass=Singleton):
         room = room.replace('sip:', '', 1).lower()
         return next((session for session in self.sessions if room in (session.room.lower(), session.sip_room.lower()) and session.state != 'terminated'), None)
 
-    def join(self, account, room, audio=True, video=True, target=None):
-        """Join room from account (its window shown), or bring forward the session already in it."""
+    def join(self, account, room, audio=True, video=True, target=None, extra_sources=None, screen=None):
+        """Join room from account (its window shown), or bring forward the session already in it. extra_sources:
+        [(source, label)] published as our extra videos once the room is joined (ExtraVideo.py); screen: a
+        screen device shared once joined (the window starts both)."""
         from VideoroomWindowController import window_for_session
         session = self.find(room)
         if session is not None:
             window_for_session(session).show()
             return session
         session = VideoroomSession(account, room, audio=audio, video=video, target=target)
+        session.pending_extra_sources = list(extra_sources or [])
+        session.pending_screen = screen
         self.sessions.append(session)
         NotificationCenter().post_notification('VideoroomManagerDidAddSession', sender=self, data=NotificationData(session=session))
         window_for_session(session).show()
