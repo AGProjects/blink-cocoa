@@ -1,4 +1,4 @@
-# Copyright (C) 2015 AG Projects. See LICENSE for details.
+# Copyright (C) 2015-2026 AG Projects. See LICENSE for details.
 #
 
 import cProfile

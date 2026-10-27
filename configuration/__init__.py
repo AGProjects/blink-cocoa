@@ -1,4 +1,4 @@
-# Copyright (C) 2010 AG Projects. See LICENSE for details.
+# Copyright (C) 2010-2026 AG Projects. See LICENSE for details.
 #
 
 __all__ = ['KeychainPasswordSetting']

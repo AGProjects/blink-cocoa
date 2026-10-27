@@ -1,4 +1,4 @@
-# Copyright (C) 2009-2021 AG Projects. See LICENSE for details.
+# Copyright (C) 2009-2026 AG Projects. See LICENSE for details.
 #
 
 debug_memory = False  # turn it on to enable tracing some of the memory leaks

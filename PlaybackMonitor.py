@@ -1,4 +1,4 @@
-# Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
+# Copyright (C) 2009-2026 AG Projects. See LICENSE for details.
 #
 
 """One watcher over the two players, for controls that outlive a bubble.

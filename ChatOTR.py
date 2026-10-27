@@ -1,4 +1,4 @@
-# Copyright (C) 2013 AG Projects. See LICENSE for details.
+# Copyright (C) 2013-2026 AG Projects. See LICENSE for details.
 #
 
 from AppKit import NSApp, NSOKButton, NSCancelButton, NSOnState, NSControlTextDidChangeNotification

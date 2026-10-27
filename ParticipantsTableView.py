@@ -1,4 +1,4 @@
-# Copyright (C) 2010-2011 AG Projects. See LICENSE for details.
+# Copyright (C) 2010-2026 AG Projects. See LICENSE for details.
 #
 
 from AppKit import NSIndexSet, NSTableView

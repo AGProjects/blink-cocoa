@@ -1,4 +1,4 @@
-# Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
+# Copyright (C) 2009-2026 AG Projects. See LICENSE for details.
 #
 
 """Ask which account a first message to a new address goes out from.

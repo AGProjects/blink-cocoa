@@ -1,4 +1,4 @@
-# Copyright (C) 2025 AG Projects. See LICENSE for details.
+# Copyright (C) 2025-2026 AG Projects. See LICENSE for details.
 #
 from AVFoundation import (AVCaptureScreenInput,
                           AVCaptureDeviceInput,

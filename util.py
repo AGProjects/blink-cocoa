@@ -1,4 +1,4 @@
-# Copyright (C) 2012 AG Projects. See LICENSE for details.
+# Copyright (C) 2012-2026 AG Projects. See LICENSE for details.
 #
 
 __all__ = ['message_from_the_past', 'window_corner_inset', 'audio_codecs', 'allocate_autorelease_pool', 'beautify_audio_codec', 'beautify_video_codec', 'call_in_gui_thread', 'call_later', 'run_in_gui_thread',

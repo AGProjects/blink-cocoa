@@ -1,4 +1,4 @@
-# Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
+# Copyright (C) 2009-2026 AG Projects. See LICENSE for details.
 #
 
 from Foundation import (NSAppleEventManager,
@@ -230,7 +230,7 @@ class BlinkAppDelegate(NSObject):
                            }
 
     statusbar_menu_icon = 'invisible'
-    about_copyright = "Copyright 2009-2025 AG Projects"
+    about_copyright = "Copyright 2009-2026 AG Projects"
     active_transports = set()
     terminating = False
 

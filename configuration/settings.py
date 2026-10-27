@@ -1,4 +1,4 @@
-# Copyright (C) 2010 AG Projects. See LICENSE for details.
+# Copyright (C) 2010-2026 AG Projects. See LICENSE for details.
 #
 
 """
@@ -176,6 +176,7 @@ class ContactsSettings(SettingsGroup):
     incoming_calls_period = Setting(type=NonNegativeInteger, default=7)
     outgoing_calls_period = Setting(type=NonNegativeInteger, default=7)
     preferred_media_version = Setting(type=int, default=0)     # see BlinkAppDelegate.migratePreferredMedia
+    search_enter_media = Setting(type=str, default='audio')   # Enter in the search box when the typed address matches no contact: audio, video or messages
 
 
 class PresenceStateSettings(SettingsGroup):

@@ -1,4 +1,4 @@
-# Copyright (C) 2012 AG Projects. See LICENSE for details.
+# Copyright (C) 2012-2026 AG Projects. See LICENSE for details.
 #
 
 from AppKit import NSEventTrackingRunLoopMode, NSApp

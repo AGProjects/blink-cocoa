@@ -1,4 +1,4 @@
-# Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
+# Copyright (C) 2009-2026 AG Projects. See LICENSE for details.
 #
 
 from AppKit import (NSAccessibilityTitleAttribute,
@@ -1279,6 +1279,22 @@ class EncryptionOption(PopUpMenuOption):
         self.popup.setFrame_(frame)
 
 
+class SearchEnterMediaOption(PopUpMenuOption):
+    def __init__(self, object, name, option, description=None):
+        PopUpMenuOption.__init__(self, object, name, option, useRepresented=True, description=description)
+        self.addMissingOptions = False
+        self.popup.addItemWithTitle_(NSLocalizedString("Audio Call", "Menu item"))
+        self.popup.lastItem().setRepresentedObject_('audio')
+        self.popup.addItemWithTitle_(NSLocalizedString("Video Call", "Menu item"))
+        self.popup.lastItem().setRepresentedObject_('video')
+        self.popup.addItemWithTitle_(NSLocalizedString("Messages", "Menu item"))
+        self.popup.lastItem().setRepresentedObject_('messages')
+
+        frame = self.popup.frame()
+        frame.size.width = 150
+        self.popup.setFrame_(frame)
+
+
 class VideoDeviceOption(PopUpMenuOption):
     def __init__(self, object, name, option, description=None):
         PopUpMenuOption.__init__(self, object, name, option, useRepresented=True, description=description)
@@ -2192,6 +2208,8 @@ PreferenceOptionTypes = {
 "contacts.missed_calls_period": HiddenOption,
 "contacts.incoming_calls_period": HiddenOption,
 "contacts.outgoing_calls_period": HiddenOption,
+"contacts.preferred_media_version": HiddenOption,
+"contacts.search_enter_media": SearchEnterMediaOption,
 "file_transfer.directory": HiddenOption,
 "file_transfer.render_incoming_image_in_chat_window": HiddenOption,
 "file_transfer.render_incoming_video_in_chat_window": HiddenOption,
@@ -2293,6 +2311,7 @@ SettingDescription = {
                       'contacts.enable_voicemail_group': NSLocalizedString("Show Voicemail Group", "Label"),
                       'contacts.enable_no_group': NSLocalizedString("Show Contacts Without Group", "Label"),
                       'contacts.enable_online_group': NSLocalizedString("Show Online Group", "Label"),
+                      'contacts.search_enter_media': NSLocalizedString("Enter in Search Box", "Label"),
                       'conference.nickname': NSLocalizedString("Nickname", "Label"),
                       'conference.server_address': NSLocalizedString("Server Address", "Label"),
                       'screen_sharing_server.disabled': NSLocalizedString("Deny Requests for Sharing My Screen", "Label"),
@@ -2520,6 +2539,7 @@ ToolTips = {
              'tls.ca_list': NSLocalizedString("File that contains a list of Certificate Autorities (CA) additional to the ones provided by MacOSX. Each CA must be in PEM format, multiple CA can be concantenated.", "Label"),
              'gui.close_delay': NSLocalizedString("Interval to keep GUI elements alive after session ends (seconds)", "Label"),
              'gui.avatar_choice_preview': NSLocalizedString("Open the window that asks which contact pictures to keep, once, with every stored picture in both columns, to check its layout. Nothing is applied. Turns itself off when the window opens", "Label"),
+             'contacts.search_enter_media': NSLocalizedString("What pressing Enter in the search box does with the typed address when it matches no contact. When it matches a contact, that contact's preferred media decides", "Label"),
              'gui.mangle_contacts': NSLocalizedString("Show invented names and addresses instead of the real ones in the contacts list and the messages pane, for taking screenshots. The domain of each address is kept. Nothing is changed in the address book or in the message history: the substitution lasts only while the application runs", "Label"),
              'xcap.xcap_root': NSLocalizedString("If empty, it is automatically discovered using DNS lookup for TXT record of xcap.domain", "Label")
            }

@@ -1,4 +1,4 @@
-# Copyright (C) 2009-2011 AG Projects. See LICENSE for details.
+# Copyright (C) 2009-2026 AG Projects. See LICENSE for details.
 
 from AppKit import (NSAccessibilityUnignoredDescendant,
                     NSAccessibilityDescriptionAttribute,
@@ -6994,13 +6994,34 @@ class ContactWindowController(NSWindowController):
                         return
 
                     if media_type is None and self.mainTabView.selectedTabViewItem().identifier() != "dialpad":
-                        # Enter opens a conversation in the message pane, as Blink Qt does (calls start
-                        # from their own buttons): the selected result, else the typed string. An
-                        # explicit ;session-type= still starts that session. The typed string goes
-                        # through the same dial plan as a call -- "alice" or a phone number has no
-                        # '@', and openMessagesForURI takes a bare token for a Bonjour instance id.
-                        # No contact is created here: the viewer files one on the first send.
+                        # Enter on a clicked result does what double-click does: the
+                        # contact's preferred media. Otherwise a contact matching the typed
+                        # address decides by its own preferred media, and anything else by
+                        # contacts.search_enter_media (a call by default, as Blink always
+                        # did). An explicit ;session-type= still starts that session.
                         BlinkLogger().log_info('Search Enter: typed %r' % text)
+                        if self.searchOutline.numberOfSelectedRows() == 1:
+                            self.actionButtonClicked_(self.searchOutline)
+                            return
+                        enter_media, enter_contact = self._searchEnterMedia(text)
+                        BlinkLogger().log_info('Search Enter: %s %s' % (enter_media, ('(preferred media of %s)' % enter_contact.uri) if enter_contact is not None else '(default setting)'))
+                        if enter_media == 'conference':
+                            self.resetWidgets()
+                            self.connectToConference(self.conferenceTargetForContact(enter_contact), ("chat", "audio"))
+                            return
+                        if enter_media in ('audio', 'video'):
+                            if enter_media == 'video' and self.sessionControllersManager.isMediaTypeSupported('video'):
+                                call_media = ("audio", "video")
+                            else:
+                                call_media = 'audio'
+                            self.resetWidgets()
+                            self.startSessionWithTarget(text, media_type=call_media, selected_contact=enter_contact)
+                            return
+                        # Messages: open the conversation in the message pane. The typed
+                        # string goes through the same dial plan as a call -- "alice" or a
+                        # phone number has no '@', and openMessagesForURI takes a bare token
+                        # for a Bonjour instance id. No contact is created here: the viewer
+                        # files one on the first send.
                         try:
                             uri = self._searchEnterTarget()
                             if uri:
@@ -7045,6 +7066,50 @@ class ContactWindowController(NSWindowController):
         user = target.user.decode() if isinstance(target.user, bytes) else target.user
         host = target.host.decode() if isinstance(target.host, bytes) else target.host
         return '%s@%s' % (user, host) if user else host
+
+    @objc.python_method
+    def _searchEnterContact(self, text):
+        """The addressbook contact the typed address belongs to, or None.
+
+        Exact match on the text as typed, then completed with the default
+        account's domain when it has none. Deleted and blocked contacts do not
+        count: their preference is not consulted.
+        """
+        from sipsimple.account import AccountManager, BonjourAccount
+        candidates = [text]
+        if '@' not in text:
+            account = AccountManager().default_account
+            if account is not None and account is not BonjourAccount():
+                candidates.append('%s@%s' % (text, account.id.domain))
+        for candidate in candidates:
+            try:
+                contact = self.getFirstContactMatchingURI(candidate, exact_match=True)
+            except Exception as e:
+                BlinkLogger().log_debug('Search Enter: contact lookup for %r failed: %s' % (candidate, e))
+                continue
+            if contact is None:
+                continue
+            if self.isRowInDeletedGroup(contact) or self.blockedContactsForItems([contact]):
+                return None
+            return contact
+        return None
+
+    @objc.python_method
+    def _searchEnterMedia(self, text):
+        """What Enter in the search box does for the typed text, and the contact
+        whose preference decided it (None when the global setting did).
+
+        Returns ('messages' | 'audio' | 'video' | 'conference', contact).
+        """
+        contact = self._searchEnterContact(text)
+        if contact is not None:
+            if self.conferenceTargetForContact(contact) is not None:
+                return 'conference', contact
+            sip_contact = getattr(contact, 'contact', None)
+            if isinstance(contact, BlinkPresenceContact) and sip_contact is not None:
+                return preferred_media_choice(sip_contact.preferred_media), contact
+        value = SIPSimpleSettings().contacts.search_enter_media
+        return preferred_media_choice(value), None
 
     @objc.python_method
     def _searchEnterTarget(self):

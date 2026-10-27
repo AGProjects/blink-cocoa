@@ -1,4 +1,4 @@
-# Copyright (C) 2014 AG Projects. See LICENSE for details.
+# Copyright (C) 2014-2026 AG Projects. See LICENSE for details.
 #
 
 
