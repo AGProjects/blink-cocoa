@@ -1127,11 +1127,8 @@ class AudioController(MediaStream):
                         item.setRepresentedObject_(parsed_target)
         else:
             aor_supports_chat = True
-            aor_supports_screen_sharing_server = True
-            aor_supports_screen_sharing_client = True
 
             can_propose = self.status == STREAM_CONNECTED and self.sessionController.canProposeMediaStreamChanges()
-            can_propose_screensharing = can_propose and not self.sessionController.remote_focus
 
             # allowsStreamOfType applies chat.enable_msrp_chat to a one-to-one
             # call while leaving a conference call alone -- adding chat to a
@@ -1179,36 +1176,6 @@ class AudioController(MediaStream):
             d_item.setEnabled_(video_stream and video_stream.status == STREAM_CONNECTED and self.sessionController.video_consumer == "audio")
             d_item.setHidden_(not(video_stream and self.sessionController.video_consumer == "audio"))
 
-            title = self.sessionController.displayTitleShort
-            have_screensharing = self.sessionController.hasStreamOfType("screen-sharing")
-            item = menu.itemWithTag_(11) # request remote screen
-            item.setTitle_(NSLocalizedString("Request Screen from %s", "Menu item") % title)
-            item.setEnabled_(not have_screensharing and can_propose_screensharing and self.sessionControllersManager.isMediaTypeSupported('screen-sharing-client') and aor_supports_screen_sharing_client)
-
-            item = menu.itemWithTag_(12) # share local screen
-            item.setTitle_(NSLocalizedString("Share My Screen with %s", "Menu item") % title)
-            item.setEnabled_(not have_screensharing and can_propose_screensharing and self.sessionControllersManager.isMediaTypeSupported('screen-sharing-server') and aor_supports_screen_sharing_server)
-
-            item = menu.itemWithTag_(13) # cancel
-            item.setEnabled_(False)
-            if self.sessionController.hasStreamOfType("screen-sharing"):
-                screen_sharing_stream = self.sessionController.streamHandlerOfType("screen-sharing")
-                if screen_sharing_stream.status == STREAM_PROPOSING or screen_sharing_stream.status == STREAM_RINGING:
-                    item.setEnabled_(True)
-                    item.setTitle_(NSLocalizedString("Cancel Screen Sharing Proposal", "Menu item"))
-                elif screen_sharing_stream.status == STREAM_CONNECTED:
-                    item.setEnabled_(True if self.sessionController.canProposeMediaStreamChanges() else False)
-                    item.setTitle_(NSLocalizedString("Stop Screen Sharing", "Menu item"))
-            else:
-                item.setTitle_(NSLocalizedString("Cancel Screen Sharing Proposal", "Menu item"))
-
-            if not NSApp.delegate().screen_sharing_ui_enabled:
-                first = menu.indexOfItemWithTag_(11)
-                for tag in (11, 12, 13):
-                    menu.itemWithTag_(tag).setHidden_(True)
-                # and the separator above them
-                if first > 0 and menu.itemAtIndex_(first - 1).isSeparatorItem():
-                    menu.itemAtIndex_(first - 1).setHidden_(True)
             item = menu.itemWithTag_(20) # add to contacts
             item.setEnabled_(not self.contact and self.sessionController.account is not BonjourAccount())
             item = menu.itemWithTag_(30)
@@ -1258,17 +1225,6 @@ class AudioController(MediaStream):
                         self.sessionController.removeVideoFromSession()
                 else:
                     self.sessionController.removeVideoFromSession()
-        elif tag == 11: # share remote screen
-            self.sessionController.addRemoteScreenToSession()
-        elif tag == 12: # share local screen
-            self.sessionController.addMyScreenToSession()
-        elif tag == 13: # cancel screen sharing proposal
-            if self.sessionController.hasStreamOfType("screen-sharing"):
-                screen_sharing_stream = self.sessionController.streamHandlerOfType("screen-sharing")
-                if screen_sharing_stream.status == STREAM_PROPOSING or screen_sharing_stream.status == STREAM_RINGING:
-                    self.sessionController.cancelProposal(screen_sharing_stream)
-                elif screen_sharing_stream.status == STREAM_CONNECTED:
-                    self.sessionController.removeScreenFromSession()
         elif tag == 16: # detach video
             self.sessionController.setVideoConsumer("standalone")
         elif tag == 20: # add to contacts

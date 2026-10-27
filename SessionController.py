@@ -20,7 +20,6 @@ import json
 
 import os
 import re
-import socket
 import time
 import urllib.request, urllib.parse, urllib.error
 import uuid
@@ -69,7 +68,6 @@ from AccountSettings import AccountSettings
 from BlinkLogger import BlinkLogger
 from ContactListModel import BlinkPresenceContact, BonjourBlinkContact
 from ChatController import ChatController, BlinkChatStream
-from ScreenSharingController import ScreenSharingController, ScreenSharingServerController, ScreenSharingViewerController
 from FileTransferController import FileTransferController
 from FileTransferSession import OutgoingPushFileTransferHandler
 from HistoryManager import ChatHistory, SessionHistory
@@ -95,9 +93,6 @@ StreamHandlerForType = {
     "chat" : ChatController,
     "audio" : AudioController,
     "file-transfer" : FileTransferController,
-    "screen-sharing" : ScreenSharingController,
-    "screen-sharing-server" : ScreenSharingServerController,
-    "screen-sharing-client" : ScreenSharingViewerController,
     "video": VideoController
 }
 
@@ -264,30 +259,15 @@ class SessionControllersManager(object, metaclass=Singleton):
             for session in self.sessionControllers[:]:
                 session.end()
 
-    def isScreenSharingEnabled(self):
-        try:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect(('127.0.0.1', 5900))
-            return True
-        except socket.error:
-            return False
-        finally:
-            s.close()
-
     def isProposedMediaTypeSupported(self, streams, session=None):
         settings = SIPSimpleSettings()
 
         stream_type_list = list(set(stream.type for stream in streams))
 
         if 'screen-sharing' in stream_type_list:
-            ds = [s for s in streams if s.type == "screen-sharing"]
-            if ds and ds[0].handler.type != "active":
-                if settings.screen_sharing_server.disabled:
-                    BlinkLogger().log_info("Screen Sharing is disabled in Blink Preferences")
-                    return False
-                if not self.isScreenSharingEnabled():
-                    BlinkLogger().log_info("Screen Sharing is disabled in System Preferences")
-                    return False
+            # VNC over MSRP is gone: screens are shared as a video input now
+            BlinkLogger().log_info("Screen sharing over MSRP is not supported")
+            return False
 
         if settings.file_transfer.disabled and 'file-transfer' in stream_type_list:
             BlinkLogger().log_info("File Transfers are disabled")
@@ -309,12 +289,6 @@ class SessionControllersManager(object, metaclass=Singleton):
 
     def isMediaTypeSupported(self, type):
         settings = SIPSimpleSettings()
-
-        if type == 'screen-sharing-server':
-            if settings.screen_sharing_server.disabled:
-                return False
-            if not self.isScreenSharingEnabled():
-                return False
 
         if settings.file_transfer.disabled and type == 'file-transfer':
             #BlinkLogger().log_info("File Transfers are disabled")
@@ -2054,12 +2028,7 @@ class SessionController(NSObject):
     @objc.python_method
     def endStream(self, streamHandler):
         if self.session is not None:
-            if streamHandler.stream.type == "audio" and self.hasStreamOfType("screen-sharing") and len(self.streamHandlers) == 2:
-                self.log_debug("ending session with audio and screensharing streams")
-                # if session is screen-sharing end it
-                self.end()
-                return True
-            elif streamHandler.stream.type == "audio" and self.hasStreamOfType("video") and len(self.streamHandlers) == 2:
+            if streamHandler.stream.type == "audio" and self.hasStreamOfType("video") and len(self.streamHandlers) == 2:
                 self.log_debug("ending session with audio and video streams")
                 # if session is video end it
                 self.end()
@@ -2516,22 +2485,6 @@ class SessionController(NSObject):
         if self.hasStreamOfType("video"):
             videoStream = self.streamHandlerOfType("video")
             self.endStream(videoStream)
-
-    @objc.python_method
-    def addMyScreenToSession(self):
-        if not self.hasStreamOfType("screen-sharing"):
-            self.startSessionWithStreamOfType("screen-sharing-server")
-
-    @objc.python_method
-    def addRemoteScreenToSession(self):
-        if not self.hasStreamOfType("screen-sharing"):
-            self.startSessionWithStreamOfType("screen-sharing-client")
-
-    @objc.python_method
-    def removeScreenFromSession(self):
-        if self.hasStreamOfType("screen-sharing"):
-            screenSharingStream = self.streamHandlerOfType("screen-sharing")
-            self.endStream(screenSharingStream)
 
     @property
     def titleLong(self):
@@ -3287,11 +3240,6 @@ class SessionController(NSObject):
                 if self.video_consumer == 'standalone':
                     NSApp.delegate().contactsWindowController.showWindow_(None)
                     NSApp.delegate().contactsWindowController.showAudioDrawer()
-            elif stream.type == "screen-sharing":
-                self.log_info("Removing screen sharing stream")
-                handler = self.streamHandlerForStream(stream)
-                if handler:
-                    handler.changeStatus(STREAM_FAILED, data.reason)
             else:
                 self.log_info("Got reject proposal for unhandled stream type: %r" % stream.type)
 

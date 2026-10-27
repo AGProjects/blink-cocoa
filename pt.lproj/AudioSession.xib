@@ -181,25 +181,6 @@ Isto não garante que a comunicação com os saltos seguintes também são cript
                         <action selector="userClickedSessionMenuItem:" target="-2" id="Gli-TR-ulc"/>
                     </connections>
                 </menuItem>
-                <menuItem isSeparatorItem="YES" id="jaD-8G-fmB"/>
-                <menuItem title="Compartilhar Tela com Usuário Remoto" tag="11" id="173">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedSessionMenuItem:" target="-2" id="174"/>
-                    </connections>
-                </menuItem>
-                <menuItem title="Solicitar para Compartlihar Tela Remota" tag="12" id="56">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedSessionMenuItem:" target="-2" id="110"/>
-                    </connections>
-                </menuItem>
-                <menuItem title="Cancelar Oferta de Compartilhamento de Tela" tag="13" enabled="NO" id="170">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedSessionMenuItem:" target="-2" id="171"/>
-                    </connections>
-                </menuItem>
                 <menuItem isSeparatorItem="YES" id="172"/>
                 <menuItem title="Inserir aos Contatos" tag="20" id="69">
                     <modifierMask key="keyEquivalentModifierMask"/>

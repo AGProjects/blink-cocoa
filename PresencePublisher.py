@@ -209,7 +209,7 @@ class PresencePublisher(object):
                     self.get_location([account])
         elif notification.sender is SIPSimpleSettings():
             account_manager = AccountManager()
-            if set(['chat.enable_msrp_chat', 'video.device', 'screen_sharing_server.disabled', 'file_transfer.disabled', 'presence_state.icon', 'presence_state.status', 'presence_state.note']).intersection(notification.data.modified):
+            if set(['chat.enable_msrp_chat', 'video.device', 'file_transfer.disabled', 'presence_state.icon', 'presence_state.status', 'presence_state.note']).intersection(notification.data.modified):
                 self.publish()
             if 'presence_state.offline_note' in notification.data.modified:
                 for account in (account for account in account_manager.get_accounts() if hasattr(account, 'xcap') and account.enabled and account.xcap.enabled and account.xcap.discovered):
@@ -419,8 +419,6 @@ class PresencePublisher(object):
         else:
             service.capabilities.video = False
         service.capabilities.file_transfer = not settings.file_transfer.disabled
-        service.capabilities.screen_sharing_server = not settings.screen_sharing_server.disabled
-        service.capabilities.screen_sharing_client = True
         service.user_input = rpid.UserInput()
         service.user_input.value = self.user_input['state']
         service.user_input.last_input = self.user_input['last_input']

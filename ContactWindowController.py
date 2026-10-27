@@ -402,7 +402,6 @@ class ContactWindowController(NSWindowController):
     videoView = objc.IBOutlet()
 
     chatMenu = objc.IBOutlet()
-    screenShareMenu = objc.IBOutlet()
 
     historyViewer = None
 
@@ -666,32 +665,15 @@ class ContactWindowController(NSWindowController):
         segmentChildren.objectAtIndex_(0).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Start Audio Call'), NSAccessibilityDescriptionAttribute)
         segmentChildren.objectAtIndex_(1).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Start Video Call'), NSAccessibilityDescriptionAttribute)
         segmentChildren.objectAtIndex_(2).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Start Text Chat'), NSAccessibilityDescriptionAttribute)
-        segmentChildren.objectAtIndex_(3).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Screen Sharing'), NSAccessibilityDescriptionAttribute)
         segmentChildren.objectAtIndex_(0).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
         segmentChildren.objectAtIndex_(1).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
         segmentChildren.objectAtIndex_(2).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
-        segmentChildren.objectAtIndex_(3).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
 
         segmentChildren2 = NSAccessibilityUnignoredDescendant(self.actionButtons).accessibilityAttributeValue_(NSAccessibilityChildrenAttribute)
         segmentChildren2.objectAtIndex_(0).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Start Audio Call'), NSAccessibilityDescriptionAttribute)
         segmentChildren2.objectAtIndex_(1).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Start Text Chat'), NSAccessibilityDescriptionAttribute)
-        segmentChildren2.objectAtIndex_(2).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Screen Sharing'), NSAccessibilityDescriptionAttribute)
         segmentChildren2.objectAtIndex_(0).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
         segmentChildren2.objectAtIndex_(1).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
-        segmentChildren2.objectAtIndex_(2).accessibilitySetOverrideValue_forAttribute_(NSString.stringWithString_('Push button'), NSAccessibilityRoleDescriptionAttribute)
-
-        if not NSApp.delegate().screen_sharing_ui_enabled:
-            # Screen sharing is the last segment of both call button bars.
-            for control in (self.actionButtons, self.actionButtonsNoVideo):
-                count = control.segmentCount()
-                if count < 2:
-                    continue
-                frame = control.frame()
-                removed = frame.size.width / count
-                control.setSegmentCount_(count - 1)
-                frame.size.width -= removed
-                frame.origin.x += removed / 2
-                control.setFrame_(frame)
 
         self.setAlwaysOnTop()
 
@@ -2635,109 +2617,6 @@ class ContactWindowController(NSWindowController):
                             self.contactContextMenu.setSubmenu_forItem_(ft_submenu, mitem)
                             mitem.setEnabled_(self.contactSupportsMedia("file-transfer", item))
 
-                    if NSApp.delegate().screen_sharing_ui_enabled and self.sessionControllersManager.isMediaTypeSupported('screen-sharing-client'):
-                        ds_submenu = NSMenu.alloc().init()
-                        ds_submenu.setAutoenablesItems_(False)
-                        for uri in sorted(item.uris, key=lambda uri: uri.position if uri.position is not None else sys.maxsize):
-                            if uri.type is not None and uri.type.lower() == 'url':
-                                continue
-
-                            if uri.type == 'Bonjour':
-                                continue
-
-                            ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (mangled_uri(uri.uri), format_uri_type(uri.type)), "startScreenSharing:", "")
-                            ds_item.setRepresentedObject_(uri.uri)
-                            ds_item.setTag_(1)
-                            ds_item.setEnabled_(self.contactSupportsMedia("screen-sharing-server", item, uri.uri))
-
-                            if isinstance(item, BlinkPresenceContact):
-                                status = presence_status_for_contact(item, uri.uri) or 'offline'
-                                icon = self.presence_dots[status]
-                                icon.setScalesWhenResized_(True)
-                                icon.setSize_(NSMakeSize(15, 15))
-                                ds_item.setImage_(icon)
-
-                        if gruu_devices:
-                            ds_submenu.addItem_(NSMenuItem.separatorItem())
-                            ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Online Devices", "Menu item"), "", "")
-                            ds_item.setEnabled_(False)
-
-                            for device in gruu_devices:
-                                if device['user_agent'] and device['local_time']:
-                                    title = '%s @ %s %s' % (str(device['user_agent']), str(device['description']), device['local_time'])
-                                else:
-                                    title = str(device['description'])
-                                title += ' in %s' % str(device['location']) if device['location'] else ''
-                                ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_(title, "startScreenSharing:", "")
-                                ds_item.setRepresentedObject_(device['contact'])
-
-                                status = device['status'] or 'offline'
-                                icon = self.presence_dots[status]
-                                icon.setScalesWhenResized_(True)
-                                icon.setSize_(NSMakeSize(15, 15))
-                                ds_item.setImage_(icon)
-
-                                ds_item.setIndentationLevel_(1)
-                                if device['caps'] is not None and 'screen-sharing-server' not in device['caps']:
-                                    ds_item.setEnabled_(False)
-
-                        if ds_submenu.itemArray():
-                            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Request Screen Sharing", "Menu item"), "", "")
-                            self.contactContextMenu.setSubmenu_forItem_(ds_submenu, mitem)
-                            mitem.setEnabled_(self.contactSupportsMedia("screen-sharing-server", item))
-
-                    if NSApp.delegate().screen_sharing_ui_enabled and self.sessionControllersManager.isMediaTypeSupported('screen-sharing-server'):
-                        ds_submenu = NSMenu.alloc().init()
-                        ds_submenu.setAutoenablesItems_(False)
-                        for uri in sorted(item.uris, key=lambda uri: uri.position if uri.position is not None else sys.maxsize):
-                            if uri.type is not None and uri.type.lower() == 'url':
-                                continue
-
-                            if uri.type == 'Bonjour':
-                                continue
-
-                            ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (mangled_uri(uri.uri), format_uri_type(uri.type)), "startScreenSharing:", "")
-                            ds_item.setRepresentedObject_(uri.uri)
-                            ds_item.setTag_(2)
-                            ds_item.setEnabled_(self.contactSupportsMedia("screen-sharing-client", item, uri.uri))
-
-                            if isinstance(item, BlinkPresenceContact):
-                                status = presence_status_for_contact(item, uri.uri) or 'offline'
-                                icon = self.presence_dots[status]
-                                icon.setScalesWhenResized_(True)
-                                icon.setSize_(NSMakeSize(15, 15))
-                                ds_item.setImage_(icon)
-
-                        if gruu_devices:
-                            ds_submenu.addItem_(NSMenuItem.separatorItem())
-                            ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Online Devices", "Menu item"), "", "")
-                            ds_item.setEnabled_(False)
-
-                            for device in gruu_devices:
-                                if device['user_agent'] and device['local_time']:
-                                    title = '%s @ %s %s' % (str(device['user_agent']), str(device['description']), device['local_time'])
-                                else:
-                                    title = str(device['description'])
-                                title += ' in %s' % str(device['location']) if device['location'] else ''
-                                ds_item = ds_submenu.addItemWithTitle_action_keyEquivalent_(title, "startScreenSharing:", "")
-                                ds_item.setRepresentedObject_(device['contact'])
-                                status = device['status'] or 'offline'
-
-                                icon = self.presence_dots[status]
-                                icon.setScalesWhenResized_(True)
-                                icon.setSize_(NSMakeSize(15, 15))
-                                ds_item.setImage_(icon)
-
-                                ds_item.setTag_(2)
-                                ds_item.setIndentationLevel_(1)
-                                if device['caps'] is not None and 'screen-sharing-client' not in device['caps']:
-                                    ds_item.setEnabled_(False)
-
-                        if ds_submenu.itemArray():
-                            mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Share My Screen", "Menu item"), "", "")
-                            self.contactContextMenu.setSubmenu_forItem_(ds_submenu, mitem)
-                            mitem.setEnabled_(self.contactSupportsMedia("screen-sharing-client", item, uri.uri))
-
                 urls = list(uri.uri for uri in item.uris if uri.type is not None and uri.type.lower() == 'url')
                 if isinstance(item, BlinkPresenceContact):
                     for url in item.presence_state['urls']:
@@ -2790,19 +2669,6 @@ class ContactWindowController(NSWindowController):
                         if has_fully_qualified_sip_uri:
                             ft_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Send Files...", "Menu item"), "sendFile:", "")
                             ft_item.setEnabled_(self.contactSupportsMedia("file-transfer", item, item.uri))
-
-                    if NSApp.delegate().screen_sharing_ui_enabled and self.sessionControllersManager.isMediaTypeSupported('screen-sharing-client'):
-                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Request Screen Sharing", "Menu item"), "startScreenSharing:", "")
-                        mitem.setTag_(1)
-                        mitem.setEnabled_(has_fully_qualified_sip_uri)
-                        mitem.setRepresentedObject_(item.uri)
-                        mitem.setEnabled_(self.contactSupportsMedia("screen-sharing-server", item, item.uri))
-
-                    if NSApp.delegate().screen_sharing_ui_enabled and self.sessionControllersManager.isMediaTypeSupported('screen-sharing-server'):
-                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Share My Screen", "Menu item"), "startScreenSharing:", "")
-                        mitem.setTag_(2)
-                        mitem.setRepresentedObject_(item.uri)
-                        mitem.setEnabled_(self.contactSupportsMedia("screen-sharing-client", item, item.uri))
 
             if isinstance(item, BlinkPresenceContact) or isinstance(item, BonjourBlinkContact):
                 self.contactContextMenu.addItem_(NSMenuItem.separatorItem())
@@ -7260,15 +7126,6 @@ class ContactWindowController(NSWindowController):
             pass
 
     @objc.IBAction
-    def startScreenSharing_(self, sender):
-        uri = sender.representedObject()
-        tag = sender.tag()
-        if tag == 1:
-            self.startSessionToSelectedContact(("screen-sharing-client", "audio"), uri)
-        elif tag == 2:
-            self.startSessionToSelectedContact(("screen-sharing-server", "audio"), uri)
-
-    @objc.IBAction
     def setSubscribeToPresence_(self, sender):
         item = sender.representedObject()
         item.contact.presence.subscribe = not item.contact.presence.subscribe
@@ -7322,11 +7179,9 @@ class ContactWindowController(NSWindowController):
             if self.sessionControllersManager.isMediaTypeSupported('video'):
                 video_segment = 1
                 chat_segment = 2
-                screen_segment = 3
             else:
                 video_segment = 10000000 # not available
                 chat_segment = 1
-                screen_segment = 2
 
             media_type = "audio"
             try:
@@ -7378,15 +7233,6 @@ class ContactWindowController(NSWindowController):
                         self.sendMessageToURI()
                 return
 
-            elif sender.selectedSegment() == screen_segment:
-                # DS button
-                point = self.window().convertScreenToBase_(NSEvent.mouseLocation())
-                event = NSEvent.mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure_(
-                                NSLeftMouseUp, point, 0, NSDate.timeIntervalSinceReferenceDate(), sender.window().windowNumber(),
-                                sender.window().graphicsContext(), 0, 1, 0)
-                NSMenu.popUpContextMenu_withEvent_forView_(self.screenShareMenu, event, sender)
-                return
-
             self.startSessionToSelectedContact(media_type)
 
     @objc.IBAction
@@ -7403,8 +7249,6 @@ class ContactWindowController(NSWindowController):
         for session in self.sessionControllersManager.sessionControllers:
             if session.hasStreamOfType("audio"):
                 if len(session.streamHandlers) == 1:
-                    session.end()
-                elif session.hasStreamOfType("screen-sharing") and len(session.streamHandlers) == 2:
                     session.end()
                 else:
                     stream = session.streamHandlerOfType("audio")
@@ -7856,34 +7700,6 @@ class ContactWindowController(NSWindowController):
             self.updateWindowMenu()
         elif menu == self.restoreContactsMenu:
             self.updateRestoreContactsMenu()
-        elif menu == self.screenShareMenu:
-            try:
-                contact = self.getSelectedContacts()[0]
-            except IndexError:
-                pass
-            else:
-                # TODO: use presence for this ?
-                aor_supports_screen_sharing_client = is_sip_aor_format(contact.uri)
-                aor_supports_screen_sharing_server = is_sip_aor_format(contact.uri)
-                if isinstance(contact, BlinkPresenceContact):
-                    settings = SIPSimpleSettings()
-                    if settings.gui.media_support_detection:
-                        aor_supports_screen_sharing_server = self.contactSupportsMedia('screen-sharing-server', contact, contact.uri)
-                        aor_supports_screen_sharing_client = self.contactSupportsMedia('screen-sharing-client', contact, contact.uri)
-                elif isinstance(contact, BonjourBlinkContact):
-                    aor_supports_screen_sharing_client = True
-                    aor_supports_screen_sharing_server = True
-
-                item = self.screenShareMenu.itemWithTag_(1)
-                from ContactMangler import mangled_name
-                item.setTitle_(NSLocalizedString("Request Screen Sharing from %s", "Menu item") % mangled_name(contact.name, uri=getattr(contact, "uri", None)))
-                item.setEnabled_(self.sessionControllersManager.isMediaTypeSupported('screen-sharing-client') and aor_supports_screen_sharing_client)
-
-                item = self.screenShareMenu.itemWithTag_(2)
-                from ContactMangler import mangled_name
-                item.setTitle_(NSLocalizedString("Share My Screen with %s", "Menu item") % mangled_name(contact.name, uri=getattr(contact, "uri", None)))
-                item.setEnabled_(self.sessionControllersManager.isMediaTypeSupported('screen-sharing-server') and aor_supports_screen_sharing_server)
-
         elif menu == self.contactsMenu:
             row = self.contactOutline.selectedRow()
             selected_contact = None

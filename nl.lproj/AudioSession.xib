@@ -188,25 +188,6 @@
                         <action selector="userClickedSessionMenuItem:" target="-2" id="yFh-OP-Ek9"/>
                     </connections>
                 </menuItem>
-                <menuItem isSeparatorItem="YES" id="jaD-8G-fmB"/>
-                <menuItem title="Deel scherm met correspondent" tag="11" id="173">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedSessionMenuItem:" target="-2" id="174"/>
-                    </connections>
-                </menuItem>
-                <menuItem title="Ask to Share Remote Screen" tag="12" id="56">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedSessionMenuItem:" target="-2" id="110"/>
-                    </connections>
-                </menuItem>
-                <menuItem title="Annuleer voorstel scherm delen" tag="13" enabled="NO" id="170">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="userClickedSessionMenuItem:" target="-2" id="171"/>
-                    </connections>
-                </menuItem>
                 <menuItem isSeparatorItem="YES" id="172"/>
                 <menuItem title="Toevoegen aan contacten" tag="20" id="69">
                     <modifierMask key="keyEquivalentModifierMask"/>

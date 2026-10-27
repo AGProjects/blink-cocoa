@@ -12,7 +12,7 @@ from sipsimple.configuration.datatypes import NonNegativeInteger, SampleRate
 from sipsimple.configuration.datatypes import H264Profile, VideoResolution
 from sipsimple.configuration.settings import H264Settings, VideoSettings
 
-from sipsimple.configuration.settings import AudioSettings, ChatSettings, EchoCancellerSettings, ScreenSharingSettings, FileTransferSettings, LogsSettings, RTPSettings, TLSSettings
+from sipsimple.configuration.settings import AudioSettings, ChatSettings, EchoCancellerSettings, FileTransferSettings, LogsSettings, RTPSettings, TLSSettings
 from sipsimple.util import ISOTimestamp
 
 from configuration.datatypes import AudioCodecList, VideoCodecList, blink_audio_codecs, blink_video_codecs
@@ -74,9 +74,6 @@ class ChatSettingsExtension(ChatSettings):
     # ordinary way to write to someone, and MSRP chat is the specialist tool.
     enable_msrp_chat = Setting(type=bool, default=False)
 
-
-class ScreenSharingSettingsExtension(ScreenSharingSettings):
-    disabled = Setting(type=bool, default=False)
 
 
 class FileTransferSettingsExtension(FileTransferSettings):
@@ -196,7 +193,6 @@ class SIPSimpleSettingsExtension(SettingsObjectExtension):
     audio = AudioSettingsExtension
     video = VideoSettingsExtension
     chat = ChatSettingsExtension
-    screen_sharing_server = ScreenSharingSettingsExtension
     file_transfer = FileTransferSettingsExtension
     logs = LogsSettingsExtension
     server = ServerSettings

@@ -982,7 +982,7 @@ ABC</string>
                         </connections>
                     </button>
                     <segmentedControl verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="457" userLabel="Start Session Buttons">
-                        <rect key="frame" x="50" y="-3" width="175" height="40"/>
+                        <rect key="frame" x="72" y="-3" width="131" height="40"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <segmentedCell key="cell" controlSize="large" state="on" borderStyle="border" alignment="left" style="rounded" trackingMode="momentary" id="458" userLabel="Session Types ">
                             <font key="font" metaFont="system"/>
@@ -994,9 +994,6 @@ ABC</string>
                                     <nil key="label"/>
                                 </segment>
                                 <segment toolTip="Chatsessies" image="pencil" imageScaling="proportionallyUpOrDown" width="30" tag="2">
-                                    <nil key="label"/>
-                                </segment>
-                                <segment toolTip="Scherm delen" image="display" width="30" tag="3">
                                     <nil key="label"/>
                                 </segment>
                             </segments>
@@ -1021,7 +1018,7 @@ ABC</string>
                         </connections>
                     </button>
                     <segmentedControl verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="dvX-cA-IOf" userLabel="Start Session Buttons">
-                        <rect key="frame" x="71" y="-3" width="134" height="40"/>
+                        <rect key="frame" x="93.5" y="-3" width="89" height="40"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <segmentedCell key="cell" controlSize="large" state="on" borderStyle="border" alignment="left" style="rounded" trackingMode="momentary" id="3ka-d8-ldq" userLabel="Session Types ">
                             <font key="font" metaFont="system"/>
@@ -1030,9 +1027,6 @@ ABC</string>
                                     <nil key="label"/>
                                 </segment>
                                 <segment toolTip="Chatsessies" image="pencil" width="30" tag="1">
-                                    <nil key="label"/>
-                                </segment>
-                                <segment toolTip="Scherm delen" image="display" imageScaling="proportionallyUpOrDown" width="30" tag="2">
                                     <nil key="label"/>
                                 </segment>
                             </segments>
@@ -1342,7 +1336,6 @@ ABC</string>
                 <outlet property="recordingsMenu" destination="1091" id="1593"/>
                 <outlet property="recordingsSubMenu" destination="1090" id="1594"/>
                 <outlet property="restoreContactsMenu" destination="1603" id="1610"/>
-                <outlet property="screenShareMenu" destination="928" id="955"/>
                 <outlet property="searchBox" destination="463" id="470"/>
                 <outlet property="searchOutline" destination="621" id="924"/>
                 <outlet property="searchResultsModel" destination="920" id="921"/>
@@ -1373,25 +1366,6 @@ ABC</string>
             </connections>
         </customObject>
         <customObject id="920" userLabel="Search Model" customClass="SearchContactListModel"/>
-        <menu autoenablesItems="NO" id="928" userLabel="Screen Sharing Button Menu">
-            <items>
-                <menuItem title="Vragen om scherm van correspondent te delen" tag="1" id="929">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="startScreenSharing:" target="389" id="1743"/>
-                    </connections>
-                </menuItem>
-                <menuItem title="Mijn scherm delen" tag="2" id="930">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="startScreenSharing:" target="389" id="1744"/>
-                    </connections>
-                </menuItem>
-            </items>
-            <connections>
-                <outlet property="delegate" destination="389" id="938"/>
-            </connections>
-        </menu>
         <menu id="951" userLabel="Start Chat Button Menu">
             <items>
                 <menuItem title="Chatsessie starten" id="952">

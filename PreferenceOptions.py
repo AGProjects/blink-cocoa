@@ -2269,10 +2269,10 @@ PreferenceOptionTypes = {
 DisabledAccountPreferenceSections = []
 
 # These general sections are always hidden
-DisabledPreferenceSections = ['service_provider', 'server', 'echo_canceller']
+DisabledPreferenceSections = ['service_provider', 'server', 'echo_canceller', 'screen_sharing_server']
 
 # These section are rendered staticaly in their own view
-StaticPreferenceSections = ['audio', 'video', 'chat', 'file_transfer', 'screen_sharing_server', 'sounds', 'answering_machine', 'contacts']
+StaticPreferenceSections = ['audio', 'video', 'chat', 'file_transfer', 'sounds', 'answering_machine', 'contacts']
 
 SettingDescription = {
                       'auth.username': NSLocalizedString("Username", "Label"),
@@ -2312,7 +2312,6 @@ SettingDescription = {
                       'contacts.search_enter_media': NSLocalizedString("Enter in Search Box", "Label"),
                       'conference.nickname': NSLocalizedString("Nickname", "Label"),
                       'conference.server_address': NSLocalizedString("Server Address", "Label"),
-                      'screen_sharing_server.disabled': NSLocalizedString("Deny Requests for Sharing My Screen", "Label"),
                       'file_transfer.auto_accept': NSLocalizedString("Automatically Accept Files from Known Contacts", "Label"),
                       'file_transfer.disabled': NSLocalizedString("Disabled", "Label"),
                       'file_transfer.send_media_as_original': NSLocalizedString("Send Pictures and Movies at Original Size", "Label"),

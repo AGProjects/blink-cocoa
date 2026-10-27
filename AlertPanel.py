@@ -284,9 +284,7 @@ class AlertPanel(NSObject, object):
         inviter = None if is_update_proposal else _conference_inviter(session)
 
         if len(self.sessions) == 1:
-            if "screen-sharing" in stream_type_list:
-                base_text = NSLocalizedString("Screen Sharing from %s", "Label")
-            elif "video" in stream_type_list:
+            if "video" in stream_type_list:
                 base_text = NSLocalizedString("Video call from %s", "Label")
             elif "audio" in stream_type_list:
                 base_text = NSLocalizedString("Audio call from %s", "Label")
@@ -322,7 +320,6 @@ class AlertPanel(NSObject, object):
         chatIcon         = view.viewWithTag_(31)
         audioIcon        = view.viewWithTag_(32)
         fileIcon         = view.viewWithTag_(33)
-        screenIcon       = view.viewWithTag_(34)
         videoIcon        = view.viewWithTag_(35)
 
         stream_types = [s.type for s in streams]
@@ -358,13 +355,6 @@ class AlertPanel(NSObject, object):
             frame.origin.x = NSMaxX(view.frame()) - 10 - (NSWidth(frame) + 10) * typeCount
             chatIcon.setFrame_(frame)
             chatIcon.setHidden_(False)
-
-        if 'screen-sharing' in stream_types:
-            frame = screenIcon.frame()
-            typeCount+= 1
-            frame.origin.x = NSMaxX(view.frame()) - 10 - (NSWidth(frame) + 10) * typeCount
-            screenIcon.setFrame_(frame)
-            screenIcon.setHidden_(False)
 
         if 'video' in stream_types:
             frame = videoIcon.frame()
@@ -683,16 +673,7 @@ class AlertPanel(NSObject, object):
 
         if len(streams) != 1:
             type_names = [s.type.replace('-', ' ').capitalize() for s in streams]
-            if "Screen sharing" in type_names:
-                ds = [s for s in streams if s.type == "screen-sharing"]
-                if ds:
-                    type_names.remove("Screen sharing")
-                    if ds[0].handler.type == "active":
-                        type_names.append(NSLocalizedString("Remote Screen offered by", "Label"))
-                    else:
-                        type_names.append(NSLocalizedString("My Screen requested by", "Label"))
-                subject = NSLocalizedString("Addition of %s", "Label") % ", ".join(type_names)
-            elif 'Video' in type_names:
+            if 'Video' in type_names:
                 subject = NSLocalizedString("Video call requested by", "Label")
             else:
                 subject = NSLocalizedString("Addition of %s requested by", "Label") % ", ".join(type_names)
@@ -713,11 +694,6 @@ class AlertPanel(NSObject, object):
             subject = NSLocalizedString("Addition of Chat requested by", "Label")
         elif streams[0].type == 'file-transfer':
             subject = NSLocalizedString("Transfer of File", "Label") + " '%s' (%s) " % (streams[0].file_selector.name, format_size(streams[0].file_selector.size, 1024)) + NSLocalizedString("offered by", "Label")
-        elif streams[0].type == 'screen-sharing':
-            if streams[0].handler.type == "active":
-                subject = NSLocalizedString("Remote Screen offered by", "Label")
-            else:
-                subject = NSLocalizedString("My Screen requested by", "Label")
         else:
             subject = NSLocalizedString("Addition of unknown stream to existing session requested by", "Label")
         return subject, alt_action, alt_object
@@ -741,16 +717,7 @@ class AlertPanel(NSObject, object):
         if not subject:
             subject = NSLocalizedString("Audio call requested by", "Label")
             if len(streams) != 1:
-                if "Screen sharing" in type_names:
-                    ds = [s for s in streams if s.type == "screen-sharing"]
-                    if ds:
-                        type_names.remove("Screen sharing")
-                        if ds[0].handler.type == "active":
-                            type_names.append(NSLocalizedString("Remote Screen offered by", "Label"))
-                        else:
-                            type_names.append(NSLocalizedString("My Screen requested by", "Label"))
-                    subject = ", ".join(type_names)
-                elif 'Video' in type_names:
+                if 'Video' in type_names:
                     subject = NSLocalizedString("Video call requested by", "Label")
                 elif streams[0].type == 'video':
                     subject = NSLocalizedString("Video call requested by", "Label")
@@ -758,8 +725,6 @@ class AlertPanel(NSObject, object):
                 subject = NSLocalizedString("Audio call requested by", "Label")
             elif streams[0].type == 'chat':
                 subject = NSLocalizedString("Chat Session requested by", "Label")
-            elif streams[0].type == 'screen-sharing':
-                subject = NSLocalizedString("Remote Screen offered by", "Label") if streams[0].handler.type == "active" else NSLocalizedString("My Screen requested by", "Label")
             elif streams[0].type == 'file-transfer':
                 subject = NSLocalizedString("Transfer of File", "Label") + " '%s' (%s) " % (streams[0].file_selector.name, format_size(streams[0].file_selector.size, 1024)) + NSLocalizedString("offered by", "Label")
             else:

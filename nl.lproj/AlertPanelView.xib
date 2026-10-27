@@ -110,12 +110,6 @@
                         <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="NSMultipleDocuments" id="48"/>
                         <accessibility description="Bestandsoverdracht"/>
                     </imageView>
-                    <imageView hidden="YES" fixedFrame="YES" tag="34" translatesAutoresizingMaskIntoConstraints="NO" id="49">
-                        <rect key="frame" x="452" y="63" width="30" height="30"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
-                        <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="display" id="50"/>
-                        <accessibility description="Scherm delen"/>
-                    </imageView>
                     <imageView hidden="YES" fixedFrame="YES" tag="35" translatesAutoresizingMaskIntoConstraints="NO" id="GNb-Wk-dV7">
                         <rect key="frame" x="415" y="63" width="30" height="30"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>

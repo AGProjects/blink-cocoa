@@ -111,17 +111,11 @@
                         <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="NSMultipleDocuments" id="48"/>
                         <accessibility description="File Transfer"/>
                     </imageView>
-                    <imageView hidden="YES" fixedFrame="YES" tag="34" translatesAutoresizingMaskIntoConstraints="NO" id="49">
-                        <rect key="frame" x="452" y="63" width="30" height="30"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
-                        <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="display" id="50"/>
-                        <accessibility description="Screen Sharing"/>
-                    </imageView>
                     <imageView hidden="YES" fixedFrame="YES" tag="35" translatesAutoresizingMaskIntoConstraints="NO" id="GNb-Wk-dV7">
                         <rect key="frame" x="415" y="63" width="30" height="30"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                         <imageCell key="cell" controlSize="small" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="video" id="4rF-Lm-PHA"/>
-                        <accessibility description="Screen Sharing"/>
+                        <accessibility description="Video"/>
                     </imageView>
                     <textField hidden="YES" verticalHuggingPriority="750" fixedFrame="YES" tag="15" translatesAutoresizingMaskIntoConstraints="NO" id="54">
                         <rect key="frame" x="196" y="9" width="210" height="17"/>

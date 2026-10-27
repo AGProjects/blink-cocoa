@@ -141,8 +141,6 @@
 		1F2272FF12B554F50010A8B2 /* Group.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B4CA92D10AA5F2F00D5F19E /* Group.xib */; };
 		1F22730012B554F50010A8B2 /* GroupController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B4CA93110AA5FAE00D5F19E /* GroupController.py */; };
 		1F22730112B554F50010A8B2 /* pencil.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B1FC09C10B104F8004C7355 /* pencil.png */; };
-		1F22730212B554F50010A8B2 /* ScreenServerWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B87529E10B5C29B002FD271 /* ScreenServerWindow.xib */; };
-		1F22730412B554F50010A8B2 /* ScreenSharingController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B8752A410B5C5AF002FD271 /* ScreenSharingController.py */; };
 		1F22730512B554F50010A8B2 /* SMSSession.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B0CE72910CD824400325F30 /* SMSSession.xib */; };
 		1F22730712B554F50010A8B2 /* ChatViewController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B0CE73610CDEF1700325F30 /* ChatViewController.py */; };
 		1F22730912B554F50010A8B2 /* smiley_off.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BD014EB10DB239B00D27A92 /* smiley_off.png */; };
@@ -624,8 +622,6 @@
 		2B6328850FE422AE00446655 /* ChatController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B6328840FE422AE00446655 /* ChatController.py */; };
 		2B6596C10FCCB75500FC8CF2 /* ContactWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B6596C00FCCB75500FC8CF2 /* ContactWindowController.py */; };
 		2B7B9C661008D67500BFDAF7 /* TableView.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B7B9C651008D67500BFDAF7 /* TableView.py */; };
-		2B8752A010B5C29B002FD271 /* ScreenServerWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2B87529E10B5C29B002FD271 /* ScreenServerWindow.xib */; };
-		2B8752A510B5C5AF002FD271 /* ScreenSharingController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B8752A410B5C5AF002FD271 /* ScreenSharingController.py */; };
 		2B8F17D41008318700E0775C /* PreferenceOptions.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B8F17D31008318700E0775C /* PreferenceOptions.py */; };
 		2B96EC7410F6DFF6004E6875 /* HistoryViewer.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B96EC7310F6DFF6004E6875 /* HistoryViewer.py */; };
 		2BAF381A0FE088C70040117A /* Contact.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2BAF38080FE088C70040117A /* Contact.xib */; };
@@ -1161,7 +1157,6 @@
 		1F6009CE18F74D22005517FA /* mbFlipWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = mbFlipWindow.m; sourceTree = "<group>"; };
 		1F64609018BC926300AC41E0 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/Subject.xib; sourceTree = "<group>"; };
 		1F64609118BC926300AC41E0 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/SMSSession.xib; sourceTree = "<group>"; };
-		1F64609318BC926300AC41E0 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/ScreenServerWindow.xib; sourceTree = "<group>"; };
 		1F64609418BC926300AC41E0 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/FileTransferWindow.xib; sourceTree = "<group>"; };
 		1F64609518BC926300AC41E0 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/FileTransferItemView.xib; sourceTree = "<group>"; };
 		1F64609618BC926300AC41E0 /* ro */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = ro; path = ro.lproj/PresenceOfflineWindow.xib; sourceTree = "<group>"; };
@@ -1222,7 +1217,6 @@
 		1F73B2EA191BCBB400213DC5 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/Nickname.xib; sourceTree = "<group>"; };
 		1F73B2EB191BCBB400213DC5 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/Subject.xib; sourceTree = "<group>"; };
 		1F73B2EC191BCBB400213DC5 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/SMSSession.xib; sourceTree = "<group>"; };
-		1F73B2EE191BCBB400213DC5 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/ScreenServerWindow.xib; sourceTree = "<group>"; };
 		1F73B2EF191BCBB400213DC5 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/FileTransferWindow.xib; sourceTree = "<group>"; };
 		1F73B2F0191BCBB400213DC5 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/FileTransferItemView.xib; sourceTree = "<group>"; };
 		1F73B2F1191BCBB400213DC5 /* es */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = es; path = es.lproj/PresenceOfflineWindow.xib; sourceTree = "<group>"; };
@@ -1258,7 +1252,6 @@
 		1F7436BA2D53AD7D00792754 /* libpython3.9.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libpython3.9.dylib; path = Distribution/Frameworks/libs/libpython3.9.dylib; sourceTree = "<group>"; };
 		1F762B44194B34B4002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/Subject.xib; sourceTree = "<group>"; };
 		1F762B45194B34B4002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/SMSSession.xib; sourceTree = "<group>"; };
-		1F762B47194B34B4002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/ScreenServerWindow.xib; sourceTree = "<group>"; };
 		1F762B48194B34B4002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/FileTransferWindow.xib; sourceTree = "<group>"; };
 		1F762B49194B34B4002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/FileTransferItemView.xib; sourceTree = "<group>"; };
 		1F762B4A194B34B4002D998E /* pt */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = pt; path = pt.lproj/PresenceOfflineWindow.xib; sourceTree = "<group>"; };
@@ -1389,7 +1382,6 @@
 		1FCEFA2619EBF9DD00E9647D /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/Nickname.xib; sourceTree = "<group>"; };
 		1FCEFA2719EBF9DD00E9647D /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/Subject.xib; sourceTree = "<group>"; };
 		1FCEFA2819EBF9DD00E9647D /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/SMSSession.xib; sourceTree = "<group>"; };
-		1FCEFA2A19EBF9DD00E9647D /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/ScreenServerWindow.xib; sourceTree = "<group>"; };
 		1FCEFA2B19EBF9DD00E9647D /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/FileTransferWindow.xib; sourceTree = "<group>"; };
 		1FCEFA2C19EBF9DD00E9647D /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/FileTransferItemView.xib; sourceTree = "<group>"; };
 		1FCEFA2D19EBF9DD00E9647D /* nl */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = nl; path = nl.lproj/PresenceOfflineWindow.xib; sourceTree = "<group>"; };
@@ -1562,8 +1554,6 @@
 		2B6328840FE422AE00446655 /* ChatController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ChatController.py; sourceTree = "<group>"; };
 		2B6596C00FCCB75500FC8CF2 /* ContactWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ContactWindowController.py; sourceTree = "<group>"; };
 		2B7B9C651008D67500BFDAF7 /* TableView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = TableView.py; sourceTree = "<group>"; };
-		2B87529F10B5C29B002FD271 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ScreenServerWindow.xib; sourceTree = "<group>"; };
-		2B8752A410B5C5AF002FD271 /* ScreenSharingController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ScreenSharingController.py; sourceTree = "<group>"; };
 		2B8F17D31008318700E0775C /* PreferenceOptions.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = PreferenceOptions.py; sourceTree = "<group>"; };
 		2B96EC7310F6DFF6004E6875 /* HistoryViewer.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = HistoryViewer.py; sourceTree = "<group>"; };
 		2BAF38090FE088C70040117A /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/Contact.xib; sourceTree = "<group>"; };
@@ -2370,15 +2360,6 @@
 			name = Enrollment;
 			sourceTree = "<group>";
 		};
-		2BC09104106884CE0069AB9A /* ScreenSharing */ = {
-			isa = PBXGroup;
-			children = (
-				2B8752A410B5C5AF002FD271 /* ScreenSharingController.py */,
-				2B87529E10B5C29B002FD271 /* ScreenServerWindow.xib */,
-			);
-			name = ScreenSharing;
-			sourceTree = "<group>";
-		};
 		2BEFC19E0FD1C2B500447EFB /* Sessions */ = {
 			isa = PBXGroup;
 			children = (
@@ -2391,7 +2372,6 @@
 				1FAF8D2E12DA1F5F0029857C /* Video */,
 				2B6328740FE421BD00446655 /* Chat */,
 				2B0CE72710CD822100325F30 /* Messages */,
-				2BC09104106884CE0069AB9A /* ScreenSharing */,
 				2B2DF5DD105CBFA700F267F9 /* FileTransfer */,
 				1F2276501A823D5900CA9A73 /* ZRTP */,
 			);
@@ -2779,8 +2759,6 @@
 				1F2272FF12B554F50010A8B2 /* Group.xib in Resources */,
 				1F22730012B554F50010A8B2 /* GroupController.py in Resources */,
 				1F22730112B554F50010A8B2 /* pencil.png in Resources */,
-				1F22730212B554F50010A8B2 /* ScreenServerWindow.xib in Resources */,
-				1F22730412B554F50010A8B2 /* ScreenSharingController.py in Resources */,
 				1F22730512B554F50010A8B2 /* SMSSession.xib in Resources */,
 				1F22730712B554F50010A8B2 /* ChatViewController.py in Resources */,
 				1F14255B1905335300CFEC42 /* aspect_ratio.png in Resources */,
@@ -3126,8 +3104,6 @@
 				2B4CA92F10AA5F2F00D5F19E /* Group.xib in Resources */,
 				2B4CA93210AA5FAE00D5F19E /* GroupController.py in Resources */,
 				2B1FC09D10B104F8004C7355 /* pencil.png in Resources */,
-				2B8752A010B5C29B002FD271 /* ScreenServerWindow.xib in Resources */,
-				2B8752A510B5C5AF002FD271 /* ScreenSharingController.py in Resources */,
 				2B0CE72B10CD824400325F30 /* SMSSession.xib in Resources */,
 				1F14255A1905335300CFEC42 /* aspect_ratio.png in Resources */,
 				1F08DB16193DEDB200187373 /* offline.aif in Resources */,
@@ -3822,18 +3798,6 @@
 				1FCEFA4019EBF9DE00E9647D /* nl */,
 			);
 			name = Group.xib;
-			sourceTree = "<group>";
-		};
-		2B87529E10B5C29B002FD271 /* ScreenServerWindow.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				2B87529F10B5C29B002FD271 /* en */,
-				1F64609318BC926300AC41E0 /* ro */,
-				1F73B2EE191BCBB400213DC5 /* es */,
-				1F762B47194B34B4002D998E /* pt */,
-				1FCEFA2A19EBF9DD00E9647D /* nl */,
-			);
-			name = ScreenServerWindow.xib;
 			sourceTree = "<group>";
 		};
 		2BAF38080FE088C70040117A /* Contact.xib */ = {

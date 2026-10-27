@@ -458,13 +458,6 @@ class PreferencesController(NSWindowController, object):
             self.sectionDescription.setStringValue_(NSLocalizedString("File Transfer Settings", "Label"))
             self.window().setTitle_(NSLocalizedString("File Transfer", "Window title"))
             self.sectionHelpPlaceholder.setStringValue_('')
-        elif section_name == 'screen-sharing':
-            self.mainTabView.selectTabViewItemWithIdentifier_("settings")
-            self.generalTabView.selectTabViewItemWithIdentifier_("screen_sharing_server")
-            self.sectionDescription.setStringValue_(NSLocalizedString("Screen Sharing Settings", "Label"))
-            self.window().setTitle_(NSLocalizedString("Screen Sharing", "Window title"))
-            self.sectionHelpPlaceholder.setHidden_(False)
-            self.sectionHelpPlaceholder.setStringValue_(NSLocalizedString("Enable Screen Sharing in System Preferences > Sharing section.\nClick on the 'Computer Settings...' button and check the option 'Anyone may request permission to control screen'", "Preferences help label"))
         elif section_name == 'alerts':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.generalTabView.selectTabViewItemWithIdentifier_("sounds")

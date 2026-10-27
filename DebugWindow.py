@@ -1254,7 +1254,7 @@ class DebugWindow(NSObject):
             if notification.name == "MSRPTransportTrace":
                 if len(attribs["data"]) > 30:
                     attribs["data"] = "<%i bytes>" % len(attribs["data"])
-            elif notification.name in ("FileTransferStreamGotChunk", "ScreenSharingStreamGotData"):
+            elif notification.name == "FileTransferStreamGotChunk":
                 attribs["content"] = "..."
                 if "data" in attribs:
                     attribs["data"] = "..."

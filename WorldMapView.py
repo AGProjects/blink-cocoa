@@ -722,26 +722,6 @@ class MapView(NSView):
             else:
                 item.setEnabled_(False)
 
-        if NSApp.delegate().contactsWindowController.sessionControllersManager.isMediaTypeSupported('screen-sharing-client'):
-            item = menu.addItemWithTitle_action_keyEquivalent_("Request Screen", "startScreenSharing:", "")
-            item.setTarget_(NSApp.delegate().contactsWindowController)
-            item.setTag_(1)
-            if device is not None:
-                item.setRepresentedObject_(device['contact'])
-                item.setEnabled_(True if device['caps'] is not None and 'screen-sharing' in device['caps'] else False)
-            else:
-                item.setEnabled_(False)
-
-        if NSApp.delegate().contactsWindowController.sessionControllersManager.isMediaTypeSupported('screen-sharing-server'):
-            item = menu.addItemWithTitle_action_keyEquivalent_("Share My Screen", "startScreenSharing:", "")
-            item.setTarget_(NSApp.delegate().contactsWindowController)
-            item.setTag_(2)
-            if device is not None:
-                item.setRepresentedObject_(device['contact'])
-                item.setEnabled_(True if device['caps'] is not None and 'screen-sharing' in device['caps'] else False)
-            else:
-                item.setEnabled_(False)
-
         NSMenu.popUpContextMenu_withEvent_forView_(menu, event, sender)
 
     def dealloc(self):

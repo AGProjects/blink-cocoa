@@ -921,7 +921,6 @@ class BlinkConferenceContact(BlinkContact):
     def __init__(self, uri, name=None, icon=None, presence_contact=None):
         objc.super(BlinkConferenceContact, self).__init__(uri, name=name, icon=icon)
         self.active_media = []
-        self.screensharing_url = None
         self.presence_contact = presence_contact
         if presence_contact is not None:
             NotificationCenter().add_observer(self, name="BlinkContactPresenceHasChanged", sender=self.presence_contact)
@@ -1050,7 +1049,6 @@ class BlinkMyselfConferenceContact(BlinkContact):
 
         objc.super(BlinkMyselfConferenceContact, self).__init__(uri, name=name, icon=own_icon)
         self.active_media = []
-        self.screensharing_url = None
         self.presence_note = None
 
 
@@ -1549,10 +1547,6 @@ class BlinkPresenceContact(BlinkContact):
                             caps.add("chat")
                         if service.capabilities.file_transfer:
                             caps.add("file-transfer")
-                        if service.capabilities.screen_sharing_server:
-                            caps.add("screen-sharing-server")
-                        if service.capabilities.screen_sharing_client:
-                            caps.add("screen-sharing-client")
 
                     contact = urllib.parse.unquote(service.contact.value) if service.contact is not None else aor
                     if not contact.startswith(('sip:', 'sips:')):
