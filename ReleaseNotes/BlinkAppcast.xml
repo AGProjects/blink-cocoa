@@ -6,6 +6,34 @@
       <description>Most recent changes with links to updates</description>
       <language>en</language>
          <item>
+            <title>Version 11.0.0</title>
+            <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog-classic.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Tue Oct 27 10:24:19 -03 2026</pubDate>
+            <enclosure url="https://download.ag-projects.com/Blink/MacOSX/Blink.dmg"
+                       sparkle:version="975"
+                       length="152572479"
+                       sparkle:shortVersionString="11.0.0"
+                       type="application/octet-stream"
+                       />
+         </item>
+         <item>
+            <title>Version 11.0.0</title>
+            <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
+		<sparkle:releaseNotesLink>
+			https://blink.sipthor.net/ReleaseNotes/changelog-classic.html
+		</sparkle:releaseNotesLink>
+            <pubDate>Mon Oct 26 20:16:22 -03 2026</pubDate>
+            <enclosure url="https://download.ag-projects.com/Blink/MacOSX/Blink.dmg"
+                       sparkle:version="974"
+                       length="152562641"
+                       sparkle:shortVersionString="11.0.0"
+                       type="application/octet-stream"
+                       />
+         </item>
+         <item>
             <title>Version 10.0.1</title>
             <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
 		<sparkle:releaseNotesLink>
