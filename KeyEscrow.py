@@ -303,15 +303,73 @@ def read_self_keys(account, storage=True):
     return record
 
 
-def escrow_write_targets(account):
-    """Every contact an escrow for this account should be written to.
+def _storage_state(account):
+    """What KeyStorage knows of the account storage (None where it is not importable)."""
+    try:
+        from KeyStorage import KeyStorage
+        storage = KeyStorage()
+        return storage.state(account) if storage._wanted(account) else 'unsupported'
+    except Exception:
+        return None
 
-    All of them, not one. Several contacts carrying the same account URI is a
+
+def _xcap_blockers(account, accounts):
+    """Why the escrow cannot be written to our own contacts now ([] when it can)."""
+    if _resource_lists_element(account) is None:
+        return ['the addressbook has not been fetched from the server yet']
+
+    elements = self_contact_elements(account)
+    if not elements:
+        return ['no contact carries the URI %s, so there is nowhere to write' % account.id]
+
+    blockers = []
+    for contact_element in elements:
+        shared = shared_accounts(contact_element, account, accounts)
+        if shared:
+            blockers.append('contact %s also carries %s; one contact holds one `keys` attribute, so '
+                            'split it -- move %s onto its own contact -- rather than choosing which '
+                            'key survives'
+                            % (contact_element.get('id'), ' and '.join(shared), ' and '.join(shared)))
+
+    for contact_id, _label, record in self_escrow_records(account, storage=False):
+        owner = _escrow_owner(record.get('public_key'), accounts)
+        if owner and owner.lower() != str(account.id).lower():
+            blockers.append('the escrow already in %s is the key of %s; overwriting it '
+                            'would destroy that account\'s only backup' % (escrow_location(contact_id), owner))
+    return blockers
+
+
+def _storage_blockers(account, accounts):
+    """Why the escrow cannot be written to the account storage now ([] when it can)."""
+    state = _storage_state(account)
+    if state not in ('present', 'absent'):
+        return ['the account storage cannot be written: %s' % {
+            None: 'not asked yet', 'pending': 'it has not answered yet', 'failed': 'it could not be read',
+            'invalid': 'it keeps something that is not a key escrow', 'unsupported': 'the account has none'}.get(state, state)]
+    record = _storage_record(account)
+    owner = _escrow_owner((record or {}).get('public_key'), accounts)
+    if owner and owner.lower() != str(account.id).lower():
+        return ['the escrow already in the account storage is the key of %s; overwriting it '
+                'would destroy that account\'s only backup' % owner]
+    return []
+
+
+def escrow_write_targets(account, accounts=None):
+    """Every place an escrow for this account should be written to now: every contact carrying
+    our URI, and the account storage (STORAGE_ID), each where nothing blocks it.
+
+    All the contacts, not one. Several contacts carrying the same account URI is a
     valid, non-conflictual configuration: they are all us, so they all take
     the same key. Writing every one of them keeps the document consistent and
     makes a read correct whichever contact it happens to pick first.
     """
-    return [element.get('id') for element in self_contact_elements(account)]
+    accounts = known_accounts() if accounts is None else accounts
+    targets = []
+    if not _xcap_blockers(account, accounts):
+        targets.extend(element.get('id') for element in self_contact_elements(account))
+    if not _storage_blockers(account, accounts):
+        targets.append(STORAGE_ID)
+    return targets
 
 
 def escrow_write_blockers(account, accounts=None):
@@ -322,11 +380,15 @@ def escrow_write_blockers(account, accounts=None):
     decides whether the feature backs a key up or destroys one, so it is
     written and proven while everything is still read-only.
 
-    The one genuine conflict is a contact carrying the URI of a DIFFERENT
-    account of ours: one contact holds one `keys` attribute, and two accounts
-    have two keypairs, so the second writer would destroy the first's backup.
-    The resolution is to split that contact, not to pick a surviving key --
-    choosing a key only chooses which account is left without a backup.
+    The escrow goes to our own contacts and to the account storage, each where
+    nothing blocks it (escrow_write_targets); only when neither can take it is
+    the write refused. The one genuine conflict on the contacts is a contact
+    carrying the URI of a DIFFERENT account of ours: one contact holds one
+    `keys` attribute, and two accounts have two keypairs, so the second writer
+    would destroy the first's backup. The resolution is to split that contact,
+    not to pick a surviving key -- choosing a key only chooses which account is
+    left without a backup. The account storage is the account's own, so it
+    knows no such conflict.
     """
     accounts = known_accounts() if accounts is None else accounts
     blockers = []
@@ -340,28 +402,10 @@ def escrow_write_blockers(account, accounts=None):
     if not (password or '').strip():
         blockers.append('no account password available to encrypt the escrow with')
 
-    if _resource_lists_element(account) is None:
-        blockers.append('the addressbook has not been fetched from the server yet')
-        return blockers
-
-    elements = self_contact_elements(account)
-    if not elements:
-        blockers.append('no contact carries the URI %s, so there is nowhere to write' % account.id)
-        return blockers
-
-    for contact_element in elements:
-        shared = shared_accounts(contact_element, account, accounts)
-        if shared:
-            blockers.append('contact %s also carries %s; one contact holds one `keys` attribute, so '
-                            'split it -- move %s onto its own contact -- rather than choosing which '
-                            'key survives'
-                            % (contact_element.get('id'), ' and '.join(shared), ' and '.join(shared)))
-
-    for contact_id, _label, record in self_escrow_records(account):
-        owner = _escrow_owner(record.get('public_key'), accounts)
-        if owner and owner.lower() != str(account.id).lower():
-            blockers.append('the escrow already in %s is the key of %s; overwriting it '
-                            'would destroy that account\'s only backup' % (escrow_location(contact_id), owner))
+    xcap = _xcap_blockers(account, accounts)
+    storage = _storage_blockers(account, accounts)
+    if xcap and storage:
+        blockers.extend(xcap + storage)
     return blockers
 
 
@@ -404,7 +448,7 @@ def escrow_write_action(account, force=False, accounts=None):
 
     current = set(contact_id for contact_id, _label, record in records
                   if (record.get('public_key') or '').replace('\r', '').strip() == ours)
-    if all(target in current for target in escrow_write_targets(account)):
+    if all(target in current for target in escrow_write_targets(account, accounts)):
         return False, 'the key of this account is already saved on the server.'
     return True, None
 
@@ -468,9 +512,10 @@ def escrow_record(account):
 
 
 def write_self_keys(account, force=False, accounts=None):
-    """Escrow this device's keypair onto every contact carrying our URI.
+    """Escrow this device's keypair onto every contact carrying our URI and into the
+    account storage (escrow_write_targets).
 
-    Returns (contact ids written, reason); an empty list and a reason means
+    Returns (contact ids written, STORAGE_ID among them when the storage write was sent, reason); an empty list and a reason means
     nothing was written and says why.
 
     Writes to every target rather than one, because several contacts carrying
@@ -485,7 +530,9 @@ def write_self_keys(account, force=False, accounts=None):
         logger.log_info('Key escrow: not writing for %s -- %s' % (account.id, reason))
         return [], reason
 
-    targets = escrow_write_targets(account)
+    accounts = known_accounts() if accounts is None else accounts
+    targets = escrow_write_targets(account, accounts)
+    contact_targets = [target for target in targets if target != STORAGE_ID]
 
     try:
         record = escrow_record(account)
@@ -498,24 +545,46 @@ def write_self_keys(account, force=False, accounts=None):
                     % (account.id, ', '.join(targets), record['device'], record['timestamp'],
                        len(record['private_key'])))
 
+    written = []
+    if STORAGE_ID in targets:
+        from KeyStorage import KeyStorage
+        if KeyStorage().store(account, payload, 'escrow written by this device'):
+            written.append(STORAGE_ID)
+    else:
+        logger.log_info('Key escrow: not writing the account storage of %s -- %s'
+                        % (account.id, '; '.join(_storage_blockers(account, accounts))))
+    if not contact_targets:
+        logger.log_info('Key escrow: not writing the contacts of %s -- %s'
+                        % (account.id, '; '.join(_xcap_blockers(account, accounts))))
+        return written, None if written else 'nowhere to write the escrow'
+
+    written.extend(_write_contacts(account, contact_targets, payload))
+    logger.log_info('Key escrow: queued an escrow for %s to %s' % (account.id, ', '.join(written) or 'nowhere'))
+    return written, None
+
+
+def _write_contacts(account, contact_ids, payload):
+    """Queue the `keys` attribute on these contacts (one transaction). Returns the ids queued."""
     from sipsimple.addressbook import AddressbookManager
 
     written = []
     manager = account.xcap_manager
     manager.start_transaction()
     try:
-        for contact_id in targets:
-            contact = AddressbookManager().get_contact(contact_id)
+        for contact_id in contact_ids:
+            try:
+                contact = AddressbookManager().get_contact(contact_id)
+            except KeyError:
+                BlinkLogger().log_info('Key escrow: contact %s of %s is in the document but not loaded yet, skipped'
+                                       % (contact_id, account.id))
+                continue
             manager.update_contact(contact.__toxcap__(), {'keys': payload})
             written.append(contact_id)
     finally:
         # Commit whatever was queued even if one target could not be resolved:
         # leaving a transaction open wedges every later addressbook change.
         manager.commit_transaction()
-
-    logger.log_info('Key escrow: queued an escrow for %s on %d contact(s): %s'
-                    % (account.id, len(written), ', '.join(written)))
-    return written, None
+    return written
 
 
 def foreign_escrows(account):
@@ -966,8 +1035,8 @@ def self_contact_report(account, accounts=None):
         if stale:
             lines.append('NOTE contacts %s carry an older escrow for %s; a write would bring them '
                          'back into step' % (', '.join(stale), account.id))
-        missing = [target for target in escrow_write_targets(account)
-                   if target not in [contact_id for contact_id, _l, _r in self_escrow_records(account, storage=False)]]
+        missing = [target for target in escrow_write_targets(account, accounts) if target != STORAGE_ID
+                   and target not in [contact_id for contact_id, _l, _r in self_escrow_records(account, storage=False)]]
         if missing:
             lines.append('NOTE contacts %s carry no escrow at all for %s' % (', '.join(missing), account.id))
         owner = _escrow_owner(record.get('public_key'), accounts)
