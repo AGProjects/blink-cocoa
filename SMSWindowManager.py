@@ -928,6 +928,7 @@ class SMSWindowManagerClass(NSObject):
     # the server has answered whether it holds a public key for it.
     key_question_waiters = {}       # account id: [callbacks] until both are known
     key_addressbook_wait_over = set()   # accounts whose addressbook did not come in ADDRESSBOOK_KEY_WAIT
+    key_storage_waiting = set()         # accounts whose escrow pass waits for the account storage (KeyStorage)
     ADDRESSBOOK_KEY_WAIT = 15
     key_generation_declined = set() # declined in this run: not asked again until restart
     key_generation_running = set()
@@ -961,6 +962,7 @@ class SMSWindowManagerClass(NSObject):
             self.notification_center.add_observer(self, name="SIPAccountRegistrationDidSucceed")
             self.notification_center.add_observer(self, name="MessageSaved")
             self.notification_center.add_observer(self, name="XCAPManagerDidReloadData")
+            self.notification_center.add_observer(self, name="BlinkKeyStorageDidChange")
             self.notification_center.add_observer(self, name="SylkServerConfigurationDidChange")
             self.notification_center.add_observer(self, name="BlinkMessagesDidDecryptInBackground")
             # application/sylk-addressbook-update: every local write to the
@@ -2033,11 +2035,13 @@ class SMSWindowManagerClass(NSObject):
 
     @objc.python_method
     def keyQuestionAnswered(self, account):
-        """Both known: the addressbook (fetched, or waited for long enough) and the
+        """All known: the addressbook (fetched, or waited for long enough), the escrow the
+        account storage keeps (answered, failed, or the addressbook wait is over) and the
         server's answer about our public key (present, absent or failed)."""
         addressbook = self.addressbookAnswered(account) or account.id in self.key_addressbook_wait_over
+        storage = self._keyStorageAnswered(account) or account.id in self.key_addressbook_wait_over
         server = self.server_key_state.get(account.id) in ('present', 'absent', 'failed')
-        return addressbook and server
+        return addressbook and storage and server
 
     @objc.python_method
     @run_in_gui_thread
@@ -2211,6 +2215,17 @@ class SMSWindowManagerClass(NSObject):
             # nothing to restore, report or escrow, and nothing logged
             return
 
+        # The escrow the account storage keeps is one more escrow record
+        # (KeyEscrow.STORAGE_ID): the pass waits for the storage to answer (or
+        # fail), and runs again whenever what it keeps changes.
+        if not self._keyStorageAnswered(account):
+            from KeyStorage import KeyStorage
+            if account.id not in self.key_storage_waiting:
+                self.key_storage_waiting.add(account.id)
+                BlinkLogger().log_info('[pgp] Key escrow: waiting for the account storage of %s before the escrow pass' % account.id)
+            KeyStorage().fetch(account, 'addressbook loaded')
+            return
+
         # Restore BEFORE reporting. The report describes the state of the
         # account, and a restore in the same pass changes it: reporting first
         # printed "no private key configured" and "a write would be REFUSED --
@@ -2242,6 +2257,31 @@ class SMSWindowManagerClass(NSObject):
 
         self.logKeyStatus(account, 'addressbook fetched')
         self.releaseKeyQuestion(account)
+
+    @objc.python_method
+    def _keyStorageAnswered(self, account):
+        """Whether the account storage has said what escrow it keeps: answered, failed, or not
+        asked (no storage for the account, PGP off)."""
+        from KeyStorage import KeyStorage
+        storage = KeyStorage()
+        return not storage._wanted(account) or storage.state(account) in ('present', 'absent', 'invalid', 'unsupported', 'failed')
+
+    @objc.python_method
+    def _NH_BlinkKeyStorageDidChange(self, sender, data):
+        # What the account storage keeps of the escrow changed (or it answered
+        # for the first time): the escrow pass runs again, so a key escrowed by
+        # another device is restored here without waiting for a reload.
+        account = data.account
+        waited = account.id in self.key_storage_waiting
+        self.key_storage_waiting.discard(account.id)
+        if account.id in self.key_escrow_checked and (waited or data.state in ('present', 'absent')):
+            self.suppressAddressbookNotifications()
+            try:
+                self._applyReloadedAddressbook(account)
+            finally:
+                self.resumeAddressbookNotifications()
+        else:
+            self.releaseKeyQuestion(account)
 
     @objc.python_method
     def repairMissingEscrow(self, account):

@@ -120,6 +120,21 @@ def storage_url(account):
     return '%s/storage/%s' % (root, urllib.parse.quote(str(account.id).lower(), safe=''))
 
 
+def device_name():
+    """This device for a human, as the account storage keeps it with what it writes:
+    'Blink on Adrian's MacBook Pro (macOS)'."""
+    name = None
+    try:
+        from Foundation import NSHost
+        name = NSHost.currentHost().localizedName()
+    except Exception:
+        pass
+    if not name:
+        import socket
+        name = socket.gethostname().split('.')[0] or 'unknown Mac'
+    return 'Blink on %s (macOS)' % name
+
+
 def _token(account):
     try:
         token = account.sms.history_token
@@ -421,6 +436,9 @@ class AccountStorage(object, metaclass=Singleton):
         url = base + ('/' + path if path else '')
         request = urllib.request.Request(url, data=body, method=method)
         request.add_header('Authorization', 'Apikey %s' % token)
+        if method in ('PUT', 'DELETE'):
+            # who wrote it, for humans (sylk-account, the other devices): the id alone says nothing
+            request.add_header('X-Sylk-Device-Name', urllib.parse.quote(device_name(), safe=" '()"))
         for name, value in (headers or {}).items():
             if value is not None:
                 request.add_header(name, value)
