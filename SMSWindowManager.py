@@ -9028,15 +9028,20 @@ class SMSWindowManagerClass(NSObject):
         if content_type in SERVER_API_REQUEST_CONTENT_TYPES:
             return
 
-        # Account storage changed (contact avatars). Sent by the server from
-        # the account to itself and never journalled: not a message, never
-        # shown, notified or counted as unread. docs/CONTACT-AVATARS.md
+        # Account storage changed (contact avatars, the key escrow). Sent by the
+        # server from the account to itself and never journalled: not a message,
+        # never shown, notified or counted as unread. docs/CONTACT-AVATARS.md
         if content_type == STORAGE_CHANGED_CONTENT_TYPE:
             if account is not None and account is not BonjourAccount():
                 try:
                     AccountStorage().handle_changed(account, content)
                 except Exception as e:
                     BlinkLogger().log_error('[avatar] Cannot apply a storage change: %s' % e)
+                try:
+                    from KeyStorage import KeyStorage
+                    KeyStorage().handle_changed(account, content)
+                except Exception as e:
+                    BlinkLogger().log_error('[pgp] Cannot apply a storage change: %s' % e)
             return
 
         if content_type == MESSAGES_BULK_DELETE_CONTENT_TYPE:

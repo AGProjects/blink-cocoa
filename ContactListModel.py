@@ -4881,6 +4881,9 @@ class ContactListModel(CustomListModel):
         # pending uploads when a token arrives. docs/CONTACT-AVATARS.md
         from AccountStorage import AccountStorage
         AccountStorage().start()
+        # The PGP key escrow in the account storage (SylkServer docs/PRIVATE-KEY-STORAGE.md)
+        from KeyStorage import KeyStorage
+        KeyStorage().start()
 
         ns_nc = NSNotificationCenter.defaultCenter()
         ns_nc.addObserver_selector_name_object_(self, "groupExpanded:", NSOutlineViewItemDidExpandNotification, self.contactOutline)
