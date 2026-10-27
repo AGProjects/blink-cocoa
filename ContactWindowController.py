@@ -176,7 +176,7 @@ from VideoMirrorController import VideoMirrorController
 from configuration.datatypes import UserIcon
 from resources import ApplicationData, Resources
 from util import allocate_autorelease_pool, format_date, format_identity_to_string, format_uri_type, is_anonymous, is_sip_aor_format, normalize_sip_uri_for_outgoing_session
-from util import pstn_uri_spellings_for_accounts, is_conference_uri
+from util import pstn_uri_spellings_for_accounts, is_conference_uri, call_later, active_account_uris, preferred_media_choice
 from HistoryManager import block_contacts, unblock_contacts, _blocked_group
 from util import log_gui_exception, run_in_gui_thread, sip_prefix_pattern, sipuri_components_from_string, translate_alpha2digit, AccountInfo, utc_to_local
 

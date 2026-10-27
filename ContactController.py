@@ -55,7 +55,7 @@ from AppKit import NSButton, NSSwitchButton
 from zope.interface import implementer
 
 from VirtualGroups import VirtualGroup
-from util import checkValidPhoneNumber, format_uri_type, log_gui_exception, run_in_gui_thread, canonical_pstn_uri, pstn_e164
+from util import checkValidPhoneNumber, format_uri_type, is_lan_address, log_gui_exception, run_in_gui_thread, canonical_pstn_uri, pstn_e164, preferred_media_choice
 
 
 # PNG, spelled out rather than imported: AppKit renamed the file-type
