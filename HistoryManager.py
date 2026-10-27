@@ -5163,6 +5163,7 @@ def calls_group_startup_check(xcap_loaded=False):
             purge_lan_addresses()
             repair_contact_addresses()
             sync_blocked_with_policies()
+            stop_room_subscriptions()
             file_contacts_into_kind_groups()
             take_rooms_out_of_messages()
 
@@ -6348,6 +6349,44 @@ def sync_blocked_with_policies():
             BlinkLogger().log_error('%s blocked sync failed: %s' % (_PREFIX, e))
         except Exception:
             pass
+
+
+_room_subscriptions_stopped = [False]
+
+
+@AddressbookOrigin.with_reason('room-subscription')
+def stop_room_subscriptions():
+    """A conference room is never subscribed to, the rule of every client: the conference
+    server takes only the conference event and rejects presence and dialog. Once the
+    addressbook reflects the server, a contact whose addresses are all rooms gets its
+    presence and dialog subscriptions turned off. A contact that also has a person's
+    address keeps them."""
+    if _room_subscriptions_stopped[0]:
+        return 0
+    _room_subscriptions_stopped[0] = True
+    try:
+        from sipsimple.addressbook import AddressbookManager
+        from util import is_conference_uri
+        manager = AddressbookManager()
+        rooms = [contact for contact in manager.get_contacts()
+                 if (contact.presence.subscribe or contact.dialog.subscribe) and contact.uris
+                 and all(is_conference_uri(str(uri.uri)) for uri in contact.uris)]
+        if not rooms:
+            return 0
+        with manager.transaction():
+            for contact in rooms:
+                contact.presence.subscribe = False
+                contact.dialog.subscribe = False
+                contact.save()
+        _log_ab('stopped presence and dialog subscriptions to %d conference room(s): %s'
+                % (len(rooms), ', '.join(_quote(str(contact.name or contact.id)) for contact in rooms)))
+        return len(rooms)
+    except Exception as e:
+        try:
+            BlinkLogger().log_error('%s cannot stop room subscriptions: %s' % (_PREFIX, e))
+        except Exception:
+            pass
+        return 0
 
 
 @AddressbookOrigin.with_reason('block')
