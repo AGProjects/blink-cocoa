@@ -51,11 +51,11 @@ from operator import attrgetter
 from sipsimple.account import AccountManager
 from sipsimple.addressbook import ContactURI
 from sipsimple.core import SIPCoreError, SIPURI
-from AppKit import NSButton, NSSwitchButton
+from AppKit import NSButton, NSSwitchButton, NSTextField
 from zope.interface import implementer
 
 from VirtualGroups import VirtualGroup
-from util import checkValidPhoneNumber, format_uri_type, is_lan_address, log_gui_exception, run_in_gui_thread, canonical_pstn_uri, pstn_e164, preferred_media_choice
+from util import checkValidPhoneNumber, format_uri_type, is_conference_uri, is_lan_address, log_gui_exception, run_in_gui_thread, canonical_pstn_uri, pstn_e164, preferred_media_choice
 
 
 # PNG, spelled out rather than imported: AppKit renamed the file-type
@@ -494,7 +494,7 @@ class AddContactController(NSObject):
                        'icon'            : self.photoImage.image() if self.photoImage.hasPhoto else None,
                        'icon_changed'    : bool(getattr(self, 'photoChanged', False)),
                        'preferred_media' : self.chosenPreferredMedia(),
-                       'subscriptions'   : self.subscriptions
+                       'subscriptions'   : self.roomSubscriptions()
                         }
             return contact
         return False
@@ -530,6 +530,45 @@ class AddContactController(NSObject):
                 self.addressText.setStringValue_('')
 
         self.addButton.setEnabled_(True if self.uris else False)
+        self.updateRoomFields()
+
+    @objc.python_method
+    def isRoom(self):
+        """Whether every address is a conference room: it has no presence to watch or
+        share and nothing to auto answer."""
+        uris = [str(uri.uri) for uri in self.uris if uri and uri.uri]
+        return bool(uris) and all(is_conference_uri(uri) for uri in uris)
+
+    @objc.python_method
+    def availabilityLabel(self):
+        """The 'Availability:' label left of the policy pop up (no outlet in the nibs)."""
+        popup = self.subscribePopUp.frame()
+        for view in self.subscribePopUp.superview().subviews():
+            if isinstance(view, NSTextField) and not view.isEditable():
+                frame = view.frame()
+                if frame.origin.x + frame.size.width <= popup.origin.x + 2 and abs((frame.origin.y + frame.size.height / 2) - (popup.origin.y + popup.size.height / 2)) < 8:
+                    return view
+        return None
+
+    @objc.python_method
+    def updateRoomFields(self):
+        """A conference room: the presence subscription and policy and auto answer are
+        hidden (room-subscription)."""
+        try:
+            room = self.isRoom()
+            for view in (self.subscribePopUp, self.availabilityLabel(), self.autoanswerCheckbox):
+                if view is not None:
+                    view.setHidden_(room)
+        except Exception:
+            log_gui_exception('the room fields of the contact editor')
+
+    @objc.python_method
+    def roomSubscriptions(self):
+        """The subscriptions to save: none for a room, the conference server rejects them."""
+        if self.isRoom():
+            self.subscriptions['presence']['subscribe'] = False
+            self.subscriptions['dialog']['subscribe'] = False
+        return self.subscriptions
 
     def windowShouldClose_(self, sender):
         self.startDeallocTimer()
@@ -538,18 +577,19 @@ class AddContactController(NSObject):
 
     @objc.python_method
     def isReadOnlyGroup(self, group):
-        """Messages, Calls and Tel are not the user's to file people into.
+        """Messages, Calls, Tel and Conference are not the user's to file people into.
 
         Messages is a record of who they have messages with, written by
         SMSWindowManager as messages arrive; Calls and Tel are the same
         record for calls, Tel being the PSTN subset. Putting somebody in
         one by hand would state something untrue, and taking somebody out
         would be undone by their next message or call -- so each is
-        shown, and shown ticked, but never offered as a choice.
+        shown, and shown ticked, but never offered as a choice. Conference
+        holds what is a room by its address, filed and unfiled with it.
         """
         try:
             return bool(group.isMessagesGroup() or group.isCallsGroup()
-                        or group.isTelGroup())
+                        or group.isTelGroup() or group.isConferenceGroup())
         except AttributeError:
             return False
 
@@ -1427,7 +1467,7 @@ class EditContactController(AddContactController):
                     'icon'            : self.photoImage.image() if self.photoImage.hasPhoto else None,
                     'icon_changed'    : bool(getattr(self, 'photoChanged', False)),
                     'preferred_media' : self.chosenPreferredMedia(),
-                    'subscriptions'   : self.subscriptions
+                    'subscriptions'   : self.roomSubscriptions()
                     }
             if self.noMediaRelayCheckbox is not None:
                 contact['no_mediaproxy'] = self.noMediaRelayCheckbox.state() == NSOnState
