@@ -58,6 +58,7 @@ __all__ = ['ADDRESSBOOK_NS', 'SIPSIMPLE_ATTRIBUTES_NS', 'BLINK_ATTRIBUTES_NS', '
            'read_self_keys', 'escrow_write_targets', 'escrow_write_blockers', 'escrow_write_action',
            'escrow_is_missing', 'escrow_record',
            'write_self_keys', 'install_keypair', 'restore_from_own_contact',
+           'escrow_copy_action', 'copy_escrow',
            'escrow_password_check', 'reencrypt_escrow', 'foreign_escrows',
            'self_contact_report', 'log_self_contact']
 
@@ -585,6 +586,83 @@ def _write_contacts(account, contact_ids, payload):
         # leaving a transaction open wedges every later addressbook change.
         manager.commit_transaction()
     return written
+
+
+# Keeping the account storage and our contacts equal (SylkServer docs/PRIVATE-KEY-STORAGE.md,
+# Phase 1). The newest record is copied as it is to the side that lacks it or holds an older
+# one: no password and no key are needed, and a client that knows only one side (an older
+# Blink, sylk-desktop, an older Sylk Mobile) sees what the others wrote.
+
+def _same_escrow(one, other):
+    return all((one.get(name) or '') == (other.get(name) or '') for name in ('private_key', 'public_key', 'timestamp'))
+
+
+def _bare_record(record):
+    """The record as a client writes it: without what read_self_keys adds."""
+    return dict((name, value) for name, value in record.items() if name not in ('namespace', 'contact_id'))
+
+
+def escrow_copy_action(account, accounts=None):
+    """(direction, record, detail): what to copy to keep the storage and the contacts equal.
+
+    direction 'storage': record (the newest on our contacts; detail: its contact) goes to the
+    account storage. 'contacts': record (the storage's) goes to the contacts in detail. None:
+    nothing to copy, detail says why (None when they are equal).
+    """
+    accounts = known_accounts() if accounts is None else accounts
+    state = _storage_state(account)
+    if state not in ('present', 'absent'):
+        return None, None, 'the account storage has not answered (%s)' % (state or 'not asked')
+    if _resource_lists_element(account) is None:
+        return None, None, 'the addressbook has not been fetched yet'
+
+    contacts = read_self_keys(account, storage=False)
+    stored = _storage_record(account)
+    if contacts is None and stored is None:
+        return None, None, None
+
+    def owned_elsewhere(record):
+        owner = _escrow_owner(record.get('public_key'), accounts)
+        return owner if owner and owner.lower() != str(account.id).lower() else None
+
+    contacts_time = (contacts or {}).get('timestamp') or ''
+    stored_time = (stored or {}).get('timestamp') or ''
+
+    if contacts is not None and (stored is None or contacts_time > stored_time):
+        owner = owned_elsewhere(contacts)
+        if owner:
+            return None, None, ('the escrow on contact %s is the key of %s, not copied to the account storage of %s'
+                                % (contacts.get('contact_id'), owner, account.id))
+        return 'storage', _bare_record(contacts), contacts.get('contact_id')
+
+    if contacts is not None and stored is not None and contacts_time == stored_time and not _same_escrow(contacts, stored):
+        return None, None, ('the contacts and the account storage keep different escrows written at the same time (%s); '
+                            'left as they are' % stored_time)
+
+    if stored is not None:
+        # the newest (or as new as the contacts'): every contact that lags gets it
+        if owned_elsewhere(stored):
+            return None, None, 'the escrow in the account storage is the key of another account, not copied to the contacts'
+        blockers = _xcap_blockers(account, accounts)
+        if blockers:
+            return None, None, 'the contacts cannot take the escrow of the account storage: %s' % '; '.join(blockers)
+        behind = [contact_id for contact_id in (element.get('id') for element in self_contact_elements(account))
+                  if not any(found == contact_id and _same_escrow(record, stored)
+                             for found, _label, record in self_escrow_records(account, storage=False))]
+        return ('contacts', _bare_record(stored), behind) if behind else (None, None, None)
+    return None, None, None
+
+
+def copy_escrow(account, direction, record, detail):
+    """Copy an escrow record as escrow_copy_action decided. Returns where it was sent."""
+    payload = json.dumps(record)
+    if direction == 'storage':
+        from KeyStorage import KeyStorage
+        sent = KeyStorage().store(account, payload, 'copied from contact %s' % detail)
+        return [STORAGE_ID] if sent else []
+    if direction == 'contacts':
+        return _write_contacts(account, detail, payload)
+    return []
 
 
 def foreign_escrows(account):

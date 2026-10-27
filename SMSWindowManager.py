@@ -929,6 +929,7 @@ class SMSWindowManagerClass(NSObject):
     key_question_waiters = {}       # account id: [callbacks] until both are known
     key_addressbook_wait_over = set()   # accounts whose addressbook did not come in ADDRESSBOOK_KEY_WAIT
     key_storage_waiting = set()         # accounts whose escrow pass waits for the account storage (KeyStorage)
+    escrow_copied = {}                  # account id -> the last escrow copy sent (copyEscrow), not repeated
     ADDRESSBOOK_KEY_WAIT = 15
     key_generation_declined = set() # declined in this run: not asked again until restart
     key_generation_running = set()
@@ -2238,6 +2239,12 @@ class SMSWindowManagerClass(NSObject):
                                     % (getattr(account, 'id', '?'), e))
 
         try:
+            self.copyEscrow(account)
+        except Exception as e:
+            BlinkLogger().log_error('Key escrow copy failed for %s: %s'
+                                    % (getattr(account, 'id', '?'), e))
+
+        try:
             log_self_contact(account)
         except Exception as e:
             BlinkLogger().log_error('Key escrow inspection failed for %s: %s'
@@ -2282,6 +2289,34 @@ class SMSWindowManagerClass(NSObject):
                 self.resumeAddressbookNotifications()
         else:
             self.releaseKeyQuestion(account)
+
+    @objc.python_method
+    def copyEscrow(self, account):
+        """Keep the account storage and our contacts equal (SylkServer
+        docs/PRIVATE-KEY-STORAGE.md, Phase 1): copy the newest escrow record, as
+        it is, to the side that lacks it or holds an older one. No password and
+        no key are needed, and a client that knows only one side (an older
+        Blink, sylk-desktop, an older Sylk Mobile) sees what the others wrote.
+        Each copy is sent once per run."""
+        if not account.enabled or not account.sms.enable_pgp or not pgp_messaging_possible(account):
+            return
+        from KeyEscrow import escrow_copy_action, copy_escrow
+        direction, record, detail = escrow_copy_action(account)
+        if direction is None:
+            if detail:
+                BlinkLogger().log_debug('[pgp] Key escrow: nothing copied for %s: %s' % (account.id, detail))
+            return
+        signature = (direction, record.get('timestamp'), len(record.get('private_key') or ''))
+        if self.escrow_copied.get(account.id) == signature:
+            return
+        self.escrow_copied[account.id] = signature
+        where = ('from contact %s to the account storage' % detail if direction == 'storage'
+                 else 'from the account storage to contact(s) %s' % ', '.join(str(item) for item in detail))
+        BlinkLogger().log_info('[pgp] Key escrow: copying the escrow of %s written %s by "%s" %s'
+                               % (account.id, record.get('timestamp') or '?', record.get('device') or '?', where))
+        if not copy_escrow(account, direction, record, detail):
+            self.escrow_copied.pop(account.id, None)
+            BlinkLogger().log_info('[pgp] Key escrow: the copy for %s could not be sent, tried again on the next pass' % account.id)
 
     @objc.python_method
     def repairMissingEscrow(self, account):
