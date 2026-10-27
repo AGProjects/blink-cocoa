@@ -2421,6 +2421,13 @@ class BlinkGroup(NSObject):
             self.deletable = False
             self.add_contact_allowed = False
             self.remove_contact_allowed = False
+        elif self.isCallsGroup() or self.isTelGroup() or self.isConferenceGroup():
+            # The same for the other groups the software keeps: Calls and Tel
+            # are the record of calls, Conference holds what is a room by its
+            # address. Nobody is dragged or added into them, or out of them, by
+            # hand (Blink Qt: is_managed_group).
+            self.add_contact_allowed = False
+            self.remove_contact_allowed = False
 
     def copyWithZone_(self, zone):
         return self
