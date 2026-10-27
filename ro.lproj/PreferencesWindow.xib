@@ -400,7 +400,7 @@
                             <action selector="userClickedToolbarButton:" target="-2" id="dC9-9O-uom"/>
                         </connections>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="B72F1019-EFCB-4603-88EF-079185F7F3D1" explicitItemIdentifier="chat" label="Text" paletteLabel="Text" image="pencil" autovalidates="NO" selectable="YES" id="269">
+                    <toolbarItem implicitItemIdentifier="B72F1019-EFCB-4603-88EF-079185F7F3D1" explicitItemIdentifier="chat" label="Mesaje" paletteLabel="Mesaje" image="pencil" autovalidates="NO" selectable="YES" id="269">
                         <connections>
                             <action selector="userClickedToolbarButton:" target="-2" id="272"/>
                         </connections>

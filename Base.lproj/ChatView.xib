@@ -170,9 +170,6 @@
                                 <behavior key="behavior" pushIn="YES" changeContents="YES" lightByContents="YES"/>
                                 <font key="font" metaFont="system"/>
                             </buttonCell>
-                            <connections>
-                                <action selector="userClickedDatabaseLoggingButton:" target="-2" id="239"/>
-                            </connections>
                         </button>
                         <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="253">
                             <rect key="frame" x="380" y="53" width="83" height="19"/>

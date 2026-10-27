@@ -1078,7 +1078,8 @@ class ContactWindowController(NSWindowController):
         menu = self.historyMenu
 
         from ContactMangler import mangled_text
-        i = 3 if not NSApp.delegate().history_enabled else 4
+        # the Recordings submenu and its separator, when present, stay
+        i = 2 if menu.indexOfItem_(self.recordingsSubMenu) >= 0 else 0
         while menu.numberOfItems() > i:
             menu.removeItemAtIndex_(i)
 
@@ -1223,9 +1224,9 @@ class ContactWindowController(NSWindowController):
             return
 
         item = menu.itemWithTag_(44)  # Join Conference
-        # Capability check, not isPeerToPeerChatEnabled(): a conference room is
-        # not a one-to-one chat, so it stays reachable with MSRP chat off.
-        item.setEnabled_(self.sessionControllersManager.isMediaTypeSupported('chat'))
+        # Not gated on chat.enable_msrp_chat: a conference room is not a
+        # one-to-one chat, so it stays reachable with MSRP chat off.
+        item.setEnabled_(True)
 
         # outbound proxy
         if not isinstance(account, BonjourAccount) and (account.sip.primary_proxy or account.sip.alternative_proxy):
@@ -1381,10 +1382,11 @@ class ContactWindowController(NSWindowController):
             item = self.chatMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Send Short Message...", "Menu item"), "sendMessageToSelected:", "")
             item.setEnabled_(self.sessionControllersManager.isMediaTypeSupported('sms') and self.contactSupportsMedia("sms", contact))
 
-            item = self.chatMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Invite to Chat...", "Menu item"), "startChatToSelected:", "")
+            # One-to-one MSRP chat is offered only when it is enabled
             if not self.sessionControllersManager.isPeerToPeerChatEnabled():
-                item.setEnabled_(False)
-            elif isinstance(contact, BonjourBlinkContact):
+                return
+            item = self.chatMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Invite to Chat...", "Menu item"), "startChatToSelected:", "")
+            if isinstance(contact, BonjourBlinkContact):
                 item.setEnabled_(True)
             elif isinstance(contact, BlinkPresenceContact):
                 item.setEnabled_(self.contactSupportsMedia("chat", item, contact.uri))  # don't require presence to initiate chat
@@ -1459,10 +1461,6 @@ class ContactWindowController(NSWindowController):
             if idx < 0:
                 self.historyMenu.addItem_(self.recordingsSubMenu)
                 self.historyMenu.addItem_(NSMenuItem.separatorItem())
-
-        settings = SIPSimpleSettings()
-        chat_privacy = self.historyMenu.itemWithTag_(101)
-        chat_privacy.setState_(NSOnState if settings.chat.disable_history else NSOffState)
 
         self.get_session_history_entries(20)
 
@@ -6159,12 +6157,6 @@ class ContactWindowController(NSWindowController):
     @objc.IBAction
     def showPendingRequests_(self, sender):
         self.model.renderPendingWatchersGroupIfNecessary(bring_in_focus=True)
-
-    @objc.IBAction
-    def toggleChatPrivacy_(self, sender):
-        settings = SIPSimpleSettings()
-        settings.chat.disable_history = not settings.chat.disable_history
-        settings.save()
 
     @objc.IBAction
     def showPresenceInfo_(self, sender):

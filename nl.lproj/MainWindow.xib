@@ -406,13 +406,6 @@ CA
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <menu key="submenu" title="Geschiedenis" autoenablesItems="NO" id="798">
                         <items>
-                            <menuItem title="Chat berichten niet loggen" tag="101" id="1863">
-                                <modifierMask key="keyEquivalentModifierMask"/>
-                                <connections>
-                                    <action selector="toggleChatPrivacy:" target="389" id="1867"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem isSeparatorItem="YES" id="1865"/>
                         </items>
                         <connections>
                             <outlet property="delegate" destination="389" id="800"/>

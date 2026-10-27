@@ -67,8 +67,6 @@ class AudioSettingsExtension(AudioSettings):
 
 class ChatSettingsExtension(ChatSettings):
     auto_accept = Setting(type=bool, default=False)
-    disabled = Setting(type=bool, default=False)
-    disable_history = Setting(type=bool, default=False)
     enable_encryption = Setting(type=bool, default=True)
     font_size = Setting(type=int, default=0)
     # MSRP chat -- the real-time session with its own window and toolbar.

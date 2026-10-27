@@ -403,13 +403,6 @@ CA
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <menu key="submenu" title="Historial" autoenablesItems="NO" id="798">
                         <items>
-                            <menuItem title="No Guardar Historial de Chat" tag="101" id="1863">
-                                <modifierMask key="keyEquivalentModifierMask"/>
-                                <connections>
-                                    <action selector="toggleChatPrivacy:" target="389" id="1867"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem isSeparatorItem="YES" id="1865"/>
                         </items>
                         <connections>
                             <outlet property="delegate" destination="389" id="800"/>

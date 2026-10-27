@@ -67,7 +67,6 @@ class BlinkContactExtension(ContactExtension):
     avatar_pending = Setting(type=Boolean, default=False)
     # A removed picture whose DELETE has not succeeded yet:
     avatar_delete_pending = Setting(type=Boolean, default=False)
-    disable_chat_history = Setting(type=Boolean, nillable=True)
     # Which language this contact's composer spell checks in.
     #
     # None means nothing was chosen, and the conversation keeps the

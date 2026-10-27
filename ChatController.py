@@ -182,7 +182,6 @@ class ChatController(MediaStream):
 
     nickname_request_map = {} # message id -> nickname
     chatOtrSmpWindow = None
-    disable_chat_history = False
     remote_party_history = True
     video_attached = False
     media_started = False
@@ -283,11 +282,6 @@ class ChatController(MediaStream):
         self.backend = SIPManager()
         self.chatOtrSmpWindow = None
 
-        if self.sessionController.contact is not None and isinstance(self.sessionController.contact, BlinkPresenceContact) and self.sessionController.contact.contact.disable_chat_history is not None:
-            self.disable_chat_history = self.sessionController.contact.contact.disable_chat_history
-        else:
-            self.disable_chat_history = settings.chat.disable_history
-
         self.updateDatabaseRecordingButton()
 
         return self
@@ -320,18 +314,14 @@ class ChatController(MediaStream):
         settings = SIPSimpleSettings()
         remote = self.sessionController.remoteAOR
 
-        if self.remote_party_history and not self.disable_chat_history:
+        if self.remote_party_history:
             self.privateLabel.setHidden_(True)
             self.databaseLoggingButton.setImage_(NSImage.imageNamed_("database-on"))
             self.databaseLoggingButton.setToolTip_(NSLocalizedString("Text conversation is saved to history database", "Tooltip"))
-        elif not self.remote_party_history and not self.disable_chat_history:
+        else:
             self.databaseLoggingButton.setImage_(NSImage.imageNamed_("database-remote-off"))
             self.privateLabel.setHidden_(False)
             self.databaseLoggingButton.setToolTip_(NSLocalizedString("%s wishes that text conversation is not saved in history database", "Tooltip text") % remote)
-        else:
-            self.privateLabel.setHidden_(False)
-            self.databaseLoggingButton.setImage_(NSImage.imageNamed_("database-local-off"))
-            self.databaseLoggingButton.setToolTip_(NSLocalizedString("Text conversation is not saved to history database", "Tooltip"))
 
     @property
     def otr_status(self):
@@ -566,8 +556,7 @@ class ChatController(MediaStream):
             return
 
         if self.status == STREAM_CONNECTED:
-            content = 'enabled' if not self.disable_chat_history else 'disabled'
-            self.stream.send_message(content, content_type='application/blink-logging-status', timestamp=ISOTimestamp.now())
+            self.stream.send_message('enabled', content_type='application/blink-logging-status', timestamp=ISOTimestamp.now())
 
     @objc.python_method
     def sendZRTPSas(self):
@@ -597,15 +586,6 @@ class ChatController(MediaStream):
 
     def validateToolbarItem_(self, item):
         return True
-
-    @objc.IBAction
-    def userClickedDatabaseLoggingButton_(self, sender):
-        self.disable_chat_history = not self.disable_chat_history
-        if self.sessionController.contact is not None and isinstance(self.sessionController.contact, BlinkPresenceContact):
-            self.sessionController.contact.contact.disable_chat_history = self.disable_chat_history
-            self.sessionController.contact.contact.save()
-        self.updateDatabaseRecordingButton()
-        self.sendLoggingState()
 
     def userClickedEncryptionMenu_(self, sender):
         tag = sender.tag()
@@ -1616,18 +1596,13 @@ class ChatController(MediaStream):
         if message.content_type == 'application/blink-logging-status':
             if message.content.lower() == "disabled":
                 self.remote_party_history = False
-                if not self.disable_chat_history:
-                    log = NSLocalizedString("Remote chat history disabled", "Label")
-                    nc_title = NSLocalizedString("Chat History", "System notification title")
-                    nc_subtitle = self.sessionController.titleShort
-                    NSApp.delegate().gui_notify(nc_title, log, nc_subtitle)
+                log = NSLocalizedString("Remote chat history disabled", "Label")
             else:
                 self.remote_party_history = True
-                if not self.disable_chat_history:
-                    log = NSLocalizedString("Remote chat history enabled", "Label")
-                    nc_title = NSLocalizedString("Chat History", "System notification title")
-                    nc_subtitle = self.sessionController.titleShort
-                    NSApp.delegate().gui_notify(nc_title, log, nc_subtitle)
+                log = NSLocalizedString("Remote chat history enabled", "Label")
+            nc_title = NSLocalizedString("Chat History", "System notification title")
+            nc_subtitle = self.sessionController.titleShort
+            NSApp.delegate().gui_notify(nc_title, log, nc_subtitle)
 
             self.sessionController.log_info(log)
             self.updateDatabaseRecordingButton()
@@ -2054,13 +2029,7 @@ class ChatController(MediaStream):
     @objc.python_method
     def _NH_CFGSettingsObjectDidChange(self, sender, data):
         settings = SIPSimpleSettings()
-        if "chat.disable_history" in data.modified:
-            if self.sessionController.contact is not None and isinstance(self.sessionController.contact, BlinkPresenceContact) and self.sessionController.contact.contact.disable_chat_history is not None:
-                self.disable_chat_history = self.sessionController.contact.contact.disable_chat_history
-            else:
-                self.disable_chat_history = settings.chat.disable_history
-            self.updateDatabaseRecordingButton()
-        elif "chat.enable_encryption" in data.modified:
+        if "chat.enable_encryption" in data.modified:
             if self.status == STREAM_CONNECTED:
                 if self.is_encrypted and not settings.chat.enable_encryption:
                     self.sessionController.log_info("Chat encryption will stop")
@@ -2523,9 +2492,6 @@ class OutgoingMessageHandler(NSObject):
 
     @objc.python_method
     def add_to_history(self, message):
-        if self.delegate.delegate.disable_chat_history:
-            return
-
         if not self.delegate.delegate.remote_party_history:
             return
 

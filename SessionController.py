@@ -293,10 +293,6 @@ class SessionControllersManager(object, metaclass=Singleton):
             BlinkLogger().log_info("File Transfers are disabled")
             return False
 
-        if settings.chat.disabled and 'chat' in stream_type_list:
-            BlinkLogger().log_info("Chat sessions are disabled")
-            return False
-
         if 'chat' in stream_type_list and not settings.chat.enable_msrp_chat:
             # One-to-one MSRP chat is switched off, so an ordinary peer's chat
             # offer is refused. A conference server marks itself isfocus and
@@ -325,14 +321,10 @@ class SessionControllersManager(object, metaclass=Singleton):
             return False
 
         if type == 'chat':
-            if settings.chat.disabled:
-                #BlinkLogger().log_info("Chat sessions are disabled")
-                return False
-            # chat.enable_msrp_chat is deliberately NOT consulted here. This
-            # answers "can this build carry an MSRP chat stream at all", and
-            # conference rooms need that answer to stay yes. The one-to-one
-            # preference is applied by isPeerToPeerChatEnabled() below and by
-            # SessionController.allowsStreamOfType().
+            # One-to-one MSRP chat. A conference room's chat is not governed
+            # by it: SessionController.allowsStreamOfType() exempts conferences
+            # before asking here, and Join Conference is not gated on it.
+            return settings.chat.enable_msrp_chat
 
         # Short messages are always available: they are how a conversation is
         # written now, not an opt-in feature.
@@ -350,8 +342,7 @@ class SessionControllersManager(object, metaclass=Singleton):
         its chat over the same MSRP plane but is not covered by the
         preference -- Join Conference keeps working with it switched off.
         """
-        settings = SIPSimpleSettings()
-        return self.isMediaTypeSupported('chat') and settings.chat.enable_msrp_chat
+        return self.isMediaTypeSupported('chat')
 
     def log_incoming_session_missed(self, controller, data):
         # Calls group step 1: proof the hook fired at all, before any
@@ -1314,7 +1305,7 @@ class SessionControllersManager(object, metaclass=Singleton):
         if data.streams and not streams:
             BlinkLogger().log_info("Rejecting session for unsupported media type")
             nc_title = 'Incompatible Media'
-            nc_body = 'Call from %s refused' % match_contact.name
+            nc_body = 'Call from %s refused' % caller_name
             NSApp.delegate().gui_notify(nc_title, nc_body, subtitle=caller_name)
             try:
                 session.reject(488)
@@ -1857,24 +1848,15 @@ class SessionController(NSObject):
     def allowsStreamOfType(self, stype):
         """Whether this session may carry a stream of the given type.
 
-        The manager's capability check, plus one extra rule for chat: a
-        one-to-one chat stream also needs chat.enable_msrp_chat, while a
-        conference is exempt. Without that exemption switching the preference
-        off would break Join Conference, which rides the same MSRP plane.
+        The manager's check, except that a conference's chat is exempt from
+        chat.enable_msrp_chat (which isMediaTypeSupported('chat') reflects):
+        without that exemption switching the preference off would break Join
+        Conference, which rides the same MSRP plane.
         """
-        if not self.sessionControllersManager.isMediaTypeSupported(stype):
-            return False
-
-        if stype != 'chat':
+        if stype == 'chat' and (self.is_conference or self.remote_focus or (self.session is not None and self.session.remote_focus)):
             return True
 
-        if self.is_conference or self.remote_focus:
-            return True
-
-        if self.session is not None and self.session.remote_focus:
-            return True
-
-        return SIPSimpleSettings().chat.enable_msrp_chat
+        return self.sessionControllersManager.isMediaTypeSupported(stype)
 
     @objc.python_method
     def isActive(self):

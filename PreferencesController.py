@@ -261,8 +261,44 @@ class PreferencesController(NSWindowController, object):
                     pass
 
         self._fixup_toolbar_overflow_menu()
+        self._fit_toolbar()
 
         self.userDefaultsDidChange_(None)
+
+    @objc.python_method
+    def _fit_toolbar(self):
+        # Old style preferences window: the title in its own title bar and
+        # the toolbar on a full width row below it (NSWindowToolbarStyleExpanded),
+        # instead of the unified style where the title shares the row with
+        # the icons and pushes some of them into the >> overflow menu. Then
+        # make the window at least as wide as the toolbar needs, so every
+        # tab is visible.
+        window = self.window()
+        if window.respondsToSelector_('setToolbarStyle:'):
+            window.setToolbarStyle_(1)   # NSWindowToolbarStyleExpanded
+        window.setTitleVisibility_(0)    # NSWindowTitleVisible
+
+        from AppKit import NSFont, NSFontAttributeName
+        from Foundation import NSString
+        attributes = {NSFontAttributeName: NSFont.systemFontOfSize_(NSFont.smallSystemFontSize())}
+        needed = 2 * 20   # toolbar margins
+        for item in self.toolbar.items():
+            identifier = item.itemIdentifier() or ''
+            if identifier.startswith('NSToolbar'):
+                if identifier in ('NSToolbarSeparatorItem', 'NSToolbarSpaceItem'):
+                    needed += 12
+                continue      # flexible space can shrink to nothing
+            label_width = NSString.stringWithString_(item.label() or '').sizeWithAttributes_(attributes).width
+            needed += max(label_width, 32) + 20   # item padding and spacing
+        needed = int(needed + 0.5)
+
+        min_size = window.minSize()
+        if min_size.width < needed:
+            window.setMinSize_(NSMakeSize(needed, min_size.height))
+        frame = window.frame()
+        if frame.size.width < needed:
+            frame.size.width = needed
+            window.setFrame_display_(frame, False)
 
     @objc.python_method
     def _fixup_toolbar_overflow_menu(self):
@@ -413,8 +449,8 @@ class PreferencesController(NSWindowController, object):
         elif section_name == 'chat':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
             self.generalTabView.selectTabViewItemWithIdentifier_("chat")
-            self.sectionDescription.setStringValue_(NSLocalizedString("Chat Settings", "Label"))
-            self.window().setTitle_(NSLocalizedString("Chat", "Window title"))
+            self.sectionDescription.setStringValue_(NSLocalizedString("Messages Settings", "Label"))
+            self.window().setTitle_(NSLocalizedString("Messages", "Window title"))
             self.sectionHelpPlaceholder.setStringValue_('')
         elif section_name == 'file-transfer':
             self.mainTabView.selectTabViewItemWithIdentifier_("settings")
