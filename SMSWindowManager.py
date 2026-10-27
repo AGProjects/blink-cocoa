@@ -2702,7 +2702,10 @@ class SMSWindowManagerClass(NSObject):
         self._token_requested_at[account.id] = now
         BlinkLogger().log_info('Requesting an API token for %s%s'
                                % (account.id, (' (%s)' % reason) if reason else ''))
-        self.sendMessage(account, 'I need a token', 'application/sylk-api-token')
+        # who we are: the server records the devices that use the account (SylkServer devices.py)
+        from AccountStorage import device_headers
+        self.sendMessage(account, 'I need a token', 'application/sylk-api-token',
+                         extra_headers=[Header(name, value) for name, value in device_headers().items()])
         return True
 
     @objc.python_method
@@ -2915,6 +2918,9 @@ class SMSWindowManagerClass(NSObject):
         self._journal_remaining = None
         req = urllib.request.Request(url, method="GET")
         req.add_header('Authorization', 'Apikey %s' % account.sms.history_token)
+        from AccountStorage import device_headers
+        for name, value in device_headers().items():
+            req.add_header(name, value)
         # Journal pages are JSON with the same handful of keys repeated
         # thousands of times, so they compress hard. urllib does not ask for
         # this on its own and does not decompress it either, which is why a

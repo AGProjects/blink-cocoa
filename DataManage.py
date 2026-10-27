@@ -230,6 +230,9 @@ def remove_from_journal(history_url, token, message_ids, verify=True, timeout=12
     request = urllib.request.Request(url, data=json.dumps(body).encode(), method='POST')
     request.add_header('Content-Type', 'application/json')
     request.add_header('Authorization', 'Apikey %s' % token)
+    from AccountStorage import device_headers
+    for name, value in device_headers().items():
+        request.add_header(name, value)
     context = None
     if not verify:
         context = ssl.create_default_context()
@@ -402,7 +405,8 @@ def scan_journal(history_url, token, since=None, verify=True, timeout=60, progre
         if stop is not None and stop():
             break
         url = journal_page_url(history_url, cursor, since, content_types)
-        request = urllib.request.Request(url, headers={'Authorization': 'Apikey %s' % token, 'Accept': 'application/json'})
+        from AccountStorage import device_headers
+        request = urllib.request.Request(url, headers=dict(device_headers(), **{'Authorization': 'Apikey %s' % token, 'Accept': 'application/json'}))
         try:
             with urllib.request.urlopen(request, timeout=timeout, context=context) as response:
                 body = response.read()

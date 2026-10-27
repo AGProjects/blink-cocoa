@@ -135,6 +135,20 @@ def device_name():
     return 'Blink on %s (macOS)' % name
 
 
+def device_headers():
+    """X-Sylk-Device-Id and X-Sylk-Device-Name for a request carrying the API token: the
+    server records the devices that use the account (SylkServer devices.py)."""
+    headers = {'X-Sylk-Device-Name': urllib.parse.quote(device_name(), safe=" '()")}
+    try:
+        from MessageHost import this_device_id
+        device_id = this_device_id()
+    except Exception:
+        device_id = None
+    if device_id:
+        headers['X-Sylk-Device-Id'] = device_id
+    return headers
+
+
 def _token(account):
     try:
         token = account.sms.history_token
@@ -436,9 +450,9 @@ class AccountStorage(object, metaclass=Singleton):
         url = base + ('/' + path if path else '')
         request = urllib.request.Request(url, data=body, method=method)
         request.add_header('Authorization', 'Apikey %s' % token)
-        if method in ('PUT', 'DELETE'):
-            # who wrote it, for humans (sylk-account, the other devices): the id alone says nothing
-            request.add_header('X-Sylk-Device-Name', urllib.parse.quote(device_name(), safe=" '()"))
+        # who we are, on every request: who wrote an object, and the devices that use the account
+        for name, value in device_headers().items():
+            request.add_header(name, value)
         for name, value in (headers or {}).items():
             if value is not None:
                 request.add_header(name, value)

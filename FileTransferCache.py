@@ -831,6 +831,9 @@ class FileTransferCache(object):
                 str(meta.get('filetype') or 'application/octet-stream'), 'Content-Type')
             if token:
                 request.setValue_forHTTPHeaderField_('Apikey %s' % token, 'Authorization')
+                from AccountStorage import device_headers
+                for name, value in device_headers().items():
+                    request.setValue_forHTTPHeaderField_(value, name)
             else:
                 # Said out loud: without it the server answers 403 and the
                 # transfer fails for a reason that has nothing to do with
