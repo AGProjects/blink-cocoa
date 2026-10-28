@@ -2705,7 +2705,7 @@ class SMSWindowManagerClass(NSObject):
         # who we are: the server records the devices that use the account (SylkServer devices.py)
         from AccountStorage import device_headers
         self.sendMessage(account, 'I need a token', 'application/sylk-api-token',
-                         extra_headers=[Header(name, value) for name, value in device_headers().items()])
+                         extra_headers=[Header(name, value) for name, value in device_headers(http=False).items()])
         return True
 
     @objc.python_method

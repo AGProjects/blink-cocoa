@@ -135,10 +135,20 @@ def device_name():
     return 'Blink on %s (macOS)' % name
 
 
-def device_headers():
-    """X-Sylk-Device-Id and X-Sylk-Device-Name for a request carrying the API token: the
-    server records the devices that use the account (SylkServer devices.py)."""
+def user_agent():
+    """The SIP/WebRTC User-Agent of this client: 'Blink 11.0.0 (MacOSX)'."""
+    from sipsimple.configuration.settings import SIPSimpleSettings
+    return ' '.join(str(SIPSimpleSettings().user_agent or '').split()) or 'Blink'
+
+
+def device_headers(http=True):
+    """X-Sylk-Device-Id, X-Sylk-Device-Name and, for HTTP, X-Sylk-User-Agent for a request carrying
+    the API token: the server records the devices that use the account (SylkServer devices.py).
+    Over HTTP the User-Agent is Python-urllib's, so the SIP one goes in X-Sylk-User-Agent; a SIP
+    request (http=False) already has it as its User-Agent."""
     headers = {'X-Sylk-Device-Name': urllib.parse.quote(device_name(), safe=" '()")}
+    if http:
+        headers['X-Sylk-User-Agent'] = user_agent()
     try:
         from MessageHost import this_device_id
         device_id = this_device_id()
