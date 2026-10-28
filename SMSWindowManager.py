@@ -81,9 +81,9 @@ try:
 except ImportError:
     DataExport = None
 from BlinkLogger import BlinkLogger
-from KeyEscrow import (escrow_is_missing, install_keypair, log_self_contact,
-                       restore_from_own_contact, write_self_keys, key_status_lines,
-                       reencrypt_escrow, self_escrow_records, foreign_escrows, key_fingerprint)
+from KeyEscrow import (escrow_is_missing, install_keypair, read_escrow, restore_from_storage,
+                       strip_contact_escrow, write_escrow, key_status_lines, reencrypt_escrow,
+                       foreign_escrow, key_fingerprint)
 from HistoryManager import ChatHistory, MESSAGES_BULK_DELETE_CONTENT_TYPE, bulk_delete_criteria, bulk_delete_label
 import HistoryManager as _history_module
 from SMSViewController import SMSViewController, is_file_transfer_notice, is_otr_wire_text, is_placeholder_uri
@@ -890,9 +890,9 @@ class SMSWindowManagerClass(NSObject):
     # within one entry, not to hold a page.
     LOCATION_CACHE_SIZE = 32
     _location_payload_cache = OrderedDict()
-    # Accounts whose addressbook has answered the escrow question, those
-    # that have adopted an escrowed key, and the escrow each one last
-    # failed to open -- see restorePrivateKeyFromOwnContact.
+    # Accounts whose addressbook has been fetched, those that have adopted
+    # an escrowed key, and the escrow each one last failed to open -- see
+    # restorePrivateKeyFromStorage.
     key_escrow_checked = set()
     key_restore_done = set()
     key_restore_failed = {}
@@ -912,7 +912,7 @@ class SMSWindowManagerClass(NSObject):
     password_changed = set()    # accounts whose new password the server has not accepted yet
     password_checked = {}       # account id -> escrow and password last checked
     # Accounts whose key was imported from another device and not yet
-    # compared with the escrow (the addressbook may not be in yet).
+    # compared with the escrow (the account storage may not have answered yet).
     key_imported_pending = set()
     generate_prompt_deferred = {}
     # What the server says about our own public key, per account:
@@ -924,13 +924,13 @@ class SMSWindowManagerClass(NSObject):
     key_status_logged = {}          # account id: the status lines last logged
     OWN_KEY_LOOKUP_TIMEOUT = 40
     # Key generation: offered (silently or with a prompt) only once the
-    # addressbook has been fetched -- it may carry the account's key -- and
-    # the server has answered whether it holds a public key for it.
+    # account storage has said whether it keeps an escrow of the account's key,
+    # and the server has answered whether it holds a public key for it.
     key_question_waiters = {}       # account id: [callbacks] until both are known
-    key_addressbook_wait_over = set()   # accounts whose addressbook did not come in ADDRESSBOOK_KEY_WAIT
-    key_storage_waiting = set()         # accounts whose escrow pass waits for the account storage (KeyStorage)
-    escrow_copied = {}                  # account id -> the last escrow copy sent (copyEscrow), not repeated
-    ADDRESSBOOK_KEY_WAIT = 15
+    key_storage_wait_over = set()   # accounts whose account storage did not answer in KEY_STORAGE_WAIT
+    key_storage_waiting = set()     # accounts whose escrow pass waits for the account storage (KeyStorage)
+    escrow_stripped = set()         # accounts whose old escrow on the own contact was cleared in this run
+    KEY_STORAGE_WAIT = 15
     key_generation_declined = set() # declined in this run: not asked again until restart
     key_generation_running = set()
     # The enabled accounts as of the last time anything was reloaded for
@@ -1863,17 +1863,10 @@ class SMSWindowManagerClass(NSObject):
 
     @objc.python_method
     def _NH_XCAPManagerDidReloadData(self, sender, data):
-        # Step 1 of the cross-client key escrow work: read-only. Every time
-        # the addressbook comes back from the server, log what our own
-        # contact carries, so the escrow's actual location is settled from
-        # inside a running Blink rather than inferred from a dumped document.
-        # Nothing here writes, and nothing downstream depends on it yet.
         try:
             account = sender.account
         except (AttributeError, ReferenceError):
             return
-        # The addressbook has now answered for this account, so a generate
-        # prompt held back waiting for it can go ahead.
         self.key_escrow_checked.add(account.id)
 
         _notify_state = self._abNotifyState(account)
@@ -1886,23 +1879,17 @@ class SMSWindowManagerClass(NSObject):
             BlinkLogger().log_info('[ab] [notify] The addressbook of %s reloaded after another device changed it'
                                    % account.id)
 
-        # Nothing this handler writes announces itself. A restore or an escrow
-        # repair is this device catching up with the document it has just been
-        # handed, and every other device reaches the same place from the same
-        # document on its own load. Announcing it would mean device A's write
-        # wakes device B, whose repair writes back, which wakes A.
+        # Nothing this handler writes announces itself: it is this device
+        # catching up with the document it has just been handed, and every
+        # other device reaches the same place from the same document on its
+        # own load. Announcing it would mean device A's write wakes device B,
+        # whose repair writes back, which wakes A.
         self.suppressAddressbookNotifications()
         try:
-            self._applyReloadedAddressbook(account)
+            self.stripContactEscrow(account)
             self.unsubscribeDeletedContacts()
         finally:
             self.resumeAddressbookNotifications()
-
-        # may ask the user, so outside the quiet stretch
-        try:
-            self.escrowImportedKey(account)
-        except Exception as e:
-            BlinkLogger().log_error('Key escrow of the imported key of %s failed: %s' % (account.id, e))
 
         # the checks of the address book that ask the user (contacts in Deleted
         # and in other groups, presence shared but not subscribed to)
@@ -1944,7 +1931,7 @@ class SMSWindowManagerClass(NSObject):
                                    % (getattr(account, 'id', '?'), e))
 
     # PGP key status: whether the account can use PGP, and the key on this
-    # device, in the addressbook escrow and on the server
+    # device, in the account storage escrow and on the server
 
     @objc.python_method
     @run_in_gui_thread
@@ -1979,8 +1966,7 @@ class SMSWindowManagerClass(NSObject):
             return
         lines = key_status_lines(account, self.server_key_state.get(account.id, 'unknown'),
                                  self.server_public_key.get(account.id),
-                                 self.server_key_reason.get(account.id),
-                                 addressbook_fetched=account.id in self.key_escrow_checked)
+                                 self.server_key_reason.get(account.id))
         if not force and self.key_status_logged.get(account.id) == lines:
             return
         self.key_status_logged[account.id] = lines
@@ -2036,13 +2022,11 @@ class SMSWindowManagerClass(NSObject):
 
     @objc.python_method
     def keyQuestionAnswered(self, account):
-        """All known: the addressbook (fetched, or waited for long enough), the escrow the
-        account storage keeps (answered, failed, or the addressbook wait is over) and the
-        server's answer about our public key (present, absent or failed)."""
-        addressbook = self.addressbookAnswered(account) or account.id in self.key_addressbook_wait_over
-        storage = self._keyStorageAnswered(account) or account.id in self.key_addressbook_wait_over
+        """All known: the escrow the account storage keeps (answered, failed, or waited for
+        long enough) and the server's answer about our public key (present, absent or failed)."""
+        storage = self._keyStorageAnswered(account) or account.id in self.key_storage_wait_over
         server = self.server_key_state.get(account.id) in ('present', 'absent', 'failed')
-        return addressbook and storage and server
+        return storage and server
 
     @objc.python_method
     @run_in_gui_thread
@@ -2055,19 +2039,21 @@ class SMSWindowManagerClass(NSObject):
         waiters.append(callback)
         if not first:
             return
-        BlinkLogger().log_info('[pgp] %s: key generation waits for the addressbook and the server key lookup' % account.id)
+        BlinkLogger().log_info('[pgp] %s: key generation waits for the account storage and the server key lookup' % account.id)
         if self.server_key_state.get(account.id, 'unknown') in ('unknown', 'failed'):
             self.lookupOwnServerKey(account)
-        if not self.addressbookAnswered(account):
-            call_later(self.ADDRESSBOOK_KEY_WAIT, self._addressbookKeyWaitOver, account)
+        if not self._keyStorageAnswered(account):
+            from KeyStorage import KeyStorage
+            KeyStorage().fetch(account, 'key generation')
+            call_later(self.KEY_STORAGE_WAIT, self._keyStorageWaitOver, account)
 
     @objc.python_method
-    def _addressbookKeyWaitOver(self, account):
-        if self.addressbookAnswered(account):
+    def _keyStorageWaitOver(self, account):
+        if self._keyStorageAnswered(account):
             return
-        BlinkLogger().log_info('[pgp] %s: the addressbook did not come in %ds, the key question goes on without it'
-                               % (account.id, self.ADDRESSBOOK_KEY_WAIT))
-        self.key_addressbook_wait_over.add(account.id)
+        BlinkLogger().log_info('[pgp] %s: the account storage did not answer in %ds, the key question goes on without it'
+                               % (account.id, self.KEY_STORAGE_WAIT))
+        self.key_storage_wait_over.add(account.id)
         self.releaseKeyQuestion(account)
 
     @objc.python_method
@@ -2089,16 +2075,14 @@ class SMSWindowManagerClass(NSObject):
 
     @objc.python_method
     def maySilentlyGenerateKey(self, account):
-        """Only when nothing can carry a key we would orphan: the account has
-        XCAP, its addressbook was fetched and holds no escrow, and the server
-        answered that it holds no public key for it."""
-        if account is BonjourAccount() or not account.xcap.enabled:
-            return False
-        if account.id not in self.key_escrow_checked:
+        """Only when nothing can carry a key we would orphan: the account storage
+        answered that it keeps no escrow, and the server answered that it holds
+        no public key for the account."""
+        if account is BonjourAccount():
             return False
         try:
-            from KeyEscrow import read_self_keys
-            if read_self_keys(account) is not None:
+            from KeyStorage import KeyStorage
+            if KeyStorage().state(account) != 'absent':
                 return False
         except Exception:
             return False
@@ -2125,7 +2109,7 @@ class SMSWindowManagerClass(NSObject):
         if self._hasPrivateKey(account) or account.id in self.key_generation_running:
             return      # restored from the escrow meanwhile, or being made
         if self.maySilentlyGenerateKey(account):
-            BlinkLogger().log_info('[pgp] %s: no key on this device, in the addressbook or on the server: '
+            BlinkLogger().log_info('[pgp] %s: no key on this device, in the account storage or on the server: '
                                    'generating one' % account.id)
             self.generateKeyInBackground(account, silent=True)
         else:
@@ -2170,7 +2154,7 @@ class SMSWindowManagerClass(NSObject):
         BlinkLogger().log_info('PGP key generated for %s in %.1fs%s' % (account.id, seconds, ' (silently)' if silent else ''))
         self.private_keys.pop(account.id, None)     # drop the cached miss
         self.resetDecryption(account)               # same path, no settings change: said here
-        # the new key goes into the addressbook escrow, so another device adopts it
+        # the new key goes into the escrow in the account storage, so another device adopts it
         try:
             self.escrow_repaired.discard(account.id)
             self.repairMissingEscrow(account)
@@ -2194,60 +2178,40 @@ class SMSWindowManagerClass(NSObject):
 
     @objc.python_method
     def _NH_SylkServerConfigurationDidChange(self, sender, data):
-        # On a first run the addressbook can come back before the domain is
-        # known to run SylkServer, and the key work below was skipped for it:
-        # do it now for the accounts of that domain whose addressbook is in.
+        # On a first run the domain may not be known to run SylkServer yet, and
+        # the key work below was skipped for it: do it now for that domain.
         for account in AccountManager().get_accounts():
             if account is BonjourAccount() or account.id.domain != data.domain:
                 continue
             self.checkKeyStatus(account, 'SylkServer configuration')
-            if account.id not in self.key_escrow_checked or not pgp_messaging_possible(account):
+            if not pgp_messaging_possible(account):
                 continue
-            self.suppressAddressbookNotifications()
-            try:
-                self._applyReloadedAddressbook(account)
-            finally:
-                self.resumeAddressbookNotifications()
+            self.runEscrowPass(account)
 
     @objc.python_method
-    def _applyReloadedAddressbook(self, account):
+    def runEscrowPass(self, account):
+        """Restore, repair and re-encrypt the escrow in the account storage
+        (SylkServer docs/PRIVATE-KEY-STORAGE.md). Waits for the storage to answer
+        (or fail), and runs again whenever what it keeps changes."""
         if not pgp_messaging_possible(account):
             # no PGP for an account whose domain does not run SylkServer:
             # nothing to restore, report or escrow, and nothing logged
             return
 
-        # The escrow the account storage keeps is one more escrow record
-        # (KeyEscrow.STORAGE_ID): the pass waits for the storage to answer (or
-        # fail), and runs again whenever what it keeps changes.
         if not self._keyStorageAnswered(account):
             from KeyStorage import KeyStorage
             if account.id not in self.key_storage_waiting:
                 self.key_storage_waiting.add(account.id)
                 BlinkLogger().log_info('[pgp] Key escrow: waiting for the account storage of %s before the escrow pass' % account.id)
-            KeyStorage().fetch(account, 'addressbook loaded')
+            KeyStorage().fetch(account, 'escrow pass')
             return
 
-        # Restore BEFORE reporting. The report describes the state of the
-        # account, and a restore in the same pass changes it: reporting first
-        # printed "no private key configured" and "a write would be REFUSED --
-        # nothing to escrow" three lines above the line saying the key had just
-        # been installed. Restoring first makes one pass tell one story.
+        # Restore BEFORE reporting: a restore in the same pass changes what
+        # the report says, so one pass tells one story.
         try:
-            self.restorePrivateKeyFromOwnContact(account)
+            self.restorePrivateKeyFromStorage(account)
         except Exception as e:
             BlinkLogger().log_error('Key escrow restore failed for %s: %s'
-                                    % (getattr(account, 'id', '?'), e))
-
-        try:
-            self.copyEscrow(account)
-        except Exception as e:
-            BlinkLogger().log_error('Key escrow copy failed for %s: %s'
-                                    % (getattr(account, 'id', '?'), e))
-
-        try:
-            log_self_contact(account)
-        except Exception as e:
-            BlinkLogger().log_error('Key escrow inspection failed for %s: %s'
                                     % (getattr(account, 'id', '?'), e))
 
         try:
@@ -2262,8 +2226,30 @@ class SMSWindowManagerClass(NSObject):
             BlinkLogger().log_error('Key escrow password check failed for %s: %s'
                                     % (getattr(account, 'id', '?'), e))
 
-        self.logKeyStatus(account, 'addressbook fetched')
+        try:
+            self.stripContactEscrow(account)
+        except Exception as e:
+            BlinkLogger().log_error('Key escrow: clearing the old escrow on the own contact of %s failed: %s'
+                                    % (getattr(account, 'id', '?'), e))
+
+        self.logKeyStatus(account, 'escrow pass')
         self.releaseKeyQuestion(account)
+
+        # may ask the user
+        try:
+            self.escrowImportedKey(account)
+        except Exception as e:
+            BlinkLogger().log_error('Key escrow of the imported key of %s failed: %s' % (account.id, e))
+
+    @objc.python_method
+    def stripContactEscrow(self, account):
+        """Clear the escrow formerly kept on our own XCAP contact, once the
+        account storage keeps one. Once per run and account: an older client may
+        put it back, and the two must not bounce the contact between them."""
+        if account.id in self.escrow_stripped or not getattr(account, 'xcap', None) or not account.xcap.enabled:
+            return
+        if strip_contact_escrow(account):
+            self.escrow_stripped.add(account.id)
 
     @objc.python_method
     def _keyStorageAnswered(self, account):
@@ -2277,64 +2263,27 @@ class SMSWindowManagerClass(NSObject):
     def _NH_BlinkKeyStorageDidChange(self, sender, data):
         # What the account storage keeps of the escrow changed (or it answered
         # for the first time): the escrow pass runs again, so a key escrowed by
-        # another device is restored here without waiting for a reload.
+        # another device is restored here at once.
         account = data.account
         waited = account.id in self.key_storage_waiting
         self.key_storage_waiting.discard(account.id)
-        if account.id in self.key_escrow_checked and (waited or data.state in ('present', 'absent')):
+        if waited or data.state in ('present', 'absent'):
             self.suppressAddressbookNotifications()
             try:
-                self._applyReloadedAddressbook(account)
+                self.runEscrowPass(account)
             finally:
                 self.resumeAddressbookNotifications()
         else:
             self.releaseKeyQuestion(account)
 
     @objc.python_method
-    def copyEscrow(self, account):
-        """Keep the account storage and our contacts equal (SylkServer
-        docs/PRIVATE-KEY-STORAGE.md, Phase 1): copy the newest escrow record, as
-        it is, to the side that lacks it or holds an older one. No password and
-        no key are needed, and a client that knows only one side (an older
-        Blink, sylk-desktop, an older Sylk Mobile) sees what the others wrote.
-        Each copy is sent once per run."""
-        if not account.enabled or not account.sms.enable_pgp or not pgp_messaging_possible(account):
-            return
-        from KeyEscrow import escrow_copy_action, copy_escrow
-        direction, record, detail = escrow_copy_action(account)
-        if direction is None:
-            if detail:
-                BlinkLogger().log_debug('[pgp] Key escrow: nothing copied for %s: %s' % (account.id, detail))
-            return
-        signature = (direction, record.get('timestamp'), len(record.get('private_key') or ''))
-        if self.escrow_copied.get(account.id) == signature:
-            return
-        self.escrow_copied[account.id] = signature
-        where = ('from contact %s to the account storage' % detail if direction == 'storage'
-                 else 'from the account storage to contact(s) %s' % ', '.join(str(item) for item in detail))
-        BlinkLogger().log_info('[pgp] Key escrow: copying the escrow of %s written %s by "%s" %s'
-                               % (account.id, record.get('timestamp') or '?', record.get('device') or '?', where))
-        if not copy_escrow(account, direction, record, detail):
-            self.escrow_copied.pop(account.id, None)
-            BlinkLogger().log_info('[pgp] Key escrow: the copy for %s could not be sent, tried again on the next pass' % account.id)
-
-    @objc.python_method
     def repairMissingEscrow(self, account):
-        """Put the escrow back when the server has lost it.
+        """Put the escrow back when the account storage keeps none.
 
-        An escrow can be destroyed by something entirely outside this feature:
-        a client that adds a contact the addressbook already holds replaces the
-        element and drops the attributes it does not know about. Observed on
-        2026-08-28, when a fresh profile with two XCAP accounts wiped the key
-        escrow off the second account's contacts; the key came back only
-        because a phone noticed and re-escrowed it.
-
-        So an account holding a key with nothing escrowed anywhere repairs
-        itself. This is deliberately the ONLY automatic write: no escrow means
-        writing one cannot displace anyone's key, while every other mismatch
-        between a local key and an escrow is a decision for the user. The
-        blockers still apply, so a contact shared with another account is
-        refused here as everywhere else.
+        An account holding a key with nothing escrowed repairs itself. This is
+        deliberately the ONLY automatic write: no escrow means writing one
+        cannot displace anyone's key, while every other mismatch between a
+        local key and an escrow is a decision for the user.
         """
         if not escrow_is_missing(account):
             self.escrow_repaired.discard(account.id)
@@ -2343,18 +2292,18 @@ class SMSWindowManagerClass(NSObject):
             return
 
         self.escrow_repaired.add(account.id)
-        BlinkLogger().log_info('Key escrow: %s holds a key but the server carries no escrow for it '
+        BlinkLogger().log_info('Key escrow: %s holds a key but the account storage keeps no escrow for it '
                                '-- restoring the backup' % account.id)
-        written, reason = write_self_keys(account)
+        written, reason = write_escrow(account)
         if not written:
             BlinkLogger().log_info('Key escrow: could not restore the backup for %s -- %s'
                                    % (account.id, reason))
 
     @objc.python_method
     def keyImported(self, account):
-        """A key was imported from another device: put it on our own contact
-        now rather than on some later reload."""
-        if account is None or account is BonjourAccount() or not account.xcap.enabled or not pgp_messaging_possible(account):
+        """A key was imported from another device: escrow it in the account
+        storage now rather than on some later pass."""
+        if account is None or account is BonjourAccount() or not pgp_messaging_possible(account):
             return
         self.key_imported_pending.add(account.id)
         self.escrow_repaired.discard(account.id)
@@ -2368,15 +2317,15 @@ class SMSWindowManagerClass(NSObject):
         replaced only when the user says so."""
         if account.id not in self.key_imported_pending:
             return
-        from KeyEscrow import _resource_lists_element
-        if _resource_lists_element(account) is None:
-            BlinkLogger().log_info('Key escrow: the addressbook of %s has not been fetched yet, '
-                                   'the imported key is saved on the server once it is' % account.id)
+        from KeyStorage import KeyStorage
+        if not KeyStorage().writable(account):
+            BlinkLogger().log_info('Key escrow: the account storage of %s has not answered yet, '
+                                   'the imported key is saved on the server once it has' % account.id)
             return
         self.key_imported_pending.discard(account.id)
 
-        foreign = foreign_escrows(account)
-        if not foreign:
+        record = foreign_escrow(account)
+        if record is None:
             self.suppressAddressbookNotifications()
             try:
                 self.repairMissingEscrow(account)
@@ -2385,7 +2334,6 @@ class SMSWindowManagerClass(NSObject):
                 self.resumeAddressbookNotifications()
             return
 
-        contact_id, record = foreign[0]
         old = key_fingerprint(record.get('public_key'))
         try:
             with open(account.sms.public_key, 'rb') as fd:
@@ -2395,9 +2343,9 @@ class SMSWindowManagerClass(NSObject):
         unknown = NSLocalizedString("unknown", "label")
         old_id = old[-16:].upper() if old else unknown
         new_id = new[-16:].upper() if new else unknown
-        BlinkLogger().log_info('Key escrow: contact %s of %s keeps a backup of key %s, saved %s by "%s", '
+        BlinkLogger().log_info('Key escrow: the account storage of %s keeps a backup of key %s, saved %s by "%s", '
                                'not of the imported key %s: asking'
-                               % (contact_id, account.id, old_id, record.get('timestamp', '?'), record.get('device', '?'), new_id))
+                               % (account.id, old_id, record.get('timestamp', '?'), record.get('device', '?'), new_id))
 
         alert = NSAlert.alloc().init()
         alert.setMessageText_(NSLocalizedString("Replace PGP key backup", "Window title"))
@@ -2410,8 +2358,8 @@ class SMSWindowManagerClass(NSObject):
             return
         BlinkLogger().log_info('Key escrow: the user chose to replace the backup of key %s for %s with the imported key %s'
                                % (old_id, account.id, new_id))
-        # announced: the other devices learn of the new backup on their next reload
-        written, reason = write_self_keys(account, force=True)
+        # announced: the storage tells the other devices (application/sylk-storage-changed)
+        written, reason = write_escrow(account, force=True)
         if not written:
             failed = NSAlert.alloc().init()
             failed.setMessageText_(NSLocalizedString("Replace PGP key backup", "Window title"))
@@ -2434,28 +2382,26 @@ class SMSWindowManagerClass(NSObject):
         password = (account.auth.password or '').strip()
         if not password or self.accepted_passwords.get(account.id) != password:
             return
-        from KeyEscrow import _resource_lists_element
-        if _resource_lists_element(account) is None:
-            return      # not fetched yet; the reload checks again
+        if not self._keyStorageAnswered(account):
+            return      # not answered yet; the escrow pass checks again
         if not (account.sms.private_key and os.path.exists(account.sms.private_key)):
             return
-        records = self_escrow_records(account)
-        if not records:
+        record = read_escrow(account)
+        if record is None:
             return      # nothing escrowed: repairMissingEscrow writes it
         import hashlib
         signature = (hashlib.sha256(password.encode()).hexdigest(),
-                     tuple(sorted((str(contact_id), str(record.get('timestamp')), len(record.get('private_key') or ''))
-                                  for contact_id, _label, record in records)))
+                     str(record.get('timestamp')), len(record.get('private_key') or ''))
         if self.password_checked.get(account.id) == signature:
             return
         self.password_checked[account.id] = signature
         reencrypt_escrow(account)
 
     @objc.python_method
-    def restorePrivateKeyFromOwnContact(self, account):
-        """Adopt an escrowed keypair when this device has none.
+    def restorePrivateKeyFromStorage(self, account):
+        """Adopt the keypair escrowed in the account storage when this device has none.
 
-        Runs on every addressbook reload, which is several times per sign-in,
+        Runs on every escrow pass, which can be several times per sign-in,
         so both outcomes are latched: success needs no repeat, and a failure
         keyed on the blob it failed against must not produce an identical
         complaint per reload. The key includes the password length so that
@@ -2466,8 +2412,7 @@ class SMSWindowManagerClass(NSObject):
         if account.sms.private_key and os.path.exists(account.sms.private_key):
             return
 
-        from KeyEscrow import read_self_keys
-        record = read_self_keys(account)
+        record = read_escrow(account)
         if record is None:
             return
 
@@ -2477,7 +2422,7 @@ class SMSWindowManagerClass(NSObject):
         if self.key_restore_failed.get(account.id) == signature:
             return
 
-        restored, reason = restore_from_own_contact(account)
+        restored, reason = restore_from_storage(account)
         if restored:
             self.key_restore_done.add(account.id)
             self.private_keys.pop(account.id, None)   # drop the cached miss
@@ -8692,17 +8637,15 @@ class SMSWindowManagerClass(NSObject):
 
     @objc.python_method
     def escrowQuestionAnswered(self, account):
-        """Whether we yet know if the server holds a key for this account.
+        """Whether we yet know if the account storage keeps a key for this account.
 
         Generating a keypair is irreversible in the only way that matters --
         the messages encrypted to the old one stop being readable -- so the
-        offer waits until the addressbook has been seen. The wait is bounded:
-        an account with no XCAP has nothing to wait for, and after 15 seconds
-        an unanswered fetch stops being a reason to withhold the prompt.
+        offer waits until the account storage has answered. The wait is
+        bounded: after 15 seconds an unanswered fetch stops being a reason to
+        withhold the prompt.
         """
-        if account.id in self.key_escrow_checked:
-            return True
-        if not account.xcap.enabled:
+        if self._keyStorageAnswered(account):
             return True
         first_asked = self.generate_prompt_deferred.setdefault(account.id, time.time())
         return time.time() - first_asked > 15
@@ -8710,7 +8653,7 @@ class SMSWindowManagerClass(NSObject):
     @objc.python_method
     @run_in_gui_thread
     def escrowPrivateKey(self, account, force=False):
-        """Publish this device's keypair onto our own XCAP contact.
+        """Escrow this device's keypair in the account storage.
 
         The escrow lets another of the user's devices adopt this account's
         existing key instead of generating a fresh one and orphaning every
@@ -8721,12 +8664,12 @@ class SMSWindowManagerClass(NSObject):
         if account is None or account is BonjourAccount():
             return
 
-        written, reason = write_self_keys(account, force=force)
+        written, reason = write_escrow(account, force=force)
 
         alert = NSAlert.alloc().init()
         alert.setMessageText_(NSLocalizedString("PGP Key Escrow", "Window title"))
         if written:
-            alert.setInformativeText_(NSLocalizedString("The private key of account %s has been encrypted with the account password and saved on the server, on %d contact(s). Your other devices can now adopt this key instead of generating their own.", "label") % (account.id, len(written)))
+            alert.setInformativeText_(NSLocalizedString("The private key of account %s has been encrypted with the account password and saved on the server. Your other devices can now adopt this key instead of generating their own.", "label") % account.id)
         else:
             alert.setInformativeText_(NSLocalizedString("The key of account %s was not saved. %s", "label") % (account.id, reason or ''))
         alert.addButtonWithTitle_(NSLocalizedString("OK", "button"))
@@ -8751,13 +8694,13 @@ class SMSWindowManagerClass(NSObject):
             # domains do not run it
             return False
 
-        if not self.escrowQuestionAnswered(account) and account.id not in self.key_addressbook_wait_over:
-            # The addressbook has not come back yet, and it may be carrying
-            # this account's real key. Generating one now would mint a second
+        if not self.escrowQuestionAnswered(account) and account.id not in self.key_storage_wait_over:
+            # The account storage has not answered yet, and it may keep this
+            # account's real key. Generating one now would mint a second
             # keypair and leave every existing message unreadable, so say
             # nothing; the prompt comes back the next time a viewer opens.
-            BlinkLogger().log_info('Waiting for the addressbook of %s before offering to generate a '
-                                   'PGP key -- it may already carry one' % account.id)
+            BlinkLogger().log_info('Waiting for the account storage of %s before offering to generate a '
+                                   'PGP key -- it may already keep one' % account.id)
             return False
 
         keys_path = ApplicationData.get('keys')
@@ -8768,7 +8711,7 @@ class SMSWindowManagerClass(NSObject):
         alert = NSAlert.alloc().init()
         alert.setMessageText_(NSLocalizedString("Generate PGP Private Key", "Window title"))
         if not has_key and server_has_key:
-            alert.setInformativeText_(NSLocalizedString("The server holds a PGP public key for account %s, so another device has a private key for it, but it was not found in the addressbook. A new key makes the messages encrypted to the other one unreadable here. Better: save the key to the server from the other device, or import it. Generate a new key anyway?", "label") % account.id)
+            alert.setInformativeText_(NSLocalizedString("The server holds a PGP public key for account %s, so another device has a private key for it, but no backup of it is saved on the server. A new key makes the messages encrypted to the other one unreadable here. Better: save the key to the server from the other device, or import it. Generate a new key anyway?", "label") % account.id)
         elif has_key:
             alert.setInformativeText_(NSLocalizedString("A PGP private key already exists for account %s. Generating a new key will permanently overwrite it, and any messages encrypted with the old key will no longer be readable. Do you want to continue?", "label") % account.id)
         else:
@@ -9593,7 +9536,7 @@ class ImportPrivateKeyController(NSObject):
         else:
             self.status.setTextColor_(NSColor.greenColor())
             self.status.setStringValue_(NSLocalizedString("Key imported sucessfully", "status label"));
-            # the escrow on our own contact follows the imported key (may ask)
+            # the escrow in the account storage follows the imported key (may ask)
             try:
                 SMSWindowManager().keyImported(self.account)
             except Exception as e:

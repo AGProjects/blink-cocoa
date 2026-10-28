@@ -3421,19 +3421,6 @@ class CustomListModel(NSObject):
         return False
 
     @objc.python_method
-    def isHiddenOwnContact(self, group, item):
-        """Our own contact is listed only while it has messages: it exists for
-        the PGP key escrow, and shows up when a message to ourselves arrives."""
-        contact = getattr(item, 'contact', None)
-        if not isinstance(contact, Contact):
-            return False
-        keys = set(self._canonical_contact_uri(uri.uri) for uri in contact.uris)
-        keys.discard('')
-        if not keys or not keys <= own_account_keys():
-            return False
-        return group.lastMessageTimeForContact(item) is None
-
-    @objc.python_method
     def displayedContacts(self, group, recompute=False):
         """The rows of a group as the list shows them."""
         if getattr(group, 'isDeletedGroup', None) and group.isDeletedGroup():
@@ -3443,7 +3430,7 @@ class CustomListModel(NSObject):
         key = id(group)
         if recompute or key not in self._displayed_contacts:
             self._displayed_contacts[key] = [c for c in group.contacts
-                                             if not self.isHiddenAsDeleted(c) and not self.isHiddenOwnContact(group, c)]
+                                             if not self.isHiddenAsDeleted(c)]
         return self._displayed_contacts[key]
 
     # data source methods
@@ -3719,8 +3706,7 @@ class CustomListModel(NSObject):
         and switch the pane out from under them.
         """
         key = getattr(notification.data, 'key', None)
-        if key is None or key in own_account_keys():
-            # our own contact is shown or hidden by whether it has messages
+        if key is None:
             self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
 
         # every group that can show a sort control: one left on A-Z keeps its
@@ -5935,62 +5921,6 @@ class ContactListModel(CustomListModel):
         return None
 
     @objc.python_method
-    def _ownContactPairs(self, pairs, soft=False):
-        """{contact id: [account addresses]} for the contacts among these that are the
-        last to carry one of our account addresses. Our own contact keeps the PGP key
-        escrow, so at least one with each account address stays in the address book.
-        soft: contacts in Deleted do not count as staying (one step from going)."""
-        accounts = own_account_keys()
-        if not accounts:
-            return {}
-        going = set(c.id for b, c in pairs)
-        deleted = set()
-        if soft:
-            group = next((g for g in AddressbookManager().get_groups() if g.id == DELETED_GROUP_ID), None)
-            if group is not None:
-                deleted = set(member.id for member in group.contacts)
-        staying = set()
-        for other in AddressbookManager().get_contacts():
-            if other.id not in going and other.id not in deleted:
-                staying.update(self._canonical_contact_uri(uri.uri) for uri in other.uris)
-        protected = {}
-        for b, c in pairs:
-            mine = sorted((set(self._canonical_contact_uri(uri.uri) for uri in c.uris) & accounts) - staying)
-            if mine:
-                protected[c.id] = mine
-        return protected
-
-    @objc.python_method
-    def _keepOwnContacts(self, pairs, soft=False):
-        """Deleting our own contact removes the conversation with ourselves instead:
-        the contact stays (it keeps the PGP key escrow) and is not listed until a new
-        message arrives. Returns the pairs that may be deleted."""
-        protected = self._ownContactPairs(pairs, soft)
-        if not protected:
-            return pairs
-        own = [(b, c) for b, c in pairs if c.id in protected]
-        names = ', '.join("'%s'" % (b.name if len(b.name) else str(b.uri)) for b, c in own)
-        message = NSLocalizedString("%s is your own contact: it stays in the address book, as it keeps the backup "
-                                    "of your private key, and is hidden until a new message to yourself arrives.\n\n"
-                                    "Remove all messages with yourself on all devices? This cannot be undone.", "Label") % names
-        message = re.sub("%", "%%", message)
-        ret = NSRunAlertPanel(NSLocalizedString("Own Contact", "Window title"), message,
-                              NSLocalizedString("Remove Messages", "Button title"),
-                              NSLocalizedString("Cancel", "Button title"), None)
-        if ret == NSAlertDefaultReturn:
-            from SMSWindowManager import SMSWindowManager
-            manager = SMSWindowManager()
-            addresses = sorted(set(address for b, c in own for address in protected[c.id]))
-            BlinkLogger().log_info('Removing the conversation with ourselves (%s) instead of deleting our own contact'
-                                   % ', '.join(addresses))
-            manager.purgeConversationsForURIs(addresses, reason='own contact deleted, conversation with ourselves removed')
-            manager.announceConversationRemoval(addresses, include_own=True)
-            self.nc.post_notification("BlinkContactsHaveChanged", sender=self)
-        else:
-            BlinkLogger().log_info('Kept our own contact and its messages: %s' % names)
-        return [(b, c) for b, c in pairs if c.id not in protected]
-
-    @objc.python_method
     def deleteContacts(self, blink_contacts):
         """Stage 1 of Sylk Mobile's delete: move the contacts to Deleted.
 
@@ -5999,7 +5929,7 @@ class ContactListModel(CustomListModel):
         the other devices. Delete Permanently from inside Deleted is what
         destroys anything (expungeContacts).
         """
-        pairs = self._keepOwnContacts(self._addressbookContacts(blink_contacts), soft=True)
+        pairs = self._addressbookContacts(blink_contacts)
         if not pairs:
             return
         names = [b.name if len(b.name) else str(b.uri) for b, c in pairs]
@@ -6064,7 +5994,7 @@ class ContactListModel(CustomListModel):
         3. a conversation-remove for each purged address tells the other
            devices to drop the thread.
         """
-        pairs = self._keepOwnContacts(self._addressbookContacts(blink_contacts))
+        pairs = self._addressbookContacts(blink_contacts)
         if not pairs:
             return
         names = [b.name if len(b.name) else str(b.uri) for b, c in pairs]
@@ -7285,9 +7215,9 @@ class ContactListModel(CustomListModel):
     def logContactsForOwnAccounts(self):
         """One line per contact carrying one of this device's own account URIs.
 
-        These are the contacts the user sees as "me", and they are where the
-        PGP key escrow lives, so what they hold is worth stating plainly
-        rather than reconstructing from a dumped XCAP document. It also shows
+        These are the contacts the user sees as "me", so what they hold is
+        worth stating plainly rather than reconstructing from a dumped XCAP
+        document. It also shows
         what the contact list is about to draw: the second line of a row is
         `detail`, and a contact whose detail reads "None" is a bug this line
         makes obvious.

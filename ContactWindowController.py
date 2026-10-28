@@ -7758,13 +7758,15 @@ class ContactWindowController(NSWindowController):
                 item.setEnabled_(account is not BonjourAccount() and pgp_possible and os.path.exists(private_key_path))
 
             # Generate PGP private key: untagged in the nibs, found by its action.
-            # Disabled while it is too early: the addressbook, which may carry
-            # the account's key, has not been fetched yet.
-            too_early = pgp_possible and account is not BonjourAccount() and not SMSWindowManager.SMSWindowManager().addressbookAnswered(account)
+            # Disabled while it is too early: the account storage, which may keep
+            # the account's key, has not answered yet.
+            manager = SMSWindowManager.SMSWindowManager()
+            too_early = (pgp_possible and account is not BonjourAccount() and not manager._keyStorageAnswered(account)
+                         and account.id not in manager.key_storage_wait_over)
             for entry in item.menu().itemArray():
                 if entry.action() in ('generateKeyButtonClicked:', b'generateKeyButtonClicked:'):
                     entry.setEnabled_(pgp_possible and not too_early)
-                    entry.setToolTip_(NSLocalizedString("Waiting for the addressbook of this account, it may already carry a key", "Tooltip") if too_early else "")
+                    entry.setToolTip_(NSLocalizedString("Waiting for the account storage of this account, it may already keep a key", "Tooltip") if too_early else "")
 
     def selectInputDevice_(self, sender):
         settings = SIPSimpleSettings()
