@@ -3,7 +3,7 @@
 
 """The Data manager: the message history in bulk.
 
-Five sections, switched at the top: Messages (below); File Transfers
+Six sections, switched at the top: Messages (below); File Transfers
 (FileTransfersPanel): the transfers whose file is on the server and not on
 this computer, drilled into the same way, and downloaded in bulk through
 FileTransferCache, as a click on each bubble would; Compact journal
@@ -12,7 +12,9 @@ no longer worth downloading (receipts, location tracks), as Blink Qt; Import
 (DataImportPanel.DataImportController): a Sylk Mobile export, hosted here
 when the phone announces it; and Export to device
 (DataExportPanel.DataExportController): this computer serving its history to
-another device of the account, which imports it as from a phone.
+another device of the account, which imports it as from a phone; and Devices
+(DevicesPanel): the devices that use the account, as SylkServer records them,
+one of which can be forgotten, as Blink Qt.
 
 Drill into an account's stored rows by type (category, location sharing, or
 content type), action (location_start/update/stop, the action of a metadata
@@ -82,7 +84,7 @@ from AppKit import (NSAlert,
                     NSViewMinYMargin,
                     NSViewWidthSizable,
                     NSWindow)
-from Foundation import NSIndexSet, NSLocalizedString, NSMakeRect, NSMakeSize, NSNumberFormatter, NSNumberFormatterNoStyle, NSObject
+from Foundation import NSIndexSet, NSLocalizedString, NSMakeRect, NSMakeSize, NSNumberFormatter, NSNumberFormatterNoStyle, NSObject, NSSortDescriptor
 
 from sipsimple.account import AccountManager, BonjourAccount
 from sipsimple.configuration.settings import SIPSimpleSettings
@@ -96,6 +98,7 @@ from DataManage import (CATEGORY_LABELS, REMOVE_BATCH, JournalRemoveError, Journ
                         DOWNLOADABLE, FILE_KINDS, build_file_rows, scan_transfer_storage, status_label,
                         COMPACTION_RULES, JournalScanError, compaction_content_types, compaction_ids, compaction_rule, contact_breakdown,
                         purge_journal, scan_journal)
+from AccountStorage import AccountStorage, storage_url, valid_name
 from BlinkLogger import BlinkLogger
 from DataExportPanel import DataExportController
 from DataImportPanel import DataImportController
@@ -259,6 +262,8 @@ class DataManagerController(NSObject):
             self.filesPanel.refresh(keep_status=True)
         elif self.sectionControl.selectedSegment() == 2:
             self.compactPanel.refreshAccounts()
+        elif self.sectionControl.selectedSegment() == 5:
+            self.devicesPanel.refreshAccounts()
 
     def sectionChanged_(self, sender):
         self._showSection(sender.selectedSegment())
@@ -271,6 +276,9 @@ class DataManagerController(NSObject):
         self.compactPanel.view.setHidden_(index != 2)
         self.importView.setHidden_(index != 3)
         self.exportPanel.view.setHidden_(index != 4)
+        self.devicesPanel.view.setHidden_(index != 5)
+        if index == 5:
+            self.devicesPanel.refreshAccounts()
         if index == 2:
             self.compactPanel.refreshAccounts()
         if index == 4 and self.exportPanel.server is None:
@@ -385,10 +393,12 @@ class DataManagerController(NSObject):
         window_content = self.window.contentView()
 
         # the sections, switched at the top
-        self.sectionControl = NSSegmentedControl.alloc().initWithFrame_(NSMakeRect((WIDTH - 760) / 2.0, HEIGHT + TAB_H - 34, 760, 24))
-        self.sectionControl.setSegmentCount_(5)
-        for index, (title, width) in enumerate(((_t("Local Messages"), 130), (_t("File transfers on server"), 180), (_t("Compact journal"), 130),
-                                                (_t("Import from device"), 150), (_t("Export to device"), 140))):
+        sections = ((_t("Local Messages"), 125), (_t("File transfers on server"), 170), (_t("Compact journal"), 125),
+                    (_t("Import from device"), 140), (_t("Export to device"), 130), (_t("Devices"), 80))
+        control_w = sum(width for title, width in sections) + 10
+        self.sectionControl = NSSegmentedControl.alloc().initWithFrame_(NSMakeRect((WIDTH - control_w) / 2.0, HEIGHT + TAB_H - 34, control_w, 24))
+        self.sectionControl.setSegmentCount_(len(sections))
+        for index, (title, width) in enumerate(sections):
             self.sectionControl.setLabel_forSegment_(title, index)
             self.sectionControl.setWidth_forSegment_(width, index)
         self.sectionControl.setSelectedSegment_(0)
@@ -427,6 +437,9 @@ class DataManagerController(NSObject):
         # Export: this computer serving its history to another device of the account
         self.exportPanel = DataExportController.alloc().init().setupInView(window_content, NSMakeRect(0, 0, WIDTH, HEIGHT), _sms_manager())
         self.exportPanel.view.setHidden_(True)
+        # Devices: the devices that use the account, as the server records them
+        self.devicesPanel = DevicesPanel.alloc().init().setupInView(window_content, NSMakeRect(0, 0, WIDTH, HEIGHT))
+        self.devicesPanel.view.setHidden_(True)
         self.window.setDelegate_(self)
         content = self.messagesView
         secondary = NSColor.secondaryLabelColor()
@@ -2307,6 +2320,398 @@ class CompactJournalPanel(NSObject):
             self.entries = None     # what was read no longer is the journal
             self.counted = frozenset()
         self.refreshControls()
+
+
+DEVICES_NAMESPACE = 'devices'
+
+# the columns of the Devices section: (identifier, title, width)
+DEVICE_COLUMNS = (('id', 'Id', 190), ('user_agent', 'User Agent', 230), ('first_seen', 'First used', 110), ('last_seen', 'Last used', 110),
+                  ('last_ip', 'Last address', 110), ('last_via', 'Via', 60))
+
+
+def _device_when(milliseconds):
+    try:
+        return datetime.fromtimestamp(int(milliseconds) / 1000).strftime('%Y-%m-%d %H:%M')
+    except (TypeError, ValueError, OverflowError, OSError):
+        return ''
+
+
+def _device_label(device):
+    """The user agent of the device, else the name it gave itself (recorded before clients sent one)."""
+    return device.get('user_agent') or device.get('device_name') or ''
+
+
+def _device_cell(device, identifier):
+    if identifier == 'id':
+        return device.get('device_id') or device.get('object_id') or ''
+    if identifier == 'user_agent':
+        return _device_label(device)
+    if identifier in ('first_seen', 'last_seen'):
+        return _device_when(device.get(identifier))
+    return str(device.get(identifier) or '')
+
+
+def _device_sort_key(device, identifier):
+    if identifier in ('first_seen', 'last_seen'):
+        try:
+            return int(device.get(identifier) or 0)
+        except (TypeError, ValueError):
+            return 0
+    return _device_cell(device, identifier).lower()
+
+
+class DevicesPanel(NSObject):
+    """The Devices section of the Data manager: the devices that use an account, as SylkServer records
+    them in the account storage, namespace `devices` (SylkServer docs/ACCOUNT-DEVICES.md): one object
+    per device, written by the server; a client lists and reads them, and may DELETE one to forget a
+    device (it is recorded again, as new, the next time it is used). The listing and the reads are done
+    in the 'account-storage' thread, as the avatars'. As Blink Qt."""
+
+    view = None
+
+    @objc.python_method
+    def setupInView(self, parent, frame):
+        self.accounts = []          # account ids with an account storage
+        self.account_id = None
+        self.devices = []           # the entries of account_id, as the server keeps them (plus 'object_id')
+        self.loading = False
+        self.seq = 0
+        self.status_text = ''
+        self.sort_key = 'last_seen'
+        self.sort_ascending = False     # the latest used first
+        self.view = NSView.alloc().initWithFrame_(frame)
+        self.view.setAutoresizingMask_(NSViewWidthSizable | NSViewHeightSizable)
+        parent.addSubview_(self.view)
+        self._build()
+        self.refreshControls()
+        return self
+
+    # -- the panel ----------------------------------------------------------------------
+
+    @objc.python_method
+    def _label(self, frame, text='', size=12, color=None, mask=0, wraps=False):
+        label = NSTextField.alloc().initWithFrame_(frame)
+        label.setBezeled_(False)
+        label.setDrawsBackground_(False)
+        label.setEditable_(False)
+        label.setSelectable_(False)
+        label.setFont_(NSFont.systemFontOfSize_(size))
+        if color is not None:
+            label.setTextColor_(color)
+        if wraps:
+            label.cell().setWraps_(True)
+            label.cell().setLineBreakMode_(NSLineBreakByWordWrapping)
+        label.setStringValue_(text)
+        label.setAutoresizingMask_(mask)
+        self.view.addSubview_(label)
+        return label
+
+    @objc.python_method
+    def _button(self, frame, title, action, mask):
+        button = NSButton.alloc().initWithFrame_(frame)
+        button.setBezelStyle_(NSRoundedBezelStyle)
+        button.setTitle_(title)
+        button.setTarget_(self)
+        button.setAction_(action)
+        button.setAutoresizingMask_(mask)
+        self.view.addSubview_(button)
+        return button
+
+    @objc.python_method
+    def _build(self):
+        secondary = NSColor.secondaryLabelColor()
+        top = NSViewWidthSizable | NSViewMinYMargin
+        height = self.view.frame().size.height
+        width = WIDTH - 2 * PAD
+        x = PAD + LABEL_W
+
+        y = height - PAD - ROW_H
+        self._label(NSMakeRect(PAD, y + 4, LABEL_W - 6, 17), _t("Account"), color=secondary, mask=NSViewMinYMargin)
+        self.accountPopup = NSPopUpButton.alloc().initWithFrame_pullsDown_(NSMakeRect(x, y, width - LABEL_W, ROW_H), False)
+        self.accountPopup.setTarget_(self)
+        self.accountPopup.setAction_('accountChanged:')
+        self.accountPopup.setAutoresizingMask_(top)
+        self.view.addSubview_(self.accountPopup)
+
+        y -= 8 + 32
+        self._label(NSMakeRect(PAD, y, width, 32),
+                    _t("The devices that used this account, as the server records them: when and from which address each was used "
+                       "first and last. Forget removes a device from the list; it is listed again, as new, the next time it is used."),
+                    size=11, mask=top, wraps=True)
+        list_top = y - 10
+
+        bottom = NSViewWidthSizable | NSViewMaxYMargin
+        self.refreshButton = self._button(NSMakeRect(WIDTH - PAD + 6 - BUTTON_W, 12, BUTTON_W, BUTTON_H), _t("Refresh"), 'refreshClicked:', NSViewMinXMargin | NSViewMaxYMargin)
+        self.forgetButton = self._button(NSMakeRect(WIDTH - PAD + 6 - 2 * BUTTON_W, 12, BUTTON_W, BUTTON_H), _t("Forget"), 'forgetClicked:', NSViewMinXMargin | NSViewMaxYMargin)
+        self.statusLabel = self._label(NSMakeRect(PAD, 48, width, 30), '', size=11, mask=bottom)
+        self.statusLabel.setAlignment_(NSCenterTextAlignment)
+        list_bottom = 84
+
+        # the devices above, the one chosen in full under them, the split moved as the user likes
+        self.split = NSSplitView.alloc().initWithFrame_(NSMakeRect(PAD, list_bottom, width, list_top - list_bottom))
+        self.split.setVertical_(False)
+        self.split.setAutoresizingMask_(NSViewWidthSizable | NSViewHeightSizable)
+        self.view.addSubview_(self.split)
+        list_h = (list_top - list_bottom) * 0.6
+
+        scroll = NSScrollView.alloc().initWithFrame_(NSMakeRect(0, 0, width, list_h))
+        scroll.setHasVerticalScroller_(True)
+        scroll.setHasHorizontalScroller_(True)
+        scroll.setAutohidesScrollers_(True)
+        scroll.setBorderType_(NSBezelBorder)
+        scroll.setAutoresizingMask_(NSViewWidthSizable | NSViewHeightSizable)
+        self.table = NSTableView.alloc().initWithFrame_(scroll.contentView().bounds())
+        for identifier, title, column_width in DEVICE_COLUMNS:
+            column = NSTableColumn.alloc().initWithIdentifier_(identifier)
+            column.headerCell().setStringValue_(_t(title))
+            column.setWidth_(column_width)
+            column.setEditable_(False)
+            column.setSortDescriptorPrototype_(NSSortDescriptor.alloc().initWithKey_ascending_(identifier, identifier not in ('first_seen', 'last_seen')))
+            column.dataCell().setFont_(NSFont.systemFontOfSize_(11))
+            column.dataCell().setLineBreakMode_(NSLineBreakByTruncatingTail)
+            self.table.addTableColumn_(column)
+        self.table.setSortDescriptors_([NSSortDescriptor.alloc().initWithKey_ascending_(self.sort_key, self.sort_ascending)])
+        self.table.setUsesAlternatingRowBackgroundColors_(True)
+        self.table.setColumnAutoresizingStyle_(NSTableViewLastColumnOnlyAutoresizingStyle)
+        self.table.setAllowsColumnReordering_(True)
+        self.table.setRowHeight_(16)
+        self.table.setAllowsMultipleSelection_(False)
+        self.table.setAllowsEmptySelection_(True)
+        self.table.setDataSource_(self)
+        self.table.setDelegate_(self)
+        scroll.setDocumentView_(self.table)
+        self.split.addSubview_(scroll)
+
+        text_scroll = NSScrollView.alloc().initWithFrame_(NSMakeRect(0, 0, width, list_top - list_bottom - list_h))
+        text_scroll.setHasVerticalScroller_(True)
+        text_scroll.setBorderType_(NSBezelBorder)
+        text_scroll.setAutoresizingMask_(NSViewWidthSizable | NSViewHeightSizable)
+        size = text_scroll.contentSize()
+        self.detailText = NSTextView.alloc().initWithFrame_(NSMakeRect(0, 0, size.width, size.height))
+        self.detailText.setEditable_(False)
+        self.detailText.setSelectable_(True)
+        self.detailText.setRichText_(False)
+        self.detailText.setVerticallyResizable_(True)
+        self.detailText.setHorizontallyResizable_(False)
+        self.detailText.setAutoresizingMask_(NSViewWidthSizable)
+        self.detailText.setMinSize_(NSMakeSize(0, size.height))
+        self.detailText.setMaxSize_(NSMakeSize(1.0e7, 1.0e7))
+        self.detailText.textContainer().setWidthTracksTextView_(True)
+        text_scroll.setDocumentView_(self.detailText)
+        self.split.addSubview_(text_scroll)
+        self._setDetail(None)
+
+    @objc.python_method
+    def _setDetail(self, device):
+        if device is None:
+            self.detailText.setString_(_t("Click a device to see what the server keeps of it"))
+            color = NSColor.secondaryLabelColor()
+        else:
+            row = {key: value for key, value in device.items() if key != 'object_id'}     # object_id is ours, the server row has it as id
+            self.detailText.setString_(json.dumps(row, indent=2, ensure_ascii=False))
+            color = NSColor.textColor()
+        self.detailText.setFont_(NSFont.userFixedPitchFontOfSize_(11))
+        self.detailText.setTextColor_(color)
+
+    # -- state ------------------------------------------------------------------------
+
+    @objc.python_method
+    def _account(self):
+        account = _account(self.account_id)
+        return account if account is not None and storage_url(account) else None
+
+    @objc.python_method
+    def _current(self):
+        index = self.table.selectedRow()
+        return self.devices[index] if 0 <= index < len(self.devices) else None
+
+    @objc.python_method
+    def _isThisDevice(self, device):
+        mine = this_device_id()
+        return bool(mine) and device is not None and device.get('device_id') == mine
+
+    @objc.python_method
+    def _sort(self):
+        self.devices.sort(key=lambda device: _device_sort_key(device, self.sort_key), reverse=not self.sort_ascending)
+
+    @objc.python_method
+    def refreshAccounts(self):
+        """The accounts with an account storage; the devices of the one chosen read again."""
+        self.accounts = sorted(str(account.id).lower() for account in AccountManager().iter_accounts()
+                               if account is not BonjourAccount() and account.enabled and storage_url(account))
+        if self.account_id not in self.accounts:
+            self.account_id = self.accounts[0] if self.accounts else None
+            self.devices = []
+            self.status_text = ''
+        menu = self.accountPopup.menu()
+        menu.removeAllItems()
+        for account_id in self.accounts:
+            menu.addItem_(NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(mangled_account_label(account_id), None, ""))
+        if self.account_id is not None:
+            self.accountPopup.selectItemAtIndex_(self.accounts.index(self.account_id))
+        self.refresh()
+
+    @objc.python_method
+    def refreshControls(self):
+        device = self._current()
+        this_one = self._isThisDevice(device)
+        self.accountPopup.setEnabled_(not self.loading and len(self.accounts) > 1)
+        self.refreshButton.setEnabled_(self.account_id is not None and not self.loading)
+        self.forgetButton.setEnabled_(device is not None and not this_one and not self.loading)
+        self.forgetButton.setToolTip_(_t("This computer is listed again as soon as it uses the account") if this_one else _t("Remove the chosen device from the list on the server"))
+        if self.account_id is None:
+            text = _t("No account has a server that keeps its devices")
+        else:
+            text = self.status_text
+        self.statusLabel.setStringValue_(text)
+
+    # -- actions ------------------------------------------------------------------------
+
+    def accountChanged_(self, sender):
+        index = sender.indexOfSelectedItem()
+        if 0 <= index < len(self.accounts) and self.accounts[index] != self.account_id:
+            self.account_id = self.accounts[index]
+            self.refresh()
+
+    def refreshClicked_(self, sender):
+        self.refresh()
+
+    # the table
+
+    def numberOfRowsInTableView_(self, table):
+        return len(self.devices)
+
+    def tableView_objectValueForTableColumn_row_(self, table, column, row):
+        if not 0 <= row < len(self.devices):
+            return ''
+        device = self.devices[row]
+        value = _device_cell(device, str(column.identifier()))
+        if str(column.identifier()) == 'user_agent' and self._isThisDevice(device):
+            value = _t("%s (this computer)") % (value or _t("This computer"))
+        return value
+
+    def tableView_willDisplayCell_forTableColumn_row_(self, table, cell, column, row):
+        this_one = 0 <= row < len(self.devices) and self._isThisDevice(self.devices[row])
+        cell.setFont_(NSFont.boldSystemFontOfSize_(11) if this_one else NSFont.systemFontOfSize_(11))
+
+    def tableView_sortDescriptorsDidChange_(self, table, old_descriptors):
+        descriptors = table.sortDescriptors()
+        if not descriptors:
+            return
+        chosen = self._current()
+        self.sort_key = str(descriptors[0].key())
+        self.sort_ascending = bool(descriptors[0].ascending())
+        self._sort()
+        table.reloadData()
+        if chosen is not None and chosen in self.devices:
+            table.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(self.devices.index(chosen)), False)
+
+    def tableViewSelectionDidChange_(self, notification):
+        self._setDetail(self._current())
+        self.refreshControls()
+
+    # -- loading ------------------------------------------------------------------------
+
+    @objc.python_method
+    def refresh(self):
+        if self.loading:
+            return
+        account = self._account()
+        if account is None:
+            self._show([], None)
+            return
+        self.seq += 1
+        self.loading = True
+        self.status_text = _t("Reading the devices from the server...")
+        self.refreshControls()
+        self._load(self.seq, self.account_id, account)
+
+    @objc.python_method
+    @run_in_thread('account-storage')
+    def _load(self, seq, account_id, account):
+        storage = AccountStorage()
+        response = storage._request(account, 'GET', DEVICES_NAMESPACE)
+        if response.status == 404:
+            self._loaded(seq, account_id, [], None)
+            return
+        if response.status != 200:
+            self._loaded(seq, account_id, None, _t("The server answered HTTP %s") % response.status if response.status else _t("The server cannot be reached"))
+            return
+        listing = response.json() or {}
+        object_ids = [item.get('id') for item in listing.get('objects') or [] if isinstance(item, dict) and item.get('id')]
+        devices = []
+        for object_id in object_ids:
+            if not valid_name(object_id):
+                continue
+            entry = storage._request(account, 'GET', '%s/%s' % (DEVICES_NAMESPACE, object_id))
+            if entry.status != 200:
+                continue
+            device = entry.json()
+            if isinstance(device, dict):
+                device['object_id'] = object_id
+                devices.append(device)
+        _log('Devices of %s: %d listed by the server' % (account_id, len(devices)))
+        self._loaded(seq, account_id, devices, None)
+
+    @objc.python_method
+    @run_in_gui_thread
+    def _loaded(self, seq, account_id, devices, error):
+        if seq != self.seq or account_id != self.account_id:
+            return
+        self.loading = False
+        if devices is None:
+            self._show([], error)
+        else:
+            self._show(devices, _t("No device recorded yet") if not devices else (_t("1 device") if len(devices) == 1 else _t("%d devices") % len(devices)))
+
+    @objc.python_method
+    def _show(self, devices, status):
+        self.devices = list(devices)
+        self._sort()
+        self.table.reloadData()
+        self.table.deselectAll_(None)
+        self._setDetail(None)
+        self.status_text = status or ''
+        self.refreshControls()
+
+    # -- forgetting ---------------------------------------------------------------------
+
+    def forgetClicked_(self, sender):
+        device, account = self._current(), self._account()
+        if device is None or account is None or self.loading or self._isThisDevice(device):
+            return
+        name = _device_label(device) or device.get('device_id') or device['object_id']
+        alert = NSAlert.alloc().init()
+        alert.setMessageText_(_t("Forget device"))
+        alert.setInformativeText_(_t("Remove %s from the devices of the account on the server? It is listed again, as new, the next time it uses the account.") % name)
+        alert.addButtonWithTitle_(_t("Forget"))
+        alert.addButtonWithTitle_(_t("Cancel"))
+        if alert.runModal() != NSAlertFirstButtonReturn:
+            return
+        self.loading = True
+        self.status_text = _t("Removing %s...") % name
+        self.refreshControls()
+        self._forget(self.seq, self.account_id, account, device['object_id'], name)
+
+    @objc.python_method
+    @run_in_thread('account-storage')
+    def _forget(self, seq, account_id, account, object_id, name):
+        response = AccountStorage()._request(account, 'DELETE', '%s/%s' % (DEVICES_NAMESPACE, object_id))
+        ok = response.status in (200, 204, 404)
+        _log('Devices of %s: forgetting %s (%s): %s' % (account_id, name, object_id, 'done' if ok else 'HTTP %s' % (response.status or 'error')))
+        self._forgotten(seq, ok, name, response.status)
+
+    @objc.python_method
+    @run_in_gui_thread
+    def _forgotten(self, seq, ok, name, status):
+        if seq != self.seq:
+            return
+        self.loading = False
+        if ok:
+            self.refresh()
+        else:
+            self.status_text = _t("%s was not removed: the server answered HTTP %s") % (name, status) if status else _t("%s was not removed: the server cannot be reached") % name
+            self.refreshControls()
 
 
 class _MenuTarget(NSObject):
