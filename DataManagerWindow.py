@@ -389,18 +389,21 @@ class DataManagerController(NSObject):
             NSBackingStoreBuffered, False)
         self.window.setTitle_(_t("Data Manager"))
         self.window.setReleasedWhenClosed_(False)
-        self.window.setMinSize_(NSMakeSize(640, 560 + TAB_H))
         window_content = self.window.contentView()
 
-        # the sections, switched at the top
-        sections = ((_t("Local Messages"), 125), (_t("File transfers on server"), 170), (_t("Compact journal"), 125),
-                    (_t("Import from device"), 140), (_t("Export to device"), 130), (_t("Devices"), 80))
-        control_w = sum(width for title, width in sections) + 10
-        self.sectionControl = NSSegmentedControl.alloc().initWithFrame_(NSMakeRect((WIDTH - control_w) / 2.0, HEIGHT + TAB_H - 34, control_w, 24))
+        # the sections, switched at the top; the segments size to their (localized) labels and
+        # the control is centred on the width it actually draws at, not on a guessed one
+        sections = (_t("Messages"), _t("Server Files"), _t("Journal"), _t("Import"), _t("Export"), _t("Devices"))
+        self.sectionControl = NSSegmentedControl.alloc().initWithFrame_(NSMakeRect(0, HEIGHT + TAB_H - 34, WIDTH, 24))
         self.sectionControl.setSegmentCount_(len(sections))
-        for index, (title, width) in enumerate(sections):
+        for index, title in enumerate(sections):
             self.sectionControl.setLabel_forSegment_(title, index)
-            self.sectionControl.setWidth_forSegment_(width, index)
+            self.sectionControl.setWidth_forSegment_(0, index)
+        self.sectionControl.sizeToFit()
+        frame = self.sectionControl.frame()
+        control_w = frame.size.width
+        self.sectionControl.setFrame_(NSMakeRect(round((WIDTH - control_w) / 2.0), HEIGHT + TAB_H - 6 - frame.size.height, control_w, frame.size.height))
+        self.window.setMinSize_(NSMakeSize(max(640, control_w + 2 * PAD), 560 + TAB_H))
         self.sectionControl.setSelectedSegment_(0)
         self.sectionControl.setTarget_(self)
         self.sectionControl.setAction_('sectionChanged:')
@@ -556,6 +559,12 @@ class DataManagerController(NSObject):
         self._setDetail(None)
         if not self.window.setFrameUsingName_('DataManagerWindow'):
             self.window.center()
+        else:
+            # a frame saved before the minimum grew could clip the section switch
+            frame = self.window.frame()
+            min_w = self.window.minSize().width
+            if frame.size.width < min_w:
+                self.window.setFrame_display_(NSMakeRect(frame.origin.x - (min_w - frame.size.width) / 2.0, frame.origin.y, min_w, frame.size.height), False)
         self.window.setFrameAutosaveName_('DataManagerWindow')
 
     @objc.python_method
