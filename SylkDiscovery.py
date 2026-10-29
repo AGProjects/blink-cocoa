@@ -171,6 +171,7 @@ class SylkServerDiscovery(object, metaclass=Singleton):
         self.configurations = {}        # domain: {'configurationUrl', 'fetched', 'configuration'}
         self.checked = {}               # domain: when it was last looked up (time.monotonic) in this run
         self.running = set()            # domains being looked up now
+        self.unreachable = set()        # domains whose last lookup failed for the network, not for the answer
         self.lock = threading.Lock()
         self._started = False
         self._stopped = False
@@ -200,6 +201,7 @@ class SylkServerDiscovery(object, metaclass=Singleton):
         self._load()
         notification_center = NotificationCenter()
         notification_center.add_observer(self, name='SIPAccountDidActivate')
+        notification_center.add_observer(self, name='SIPAccountRegistrationDidSucceed')
         notification_center.add_observer(self, name='SIPApplicationWillEnd')
         call_later(refresh_interval, self._refresh_all)
 
@@ -255,6 +257,19 @@ class SylkServerDiscovery(object, metaclass=Singleton):
             return
         self._apply(account, self.configuration(account.id.domain))
         self.discover(account.id.domain)
+
+    def _NH_SIPAccountRegistrationDidSucceed(self, notification):
+        # A registration proves the network is back: a domain that could not be
+        # looked up (started offline) and has no cached configuration is looked
+        # up again now, rather than at the daily refresh -- without it a fresh
+        # profile started offline has no PGP (nor key escrow restore) all run.
+        account = notification.sender
+        if account is BonjourAccount():
+            return
+        domain = str(account.id.domain).lower()
+        if domain in self.unreachable and not self.configuration(domain):
+            BlinkLogger().log_info('[sylkserver] %s: the account registered, looking up the SylkServer configuration again' % domain)
+            self.discover(domain, force=True)
 
     def _NH_SIPApplicationWillEnd(self, notification):
         self._stopped = True
@@ -373,7 +388,9 @@ class SylkServerDiscovery(object, metaclass=Singleton):
             except Exception as e:
                 keeping = '; keeping the cached configuration' if domain in self.configurations else ''
                 logger.log_warning('[sylkserver] TXT record %s not found: DNS and dns.google failed (%s)%s' % (name, e, keeping))
+                self.unreachable.add(domain)
                 return
+        self.unreachable.discard(domain)
         urls = [record.strip() for record in records if record.strip()]
         if not urls:
             logger.log_info('[sylkserver] %s publishes no SylkServer configuration (no TXT record %s, by %s)' % (domain, name, how))
@@ -392,6 +409,7 @@ class SylkServerDiscovery(object, metaclass=Singleton):
         except Exception as e:
             keeping = '; keeping the cached one' if domain in self.configurations else ''
             logger.log_warning('[sylkserver] Cannot download the configuration of %s from %s: %s%s' % (domain, url, e, keeping))
+            self.unreachable.add(domain)
             return
         if not isinstance(configuration, dict):
             logger.log_warning('[sylkserver] The configuration of %s from %s is not a JSON object' % (domain, url))

@@ -58,6 +58,9 @@ KEY_PATH = f'{KEYS_NAMESPACE}/{KEY_OBJECT}'
 KEY_CONTENT_TYPE = 'application/json'
 
 ANSWERED = ('present', 'absent', 'invalid', 'unsupported')
+KNOWN = ('present', 'absent', 'invalid')     # a new token cannot change these
+
+AWAITING_TOKEN = 'waiting for the API token'
 
 
 def this_device_id():
@@ -72,6 +75,13 @@ def _writer(response):
     """Who wrote the stored object: its device name (X-Sylk-Device-Name), else its id."""
     name = response.header('X-Sylk-Device-Name')
     return urllib.parse.unquote(name) if name else response.header('X-Sylk-Device-Id')
+
+
+def _has_token(account):
+    try:
+        return bool(account.sms.history_token)
+    except AttributeError:
+        return False
 
 
 def _escrow_record(body):
@@ -155,6 +165,13 @@ class KeyStorage(object, metaclass=Singleton):
         from AccountStorage import AccountStorage, storage_url
         try:
             if not storage_url(account):
+                if not _has_token(account):
+                    # The account runs SylkServer (_wanted), so no storage URL only
+                    # means the API token (and the history URL the URL is built
+                    # from) has not arrived yet: a fresh profile. Not an answer --
+                    # stay pending and fetch again when the token arrives.
+                    self._await_token(account)
+                    return
                 self._answer(account, 'unsupported', reason='no SylkServer storage for the account')
                 return
             headers = {'If-None-Match': f'"{etag}"'} if etag else {}
@@ -177,6 +194,22 @@ class KeyStorage(object, metaclass=Singleton):
         finally:
             with self.lock:
                 self.in_flight.discard(account.id)
+
+    def awaiting_token(self, account):
+        """Whether the fetch waits for the API token that makes the storage URL known."""
+        with self.lock:
+            entry = self.entries.get(account.id)
+            return bool(entry) and entry['state'] == 'pending' and entry['reason'] == AWAITING_TOKEN
+
+    def _await_token(self, account):
+        with self.lock:
+            entry = self.entries.setdefault(account.id, dict(state=None, record=None, etag=None, device_id=None, modified=None, reason=None))
+            first = entry['reason'] != AWAITING_TOKEN
+            entry.update(state='pending', reason=AWAITING_TOKEN)
+        if first:
+            BlinkLogger().log_info(f'[pgp] Key storage of {account.id}: waiting for the API token before reading the escrow')
+        from AccountStorage import AccountStorage
+        AccountStorage()._ask_token(account, 'key escrow')
 
     def _answer(self, account, state, record=None, etag=None, device_id=None, reason=None, unchanged=False):
         note = reason if state == 'failed' else None
@@ -298,10 +331,15 @@ class KeyStorage(object, metaclass=Singleton):
         account = notification.sender
         if self.state(account) in (None, 'failed'):
             self.fetch(account, 'registered')
+        elif self.awaiting_token(account):
+            # the token request sent before (offline) may never have gone out
+            self._await_token(account)
 
     def _NH_CFGSettingsObjectDidChange(self, notification):
         account = notification.sender
         modified = getattr(notification.data, 'modified', None) or {}
-        if 'sms.history_synchronization_token' in modified and isinstance(account, Account):
-            if self.state(account) in (None, 'failed'):
+        if ('sms.history_token' in modified or 'sms.history_url' in modified) and isinstance(account, Account):
+            # the token and history URL make the storage URL known (a fresh profile
+            # learns them after the first escrow pass): ask again unless already answered
+            if self.state(account) not in KNOWN:
                 self.fetch(account, 'new API token')

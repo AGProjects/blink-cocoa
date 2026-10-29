@@ -83,7 +83,7 @@ except ImportError:
 from BlinkLogger import BlinkLogger
 from KeyEscrow import (escrow_is_missing, install_keypair, read_escrow, restore_from_storage,
                        strip_contact_escrow, write_escrow, key_status_lines, reencrypt_escrow,
-                       foreign_escrow, key_fingerprint)
+                       foreign_escrow, key_fingerprint, record_key_provenance, reconcile_decision)
 from HistoryManager import ChatHistory, MESSAGES_BULK_DELETE_CONTENT_TYPE, bulk_delete_criteria, bulk_delete_label
 import HistoryManager as _history_module
 from SMSViewController import SMSViewController, is_file_transfer_notice, is_otr_wire_text, is_placeholder_uri
@@ -914,6 +914,7 @@ class SMSWindowManagerClass(NSObject):
     # Accounts whose key was imported from another device and not yet
     # compared with the escrow (the account storage may not have answered yet).
     key_imported_pending = set()
+    key_reconciled = set()          # (account id, local fingerprint, escrow fingerprint) settled in this run
     generate_prompt_deferred = {}
     # What the server says about our own public key, per account:
     # 'unknown', 'asked', 'present', 'absent' or 'failed' (see lookupOwnServerKey)
@@ -931,6 +932,9 @@ class SMSWindowManagerClass(NSObject):
     key_storage_waiting = set()     # accounts whose escrow pass waits for the account storage (KeyStorage)
     escrow_stripped = set()         # accounts whose old escrow on the own contact was cleared in this run
     KEY_STORAGE_WAIT = 15
+    KEY_STORAGE_TOKEN_WAIT = 60     # how long in all the key question waits for the API token of a fresh profile
+    key_storage_token_waits = {}    # account id -> seconds waited for the API token
+    registered_accounts = set()     # accounts that registered at least once in this run
     key_generation_declined = set() # declined in this run: not asked again until restart
     key_generation_running = set()
     # The enabled accounts as of the last time anything was reloaded for
@@ -2051,6 +2055,23 @@ class SMSWindowManagerClass(NSObject):
     def _keyStorageWaitOver(self, account):
         if self._keyStorageAnswered(account):
             return
+        from KeyStorage import KeyStorage
+        if KeyStorage().awaiting_token(account):
+            # a fresh profile: the storage URL is not known until the API token
+            # arrives, which can take longer than KEY_STORAGE_WAIT after the first
+            # escrow pass -- keep waiting, up to KEY_STORAGE_TOKEN_WAIT in all,
+            # counted from the first registration: offline (not registered yet)
+            # the token cannot even be asked for, so the wait does not run out
+            if account.id not in self.registered_accounts:
+                call_later(self.KEY_STORAGE_WAIT, self._keyStorageWaitOver, account)
+                return
+            waited = self.key_storage_token_waits.get(account.id, 0) + self.KEY_STORAGE_WAIT
+            self.key_storage_token_waits[account.id] = waited
+            if waited < self.KEY_STORAGE_TOKEN_WAIT:
+                BlinkLogger().log_info('[pgp] %s: the account storage waits for the API token, the key question keeps waiting'
+                                       % account.id)
+                call_later(self.KEY_STORAGE_WAIT, self._keyStorageWaitOver, account)
+                return
         BlinkLogger().log_info('[pgp] %s: the account storage did not answer in %ds, the key question goes on without it'
                                % (account.id, self.KEY_STORAGE_WAIT))
         self.key_storage_wait_over.add(account.id)
@@ -2152,6 +2173,10 @@ class SMSWindowManagerClass(NSObject):
                 alert.runModal()
             return
         BlinkLogger().log_info('PGP key generated for %s in %.1fs%s' % (account.id, seconds, ' (silently)' if silent else ''))
+        try:
+            record_key_provenance(account, 'generated')
+        except Exception as e:
+            BlinkLogger().log_error('[pgp] Cannot record where the key of %s came from: %s' % (account.id, e))
         self.private_keys.pop(account.id, None)     # drop the cached miss
         self.resetDecryption(account)               # same path, no settings change: said here
         # the new key goes into the escrow in the account storage, so another device adopts it
@@ -2241,6 +2266,12 @@ class SMSWindowManagerClass(NSObject):
         except Exception as e:
             BlinkLogger().log_error('Key escrow of the imported key of %s failed: %s' % (account.id, e))
 
+        # may ask the user
+        try:
+            self.reconcileWithEscrow(account)
+        except Exception as e:
+            BlinkLogger().log_error('[pgp] Reconciling the key of %s with the escrow failed: %s' % (account.id, e))
+
     @objc.python_method
     def stripContactEscrow(self, account):
         """Clear the escrow formerly kept on our own XCAP contact, once the
@@ -2323,6 +2354,9 @@ class SMSWindowManagerClass(NSObject):
                                    'the imported key is saved on the server once it has' % account.id)
             return
         self.key_imported_pending.discard(account.id)
+        # the storage has answered: the imported key is now one installed knowing the
+        # escrow, so whatever is decided below is not decided again by reconcileWithEscrow
+        record_key_provenance(account, 'imported')
 
         record = foreign_escrow(account)
         if record is None:
@@ -2366,6 +2400,87 @@ class SMSWindowManagerClass(NSObject):
             failed.setInformativeText_(NSLocalizedString("The backup of %s was not replaced: %s", "label") % (account.id, reason or ''))
             failed.addButtonWithTitle_(NSLocalizedString("OK", "button"))
             failed.runModal()
+
+    @objc.python_method
+    def reconcileWithEscrow(self, account):
+        """This device holds a key and the account storage an escrow of another one:
+        decide which is the account's key (KeyEscrow.reconcile_decision), adopting the
+        escrowed one or asking. Once per pair of keys per run; an imported key waiting
+        for its own question (escrowImportedKey) is left to it."""
+        if account.id in self.key_imported_pending:
+            return
+        action, reason, details = reconcile_decision(account)
+        if details is None:
+            return
+        pair = (account.id, details['local_fingerprint'], details['escrow_fingerprint'])
+        if pair in self.key_reconciled:
+            return
+        self.key_reconciled.add(pair)
+        local_id = details['local_fingerprint'][-16:]
+        escrow_id = details['escrow_fingerprint'][-16:]
+        if action is None:
+            BlinkLogger().log_info('[pgp] %s: the escrow keeps key %s, this device uses key %s: %s, left as it is'
+                                   % (account.id, escrow_id, local_id, reason))
+            return
+        BlinkLogger().log_info('[pgp] %s: the escrow keeps key %s, this device uses key %s: %s -> %s'
+                               % (account.id, escrow_id, local_id, reason, action))
+        if action == 'adopt':
+            self._adoptEscrowedKey(account, local_id)
+            return
+
+        def created(when):
+            return when.strftime('%Y-%m-%d %H:%M') if when else NSLocalizedString("unknown", "label")
+        server_fp = key_fingerprint(self.server_public_key.get(account.id))
+        server_fp = str(server_fp).replace(' ', '').upper() if server_fp else None
+        if server_fp == details['escrow_fingerprint']:
+            published = NSLocalizedString("The server publishes the key on the server to your contacts.", "label")
+        elif server_fp == details['local_fingerprint']:
+            published = NSLocalizedString("The server publishes the key of this device to your contacts.", "label")
+        else:
+            published = NSLocalizedString("It is not known which key the server publishes to your contacts.", "label")
+        alert = NSAlert.alloc().init()
+        alert.setMessageText_(NSLocalizedString("Two PGP keys", "Window title"))
+        alert.setInformativeText_(NSLocalizedString("The server keeps a backup of another PGP key for %s than the one this device uses.\n\nKey on the server: %s, created %s, saved %s by %s\nKey of this device: %s, created %s\n\n%s\n\nMessages encrypted to the key that is not used cannot be read. The key not used is kept on this device, not deleted.", "label")
+                                  % (account.id, escrow_id, created(details['escrow_created']),
+                                     details.get('escrow_timestamp') or '?', details.get('escrow_device') or '?',
+                                     local_id, created(details['local_created']), published))
+        alert.addButtonWithTitle_(NSLocalizedString("Use the Key on the Server", "button"))
+        alert.addButtonWithTitle_(NSLocalizedString("Keep This Device's Key", "button"))
+        if alert.runModal() == NSAlertFirstButtonReturn:
+            BlinkLogger().log_info('[pgp] %s: the user chose the key on the server (%s)' % (account.id, escrow_id))
+            self._adoptEscrowedKey(account, local_id)
+            return
+        BlinkLogger().log_info('[pgp] %s: the user kept the key of this device (%s), replacing the backup of key %s'
+                               % (account.id, local_id, escrow_id))
+        record_key_provenance(account, 'kept')
+        # announced: the storage tells the other devices (application/sylk-storage-changed)
+        written, why = write_escrow(account, force=True)
+        if not written:
+            failed = NSAlert.alloc().init()
+            failed.setMessageText_(NSLocalizedString("Replace PGP key backup", "Window title"))
+            failed.setInformativeText_(NSLocalizedString("The backup of %s was not replaced: %s", "label") % (account.id, why or ''))
+            failed.addButtonWithTitle_(NSLocalizedString("OK", "button"))
+            failed.runModal()
+
+    @objc.python_method
+    def _adoptEscrowedKey(self, account, local_id):
+        restored, why = restore_from_storage(account, replace=True)
+        if not restored:
+            BlinkLogger().log_error('[pgp] %s: the key on the server could not be adopted: %s' % (account.id, why))
+            return
+        self.key_restore_done.add(account.id)
+        self.private_keys.pop(account.id, None)
+        self.resetDecryption(account)
+        for viewer in list(self.allViewers()):
+            if getattr(viewer, 'account', None) is account:
+                try:
+                    viewer.load_private_key()
+                except Exception:
+                    pass
+        nc_title = NSLocalizedString("Private key", "System notification title")
+        nc_body = NSLocalizedString("The private key of this account was replaced by the one on the server; the previous key %s is kept on this device", "System notification body") % local_id
+        NSApp.delegate().gui_notify(nc_title, nc_body, str(account.id))
+        self.logKeyStatus(account, 'key adopted from the escrow')
 
     @objc.python_method
     def reencryptEscrowIfNeeded(self, account):
@@ -2594,6 +2709,7 @@ class SMSWindowManagerClass(NSObject):
     def _NH_SIPAccountRegistrationDidSucceed(self, account, data):
         # BlinkLogger().log_info('startup: SMSWindowManager._NH_SIPAccountRegistrationDidSucceed enter (%s)' % account.id)
         if account is not BonjourAccount():
+            self.registered_accounts.add(account.id)
             call_later(10, self.syncConversations, account)
             if self.server_key_state.get(account.id, 'unknown') in ('unknown', 'failed'):
                 self.checkKeyStatus(account, 'registration')
@@ -9520,6 +9636,10 @@ class ImportPrivateKeyController(NSObject):
             # files and set the same settings -- and so a key being replaced
             # here is archived rather than overwritten.
             install_keypair(self.account, private_key, self.public_key)
+            try:
+                record_key_provenance(self.account, 'imported')
+            except Exception as e:
+                BlinkLogger().log_error('[pgp] Cannot record where the key of %s came from: %s' % (self.account.id, e))
 
             if self.dealloc_timer is None:
                 self.dealloc_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(6.0, self, "deallocTimer:", None, True)

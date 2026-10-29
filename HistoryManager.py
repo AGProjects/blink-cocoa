@@ -45,6 +45,7 @@ from BlinkLogger import BlinkLogger
 import AddressbookOrigin
 from resources import ApplicationData
 from util import allocate_autorelease_pool, format_identity_to_string, sipuri_components_from_string, run_in_gui_thread, call_later
+from util import message_from_the_past
 # Calls group preview (end of this file)
 from util import canonical_pstn_uri, pstn_e164, is_conference_uri, sip_prefix_pattern, same_phone_number
 
@@ -4254,19 +4255,20 @@ class SessionHistoryReplicator(object):
                             # video call is still a video call.
                             notification_center.post_notification('AudioCallLoggedToHistory', sender=self, data=NotificationData(direction=direction, history_entry=False, remote_party=remote_uri, local_party=local_uri, check_contact=True, missed=call_was_missed(record)))
 
-                        if 'audio' in call['media'] and success == 'missed':
-                            elapsed = end_time - start_time
-                            elapsed_hours = elapsed.days * 24 + elapsed.seconds / (60*60)
-                            if elapsed_hours < 48:
-                                try:
-                                    uri = SIPURI.parse('sip:'+str(remote_uri))
-                                except Exception:
-                                    pass
-                                else:
-                                    nc_title = 'Missed Call (' + media_type  + ')'
-                                    nc_subtitle = 'From %s' % format_identity_to_string(uri, check_contact=True, format='full')
-                                    nc_body = 'Missed call at %s' % start_time.strftime("%Y-%m-%d %H:%M")
-                                    NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
+                        # Same rule as messages: only a call missed since the
+                        # application started gets a banner. An older one is
+                        # history (Missed Calls group, Calls history), never a
+                        # banner -- a fresh profile imports them all at once.
+                        if 'audio' in call['media'] and success == 'missed' and not message_from_the_past(start_time):
+                            try:
+                                uri = SIPURI.parse('sip:'+str(remote_uri))
+                            except Exception:
+                                pass
+                            else:
+                                nc_title = 'Missed Call (' + media_type  + ')'
+                                nc_subtitle = 'From %s' % format_identity_to_string(uri, check_contact=True, format='full')
+                                nc_body = 'Missed call at %s' % start_time.strftime("%Y-%m-%d %H:%M")
+                                NSApp.delegate().gui_notify(nc_title, nc_body, nc_subtitle)
 
         except Exception as e:
             BlinkLogger().log_error("Error: %s" % e)
