@@ -50,7 +50,6 @@
 		1F22729612B554F50010A8B2 /* ContactWindowController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2B6596C00FCCB75500FC8CF2 /* ContactWindowController.py */; };
 		1F22729712B554F50010A8B2 /* ContactCell.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC594740FCCDA910017CB1B /* ContactCell.py */; };
 		1F22729812B554F50010A8B2 /* ContactListModel.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC5965F0FCE1EA90017CB1B /* ContactListModel.py */; };
-		6CBAA7DFDC18422D94A76FE7 /* KeyStorage.py in Resources */ = {isa = PBXBuildFile; fileRef = 4F7410FEAB8A4215BAEDD154 /* KeyStorage.py */; };
 		1F22729A12B554F50010A8B2 /* reconnect.png in Resources */ = {isa = PBXBuildFile; fileRef = 2B2451730FCF8A9F0023DBFB /* reconnect.png */; };
 		1F22729B12B554F50010A8B2 /* SessionController.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BEFC12D0FD0BE4700447EFB /* SessionController.py */; };
 		1F22729C12B554F50010A8B2 /* HorizontalBoxView.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BEFC1480FD0C73400447EFB /* HorizontalBoxView.py */; };
@@ -641,7 +640,6 @@
 		2BC08CC3106679940069AB9A /* FileTransferSession.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC08CC2106679940069AB9A /* FileTransferSession.py */; };
 		2BC594750FCCDA910017CB1B /* ContactCell.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC594740FCCDA910017CB1B /* ContactCell.py */; };
 		2BC596600FCE1EA90017CB1B /* ContactListModel.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BC5965F0FCE1EA90017CB1B /* ContactListModel.py */; };
-		4223CE0CEF0142AC8B96E9A2 /* KeyStorage.py in Resources */ = {isa = PBXBuildFile; fileRef = 4F7410FEAB8A4215BAEDD154 /* KeyStorage.py */; };
 		2BD014ED10DB239B00D27A92 /* smiley_off.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BD014EB10DB239B00D27A92 /* smiley_off.png */; };
 		2BD014EE10DB239B00D27A92 /* smiley_on.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BD014EC10DB239B00D27A92 /* smiley_on.png */; };
 		2BDAE17311113B8200AC1D7A /* audio_small.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BDAE17211113B8200AC1D7A /* audio_small.png */; };
@@ -655,6 +653,7 @@
 		2BFB33E5101674BD002D79FB /* srtp.png in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB33E3101674BD002D79FB /* srtp.png */; };
 		2BFB34B310178A99002D79FB /* AlertPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB34B210178A99002D79FB /* AlertPanel.py */; };
 		2BFB35541017E363002D79FB /* blink.icns in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB35531017E363002D79FB /* blink.icns */; };
+		4223CE0CEF0142AC8B96E9A2 /* KeyStorage.py in Resources */ = {isa = PBXBuildFile; fileRef = 4F7410FEAB8A4215BAEDD154 /* KeyStorage.py */; };
 		5A1E00010000000000000006 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A1E00010000000000000001 /* ShareViewController.swift */; };
 		5A1E00010000000000000007 /* BlinkShare.appex in Embed Share Extension */ = {isa = PBXBuildFile; fileRef = 5A1E00010000000000000004 /* BlinkShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		5A1E00010000000000000013 /* ShareController.py in Resources */ = {isa = PBXBuildFile; fileRef = 5A1E00010000000000000012 /* ShareController.py */; };
@@ -697,6 +696,7 @@
 		5C1E00F50000000000000002 /* ConferenceInfoPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 5C1E00F50000000000000001 /* ConferenceInfoPanel.py */; };
 		5C1E00F50000000000000003 /* ConferenceInfoPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 5C1E00F50000000000000001 /* ConferenceInfoPanel.py */; };
 		6891C4358F58D5C1BE764D8F /* AccountStorage.py in Resources */ = {isa = PBXBuildFile; fileRef = F1E292A2EF0C3705AB554508 /* AccountStorage.py */; };
+		6CBAA7DFDC18422D94A76FE7 /* KeyStorage.py in Resources */ = {isa = PBXBuildFile; fileRef = 4F7410FEAB8A4215BAEDD154 /* KeyStorage.py */; };
 		6F4A2186383B4EC036556823 /* AvatarConflictPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 357D1EE3CE09B6CB0F7E08D5 /* AvatarConflictPanel.py */; };
 		82E9002A6E2F6878C83E86C4 /* DNSInformationPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 45397DEE96ABB5F308EF4D7E /* DNSInformationPanel.py */; };
 		8547A6C8114EB6E200AD84BF /* __init__.py in Copy Interfaces Package */ = {isa = PBXBuildFile; fileRef = 8547A6C6114EB6E200AD84BF /* __init__.py */; };
@@ -1574,7 +1574,6 @@
 		2BC08CC2106679940069AB9A /* FileTransferSession.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = FileTransferSession.py; sourceTree = "<group>"; };
 		2BC594740FCCDA910017CB1B /* ContactCell.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ContactCell.py; sourceTree = "<group>"; };
 		2BC5965F0FCE1EA90017CB1B /* ContactListModel.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ContactListModel.py; sourceTree = "<group>"; };
-		4F7410FEAB8A4215BAEDD154 /* KeyStorage.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = KeyStorage.py; sourceTree = "<group>"; };
 		2BD014EB10DB239B00D27A92 /* smiley_off.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = smiley_off.png; path = icons/smiley_off.png; sourceTree = "<group>"; };
 		2BD014EC10DB239B00D27A92 /* smiley_on.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = smiley_on.png; path = icons/smiley_on.png; sourceTree = "<group>"; };
 		2BDAE17211113B8200AC1D7A /* audio_small.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = audio_small.png; path = icons/audio_small.png; sourceTree = "<group>"; };
@@ -1591,6 +1590,7 @@
 		318DF6EF17EAC3B6BDC3BEBE /* sip_domain_check.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = sip_domain_check.py; sourceTree = "<group>"; };
 		357D1EE3CE09B6CB0F7E08D5 /* AvatarConflictPanel.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AvatarConflictPanel.py; sourceTree = "<group>"; };
 		45397DEE96ABB5F308EF4D7E /* DNSInformationPanel.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = DNSInformationPanel.py; sourceTree = "<group>"; };
+		4F7410FEAB8A4215BAEDD154 /* KeyStorage.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = KeyStorage.py; sourceTree = "<group>"; };
 		5A1E00010000000000000001 /* ShareViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ShareViewController.swift; path = ShareExtension/ShareViewController.swift; sourceTree = "<group>"; };
 		5A1E00010000000000000002 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = ShareExtension/Info.plist; sourceTree = "<group>"; };
 		5A1E00010000000000000003 /* BlinkShare.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.entitlements; name = BlinkShare.entitlements; path = ShareExtension/BlinkShare.entitlements; sourceTree = "<group>"; };
@@ -4128,7 +4128,7 @@
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 975;
+				CURRENT_PROJECT_VERSION = 980;
 				DEVELOPMENT_TEAM = 4DFEFUDLKZ;
 				ENABLE_HARDENED_RUNTIME = YES;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
@@ -4155,7 +4155,7 @@
 					"$(PROJECT_DIR)/Distribution/Frameworks/libs",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 11.0.0;
+				MARKETING_VERSION = 11.0.1;
 				ONLY_ACTIVE_ARCH = NO;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				OTHER_CODE_SIGN_FLAGS = "";
@@ -4179,7 +4179,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 975;
+				CURRENT_PROJECT_VERSION = 980;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 4DFEFUDLKZ;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -4205,7 +4205,7 @@
 					"$(PROJECT_DIR)/Distribution/Frameworks/libs",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 11.0.0;
+				MARKETING_VERSION = 11.0.1;
 				ONLY_ACTIVE_ARCH = NO;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				OTHER_CODE_SIGN_FLAGS = "";

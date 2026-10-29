@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>BlinkVersionDate</key>
-	<string>Oct 20th, 2026</string>
+	<string>Oct 29th, 2026</string>
 	<key>BrandingFile</key>
 	<string>branding</string>
 	<key>CFBundleDevelopmentRegion</key>
@@ -59,10 +59,6 @@
 	<string>public.app-category.social-networking</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>13.0</string>
-	<key>NSCameraUsageDescription</key>
-	<string>Required for VoIP calls</string>
-	<key>NSContactsUsageDescription</key>
-	<string>Required for calling your contacts</string>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_sipuri._udp</string>
@@ -73,6 +69,10 @@
 		<string>_sipfocus._tls</string>
 		<string>_rtsp._tcp</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>Required for VoIP calls</string>
+	<key>NSContactsUsageDescription</key>
+	<string>Required for calling your contacts</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Blink connects to your other devices on the local network to import the messages and files they export, and to network (RTSP) cameras you add to a video conference.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
