@@ -2957,7 +2957,7 @@ class SMSWindowManagerClass(NSObject):
         except Exception:
             return 0
 
-    # Progress for the strip at the top of the contact list (JournalProgressStrip)
+    # Progress for the strip at the bottom of the contact list (JournalProgressStrip)
     JOURNAL_PROGRESS_INTERVAL = 0.25    # seconds between progress notifications
     _journal_progress_posted = 0.0
     _journal_apply_progress = None      # (account, entries applied before this page, total) during the import

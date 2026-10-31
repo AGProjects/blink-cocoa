@@ -1,7 +1,7 @@
 # Copyright (C) 2026 AG Projects. See LICENSE for details.
 #
 
-"""The progress lines at the top of the contact list.
+"""The progress lines at the bottom of the contact list.
 
 One line per background job, shown together, each with its own bar:
 
@@ -37,7 +37,7 @@ from AppKit import (NSFont,
                     NSProgressIndicator,
                     NSTextField,
                     NSView,
-                    NSViewMinYMargin,
+                    NSViewMaxYMargin,
                     NSViewWidthSizable,
                     NSViewMinXMargin,
                     NSPopUpButton,
@@ -205,7 +205,7 @@ class JournalProgressStrip(NSObject):
         self.decryption_details = (None, None)
         width = self.container.bounds().size.width
         self.view = NSView.alloc().initWithFrame_(NSMakeRect(0, 0, width, 0))
-        self.view.setAutoresizingMask_(NSViewWidthSizable | NSViewMinYMargin)
+        self.view.setAutoresizingMask_(NSViewWidthSizable | NSViewMaxYMargin)
         self.view.setHidden_(True)
         self.container.addSubview_(self.view)
         self.lines = dict((job, ProgressLine(self, job)) for job in JOBS)
@@ -232,7 +232,7 @@ class JournalProgressStrip(NSObject):
             self.decryption_progress = (done, total, decryptor.speed, eta)
             self._show_decryption()
 
-    # Showing and hiding: the lines shown take the top of the contact list's
+    # Showing and hiding: the lines shown take the bottom of the contact list's
     # tab, the list gets the rest
 
     @objc.python_method
@@ -286,10 +286,11 @@ class JournalProgressStrip(NSObject):
         frame = self.scroll_view.frame()
         # the list's height as if no line were shown, adjusted for what the window did meanwhile
         full = frame.size.height + self.taken
-        self.scroll_view.setFrame_(NSMakeRect(frame.origin.x, frame.origin.y, frame.size.width, max(0, full - height)))
+        bottom = frame.origin.y - self.taken
+        height = min(height, full)
+        self.scroll_view.setFrame_(NSMakeRect(frame.origin.x, bottom + height, frame.size.width, full - height))
         self.taken = height
-        top = frame.origin.y + full
-        self.view.setFrame_(NSMakeRect(0, top - height, bounds.size.width, height))
+        self.view.setFrame_(NSMakeRect(0, bottom, bounds.size.width, height))
         self.view.setHidden_(not shown)
         for job in JOBS:
             line = self.lines[job]
