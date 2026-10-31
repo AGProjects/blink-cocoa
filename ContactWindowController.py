@@ -7640,6 +7640,7 @@ class ContactWindowController(NSWindowController):
             else:
                 if hasattr(self.backend._app.engine, "video_devices"):
                     setupVideoDeviceMenu(menu, 500, NSApp.delegate().video_devices, "device",  "selectVideoDevice:")
+            self.setupRtspCamerasMenu(menu)
 
         elif menu == self.contactsMenu:
             self.updateKeyEscrowMenuItem()
@@ -7795,6 +7796,57 @@ class ContactWindowController(NSWindowController):
         settings = SIPSimpleSettings()
         settings.audio.alert_device = sender.representedObject()
         settings.save()
+
+    @objc.python_method
+    def setupRtspCamerasMenu(self, menu):
+        """Devices -> RTSP Cameras, under the video cameras: the network cameras saved (tested before), each opening
+        Manage Cameras… with it selected, then Manage Cameras… (CameraSetup.NetworkCameraPanel)."""
+        for tag in [700, 701] + list(range(70000, 70100)):
+            old = menu.itemWithTag_(tag)
+            if old:
+                menu.removeItem_(old)
+        if menu.itemWithTag_(500) is None:
+            return      # no video
+        try:
+            from ExtraVideo import saved_sources
+            from RtspSource import rtsp_missing
+            from CameraSetup import _host
+            sources = saved_sources()
+            missing = rtsp_missing()
+        except Exception as e:
+            BlinkLogger().log_error('Cannot list the RTSP cameras: %s' % e)
+            return
+        index = menu.indexOfItem_(menu.itemWithTag_(500)) + 1
+        while index < menu.numberOfItems() and 50000 <= menu.itemAtIndex_(index).tag() < 50100:
+            index += 1
+        separator = NSMenuItem.separatorItem()
+        separator.setTag_(701)
+        menu.insertItem_atIndex_(separator, index)
+        index += 1
+        item = menu.insertItemWithTitle_action_keyEquivalent_atIndex_(NSLocalizedString("RTSP Cameras", "Menu item"), None, "", index)
+        item.setTag_(700)
+        item.setEnabled_(False)
+        index += 1
+        for i, source in enumerate(sources[:99]):
+            host = _host(source['url'])
+            item = menu.insertItemWithTitle_action_keyEquivalent_atIndex_(source.get('label') or host or source['url'], None if missing else "manageRtspCamera:", "", index)
+            item.setRepresentedObject_(source['url'])
+            item.setTarget_(self)
+            item.setTag_(70000 + i)
+            item.setIndentationLevel_(2)
+            item.setToolTip_(missing or ('%s%s' % (host, (' (%s)' % source['user']) if source.get('user') else '')))
+            index += 1
+        item = menu.insertItemWithTitle_action_keyEquivalent_atIndex_(NSLocalizedString("Manage Cameras…", "Menu item"), None if missing else "manageRtspCamera:", "", index)
+        item.setRepresentedObject_(None)
+        item.setTarget_(self)
+        item.setTag_(70099)
+        item.setIndentationLevel_(2)
+        item.setToolTip_(missing or NSLocalizedString("Find the cameras on the network, test them and save them, with their passwords", "Menu item"))
+
+    def manageRtspCamera_(self, sender):
+        from CameraSetup import NetworkCameraPanel
+        url = sender.representedObject()
+        NetworkCameraPanel.alloc().initManagingCamera_(str(url) if url else '').run()
 
     def selectVideoDevice_(self, sender):
         settings = SIPSimpleSettings()

@@ -15,7 +15,7 @@
 The blocking work runs in threads of its own; the callbacks are called in the GUI thread.
 """
 
-__all__ = ['FoundCamera', 'discover', 'onvif_stream_uri', 'test_stream']
+__all__ = ['FoundCamera', 'check_online', 'classify_local', 'discover', 'onvif_stream_uri', 'test_stream']
 
 import base64
 import hashlib
@@ -30,6 +30,7 @@ import urllib.error
 import urllib.request
 
 from datetime import datetime, timezone
+from urllib.parse import urlsplit
 from xml.etree import ElementTree
 
 from BlinkLogger import BlinkLogger
@@ -214,6 +215,102 @@ def discover(callback):
     _in_thread('camera discovery', _discover, callback)
 
 
+# Whether a camera is on this Mac's networks
+
+def _local_networks():
+    """The networks of this Mac's interfaces (ifconfig: inet and netmask, inet6 and prefixlen)."""
+    import ipaddress
+    import subprocess
+    networks = []
+    try:
+        output = subprocess.run(['/sbin/ifconfig'], capture_output=True, text=True, timeout=5).stdout
+    except (OSError, subprocess.SubprocessError):
+        return networks
+    for line in output.splitlines():
+        words = line.split()
+        try:
+            if len(words) >= 4 and words[0] == 'inet' and words[2] == 'netmask':
+                mask = words[3]
+                mask = str(ipaddress.IPv4Address(int(mask, 16))) if mask.startswith('0x') else mask
+                networks.append(ipaddress.ip_network('%s/%s' % (words[1], mask), strict=False))
+            elif len(words) >= 4 and words[0] == 'inet6' and words[2] == 'prefixlen':
+                networks.append(ipaddress.ip_network('%s/%s' % (words[1].split('%')[0], words[3]), strict=False))
+        except ValueError:
+            continue
+    return networks
+
+
+def _classify_local(hosts):
+    import ipaddress
+    networks = _local_networks()
+    answer = {}
+    for host in hosts:
+        if host.lower().rstrip('.').endswith('.local'):
+            answer[host] = True         # mDNS: on the link by definition
+            continue
+        try:
+            addresses = [ipaddress.ip_address(host.strip('[]').split('%')[0])]
+        except ValueError:
+            try:
+                addresses = [ipaddress.ip_address(info[4][0].split('%')[0]) for info in socket.getaddrinfo(host, None)]
+            except (OSError, ValueError):
+                addresses = []
+        answer[host] = any(address in network for address in addresses for network in networks if address.version == network.version)
+    return answer
+
+
+def classify_local(hosts, callback):
+    """Whether each host is on one of this Mac's networks: callback({host: bool}, error) in the GUI thread."""
+    _in_thread('camera networks', _classify_local, callback, list(hosts))
+
+
+# Whether a camera answers
+
+ONLINE_TIMEOUT = 2.0
+
+
+def _rtsp_port(url):
+    try:
+        parts = urlsplit(url)
+        return parts.hostname, parts.port or (322 if parts.scheme.lower() == 'rtsps' else 554)
+    except ValueError:
+        return None, None
+
+
+def _mac_address(address):
+    """The MAC address of an IPv4 address on this Mac's networks, from the ARP table (arp -n), or None."""
+    import subprocess
+    if ':' in address:
+        return None     # IPv6: the neighbour table is not read
+    try:
+        output = subprocess.run(['/usr/sbin/arp', '-n', address], capture_output=True, text=True, timeout=3).stdout
+    except (OSError, subprocess.SubprocessError):
+        return None
+    match = re.search(r' at ((?:[0-9a-fA-F]{1,2}:){5}[0-9a-fA-F]{1,2}) ', output)
+    return ':'.join(part.rjust(2, '0') for part in match.group(1).lower().split(':')) if match else None
+
+
+def check_online(urls, callback):
+    """Whether each camera takes a TCP connection on its RTSP port (cameras that discovery does not list), and
+    then its MAC address (the ARP entry the connection made): callback(url, online, mac) in the GUI thread, for
+    each, as they answer; mac None when not known (not on this Mac's networks, or IPv6)."""
+    def check(url):
+        host, port = _rtsp_port(url)
+        online, mac = False, None
+        if host:
+            try:
+                connection = socket.create_connection((host, port), timeout=ONLINE_TIMEOUT)
+                address = connection.getpeername()[0]
+                connection.close()
+                online = True
+                mac = _mac_address(address)
+            except OSError:
+                pass
+        call_in_gui_thread(callback, url, online, mac)
+    for url in urls:
+        threading.Thread(target=check, args=(url,), name='camera online %s' % url.split('@')[-1], daemon=True).start()
+
+
 # ONVIF: the RTSP address of a camera
 
 def _security_header(user, password, offset=0.0):
@@ -326,6 +423,38 @@ def onvif_stream_uri(xaddr, user, password, callback):
 
 # Testing a stream
 
+KEY_FRAME_WAIT = 3.0        # seconds of pictures without a key frame after which one is shown anyway
+
+
+def _nsimage(buffer):
+    """A copy of a BGRA pixel buffer's picture, as an NSImage (drawn from its own bytes, not from the buffer)."""
+    from AppKit import NSImage
+    from Foundation import NSData, NSMakeSize
+    from Quartz import (CGColorSpaceCreateDeviceRGB, CGDataProviderCreateWithCFData, CGImageCreate,
+                        CVPixelBufferGetBaseAddress, CVPixelBufferGetBytesPerRow, CVPixelBufferGetHeight,
+                        CVPixelBufferGetWidth, CVPixelBufferLockBaseAddress, CVPixelBufferUnlockBaseAddress,
+                        kCGBitmapByteOrder32Little, kCGImageAlphaNoneSkipFirst, kCGRenderingIntentDefault)
+    if CVPixelBufferLockBaseAddress(buffer, 1) != 0:        # kCVPixelBufferLock_ReadOnly
+        return None
+    try:
+        width, height, stride = CVPixelBufferGetWidth(buffer), CVPixelBufferGetHeight(buffer), CVPixelBufferGetBytesPerRow(buffer)
+        base = CVPixelBufferGetBaseAddress(buffer)
+        if base is None or not width or not height:
+            return None
+        try:
+            view = base.as_buffer(stride * height)
+        except AttributeError:
+            view = memoryview(base)
+        data = bytes(view[:stride * height])
+    finally:
+        CVPixelBufferUnlockBaseAddress(buffer, 1)
+    provider = CGDataProviderCreateWithCFData(NSData.dataWithBytes_length_(data, len(data)))
+    picture = CGImageCreate(width, height, 8, 32, stride, CGColorSpaceCreateDeviceRGB(), kCGImageAlphaNoneSkipFirst | kCGBitmapByteOrder32Little,
+                            provider, None, False, kCGRenderingIntentDefault)
+    if picture is None:
+        return None
+    return NSImage.alloc().initWithCGImage_size_(picture, NSMakeSize(width, height))
+
 def test_stream(url, user, password, callback, timeout=TEST_TIMEOUT):
     """Pull the first picture of an RTSP stream: callback(image, width, height, error) in the GUI thread, image an
     NSImage. Returns a function that cancels it (no callback then)."""
@@ -340,16 +469,18 @@ def test_stream(url, user, password, callback, timeout=TEST_TIMEOUT):
         reader.stop()
         callback(image, width, height, error)
 
-    def frame(buffer):
-        # the reading thread: the first picture, as an NSImage
+    def frame(buffer, key):
+        # the reading thread: the first whole picture (a key frame: those before it decode gray), as an NSImage
+        # copied out of the pixel buffer now (the reader and its buffers go once it is stopped)
         if state.get('image') is not None:
             return
-        from AppKit import NSCIImageRep, NSImage
-        from Quartz import CIImage
-        ciimage = CIImage.imageWithCVPixelBuffer_(buffer)
-        rep = NSCIImageRep.imageRepWithCIImage_(ciimage)
-        image = NSImage.alloc().initWithSize_(rep.size())
-        image.addRepresentation_(rep)
+        now = time.monotonic()
+        state.setdefault('first', now)
+        if not key and now - state['first'] < KEY_FRAME_WAIT:
+            return
+        image = _nsimage(buffer)
+        if image is None:
+            return
         state['image'] = image
         reader.stop()
         size = reader.size or (0, 0)
@@ -362,7 +493,7 @@ def test_stream(url, user, password, callback, timeout=TEST_TIMEOUT):
         if state.get('image') is None:
             finish(error='stopped')
 
-    reader = RtspReader(url, user, password, source=None, fps=1, on_failed=failed, on_ended=ended, on_frame=frame)
+    reader = RtspReader(url, user, password, source=None, fps=30, on_failed=failed, on_ended=ended, on_frame=frame)     # every frame: the key frame is not to be dropped
     timer = threading.Timer(timeout, lambda: call_in_gui_thread(finish, None, 0, 0, 'no picture within %d s' % timeout))
     try:
         reader.start()

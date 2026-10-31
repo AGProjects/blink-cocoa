@@ -254,7 +254,7 @@ bounds) and lifted above the bottom row's name pills (`bottom`).
 | Mute | microphone |
 | Camera (menu) | System Default and each camera, the screen (one entry per display) while connected, Turn camera off/on; red "Camera off" while off |
 | Stop sharing | red, only while the screen is shared |
-| Speakers | the speaker sheet (§5.6); with four people or more, or speakers set |
+| Speakers | the speaker sheet (§5.6); with two video streams or more, or speakers set |
 | Chat | the room's chat window in front (deminiaturized), the chat started if there is none |
 | Raise/Lower hand | with three people or more (or our hand still up); yellow while up |
 | More (menu) | Share screen / Stop sharing screen, Hide myself / Show myself, Show me as a thumbnail / Put me back in the grid, Invite participants…, Share conference address…, Mute everyone, Lower all hands |
@@ -280,9 +280,15 @@ person count once), us included, the audio bridge and our own MSRP leg left out.
 | People | Shown |
 |---|---|
 | 3 or more | Raise/Lower hand, Lower hand on a tile, Lower all hands, Mute everyone, Mute/Unmute on a tile |
-| 4 or more | Speakers, and on a tile Show as the speaker / as second speaker |
-| fewer | hidden, except a hand still up (Lower hand) and speakers still set (Speakers, Stop showing as speaker), so they can be cleared |
+| fewer | hidden, except a hand still up (Lower hand) |
 | any | Remove from the conference on a SIP participant's tile (there is a tile: we are not alone) |
+
+**Video streams** decide speaker selection, not people: every stream that can be shown as speaker
+counts (`speakerCandidates`): ours while the camera is on, our established extra videos, everyone
+else's videos and their extra videos (children count as well as parents). With **2 or more**:
+Speakers, and on a tile Show as the speaker / as second speaker. Fewer: hidden, except speakers
+still set (Speakers, Stop showing as speaker), so they can be cleared. The sheet offers the same
+streams.
 
 **Right-click on a tile**: Mute/Unmute, Lower hand, Show as the speaker / as second speaker / Stop
 showing as speaker, Remove from the conference (SIP participants), as the table allows. On ours:

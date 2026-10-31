@@ -76,7 +76,8 @@ def _cls(name):
 # Remembered RTSP cameras
 
 def saved_sources():
-    """The RTSP cameras that worked, newest first: [{label, url, user, password, resolution}]."""
+    """The RTSP cameras saved, newest first: [{label, url, user, password, resolution, verified}]; verified: a
+    picture came from it with these details (Test)."""
     try:
         sources = json.loads(NSUserDefaults.standardUserDefaults().stringForKey_(SOURCES_KEY) or '[]')
     except (TypeError, ValueError):
@@ -88,12 +89,33 @@ def _save_sources(sources):
     NSUserDefaults.standardUserDefaults().setObject_forKey_(json.dumps(sources[:MAX_SOURCES]), SOURCES_KEY)
 
 
-def remember_source(source):
-    previous = next((other for other in saved_sources() if other.get('url') == source.get('url')), {})
-    sources = [other for other in saved_sources() if other.get('url') != source.get('url')]
+def remember_source(source, replaces=None):
+    """Saved first; replaces: the address of the saved camera it is an edit of (its address may have changed)."""
+    gone = {source.get('url'), replaces} - {None}
+    previous = next((other for other in saved_sources() if other.get('url') in gone), {})
+    sources = [other for other in saved_sources() if other.get('url') not in gone]
     sources.insert(0, dict(label=source.get('label') or '', url=source['url'], user=source.get('user') or '', password=source.get('password') or '',
-                           resolution=source.get('resolution') or previous.get('resolution') or DEFAULT_RESOLUTION))
+                           resolution=source.get('resolution') or previous.get('resolution') or DEFAULT_RESOLUTION,
+                           verified=bool(source['verified']) if 'verified' in source else _still_verified(previous, source)))
     _save_sources(sources)
+
+
+def _still_verified(previous, source):
+    """Saved again without a verdict (the room): verified as before while the address, user and password are those."""
+    same = lambda other: (other.get('url'), other.get('user') or '', other.get('password') or '')
+    return bool(previous.get('verified')) and same(previous) == same(source)
+
+
+def mark_verified(url, user=None, password=None):
+    """A picture came from the saved camera with its address, user and password (user given: only when those
+    are the ones saved)."""
+    sources = saved_sources()
+    changed = False
+    for source in sources:
+        if source.get('url') == url and not source.get('verified') and (user is None or ((source.get('user') or ''), (source.get('password') or '')) == (user or '', password or '')):
+            source['verified'] = changed = True
+    if changed:
+        _save_sources(sources)
 
 
 def rename_source(url, label):
@@ -428,6 +450,7 @@ class ExtraVideo(object):
             return
         self.capture_size = (width, height)
         self.log('RTSP %s %dx%d' % (codec.upper(), width, height))
+        mark_verified(self.source['url'], self.source.get('user') or '', self.source.get('password') or '')     # a picture came
 
     def _answer_set(self, error):
         if self.peer_connection is None:

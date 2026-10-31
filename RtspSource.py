@@ -65,6 +65,7 @@ CODEC_ID = 20                           # AVCodec.id
 PACKET_STREAM_INDEX = 36                # AVPacket.stream_index
 FRAME_LINESIZE = 64                     # AVFrame.data at 0, linesize[8] here
 FRAME_WIDTH, FRAME_HEIGHT, FRAME_FORMAT = 104, 108, 116
+FRAME_KEY_FRAME = 120                   # AVFrame.key_frame
 
 AVMEDIA_TYPE_VIDEO = 0
 AV_PIX_FMT_BGRA = 28
@@ -207,7 +208,7 @@ class RtspReader(object):
         self.on_started = on_started
         self.on_failed = on_failed
         self.on_ended = on_ended
-        self.on_frame = on_frame        # on_frame(pixel buffer), in the reading thread: a test's picture
+        self.on_frame = on_frame        # on_frame(pixel buffer, key frame), in the reading thread: a test's picture
         self.size = None                # (width, height) of the stream
         self.codec = None
         self._stop = False
@@ -402,7 +403,7 @@ class RtspReader(object):
             finally:
                 CVPixelBufferUnlockBaseAddress(buffer, 0)
             if self.on_frame is not None:
-                self.on_frame(buffer)
+                self.on_frame(buffer, bool(_int_at(frame, FRAME_KEY_FRAME)))
             if self.source is not None and self._capturer is not None:
                 classes = webrtc_classes()
                 video_frame = classes['RTCVideoFrame'].alloc().initWithBuffer_rotation_timeStampNs_(

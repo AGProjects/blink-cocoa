@@ -7,14 +7,17 @@ AddVideoPanel (More -> Add video… in the room): its name, and a camera of this
 computer or a network (RTSP) camera: one used before, or a new one by its address,
 user and password, or Find on network…; and the resolution it is sent at.
 
-NetworkCameraPanel (Find on network…, and Add network camera… in Join Conference):
+NetworkCameraPanel (Find on network…, Add network camera… in Join Conference, and Devices ->
+RTSP Cameras -> Manage Cameras…, where Save keeps it open and Forget removes a saved camera):
 the cameras found on the network (ONVIF WS-Discovery, Bonjour _rtsp._tcp) and those
-tested before (first, in bold, ✓, under the name given to them; "not found now"
-when they do not answer), with a filter and a sort. Picking one fills in its name and
+saved (first, in bold, ✓, under the name given to them; those discovery does not
+list are "online" or "offline" by whether their RTSP port takes a connection: not all
+cameras answer discovery), with a filter and a sort. Picking one fills in its name and
 address (an ONVIF camera's RTSP address is asked from the camera when tested, with
 the user and password), and the user and password used before with that host. Test
-pulls a picture and shows it: only what was tested can be added, and it is remembered
-(ExtraVideo.remember_source) with its password. Renaming a tested camera saves it.
+pulls a picture and shows it. Any rtsp:// address can be added, tested or not (the
+camera may be offline now); it is remembered (ExtraVideo.remember_source) with its
+password. Renaming a saved camera saves it.
 
 Both are built in code and run modally; run() answers (source, label) or None.
 
@@ -64,6 +67,114 @@ def _host(url):
         return urlsplit(url).hostname or ''
     except ValueError:
         return ''
+
+
+def _rtsp_address(text):
+    """The camera's address as typed: an rtsp:// or rtsps:// URL, or a bare host or IP (with a port and a path or
+    not), taken as rtsp://. '' when it is neither."""
+    text = (text or '').strip()
+    if not text:
+        return ''
+    if '://' not in text:
+        text = 'rtsp://' + text
+    return text if text.lower().startswith(('rtsp://', 'rtsps://')) and _host(text) else ''
+
+
+def _split_credentials(text):
+    """rtsp://user:password@host/... as typed: (the address without them, user, password); user None when the
+    address has none."""
+    from urllib.parse import unquote, urlunsplit
+    url = _rtsp_address(text)
+    if not url:
+        return text, None, None
+    try:
+        parts = urlsplit(url)
+        user, password, host, port = parts.username, parts.password, parts.hostname or '', parts.port
+    except ValueError:
+        return text, None, None
+    if user is None:
+        return url, None, None
+    netloc = ('[%s]' % host if ':' in host else host) + (':%d' % port if port else '')
+    return urlunsplit((parts.scheme, netloc, parts.path, parts.query, parts.fragment)), unquote(user), unquote(password or '')
+
+
+class _PasswordField(NSObject):
+    """A password field with an eye button at its right that shows the password or hides it again: a secure and a
+    plain text field in the same place, one of them shown. Takes the calls made on a text field here."""
+
+    def initWithField_(self, secure):
+        from AppKit import NSImage
+        self = objc.super(_PasswordField, self).init()
+        if self is None:
+            return None
+        self.secure = secure
+        frame = secure.frame()
+        frame.size.width -= 26
+        secure.setFrame_(frame)
+        view = secure.superview()
+        self.plain = _text_field()
+        self.plain.setFrame_(frame)
+        self.plain.setHidden_(True)
+        view.addSubview_(self.plain)
+        self.eye = NSButton.alloc().initWithFrame_(NSMakeRect(frame.origin.x + frame.size.width + 4, frame.origin.y + 1, 22, 20))
+        self.eye.setBordered_(False)
+        self.eye.setImage_(NSImage.imageWithSystemSymbolName_accessibilityDescription_('eye', _t("Show the password")))
+        self.eye.setToolTip_(_t("Show the password"))
+        self.eye.setTarget_(self)
+        self.eye.setAction_('toggle:')
+        view.addSubview_(self.eye)
+        return self
+
+    def toggle_(self, sender):
+        from AppKit import NSImage
+        showing = self.secure.isHidden()
+        current, other = (self.plain, self.secure) if showing else (self.secure, self.plain)
+        window = current.window()
+        editing = window is not None and window.firstResponder() is current.currentEditor()
+        other.setStringValue_(current.stringValue())
+        current.setHidden_(True)
+        other.setHidden_(False)
+        if editing:
+            window.makeFirstResponder_(other)
+        title = _t("Show the password") if showing else _t("Hide the password")
+        self.eye.setImage_(NSImage.imageWithSystemSymbolName_accessibilityDescription_('eye' if showing else 'eye.slash', title))
+        self.eye.setToolTip_(title)
+
+    def stringValue(self):
+        return (self.plain if self.secure.isHidden() else self.secure).stringValue()
+
+    def setStringValue_(self, text):
+        self.secure.setStringValue_(text)
+        self.plain.setStringValue_(text)
+
+    def setDelegate_(self, delegate):
+        self.secure.setDelegate_(delegate)
+        self.plain.setDelegate_(delegate)
+
+    def setEnabled_(self, enabled):
+        for control in (self.secure, self.plain, self.eye):
+            control.setEnabled_(enabled)
+
+    def setAutoresizingMask_(self, mask):
+        self.secure.setAutoresizingMask_(mask)
+        self.plain.setAutoresizingMask_(mask)
+        self.eye.setAutoresizingMask_(1)        # NSViewMinXMargin: it follows the right edge
+
+
+def _bare(url):
+    """Whether the address has no path: only the host (and port) was given."""
+    try:
+        return urlsplit(url).path in ('', '/') and not urlsplit(url).query
+    except ValueError:
+        return False
+
+
+LOCAL_ONLY_KEY = 'RTSPCamerasLocalOnly'      # Only my local network, as last set
+
+
+def _defaults():
+    from Foundation import NSUserDefaults
+    return NSUserDefaults.standardUserDefaults()
 
 
 class _FlippedView(NSView):
@@ -202,7 +313,24 @@ class NetworkCameraPanel(_ModalPanel):
         self = objc.super(NetworkCameraPanel, self).init()
         if self is None:
             return None
+        self._setup(label, False)
+        return self
+
+    def initManagingCamera_(self, url):
+        """Devices -> RTSP Cameras: the panel to find, test, save, rename and forget cameras; it stays open after a
+        Save. url: the saved camera to show selected, or empty."""
+        self = objc.super(NetworkCameraPanel, self).init()
+        if self is None:
+            return None
+        self._setup('', True)
+        if url:
+            self.selectHost(_host(url))
+        return self
+
+    @objc.python_method
+    def _setup(self, label, managing):
         from ExtraVideo import saved_sources
+        self.managing = managing
         self.saved = saved_sources()
         self.found = []             # FoundCamera, from the last search
         self.rows = []              # (FoundCamera, title, tooltip, tested) as listed
@@ -211,16 +339,21 @@ class NetworkCameraPanel(_ModalPanel):
         self.filled = None          # (user, password) filled in from a camera tested before
         self.reselecting = False    # the list reloaded, its selection put back: the fields are left as they are
         self.searching = False
+        self.online = {}            # saved address: True/False once checked (check_online), for those not discovered
+        self.local = {}             # host: whether it is on one of this Mac's networks (classify_local)
+        self.macs = {}              # saved address: the camera's MAC address (ARP), when online and on this Mac's networks
         self.closed = False
         self.cancel_test = None
+        self.testing = False
+        self.test_id = 0            # the test running: an answer of an earlier one (the camera changed since) is dropped
+        self.editing = None         # the saved camera the fields are of: Save replaces it; None: a new camera
         self._build(label or '')
         self.showFound()
         self.search_(None)
-        return self
 
     @objc.python_method
     def _build(self, label):
-        self.panel, view = _panel(_t("Add network camera"), self.WIDTH, self.HEIGHT)
+        self.panel, view = _panel(_t("RTSP Cameras") if self.managing else _t("Add network camera"), self.WIDTH, self.HEIGHT)
         self.panel.setDelegate_(self)
         form = _Form(view, self.WIDTH)
         form.label(_t("Cameras on your network"), width=200)
@@ -248,18 +381,39 @@ class NetworkCameraPanel(_ModalPanel):
         self.table = NSTableView.alloc().initWithFrame_(scroll.bounds())
         column = NSTableColumn.alloc().initWithIdentifier_('camera')
         column.setResizingMask_(1)
-        column.setWidth_(scroll.bounds().size.width - 20)
+        column.setWidth_(scroll.bounds().size.width - 20 - 70)
+        column.headerCell().setStringValue_(_t("Camera"))
         self.table.addTableColumn_(column)
-        self.table.setHeaderView_(None)
+        column = NSTableColumn.alloc().initWithIdentifier_('verified')
+        column.setResizingMask_(0)
+        column.setWidth_(64)
+        column.headerCell().setStringValue_(_t("Verified"))
+        column.headerCell().setAlignment_(1)         # NSTextAlignmentCenter
+        column.dataCell().setAlignment_(1)
+        self.table.addTableColumn_(column)
         self.table.setDataSource_(self)
         self.table.setDelegate_(self)
         self.table.setColumnAutoresizingStyle_(1)    # NSTableViewUniformColumnAutoresizingStyle
         scroll.setDocumentView_(self.table)
         view.addSubview_(scroll)
         form.gap(176)
-        self.foundStatus = form.label('', small=True, secondary=True)
+        self.foundStatus = form.label('', small=True, secondary=True, width=self.WIDTH - 2 * form.MARGIN - 210)
         self.foundStatus.setAutoresizingMask_(2)
-        form.gap(28)
+        self.localOnly = NSButton.checkboxWithTitle_target_action_(_t("Only my local network"), self, 'localOnlyChanged:')
+        self.localOnly.setFont_(NSFont.systemFontOfSize_(NSFont.smallSystemFontSize()))
+        self.localOnly.setControlSize_(1)       # NSControlSizeSmall
+        self.localOnly.sizeToFit()
+        size = self.localOnly.frame().size
+        self.localOnly.setFrame_(NSMakeRect(self.WIDTH - form.MARGIN - size.width, form.y, size.width, size.height))
+        self.localOnly.setAutoresizingMask_(1)  # NSViewMinXMargin
+        self.localOnly.setToolTip_(_t("Only the cameras whose address is on one of this Mac's networks (its IP addresses and netmasks)"))
+        self.localOnly.setState_(NSOnState if _defaults().boolForKey_(LOCAL_ONLY_KEY) else NSOffState)
+        view.addSubview_(self.localOnly)
+        form.gap(24)
+        self.modeLabel = form.label('', x=form.field_x, width=form.field_w)
+        self.modeLabel.setFont_(NSFont.boldSystemFontOfSize_(NSFont.systemFontSize()))
+        self.modeLabel.setAutoresizingMask_(2)
+        form.gap(24)
 
         self.labelField = form.row(_t("Name"), _text_field(_t("Front door")))
         self.labelField.setStringValue_(label)
@@ -267,16 +421,16 @@ class NetworkCameraPanel(_ModalPanel):
         self.labelField.setAction_('labelEdited:')
         self.urlField = form.row(_t("Address"), _text_field('rtsp://192.168.1.10:554/stream1'))
         self.userField = form.row(_t("User"), _text_field())
-        self.passwordField = form.row(_t("Password"), _text_field(secure=True))
+        self.passwordField = _PasswordField.alloc().initWithField_(form.row(_t("Password"), _text_field(secure=True)))
         self.resolutionPopup = form.row(_t("Send at"), _resolution_popup(), height=24)
         for field in (self.labelField, self.urlField, self.userField, self.passwordField):
             field.setAutoresizingMask_(2)
-            NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, 'fieldChanged:', 'NSControlTextDidChangeNotification', field)
+            field.setDelegate_(self)        # controlTextDidChange_: every edit, typed or pasted
         form.gap(4)
         self.testButton = _button(_t("Test"), self, 'test:')
         self.testButton.setFrame_(NSMakeRect(form.MARGIN - 6, form.y - 4, 80, 30))
         view.addSubview_(self.testButton)
-        self.testStatus = form.label(_t("Test the camera: it can be added once a picture comes from it."), x=form.MARGIN + 82,
+        self.testStatus = form.label(_t("Test pulls a picture from the camera; it can be saved untested too."), x=form.MARGIN + 82,
                                      width=self.WIDTH - 2 * form.MARGIN - 82, height=34, wraps=True)
         self.testStatus.setAutoresizingMask_(2)
         form.gap(40)
@@ -289,9 +443,18 @@ class NetworkCameraPanel(_ModalPanel):
         form.gap(188)
         form.label(_t("Video only, 10 fps. The camera is remembered with its password."), small=True, secondary=True)
         form.gap(17)
-        cancel = _button(_t("Cancel"), self, 'cancel:', '\x1b')
-        self.addButton = _button(_t("Add"), self, 'add:', '\r')
-        height = _finish(self.panel, view, form, (self.addButton, cancel), self.WIDTH)
+        cancel = _button(_t("Close") if self.managing else _t("Cancel"), self, 'cancel:', '\x1b')
+        # no Return key: Return in the address only takes the user and password out of it (it can be saved untested)
+        self.addButton = _button(_t("Save") if self.managing else _t("Add"), self, 'add:')
+        buttons = (self.addButton, cancel)
+        self.forgetButton = None
+        if self.managing:
+            self.forgetButton = _button(_t("Forget"), self, 'forget:')
+            self.forgetButton.setToolTip_(_t("Remove this camera, and its password"))
+            new = _button(_t("New"), self, 'newCamera:')
+            new.setToolTip_(_t("Empty the fields for another camera"))
+            buttons += (self.forgetButton, new)
+        height = _finish(self.panel, view, form, buttons, self.WIDTH)
         self.panel.setContentMinSize_(NSMakeSize(520, height))
         self.panel.setContentMaxSize_(NSMakeSize(720, height))
         self.updateButtons()
@@ -317,6 +480,46 @@ class NetworkCameraPanel(_ModalPanel):
         self.searchButton.setEnabled_(False)
         self.foundStatus.setStringValue_(_t("Looking for cameras (ONVIF, Bonjour)…"))
         discover(self.discovered)
+        self.checkOnline()
+
+    @objc.python_method
+    def checkOnline(self):
+        """Not all cameras answer discovery: the saved ones are asked on their RTSP port whether they are online."""
+        from CameraFinder import check_online
+        urls = [source['url'] for source in self.saved]
+        for url in urls:
+            self.online.pop(url, None)
+        check_online(urls, self.onlineChecked)
+        self.classifyLocal()
+
+    @objc.python_method
+    def onlineChecked(self, url, online, mac):
+        if self.closed:
+            return
+        self.online[url] = online
+        if mac:
+            self.macs[url] = mac
+        self.showFound()
+
+    def localOnlyChanged_(self, sender):
+        _defaults().setBool_forKey_(sender.state() == NSOnState, LOCAL_ONLY_KEY)
+        self.showFound()
+
+    @objc.python_method
+    def classifyLocal(self):
+        """Which of the cameras listed are on this Mac's networks, for Only my local network."""
+        from CameraFinder import classify_local
+        hosts = {camera.host for camera in self.found} | {_host(source['url']) for source in self.saved}
+        hosts = {host for host in hosts if host and host not in self.local}
+        if hosts:
+            classify_local(hosts, self.localClassified)
+
+    @objc.python_method
+    def localClassified(self, answer, error):
+        if self.closed or not answer:
+            return
+        self.local.update(answer)
+        self.showFound()
 
     @objc.python_method
     def discovered(self, cameras, error):
@@ -325,6 +528,7 @@ class NetworkCameraPanel(_ModalPanel):
             return
         self.searchButton.setEnabled_(True)
         self.found = cameras or []
+        self.classifyLocal()
         self.showFound()
         if error:
             self.foundStatus.setStringValue_(_t("Search failed: %s") % error)
@@ -370,18 +574,27 @@ class NetworkCameraPanel(_ModalPanel):
             key = lambda camera: (self.savedFor(camera.host) is None, self.cameraName(camera).lower(), address(camera.host))
         selected = self.selectedCamera()
         text = str(self.filterField.stringValue()).strip().lower()
+        local_only = self.localOnly.state() == NSOnState
         self.rows = []
         for camera in sorted(cameras, key=key):
             saved = self.savedFor(camera.host)
-            how = {'onvif': 'ONVIF', 'bonjour': 'Bonjour'}.get(camera.how, _t("not found now"))
+            how = {'onvif': 'ONVIF', 'bonjour': 'Bonjour'}.get(camera.how)
+            if how is None:     # saved, not discovered (not all cameras answer discovery): online when its port answers
+                online = self.online.get(saved['url']) if saved else None
+                how = _t("online") if online else (_t("offline") if online is False else _t("checking…"))
             details = [camera.host, how]
+            mac = self.macs.get(saved['url']) if saved else None
+            if mac:
+                details.insert(1, mac)
             if camera.hardware and camera.hardware != self.cameraName(camera):
                 details.insert(0, camera.hardware)
-            title = ('✓ ' if saved else '    ') + self.cameraName(camera) + '  ·  ' + ', '.join(details)
-            tooltip = (_t("Tested before: %s") % saved['url']) if saved else (camera.url or camera.xaddr or camera.host)
+            title = self.cameraName(camera) + '  ·  ' + ', '.join(details)
+            tooltip = (_t("Saved: %s") % saved['url']) if saved else (camera.url or camera.xaddr or camera.host)
+            if local_only and self.local.get(camera.host) is False:
+                continue        # not on this Mac's networks (shown while that is not known yet)
             if text and text not in title.lower() and text not in tooltip.lower():
                 continue
-            self.rows.append((camera, title, tooltip, saved is not None))
+            self.rows.append((camera, title, tooltip, saved is not None, bool(saved and saved.get('verified'))))
         self.table.reloadData()
         if selected is not None:
             index = next((index for index, row in enumerate(self.rows) if row[0].host == selected.host), None)
@@ -394,6 +607,20 @@ class NetworkCameraPanel(_ModalPanel):
                     self.reselecting = False
 
     @objc.python_method
+    def selectHost(self, host, fill=True):
+        """Select the line of that host; fill: its saved address, user and password go into the fields."""
+        index = next((index for index, row in enumerate(self.rows) if row[0].host == host), None)
+        if index is None:
+            return
+        from Foundation import NSIndexSet
+        self.reselecting = not fill
+        try:
+            self.table.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(index), False)
+            self.table.scrollRowToVisible_(index)
+        finally:
+            self.reselecting = False
+
+    @objc.python_method
     def selectedCamera(self):
         row = self.table.selectedRow() if self.table is not None else -1
         return self.rows[row][0] if 0 <= row < len(self.rows) else None
@@ -402,7 +629,12 @@ class NetworkCameraPanel(_ModalPanel):
         return len(self.rows)
 
     def tableView_objectValueForTableColumn_row_(self, table, column, row):
-        return self.rows[row][1] if 0 <= row < len(self.rows) else None
+        if not 0 <= row < len(self.rows):
+            return None
+        camera, title, tooltip, saved, verified = self.rows[row]
+        if column is not None and column.identifier() == 'verified':
+            return '✓' if verified else ''      # empty: not verified (or not saved)
+        return title
 
     def tableView_willDisplayCell_forTableColumn_row_(self, table, cell, column, row):
         if 0 <= row < len(self.rows):
@@ -410,12 +642,19 @@ class NetworkCameraPanel(_ModalPanel):
             cell.setFont_(NSFont.systemFontOfSize_weight_(size, NSFontWeightBold) if self.rows[row][3] else NSFont.systemFontOfSize_(size))
 
     def tableView_toolTipForCell_rect_tableColumn_row_mouseLocation_(self, table, cell, rect, column, row, location):
-        return (self.rows[row][2] if 0 <= row < len(self.rows) else None), rect
+        if not 0 <= row < len(self.rows):
+            return None, rect
+        camera, title, tooltip, saved, verified = self.rows[row]
+        if column is not None and column.identifier() == 'verified' and saved:
+            tooltip = (_t("A picture came from it with the address, user and password saved") if verified
+                       else _t("Not verified: saved without a picture from it with these details. Test it."))
+        return tooltip, rect
 
     def tableViewSelectionDidChange_(self, notification):
         camera = self.selectedCamera()
         if camera is None or self.reselecting:
             return
+        self.forgetTest()       # another camera: not the picture of the one before
         saved = self.savedFor(camera.host)
         self.labelField.setStringValue_((saved or {}).get('label') or camera.name or camera.host)
         if saved is not None:
@@ -424,7 +663,9 @@ class NetworkCameraPanel(_ModalPanel):
             self.passwordField.setStringValue_(saved.get('password') or '')
             self.filled = (saved.get('user') or '', saved.get('password') or '')
             _select_resolution(self.resolutionPopup, saved.get('resolution'))
+            self.editing = saved
         else:
+            self.editing = None
             self.urlField.setStringValue_(camera.url or '')
             if self.filled is not None and self.fields()[1:] == self.filled:
                 # another camera's user and password, not to be sent to this one
@@ -446,63 +687,130 @@ class NetworkCameraPanel(_ModalPanel):
     def labelEdited_(self, sender):
         """The name of a camera tested before, changed: kept, and shown in the list."""
         from ExtraVideo import rename_source, saved_sources
-        camera = self.selectedCamera()
         label = str(self.labelField.stringValue()).strip()
-        if camera is None or not label:
-            return
-        saved = self.savedFor(camera.host)
-        if saved is None or saved.get('label') == label or saved['url'] != str(self.urlField.stringValue()).strip():
+        saved = self.editing
+        if saved is None or not label or saved.get('label') == label or saved['url'] != self.fields()[0]:
             return
         rename_source(saved['url'], label)
         self.saved = saved_sources()
+        self.editing = next((source for source in self.saved if source['url'] == saved['url']), None)
         self.showFound()
+        self.updateButtons()
 
-    def fieldChanged_(self, notification):
+    def controlTextDidEndEditing_(self, notification):
+        if notification.object() is self.urlField:
+            self.takeCredentials()
+
+    @objc.python_method
+    def takeCredentials(self):
+        """rtsp://user:password@host/... typed or pasted: the user and password go into their fields."""
+        url, user, password = _split_credentials(str(self.urlField.stringValue()))
+        if user is None:
+            return
+        self.urlField.setStringValue_(url)
+        self.userField.setStringValue_(user)
+        self.passwordField.setStringValue_(password)
+        self.updateButtons()
+
+    def controlTextDidChange_(self, notification):
         if notification.object() is self.urlField:
             self.xaddr = None if self.urlField.stringValue() else self.xaddr      # typed: no longer the ONVIF camera picked
+        if self.tested is not None and self.fields() != self.tested:
+            self.forgetTest()   # the picture was of other details
         self.updateButtons()
+
+    @objc.python_method
+    def forgetTest(self):
+        """The preview and the test's result go: they are of another camera, or of other details."""
+        if self.cancel_test is not None:
+            self.cancel_test()
+            self.cancel_test = None
+        self.testing = False
+        self.test_id += 1
+        self.tested = None
+        self.preview.setImage_(None)
+        self.testStatus.setStringValue_(_t("Test pulls a picture from the camera; it can be saved untested too."))
 
     # Test
 
     @objc.python_method
     def fields(self):
-        return str(self.urlField.stringValue()).strip(), str(self.userField.stringValue()).strip(), str(self.passwordField.stringValue())
+        """(url, user, password): the address as an rtsp:// URL ('' when it is not one, see _rtsp_address)."""
+        return _rtsp_address(str(self.urlField.stringValue())), str(self.userField.stringValue()).strip(), str(self.passwordField.stringValue())
 
     @objc.python_method
     def updateButtons(self):
-        url, user, password = self.fields()
-        self.testButton.setEnabled_(url.lower().startswith(('rtsp://', 'rtsps://')) or (not url and self.xaddr is not None))
-        self.addButton.setEnabled_(self.tested is not None and self.tested == (url, user, password))
+        """Test: always, but while a test runs (the address is checked when pressed); Add/Save: an rtsp:// address,
+        tested or not (the camera may be offline now); Forget: a saved camera is selected."""
+        try:
+            url, user, password = self.fields()
+            self.testButton.setEnabled_(not self.testing)
+            self.addButton.setEnabled_(bool(url))
+            if self.forgetButton is not None:
+                self.forgetButton.setEnabled_(self.editing is not None)
+            if self.editing is not None:
+                self.modeLabel.setStringValue_(_t("Editing “%s”") % (self.editing.get('label') or _host(self.editing['url'])))
+                self.modeLabel.setToolTip_(_t("Saving replaces this camera, also when its address is changed. New empties the fields for another one.")
+                                           if self.managing else _t("Adding it also saves the changes made to this camera"))
+            else:
+                self.modeLabel.setStringValue_(_t("New camera"))
+                self.modeLabel.setToolTip_(_t("Saving adds a camera (one with the same address is replaced)"))
+            if self.managing:
+                self.addButton.setTitle_(_t("Update") if self.editing is not None else _t("Save"))
+        except Exception as e:
+            BlinkLogger().log_error('[cameras] Cannot update the buttons: %s: %s' % (e.__class__.__name__, e))
 
     def test_(self, sender):
         from CameraFinder import onvif_stream_uri
+        self.takeCredentials()
         url, user, password = self.fields()
-        xaddr = self.xaddr if not url else None
+        typed = str(self.urlField.stringValue()).strip()
+        xaddr = self.xaddr if not typed else None
+        if not xaddr and not url:
+            self.testStatus.setStringValue_(_t("Enter the camera's IP address or RTSP address (rtsp://192.168.1.10:554/stream1), or pick a camera from the list.") if not typed
+                                            else _t("Not a camera address: an IP address, or rtsp://192.168.1.10:554/stream1"))
+            return
+        self.testing = True
+        self.test_id += 1
+        test_id = self.test_id
         self.testButton.setEnabled_(False)
         self.tested = None
         self.preview.setImage_(None)
         if xaddr:
             self.testStatus.setStringValue_(_t("Asking the camera for its stream…"))
-            onvif_stream_uri(xaddr, user, password, lambda uri, error: self.streamKnown(uri, error, user, password))
+            onvif_stream_uri(xaddr, user, password, lambda uri, error: self.streamKnown(uri, error, user, password, test_id))
+        elif _bare(url):
+            # only the IP: the stream's path asked from the camera over ONVIF, else the address as it is
+            host = _host(url)
+            guess = 'http://%s/onvif/device_service' % ('[%s]' % host if ':' in host else host)
+            self.testStatus.setStringValue_(_t("Asking the camera for its stream (ONVIF)…"))
+
+            def known(uri, error):
+                if error is not None:
+                    BlinkLogger().log_info('[cameras] %s: no stream address over ONVIF (%s), trying %s' % (host, error, url))
+                    uri = url
+                self.streamKnown(uri, None, user, password, test_id)
+            onvif_stream_uri(guess, user, password, known)
         else:
-            self.streamKnown(url, None, user, password)
+            self.streamKnown(url, None, user, password, test_id)
 
     @objc.python_method
-    def streamKnown(self, url, error, user, password):
+    def streamKnown(self, url, error, user, password, test_id):
         from CameraFinder import test_stream
-        if self.closed:
+        if self.closed or test_id != self.test_id:
             return
         if error is not None:
-            self.tested_(None, url, error, user, password)
+            self.tested_(None, url, error, user, password, test_id)
             return
         self.testStatus.setStringValue_(_t("Connecting…"))
-        self.cancel_test = test_stream(url, user, password, lambda image, width, height, error: self.tested_(image, url, error or ('%dx%d' % (width, height) if width else ''), user, password, error is None))
+        self.cancel_test = test_stream(url, user, password, lambda image, width, height, error: self.tested_(image, url, error or ('%dx%d' % (width, height) if width else ''), user, password, test_id, error is None))
 
     @objc.python_method
-    def tested_(self, image, url, detail, user, password, ok=False):
-        self.cancel_test = None
-        if self.closed:
+    def tested_(self, image, url, detail, user, password, test_id, ok=False):
+        if self.closed or test_id != self.test_id:
             return
+        self.cancel_test = None
+        self.testing = False
         log = BlinkLogger().log_info
         if not ok:
             log('[cameras] Test of %s failed: %s' % (_host(url) or url, detail))
@@ -513,13 +821,20 @@ class NetworkCameraPanel(_ModalPanel):
             self.preview.setImage_(image)
             self.testStatus.setStringValue_((_t("The camera works (%s video)") % detail) if detail else _t("The camera works"))
             self.tested = (url, user, password)
+            saved = self.editing
+            if saved is not None and not saved.get('verified') and (saved['url'], saved.get('user') or '', saved.get('password') or '') == self.tested:
+                from ExtraVideo import mark_verified, saved_sources
+                mark_verified(url)
+                self.saved = saved_sources()
+                self.editing = next((source for source in self.saved if source['url'] == url), None)
+                self.showFound()
         self.updateButtons()
 
     # The result
 
     @objc.python_method
     def label(self):
-        return str(self.labelField.stringValue()).strip() or _host(str(self.urlField.stringValue())) or _t("Camera")
+        return str(self.labelField.stringValue()).strip() or _host(self.fields()[0]) or _t("Camera")
 
     @objc.python_method
     def source(self):
@@ -528,10 +843,62 @@ class NetworkCameraPanel(_ModalPanel):
 
     def add_(self, sender):
         from ExtraVideo import remember_source
+        self.takeCredentials()
         if not self.addButton.isEnabled():
             return
-        remember_source(dict(self.source(), label=self.label()))
-        self.done(1)
+        url, user, password = self.fields()
+        if self.tested != (url, user, password):
+            BlinkLogger().log_info('[cameras] Saving %s untested' % (_host(url) or url))
+        replaces = self.editing['url'] if self.editing is not None else None
+        # verified: a picture came with these details, now or before (an edit that changed only the name or resolution)
+        verified = self.tested == (url, user, password) or bool(self.editing is not None and self.editing.get('verified') and
+                   (self.editing['url'], self.editing.get('user') or '', self.editing.get('password') or '') == (url, user, password))
+        remember_source(dict(self.source(), label=self.label(), verified=verified), replaces=replaces)
+        self.urlField.setStringValue_(url)      # as saved: rtsp://, when only the IP was typed
+        if not self.managing:
+            self.done(1)
+            return
+        from ExtraVideo import saved_sources
+        self.saved = saved_sources()
+        self.checkOnline()
+        self.editing = next((source for source in self.saved if source['url'] == url), None)
+        self.filled = (user, password)
+        self.showFound()
+        self.selectHost(_host(url), fill=False)
+        tested = self.tested == (url, user, password)
+        if replaces:
+            text = _t("Updated: %s") if tested else _t("Updated, not tested: %s")
+        else:
+            text = _t("Saved: %s") if tested else _t("Saved, not tested: %s")
+        self.testStatus.setStringValue_(text % self.label())
+        self.updateButtons()
+
+    def forget_(self, sender):
+        from ExtraVideo import forget_source, saved_sources
+        saved = self.editing
+        if saved is None:
+            return
+        forget_source(saved['url'])
+        self.saved = saved_sources()
+        self.clearFields()
+        self.showFound()
+        self.testStatus.setStringValue_(_t("Forgotten: %s") % (saved.get('label') or _host(saved['url'])))
+        self.updateButtons()
+
+    def newCamera_(self, sender):
+        self.clearFields()
+        self.testStatus.setStringValue_(_t("Enter the camera's address (an IP is enough), user and password."))
+        self.panel.makeFirstResponder_(self.labelField)
+        self.updateButtons()
+
+    @objc.python_method
+    def clearFields(self):
+        self.forgetTest()
+        for field in (self.labelField, self.urlField, self.userField, self.passwordField):
+            field.setStringValue_('')
+        self.urlField.setPlaceholderString_('rtsp://192.168.1.10:554/stream1')
+        self.filled = self.editing = self.xaddr = None
+        self.table.deselectAll_(None)
 
     def cancel_(self, sender):
         self.done(0)
@@ -603,9 +970,10 @@ class AddVideoPanel(_ModalPanel):
         view.addSubview_(self.findButton)
         self.urlField = form.row(_t("Address"), _text_field('rtsp://192.168.1.10:554/stream1'))
         self.userField = form.row(_t("User"), _text_field())
-        self.passwordField = form.row(_t("Password"), _text_field(secure=True))
+        self.passwordField = _PasswordField.alloc().initWithField_(form.row(_t("Password"), _text_field(secure=True)))
         self.resolutionPopup = form.row(_t("Send at"), _resolution_popup(), height=24)
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, 'fieldChanged:', 'NSControlTextDidChangeNotification', self.urlField)
+        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, 'urlEnded:', 'NSControlTextDidEndEditingNotification', self.urlField)
         form.label(_t("Video only, 10 fps. A network camera that works is remembered here, with its password."), small=True, secondary=True, height=30, wraps=True)
         form.gap(30)
         cancel = _button(_t("Cancel"), self, 'cancel:', '\x1b')
@@ -662,6 +1030,14 @@ class AddVideoPanel(_ModalPanel):
     def fieldChanged_(self, notification):
         self.updateControls()
 
+    def urlEnded_(self, notification):
+        """rtsp://user:password@host/...: the user and password go into their fields."""
+        url, user, password = _split_credentials(str(self.urlField.stringValue()))
+        if user is not None:
+            self.urlField.setStringValue_(url)
+            self.userField.setStringValue_(user)
+            self.passwordField.setStringValue_(password)
+
     @objc.python_method
     def updateControls(self):
         rtsp = self.rtspRadio.state() == NSOnState
@@ -669,7 +1045,7 @@ class AddVideoPanel(_ModalPanel):
         for control in (self.savedPopup, self.findButton, self.urlField, self.userField, self.passwordField):
             control.setEnabled_(rtsp)
         if rtsp:
-            ok = str(self.urlField.stringValue()).strip().lower().startswith(('rtsp://', 'rtsps://'))
+            ok = bool(_rtsp_address(str(self.urlField.stringValue())))
         else:
             ok = bool(self.cameras) and self.cameraRadio.state() == NSOnState
         self.addButton.setEnabled_(ok)
@@ -680,7 +1056,8 @@ class AddVideoPanel(_ModalPanel):
         label = str(self.labelField.stringValue()).strip()
         resolution = str(self.resolutionPopup.selectedItem().representedObject())
         if self.rtspRadio.state() == NSOnState:
-            url = str(self.urlField.stringValue()).strip()
+            self.urlEnded_(None)
+            url = _rtsp_address(str(self.urlField.stringValue()))
             source = dict(kind='rtsp', url=url, user=str(self.userField.stringValue()).strip(), password=str(self.passwordField.stringValue()), resolution=resolution)
             label = label or _host(url) or _t("Camera")
         else:

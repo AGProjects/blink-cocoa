@@ -28,8 +28,9 @@ The call bar is the video call window's (VideoCallBar), at 75 % and lifted
 above the bottom row's names; it fades out after 5 seconds without the mouse
 moving, with the carousel and the button on our own tile that moves it between
 the grid and the thumbnail. Camera and More are menus. Raising hands and muting
-are there with three people or more, speaker selection with four or more
-(distinct addresses, us included); Stop sharing while the screen is shared.
+are there with three people or more (distinct addresses, us included), speaker
+selection with two video streams or more (ours, our extra videos, everyone else's
+and their extra videos); Stop sharing while the screen is shared.
 
 Our extra videos (ExtraVideo.py: a second camera or an RTSP camera, with a
 gateway that takes several videos per participant) are tiles of their own, drawn from their own
@@ -152,7 +153,8 @@ VIDEO_STALL_TIME = 20               # seconds without new frames before asking f
 SCREEN_GUESS_PIXELS = 1280 * 720
 # The room's controls by how many people (distinct addresses, us included) are in it
 ROOM_CONTROLS_AORS = 3              # raise hand, mute (everyone or one)
-SPEAKER_CONTROLS_AORS = 4           # speaker selection and the speaker items
+# and by how many video streams (parents and children, ours included) can be shown as speaker
+SPEAKER_CONTROLS_STREAMS = 2        # speaker selection and the speaker items
 PENDING_CAMERA_WAIT = 30.0          # seconds the cameras chosen in Join Conference wait for the screen to free the SDK's camera
 
 SESSION_NOTIFICATIONS = ('VideoroomSessionDidChangeState', 'VideoroomSessionAudioMutedDidChange', 'VideoroomSessionVideoMutedDidChange',
@@ -1695,6 +1697,19 @@ class VideoroomWindowController(NSObject):
         return len(aors)
 
     @objc.python_method
+    def speakerCandidates(self):
+        """The video streams that can be shown as speaker, as (publisher id, name): ours first ("Me", while
+        the camera is on), our established extra videos, and everyone else's videos, extra ones included."""
+        candidates = [] if self.session.video_muted else [(self.session.id, _t("Me"))]
+        for participant in self.tiles:
+            if participant.video is not True or not participant.visible:
+                continue
+            if participant.extra_video is not None and participant.extra_video.state != 'established':
+                continue
+            candidates.append((participant.id, participant.name))
+        return candidates
+
+    @objc.python_method
     def toggleLocalPlacement(self):
         self.local_placement = 'grid' if self.floating else 'floating'
         self.layoutTiles()
@@ -1859,7 +1874,7 @@ class VideoroomWindowController(NSObject):
         established = session.state == 'established'
         aors = self.aorCount()
         room_controls = aors >= ROOM_CONTROLS_AORS          # hands and muting
-        speaker_controls = aors >= SPEAKER_CONTROLS_AORS    # promoting speakers
+        speaker_controls = len(self.speakerCandidates()) >= SPEAKER_CONTROLS_STREAMS    # promoting speakers
         if tile.participant is None:
             id = session.id
             if tile.thumbnail_enabled:
@@ -2089,8 +2104,7 @@ class VideoroomWindowController(NSObject):
                     self.window.makeKeyAndOrderFront_(None)
 
     def userClickedSpeakersButton_(self, sender):
-        candidates = [(self.session.id, _t("Me"))]
-        candidates += [(participant.id, participant.name) for participant in self.tiles if participant.video is True and participant.visible]
+        candidates = self.speakerCandidates()
         self.speakerPanel = SpeakerSelectionPanel.alloc().init()
         self.speakerPanel.run(self.window, candidates, list(self.session.speakers), self.session.set_speakers)
 
@@ -2269,8 +2283,8 @@ class VideoroomWindowController(NSObject):
     @objc.python_method
     def updateRoomButtons(self):
         aors = self.aorCount()
-        # speakers with four people or more (or speakers still set, to clear them)
-        self.speakersButton.setHidden_(not (aors >= SPEAKER_CONTROLS_AORS or bool(self.session.speakers)))
+        # speakers with two video streams or more (or speakers still set, to clear them)
+        self.speakersButton.setHidden_(not (len(self.speakerCandidates()) >= SPEAKER_CONTROLS_STREAMS or bool(self.session.speakers)))
         # raising a hand with three people or more (or to lower one still up)
         self.handButton.setHidden_(not (aors >= ROOM_CONTROLS_AORS or self.session.id in self.session.raised_hands))
         if not self.carousel.isHidden():
@@ -2412,6 +2426,7 @@ class VideoroomWindowController(NSObject):
     @objc.python_method
     def _NH_VideoroomSessionVideoMutedDidChange(self, notification):
         self.updateCameraButton()
+        self.updateRoomButtons()        # our camera is one of the streams that can be speaker
 
     @objc.python_method
     def _NH_VideoroomSessionLocalVideoDidChange(self, notification):
@@ -2492,6 +2507,7 @@ class VideoroomWindowController(NSObject):
         elif state == 'established':
             self.flash(_t("%s added") % extra.label)
             self.updateAutoSpeakers()
+            self.updateRoomButtons()    # one more stream that can be speaker
         elif state == 'ended':
             self.removeParticipant(extra.participant)
             self.updateAutoSpeakers()
