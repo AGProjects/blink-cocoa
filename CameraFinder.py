@@ -6,7 +6,8 @@
   - ONVIF WS-Discovery: a Probe for dn:NetworkVideoTransmitter sent to 239.255.255.250:3702;
     each ProbeMatch gives the camera's device service address (XAddrs) and its scopes (name,
     hardware). Its RTSP address is then asked with the ONVIF SOAP calls GetCapabilities,
-    GetProfiles and GetStreamUri, authenticated with a WS-Security UsernameToken (digest).
+    GetProfiles and GetStreamUri, authenticated with a WS-Security UsernameToken (digest) dated in the
+    camera's clock (GetSystemDateAndTime), or with HTTP Digest when the camera refuses that.
   - Bonjour: the _rtsp._tcp services (dns_sd, through the SDK's pybonjour), resolved to
     host, port and the TXT record's path.
   - A test: RtspSource's reader until the first picture, or a timeout.
@@ -215,11 +216,13 @@ def discover(callback):
 
 # ONVIF: the RTSP address of a camera
 
-def _security_header(user, password):
+def _security_header(user, password, offset=0.0):
+    """A WS-Security UsernameToken (digest); Created in the camera's time (offset: its clock minus ours), as a
+    camera refuses a token whose time is too far from its own."""
     if not user:
         return ''
     nonce = os.urandom(16)
-    created = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.000Z')
+    created = datetime.fromtimestamp(time.time() + offset, timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.000Z')
     digest = base64.b64encode(hashlib.sha1(nonce + created.encode() + (password or '').encode()).digest()).decode()
     return ('<s:Header><Security s:mustUnderstand="1" xmlns="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">'
             '<UsernameToken><Username>%s</Username>'
@@ -233,19 +236,58 @@ def _xml_escape(text):
     return (text or '').replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
 
 
-def _soap(url, body, user, password):
-    envelope = ('<?xml version="1.0" encoding="UTF-8"?><s:Envelope xmlns:s="http://www.w3.org/2003/05/soap-envelope" '
-                'xmlns:tds="http://www.onvif.org/ver10/device/wsdl" xmlns:trt="http://www.onvif.org/ver10/media/wsdl" '
-                'xmlns:tt="http://www.onvif.org/ver10/schema">%s<s:Body>%s</s:Body></s:Envelope>') % (_security_header(user, password), body)
+class _Refused(RuntimeError):
+    pass
+
+
+def _post(url, envelope, user, password):
+    """POST to the camera, answering an HTTP Digest (or Basic) challenge with the user and password."""
+    handlers = []
+    if user:
+        passwords = urllib.request.HTTPPasswordMgrWithDefaultRealm()
+        passwords.add_password(None, url, user, password or '')
+        handlers = [urllib.request.HTTPDigestAuthHandler(passwords), urllib.request.HTTPBasicAuthHandler(passwords)]
     request = urllib.request.Request(url, data=envelope.encode(), headers={'Content-Type': 'application/soap+xml; charset=utf-8'})
     try:
-        with urllib.request.urlopen(request, timeout=SOAP_TIMEOUT) as response:
+        with urllib.request.build_opener(*handlers).open(request, timeout=SOAP_TIMEOUT) as response:
             return ElementTree.fromstring(response.read())
     except urllib.error.HTTPError as e:
         text = e.read().decode(errors='replace')
-        if e.code in (400, 401, 500) and re.search(r'NotAuthorized|not authorized|Sender', text, re.I):
-            raise RuntimeError('the camera refused the user or password')
+        if e.code == 401 or (e.code in (400, 500) and re.search(r'NotAuthorized|not authorized|Sender', text, re.I)):
+            raise _Refused('the camera refused the user or password (ONVIF, %d)' % e.code)
         raise RuntimeError('the camera answered %d %s' % (e.code, e.reason))
+
+
+def _envelope(body, header=''):
+    return ('<?xml version="1.0" encoding="UTF-8"?><s:Envelope xmlns:s="http://www.w3.org/2003/05/soap-envelope" '
+            'xmlns:tds="http://www.onvif.org/ver10/device/wsdl" xmlns:trt="http://www.onvif.org/ver10/media/wsdl" '
+            'xmlns:tt="http://www.onvif.org/ver10/schema">%s<s:Body>%s</s:Body></s:Envelope>') % (header, body)
+
+
+def _clock_offset(xaddr):
+    """The camera's UTC clock minus ours, in seconds (GetSystemDateAndTime needs no authentication); 0 if unknown."""
+    try:
+        answer = _post(xaddr, _envelope('<tds:GetSystemDateAndTime/>'), None, None)
+        utc = _find(answer, 'UTCDateTime')
+        date, clock = _find(utc, 'Date'), _find(utc, 'Time')
+        value = lambda element, name: int(_find(element, name).text)
+        camera = datetime(value(date, 'Year'), value(date, 'Month'), value(date, 'Day'),
+                          value(clock, 'Hour'), value(clock, 'Minute'), value(clock, 'Second'), tzinfo=timezone.utc)
+        return camera.timestamp() - time.time()
+    except Exception:
+        return 0.0
+
+
+def _soap(url, body, user, password, offset=0.0):
+    """The call with a WS-Security token in the camera's time (and HTTP Digest if challenged); refused, once more
+    with HTTP Digest only: cameras differ in which they take."""
+    try:
+        return _post(url, _envelope(body, _security_header(user, password, offset)), user, password)
+    except _Refused:
+        if not user:
+            raise
+    _log('ONVIF %s: WS-Security refused, trying HTTP Digest only' % url)
+    return _post(url, _envelope(body), user, password)
 
 
 def _find(root, name):
@@ -254,16 +296,19 @@ def _find(root, name):
 
 def _onvif_stream_uri(xaddr, user, password):
     try:
-        capabilities = _soap(xaddr, '<tds:GetCapabilities><tds:Category>Media</tds:Category></tds:GetCapabilities>', user, password)
+        offset = _clock_offset(xaddr) if user else 0.0
+        if abs(offset) > 5:
+            _log('ONVIF %s: the camera clock is %+d s from ours' % (xaddr, offset))
+        capabilities = _soap(xaddr, '<tds:GetCapabilities><tds:Category>Media</tds:Category></tds:GetCapabilities>', user, password, offset)
         media = _find(capabilities, 'Media')
         media_url = _find(media, 'XAddr').text.strip() if media is not None and _find(media, 'XAddr') is not None else xaddr
-        profiles = _soap(media_url, '<trt:GetProfiles/>', user, password)
+        profiles = _soap(media_url, '<trt:GetProfiles/>', user, password, offset)
         profile = next((element for element in profiles.iter() if _local_name(element.tag) == 'Profiles'), None)
         if profile is None or not profile.get('token'):
             raise RuntimeError('the camera has no media profile')
         body = ('<trt:GetStreamUri><trt:StreamSetup><tt:Stream>RTP-Unicast</tt:Stream><tt:Transport><tt:Protocol>RTSP</tt:Protocol>'
                 '</tt:Transport></trt:StreamSetup><trt:ProfileToken>%s</trt:ProfileToken></trt:GetStreamUri>') % _xml_escape(profile.get('token'))
-        answer = _soap(media_url, body, user, password)
+        answer = _soap(media_url, body, user, password, offset)
         uri = _find(answer, 'Uri')
         if uri is None or not uri.text:
             raise RuntimeError('the camera gave no stream address')

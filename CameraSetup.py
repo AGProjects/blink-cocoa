@@ -208,6 +208,8 @@ class NetworkCameraPanel(_ModalPanel):
         self.rows = []              # (FoundCamera, title, tooltip, tested) as listed
         self.xaddr = None           # the ONVIF device service of the camera picked from the list
         self.tested = None          # (url, user, password) that gave a picture
+        self.filled = None          # (user, password) filled in from a camera tested before
+        self.reselecting = False    # the list reloaded, its selection put back: the fields are left as they are
         self.searching = False
         self.closed = False
         self.cancel_test = None
@@ -385,7 +387,11 @@ class NetworkCameraPanel(_ModalPanel):
             index = next((index for index, row in enumerate(self.rows) if row[0].host == selected.host), None)
             if index is not None:
                 from Foundation import NSIndexSet
-                self.table.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(index), False)
+                self.reselecting = True
+                try:
+                    self.table.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(index), False)
+                finally:
+                    self.reselecting = False
 
     @objc.python_method
     def selectedCamera(self):
@@ -408,7 +414,7 @@ class NetworkCameraPanel(_ModalPanel):
 
     def tableViewSelectionDidChange_(self, notification):
         camera = self.selectedCamera()
-        if camera is None:
+        if camera is None or self.reselecting:
             return
         saved = self.savedFor(camera.host)
         self.labelField.setStringValue_((saved or {}).get('label') or camera.name or camera.host)
@@ -416,9 +422,15 @@ class NetworkCameraPanel(_ModalPanel):
             self.urlField.setStringValue_(saved['url'])
             self.userField.setStringValue_(saved.get('user') or '')
             self.passwordField.setStringValue_(saved.get('password') or '')
+            self.filled = (saved.get('user') or '', saved.get('password') or '')
             _select_resolution(self.resolutionPopup, saved.get('resolution'))
         else:
             self.urlField.setStringValue_(camera.url or '')
+            if self.filled is not None and self.fields()[1:] == self.filled:
+                # another camera's user and password, not to be sent to this one
+                self.userField.setStringValue_('')
+                self.passwordField.setStringValue_('')
+            self.filled = None
         self.xaddr = camera.xaddr if camera.how == 'onvif' else None
         if not self.urlField.stringValue() and self.xaddr:
             self.urlField.setPlaceholderString_(_t("asked from the camera (ONVIF) when tested"))
