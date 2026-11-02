@@ -243,6 +243,68 @@ def _media_summary(sdp):
     return ', '.join(parts) or 'no media'
 
 
+# SDP, for the RTP tab of the Logs window: the lines below carry the same markers as the SIP
+# calls' ("Proposed video codecs:", "Video codec negotiated:", ...), DebugWindow mirrors them
+
+_AUXILIARY_CODECS = ('RTX', 'RED', 'ULPFEC', 'FLEXFEC-03')
+
+
+def _sdp_sections(sdp):
+    """(media, port, payload types, section text) of every m= line of an SDP."""
+    sections = []
+    for match in re.finditer(r'^m=(\w+) (\d+) [^ ]+ ([^\r\n]*)', sdp, re.M):
+        section_end = re.search(r'^m=', sdp[match.end():], re.M)
+        section = sdp[match.end():match.end() + section_end.start()] if section_end else sdp[match.end():]
+        sections.append((match.group(1), match.group(2), match.group(3).split(), section))
+    return sections
+
+
+def _codec_description(section, pt):
+    """'H264/90000 (PT 96, profile-level-id=42e01f;packetization-mode=1)', or None for RTX, RED and FEC."""
+    rtpmap = re.search(r'^a=rtpmap:%s ([^\r\n]+)' % re.escape(pt), section, re.M)
+    name = rtpmap.group(1).strip() if rtpmap else 'PT %s' % pt
+    if name.partition('/')[0].upper() in _AUXILIARY_CODECS:
+        return None
+    fmtp = re.search(r'^a=fmtp:%s ([^\r\n]+)' % re.escape(pt), section, re.M)
+    if fmtp:
+        return '%s (PT %s, %s)' % (name, pt, fmtp.group(1).strip())
+    return '%s (PT %s)' % (name, pt)
+
+
+def _section_direction(section):
+    match = re.search(r'^a=(sendrecv|sendonly|recvonly|inactive)\s*$', section, re.M)
+    return match.group(1) if match else 'sendrecv'
+
+
+def _rtp_offer_lines(sdp):
+    """'Proposed audio codecs: ...', 'Proposed video codecs: ...' of an offer, every codec with its fmtp."""
+    lines = []
+    for media, port, payloads, section in _sdp_sections(sdp):
+        if media not in ('audio', 'video'):
+            continue
+        if port == '0' and 'a=bundle-only' not in section:
+            lines.append('Proposed %s codecs: none, %s disabled' % (media, media))
+            continue
+        codecs = [codec for codec in (_codec_description(section, pt) for pt in payloads) if codec]
+        lines.append('Proposed %s codecs: %s, %s' % (media, ', '.join(codecs) or 'none', _section_direction(section)))
+    return lines
+
+
+def _rtp_answer_lines(sdp):
+    """'Audio codec negotiated: ...', 'Video codec negotiated: ...' of an answer: its first codec, with its fmtp."""
+    lines = []
+    for media, port, payloads, section in _sdp_sections(sdp):
+        if media not in ('audio', 'video'):
+            continue
+        label = media.capitalize()
+        if port == '0' and 'a=bundle-only' not in section:
+            lines.append('%s codec negotiated: none, %s rejected (no codec in common?)' % (label, media))
+            continue
+        codec = next((codec for codec in (_codec_description(section, pt) for pt in payloads) if codec), None)
+        lines.append('%s codec negotiated: %s, %s' % (label, codec or 'none', _section_direction(section)))
+    return lines
+
+
 def _offers_video(sdp):
     """Whether a feed's offer carries video: an m=video that is not rejected nor inactive."""
     for match in re.finditer(r'^m=video (\d+) [^\r\n]*', sdp, re.M):
@@ -736,6 +798,8 @@ class VideoroomSession(object):
 
         self.peer_connection.setLocalDescription_completionHandler_(description, local_set)
         self.log('sending the offer (%s)' % _media_summary(sdp))
+        for line in _rtp_offer_lines(sdp):
+            self.log('publishing: %s' % line)
         _log('[videoroom] %s: offer\n%s' % (self.room, sdp), 'debug')
         request = dict(sylkrtc='videoroom-join', account=self.identity, session=self.id, uri=self.room, sdp=sdp, audio=True, video=True)
         if not self._guest:
@@ -758,6 +822,8 @@ class VideoroomSession(object):
 
     def _on_answer(self, sdp):
         self.log('answer: %s' % _media_summary(sdp))
+        for line in _rtp_answer_lines(sdp):
+            self.log('publishing: %s' % line)
         _log('[videoroom] %s: answer\n%s' % (self.room, sdp), 'debug')
         codec = _chosen_video_codec(sdp)
         if codec is None:
@@ -1416,6 +1482,8 @@ class VideoroomSession(object):
         participant.video = _offers_video(sdp)      # without video: audio only, in the carousel
         self._post('VideoroomSessionParticipantDidChange', participant=participant)
         self.log('offer from %s: %s' % (participant.uri, _media_summary(sdp)))
+        for line in _rtp_offer_lines(sdp):
+            self.log('feed of %s: %s' % (participant.uri, line))
         _log('[videoroom] %s: offer from %s\n%s' % (self.room, participant.uri, sdp), 'debug')
         factory = peer_connection_factory()
         feed = participant.feed
@@ -1465,6 +1533,8 @@ class VideoroomSession(object):
         participant.peer_connection.setLocalDescription_completionHandler_(description, local_set)
         sdp = str(description.sdp())
         participant.video_codec = participant.video_codec or _chosen_video_codec(sdp)
+        for line in _rtp_answer_lines(sdp):
+            self.log('feed of %s: %s' % (participant.uri, line))
         self.connection.request(dict(sylkrtc='videoroom-feed-answer', session=self.id, feed=feed, sdp=sdp))
         self._flush_trickle(feed)
         if self.video_paused:

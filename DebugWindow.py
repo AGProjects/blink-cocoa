@@ -636,8 +636,14 @@ class DebugWindow(NSObject):
         "Video stream ended",
         "Video channel received data",
         # Codec details
+        "Audio codec negotiated:",
         "Video codec negotiated:",
         "Video codec fmtp:",
+        # Video rooms (Videoroom.py): our publisher and each feed; the codec lines are matched above
+        "the room takes no video from us",
+        " video stalled, asking for it again",
+        " video lost (no new frames",
+        " has no video for ",
         # Encryption outcomes
         "RTP encryption:",                      # our new verbose form
         "SRTP/SDES audio encryption active",
