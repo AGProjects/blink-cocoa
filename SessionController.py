@@ -1899,7 +1899,15 @@ class SessionController(NSObject):
                     raise TypeError("Unsupported stream type %s" % stream.type)
 
             if not is_update:
-                self.session.accept(streams)
+                contact_parameters = None
+                if self.session.remote_focus and self.session.account is not BonjourAccount():
+                    # a focus calling us (a REFER-initiated invitation into a room): the same device id as on
+                    # connect() (RFC 5626 +sip.instance), so the focus publishes it as this endpoint's
+                    # participant_id and the video room's gateway, told the same on join, knows the leg is us
+                    instance_id = SIPSimpleSettings().instance_id
+                    if instance_id:
+                        contact_parameters = {'+sip.instance': '"<%s>"' % instance_id}
+                self.session.accept(streams, contact_parameters=contact_parameters)
         except Exception as exc:
             # if there was some exception, reject the session
             if is_update:
