@@ -177,7 +177,7 @@ def _defaults():
     return NSUserDefaults.standardUserDefaults()
 
 
-class _FlippedView(NSView):
+class CameraSetupFlippedView(NSView):
     def isFlipped(self):
         return True
 
@@ -275,7 +275,7 @@ def _panel(title, width, height, resizable=False):
     panel = NSPanel.alloc().initWithContentRect_styleMask_backing_defer_(NSMakeRect(0, 0, width, height), style, NSBackingStoreBuffered, False)
     panel.setTitle_(title)
     panel.setReleasedWhenClosed_(False)
-    content = _FlippedView.alloc().initWithFrame_(NSMakeRect(0, 0, width, height))
+    content = CameraSetupFlippedView.alloc().initWithFrame_(NSMakeRect(0, 0, width, height))
     panel.setContentView_(content)
     return panel, content
 

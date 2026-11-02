@@ -67,7 +67,7 @@ def describe_time(value):
         return NSLocalizedString("unknown time", "Label")
 
 
-class _FlippedView(NSView):
+class AvatarConflictFlippedView(NSView):
     def isFlipped(self):
         return True
 
@@ -169,7 +169,7 @@ class AvatarConflictPanel(NSObject):
         scroll.setHasVerticalScroller_(len(self.items) > MAX_VISIBLE_ROWS)
         scroll.setBorderType_(NSBezelBorder)
         inner_w = scroll.contentSize().width
-        document = _FlippedView.alloc().initWithFrame_(NSMakeRect(0, 0, inner_w, len(self.items) * ROW_H))
+        document = AvatarConflictFlippedView.alloc().initWithFrame_(NSMakeRect(0, 0, inner_w, len(self.items) * ROW_H))
         for row, item in enumerate(self.items):
             self._addRow(document, row, item, inner_w)
         scroll.setDocumentView_(document)

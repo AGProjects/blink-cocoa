@@ -86,11 +86,11 @@ def _size(stats):
     return '%dx%d' % (int(width), int(height)) if width and height else None
 
 
-class _Node(NSObject):
+class ConferenceInfoNode(NSObject):
     """An item of the tree, kept across refreshes (the outline view knows its items by identity)."""
 
     def initWithKey_(self, key):
-        self = objc.super(_Node, self).init()
+        self = objc.super(ConferenceInfoNode, self).init()
         if self is not None:
             self.key = key
             self.title = ''
@@ -100,7 +100,7 @@ class _Node(NSObject):
         return self
 
 
-class _FlippedView(NSView):
+class ConferenceInfoFlippedView(NSView):
     def isFlipped(self):
         return True
 
@@ -114,7 +114,7 @@ class ConferenceInfoWindow(NSObject):
         self.controller = controller
         self.session = controller.session
         self.previous = {}      # key -> (time, value), for the rates
-        self.nodes = {}         # entry key -> _Node
+        self.nodes = {}         # entry key -> ConferenceInfoNode
         self.order = []         # the top level nodes, in order
         self.totals = dict(up=0.0, down=0.0)
         self.closed = False
@@ -132,7 +132,7 @@ class ConferenceInfoWindow(NSObject):
         self.window.setTitle_(_t("Conference info: %s") % self.controller.title)
         self.window.setDelegate_(self)
         self.window.setContentMinSize_(NSMakeSize(320, 360))
-        view = _FlippedView.alloc().initWithFrame_(NSMakeRect(0, 0, WIDTH, HEIGHT))
+        view = ConferenceInfoFlippedView.alloc().initWithFrame_(NSMakeRect(0, 0, WIDTH, HEIGHT))
         self.window.setContentView_(view)
         margin, label_w = 10.0, 78.0
         y = margin
@@ -260,7 +260,7 @@ class ConferenceInfoWindow(NSObject):
         for key, title, status, fields, bold in entries:
             node = self.nodes.get(key)
             if node is None:
-                node = self.nodes[key] = _Node.alloc().initWithKey_(key)
+                node = self.nodes[key] = ConferenceInfoNode.alloc().initWithKey_(key)
                 new.append(node)
             node.title, node.value, node.bold = title, status or '', bold
             fields = [(field, value) for field, value in fields if value not in (None, '')]
@@ -268,7 +268,7 @@ class ConferenceInfoWindow(NSObject):
                 node.children.pop()
             for number, (field, value) in enumerate(fields):
                 if number >= len(node.children):
-                    node.children.append(_Node.alloc().initWithKey_((key, number)))
+                    node.children.append(ConferenceInfoNode.alloc().initWithKey_((key, number)))
                 child = node.children[number]
                 child.title, child.value = _t(field), str(value)
             order.append(node)
