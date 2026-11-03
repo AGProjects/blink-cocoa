@@ -5290,6 +5290,25 @@ class ContactWindowController(NSWindowController):
 
         if account is None:
             account = self.getAccountWitDialPlan(target)
+
+        # a room with video: joined, as the contact menu's Start Video Call does (WebRTC audio and video,
+        # MSRP chat); a SIP call with video to its focus would only get audio, the focus does no video
+        media = media_type if isinstance(media_type, (tuple, list)) else (media_type,)
+        if 'video' in media and selected_contact is not None and account is not None and account is not BonjourAccount():
+            room = self.conferenceTargetForContact(selected_contact)
+            if room is not None:
+                try:
+                    from WebRTCSupport import room_video
+                    has_video_room = room_video(room, account) is not None
+                except Exception:
+                    log_gui_exception('checking the video room of %s' % room)
+                    has_video_room = False
+                if has_video_room:
+                    BlinkLogger().log_info("%s is a room with video: joining it with audio and video" % room)
+                    self.connectToConference(room, ("chat", "audio", "video"))
+                    return
+                BlinkLogger().log_info("%s is a room without a video room for %s: calling it with SIP" % (room, account.id))
+
         local_uri = account.id if account is not None else None
         self.startSessionWithTarget(target, media_type=media_type, local_uri=local_uri, selected_contact=selected_contact)
 
