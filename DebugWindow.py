@@ -626,6 +626,7 @@ class DebugWindow(NSObject):
         "Proposed audio codecs:",
         "Proposed video codecs:",
         "Proposed video options:",
+        "Proposed video SDP:",
         "Account RTP encryption:",
         # Stream-start lifecycle
         "MediaStreamDidStart",
