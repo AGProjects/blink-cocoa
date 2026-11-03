@@ -685,6 +685,8 @@
 		5C1E00080000000000000003 /* MSRPDiagnostics.py in Resources */ = {isa = PBXBuildFile; fileRef = 5C1E00080000000000000001 /* MSRPDiagnostics.py */; };
 		5C1E00090000000000000002 /* ConferenceShareDialog.py in Resources */ = {isa = PBXBuildFile; fileRef = 5C1E00090000000000000001 /* ConferenceShareDialog.py */; };
 		5C1E00090000000000000003 /* ConferenceShareDialog.py in Resources */ = {isa = PBXBuildFile; fileRef = 5C1E00090000000000000001 /* ConferenceShareDialog.py */; };
+		5C1E000A0000000000000002 /* CallMeMaybe.py in Resources */ = {isa = PBXBuildFile; fileRef = 5C1E000A0000000000000001 /* CallMeMaybe.py */; };
+		5C1E000A0000000000000003 /* CallMeMaybe.py in Resources */ = {isa = PBXBuildFile; fileRef = 5C1E000A0000000000000001 /* CallMeMaybe.py */; };
 		5C1E00F10000000000000002 /* ExtraVideo.py in Resources */ = {isa = PBXBuildFile; fileRef = 5C1E00F10000000000000001 /* ExtraVideo.py */; };
 		5C1E00F10000000000000003 /* ExtraVideo.py in Resources */ = {isa = PBXBuildFile; fileRef = 5C1E00F10000000000000001 /* ExtraVideo.py */; };
 		5C1E00F20000000000000002 /* RtspSource.py in Resources */ = {isa = PBXBuildFile; fileRef = 5C1E00F20000000000000001 /* RtspSource.py */; };
@@ -1605,6 +1607,7 @@
 		5C1E00070000000000000001 /* VideoroomWindowController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoroomWindowController.py; sourceTree = "<group>"; };
 		5C1E00080000000000000001 /* MSRPDiagnostics.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MSRPDiagnostics.py; sourceTree = "<group>"; };
 		5C1E00090000000000000001 /* ConferenceShareDialog.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ConferenceShareDialog.py; sourceTree = "<group>"; };
+		5C1E000A0000000000000001 /* CallMeMaybe.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = CallMeMaybe.py; sourceTree = "<group>"; };
 		5C1E00F10000000000000001 /* ExtraVideo.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ExtraVideo.py; sourceTree = "<group>"; };
 		5C1E00F20000000000000001 /* RtspSource.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = RtspSource.py; sourceTree = "<group>"; };
 		5C1E00F30000000000000001 /* CameraFinder.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = CameraFinder.py; sourceTree = "<group>"; };
@@ -1888,6 +1891,7 @@
 				5C1E00070000000000000001 /* VideoroomWindowController.py */,
 				5C1E00080000000000000001 /* MSRPDiagnostics.py */,
 				5C1E00090000000000000001 /* ConferenceShareDialog.py */,
+				5C1E000A0000000000000001 /* CallMeMaybe.py */,
 				5A1E000200000000000000F3 /* VideoCallRecorder.py */,
 				DD1A00000000000000000001 /* DataImport.py */,
 				DD1A00000000000000000003 /* DataImportPanel.py */,
@@ -2647,6 +2651,7 @@
 				5C1E00070000000000000003 /* VideoroomWindowController.py in Resources */,
 				5C1E00080000000000000003 /* MSRPDiagnostics.py in Resources */,
 				5C1E00090000000000000003 /* ConferenceShareDialog.py in Resources */,
+				5C1E000A0000000000000003 /* CallMeMaybe.py in Resources */,
 				1F2C06F225DC3490004701ED /* mime.types in Resources */,
 				1F762C321D9C75FA00F3D455 /* memory_debug.py in Resources */,
 				1F22729612B554F50010A8B2 /* ContactWindowController.py in Resources */,
@@ -2981,6 +2986,7 @@
 				5C1E00070000000000000002 /* VideoroomWindowController.py in Resources */,
 				5C1E00080000000000000002 /* MSRPDiagnostics.py in Resources */,
 				5C1E00090000000000000002 /* ConferenceShareDialog.py in Resources */,
+				5C1E000A0000000000000002 /* CallMeMaybe.py in Resources */,
 				5A1E000200000000000000F4 /* VideoCallRecorder.py in Resources */,
 				DD1A00000000000000000002 /* DataImport.py in Resources */,
 				DD1A00000000000000000004 /* DataImportPanel.py in Resources */,

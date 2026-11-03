@@ -390,6 +390,7 @@ class ContactWindowController(NSWindowController):
     contactsMenu = objc.IBOutlet()
     devicesMenu = objc.IBOutlet()
     callMenu = objc.IBOutlet()
+    callMeMaybeDialog = None
     presenceMenu = objc.IBOutlet()
     presenceWatchersMenu = objc.IBOutlet()
     presencePopUpMenu = objc.IBOutlet()
@@ -1180,6 +1181,42 @@ class ContactWindowController(NSWindowController):
             self.blinkMenu.itemWithTag_(6).setHidden_(True)
 
     @objc.python_method
+    def updateCallMeMaybeMenuItem(self):
+        """Call me, maybe? (as Sylk Mobile), first in the Call menu: shown when the selected
+        account's domain runs SylkServer."""
+        menu = self.callMenu
+        item = menu.itemWithTag_(45)
+        if item is None:
+            item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(NSLocalizedString("Call me, maybe?…", "Menu item"), "callMeMaybeClicked:", "")
+            item.setTarget_(self)
+            item.setTag_(45)
+            menu.insertItem_atIndex_(item, 0)
+            separator = NSMenuItem.separatorItem()
+            separator.setTag_(46)
+            menu.insertItem_atIndex_(separator, 1)
+        from CallMeMaybe import call_me_target
+        try:
+            visible = call_me_target(self.activeAccount()) is not None
+        except Exception as e:
+            visible = False
+            BlinkLogger().log_error('[ui] Cannot tell whether the account can be called from the web: %s' % e)
+        item.setHidden_(not visible)
+        menu.itemWithTag_(46).setHidden_(not visible)
+
+    @objc.IBAction
+    def callMeMaybeClicked_(self, sender):
+        from CallMeMaybe import CallMeMaybeDialog, call_me_target
+        account = self.activeAccount()
+        call_url = call_me_target(account)
+        if call_url is None:
+            return
+        BlinkLogger().log_info('[ui] Call me, maybe: %s at %s' % (account.id, call_url))
+        if self.callMeMaybeDialog is not None:
+            self.callMeMaybeDialog.dismiss()
+        self.callMeMaybeDialog = CallMeMaybeDialog.alloc().initWithAccount_callURL_(account, call_url)
+        self.callMeMaybeDialog.runSheetForWindow(self.window())
+
+    @objc.python_method
     def updateCallMenu(self):
         menu = self.callMenu
 
@@ -1198,8 +1235,12 @@ class ContactWindowController(NSWindowController):
         settings = SIPSimpleSettings()
         self.useSpeechRecognitionMenuItem.setState_(NSOnState if settings.sounds.use_speech_recognition else NSOffState)
 
-        while menu.numberOfItems() > 9:
-            menu.removeItemAtIndex_(9)
+        self.updateCallMeMaybeMenuItem()
+
+        # the items after the last one of the nib are made here
+        fixed = menu.indexOfItem_(menu.itemWithTag_(51)) + 1
+        while menu.numberOfItems() > fixed:
+            menu.removeItemAtIndex_(fixed)
 
         account = self.activeAccount()
         if account is None:
