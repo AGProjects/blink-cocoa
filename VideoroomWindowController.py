@@ -1275,6 +1275,7 @@ class VideoroomWindowController(NSObject):
         for name in SESSION_NOTIFICATIONS:
             notification_center.add_observer(self, sender=session, name=name)
         notification_center.add_observer(self, name='VideoDeviceDidChangeCamera')
+        notification_center.add_observer(self, name='VideoDeviceDidStop')
         for participant in list(session.participants.values()):
             self.addParticipant(participant)
         self.updateMuteButton()
@@ -1414,6 +1415,7 @@ class VideoroomWindowController(NSObject):
         for name in SESSION_NOTIFICATIONS:
             notification_center.discard_observer(self, sender=self.session, name=name)
         notification_center.discard_observer(self, name='VideoDeviceDidChangeCamera')
+        notification_center.discard_observer(self, name='VideoDeviceDidStop')
         if self.sharing_screen and self.device_before_screen is not None:
             self.stopSharingScreen()        # the room is over: the camera is the device again
         if 'ConferenceInfoPanel' in sys.modules:
@@ -2435,6 +2437,15 @@ class VideoroomWindowController(NSObject):
     @objc.python_method
     def _NH_VideoDeviceDidChangeCamera(self, notification):
         self.updateScreenState()
+
+    @objc.python_method
+    def _NH_VideoDeviceDidStop(self, notification):
+        # the screen share ended outside Blink (the Stop of the menu bar's screen sharing item, the
+        # display gone): the camera comes back as with our own Stop button
+        if not self.sharing_screen:
+            return
+        BlinkLogger().log_info('[screen sharing] %s: the screen capture ended (%s)' % (self.session.room, notification.data.reason))
+        self.stopSharingScreen()
 
     @objc.python_method
     def _NH_VideoroomSessionParticipantDidJoin(self, notification):

@@ -384,7 +384,7 @@ class ScreenPointerManager(object, metaclass=Singleton):
         self.notification_center = NotificationCenter()
         for name in ('SIPSessionDidStart', 'SIPSessionDidEnd', 'SIPSessionDidFail',
                      'SIPSessionGotMessage', 'MediaStreamDidStart', 'MediaStreamDidEnd',
-                     'VideoDeviceDidChangeCamera', 'SIPApplicationWillEnd'):
+                     'VideoDeviceDidChangeCamera', 'VideoDeviceDidStop', 'SIPApplicationWillEnd'):
             self.notification_center.add_observer(self, name=name)
 
     @run_in_gui_thread
@@ -851,6 +851,29 @@ class ScreenPointerManager(object, metaclass=Singleton):
         state.awaiting_share = True
         BlinkLogger().log_info('[screen-request] accepted, switching video to %s' % devices[0])
         self.select_device(devices[0])
+
+    def _NH_VideoDeviceDidStop(self, sender, data):
+        # The screen capture ended outside Blink (the Stop of the menu bar's
+        # screen sharing item, the display gone). A video room window puts its
+        # camera back itself; anything still on the screen a moment later (a
+        # SIP call sharing it) goes back to the camera used before.
+        if not ScreenPointer.is_screen_device(data.real_name or data.name or ''):
+            return
+        BlinkLogger().log_info('[screen-request] the screen capture ended (%s)' % data.reason)
+        call_later(0.5, self._screen_capture_ended)
+
+    def _screen_capture_ended(self):
+        settings = SIPSimpleSettings()
+        if not ScreenPointer.is_screen_device(settings.video.device):
+            return      # a video room window already put its camera back
+        previous = next((state.device_before_share for state in self.calls.values()
+                         if state.device_before_share is not None), None)
+        for state in self.calls.values():
+            state.device_before_share = None
+            state.awaiting_share = False
+        device = previous or self.last_camera or 'system_default'
+        BlinkLogger().log_info('[screen-request] screen sharing stopped from the system, video back to %s' % device)
+        self.select_device(device)
 
     def _NH_SIPApplicationWillEnd(self, sender, data):
         # Quitting while sharing: the screen is not the device next time

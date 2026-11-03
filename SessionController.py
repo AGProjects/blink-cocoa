@@ -2815,6 +2815,7 @@ class SessionController(NSObject):
         self.try_next_hop = False
         self.transport = '%s:%s' % (self.session.transport, self.session.peer_address)
         self.log_info("Next SIP hop is %s" % self.transport)
+        self.notification_center.discard_observer(self, name='SIPInvitationChangedState', sender=self.session._invitation)
         self.notification_center.add_observer(self, sender=self.session._invitation)
         self.mustCloseAudioDrawer = True
         self.changeSessionState(STATE_CONNECTED)
@@ -2924,6 +2925,7 @@ class SessionController(NSObject):
         oldSession = self.session
 
         self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
+        self.notification_center.discard_observer(self, name='SIPInvitationChangedState', sender=getattr(sender, '_invitation', None))
         self.notification_center.remove_observer(self, sender=sender)
 
         # redirect
@@ -3070,6 +3072,11 @@ class SessionController(NSObject):
     @objc.python_method
     def _NH_SIPSessionNewOutgoing(self, session, data):
         self.log_info("Proposed media: %s" % ', '.join([s.type for s in data.streams]))
+        # the INVITE's state changes, to log the SDP it carries once sent (_NH_SIPInvitationChangedState);
+        # from SIPSessionDidStart on the invitation is observed for all its notifications
+        invitation = getattr(session, '_invitation', None)
+        if invitation is not None and any(s.type == 'video' for s in data.streams):
+            self.notification_center.add_observer(self, name='SIPInvitationChangedState', sender=invitation)
         # Surface the per-media codec preference lists too, so the RTP /
         # SIP info window shows what we actually offered (not just the
         # media types).  The "selected" side gets logged later from
@@ -3151,6 +3158,7 @@ class SessionController(NSObject):
         self.notification_center.post_notification("BlinkConferenceGotUpdate", sender=self)
         self.notification_center.post_notification("BlinkSessionDidProcessTransaction", sender=self)
         self.notification_center.discard_observer(self, sender=sender._invitation)
+        self.notification_center.discard_observer(self, name='SIPInvitationChangedState', sender=sender._invitation)
         self.notification_center.remove_observer(self, sender=sender)
 
     @objc.python_method
