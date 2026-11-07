@@ -75,6 +75,7 @@ from zope.interface import implementer
 import FancyTabSwitcher
 import ParticipantsTableView
 import RadioPTT
+import ConferenceDevices     # also registers <agp-conf:participant_id>, user_agent, instance_id
 from BlinkLogger import BlinkLogger
 from ChatPrivateMessageController import ChatPrivateMessageController
 from MediaStream import STREAM_CONNECTED, STREAM_WAITING_DNS_LOOKUP
@@ -882,7 +883,7 @@ class ChatWindowController(NSWindowController):
 
             hasContactMatchingURI = NSApp.delegate().contactsWindowController.hasContactMatchingURI
             self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_ADD_CONTACT).setEnabled_(False if (hasContactMatchingURI(contact.uri) or contact.uri == own_uri or isinstance(session.account, BonjourAccount)) else True)
-            self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_REMOVE_FROM_CONFERENCE).setEnabled_(True if self.canBeRemovedFromConference(contact.uri) else False)
+            self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_REMOVE_FROM_CONFERENCE).setEnabled_(True if self.canBeRemovedFromConference(contact.uri, contact) else False)
 
             if remote_uri != contact.uri and own_uri != contact.uri and session.hasStreamOfType("chat") and self.isConferenceParticipant(contact.uri):
                 chat_stream = session.streamHandlerOfType("chat")
@@ -1038,14 +1039,51 @@ class ChatWindowController(NSWindowController):
         return False
 
     @objc.python_method
-    def canBeRemovedFromConference(self, uri):
+    def canBeRemovedFromConference(self, uri, contact=None):
         session = self.selectedSessionController()
+        if session and getattr(contact, 'multi_device', False):
+            return not contact.this_device      # our other devices can be removed, this one not
         own_uri = '%s@%s' % (session.account.id.username, session.account.id.domain)
         return session and (self.isConferenceParticipant(uri) or self.isInvitedParticipant(uri)) and own_uri != uri
 
     @objc.python_method
-    def removeParticipant(self, uri):
+    def devicePublishers(self, video_room, uri, device):
+        """The publishers of a device (ConferenceDevices.Device) of uri in the room's video room, its extra videos left out."""
+        if video_room is None or not device.webrtc:
+            return []
+        publishers = [publisher for publisher in video_room.participants.values()
+                      if publisher.uri.lower() == uri.lower() and not publisher.parent and publisher.type == 'webrtc']
+        if len(publishers) > 1 and device.webrtc_display_name:
+            publishers = [publisher for publisher in publishers if publisher.display_name == device.webrtc_display_name] or publishers
+        return publishers
+
+    @objc.python_method
+    def removeConferenceDevice(self, session, uri, device):
+        """Remove one device of an account in the room from several (maybe ours): just its legs, never by
+        the address alone, which ends them all (us too, when it is our account)."""
+        publishers = self.devicePublishers(self.selectedVideoRoom(), uri, device)
+        if device.webrtc and len(publishers) != 1:
+            publishers = []     # not one we can tell for sure
+        if not publishers and not device.direct_ids:
+            session.log_info("Cannot remove one device of %s (%s): %s" % (uri, device.label, 'its WebRTC session is not told apart from the others' if device.webrtc else 'the room tells no participant_id for it'))
+            return
+        session.pending_removal_participants.update(device.ids)
+        for publisher in publishers:
+            session.log_info("Request server for removal of the WebRTC session of %s (%s, publisher %s)" % (uri, device.label, publisher.id))
+            self.selectedVideoRoom().remove_participants([publisher.id])
+        for participant_id in device.direct_ids:
+            session.log_info("Request server for removal of the SIP leg of %s (%s, participant_id %s)" % (uri, device.label, participant_id))
+            session.session.conference.remove_participant('sip:%s;participant_id=%s' % (uri, participant_id))
+
+    @objc.python_method
+    def removeParticipant(self, uri, contact=None):
         session = self.selectedSessionController()
+        if session and getattr(contact, 'multi_device', False) and getattr(contact, 'device', None) is not None:
+            if session.remote_focus and not contact.this_device:
+                self.removeConferenceDevice(session, uri, contact.device)
+            self.participantsTableView.deselectAll_(self)
+            self.refreshDrawer()
+            return
         if session:
             # remove uri from invited participants
             try:
@@ -1190,7 +1228,7 @@ class ChatWindowController(NSWindowController):
             except IndexError:
                 return
             uri = object.uri
-            self.removeParticipant(uri)
+            self.removeParticipant(uri, object)
 
     def menuWillOpen_(self, menu):
         if menu == self.encryptionMenu:
@@ -1342,7 +1380,7 @@ class ChatWindowController(NSWindowController):
                                       NSLocalizedString("Cancel", "Button title"),
                                       None)
                 if ret == NSAlertDefaultReturn:
-                    self.removeParticipant(uri)
+                    self.removeParticipant(uri, object)
             elif tag == CONFERENCE_ROOM_MENU_INVITE_TO_CONFERENCE:
                 self.addParticipants()
             elif tag == CONFERENCE_ROOM_MENU_NOTIFY_CHANGE_PARTICIPANTS:
@@ -1775,42 +1813,59 @@ class ChatWindowController(NSWindowController):
                 self.participants.append(contact)
             elif session.conference_info is not None:
                 # Add conference participants if any
-                for user in session.conference_info.users:
-                    if re.search(r';app=[^;]*bridge', str(user.entity)):
-                        continue    # the room's audio bridge (sylk-janus-audio-bridge, the WebRTC side) is plumbing, not a participant
+                # a participant per device of each account (ConferenceDevices): an account in the room from
+                # several devices (ours too) is an item per device, its user agent telling which
+                from SMSWindowManager import bare_instance_id
+                own_instance = ConferenceDevices.normalize_id(bare_instance_id(SIPSimpleSettings().instance_id))
+                for user, device, multi_device in ((user, device, len(user_devices) > 1) for user in session.conference_info.users
+                                                    if not re.search(r';app=[^;]*bridge', str(user.entity))
+                                                    for user_devices in (ConferenceDevices.devices(user),) for device in user_devices):
                     uri = sip_prefix_pattern.sub("", user.entity)
-                    if uri == own_uri:
+                    this_device = uri == own_uri and (own_instance in device.instance_ids if multi_device else True)
+                    if this_device:
                         # Add ourselves
-                        own_name = user.display_text.value if user.display_text is not None and user.display_text.value else None
+                        own_name = device.display_text.value if device.display_text is not None and device.display_text.value else None
                         contact = BlinkMyselfConferenceContact(session.account, name=own_name)
                     else:
                          # Add remote party
                         presence_contact = NSApp.delegate().contactsWindowController.getFirstContactFromAllContactsGroupMatchingURI(uri)
                         if presence_contact:
-                            display_name = user.display_text.value if user.display_text is not None and user.display_text.value else presence_contact.name
+                            display_name = device.display_text.value if device.display_text is not None and device.display_text.value else presence_contact.name
                             contact = BlinkConferenceContact(uri, name=display_name, icon=presence_contact.icon, presence_contact=presence_contact)
                         else:
-                            display_name = user.display_text.value if user.display_text is not None and user.display_text.value else uri
+                            display_name = device.display_text.value if device.display_text is not None and device.display_text.value else uri
                             contact = BlinkConferenceContact(uri, name=display_name)
+                    contact.device = device
+                    contact.multi_device = multi_device
+                    contact.this_device = this_device
+                    if multi_device and device.label:
+                        contact.detail = NSLocalizedString("%s (this device)", "Contact detail") % device.label if this_device else device.label
 
                     active_media = []
 
-                    if any(media.media_type == 'message' for media in chain(*user)):
+                    if any(media.media_type == 'message' for media in chain(*device)):
                         active_media.append('message')
 
-                    audio_endpoints = [endpoint for endpoint in user if any(media.media_type == 'audio' for media in endpoint)]
+                    audio_endpoints = [endpoint for endpoint in device if any(media.media_type == 'audio' for media in endpoint)]
                     user_on_hold = all(endpoint.status == 'on-hold' for endpoint in audio_endpoints)
                     if audio_endpoints and not user_on_hold:
                         active_media.append('audio')
                     elif audio_endpoints and user_on_hold:
                         active_media.append('audio-onhold')
 
-                    if uri == own_uri and video_room is not None:
+                    if this_device and video_room is not None:
                         active_media.extend(media for media in ('audio', 'video') if media not in active_media)
+                    elif not this_device and device.webrtc:
+                        # in the room's video room: conference-info tells only the chat of its WebRTC leg,
+                        # the video room (when we are in it too) whether it sends video
+                        if 'audio' not in active_media and 'audio-onhold' not in active_media:
+                            active_media.append('audio')
+                        if any(publisher.video is not False for publisher in self.devicePublishers(video_room, uri, device)) and 'video' not in active_media:
+                            active_media.append('video')
 
                     # Radio PTT: an endpoint that drives a radio and has
                     # audio; the most active state of its radios wins.
-                    radio_states = [radio[0] for radio in (RadioPTT.endpoint_radio(endpoint) for endpoint in user) if radio is not None and radio[1]]
+                    radio_states = [radio[0] for radio in (RadioPTT.endpoint_radio(endpoint) for endpoint in device) if radio is not None and radio[1]]
                     if radio_states:
                         active_media.append('radio')
                         for state in ('transmitting', 'keying', 'error', 'idle'):
@@ -1822,7 +1877,7 @@ class ChatWindowController(NSWindowController):
 
                     contact.active_media = active_media
                     # detail will be reset on receival of next conference-info update
-                    if uri in session.pending_removal_participants:
+                    if uri in session.pending_removal_participants or (multi_device and device.ids & session.pending_removal_participants):
                         contact.detail = 'Removal requested...'
 
                     self.participants.append(contact)
