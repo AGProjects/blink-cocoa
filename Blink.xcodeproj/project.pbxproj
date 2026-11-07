@@ -711,7 +711,9 @@
 		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
 		A0D10F7000000000000000E1 /* RadioPTT.py in Resources */ = {isa = PBXBuildFile; fileRef = A0D10F7000000000000000E0 /* RadioPTT.py */; };
+		A0D10F7100000000000000F1 /* ConferenceDevices.py in Resources */ = {isa = PBXBuildFile; fileRef = A0D10F7100000000000000F0 /* ConferenceDevices.py */; };
 		A0D10F7000000000000000E2 /* RadioPTT.py in Resources */ = {isa = PBXBuildFile; fileRef = A0D10F7000000000000000E0 /* RadioPTT.py */; };
+		A0D10F7100000000000000F2 /* ConferenceDevices.py in Resources */ = {isa = PBXBuildFile; fileRef = A0D10F7100000000000000F0 /* ConferenceDevices.py */; };
 		A0D10F7000000000000000F1 /* radio_ptt.png in Resources */ = {isa = PBXBuildFile; fileRef = A0D10F7000000000000000F0 /* radio_ptt.png */; };
 		A0D10F7000000000000000F2 /* radio_ptt.png in Resources */ = {isa = PBXBuildFile; fileRef = A0D10F7000000000000000F0 /* radio_ptt.png */; };
 		A0D10F7000000000000000F4 /* radio_ptt_tx.png in Resources */ = {isa = PBXBuildFile; fileRef = A0D10F7000000000000000F3 /* radio_ptt_tx.png */; };
@@ -1622,6 +1624,7 @@
 		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* Blink.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Blink.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A0D10F7000000000000000E0 /* RadioPTT.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = RadioPTT.py; sourceTree = "<group>"; };
+		A0D10F7100000000000000F0 /* ConferenceDevices.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ConferenceDevices.py; sourceTree = "<group>"; };
 		A0D10F7000000000000000F0 /* radio_ptt.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = radio_ptt.png; path = icons/radio_ptt.png; sourceTree = "<group>"; };
 		A0D10F7000000000000000F3 /* radio_ptt_tx.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = radio_ptt_tx.png; path = icons/radio_ptt_tx.png; sourceTree = "<group>"; };
 		AD00000000000000004B0000 /* MessageBubbleView.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MessageBubbleView.py; sourceTree = "<group>"; };
@@ -2045,6 +2048,7 @@
 				AD0000000000000000AB0010 /* AddressbookOrigin.py */,
 				AD0000000000000000EF0000 /* ScreenPointer.py */,
 				A0D10F7000000000000000E0 /* RadioPTT.py */,
+				A0D10F7100000000000000F0 /* ConferenceDevices.py */,
 				AD0000000000000000F00000 /* ClamshellMonitor.py */,
 				AD0000000000000000EF0100 /* ScreenPointerController.py */,
 				AD00000000000000004D0000 /* MessageHost.py */,
@@ -2636,6 +2640,7 @@
 				5B1E00010000000000000006 /* DataManagerWindow.py in Resources */,
 				5B1E00010000000000000007 /* ScreenPointer.py in Resources */,
 				A0D10F7000000000000000E1 /* RadioPTT.py in Resources */,
+				A0D10F7100000000000000F1 /* ConferenceDevices.py in Resources */,
 				5B1E00010000000000000008 /* ScreenPointerController.py in Resources */,
 				5B1E00010000000000000009 /* ShareController.py in Resources */,
 				5B1E0001000000000000000A /* VideoCallRecorder.py in Resources */,
@@ -3164,6 +3169,7 @@
 				AD0000000000000000AB0013 /* AddressbookOrigin.py in Resources */,
 				AD0000000000000000EF0003 /* ScreenPointer.py in Resources */,
 				A0D10F7000000000000000E2 /* RadioPTT.py in Resources */,
+				A0D10F7100000000000000F2 /* ConferenceDevices.py in Resources */,
 				AD0000000000000000F00003 /* ClamshellMonitor.py in Resources */,
 				AD0000000000000000EF0103 /* ScreenPointerController.py in Resources */,
 				AD00000000000000004D0003 /* MessageHost.py in Resources */,
