@@ -1428,6 +1428,15 @@ class SessionControllersManager(object, metaclass=Singleton):
         except KeyError:
             session.subject = None
 
+        # X-Video-Room: sylkrtc -- SylkServer's focus invites us with audio and chat on behalf
+        # of someone in its video room; the room has video there, over sylkrtc (WebRTC)
+        try:
+            video_room = data.headers['X-Video-Room'].body
+            video_room = video_room.decode() if isinstance(video_room, bytes) else str(video_room)
+            session.blink_video_room = video_room.strip().lower() or None
+        except KeyError:
+            session.blink_video_room = None
+
         # at this stage call is allowed and will alert the user
         self.incomingSessions.add(session)
 
@@ -2847,6 +2856,58 @@ class SessionController(NSObject):
                 self.session.conference.add_participant(contact.uri)
 
         self.notification_center.post_notification("BlinkSessionDidStart", sender=self)
+
+        if self.session.direction == 'incoming' and getattr(self.session, 'blink_video_room', None) and any(stream.type == 'chat' for stream in data.streams):
+            from util import call_later
+            call_later(1.0, self.offerVideoRoom)
+
+    # The focus invited us with X-Video-Room: sylkrtc (SylkServer's webrtcgateway put
+    # ;video-room=sylkrtc in the REFER of the inviter, who is in the room's video room): once
+    # audio and chat are up, ask whether to add video by joining the video room over sylkrtc.
+    # Yes: audio and video move there (drop_sip_audio), the chat stays on this session.
+    # No: nothing changes.
+    @objc.python_method
+    def offerVideoRoom(self):
+        protocol = getattr(self.session, 'blink_video_room', None) if self.session is not None else None
+        if protocol != 'sylkrtc' or getattr(self, 'video_room_offered', False):
+            return
+        if getattr(self, 'finished', False) or self.state != STATE_CONNECTED or not self.hasStreamOfType('chat'):
+            return
+        self.video_room_offered = True
+        from WebRTCSupport import active_videoroom, join_video_conference, room_video
+        sip_room = '%s@%s' % (self.target_uri.user.decode(), self.target_uri.host.decode())
+        if active_videoroom(sip_room) is not None:
+            return                      # already in it
+        video = room_video(sip_room, self.account)
+        if video is None:
+            self.log_info("Room %s has video over sylkrtc, but this account cannot join video rooms" % sip_room)
+            return
+        # the video room has the focus address, or what the server's configuration says (RoomTarget)
+        video_uri, room_target = video
+        video_room = video_uri
+        from AppKit import NSAlert
+        alert = NSAlert.alloc().init()
+        alert.setMessageText_(NSLocalizedString("Add video?", "Window title"))
+        alert.setInformativeText_(NSLocalizedString("The conference %s has video. Switch to its video room? Audio and video move there, the chat stays here.", "Label") % video_room)
+        alert.addButtonWithTitle_(NSLocalizedString("Switch to Video", "Button title"))
+        alert.addButtonWithTitle_(NSLocalizedString("Stay without Video", "Button title"))
+        NSApp.activateIgnoringOtherApps_(True)
+        if alert.runModal() != 1000:      # NSAlertFirstButtonReturn
+            self.log_info("Staying in %s without video" % self.remoteAOR)
+            return
+        if getattr(self, 'finished', False) or self.state != STATE_CONNECTED:
+            return
+        self.log_info("Switching %s to the video room %s" % (self.remoteAOR, video_uri))
+        session = join_video_conference(self.account, video_uri, audio=self.hasStreamOfType('audio'), video=True, target=room_target)
+        if session is None:
+            self.log_error("Could not join the video room %s, staying without video" % video_uri)
+            return
+        if active_videoroom(self.remoteAOR) is not session:
+            # the server's configuration gave the video room another address than this session's
+            # MSRP switch: tie them, so the room finds its chat here and our SIP audio goes
+            from WebRTCSupport import drop_sip_audio
+            session.sip_room = sip_room
+            drop_sip_audio(session)
 
     @objc.python_method
     def _NH_SIPSessionWillEnd(self, sender, data):

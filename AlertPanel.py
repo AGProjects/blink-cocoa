@@ -4,6 +4,10 @@
 from AppKit import (NSApp,
                     NSCriticalRequest,
                     NSEventTrackingRunLoopMode,
+                    NSFontWeightRegular,
+                    NSImageScaleProportionallyUpOrDown,
+                    NSImageSymbolConfiguration,
+                    NSImageView,
                     NSNibOwner,
                     NSNibTopLevelObjects,
                     NSRectFill)
@@ -274,6 +278,27 @@ class AlertPanel(NSObject, object):
         self._addIncomingSession(session, session.blink_supported_streams, False)
 
     @objc.python_method
+    def _chatBubbleIconView(self, view, audioIcon):
+        size = 30
+        audio_frame = audioIcon.frame()
+        y = audio_frame.origin.y + (NSHeight(audio_frame) - size) / 2.0
+        image_view = NSImageView.alloc().initWithFrame_(NSMakeRect(0, y, size, size))
+        image_view.setAutoresizingMask_(audioIcon.autoresizingMask())
+        image_view.setImageScaling_(NSImageScaleProportionallyUpOrDown)
+        image = NSImage.imageWithSystemSymbolName_accessibilityDescription_("bubble.left.fill", NSLocalizedString("Chat", "Label"))
+        if image is not None:
+            config = NSImageSymbolConfiguration.configurationWithPointSize_weight_(size, NSFontWeightRegular)
+            image = image.imageWithSymbolConfiguration_(config) or image
+            image.setTemplate_(True)
+            image_view.setContentTintColor_(NSColor.systemBlueColor())
+        else:
+            image = NSImage.imageNamed_("chat")
+        image_view.setImage_(image)
+        image_view.setHidden_(True)
+        view.addSubview_(image_view)
+        return image_view
+
+    @objc.python_method
     def _addIncomingSession(self, session, streams, is_update_proposal):
         view = self.getItemView()
         self.sessions[session] = view
@@ -350,11 +375,16 @@ class AlertPanel(NSObject, object):
                     self.enableAnsweringMachine(view, session)
 
         if 'chat' in stream_types:
-            frame = chatIcon.frame()
+            # The nib's tag 31 is an "IM" label in Gill Sans whose glyph box
+            # never lined up with the audio icon. Leave it hidden and show a
+            # chat bubble symbol instead, centred on the audio icon's row.
+            chatIcon.setHidden_(True)
+            bubble = self._chatBubbleIconView(view, audioIcon)
+            frame = bubble.frame()
             typeCount+= 1
             frame.origin.x = NSMaxX(view.frame()) - 10 - (NSWidth(frame) + 10) * typeCount
-            chatIcon.setFrame_(frame)
-            chatIcon.setHidden_(False)
+            bubble.setFrame_(frame)
+            bubble.setHidden_(False)
 
         if 'video' in stream_types:
             frame = videoIcon.frame()
