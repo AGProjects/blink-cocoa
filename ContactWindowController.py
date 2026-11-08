@@ -3547,11 +3547,15 @@ class ContactWindowController(NSWindowController):
     def refreshLdapDirectory(self):
         active_account = self.activeAccount()
         if active_account and active_account.ldap.hostname and active_account.ldap.enabled:
+            if self.ldap_search is not None:
+                self.ldap_search.stop()
             if self.ldap_directory:
                 self.ldap_directory.disconnect()
             self.ldap_directory = LdapDirectory(active_account.ldap)
             self.ldap_search = LdapSearch(self.ldap_directory)
         else:
+            if self.ldap_search is not None:
+                self.ldap_search.stop()
             if self.ldap_directory:
                 self.ldap_directory.disconnect()
                 self.ldap_directory = None
@@ -9013,6 +9017,9 @@ class ContactWindowController(NSWindowController):
     def _NH_SIPApplicationWillEnd(self, notification):
         self.conference_timer.invalidate()
         self.purge_presence_timer.invalidate()
+        # Drop any queued LDAP searches so shutdown doesn't wait on them
+        if self.ldap_search is not None:
+            self.ldap_search.stop()
 
     @objc.python_method
     def _NH_SIPApplicationWillStart(self, notification):
@@ -9417,6 +9424,12 @@ class LdapDirectory(object):
         self.password = ldap_settings.password or ''
         self.dn = ldap_settings.dn or ''
         self.extra_fields = ldap_settings.extra_fields or ''
+        # After a failed bind don't try again for a while: every search
+        # keystroke would otherwise queue another multi-second bind on the
+        # ldap-query thread, and application shutdown has to join that
+        # thread and wait for all of them.
+        self.retry_after = 0
+        self.retry_interval = 60
 
         self.l = ldap.initialize(self.server)
         tls_folder = ApplicationData.get('tls')
@@ -9429,13 +9442,17 @@ class LdapDirectory(object):
 
     def connect(self):
         if self.connected is False:
+            if time.monotonic() < self.retry_after:
+                return
             try:
                 self.l.simple_bind_s(self.username, self.password)
                 BlinkLogger().log_info('Connected to LDAP server %s' % self.server)
                 self.connected = True
+                self.retry_after = 0
             except ldap.LDAPError as e:
-                BlinkLogger().log_info('Connection to LDAP server %s failed: %s' % (self.server, e))
+                BlinkLogger().log_info('Connection to LDAP server %s failed: %s, retrying in %ds' % (self.server, e, self.retry_interval))
                 self.connected = False
+                self.retry_after = time.monotonic() + self.retry_interval
 
     def disconnect(self):
         if self.l is not None and self.connected:
@@ -9450,6 +9467,22 @@ class LdapSearch(object):
     def __init__(self, ldap_directory):
         self.ldap_directory = ldap_directory
         self.ldap_query_id = None
+        # Bumped on every search() call from the GUI thread; a queued
+        # search whose generation is no longer current is skipped, so
+        # fast typing doesn't stack up connects/queries on the thread.
+        self.generation = 0
+        self.stopped = False
+
+    def stop(self):
+        self.stopped = True
+        self.generation += 1
+        self.cancel()
+
+    def search(self, keyword):
+        if self.stopped:
+            return
+        self.generation += 1
+        self._search(keyword, self.generation)
 
     def cancel(self):
         if self.ldap_query_id and self.ldap_directory.connected:
@@ -9459,11 +9492,13 @@ class LdapSearch(object):
                 return
 
     @run_in_thread('ldap-query')
-    def search(self, keyword):
-        if not self.ldap_directory:
+    def _search(self, keyword, generation):
+        if not self.ldap_directory or self.stopped or generation != self.generation:
             return
 
         self.ldap_directory.connect()
+        if self.stopped or generation != self.generation:
+            return
         if self.ldap_directory.connected:
             extra_fields = self.ldap_directory.extra_fields.split(",")
 
