@@ -2185,18 +2185,45 @@ class MessageBubbleView(NSView):
         # its text white on it. Checked here rather than only on the
         # appearance callback: a switch that happens while the window is
         # hidden or the Mac asleep reaches the bubble only as a redraw.
+        #
+        # The rebuild itself is NOT done here. Swapping the field's string in
+        # the middle of the display pass left it blank on an automatic
+        # (Auto, at dusk/dawn, often while asleep) switch: the field's own
+        # redraw was dropped from that pass and nothing asked again until a
+        # click handed the text to the field editor. Defer it one turn of the
+        # run loop, where it is an ordinary change followed by a fresh pass.
         try:
             if self._bodyAppearanceIsStale():
-                self._rebuildBody()
+                self._scheduleAppearanceRefresh()
         except Exception as e:
             BlinkLogger().log_error('Cannot restyle bubble %s: %s' % (self.msgid, e))
         objc.super(MessageBubbleView, self).viewWillDraw()
 
     def viewDidChangeEffectiveAppearance(self):
+        # Deferred, and unconditional: when the system switches on its own
+        # the view hears about it before NSApp's effectiveAppearance (which
+        # is what the colours are chosen from) has caught up, so a stale
+        # check made right now can answer "nothing to do".
         try:
-            if self._bodyAppearanceIsStale():
+            self._scheduleAppearanceRefresh()
+        except Exception as e:
+            BlinkLogger().log_error('Cannot restyle bubble %s: %s' % (self.msgid, e))
+
+    @objc.python_method
+    def _scheduleAppearanceRefresh(self):
+        if getattr(self, '_appearance_refresh_pending', False):
+            return
+        self._appearance_refresh_pending = True
+        self.performSelector_withObject_afterDelay_('refreshAppearance:', None, 0.0)
+
+    def refreshAppearance_(self, sender):
+        self._appearance_refresh_pending = False
+        try:
+            if self._body_field is not None and self._bodyAppearanceIsStale():
                 self._rebuildBody()
-                self.setNeedsDisplay_(True)
+            if self._body_field is not None:
+                self._body_field.setNeedsDisplay_(True)
+            self.setNeedsDisplay_(True)
         except Exception as e:
             BlinkLogger().log_error('Cannot restyle bubble %s: %s' % (self.msgid, e))
 
