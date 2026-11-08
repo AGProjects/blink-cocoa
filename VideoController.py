@@ -842,6 +842,18 @@ class VideoController(MediaStream):
         self.changeStatus(STREAM_RINGING)
 
     @objc.python_method
+    @run_in_gui_thread
+    def _NH_BlinkSessionGotProvisionalResponse(self, sender, data):
+        # Any non-ringing 1xx (e.g. 100 Trying, 110 Push sent) means the
+        # request reached the far side and we are now waiting for the
+        # callee; replace "Connecting..." with "Waiting for answer...".
+        # Ringing (180) has its own label via GotRingIndication.
+        if self.status != STREAM_CONNECTING:
+            return
+        if self.videoWindowController:
+            self.videoWindowController.showStatusLabel(NSLocalizedString("Waiting for answer...", "Audio status label"))
+
+    @objc.python_method
     def _NH_VideoRemovedByRemoteParty(self, sender, data):
         if self.videoWindowController:
             self.videoWindowController.showStatusLabel(NSLocalizedString("Video Ended", "Label"))
