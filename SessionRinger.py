@@ -2,7 +2,8 @@
 #
 
 from AppKit import (NSApp,
-                    NSEventTrackingRunLoopMode)
+                    NSEventTrackingRunLoopMode,
+                    NSSound)
 
 from Foundation import (NSRunLoop,
                         NSRunLoopCommonModes,
@@ -69,6 +70,7 @@ class Ringer(object):
 
     file_transfer_outgoing_sound = None
     file_transfer_incoming_sound = None
+    _short_tone_sound = None
 
     last_hangup_tone_time = 0
     chat_beep_time = 0
@@ -456,6 +458,34 @@ class Ringer(object):
         # TODO: play-resume iTunes after adding audio to conference tone has been played -adi
         self.initial_hold_tone.start()
 
+    def _play_short_tone(self, tone):
+        """Play a message or file transfer tone.
+
+        Through the mixer the first port added opens the sound device, and
+        opening it holds the reactor thread for a second or more. When
+        nothing else is using the mixer and the output is the system
+        default, the tone goes through NSSound instead and the device stays
+        closed. During a call the device is already open and the mixer is
+        free to use.
+        """
+        if tone is None:
+            return
+        settings = SIPSimpleSettings()
+        mixer = SIPApplication.voice_audio_mixer
+        idle = mixer is not None and getattr(mixer, 'used_slot_count', 1) == 0
+        if idle and settings.audio.output_device in (None, 'system_default'):
+            sound = NSSound.alloc().initWithContentsOfFile_byReference_(str(tone.filename), True)
+            if sound is not None:
+                sound.setVolume_(max(0, min(100, tone.volume)) / 100.0)
+                if self._short_tone_sound is not None:
+                    self._short_tone_sound.stop()
+                self._short_tone_sound = sound   # NSSound stops when released
+                if sound.play():
+                    return
+                self._short_tone_sound = None
+        tone.stop()
+        tone.start()
+
     def _NH_ChatViewControllerDidDisplayMessage(self, notification):
         data = notification.data
         settings = SIPSimpleSettings()
@@ -469,11 +499,9 @@ class Ringer(object):
         now = time.time()
         if now - self.chat_beep_time > CHAT_TONE_THROTLE_DELAY and not data.history_entry:
             if data.direction == 'outgoing' and self.chat_message_outgoing_sound:
-                self.chat_message_outgoing_sound.stop()
-                self.chat_message_outgoing_sound.start()
+                self._play_short_tone(self.chat_message_outgoing_sound)
             elif self.chat_message_incoming_sound:
-                self.chat_message_incoming_sound.stop()
-                self.chat_message_incoming_sound.start()
+                self._play_short_tone(self.chat_message_incoming_sound)
             self.chat_beep_time = now
 
     def _NH_BlinkFileTransferDidEnd(self, notification):
@@ -490,10 +518,10 @@ class Ringer(object):
                 if notification.sender.account is BonjourAccount():
                     return
                 if self.file_transfer_incoming_sound:
-                    self.file_transfer_incoming_sound.start()
+                    self._play_short_tone(self.file_transfer_incoming_sound)
             else:
                 if self.file_transfer_outgoing_sound:
-                    self.file_transfer_outgoing_sound.start()
+                    self._play_short_tone(self.file_transfer_outgoing_sound)
 
     def _NH_CFGSettingsObjectDidChange(self, notification):
         data = notification.data
