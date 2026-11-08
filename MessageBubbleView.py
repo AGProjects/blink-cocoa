@@ -916,6 +916,10 @@ COLOR_TEXT_ON_DEEP = _rgb(255, 255, 255)
 # one. These are 4.6:1 on the tile, and 6.8:1 / 5.5:1 on white / pale blue.
 COLOR_LINK_ON_PALE = _rgb(10, 88, 184)
 COLOR_LINK_ON_DEEP = _rgb(224, 242, 255)
+# Names on the deep blue incoming tile: the light-theme sender colours are
+# dark blue / dark green and vanish on it.
+COLOR_SENDER_PEER_ON_DEEP = _rgb(190, 222, 255)
+COLOR_SENDER_SELF_ON_DEEP = _rgb(170, 235, 150)
 CHAT_BG_LIGHT      = _rgb(236, 229, 221)
 CHAT_BG_DARK       = _rgb(11, 20, 26)
 COLOR_TRACK        = _rgb(52, 120, 246)
@@ -1118,6 +1122,17 @@ def bubble_success_color(state, is_private, direction=None):
     except Exception:
         on_deep = False
     return COLOR_CALL_OK_DARK if on_deep else COLOR_CALL_OK
+
+
+def bubble_sender_color(is_self, state, is_private, direction=None):
+    """A sender name (header or quote) legible on THIS bubble's fill."""
+    try:
+        on_deep = bubble_text_color(state, is_private, direction) is COLOR_TEXT_ON_DEEP
+    except Exception:
+        on_deep = False
+    if on_deep:
+        return COLOR_SENDER_SELF_ON_DEEP if is_self else COLOR_SENDER_PEER_ON_DEEP
+    return COLOR_SENDER_SELF if is_self else COLOR_SENDER_PEER
 
 
 def bubble_link_color(state, is_private, direction=None):
@@ -3944,7 +3959,8 @@ class MessageBubbleView(NSView):
         names, so a quote of your own words and a quote of theirs are
         told apart the same way the messages themselves are.
         """
-        return (COLOR_SENDER_SELF if self.reply_from_self else COLOR_SENDER_PEER)
+        return bubble_sender_color(bool(self.reply_from_self), self.state,
+                                   self.is_private, self.direction)
 
     @objc.python_method
     def _quoteHeight(self, body_w):
@@ -5686,7 +5702,8 @@ class MessageBubbleView(NSView):
 
         # sender, left, truncated at whatever the header left free
         if self._showsSender():
-            color = COLOR_SENDER_SELF if self.direction == 'outgoing' else COLOR_SENDER_PEER
+            color = bubble_sender_color(self.direction == 'outgoing', self.state,
+                                        self.is_private, self.direction)
             style = NSMutableParagraphStyle.alloc().init()
             # one line, cut at the end if it must be: word wrapping into a one-line rect showed the start of
             # an address and nothing else
