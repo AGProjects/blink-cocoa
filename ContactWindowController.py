@@ -5199,6 +5199,48 @@ class ContactWindowController(NSWindowController):
             BlinkLogger().log_error('Cannot clear the conversation search: %s' % e)
 
     @objc.python_method
+    def sortSearchResults(self, contacts, exact_uri):
+        """Order contact search results in place.
+
+        First the contact holding exactly the typed address (completed with
+        the account domain), then the ones we talked to, newest message or
+        call first, then the rest alphabetically. Returns whether an exact
+        match was found.
+        """
+        manager = SMSWindowManager.SMSWindowManager()
+        canonical = manager._canonical_uri
+        exact = canonical(exact_uri)
+
+        def uris_of(item):
+            uris = [str(uri.uri) for uri in (getattr(item, 'uris', None) or ())]
+            if getattr(item, 'uri', None):
+                uris.append(str(item.uri))
+            return set(canonical(uri) for uri in uris if uri)
+
+        def last_activity(keys):
+            times = [when for key in keys for when in (manager.last_message_times.get(key), manager.last_call_times.get(key)) if when is not None]
+            return max(times) if times else None
+
+        found_exact = False
+        ranked = []
+        for item in contacts:
+            keys = uris_of(item)
+            is_exact = bool(exact) and exact in keys
+            found_exact = found_exact or is_exact
+            when = last_activity(keys)
+            name = str(getattr(item, 'name', None) or getattr(item, 'uri', None) or '').lower()
+            if is_exact:
+                rank = (0, 0, name)
+            elif when is not None:
+                rank = (1, -when.timestamp(), name)
+            else:
+                rank = (2, 0, name)
+            ranked.append((rank, item))
+        ranked.sort(key=lambda entry: entry[0])
+        contacts[:] = [item for rank, item in ranked]
+        return found_exact
+
+    @objc.python_method
     def searchContacts(self):
         # BlinkLogger().log_info('startup: searchContacts(noarg) body enter')
         if self.mainTabView.selectedTabViewItem().identifier() == "dialpad":
@@ -5245,6 +5287,14 @@ class ContactWindowController(NSWindowController):
                     self.local_found_contacts.append(local_found_contact)
 
             active_account = self.activeAccount()
+            exact_uri = text
+            if active_account is not None and active_account is not BonjourAccount() and " " not in text:
+                if text.endswith('@'):
+                    exact_uri = '%s%s' % (text, active_account.id.domain)
+                elif "@" not in text:
+                    exact_uri = '%s@%s' % (text, active_account.id.domain)
+            exact_found = self.sortSearchResults(self.local_found_contacts, exact_uri)
+
             if active_account:
                 # perform LDAP search
                 if len(text) > 3 and self.ldap_directory is not None:
@@ -5260,19 +5310,15 @@ class ContactWindowController(NSWindowController):
                     pass
                 else:
                     if " " not in text:
-                        input_text = text
-                        if active_account is not BonjourAccount():
-                            if text.endswith('@'):
-                                input_text = '%s%s' % (text, active_account.id.domain)
-                            elif "@" not in text:
-                                input_text = '%s@%s' % (text, active_account.id.domain)
+                        input_text = exact_uri
                         search_icon = NSImage.imageNamed_("lupa")
                         search_icon.setSize_(NSMakeSize(32, 32))
                         input_contact = SearchResultContact(input_text, name=str(input_text), icon=search_icon)
-                        exists = text in (contact.uri for contact in self.local_found_contacts)
+                        exists = exact_found
 
                         if not exists:
-                            self.local_found_contacts.append(input_contact)
+                            # what was typed is the closest match there is
+                            self.local_found_contacts.insert(0, input_contact)
 
                         self.addContactButtonSearch.setEnabled_(not exists)
 
