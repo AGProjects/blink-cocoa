@@ -1426,7 +1426,7 @@
                         </connections>
                     </tabView>
                     <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="yxU-Br-7fi">
-                        <rect key="frame" x="0.0" y="-1" width="144" height="22"/>
+                        <rect key="frame" x="12" y="-1" width="144" height="22"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <buttonCell key="cell" type="check" title="Desplazamiento automático" bezelStyle="regularSquare" imagePosition="left" controlSize="mini" state="on" inset="2" id="lbX-Ct-Ujc">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
