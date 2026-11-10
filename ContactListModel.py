@@ -2531,7 +2531,16 @@ class BlinkGroup(NSObject):
 
     @objc.python_method
     def recentTimeForContact(self, item):
-        return self.lastCallTimeForContact(item) if self.usesCallTimes() else self.lastMessageTimeForContact(item)
+        # The last activity of either kind, in every group: a call is as
+        # recent a contact as a message, so the Messages and Calls groups
+        # show the same time against the same contact.
+        call = self.lastCallTimeForContact(item)
+        message = self.lastMessageTimeForContact(item)
+        if call is None:
+            return message
+        if message is None:
+            return call
+        return max(call, message)
 
     @objc.python_method
     def isCallsGroup(self):
@@ -2577,10 +2586,8 @@ class BlinkGroup(NSObject):
         # Passes relying on sort being stable: alphabetical first, then by
         # recency, then by unread count. Contacts that tie -- and the whole
         # tail with no time or no count -- keep the order of the pass before
-        # instead of shuffling on every redraw. Recent is the last call in
-        # Calls, Tel and Conference (Tel rides the same clock as Calls: its
-        # members are the PSTN subset of them; a room is ordered by its last
-        # conference), the last message everywhere else.
+        # instead of shuffling on every redraw. Recent is the newest of the
+        # last call and the last message, in every group.
         mode = self.effectiveSortMode()
         self.contacts.sort(key=lambda item: str(getattr(item, 'name', '')).lower())
         if mode == GROUP_SORT_NAME:
@@ -2598,8 +2605,7 @@ class BlinkGroup(NSObject):
         """When this contact was last on a call, or None.
 
         The call equivalent of lastMessageTimeForContact, reading the manager's
-        separate call map: chat_messages holds both, but a message must not
-        reorder the Calls group and a call must not reorder Messages.
+        separate call map. recentTimeForContact merges the two.
         """
         try:
             from SMSWindowManager import SMSWindowManager
@@ -3749,10 +3755,8 @@ class CustomListModel(NSObject):
     def lastMessageTimeForRow(self, outline, item):
         """The time to show against a row, or None.
 
-        Which time depends on what the group is about: the Messages group
-        shows when they last wrote, Calls and Tel when they last called.
-        Showing a message time in the Calls group would be answering a
-        question nobody asked there.
+        The newest of the last call and the last message, the same in
+        every group the contact appears in.
         """
         if not isinstance(item, BlinkContact):
             return None

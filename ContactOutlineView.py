@@ -44,9 +44,7 @@ class ContactOutlineView(NSOutlineView):
         menu = NSMenu.alloc().init()
         menu.setAutoenablesItems_(False)
         titles = {GROUP_SORT_NAME: NSLocalizedString("Alphabetically", "Group sort order menu item"),
-                  GROUP_SORT_RECENT: (NSLocalizedString("By Last Call", "Group sort order menu item")
-                                      if group.usesCallTimes()
-                                      else NSLocalizedString("By Last Message", "Group sort order menu item")),
+                  GROUP_SORT_RECENT: NSLocalizedString("By Recent Activity", "Group sort order menu item"),
                   GROUP_SORT_UNREAD: NSLocalizedString("By Unread Messages", "Group sort order menu item")}
         current = group.effectiveSortMode()
         for mode in group.availableSortModes():
