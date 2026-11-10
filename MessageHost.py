@@ -811,13 +811,20 @@ _CALL_LABELS = {
     ('outgoing', 'cancelled'):          'Cancelled call',
     ('outgoing', 'failed'):             'Call failed',
     ('outgoing', 'rejected'):           'Call rejected',
-    ('outgoing', 'missed'):             'No answer',
+    ('outgoing', 'missed'):             'Unanswered call',
 }
 
 
 def call_outcome(record):
     """`outcome`, or the derivation every client did before the field existed."""
     outcome = str(record.get('outcome') or '').strip()
+    # An outgoing call that timed out (408) is the callee not picking up,
+    # not a failure: it is the outgoing 'missed' ("No answer"), whatever
+    # the record says.
+    if (str(record.get('direction') or '') == 'outgoing'
+            and str(record.get('status') or '').strip() == '408'
+            and outcome in ('', 'failed')):
+        return 'missed'
     if outcome:
         return outcome
     try:

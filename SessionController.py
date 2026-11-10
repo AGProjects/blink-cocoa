@@ -2958,8 +2958,14 @@ class SessionController(NSObject):
             explain_msrp_failure(self.remoteAOR, data.failure_reason or data.reason, session=sender)
         
         if data.code != 487:
-            nc_title = 'Call failed'
-            nc_body = '%s (%s)' % (data.reason, data.code)
+            if data.code == 408 and sender.direction == 'outgoing':
+                # the callee never picked up: not a failure (cf. the
+                # "Unanswered call" bubble in MessageHost.call_outcome)
+                nc_title = NSLocalizedString("No answer", "Notification title")
+                nc_body = ''
+            else:
+                nc_title = 'Call failed'
+                nc_body = '%s (%s)' % (data.reason, data.code)
             NSApp.delegate().gui_notify(nc_title, nc_body, subtitle=format_identity_to_string(self.target_uri))
 
         must_retry = False
