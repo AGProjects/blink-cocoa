@@ -73,6 +73,7 @@ import objc
 from application.notification import NotificationCenter, IObserver
 from application.python import Null
 from sipsimple.account import BonjourAccount
+from MediaStream import STATE_DNS_LOOKUP, STATE_CONNECTING, STATE_CONNECTED
 from zope.interface import implementer
 
 from BlinkLogger import BlinkLogger
@@ -103,6 +104,7 @@ SEGMENT_W = 34.0
 SEGMENT_H = 22.0
 NSSegmentStyleRoundRect = 3
 NSSegmentSwitchTrackingMomentary = 2
+NSSegmentSwitchTrackingSelectAny = 1
 NSSmallControlSize = 1
 # Drawn if the lock artwork cannot be loaded: the control has to keep its
 # place in the header whatever happens to the image files.
@@ -509,6 +511,11 @@ class MessagePaneController(NSObject):
                 # about playback that began -- and ended -- somewhere else.
                 NotificationCenter().add_observer(
                     self, name=PLAYBACK_STATE_CHANGED)
+                # The audio | video segments follow a call to the
+                # conversation's party (updateCallSegmentState).
+                for name in ('BlinkSessionChangedState', 'BlinkStreamHandlersChanged',
+                             'BlinkSessionDidStart', 'BlinkSessionDidEnd', 'BlinkSessionDidFail'):
+                    NotificationCenter().add_observer(self, name=name)
             except Exception as e:
                 # Worth surviving: without the pane there is no messages UI
                 # at all, and the app quietly falls back to the old tabbed
@@ -521,6 +528,16 @@ class MessagePaneController(NSObject):
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification.sender, notification.data)
+
+    @objc.python_method
+    def _NH_BlinkSessionChangedState(self, sender, data):
+        if self._selected is not None:
+            self.updateCallSegmentState()
+
+    _NH_BlinkStreamHandlersChanged = _NH_BlinkSessionChangedState
+    _NH_BlinkSessionDidStart = _NH_BlinkSessionChangedState
+    _NH_BlinkSessionDidEnd = _NH_BlinkSessionChangedState
+    _NH_BlinkSessionDidFail = _NH_BlinkSessionChangedState
 
     @objc.python_method
     def _NH_BlinkContactsHaveChanged(self, sender, data):
@@ -706,6 +723,9 @@ class MessagePaneController(NSObject):
             camera.setSize_(NSMakeSize(VIDEO_IMAGE_SIZE, VIDEO_IMAGE_SIZE))
             self.callSegment.setLabel_forSegment_('', 1)
             self.callSegment.setImage_forSegment_(camera, 1)
+        # Pressed while a call to the conversation's party has audio, video
+        # (updateCallSegmentState), so not momentary like A- A+.
+        self.callSegment.cell().setTrackingMode_(NSSegmentSwitchTrackingSelectAny)
         # Hidden until there is somebody to call: a control that does nothing
         # is worse than no control.
         self.callSegment.setHidden_(True)
@@ -826,7 +846,84 @@ class MessagePaneController(NSObject):
 
     @objc.IBAction
     def callSegmentClicked_(self, sender):
-        self._startCall('video' if sender.selectedSegment() == 1 else 'audio')
+        media_type = 'video' if sender.selectedSegment() == 1 else 'audio'
+        controller = self._callSessionFor(self._selected)
+        if controller is None:
+            self._startCall(media_type)
+        elif media_type == 'video' and not controller.hasStreamOfType('video') \
+                and controller.state == STATE_CONNECTED and not getattr(controller, 'inProposal', False):
+            BlinkLogger().log_info('Message pane: add video to the call with %s' % controller.remoteAOR)
+            controller.addVideoToSession()
+        # Audio starts no other call, and ending is the call's own Hang up:
+        # the segments go back to what the call has
+        self.updateCallSegmentState()
+
+    # A call that is on: being set up or connected
+    _CALL_ACTIVE_STATES = (STATE_DNS_LOOKUP, STATE_CONNECTING, STATE_CONNECTED)
+
+    @objc.python_method
+    def _callSessionFor(self, viewer):
+        """The call with audio to this conversation's party that is on, or None."""
+        if viewer is None or self.isConferenceViewer(viewer):
+            return None
+        def aor(uri):
+            text = str(uri or '').strip().lower()
+            for prefix in ('sips:', 'sip:'):
+                if text.startswith(prefix):
+                    text = text[len(prefix):]
+            return text.split(';', 1)[0]
+        addresses = {aor(getattr(viewer, 'remote_uri', None)), aor(getattr(viewer, 'target_uri', None))}
+        contact = getattr(viewer, 'contact', None)
+        for entry in (getattr(contact, 'uris', None) or []):
+            addresses.add(aor(getattr(entry, 'uri', entry)))
+        addresses.discard('')
+        account = getattr(viewer, 'account', None)
+        try:
+            from SessionController import SessionControllersManager
+            controllers = list(SessionControllersManager().sessionControllers)
+        except Exception:
+            return None
+        for controller in controllers:
+            if controller.state not in self._CALL_ACTIVE_STATES or not controller.hasStreamOfType('audio'):
+                continue
+            if account is not None and controller.account is not account:
+                continue
+            if aor(controller.remoteAOR) in addresses:
+                return controller
+        return None
+
+    @objc.python_method
+    def updateCallSegmentState(self):
+        """With a call to the conversation's party on, the segments show it: pressed
+        while it has audio, video. Audio then starts no other call and Video adds
+        video to it (only once connected, and not while a proposal is pending)."""
+        control = getattr(self, 'callSegment', None)
+        if control is None:
+            return
+        viewer = self._selected
+        controller = self._callSessionFor(viewer)
+        cell = control.cell()
+        if controller is None:
+            control.setSelected_forSegment_(False, 0)
+            control.setSelected_forSegment_(False, 1)
+            if not self.isConferenceViewer(viewer):
+                cell.setToolTip_forSegment_(NSLocalizedString("Start an audio call", "Tooltip"), 0)
+                cell.setToolTip_forSegment_(NSLocalizedString("Start a video call", "Tooltip"), 1)
+                control.setEnabled_forSegment_(viewer is not None and self._videoSupported(), 1)
+            return
+        has_video = controller.hasStreamOfType('video')
+        control.setSelected_forSegment_(True, 0)
+        control.setSelected_forSegment_(has_video, 1)
+        cell.setToolTip_forSegment_(
+            NSLocalizedString("Connecting...", "Tooltip") if controller.state != STATE_CONNECTED else
+            NSLocalizedString("Audio call in progress (Hang up ends it)", "Tooltip"), 0)
+        if has_video:
+            cell.setToolTip_forSegment_(NSLocalizedString("Video call in progress (Hang up ends it)", "Tooltip"), 1)
+            control.setEnabled_forSegment_(True, 1)
+        else:
+            cell.setToolTip_forSegment_(NSLocalizedString("Add video to the call", "Tooltip"), 1)
+            control.setEnabled_forSegment_(controller.state == STATE_CONNECTED and self._videoSupported()
+                                           and not getattr(controller, 'inProposal', False), 1)
 
     @objc.python_method
     def _styleLockBadge(self):
@@ -1677,6 +1774,7 @@ class MessagePaneController(NSObject):
         if control is not None:
             control.setHidden_(viewer is None)
             control.setEnabled_forSegment_(viewer is not None and self._videoSupported(), 1)
+            self.updateCallSegmentState()
         self._layoutHeaderButtons()
 
     @objc.python_method
