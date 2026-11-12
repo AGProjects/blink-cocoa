@@ -128,6 +128,10 @@ STATS_INTERVAL = 0.3            # seconds between reads of the PeerConnections' 
 SPEAKING_LEVEL = 10 ** (-38 / 20.0)     # audioLevel (0-1, linear) above which someone speaks: -38 dBFS
 SPEAKING_SIP_LEVEL = 25         # the same for the room's audio levels of SIP participants (the mixer's 0-255 scale)
 SPEAKING_HOLD = 0.6             # seconds speaking lasts after the last loud level, so a tile does not flicker between words
+AUDIO_BITRATE = 64000           # bit/s of our Opus: libwebrtc takes it from the answer's maxaveragebitrate (32000 without)
+# the microphone: echo cancelling only, as the SIP audio; no noise suppression or gain control
+AUDIO_CONSTRAINTS = {'googEchoCancellation': 'true', 'googHighpassFilter': 'true',
+                     'googNoiseSuppression': 'false', 'googAutoGainControl': 'false'}
 
 # libwebrtc's enums (RTCPeerConnection.h, RTCConfiguration.h, RTCRtpTransceiver.h, ...)
 SDP_OFFER, SDP_ANSWER = 0, 2                            # RTCSdpType
@@ -269,6 +273,20 @@ def _codec_description(section, pt):
     if fmtp:
         return '%s (PT %s, %s)' % (name, pt, fmtp.group(1).strip())
     return '%s (PT %s)' % (name, pt)
+
+
+def _opus_bitrate(sdp, bitrate):
+    """The SDP with maxaveragebitrate=bitrate in the fmtp of every Opus payload type (added, or replaced)."""
+    eol = '\r\n' if '\r\n' in sdp else '\n'
+    for pt in re.findall(r'^a=rtpmap:(\d+) opus/48000', sdp, re.M | re.I):
+        fmtp = re.search(r'^a=fmtp:%s ([^\r\n]*)' % pt, sdp, re.M)
+        if fmtp is None:
+            sdp = re.sub(r'^(a=rtpmap:%s [^\r\n]*)' % pt, r'\1%sa=fmtp:%s maxaveragebitrate=%d' % (eol, pt, bitrate), sdp, count=1, flags=re.M)
+            continue
+        params = [param for param in fmtp.group(1).split(';') if param.strip() and not param.strip().lower().startswith('maxaveragebitrate=')]
+        params.append('maxaveragebitrate=%d' % bitrate)
+        sdp = sdp[:fmtp.start(1)] + ';'.join(params) + sdp[fmtp.end(1):]
+    return sdp
 
 
 def _section_direction(section):
@@ -758,7 +776,8 @@ class VideoroomSession(object):
         stream_id = 'blink-%s' % self.id
 
         # microphone: the audio device's; muted is a disabled track (silence is sent)
-        audio_source = factory.audioSourceWithConstraints_(None)
+        constraints = _cls('RTCMediaConstraints').alloc().initWithMandatoryConstraints_optionalConstraints_(AUDIO_CONSTRAINTS, None)
+        audio_source = factory.audioSourceWithConstraints_(constraints)
         self._audio_track = factory.audioTrackWithSource_trackId_(audio_source, 'audio-%s' % self.id)
         self._audio_track.setIsEnabled_(not self.audio_muted)
         init = _cls('RTCRtpTransceiverInit').alloc().init()
@@ -821,6 +840,7 @@ class VideoroomSession(object):
             self._terminate('cannot join: %s' % error)
 
     def _on_answer(self, sdp):
+        sdp = _opus_bitrate(sdp, AUDIO_BITRATE)     # what our Opus encoder sends at
         self.log('answer: %s' % _media_summary(sdp))
         for line in _rtp_answer_lines(sdp):
             self.log('publishing: %s' % line)
