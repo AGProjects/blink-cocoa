@@ -2709,6 +2709,15 @@ class NativeChatViewController(ChatViewController):
         resend(msgid)
 
     @objc.python_method
+    def bubbleDidRequestSendAgain(self, msgid, path):
+        send_again = getattr(self.delegate, 'send_again', None)
+        if send_again is None:
+            BlinkLogger().log_info('Cannot send %s again: this view has no conversation to send it on'
+                                   % msgid)
+            return
+        send_again(path)
+
+    @objc.python_method
     def bubbleDidRequestEdit(self, msgid, text, timestamp=None):
         if hasattr(self.delegate, 'begin_editing_message'):
             self.delegate.begin_editing_message(msgid, text, timestamp)

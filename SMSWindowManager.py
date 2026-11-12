@@ -993,6 +993,7 @@ class SMSWindowManagerClass(NSObject):
             self.keys_path = ApplicationData.get('keys')
             makedirs(self.keys_path)
             self.history = ChatHistory()
+            self.history.fail_unfinished_transfers()
 
             # The heartbeat lives on the manager rather than on a window so
             # that every live conversation keeps retrying failed messages and

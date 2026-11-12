@@ -3622,6 +3622,25 @@ class ChatHistory(object, metaclass=Singleton):
             frontier = found
 
     @run_in_db_thread
+    def fail_unfinished_transfers(self):
+        """Outgoing file transfers an earlier run left 'sending'. Nothing is uploading
+        at start, so they are failed: the bubble shows the error and offers Resend,
+        instead of a clock for ever."""
+        from MessageHost import FILE_TRANSFER_CONTENT_TYPES
+        table = ChatMessage.sqlmeta.table
+        types = ', '.join(ChatMessage.sqlrepr(content_type) for content_type in FILE_TRANSFER_CONTENT_TYPES)
+        where = ("direction='outgoing' and status='sending' and content_type in (%s) "
+                 "and (deleted is null or deleted = 0)" % types)
+        try:
+            count = int(self.db.queryAll('select count(*) from %s where %s' % (table, where))[0][0])
+            if count:
+                self.db.queryAll("update %s set status='failed', failure_reason=%s where %s"
+                                 % (table, ChatMessage.sqlrepr('Blink quit before the transfer ended'), where))
+                BlinkLogger().log_info('[db] %d outgoing file transfers left unfinished by an earlier run are failed now' % count)
+        except Exception as e:
+            BlinkLogger().log_error('[db] Cannot fail the unfinished file transfers: %s' % e)
+
+    @run_in_db_thread
     def remove_account(self, account_id):
         """Erase every row of a removed account, its calls and tombstones included, the
         downloaded files of its transfers with them, then whatever is left in its folder

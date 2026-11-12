@@ -4024,7 +4024,7 @@ class SMSViewController(NSObject):
     @run_in_gui_thread
     def _requeue_for_resend(self, msgid, body, content_type, when):
         if content_type == FILE_TRANSFER_CONTENT_TYPE:
-            self.log_info('Not resending %s as a message: it is a file transfer' % msgid)
+            self._resendTransfer(msgid, body)
             return
         existing = self.messages.get(msgid)
         if existing is not None and (existing.queued or existing.pjsip_id):
@@ -4051,6 +4051,82 @@ class SMSViewController(NSObject):
             self.start_queue()
         elif not self.dns_lookup_in_progress:
             self.lookup_destination(self.target_uri)
+
+    @objc.python_method
+    def _resendTransfer(self, msgid, body):
+        """Send again, under its own transfer id, a file of ours that did not get there.
+
+        From the copy filed when it was sent (FileTransferCache.store), never from the
+        user's original. The envelope goes back to the plain file first: an encrypted
+        transfer is encrypted again by _uploadTransfer, from the plain copy.
+        """
+        from FileTransferCache import FileTransferCache, display_name, envelope
+        try:
+            meta = dict(envelope(body) or {})
+        except Exception as e:
+            self.log_error('Cannot read the stored transfer %s: %s' % (msgid, e))
+            return
+        if not meta:
+            self.log_error('Cannot resend %s: no transfer envelope' % msgid)
+            return
+        meta['transfer_id'] = msgid
+        cache = FileTransferCache()
+        if cache.is_uploading(meta) or msgid in (self.msrp_transfers or {}).values():
+            self.log_info('File %s is already on its way' % msgid)
+            return
+        name = display_name(meta)
+        stored = (cache.local_file(meta, self.local_uri, self.remote_uri)
+                  or cache.local_file(meta, self.local_uri, self.conversation_peer_uri()))
+        if stored is None:
+            self.log_error('Cannot resend %s (%s): its copy is no longer here' % (msgid, name))
+            self.chatViewController.showSystemMessage(
+                NSLocalizedString("Cannot send %s again: the file is no longer here", "Label") % name,
+                ISOTimestamp.now(), is_error=True)
+            return
+        meta['filename'] = name
+        meta.pop('encrypted', None)
+        url = str(meta.get('url') or '')
+        if url.endswith('.asc'):
+            meta['url'] = url[:-4]
+        try:
+            meta['filesize'] = os.path.getsize(stored)
+        except OSError:
+            pass
+        timestamp = None
+        try:
+            rows, _replies, _related = self.history.message_details(msgid)
+            row = next((row for row in rows if row.direction == 'outgoing'), None)
+            timestamp = ISOTimestamp(row.time) if row is not None and row.time else None
+        except Exception:
+            timestamp = None
+        timestamp = timestamp or ISOTimestamp.now()
+
+        if meta.get('url'):
+            self.log_info('Uploading %s (%s) again, asked for' % (name, msgid))
+            self.update_message_status(msgid, MSG_STATE_SENDING)
+            self.chatViewController.attachLocalMedia(msgid, stored)
+            self._uploadTransfer(meta, stored, timestamp)
+            return
+        # MSRP: offered to the other party again, or held until the neighbour is back
+        if not self.bonjourNeighbourIsOnline():
+            self.log_info('File %s waits for Bonjour neighbour %s' % (msgid, self.instance_id))
+            self.pending_transfers[msgid] = (meta, stored)
+            self.update_message_status(msgid, MSG_STATE_FAILED_LOCAL)
+            return
+        if self._startTransfer(msgid, stored, name):
+            self.update_message_status(msgid, MSG_STATE_SENDING)
+            self.chatViewController.setTransferProgress(msgid, 0.0)
+
+    @objc.python_method
+    def send_again(self, path):
+        """A file of ours sent again as a new message, under a new transfer id: the
+        server and the other party may already hold the old one, and a second upload
+        under it could be taken as a duplicate."""
+        if not path or not os.path.isfile(path):
+            self.log_error('Cannot send %s again: it is no longer here' % path)
+            return None
+        self.log_info('Sending %s again as a new message, asked for' % os.path.basename(path))
+        return self.sendFile(path)
 
     @objc.python_method
     def resend_pending(self):

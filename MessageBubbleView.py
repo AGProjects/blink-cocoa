@@ -6611,6 +6611,8 @@ class MessageBubbleView(NSView):
             group = []
             if self._isResendable():
                 group.append((NSLocalizedString("Resend", "Menu item"), "menuResend:"))
+            if self._isSendableAgain():
+                group.append((NSLocalizedString("Send Again", "Menu item"), "menuSendAgain:"))
             if self._isRepliable():
                 group.append((NSLocalizedString("Reply", "Menu item"), "menuReply:"))
             if self._isEditable():
@@ -6646,14 +6648,28 @@ class MessageBubbleView(NSView):
 
     @objc.python_method
     def _isResendable(self):
-        """Your own words that did not get there. A file transfer has its
-        own way back onto the wire (resend_pending_transfers) and is not
-        offered here."""
+        """Your own words, or your own file, that did not get there. A file goes
+        again under its own transfer id, from the copy filed when it was sent."""
+        if self.direction != 'outgoing' or not self.msgid:
+            return False
+        if self.state not in (MSG_STATE_FAILED, MSG_STATE_FAILED_LOCAL, MSG_STATE_DEFERRED):
+            return False
+        if self.transfer_meta is not None:
+            return not getattr(self, 'upload_pending', False)
+        return self.kind == self.KIND_TEXT
+
+    @objc.python_method
+    def _isSendableAgain(self):
+        """A file of ours that is on this computer, to send again as a new message."""
         return (self.direction == 'outgoing' and bool(self.msgid)
-                and self.kind == self.KIND_TEXT
-                and self.transfer_meta is None
-                and self.state in (MSG_STATE_FAILED, MSG_STATE_FAILED_LOCAL,
-                                   MSG_STATE_DEFERRED))
+                and self.transfer_meta is not None
+                and bool(self.media_path) and os.path.exists(self.media_path))
+
+    def menuSendAgain_(self, sender):
+        renderer = self.renderer
+        if renderer is not None and hasattr(renderer, 'bubbleDidRequestSendAgain'):
+            BlinkLogger().log_info('Bubble %s: send again, from the menu' % self.msgid)
+            renderer.bubbleDidRequestSendAgain(self.msgid, self.media_path)
 
     def menuResend_(self, sender):
         renderer = self.renderer
