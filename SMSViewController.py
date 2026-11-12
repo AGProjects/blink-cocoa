@@ -3556,6 +3556,18 @@ class SMSViewController(NSObject):
         readable on this account's other devices -- the same pair of keys
         a text message goes out under.
         """
+        target = os.path.join(tempfile.gettempdir(),
+                              '%s.asc' % meta['transfer_id'])
+        # In the PGP worker when there is one: pgpy armours one bit at a time,
+        # holding the GIL for seconds on a big file (PGPFiles)
+        import PGPFiles
+        keys = [str(self.my_public_key)] if self._isSelfTransfer(meta) else \
+            [str(self.public_key)] + ([str(self.my_public_key)] if self.my_public_key else [])
+        if PGPFiles.encrypt_file(path, target, keys):
+            self.log_info('Encrypted %s for upload (%s bytes)'
+                          % (meta['filename'], os.path.getsize(target)))
+            return target
+
         with open(path, 'rb') as f:
             data = f.read()
 
@@ -3584,8 +3596,6 @@ class SMSViewController(NSObject):
         finally:
             del sessionkey
 
-        target = os.path.join(tempfile.gettempdir(),
-                              '%s.asc' % meta['transfer_id'])
         with open(target, 'w') as f:
             f.write(str(encrypted))
         self.log_info('Encrypted %s for upload (%s bytes)'

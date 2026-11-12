@@ -1164,6 +1164,16 @@ def _decryptor():
         return None
 
     def decrypt(payload):
+        # In the PGP worker when there is one: pgpy checks the armour of a big file one bit
+        # at a time, holding the GIL for seconds -- a bulk download froze Blink (PGPFiles)
+        import PGPFiles
+        try:
+            plaintext = PGPFiles.decrypt_file(payload)
+        except Exception as e:
+            BlinkLogger().log_error('[data] Cannot decrypt a downloaded file (%d bytes): %s' % (len(payload or b''), e))
+            return None
+        if plaintext is not None:
+            return plaintext
         try:
             import pgpy
             from MessageHost import pgp_plaintext_bytes, private_key_for_message

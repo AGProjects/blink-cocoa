@@ -4411,6 +4411,21 @@ class NativeChatViewController(ChatViewController):
             return None
 
         def decrypt(payload):
+            # In the PGP worker when there is one: pgpy checks the armour of a big
+            # file one bit at a time, holding the GIL for seconds (PGPFiles)
+            import PGPFiles
+            try:
+                plaintext = PGPFiles.decrypt_file(payload)
+            except Exception as e:
+                BlinkLogger().log_error('Cannot decrypt a downloaded file (%d bytes): %s'
+                                        % (len(payload or b''), e))
+                plaintext = None
+                if private_key is None:
+                    return None
+                # the conversation's own key may live outside the keys folder:
+                # tried in Blink below, as before
+            if plaintext is not None:
+                return plaintext
             blob = payload
             key = private_key
             try:
