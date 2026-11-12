@@ -183,6 +183,9 @@ class ChatWindowController(NSWindowController):
             self.notification_center.add_observer(self, name="BlinkMuteChangedState")
             self.notification_center.add_observer(self, name="VideoroomSessionAudioMutedDidChange")
             self.notification_center.add_observer(self, name="VideoroomSessionDidChangeState")
+            # who is in the video room, and with video, shows in the participant rows
+            self.notification_center.add_observer(self, name="VideoroomSessionParticipantsDidChange")
+            self.notification_center.add_observer(self, name="VideoroomSessionParticipantDidChange")
             self.notification_center.add_observer(self, name="BlinkSessionChangedState")
             self.notification_center.add_observer(self, name="BlinkStreamHandlerChangedState")
             self.notification_center.add_observer(self, name="BlinkStreamHandlersChanged")
@@ -711,6 +714,16 @@ class ChatWindowController(NSWindowController):
     def _NH_VideoroomSessionAudioMutedDidChange(self, sender, data):
         if sender is self.selectedVideoRoom():
             self.updateMuteButton()
+
+    @objc.python_method
+    def _NH_VideoroomSessionParticipantsDidChange(self, sender, data):
+        # a publisher came, went or told whether it sends video: the participant rows of
+        # the session to that room show it (conference-info may have come before the
+        # video room told it)
+        if sender is self.selectedVideoRoom():
+            self.refreshDrawer()
+
+    _NH_VideoroomSessionParticipantDidChange = _NH_VideoroomSessionParticipantsDidChange
 
     @objc.python_method
     def _NH_VideoroomSessionDidChangeState(self, sender, data):
