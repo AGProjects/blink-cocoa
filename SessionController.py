@@ -71,7 +71,7 @@ from ChatController import ChatController, BlinkChatStream
 from FileTransferController import FileTransferController
 from FileTransferSession import OutgoingPushFileTransferHandler
 from HistoryManager import ChatHistory, SessionHistory
-from HistoryManager import SessionHistoryReplicator
+from HistoryManager import SessionHistoryReplicator, AccountDataRemover
 from HistoryManager import preview_call
 from MessageHost import CALL_CONTENT_TYPE, build_call_record, call_summary, dominant_media
 from MessageHost import this_device_id
@@ -198,6 +198,7 @@ class SessionControllersManager(object, metaclass=Singleton):
         self.redial_uri = None
 
         SessionHistoryReplicator()
+        AccountDataRemover()
 
         # Remote pointer on shared screens (capabilities, share start/stop and
         # pointer messages inside calls). Not every target ships it.

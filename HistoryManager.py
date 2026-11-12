@@ -55,6 +55,7 @@ import dateutil.parser
 from sipsimple.account import Account, AccountManager, BonjourAccount
 from sipsimple.configuration.settings import SIPSimpleSettings
 from sipsimple.core import SIPURI
+from sipsimple.threading import run_in_thread
 from sipsimple.threading.green import run_in_green_thread
 from sipsimple.util import ISOTimestamp
 from zope.interface import implementer
@@ -3620,6 +3621,35 @@ class ChatHistory(object, metaclass=Singleton):
                         found.append(msgid)
             frontier = found
 
+    @run_in_db_thread
+    def remove_account(self, account_id):
+        """Erase every row of a removed account, its calls and tombstones included, the
+        downloaded files of its transfers with them, then whatever is left in its folder
+        of the file transfer cache. Returns the number of rows erased."""
+        table = ChatMessage.sqlmeta.table
+        try:
+            row_ids = [int(row[0]) for row in self.db.queryAll('select id from %s where local_uri=%s'
+                                                                 % (table, ChatMessage.sqlrepr(account_id)))]
+        except Exception as e:
+            BlinkLogger().log_error('[db] Cannot read the messages of %s: %s' % (account_id, e))
+            return 0
+        removed, conversations = self._erase_rows(row_ids, files=True) if row_ids else (0, [])
+        BlinkLogger().log_info('[db] Removed %d messages and calls of %s in %d conversations'
+                               % (removed, account_id, len(conversations)))
+        try:
+            import shutil
+            from FileTransferCache import FileTransferCache
+            cache = FileTransferCache()
+            folder = os.path.join(cache.directory(), cache._safe(account_id))
+            if os.path.isdir(folder):
+                count = sum(len(files) for _, _, files in os.walk(folder))
+                shutil.rmtree(folder, ignore_errors=True)
+                cache._folders = None
+                BlinkLogger().log_info('[db] Removed the file transfer folder of %s (%d files left in it)' % (account_id, count))
+        except Exception as e:
+            BlinkLogger().log_error('[db] Cannot remove the downloaded files of %s: %s' % (account_id, e))
+        return removed
+
     def _erase_rows(self, row_ids, files=True):
         """Delete rows by id, then the downloaded files of the transfers among them.
         Returns (rows erased, conversations touched). Caller is in the db thread."""
@@ -3874,6 +3904,19 @@ class FileTransferHistory(object, metaclass=Singleton):
         return block_on(self._get_transfers(limit))
 
     @run_in_db_thread
+    @run_in_db_thread
+    def remove_account(self, account_id):
+        """The MSRP transfer rows of a removed account (the files are in the file transfer cache)."""
+        try:
+            count = int(self.db.queryAll("select count(*) from file_transfers where local_uri=%s" % FileTransfer.sqlrepr(account_id))[0][0])
+            self.db.queryAll("delete from file_transfers where local_uri=%s" % FileTransfer.sqlrepr(account_id))
+        except Exception as e:
+            BlinkLogger().log_error('[db] Cannot remove the MSRP transfers of %s: %s' % (account_id, e))
+            return 0
+        if count:
+            BlinkLogger().log_info('[db] Removed %d MSRP transfer entries of %s' % (count, account_id))
+        return count
+
     def delete_transfers(self):
         query = "delete from file_transfers"
         try:
@@ -3904,6 +3947,83 @@ def addressbook_ready(account):
 
 
 @implementer(IObserver)
+class AccountDataRemover(object, metaclass=Singleton):
+    """Removing an account takes its data with it: messages, calls, downloaded files,
+    its own PGP keys (archived ones too; the escrow on the server stays), its journal
+    folder, its account storage cache and addressbook origins.
+
+    Unless another profile still has the account: all of that is shared by the
+    profiles (only the configuration is per profile), so it stays."""
+
+    def __init__(self):
+        NotificationCenter().add_observer(self, name='SIPAccountManagerDidRemoveAccount')
+
+    @run_in_gui_thread
+    def handle_notification(self, notification):
+        handler = getattr(self, '_NH_%s' % notification.name, Null)
+        handler(notification)
+
+    def _NH_SIPAccountManagerDidRemoveAccount(self, notification):
+        account = notification.data.account
+        if account is BonjourAccount() or not isinstance(account, Account):
+            return
+        account_id = str(account.id)
+        try:
+            import Profiles
+            others = Profiles.profiles_with_account(account_id)
+            current = Profiles.current_profile()
+        except Exception as e:
+            BlinkLogger().log_error('[db] Cannot tell whether other profiles use %s, keeping its data: %s' % (account_id, e))
+            return
+        if others:
+            BlinkLogger().log_info('[db] Account %s was removed from profile %s; profile %s still has it, '
+                                   'its messages, calls, files, PGP keys and journal are kept'
+                                   % (account_id, current, ', '.join(others)))
+            return
+        BlinkLogger().log_info('[db] Account %s was removed, removing its data' % account_id)
+        # read now: the settings object is gone once the notification is over
+        key_files = [str(path) for path in (account.sms.private_key, account.sms.public_key) if path]
+        ChatHistory().remove_account(account_id)
+        SessionHistory().delete_entries(local_uri=account_id)
+        FileTransferHistory().remove_account(account_id)
+        self._remove_files(account_id, key_files)
+
+    @run_in_thread('file-io')
+    def _remove_files(self, account_id, key_files):
+        import glob
+        import shutil
+        # own PGP keys: <keys>/<account>.privkey/.pubkey, the ones replaced earlier
+        # (<account>.privkey.<fingerprint>, KeyEscrow._archive_existing_key) and
+        # whatever the account settings pointed to
+        keys = ApplicationData.get('keys')
+        filenames = set(key_files)
+        base = glob.escape(os.path.join(keys, account_id))
+        for suffix in ('.privkey', '.pubkey', '.privkey.*', '.pubkey.*'):
+            filenames.update(glob.glob(base + suffix))
+        removed = 0
+        for filename in filenames:
+            try:
+                if os.path.isfile(filename):
+                    os.unlink(filename)
+                    removed += 1
+            except OSError as e:
+                BlinkLogger().log_error('[db] Cannot remove %s: %s' % (filename, e))
+        BlinkLogger().log_info('[db] Removed %d PGP key files of %s' % (removed, account_id))
+        # the journal folder: first sync marker, snapshots. A marker left behind would make
+        # the account, added again, resume a first sync of a history that is gone
+        for folder in ('journal/%s' % account_id, 'account_storage/%s' % account_id.lower()):
+            path = ApplicationData.get(folder)
+            if os.path.isdir(path):
+                shutil.rmtree(path, ignore_errors=True)
+                BlinkLogger().log_info('[db] Removed %s' % path)
+        origins = ApplicationData.get('addressbook_origins/%s.json' % account_id)
+        if os.path.isfile(origins):
+            try:
+                os.unlink(origins)
+            except OSError as e:
+                BlinkLogger().log_error('[db] Cannot remove %s: %s' % (origins, e))
+
+
 class SessionHistoryReplicator(object):
 
     last_calls_connections = {}
