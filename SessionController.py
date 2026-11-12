@@ -126,6 +126,24 @@ def offered_video_sdp_lines(sdp):
     return lines
 
 
+def local_camera_problem():
+    """Why the camera cannot be sent in a call, or None when it can. When no camera opens
+    the SDK falls back to its Null device (no real name), and a camera that failed to
+    reopen (another resolution, a device that went away) stays closed: attaching it to
+    the call's video transport then fails the whole call."""
+    device = getattr(SIPApplication, 'video_device', None)
+    if device is None or getattr(device, 'producer', None) is None:
+        return 'no video device'
+    if device.real_name in (None, 'Null video device'):
+        return 'no camera could be opened'
+    if not getattr(device, 'muted', False):
+        try:
+            device.producer.start()     # a no-op on a running camera, a closed one raises
+        except SIPCoreError as e:
+            return str(e) or 'the camera cannot be started'
+    return None
+
+
 def zip_folder_for_transfer(folder):
     """Compress a dropped folder into .tmp_file_transfers. Path, or None.
 
@@ -2303,6 +2321,17 @@ class SessionController(NSObject):
 
     @objc.python_method
     def startCompositeSessionWithStreamsOfTypes(self, stype_tuple):
+        # A new call with video and a camera that cannot be opened: it goes on with
+        # audio, it must not fail the whole call
+        if (self.session is None or self.state in (STATE_FINISHED, STATE_DNS_FAILED, STATE_FAILED)) \
+                and any((s[0] if type(s) == tuple else s) == 'video' for s in stype_tuple):
+            problem = local_camera_problem()
+            if problem is not None:
+                self.log_info("Cannot use the camera (%s): calling %s with audio only" % (problem, self.target_uri))
+                stype_tuple = [s for s in stype_tuple if (s[0] if type(s) == tuple else s) != 'video']
+                if not any((s[0] if type(s) == tuple else s) == 'audio' for s in stype_tuple):
+                    stype_tuple.insert(0, 'audio')
+
         # A new call with the lid closed on the built-in microphone: ask for
         # a microphone first, and do not place the call without one. Only
         # for calls the user starts -- retries and redirects of a call that
@@ -2823,6 +2852,7 @@ class SessionController(NSObject):
     @objc.python_method
     def _NH_SIPSessionDidStart(self, sender, data):
         self.try_next_hop = False
+        self._audio_only_fallback = False     # a later call on this controller may fall back again
         self.transport = '%s:%s' % (self.session.transport, self.session.peer_address)
         self.log_info("Next SIP hop is %s" % self.transport)
         self.notification_center.discard_observer(self, name='SIPInvitationChangedState', sender=self.session._invitation)
@@ -3019,6 +3049,17 @@ class SessionController(NSObject):
                 finally:
                     self._restarting_call = False
 
+        # an outgoing video call that failed locally on the camera: the same call without video, once
+        elif self._audioOnlyRetry(sender, data, oldSession) is not None:
+            retry = self._audioOnlyRetry(sender, data, oldSession)
+            self.log_info("The video call to %s failed on the camera (%s): calling again with audio only"
+                          % (self.target_uri, data.failure_reason))
+            self._audio_only_fallback = True
+            if len(retry) == 1:
+                self.startSessionWithStreamOfType(retry[0])
+            else:
+                self.startCompositeSessionWithStreamsOfTypes(retry)
+
         # local timeout while we have an alternative route
         elif must_retry:
             self.log_info('Trying an alternative route...')
@@ -3031,6 +3072,27 @@ class SessionController(NSObject):
                     self.startCompositeSessionWithStreamsOfTypes([s.type for s in oldSession.proposed_streams])
             finally:
                 self._restarting_call = False
+
+    @objc.python_method
+    def _audioOnlyRetry(self, sender, data, session):
+        """The streams to call again with when an outgoing video call failed locally on
+        the camera (it could not be attached when the media started): the same call
+        without video. None for any other failure, and for the retry itself."""
+        if sender.direction != 'outgoing' or getattr(self, '_audio_only_fallback', False) or session is None:
+            return None
+        types = [stream.type for stream in (session.proposed_streams or [])]
+        if 'video' not in types:
+            return None
+        if data.originator != 'local' or data.code:
+            return None
+        failure = (data.failure_reason or '').lower()
+        if not (failure.startswith('video media stream')
+                or (failure.startswith('sip core error') and ('video' in failure or 'camera' in failure))):
+            return None
+        types = [stype for stype in types if stype != 'video']
+        if 'audio' not in types:
+            types.insert(0, 'audio')
+        return types
 
     @objc.python_method
     def _store_sylk_zrtp_state(self, state, sas, installed_streams, failed_streams):
