@@ -7585,7 +7585,7 @@ class SMSWindowManagerClass(NSObject):
                    msg.get('contact'), msg.get('timestamp'), msg.get('disposition')))
 
     @objc.python_method
-    def _journalMessageAlreadyTakenIn(self, msg):
+    def _journalMessageAlreadyTakenIn(self, msg, account=None):
         """Whether this journal entry is a message we already took in live.
 
         The journal carries everything, including what arrived over the
@@ -7601,7 +7601,7 @@ class SMSWindowManagerClass(NSObject):
         through the front door. Peeked at, not recorded: a journal entry
         must not be able to make a later live message look like a repeat.
         """
-        return bool(msg.get('message_id')) and msg['message_id'] in self.seen_message_ids
+        return bool(msg.get('message_id')) and self._seenKey(msg['message_id'], account) in self.seen_message_ids
 
     @objc.python_method
     def _journal_message_is_notable(self, account, msg):
@@ -7624,7 +7624,7 @@ class SMSWindowManagerClass(NSObject):
         announces "15 messages received while you were away" for what was
         a handshake.
         """
-        if self._journalMessageAlreadyTakenIn(msg):
+        if self._journalMessageAlreadyTakenIn(msg, account):
             return False
 
         if is_otr_wire_text(msg.get('content')):
@@ -8949,7 +8949,19 @@ class SMSWindowManagerClass(NSObject):
                                    % (len(text), text[:600]))
 
     @objc.python_method
-    def _seenMessage(self, key):
+    def _seenKey(self, key, account=None):
+        """The ring's key for an id: per account when the account is known.
+
+        A message between two accounts of this device has one Message-ID
+        for both copies, the one sent and the one received; keyed on the
+        id alone, the second copy looked like a repeat of the first and
+        was dropped from the other account's history.
+        """
+        account_id = getattr(account, 'id', None) if account is not None else None
+        return '%s/%s' % (account_id, key) if account_id else str(key)
+
+    @objc.python_method
+    def _seenMessage(self, key, account=None):
         """Whether this id has been taken in before. Records it if not.
 
         One ring for both kinds of id: they are drawn from different
@@ -8959,6 +8971,7 @@ class SMSWindowManagerClass(NSObject):
         """
         if not key:
             return False
+        key = self._seenKey(key, account)
         seen = self.seen_message_ids
         if key in seen:
             seen.move_to_end(key)
@@ -9142,7 +9155,7 @@ class SMSWindowManagerClass(NSObject):
         if (is_cpim and imdn_id and imdn_id != call_id
                 and content_type not in (IsComposingDocument.content_type,
                                          IMDNDocument.content_type)
-                and self._seenMessage(imdn_id)):
+                and self._seenMessage(imdn_id, account)):
             BlinkLogger().log_info('Dropped a second copy of message %s from %s'
                                    % (imdn_id, format_identity_to_string(sender_identity)))
             return
