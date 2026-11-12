@@ -423,6 +423,25 @@ class NetworkCameraPanel(_ModalPanel):
         self.userField = form.row(_t("User"), _text_field())
         self.passwordField = _PasswordField.alloc().initWithField_(form.row(_t("Password"), _text_field(secure=True)))
         self.resolutionPopup = form.row(_t("Send at"), _resolution_popup(), height=24)
+        # The MAC address: learned when the camera is first seen online, or entered; Find
+        # looks for the camera by it when the DHCP server gave it another address
+        self.macField = form.row(_t("MAC address"), _text_field(_t("learned when it answers")))
+        self.findMacButton = _button(_t("Find"), self, 'findCamera:')
+        self.findMacButton.sizeToFit()
+        find_w = max(70.0, self.findMacButton.frame().size.width)
+        mac_frame = self.macField.frame()
+        self.macField.setFrame_(NSMakeRect(mac_frame.origin.x, mac_frame.origin.y, mac_frame.size.width - find_w - 8, mac_frame.size.height))
+        self.findMacButton.setFrame_(NSMakeRect(mac_frame.origin.x + mac_frame.size.width - find_w, mac_frame.origin.y - 4, find_w, 30))
+        self.findMacButton.setToolTip_(_t("Check that this MAC address answers at the camera's address, else look for it on the network "
+                                          "and put the address it is at in the field (Update saves it); without a MAC address, the one "
+                                          "answering at the address is filled in"))
+        self.macField.setToolTip_(_t("Learned when the camera is first seen online, or entered; Find looks for the camera by it "
+                                     "when the DHCP server gave it another address"))
+        self.macField.setAutoresizingMask_(2)
+        self.findMacButton.setAutoresizingMask_(1)     # NSViewMinXMargin
+        self.macField.setDelegate_(self)
+        view.addSubview_(self.findMacButton)
+        self.finding = False
         for field in (self.labelField, self.urlField, self.userField, self.passwordField):
             field.setAutoresizingMask_(2)
             field.setDelegate_(self)        # controlTextDidChange_: every edit, typed or pasted
@@ -499,7 +518,94 @@ class NetworkCameraPanel(_ModalPanel):
         self.online[url] = online
         if mac:
             self.macs[url] = mac
+            self.learnMac(url, mac)
         self.showFound()
+
+    # The MAC address
+
+    @objc.python_method
+    def learnMac(self, url, mac):
+        """A saved camera without a MAC address seen online at its address: its MAC address kept."""
+        from ExtraVideo import saved_sources, set_source_mac
+        saved = next((source for source in self.saved if source['url'] == url), None)
+        if saved is None or saved.get('mac'):
+            return
+        set_source_mac(url, mac)
+        BlinkLogger().log_info('[cameras] %s: MAC address %s' % (saved.get('label') or _host(url), mac))
+        self.saved = saved_sources()
+        if self.editing is not None and self.editing['url'] == url:
+            self.editing = next((source for source in self.saved if source['url'] == url), None)
+            if not str(self.macField.stringValue()).strip():
+                self.macField.setStringValue_(mac)
+
+    @objc.python_method
+    def mac(self):
+        """The MAC address entered, normalized; '' when empty, None when not one."""
+        from CameraFinder import normal_mac
+        text = str(self.macField.stringValue()).strip()
+        return normal_mac(text) if text else ''
+
+    @objc.python_method
+    def macEdited(self):
+        """Of a saved camera: kept at once (as its name), when valid."""
+        mac = self.mac()
+        if mac is None:
+            self.macField.setTextColor_(NSColor.systemRedColor())
+            self.testStatus.setStringValue_(_t("Not a MAC address: six pairs of hex digits, aa:bb:cc:dd:ee:ff"))
+            return
+        self.macField.setTextColor_(NSColor.controlTextColor())
+        if mac and str(self.macField.stringValue()) != mac:
+            self.macField.setStringValue_(mac)
+        saved = self.editing
+        if saved is None or (saved.get('mac') or '') == mac or saved['url'] != self.fields()[0]:
+            return
+        from ExtraVideo import saved_sources, set_source_mac
+        set_source_mac(saved['url'], mac or None)
+        BlinkLogger().log_info('[cameras] %s: MAC address %s' % (saved.get('label') or _host(saved['url']), mac or 'forgotten'))
+        self.saved = saved_sources()
+        self.editing = next((source for source in self.saved if source['url'] == saved['url']), None)
+        self.showFound()
+        self.updateButtons()
+
+    def findCamera_(self, sender):
+        from CameraFinder import locate_camera
+        mac = self.mac()
+        if mac is None:
+            self.macEdited()
+            return
+        self.takeCredentials()
+        url = self.fields()[0]
+        if not url or self.finding:
+            return
+        self.finding = True
+        self.updateButtons()
+        self.testStatus.setStringValue_((_t("Looking for %s on the network…") % mac) if mac else (_t("Asking who is at %s…") % _host(url)))
+        locate_camera(url, mac or None, lambda answer, error: self.cameraFound(url, answer, error))
+
+    @objc.python_method
+    def cameraFound(self, url, answer, error):
+        if self.closed:
+            return
+        self.finding = False
+        if error is not None or answer is None:
+            answer = ('unknown', url, self.mac() or None, str(error))
+        state, new_url, mac, detail = answer
+        if self.fields()[0] != url:         # the address changed meanwhile
+            self.updateButtons()
+            return
+        if mac and not str(self.macField.stringValue()).strip():
+            self.macField.setStringValue_(mac)
+            self.macEdited()
+        if state == 'moved':
+            BlinkLogger().log_info('[cameras] Found: %s' % detail)
+            self.urlField.setStringValue_(new_url)
+            self.forgetTest()
+            self.testStatus.setStringValue_((_t("Found: %s. ") % detail) + (_t("Update to save the new address.") if self.editing is not None else _t("Save to keep it.")))
+        elif state == 'here':
+            self.testStatus.setStringValue_(_t("The camera is at its address: %s.") % detail)
+        else:
+            self.testStatus.setStringValue_(_t("Not found: %s.") % detail)
+        self.updateButtons()
 
     def localOnlyChanged_(self, sender):
         _defaults().setBool_forKey_(sender.state() == NSOnState, LOCAL_ONLY_KEY)
@@ -583,7 +689,7 @@ class NetworkCameraPanel(_ModalPanel):
                 online = self.online.get(saved['url']) if saved else None
                 how = _t("online") if online else (_t("offline") if online is False else _t("checking…"))
             details = [camera.host, how]
-            mac = self.macs.get(saved['url']) if saved else None
+            mac = (self.macs.get(saved['url']) or saved.get('mac')) if saved else None
             if mac:
                 details.insert(1, mac)
             if camera.hardware and camera.hardware != self.cameraName(camera):
@@ -663,9 +769,12 @@ class NetworkCameraPanel(_ModalPanel):
             self.passwordField.setStringValue_(saved.get('password') or '')
             self.filled = (saved.get('user') or '', saved.get('password') or '')
             _select_resolution(self.resolutionPopup, saved.get('resolution'))
+            self.macField.setStringValue_(saved.get('mac') or self.macs.get(saved['url']) or '')
+            self.macField.setTextColor_(NSColor.controlTextColor())
             self.editing = saved
         else:
             self.editing = None
+            self.macField.setStringValue_('')
             self.urlField.setStringValue_(camera.url or '')
             if self.filled is not None and self.fields()[1:] == self.filled:
                 # another camera's user and password, not to be sent to this one
@@ -700,6 +809,8 @@ class NetworkCameraPanel(_ModalPanel):
     def controlTextDidEndEditing_(self, notification):
         if notification.object() is self.urlField:
             self.takeCredentials()
+        elif notification.object() is self.macField:
+            self.macEdited()
 
     @objc.python_method
     def takeCredentials(self):
@@ -745,6 +856,7 @@ class NetworkCameraPanel(_ModalPanel):
         try:
             url, user, password = self.fields()
             self.testButton.setEnabled_(not self.testing)
+            self.findMacButton.setEnabled_(bool(url) and not self.finding)
             self.addButton.setEnabled_(bool(url))
             if self.forgetButton is not None:
                 self.forgetButton.setEnabled_(self.editing is not None)
@@ -839,7 +951,9 @@ class NetworkCameraPanel(_ModalPanel):
     @objc.python_method
     def source(self):
         url, user, password = self.fields()
-        return dict(kind='rtsp', url=url, user=user, password=password, resolution=str(self.resolutionPopup.selectedItem().representedObject()))
+        mac = self.mac()
+        return dict(kind='rtsp', url=url, user=user, password=password, resolution=str(self.resolutionPopup.selectedItem().representedObject()),
+                    mac=mac or '')
 
     def add_(self, sender):
         from ExtraVideo import remember_source
@@ -894,8 +1008,9 @@ class NetworkCameraPanel(_ModalPanel):
     @objc.python_method
     def clearFields(self):
         self.forgetTest()
-        for field in (self.labelField, self.urlField, self.userField, self.passwordField):
+        for field in (self.labelField, self.urlField, self.userField, self.passwordField, self.macField):
             field.setStringValue_('')
+        self.macField.setTextColor_(NSColor.controlTextColor())
         self.urlField.setPlaceholderString_('rtsp://192.168.1.10:554/stream1')
         self.filled = self.editing = self.xaddr = None
         self.table.deselectAll_(None)

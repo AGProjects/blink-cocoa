@@ -94,9 +94,37 @@ def remember_source(source, replaces=None):
     gone = {source.get('url'), replaces} - {None}
     previous = next((other for other in saved_sources() if other.get('url') in gone), {})
     sources = [other for other in saved_sources() if other.get('url') not in gone]
-    sources.insert(0, dict(label=source.get('label') or '', url=source['url'], user=source.get('user') or '', password=source.get('password') or '',
-                           resolution=source.get('resolution') or previous.get('resolution') or DEFAULT_RESOLUTION,
-                           verified=bool(source['verified']) if 'verified' in source else _still_verified(previous, source)))
+    entry = dict(label=source.get('label') or '', url=source['url'], user=source.get('user') or '', password=source.get('password') or '',
+                 resolution=source.get('resolution') or previous.get('resolution') or DEFAULT_RESOLUTION,
+                 verified=bool(source['verified']) if 'verified' in source else _still_verified(previous, source))
+    # mac: the camera's MAC address (learned when it answers, or entered), to find it when the
+    # DHCP server gave it another address (CameraFinder.locate_camera)
+    if 'mac' in source:         # the manager's field: given, or emptied
+        if source['mac']:
+            entry['mac'] = source['mac']
+    elif previous.get('mac') and _url_host(previous.get('url')) == _url_host(entry['url']):      # the same device
+        entry['mac'] = previous['mac']
+    sources.insert(0, entry)
+    _save_sources(sources)
+
+
+def _url_host(url):
+    from urllib.parse import urlsplit
+    try:
+        return urlsplit(url or '').hostname or ''
+    except ValueError:
+        return ''
+
+
+def set_source_mac(url, mac):
+    """The MAC address of a saved camera; None forgets it."""
+    sources = saved_sources()
+    for source in sources:
+        if source.get('url') == url:
+            if mac:
+                source['mac'] = mac
+            else:
+                source.pop('mac', None)
     _save_sources(sources)
 
 
