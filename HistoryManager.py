@@ -3923,7 +3923,6 @@ class FileTransferHistory(object, metaclass=Singleton):
         return block_on(self._get_transfers(limit))
 
     @run_in_db_thread
-    @run_in_db_thread
     def remove_account(self, account_id):
         """The MSRP transfer rows of a removed account (the files are in the file transfer cache)."""
         try:
@@ -3936,6 +3935,7 @@ class FileTransferHistory(object, metaclass=Singleton):
             BlinkLogger().log_info('[db] Removed %d MSRP transfer entries of %s' % (count, account_id))
         return count
 
+    @run_in_db_thread
     def delete_transfers(self):
         query = "delete from file_transfers"
         try:
@@ -4043,6 +4043,7 @@ class AccountDataRemover(object, metaclass=Singleton):
                 BlinkLogger().log_error('[db] Cannot remove %s: %s' % (origins, e))
 
 
+@implementer(IObserver)
 class SessionHistoryReplicator(object):
 
     last_calls_connections = {}
