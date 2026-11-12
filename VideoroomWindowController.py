@@ -1921,12 +1921,30 @@ class VideoroomWindowController(NSObject):
                 self._item(menu, _t("Show as the speaker"), lambda: session.set_speakers([id]), enabled=established)
                 if len(speakers) == 1:
                     self._item(menu, _t("Show as second speaker"), lambda: session.set_speakers(speakers + [id]), enabled=established)
-        if tile.participant is not None and tile.participant.type == 'sip':
-            # whatever the number of people (a tile of someone else means we are not alone)
-            menu.addItem_(NSMenuItem.separatorItem())
-            uri = tile.participant.uri
-            self._item(menu, _t("Remove from the conference"), lambda: session.remove_participants([uri]), enabled=established)
+        participant = tile.participant
+        if participant is not None and participant.extra_video is None and not participant.parent:
+            # whatever the number of people (a tile of someone else means we are not alone).
+            # A SIP caller by its address; a WebRTC one by its publisher id: the server kicks
+            # exactly that device, even one of our own account (never this one, nor an extra
+            # video of someone)
+            target = participant.uri if participant.type == 'sip' else participant.id
+            if target:
+                menu.addItem_(NSMenuItem.separatorItem())
+                self._item(menu, _t("Remove from the conference"),
+                           lambda: self.confirmRemoveParticipant(participant, target), enabled=established)
         return menu
+
+    @objc.python_method
+    def confirmRemoveParticipant(self, participant, target):
+        from AppKit import NSAlert, NSAlertFirstButtonReturn
+        alert = NSAlert.alloc().init()
+        alert.setMessageText_(_t("Remove participant"))
+        alert.setInformativeText_(_t("Would you like to kick %s out of the conference?") % (participant.name or participant.uri))
+        alert.addButtonWithTitle_(_t("Remove"))
+        alert.addButtonWithTitle_(_t("Cancel"))
+        if alert.runModal() == NSAlertFirstButtonReturn and self.session is not None:
+            BlinkLogger().log_info('[videoroom] Remove %s from the conference (%s)' % (participant.uri, target))
+            self.session.remove_participants([target])
 
     # Status
 
