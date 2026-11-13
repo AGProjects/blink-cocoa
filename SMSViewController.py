@@ -1716,10 +1716,13 @@ class SMSViewController(NSObject):
                     #self.log_info('OTR message %s handled without error' % call_id)
                     encrypted = encryption_active = self.encryption.active
 
-            try:
-                content = content.decode() if isinstance(content, bytes) else content
-            except UnicodeDecodeError:
-                return
+            if isinstance(content, bytes):
+                try:
+                    content = content.decode('utf-8')
+                except UnicodeDecodeError:
+                    # shown with replacement characters rather than lost without a trace
+                    self.log_error('Message %s is not valid UTF-8, shown with replacement characters' % call_id)
+                    content = content.decode('utf-8', errors='replace')
             
             if is_file_transfer_notice(content_type, content):
                 self.log_info('Dropped file transfer notice %s: the transfer comes as its own message' % call_id)
