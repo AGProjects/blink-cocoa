@@ -1546,6 +1546,31 @@ class SMSViewController(NSObject):
             self.log_error('Cannot store %s %s: %s' % (content_type, msgid, e))
 
     @objc.python_method
+    def _storeEncryptedRow(self, message_tuple, ciphertext, timestamp):
+        """Store a PGP message as it came, before decrypting it. Returns its row id, or None.
+
+        Unread on the same terms as the row stored once it is decrypted, so a
+        message that never opens still shows in the badge after a restart.
+        """
+        (sender_identity, id, call_id, direction, content, content_type, is_replication_message, window, cpim_imdn_events, imdn_timestamp, account, imdn_message_id, status, metadata, counts_as_unread) = message_tuple
+        msg_id = imdn_message_id if imdn_message_id and is_replication_message else id
+        try:
+            from SMSWindowManager import SMSWindowManager
+            on_screen = SMSWindowManager()._conversationIsOnScreen(self.account, self.remote_uri)
+            unread = (counts_as_unread and direction == 'incoming' and not is_replication_message
+                      and not on_screen and (status or MSG_STATE_DELIVERED) != 'displayed')
+            recipient = ChatIdentity(self.target_uri, self.display_name) if direction == 'outgoing' else ChatIdentity(self.account.uri, self.account.display_name)
+            cpim_to = format_identity_to_string(recipient, format='full')
+            cpim_from = format_identity_to_string(sender_identity, format='full') if sender_identity else ''
+            self.history.add_message(msg_id, 'sms', self.local_uri, self.conversation_peer_uri(), direction, cpim_from, cpim_to,
+                                     str(timestamp), ciphertext, str(content_type), "0", status or MSG_STATE_DELIVERED,
+                                     call_id=call_id, encryption='', read=0 if unread else 1)
+        except Exception as e:
+            self.log_error('Cannot store encrypted message %s: %s' % (msg_id, e))
+            return None
+        return msg_id
+
+    @objc.python_method
     def _receive_message(self, message_tuple):
         (sender_identity, id, call_id, direction, content, content_type, is_replication_message, window, cpim_imdn_events, imdn_timestamp, account, imdn_message_id, status, metadata, counts_as_unread) = message_tuple
 
@@ -1648,7 +1673,14 @@ class SMSViewController(NSObject):
                 text_content = summary
                 is_html = False
 
+            pgp_row_id = None
             if text_content.startswith('-----BEGIN PGP MESSAGE-----') and text_content.endswith('-----END PGP MESSAGE-----'):
+                # Stored first, as it came, before anything can go wrong with
+                # it: a message that does not decrypt (no key yet, a key it was
+                # not sealed to, a bug) keeps its ciphertext row, which the
+                # background decryptor opens once a key can. The plaintext
+                # replaces the ciphertext below when it opens here.
+                pgp_row_id = self._storeEncryptedRow(message_tuple, text_content, timestamp)
                 from MessageHost import private_key_for_message, load_private_keys
                 if not self.private_key and not load_private_keys():
                     self.chatViewController.showSystemMessage("No PGP private key available", ISOTimestamp.now(), is_error=True)
@@ -1673,6 +1705,8 @@ class SMSViewController(NSObject):
                         self.chatViewController.showMessage(call_id, id, direction, sender_name, icon, "PGP decryption error: %s" % str(e), timestamp, state=MSG_STATE_FAILED, media_type='sms')
 
                         self.log_error('PGP decrypt error: %s' % str(e))
+                        if pgp_row_id is not None:
+                            self.history.store_undecryptable_message(pgp_row_id, str(e))
                         if require_delivered_notification:
                             self.sendIMDNNotification(id, 'failed')
                         return
@@ -1723,10 +1757,17 @@ class SMSViewController(NSObject):
                     # shown with replacement characters rather than lost without a trace
                     self.log_error('Message %s is not valid UTF-8, shown with replacement characters' % call_id)
                     content = content.decode('utf-8', errors='replace')
-            
+
             if is_file_transfer_notice(content_type, content):
                 self.log_info('Dropped file transfer notice %s: the transfer comes as its own message' % call_id)
+                if pgp_row_id is not None:
+                    self.history.delete_message(pgp_row_id)     # its ciphertext was stored before it could be read
                 return None
+
+            if pgp_row_id is not None and self.pgp_encrypted:
+                # the row stored with the ciphertext gets the plaintext (storing it
+                # again below only updates the state of an existing row)
+                self.history.update_decrypted_message(pgp_row_id, content)
 
             if is_otr_wire_text(content):
                 if content.lstrip().startswith('?OTR:'):
