@@ -3,7 +3,8 @@
 # Show the audio + video codecs that PJSIP actually registered in the
 # sipsimple build currently installed in Blink's venv. Useful for verifying
 # that optional codecs (G.729, opus, AMR-WB, etc.) made it into the
-# compiled _core.so before / after running 04-install_sipsimple.sh.
+# compiled _core.so before / after running 04-install_sipsimple.sh,
+# and whether the SDK supports stereo audio calls.
 #
 # Usage:
 #     ./show-codecs.sh
@@ -73,6 +74,29 @@ print("Optional codec status:")
 for name in ("G729", "opus", "AMR-WB", "GSM", "iLBC", "speex"):
     mark = "yes" if name in audio else "no"
     print(f"  {name:<8} {mark}")
+
+# Stereo audio (python3-sipsimple 5.7): the audio.stereo setting (stereo
+# mixer, Opus in stereo, no echo canceller) and AudioStream(stereo=True)
+# offering only the stereo codecs. Stereo calls need both, and opus.
+import inspect
+
+try:
+    from sipsimple.configuration.settings import AudioSettings
+    stereo_setting = 'stereo' in dir(AudioSettings)
+except Exception:
+    stereo_setting = False
+try:
+    from sipsimple.streams.rtp.audio import AudioStream
+    stereo_stream = 'stereo' in inspect.signature(AudioStream.__init__).parameters
+except Exception:
+    stereo_stream = False
+stereo = stereo_setting and stereo_stream and 'opus' in audio
+
+print()
+print("Stereo audio:")
+print(f"  audio.stereo setting          {'yes' if stereo_setting else 'no'}")
+print(f"  AudioStream(stereo=True)      {'yes' if stereo_stream else 'no'}")
+print(f"  stereo calls (Opus stereo)    {'yes' if stereo else 'no'}")
 
 e.stop()
 e.join(timeout=5)
