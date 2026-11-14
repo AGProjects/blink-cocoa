@@ -14,16 +14,16 @@
   calls (shown at the top of that strip).
 """
 
-__all__ = ['CuteMusicLink', 'selected']
+__all__ = ['CuteMusicLink', 'selected', 'device_name', 'menu_devices', 'unavailable_reason', 'open_mixer']
 
 import fcntl
 import json
 import os
 
-from AppKit import NSApp
+from AppKit import NSApp, NSWorkspace
 from Foundation import NSTimer
 
-from application.notification import IObserver, NotificationCenter
+from application.notification import IObserver, NotificationCenter, NotificationData
 from application.python import Null
 from application.python.types import Singleton
 from sipsimple.application import SIPApplication
@@ -33,6 +33,7 @@ from zope.interface import implementer
 from BlinkLogger import BlinkLogger
 from resources import ApplicationData
 from util import run_in_gui_thread
+from Foundation import NSLocalizedString
 
 
 MUSIC_SAMPLE_RATE = 48000
@@ -46,6 +47,90 @@ def _engine():
 def device_name():
     engine = _engine()
     return engine.podcast_mixer_device if engine is not None else 'AG Podcast Mixer'
+
+
+BUNDLE_ID = 'com.ag-projects.ag-cute-music'
+
+
+def installed():
+    """Whether AG CuteMusic is installed (Launch Services knows its bundle)."""
+    try:
+        return NSWorkspace.sharedWorkspace().URLForApplicationWithBundleIdentifier_(BUNDLE_ID) is not None
+    except Exception:
+        return False
+
+
+def _held(name):
+    """Whether another process holds an exclusive flock on name in the link's directory."""
+    engine = _engine()
+    if engine is None:
+        return False
+    try:
+        with open(os.path.join(engine.podcast_mixer_dir, name), 'rb') as file:
+            try:
+                fcntl.flock(file.fileno(), fcntl.LOCK_SH | fcntl.LOCK_NB)
+            except OSError:
+                return True
+            fcntl.flock(file.fileno(), fcntl.LOCK_UN)
+            return False
+    except OSError:
+        return False
+
+
+def unavailable_reason():
+    """Why the device is not listed, a few words for its menu item; None when it is (or there is no link)."""
+    engine = _engine()
+    if engine is None:
+        return None
+    if engine.podcast_mixer_device in engine.input_devices:
+        return None
+    if engine.podcast_mixer_available:
+        return NSLocalizedString("starting", "Menu item")      # listed at the next refresh (2 s)
+    if _held('cutemusic.lock'):     # AG CuteMusic runs, its mixer is off
+        return NSLocalizedString("turn on POWER in AG CuteMusic's mixer", "Menu item")
+    if installed():
+        return NSLocalizedString("start AG CuteMusic", "Menu item")
+    return NSLocalizedString("install AG CuteMusic", "Menu item")
+
+
+def open_mixer():
+    """AG CuteMusic in front, on its Mixer view: asked through the link's directory (show-mixer.request, which it
+    checks twice a second); started with --mixer when it is installed but not running."""
+    engine = _engine()
+    if engine is not None:
+        try:
+            os.makedirs(engine.podcast_mixer_dir, mode=0o700, exist_ok=True)
+            with open(os.path.join(engine.podcast_mixer_dir, 'show-mixer.request'), 'w'):
+                pass
+        except OSError as e:
+            BlinkLogger().log_info('Cannot ask AG CuteMusic for its mixer: %s' % e)
+    from AppKit import NSRunningApplication, NSApplicationActivateIgnoringOtherApps, NSWorkspaceOpenConfiguration
+    running = NSRunningApplication.runningApplicationsWithBundleIdentifier_(BUNDLE_ID)
+    if running:
+        running[0].activateWithOptions_(NSApplicationActivateIgnoringOtherApps)
+        return
+    if _held('cutemusic.lock'):
+        return      # run from its source tree: it shows itself (the request)
+    url = NSWorkspace.sharedWorkspace().URLForApplicationWithBundleIdentifier_(BUNDLE_ID)
+    if url is None:
+        BlinkLogger().log_info('AG CuteMusic is not installed')
+        return
+    configuration = NSWorkspaceOpenConfiguration.configuration()
+    configuration.setArguments_(['--mixer'])
+    configuration.setActivates_(True)
+    NSWorkspace.sharedWorkspace().openApplicationAtURL_configuration_completionHandler_(url, configuration, None)
+    BlinkLogger().log_info('Starting AG CuteMusic on its mixer')
+
+
+def menu_devices(devices):
+    """The Devices menu's list: AG Podcast Mixer first when it is there; when it is not, the title of a greyed out
+    item saying why (always shown), else None."""
+    name = device_name()
+    devices = list(devices)
+    if name in devices:
+        return [name] + [device for device in devices if device != name], None
+    reason = unavailable_reason()
+    return devices, ('%s (%s)' % (name, reason) if reason else None)
 
 
 def selected(settings=None):
@@ -148,6 +233,8 @@ class CuteMusicLink(object, metaclass=Singleton):
                 before = json.load(file)
         except (OSError, ValueError):
             before = None
+        # the main window's notice (JournalProgressStrip): shown while the mixer is the input
+        NotificationCenter().post_notification('BlinkPodcastMixerSelected', sender=self, data=NotificationData(selected=selected(settings)))
         busy = bool(getattr(NSApp.delegate().contactsWindowController, 'has_audio', False))
         if selected(settings) and before is None:
             before = {'enable_aec': bool(settings.audio.enable_aec), 'sample_rate': int(settings.audio.sample_rate),

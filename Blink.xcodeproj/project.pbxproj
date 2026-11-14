@@ -775,10 +775,6 @@
 		AD0000000000000000EF0003 /* ScreenPointer.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000EF0000 /* ScreenPointer.py */; };
 		AD0000000000000000EF0103 /* ScreenPointerController.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000EF0100 /* ScreenPointerController.py */; };
 		AD0000000000000000F00001 /* ClamshellMonitor.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000F00000 /* ClamshellMonitor.py */; };
-		AD00000000000000C5700001 /* StereoCalls.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000C5700000 /* StereoCalls.py */; };
-		AD00000000000000C5900001 /* CuteMusic.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000C5900000 /* CuteMusic.py */; };
-		AD00000000000000C5900003 /* CuteMusic.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000C5900000 /* CuteMusic.py */; };
-		AD00000000000000C5700003 /* StereoCalls.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000C5700000 /* StereoCalls.py */; };
 		AD0000000000000000F00003 /* ClamshellMonitor.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000F00000 /* ClamshellMonitor.py */; };
 		AD00000000000000740001 /* AttachmentPreview.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000740000 /* AttachmentPreview.py */; };
 		AD00000000000000740003 /* AttachmentPreview.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000740000 /* AttachmentPreview.py */; };
@@ -790,6 +786,12 @@
 		AD000000000000009A0003 /* MediaCompression.py in Resources */ = {isa = PBXBuildFile; fileRef = AD000000000000009A0000 /* MediaCompression.py */; };
 		AD00000000000000AC5A0001 /* AddressbookChecks.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000AC5A0000 /* AddressbookChecks.py */; };
 		AD00000000000000AC5A0003 /* AddressbookChecks.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000AC5A0000 /* AddressbookChecks.py */; };
+		AD00000000000000C5700001 /* StereoCalls.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000C5700000 /* StereoCalls.py */; };
+		AD00000000000000C5700003 /* StereoCalls.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000C5700000 /* StereoCalls.py */; };
+		AD00000000000000C5900001 /* CuteMusic.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000C5900000 /* CuteMusic.py */; };
+		AD00000000000000C5900003 /* CuteMusic.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000C5900000 /* CuteMusic.py */; };
+		AD00000000000000C5A00001 /* ag-cute-music.png in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000C5A00000 /* ag-cute-music.png */; };
+		AD00000000000000C5A00003 /* ag-cute-music.png in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000C5A00000 /* ag-cute-music.png */; };
 		ADFEED000000000000000001 /* PlaybackMonitor.py in Resources */ = {isa = PBXBuildFile; fileRef = ADFEED000000000000000000 /* PlaybackMonitor.py */; };
 		ADFEED000000000000000003 /* PlaybackMonitor.py in Resources */ = {isa = PBXBuildFile; fileRef = ADFEED000000000000000000 /* PlaybackMonitor.py */; };
 		B199B0EA7AEFF92918BF5138 /* AvatarConflictPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 357D1EE3CE09B6CB0F7E08D5 /* AvatarConflictPanel.py */; };
@@ -1663,13 +1665,14 @@
 		AD0000000000000000EF0000 /* ScreenPointer.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ScreenPointer.py; sourceTree = "<group>"; };
 		AD0000000000000000EF0100 /* ScreenPointerController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ScreenPointerController.py; sourceTree = "<group>"; };
 		AD0000000000000000F00000 /* ClamshellMonitor.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ClamshellMonitor.py; sourceTree = "<group>"; };
-		AD00000000000000C5700000 /* StereoCalls.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = StereoCalls.py; sourceTree = "<group>"; };
-		AD00000000000000C5900000 /* CuteMusic.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = CuteMusic.py; sourceTree = "<group>"; };
 		AD00000000000000740000 /* AttachmentPreview.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AttachmentPreview.py; sourceTree = "<group>"; };
 		AD00000000000000750000 /* CameraCapture.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = CameraCapture.py; sourceTree = "<group>"; };
 		AD00000000000000760000 /* Avatars.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = Avatars.py; sourceTree = "<group>"; };
 		AD000000000000009A0000 /* MediaCompression.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MediaCompression.py; sourceTree = "<group>"; };
 		AD00000000000000AC5A0000 /* AddressbookChecks.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = AddressbookChecks.py; sourceTree = "<group>"; };
+		AD00000000000000C5700000 /* StereoCalls.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = StereoCalls.py; sourceTree = "<group>"; };
+		AD00000000000000C5900000 /* CuteMusic.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = CuteMusic.py; sourceTree = "<group>"; };
+		AD00000000000000C5A00000 /* ag-cute-music.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "ag-cute-music.png"; path = "icons/ag-cute-music.png"; sourceTree = "<group>"; };
 		ADFEED000000000000000000 /* PlaybackMonitor.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = PlaybackMonitor.py; sourceTree = "<group>"; };
 		DD1A00000000000000000001 /* DataImport.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = DataImport.py; sourceTree = "<group>"; };
 		DD1A00000000000000000003 /* DataImportPanel.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = DataImportPanel.py; sourceTree = "<group>"; };
@@ -2161,6 +2164,7 @@
 				1FAF8D5212DA31100029857C /* video-hangup.png */,
 				1F1FC04712D0FC77007A31A3 /* video.png */,
 				1F06174112D09C18007A68F4 /* audio_16.png */,
+				AD00000000000000C5A00000 /* ag-cute-music.png */,
 				1F1E6DCC12D07FF1003C63FB /* hangup_small.png */,
 				1F5615C212BB990800621C11 /* test@conference.sip2sip.info.tiff */,
 				1F85BE3C117CC33D0054888F /* blink-full-72dpi.tif */,
@@ -2850,6 +2854,7 @@
 				1F5D309312CDF04D00543DF3 /* ParticipantsTableView.py in Resources */,
 				1F1E6DCE12D07FF1003C63FB /* hangup_small.png in Resources */,
 				1F06174212D09C18007A68F4 /* audio_16.png in Resources */,
+				AD00000000000000C5A00001 /* ag-cute-music.png in Resources */,
 				1F99F56B265A88390095E3FA /* ImportPrivateKeyWindow.xib in Resources */,
 				1F1FC04812D0FC77007A31A3 /* video.png in Resources */,
 				1FAF8C5E12DA18960029857C /* VideoController.py in Resources */,
@@ -3204,6 +3209,7 @@
 				1F5D309212CDF04D00543DF3 /* ParticipantsTableView.py in Resources */,
 				1F1E6DCD12D07FF1003C63FB /* hangup_small.png in Resources */,
 				1F06174312D09C18007A68F4 /* audio_16.png in Resources */,
+				AD00000000000000C5A00003 /* ag-cute-music.png in Resources */,
 				1F1FC04912D0FC77007A31A3 /* video.png in Resources */,
 				1FAF8C5D12DA18960029857C /* VideoController.py in Resources */,
 				1FAF8D5312DA31100029857C /* video-hangup.png in Resources */,
@@ -4158,7 +4164,7 @@
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 986;
+				CURRENT_PROJECT_VERSION = 987;
 				DEVELOPMENT_TEAM = 4DFEFUDLKZ;
 				ENABLE_HARDENED_RUNTIME = YES;
 				EXCLUDED_RECURSIVE_SEARCH_PATH_SUBDIRECTORIES = "_darcs *.nib *.lproj *.framework *.gch (*) CVS .svn *.xcodeproj *.xcode *.pbproj *.pbxproj";
@@ -4185,7 +4191,7 @@
 					"$(PROJECT_DIR)/Distribution/Frameworks/libs",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 11.1.0;
+				MARKETING_VERSION = 11.2.0;
 				ONLY_ACTIVE_ARCH = NO;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				OTHER_CODE_SIGN_FLAGS = "";
@@ -4209,7 +4215,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 986;
+				CURRENT_PROJECT_VERSION = 987;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 4DFEFUDLKZ;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -4235,7 +4241,7 @@
 					"$(PROJECT_DIR)/Distribution/Frameworks/libs",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 11.1.0;
+				MARKETING_VERSION = 11.2.0;
 				ONLY_ACTIVE_ARCH = NO;
 				"OTHER_CFLAGS[arch=*]" = "-IDistribution/Frameworks/Python.framework/Headers";
 				OTHER_CODE_SIGN_FLAGS = "";

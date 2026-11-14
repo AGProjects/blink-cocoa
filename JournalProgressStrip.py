@@ -10,7 +10,9 @@ One line per background job, shown together, each with its own bar:
 - the import of the older history of a first sync, with its speed menu
   (BlinkJournalBacklogProgress, SMSWindowManager);
 - the background decryption of stored messages, with its speed menu
-  (BlinkBackgroundDecryptionProgress, PGPDecryptor).
+  (BlinkBackgroundDecryptionProgress, PGPDecryptor);
+- above them, a notice while AG CuteMusic's mixer is the audio device, no bar
+  (BlinkPodcastMixerSelected, CuteMusic.py: data selected).
 
 A line is shown only when its job takes a while: it appears 1.5 seconds after
 the job's first progress and goes away when the job is done. The contact list
@@ -29,6 +31,9 @@ __all__ = ['JournalProgressStrip']
 import objc
 
 from AppKit import (NSFont,
+                    NSImage,
+                    NSButton,
+                    NSWorkspace,
                     NSMenu,
                     NSMenuItem,
                     NSOnState,
@@ -37,12 +42,13 @@ from AppKit import (NSFont,
                     NSProgressIndicator,
                     NSTextField,
                     NSView,
+                    NSViewFrameDidChangeNotification,
                     NSViewMaxYMargin,
                     NSViewWidthSizable,
                     NSViewMinXMargin,
                     NSPopUpButton,
                     NSColor)
-from Foundation import NSObject, NSLocalizedString, NSMakeRect, NSTimer
+from Foundation import NSObject, NSLocalizedString, NSMakeRect, NSNotificationCenter, NSTimer
 
 from application.notification import IObserver, NotificationCenter
 from application.python import Null
@@ -56,8 +62,11 @@ SHOW_DELAY = 1.5        # seconds of work before a line appears
 BAR_WIDTH = 70
 SPEED_WIDTH = 78
 
+NOTICE_HEIGHT = 34     # the mixer's notice: two lines of text, at least
+ICON_MARGIN = 2        # AG CuteMusic's icon, left of the notice: its height less this above and below
+
 # the order of the lines, top to bottom
-JOBS = ('journal', 'backlog', 'decryption')
+JOBS = ('mixer', 'journal', 'backlog', 'decryption')
 
 
 def _speed_source(job):
@@ -82,10 +91,12 @@ class ProgressLine(object):
         self.visible = False        # the line is on screen
         self.started = None         # when the job's first progress came (monotonic)
         self.has_speed = job in ('backlog', 'decryption')
+        self.notice = job == 'mixer'        # text only, two lines
+        self.height = NOTICE_HEIGHT if self.notice else LINE_HEIGHT
         width = strip.view.bounds().size.width
         font = NSFont.systemFontOfSize_(NSFont.smallSystemFontSize())
 
-        self.view = NSView.alloc().initWithFrame_(NSMakeRect(0, 0, width, LINE_HEIGHT))
+        self.view = NSView.alloc().initWithFrame_(NSMakeRect(0, 0, width, self.height))
         self.view.setAutoresizingMask_(NSViewWidthSizable)
         self.view.setHidden_(True)
 
@@ -98,6 +109,27 @@ class ProgressLine(object):
         self.label.setTextColor_(NSColor.secondaryLabelColor())
         self.label.cell().setLineBreakMode_(NSLineBreakByTruncatingTail)
         self.label.setAutoresizingMask_(NSViewWidthSizable)
+        self.icon = None
+        if self.notice:
+            # AG CuteMusic's icon on the left (icons/ag-cute-music.png, else the installed app's)
+            image = NSImage.imageNamed_('ag-cute-music')
+            if image is None:
+                path = NSWorkspace.sharedWorkspace().URLForApplicationWithBundleIdentifier_('com.ag-projects.ag-cute-music')
+                image = NSWorkspace.sharedWorkspace().iconForFile_(path.path()) if path is not None else None
+            if image is not None:       # a button: AG CuteMusic opened on its mixer
+                self.icon = NSButton.alloc().initWithFrame_(NSMakeRect(6, ICON_MARGIN, NOTICE_HEIGHT - 2 * ICON_MARGIN, NOTICE_HEIGHT - 2 * ICON_MARGIN))
+                self.icon.setBordered_(False)
+                self.icon.setButtonType_(0)         # NSButtonTypeMomentaryLight
+                self.icon.setImagePosition_(1)      # NSImageOnly
+                self.icon.setImageScaling_(3)       # NSImageScaleProportionallyUpOrDown
+                self.icon.setImage_(image)
+                self.icon.setTarget_(strip)
+                self.icon.setAction_('openMixer:')
+                self.icon.setToolTip_(NSLocalizedString("Open AG CuteMusic's mixer", "Tooltip"))
+                self.view.addSubview_(self.icon)
+            self.label.cell().setWraps_(True)
+            self.label.cell().setLineBreakMode_(0)      # NSLineBreakByWordWrapping
+            self.label.setTextColor_(NSColor.controlAccentColor())
         self.view.addSubview_(self.label)
 
         self.bar = NSProgressIndicator.alloc().initWithFrame_(NSMakeRect(width - BAR_WIDTH - 6, 4, BAR_WIDTH, 12))
@@ -107,6 +139,7 @@ class ProgressLine(object):
         self.bar.setMinValue_(0)
         self.bar.setMaxValue_(1)
         self.bar.setAutoresizingMask_(NSViewMinXMargin)
+        self.bar.setHidden_(self.notice)
         self.view.addSubview_(self.bar)
 
         self.speed_button = None
@@ -160,8 +193,35 @@ class ProgressLine(object):
         menu.itemAtIndex_(0).setTitle_(label)
         self.speed_button.setTitle_(label)
 
+    def _icon_size(self):
+        """The icon fills the notice's height (a square, ICON_MARGIN above and below)."""
+        return self.height - 2 * ICON_MARGIN
+
+    def _text_x(self):
+        return 6 + (self._icon_size() + 8 if self.icon is not None else 0)
+
+    def fit(self, width):
+        """The notice as tall as its text needs at width (all of it shown, however narrow the window); the icon as
+        tall as the notice, so the text's width depends on the height: settled in a few rounds."""
+        if not self.notice:
+            return
+        self.height = NOTICE_HEIGHT
+        for _ in range(4):
+            size = self.label.cell().cellSizeForBounds_(NSMakeRect(0, 0, max(20, width - self._text_x() - 6), 10000))
+            height = max(NOTICE_HEIGHT, int(size.height) + 6)
+            if height == self.height:
+                break
+            self.height = height
+
     def layout(self):
         width = self.strip.view.bounds().size.width
+        if self.notice:
+            x = self._text_x()
+            self.label.setFrame_(NSMakeRect(x, 2, max(20, width - x - 6), self.height - 4))
+            if self.icon is not None:       # the notice's whole height
+                size = self._icon_size()
+                self.icon.setFrame_(NSMakeRect(6, ICON_MARGIN, size, size))
+            return
         if self.has_speed:
             bar_x = width - SPEED_WIDTH - BAR_WIDTH - 6
             self.speed_button.setFrame_(NSMakeRect(width - SPEED_WIDTH - 2, 0, SPEED_WIDTH, LINE_HEIGHT))
@@ -213,7 +273,23 @@ class JournalProgressStrip(NSObject):
         notification_center.add_observer(self, name='BlinkJournalProgress')
         notification_center.add_observer(self, name='BlinkJournalBacklogProgress')
         notification_center.add_observer(self, name='BlinkBackgroundDecryptionProgress')
+        notification_center.add_observer(self, name='BlinkPodcastMixerSelected')
+        # the window resized: the notice's height follows the width
+        self.container.setPostsFrameChangedNotifications_(True)
+        NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, 'containerResized:', NSViewFrameDidChangeNotification, self.container)
         return self
+
+    def containerResized_(self, notification):
+        line = self.lines['mixer']
+        if line.visible:
+            height = line.height
+            line.fit(self.container.bounds().size.width)
+            if line.height != height:
+                self._relayout()
+
+    def openMixer_(self, sender):
+        from CuteMusic import open_mixer
+        open_mixer()
 
     def speedChosen_(self, sender):
         job, speed = sender.representedObject().split(':', 1)
@@ -281,8 +357,10 @@ class JournalProgressStrip(NSObject):
     @objc.python_method
     def _relayout(self):
         shown = [self.lines[job] for job in JOBS if self.lines[job].visible]
-        height = LINE_HEIGHT * len(shown)
         bounds = self.container.bounds()
+        for line in shown:
+            line.fit(bounds.size.width)
+        height = sum(line.height for line in shown)
         frame = self.scroll_view.frame()
         # the list's height as if no line were shown, adjusted for what the window did meanwhile
         full = frame.size.height + self.taken
@@ -297,8 +375,8 @@ class JournalProgressStrip(NSObject):
             line.view.setHidden_(not line.visible)
         y = height
         for line in shown:
-            y -= LINE_HEIGHT
-            line.view.setFrame_(NSMakeRect(0, y, bounds.size.width, LINE_HEIGHT))
+            y -= line.height
+            line.view.setFrame_(NSMakeRect(0, y, bounds.size.width, line.height))
             line.layout()
 
     # Notifications
@@ -307,6 +385,22 @@ class JournalProgressStrip(NSObject):
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
+
+    @objc.python_method
+    def _NH_BlinkPodcastMixerSelected(self, notification):
+        """AG CuteMusic's mixer chosen as the audio device, or no longer: the notice shown at once, or gone."""
+        line = self.lines['mixer']
+        if notification.data.selected:
+            text = NSLocalizedString("You are now using AG CuteMusic Podcast Mixer for mixing audio. Wear headsets to make sure echo is cancelled. To change the device, go to the Devices menu.", "Label")
+            line.label.setStringValue_(text)
+            for view in (line.view, line.label):
+                view.setToolTip_(NSLocalizedString("Echo cancelling is off while AG CuteMusic Podcast Mixer is the audio device, for music: without headsets, the other party hears themselves", "Tooltip"))
+            line.wanted = True
+            if not line.visible:
+                line.visible = True
+                self._relayout()
+        else:
+            self._stop('mixer')
 
     @objc.python_method
     def _NH_BlinkJournalProgress(self, notification):

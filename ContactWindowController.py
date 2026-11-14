@@ -179,6 +179,7 @@ from util import allocate_autorelease_pool, format_date, format_identity_to_stri
 from util import pstn_uri_spellings_for_accounts, is_conference_uri, call_later, active_account_uris, preferred_media_choice
 from HistoryManager import block_contacts, unblock_contacts, _blocked_group
 from StereoCalls import StereoCalls, stereo_available
+from CuteMusic import menu_devices
 from util import log_gui_exception, run_in_gui_thread, sip_prefix_pattern, sipuri_components_from_string, translate_alpha2digit, AccountInfo, utc_to_local
 
 
@@ -7665,6 +7666,15 @@ class ContactWindowController(NSWindowController):
             index += 1
 
             i = 2
+            # AG CuteMusic's mixer (CuteMusic.py): first when listed, else a greyed out item saying why
+            devices, placeholder = menu_devices(devices)
+            if placeholder and tag != 403:
+                item = menu.insertItemWithTitle_action_keyEquivalent_atIndex_(placeholder, None, "", index)
+                item.setTag_(tag * 100 + i)
+                item.setIndentationLevel_(2)
+                item.setEnabled_(False)         # greyed out whether or not the menu enables its items itself
+                i += 1
+                index += 1
             for dev in devices:
                 dev_title = dev.strip()
                 dead = dev_title in dead_inputs
@@ -7759,8 +7769,16 @@ class ContactWindowController(NSWindowController):
             item.setIndentationLevel_(2)
             index += 1
 
+            devices, placeholder = menu_devices(devices)     # AG CuteMusic's mixer: first, or why it is not there
+            i = 1
+            if placeholder:
+                item = menu.insertItemWithTitle_action_keyEquivalent_atIndex_(placeholder, None, "", index)
+                item.setTag_(tag * 100 + i)
+                item.setIndentationLevel_(2)
+                item.setEnabled_(False)         # greyed out whether or not the menu enables its items itself
+                i += 1
+                index += 1
             if devices:
-                i = 1
                 for dev in devices:
                     dead = dev.strip() in dead_inputs
                     item = menu.insertItemWithTitle_action_keyEquivalent_atIndex_(dev.strip(), None if dead else selector, "", index)
