@@ -653,6 +653,13 @@ class DebugWindow(NSObject):
         "ZRTP video encryption active",
         # ICE outcomes
         "ICE negotiation",
+        # Stereo calls (StereoCalls.py)
+        "Stereo call",
+        "Stereo offer",
+        "Incoming stereo offer",
+        "No stereo call left",
+        "Stereo audio:",
+        "(stereo audio)",
         # Remote-side stream descriptors
         "Remote video stream at",
         "Remote aspect ratio is",
@@ -946,6 +953,7 @@ class DebugWindow(NSObject):
                                                                       audio_stream.remote_rtp_port)
         if audio_stream.codec and audio_stream.sample_rate:
             text += '%s Audio call established using %s codec at %sHz\n' % (session.start_time, audio_stream.codec, audio_stream.sample_rate)
+        text += self._stereo_info(session, audio_stream)
         if audio_stream.encryption.active:
             text += '%s RTP audio stream is encrypted with %s (%s)\n' % (session.start_time, audio_stream.encryption.type, audio_stream.encryption.cipher.decode() if isinstance(audio_stream.encryption.cipher, bytes) else audio_stream.encryption.cipher)
         # Log the account's RTP encryption fields VERBATIM (both enabled
@@ -993,6 +1001,41 @@ class DebugWindow(NSObject):
         astring = NSAttributedString.alloc().initWithString_attributes_(text, self.normalText)
         self.rtpTextView.textStorage().appendAttributedString_(astring)
         self._scrollToEnd(self.rtpTextView)
+
+    @objc.python_method
+    def _stereo_info(self, session, audio_stream):
+        """The stereo clues of an audio call (StereoCalls.py): what was asked for, the mixer, the Opus fmtp of both
+        SDPs and the outcome."""
+        if not hasattr(audio_stream, 'stereo_active'):
+            return ''       # an SDK without stereo audio
+        start = session.start_time
+        lines = []
+        try:
+            requested = audio_stream.stereo
+            if session.direction == 'incoming':
+                asked = 'the remote offered stereo' if getattr(audio_stream, 'offered_stereo', False) else 'the remote offered mono'
+            elif requested:
+                asked = 'stereo call requested (Opus only)'
+            elif requested is None:
+                asked = 'stereo as the SDK is (audio.stereo)'
+            else:
+                asked = 'mono call'
+            channels = getattr(audio_stream.mixer, 'channel_count', 1)
+            lines.append('%s Audio stereo: %s, mixer %s' % (start, asked, 'stereo (no echo cancellation)' if channels == 2 else 'mono'))
+            sdp = session._invitation.sdp
+            for label, media_sdp in (('local', sdp.active_local), ('remote', sdp.active_remote)):
+                if media_sdp is None:
+                    continue
+                media = media_sdp.media[audio_stream.index]
+                payload_types = [a.value.partition(b' ')[0] for a in media.attributes
+                                 if a.name == b'rtpmap' and a.value.partition(b' ')[2].lower().startswith(b'opus/')]
+                fmtps = [a.value.decode() for a in media.attributes if a.name == b'fmtp' and a.value.split(b' ', 1)[0] in payload_types]
+                if payload_types:
+                    lines.append('%s Audio stereo: %s Opus fmtp %s' % (start, label, '; '.join(fmtps) or '(none: mono)'))
+            lines.append('%s Audio stereo: %s' % (start, 'the call is in stereo' if audio_stream.stereo_active else 'the call is in mono'))
+        except Exception as e:
+            lines.append('%s Audio stereo: cannot tell (%s)' % (start, e))
+        return ''.join(line + '\n' for line in lines)
 
     @objc.python_method
     def renderVideo(self, session):

@@ -63,6 +63,7 @@ class AudioSettingsExtension(AudioSettings):
     automatic_device_switch = Setting(type=bool, default=True)
     pause_music = Setting(type=bool, default=True)
     per_device_aec = Setting(type=str, default=None, nillable=True)
+    enable_stereo = Setting(type=bool, default=False)       # Start Stereo Audio Call in the contact menus (StereoCalls.py)
 
 
 class ChatSettingsExtension(ChatSettings):

@@ -52,6 +52,7 @@ class BlinkContactExtension(ContactExtension):
     auto_answer = SharedSetting(type=Boolean, default=False)
     preferred_media = SharedSetting(type=str, default='messages')    # what double click / Enter does: messages, audio or video
     disable_smileys = SharedSetting(type=Boolean, default=False)
+    stereo = SharedSetting(type=Boolean, default=False)         # audio calls to this contact in stereo (StereoCalls.py), with Enable Stereo Mode on
     # Who last changed this entry and when -- see AddressbookOrigin.py. Shared,
     # so every device reads the same answer; written by AddressbookOrigin's
     # save() wrapper and never by hand.

@@ -50,7 +50,7 @@ from configuration.settings import SIPSimpleSettingsExtension
 from resources import ApplicationData, Resources
 import AddressbookOrigin
 
-from util import beautify_audio_codec, beautify_video_codec, format_identity_to_string, run_in_gui_thread, trusted_cas
+from util import call_in_gui_thread, beautify_audio_codec, beautify_video_codec, format_identity_to_string, run_in_gui_thread, trusted_cas
 
 
 def _addressbook_origin_device_id():
@@ -578,6 +578,32 @@ class SIPManager(object, metaclass=Singleton):
 
         codecs_print = list(beautify_audio_codec(codec) for codec in settings.rtp.audio_codec_list if codec.encode() in self.available_codecs)
         BlinkLogger().log_info("Configured audio codecs: %s" % settings.rtp.audio_codec_list)
+
+        # stereo calls (StereoCalls.py): an SDK with stereo audio (audio.stereo), and Opus
+        from StereoCalls import stereo_sdk_available
+        if not stereo_sdk_available():
+            BlinkLogger().log_info("Stereo audio: not supported by this SDK")
+        elif b'opus' not in self.available_codecs:
+            BlinkLogger().log_info("Stereo audio: supported by the SDK, but Opus is not available")
+        else:
+            BlinkLogger().log_info("Stereo audio: supported (Opus stereo), Enable Stereo Mode %s, audio %s" % ("on" if settings.audio.enable_stereo else "off", "in stereo" if settings.audio.stereo else "in mono"))
+
+        # the sound devices, and AG CuteMusic's mixer (the SDK's AG Podcast Mixer link, docs/PodcastMixerLink.md)
+        try:
+            engine = self._app.engine
+            BlinkLogger().log_info("Audio input devices: %s" % ", ".join(engine.input_devices))
+            BlinkLogger().log_info("Audio output devices: %s" % ", ".join(engine.output_devices))
+            if hasattr(engine, 'podcast_mixer_available'):
+                listed = engine.podcast_mixer_device in engine.input_devices
+                BlinkLogger().log_info("%s: %s (link in %s)" % (engine.podcast_mixer_device,
+                                       "listed, AG CuteMusic's mixer runs" if listed else
+                                       ("AG CuteMusic's mixer runs, not listed yet" if engine.podcast_mixer_available else "AG CuteMusic's mixer is not running"),
+                                       engine.podcast_mixer_dir))
+        except Exception as e:
+            BlinkLogger().log_info("Audio devices: cannot list them (%s)" % e)
+        # AG CuteMusic's mixer: the device refreshed as it starts and quits, music mode, blink.lock, calls.json
+        from CuteMusic import CuteMusicLink
+        call_in_gui_thread(CuteMusicLink().start)
 
         if settings.audio.input_device is None:
             BlinkLogger().log_info("Switching audio input device to system default")

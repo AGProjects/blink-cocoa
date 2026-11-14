@@ -178,6 +178,7 @@ from resources import ApplicationData, Resources
 from util import allocate_autorelease_pool, format_date, format_identity_to_string, format_uri_type, is_anonymous, is_sip_aor_format, normalize_sip_uri_for_outgoing_session
 from util import pstn_uri_spellings_for_accounts, is_conference_uri, call_later, active_account_uris, preferred_media_choice
 from HistoryManager import block_contacts, unblock_contacts, _blocked_group
+from StereoCalls import StereoCalls, stereo_available
 from util import log_gui_exception, run_in_gui_thread, sip_prefix_pattern, sipuri_components_from_string, translate_alpha2digit, AccountInfo, utc_to_local
 
 
@@ -1906,16 +1907,24 @@ class ContactWindowController(NSWindowController):
         return None
 
     @objc.python_method
-    def connectToConference(self, target, media_type):
+    def connectToConference(self, target, media_type, stereo=False):
         """Join a room the way the Join Conference panel does."""
+        media = media_type if isinstance(media_type, (tuple, list)) else (media_type,)
+        if not stereo and 'audio' in media and 'video' not in media:
+            stereo = self.contactWantsStereo(target)
         account = self.activeAccount()
         nickname = account.conference.nickname if account is not None and account is not BonjourAccount() else None
-        self.joinConference(target, media_type, (), nickname)
+        self.joinConference(target, media_type, (), nickname, stereo=stereo)
 
     @objc.IBAction
     def connectToConference_(self, sender):
         target, media_type = sender.representedObject()
         self.connectToConference(target, media_type)
+
+    @objc.IBAction
+    def connectToConferenceInStereo_(self, sender):
+        target, media_type = sender.representedObject()
+        self.connectToConference(target, media_type, stereo=True)
 
     @objc.python_method
     def adaptContactContextMenuForConference(self):
@@ -1957,6 +1966,7 @@ class ContactWindowController(NSWindowController):
             except Exception:
                 log_gui_exception('checking the video room of %s' % target)
         audio_title = NSLocalizedString("Start Audio Call", "Menu item")
+        stereo_title = NSLocalizedString("Start Stereo Audio Call", "Menu item")
         video_title = NSLocalizedString("Start Video Call", "Menu item")
         sms_title = NSLocalizedString("Send Short Message...", "Menu item")
         chat_title = NSLocalizedString("Invite to Chat...", "Menu item")
@@ -1969,6 +1979,8 @@ class ContactWindowController(NSWindowController):
             if title == audio_title or action == 'startAudioToSelected:':
                 if insert_at is None:
                     insert_at = menu.indexOfItem_(mitem)
+                menu.removeItem_(mitem)
+            elif title == stereo_title or action == 'startStereoAudioToSelected:':
                 menu.removeItem_(mitem)
             elif title in (sms_title, chat_title) or action in ('sendMessageToSelected:', 'startChatToSelected:'):
                 if insert_at is None:
@@ -2006,6 +2018,22 @@ class ContactWindowController(NSWindowController):
         audio_item.setRepresentedObject_((target, ("chat", "audio")))
         audio_item.setEnabled_(True)
         menu.insertItem_atIndex_(audio_item, insert_at + 1)
+
+        if stereo_available():      # Preferences, Audio Calls: Enable Stereo Mode (StereoCalls.py)
+            stereo_item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(
+                NSLocalizedString("Connect with Stereo Audio + Chat", "Menu item"), "connectToConferenceInStereo:", "")
+            stereo_item.setTarget_(self)
+            stereo_item.setRepresentedObject_((target, ("chat", "audio")))
+            stereo_item.setEnabled_(True)
+            menu.insertItem_atIndex_(stereo_item, insert_at + 2)
+
+            # stereo audio alone, no chat (music: nothing to type)
+            stereo_only_item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(
+                NSLocalizedString("Connect with Stereo Audio", "Menu item"), "connectToConferenceInStereo:", "")
+            stereo_only_item.setTarget_(self)
+            stereo_only_item.setRepresentedObject_((target, "audio"))
+            stereo_only_item.setEnabled_(True)
+            menu.insertItem_atIndex_(stereo_only_item, insert_at + 3)
 
     @objc.python_method
     def isRowInDeletedGroup(self, item):
@@ -2221,39 +2249,6 @@ class ContactWindowController(NSWindowController):
         self.model.deleteContacts(contacts)
         self.refreshContactsList()
         self.searchContacts()
-
-    @objc.python_method
-    def logContactContextMenu(self, menu):
-        """One Activity log line per right click on a contact: who, and the
-        menu items offered, the disabled ones in brackets. A debugging aid."""
-        try:
-            names = []
-            rows = []
-            indexes = self.contactOutline.selectedRowIndexes()
-            index = indexes.firstIndex() if indexes is not None else NSNotFound
-            while index != NSNotFound and len(rows) < 20:
-                rows.append(index)
-                index = indexes.indexGreaterThanIndex_(index)
-            for row in rows:
-                item = self.contactOutline.itemAtRow_(row)
-                name = getattr(item, 'name', None) or str(getattr(item, 'uri', '') or '')
-                if name:
-                    names.append(str(name))
-            autoenables = menu.autoenablesItems()
-            offered = []
-            for item in menu.itemArray():
-                if item.isSeparatorItem():
-                    continue
-                title = str(item.title() or '').strip()
-                if not title:
-                    continue
-                enabled = item.isEnabled()
-                if enabled and autoenables and item.action() is None and not item.hasSubmenu():
-                    enabled = False     # AppKit greys an item with no action
-                offered.append(title if enabled else '[%s]' % title)
-            BlinkLogger().log_info('Contact menu for %s: %s' % (', '.join(names) or '-', ', '.join(offered) or '(empty)'))
-        except Exception as e:
-            BlinkLogger().log_debug('Cannot describe the contact menu: %s' % e)
 
     @objc.python_method
     def updateContactContextMenu(self):
@@ -2479,6 +2474,20 @@ class ContactWindowController(NSWindowController):
                 mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Start Audio Call", "Menu item"), "", "")
                 self.contactContextMenu.setSubmenu_forItem_(audio_submenu, mitem)
 
+                if stereo_available():       # Preferences, Audio Calls: Enable Stereo Mode (StereoCalls.py)
+                    stereo_submenu = NSMenu.alloc().init()
+                    stereo_submenu.setAutoenablesItems_(False)
+                    for uri in sorted(item.uris, key=lambda uri: uri.position if uri.position is not None else sys.maxsize):
+                        if uri.type is not None and uri.type.lower() in ('url', 'xmpp'):
+                            continue
+                        if uri.type == 'Bonjour':
+                            continue
+                        stereo_item = stereo_submenu.addItemWithTitle_action_keyEquivalent_('%s (%s)' % (mangled_uri(uri.uri), format_uri_type(uri.type)), "startStereoAudioToSelected:", "")
+                        stereo_item.setRepresentedObject_(uri.uri)
+                    if stereo_submenu.numberOfItems():
+                        mitem = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Start Stereo Audio Call", "Menu item"), "", "")
+                        self.contactContextMenu.setSubmenu_forItem_(stereo_submenu, mitem)
+
                 if self.sessionControllersManager.isMediaTypeSupported('video') and settings.video.device:
                     video_submenu = NSMenu.alloc().init()
                     video_submenu.setAutoenablesItems_(False)
@@ -2689,6 +2698,10 @@ class ContactWindowController(NSWindowController):
                                      and item.bonjour_neighbour is None)
                     audio_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Start Audio Call", "Menu item"), "startAudioToSelected:", "")
                     audio_item.setEnabled_(reachable)
+
+                    if stereo_available() and type(item) is not BonjourBlinkContact:     # Preferences, Audio Calls: Enable Stereo Mode
+                        stereo_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Start Stereo Audio Call", "Menu item"), "startStereoAudioToSelected:", "")
+                        stereo_item.setEnabled_(reachable)
 
                     if self.sessionControllersManager.isMediaTypeSupported('video'):
                         video_item = self.contactContextMenu.addItemWithTitle_action_keyEquivalent_(NSLocalizedString("Start Video Call", "Menu item"), "startVideoToSelected:", "")
@@ -4889,6 +4902,23 @@ class ContactWindowController(NSWindowController):
         return any(window for window in NSApp().windows() if window.title() == 'Add Participants' and window.isVisible())
 
     @objc.python_method
+    def contactWantsStereo(self, target, contact=None):
+        """Whether audio calls to target (or to contact) are made in stereo: Enable Stereo Mode on, and the contact's
+        own Enable Stereo setting (shared over XCAP)."""
+        if not stereo_available():
+            return False
+        try:
+            if not isinstance(contact, BlinkContact):
+                contact = self.getFirstContactMatchingURI(str(target).split(';')[0], exact_match=True)
+            if isinstance(contact, HistoryBlinkContact):
+                contact = contact.contact
+            sip_contact = getattr(contact, 'contact', None)
+            return bool(getattr(sip_contact, 'stereo', False))
+        except Exception:
+            log_gui_exception('the stereo setting of %s' % target)
+            return False
+
+    @objc.python_method
     def getFirstContactMatchingURI(self, uri, exact_match=False):
         if uri is None:
             return None
@@ -5331,7 +5361,7 @@ class ContactWindowController(NSWindowController):
         # BlinkLogger().log_info('startup: searchContacts(noarg) body exit')
 
     @objc.python_method
-    def startSessionToSelectedContact(self, media_type, uri=None):
+    def startSessionToSelectedContact(self, media_type, uri=None, stereo=False):
         # double click
         selected_contact = None
         account = None
@@ -5401,12 +5431,16 @@ class ContactWindowController(NSWindowController):
                 BlinkLogger().log_info("%s is a room without a video room for %s: calling it with SIP" % (room, account.id))
 
         local_uri = account.id if account is not None else None
-        self.startSessionWithTarget(target, media_type=media_type, local_uri=local_uri, selected_contact=selected_contact)
+        self.startSessionWithTarget(target, media_type=media_type, local_uri=local_uri, selected_contact=selected_contact, stereo=stereo)
 
     @objc.python_method
-    def startSessionWithTarget(self, target, media_type='audio', local_uri=None, selected_contact=None, from_history=False, display_name=''):
+    def startSessionWithTarget(self, target, media_type='audio', local_uri=None, selected_contact=None, from_history=False, display_name='', stereo=False):
         # activate the app in case the app is not active
         NSApp.activateIgnoringOtherApps_(True)
+
+        if not stereo and media_type == 'audio' and target:
+            # the contact's Enable Stereo (shared over XCAP): its audio calls in stereo
+            stereo = self.contactWantsStereo(target, selected_contact)
 
         if not target:
             if isinstance(selected_contact, VoicemailBlinkContact):
@@ -5484,6 +5518,12 @@ class ContactWindowController(NSWindowController):
             traceback.print_exc()
             return
 
+        if stereo and media_type == "audio":
+            # a stereo call: the SDK in stereo first, the session after (StereoCalls.py)
+            BlinkLogger().log_info("Starting stereo audio session to %s" % target_uri)
+            StereoCalls().start(session_controller)
+            return session_controller
+
         if type(media_type) is not tuple:
             if media_type == "chat" and (account is not BonjourAccount() or from_history):
                 # just show the window and wait for user to type before starting the outgoing session
@@ -5500,8 +5540,8 @@ class ContactWindowController(NSWindowController):
         return session_controller
 
     @objc.python_method
-    def joinConference(self, target, media_type, participants=(), nickname=None, video_room=None, video_sources=None):
-        BlinkLogger().log_info("Join conference %s with media %s" % (target, media_type))
+    def joinConference(self, target, media_type, participants=(), nickname=None, video_room=None, video_sources=None, stereo=False):
+        BlinkLogger().log_info("Join conference %s with media %s%s" % (target, media_type, " (stereo audio)" if stereo else ""))
         if participants:
             BlinkLogger().log_info("Inviting participants: %s" % participants)
 
@@ -5564,7 +5604,11 @@ class ContactWindowController(NSWindowController):
         if not media_type:
             media_type = 'audio'
 
-        if type(media_type) in (tuple, list):
+        media = media_type if type(media_type) in (tuple, list) else (media_type,)
+        if stereo and 'audio' in media:
+            # the room's audio in stereo: the SDK in stereo first, the session after (StereoCalls.py)
+            StereoCalls().start(session_controller, tuple(('audio', {'stereo': True}) if m == 'audio' else m for m in media))
+        elif type(media_type) in (tuple, list):
             if not session_controller.startCompositeSessionWithStreamsOfTypes(media_type):
                 BlinkLogger().log_error("Failed to start session with streams of types %s" % str(media_type))
         else:
@@ -6483,6 +6527,10 @@ class ContactWindowController(NSWindowController):
     @objc.IBAction
     def startAudioToSelected_(self, sender):
         self.startSessionToSelectedContact("audio", sender.representedObject())
+
+    @objc.IBAction
+    def startStereoAudioToSelected_(self, sender):
+        self.startSessionToSelectedContact("audio", sender.representedObject(), stereo=True)
 
     @objc.IBAction
     def startVideoToSelected_(self, sender):
@@ -7766,7 +7814,6 @@ class ContactWindowController(NSWindowController):
                 self.adaptContactContextMenuForConference()
             except Exception as e:
                 BlinkLogger().log_error('Cannot adapt the contact menu for a conference room: %s' % e)
-            self.logContactContextMenu(menu)
         elif menu == self.presenceWatchersMenu:
             self.updatePresenceWatchersMenu(menu)
         elif menu == self.presenceMenu:
@@ -8816,7 +8863,10 @@ class ContactWindowController(NSWindowController):
             BlinkLogger().log_info("New audio device %s detected" % new_device.strip())
             in_devices = list(set(self.backend._app.engine.input_devices))
             out_devices = list(set(self.backend._app.engine.output_devices))
-            if new_device in in_devices and new_device in out_devices:
+            from CuteMusic import device_name
+            if new_device == device_name():
+                pass        # AG CuteMusic's mixer started: chosen by the user, never switched to on its own
+            elif new_device in in_devices and new_device in out_devices:
                 self.switchAudioDevice(new_device)
             else:
                 pass

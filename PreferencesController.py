@@ -67,6 +67,7 @@ from EnrollmentController import EnrollmentController
 SYLKSERVER_HIDDEN_OPTIONS = {'sms.enable_pgp', 'xcap.enabled', 'xcap.xcap_diff'}
 SYLKSERVER_LOCKED_OPTIONS = {'sms.enable_cpim', 'sms.history_url', 'sms.history_token'}
 
+from StereoCalls import stereo_sdk_available
 from PreferenceOptions import AccountSectionOrder, AccountSettingsOrder, AecSliderOption, AdvancedGeneralSectionOrder, BonjourAccountSectionOrder, DisabledAccountPreferenceSections, DisabledPreferenceSections, GeneralSettingsOrder, HiddenOption, PreferenceOptionTypes, SampleRateOption, SettingDescription, StaticPreferenceSections, SectionNames, ToolTips, Placeholders, formatName
 from SIPManager import SIPManager
 from VerticalBoxView import VerticalBoxView
@@ -612,6 +613,12 @@ class PreferencesController(NSWindowController, object):
 
         if not NSApp.delegate().external_alert_enabled:
             PreferenceOptionTypes['web_alert.alert_url'] = HiddenOption
+
+        # stereo calls need an SDK with stereo audio (python3-sipsimple 5.7: audio.stereo, AudioStream(stereo=...))
+        if stereo_sdk_available():
+            PreferenceOptionTypes.pop('audio.enable_stereo', None)
+        else:
+            PreferenceOptionTypes['audio.enable_stereo'] = HiddenOption
 
         if not NSApp.delegate().debug:
             PreferenceOptionTypes['audio.sound_card_delay'] = HiddenOption

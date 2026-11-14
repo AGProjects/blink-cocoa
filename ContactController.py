@@ -55,6 +55,7 @@ from AppKit import NSButton, NSSwitchButton, NSTextField
 from zope.interface import implementer
 
 from VirtualGroups import VirtualGroup
+from StereoCalls import stereo_available
 from util import checkValidPhoneNumber, format_uri_type, is_conference_uri, is_lan_address, log_gui_exception, run_in_gui_thread, canonical_pstn_uri, pstn_e164, preferred_media_choice
 
 
@@ -327,6 +328,7 @@ class AddContactController(NSObject):
         self.updateSubscriptionMenus()
         self.loadGroupNames()
         self.addButton.setEnabled_(True if self.uris else False)
+        self.setUpStereoCheckbox(None)
 
     PREFERRED_MEDIA_TAGS = ('messages', 'audio', 'video')     # the popup item tags, in order
 
@@ -496,6 +498,8 @@ class AddContactController(NSObject):
                        'preferred_media' : self.chosenPreferredMedia(),
                        'subscriptions'   : self.roomSubscriptions()
                         }
+            if getattr(self, 'stereoCheckbox', None) is not None:
+                contact['stereo'] = self.stereoCheckbox.state() == NSOnState
             return contact
         return False
 
@@ -1399,6 +1403,7 @@ class EditContactController(AddContactController):
         self.default_uri = self.blink_contact.contact.uris.default
         self.autoanswerCheckbox.setState_(NSOnState if blink_contact.auto_answer else NSOffState)
         self.setUpNoMediaRelayCheckbox(blink_contact)
+        self.setUpStereoCheckbox(getattr(blink_contact, 'contact', None))
 
         self.uris = sorted(blink_contact.contact.uris, key=lambda uri: uri.position if uri.position is not None else sys.maxsize)
         # TODO: how to handle xmmp: uris?
@@ -1471,8 +1476,35 @@ class EditContactController(AddContactController):
                     }
             if self.noMediaRelayCheckbox is not None:
                 contact['no_mediaproxy'] = self.noMediaRelayCheckbox.state() == NSOnState
+            if getattr(self, 'stereoCheckbox', None) is not None:
+                contact['stereo'] = self.stereoCheckbox.state() == NSOnState
             return contact
         return False
+
+    @objc.python_method
+    def setUpStereoCheckbox(self, sip_contact):
+        """Enable Stereo: audio calls to this contact in stereo (shared over XCAP, StereoCalls.py), right of
+        Automatically Answer Calls (and No Media Relay, when shown). Enabled only while Enable Stereo Mode is on."""
+        self.stereoCheckbox = None
+        anchor = getattr(self, 'noMediaRelayCheckbox', None) or self.autoanswerCheckbox
+        anchor.sizeToFit()
+        frame = anchor.frame()
+        checkbox = NSButton.alloc().initWithFrame_(NSMakeRect(frame.origin.x + frame.size.width + 12, frame.origin.y, 160, frame.size.height))
+        checkbox.setButtonType_(NSSwitchButton)
+        checkbox.setTitle_(NSLocalizedString("Enable Stereo", "Checkbox title"))
+        checkbox.setFont_(self.autoanswerCheckbox.font())
+        available = stereo_available()
+        if available:
+            checkbox.setToolTip_(NSLocalizedString("Audio calls to this contact, started with the Audio button or a double click, are made in stereo (Opus stereo, no echo cancellation: use a headset). Shared with your other devices", "Tooltip"))
+        else:
+            checkbox.setToolTip_(NSLocalizedString("Turn on Enable Stereo Mode in Preferences, Audio Calls, to make stereo calls", "Tooltip"))
+        checkbox.setState_(NSOnState if sip_contact is not None and getattr(sip_contact, 'stereo', False) else NSOffState)
+        checkbox.setEnabled_(available)
+        checkbox.sizeToFit()
+        checkbox.setAutoresizingMask_(anchor.autoresizingMask())
+        anchor.superview().addSubview_(checkbox)
+        if available:
+            self.stereoCheckbox = checkbox      # saved only while it can be changed
 
     @objc.python_method
     def setUpNoMediaRelayCheckbox(self, blink_contact):

@@ -5679,6 +5679,8 @@ class ContactListModel(CustomListModel):
             contact.auto_answer = new_contact['auto_answer']
             contact.uris.default = new_contact['default_uri']
             contact.preferred_media = new_contact['preferred_media']
+            if 'stereo' in new_contact:
+                contact.stereo = new_contact['stereo']
             contact.presence.policy = new_contact['subscriptions']['presence']['policy']
             contact.presence.subscribe = new_contact['subscriptions']['presence']['subscribe']
             contact.dialog.policy = new_contact['subscriptions']['dialog']['policy']
@@ -5789,6 +5791,8 @@ class ContactListModel(CustomListModel):
 
             if 'no_mediaproxy' in new_contact:
                 contact.no_mediaproxy = new_contact['no_mediaproxy']
+            if 'stereo' in new_contact:
+                contact.stereo = new_contact['stereo']
 
             contact.save()
 

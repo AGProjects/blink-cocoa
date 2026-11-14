@@ -1067,6 +1067,11 @@ class BlinkAppDelegate(NSObject):
 
         self.terminating = True
         BlinkLogger().log_info('Application will end')
+        try:
+            from CuteMusic import CuteMusicLink
+            CuteMusicLink().stop()      # blink.lock and calls.json gone: AG CuteMusic hides its BLINK strip
+        except Exception:
+            pass
         NSThread.detachNewThreadSelector_toTarget_withObject_("killSelfAfterTimeout:", self, None)
         NotificationCenter().post_notification("BlinkShouldTerminate", None)
         NotificationCenter().add_observer(self, name="SIPApplicationDidEnd")

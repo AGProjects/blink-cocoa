@@ -2201,6 +2201,7 @@ PreferenceOptionTypes = {
 "audio.input_device" : AudioInputDeviceOption,
 "audio.output_device" : AudioOutputDeviceOption,
 "audio.per_device_aec": HiddenOption,
+"audio.stereo": HiddenOption,         # the SDK's stereo mixer: switched for stereo calls (StereoCalls.py)
 "sms.history_last_id": JournalCursorOption,
 "sms.history_last_id_timestamp": HiddenOption,
 "chat.enable_encryption": BoolOption,
@@ -2293,6 +2294,7 @@ SettingDescription = {
                       'audio.pause_music': NSLocalizedString("Pause iTunes During Audio Calls", "Label"),
                       'audio.automatic_device_switch': NSLocalizedString("Switch to New Devices when Plugged-in", "Label"),
                       'audio.enable_aec': NSLocalizedString("Enable Acoustic Echo Cancellation", "Label"),
+                      'audio.enable_stereo': NSLocalizedString("Enable Stereo Mode", "Label"),
                       'answering_machine.max_recording_duration': NSLocalizedString("Maximum Duration", "Label"),
                       'answering_machine.answer_delay': NSLocalizedString("Answer Delay", "Label"),
                       'answering_machine.unavailable_message': NSLocalizedString("Unavailable Message", "Label"),
@@ -2460,7 +2462,7 @@ SectionNames = {
                        }
 
 GeneralSettingsOrder = {
-                       'audio': ['input_device', 'output_device', 'alert_device', 'silent', 'automatic_device_switch', 'directory', 'enable_aec', 'sound_card_delay'],
+                       'audio': ['input_device', 'output_device', 'alert_device', 'silent', 'automatic_device_switch', 'directory', 'enable_aec', 'enable_stereo', 'sound_card_delay'],
                        'answering_machine': ['enabled', 'show_in_alert_panel'],
                        'chat': ['enable_msrp_chat'],
                        'video': ['device', 'container', 'quality', 'resolution', 'framerate', 'max_bitrate'],
@@ -2503,6 +2505,7 @@ UnitOptions = {
                }
 
 ToolTips = {
+             'audio.enable_stereo': NSLocalizedString("Adds Start Stereo Audio Call to the contact menus and answers stereo calls in stereo. A stereo call offers only Opus, and echo cancellation is off during stereo calls: use a headset", "Label"),
              'audio.auto_transfer' : NSLocalizedString("Automatically accept transfer requests from remote party", "Label"),
              'audio.call_waiting' : NSLocalizedString("If disabled, new incoming calls are rejected with busy signal (486) if an audio call is already in progress", "Label"),
              'audio.echo_canceller.enabled': NSLocalizedString("If disabled, acoustic echo cancelation and noise reduction are disabled and the sampling rate is raised to 48kHz to achieve best audio quality possible. To increase audio quality, also disable Use ambient noise reduction in System Preferences in the microphone input section. When enabled, the sampling rate of the audio engine is set to 32kHz.", "Label"),

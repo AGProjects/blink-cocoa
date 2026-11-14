@@ -362,6 +362,8 @@ class SessionInfoController(NSObject):
                     codec = codec + " %0.fkHz" % sample_rate
                 except TypeError:
                     pass
+                if getattr(self.audio_stream.stream, 'stereo_active', False):      # a stereo call (StereoCalls.py)
+                    codec = codec + " " + NSLocalizedString("Stereo", "Label")
 
                 self.audio_codec.setStringValue_(codec)
                 self.audio_srtp_lock.setHidden_(False if self.audio_stream.encryption_active else True)
