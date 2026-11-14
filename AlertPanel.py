@@ -278,6 +278,30 @@ class AlertPanel(NSObject, object):
         self._addIncomingSession(session, session.blink_supported_streams, False)
 
     @objc.python_method
+    def _stereoIconView(self, view, audioIcon, answered_in_stereo):
+        """The stereo symbol, on the audio icon's row: the caller offers stereo (Opus stereo, StereoCalls.py)."""
+        size = 30
+        audio_frame = audioIcon.frame()
+        y = audio_frame.origin.y + (NSHeight(audio_frame) - size) / 2.0
+        image_view = NSImageView.alloc().initWithFrame_(NSMakeRect(0, y, size, size))
+        image_view.setAutoresizingMask_(audioIcon.autoresizingMask())
+        image_view.setImageScaling_(NSImageScaleProportionallyUpOrDown)
+        image = NSImage.imageWithSystemSymbolName_accessibilityDescription_("hifispeaker.2", NSLocalizedString("Stereo", "Label"))
+        if image is None:
+            return None
+        config = NSImageSymbolConfiguration.configurationWithPointSize_weight_(size, NSFontWeightRegular)
+        image = image.imageWithSymbolConfiguration_(config) or image
+        image.setTemplate_(True)
+        image_view.setContentTintColor_(NSColor.systemBlueColor() if answered_in_stereo else NSColor.secondaryLabelColor())
+        image_view.setImage_(image)
+        if answered_in_stereo:
+            image_view.setToolTip_(NSLocalizedString("Stereo call: answered in stereo (Opus stereo, no echo cancellation: use a headset)", "Tooltip"))
+        else:
+            image_view.setToolTip_(NSLocalizedString("The caller offers stereo, answered in mono (Enable Stereo Mode is off, or another call is in progress)", "Tooltip"))
+        view.addSubview_(image_view)
+        return image_view
+
+    @objc.python_method
     def _chatBubbleIconView(self, view, audioIcon):
         size = 30
         audio_frame = audioIcon.frame()
@@ -362,6 +386,17 @@ class AlertPanel(NSObject, object):
             frame.origin.x = NSMaxX(view.frame()) - 10 - (NSWidth(frame) + 10) * typeCount
             audioIcon.setFrame_(frame)
             audioIcon.setHidden_(False)
+
+            # a stereo offer (Opus stereo=1): the stereo symbol next to the audio icon, blue when answered in stereo
+            audio_stream = next((s for s in streams if s.type == 'audio'), None)
+            if audio_stream is not None and getattr(audio_stream, 'offered_stereo', False):
+                answered_in_stereo = bool(getattr(SIPSimpleSettings().audio, 'stereo', False))
+                stereo_icon = self._stereoIconView(view, audioIcon, answered_in_stereo)
+                if stereo_icon is not None:
+                    frame = stereo_icon.frame()
+                    typeCount += 1
+                    frame.origin.x = NSMaxX(view.frame()) - 10 - (NSWidth(frame) + 10) * typeCount
+                    stereo_icon.setFrame_(frame)
 
             if not is_update_proposal:
                 frame = view.frame()

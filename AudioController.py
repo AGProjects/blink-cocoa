@@ -7,6 +7,11 @@ from AppKit import (NSAccessibilityChildrenAttribute,
                     NSAccessibilityTitleAttribute,
                     NSAccessibilityUnignoredDescendant,
                     NSForegroundColorAttributeName,
+                    NSFontAttributeName,
+                    NSFontWeightRegular,
+                    NSImageSymbolConfiguration,
+                    NSMutableAttributedString,
+                    NSTextAttachment,
                     NSApp,
                     NSOffState,
                     NSOnState,
@@ -22,6 +27,7 @@ from Foundation import (NSBundle,
                         NSEvent,
                         NSHeight,
                         NSImage,
+                        NSMakeRange,
                         NSMaxX,
                         NSMenu,
                         NSMinX,
@@ -170,14 +176,16 @@ class AudioController(MediaStream):
 
     @objc.python_method
     @classmethod
-    def createStream(self):
-        return MediaStreamRegistry.AudioStream()
+    def createStream(self, stereo=False):
+        # a stereo call (StereoCalls.py): it offers only the codecs that carry stereo (Opus)
+        return MediaStreamRegistry.AudioStream(stereo=True) if stereo else MediaStreamRegistry.AudioStream()
 
     @objc.python_method
     def resetStream(self):
         self.sessionController.log_debug("Reset stream %s" % self)
         self.notification_center.discard_observer(self, sender=self.stream)
-        self.stream = MediaStreamRegistry.AudioStream()
+        stereo = getattr(self.stream, 'stereo', None)       # a stereo call stays one
+        self.stream = MediaStreamRegistry.AudioStream(stereo=True) if stereo else MediaStreamRegistry.AudioStream()
         self.notification_center.add_observer(self, sender=self.stream)
         self.previous_rx_bytes = 0
         self.previous_tx_bytes = 0
@@ -688,6 +696,27 @@ class AudioController(MediaStream):
         self.audioStatus.display()
 
     @objc.python_method
+    def setAudioStatusWithStereoSymbol(self, text):
+        """The codec status, with the stereo symbol after it in a stereo call (StereoCalls.py)."""
+        stereo = getattr(self.stream, 'stereo_active', False)
+        self.audioStatus.setToolTip_(NSLocalizedString("Stereo call (Opus stereo, no echo cancellation)", "Tooltip") if stereo else None)
+        image = NSImage.imageWithSystemSymbolName_accessibilityDescription_('hifispeaker.2', NSLocalizedString("Stereo", "Label")) if stereo else None
+        if image is None:
+            self.audioStatus.setStringValue_(text)
+            return
+        font = self.audioStatus.font()
+        color = self.audioStatus.textColor()
+        configuration = NSImageSymbolConfiguration.configurationWithPointSize_weight_(font.pointSize(), NSFontWeightRegular)
+        attachment = NSTextAttachment.alloc().init()
+        attachment.setImage_(image.imageWithSymbolConfiguration_(configuration) or image)
+        attributes = {NSFontAttributeName: font, NSForegroundColorAttributeName: color}
+        status = NSMutableAttributedString.alloc().initWithString_attributes_(text + " ", attributes)
+        symbol = NSMutableAttributedString.attributedStringWithAttachment_(attachment).mutableCopy()
+        symbol.addAttribute_value_range_(NSForegroundColorAttributeName, color, NSMakeRange(0, symbol.length()))
+        status.appendAttributedString_(symbol)
+        self.audioStatus.setAttributedStringValue_(status)
+
+    @objc.python_method
     def updateAudioStatusWithCodecInformation(self):
         if self.zrtp_show_verify_phrase:
             return
@@ -713,7 +742,7 @@ class AudioController(MediaStream):
             elif self.stream.sample_rate and self.stream.codec:
                 sample_rate = self.stream.sample_rate/1000
                 codec = beautify_audio_codec(self.stream.codec)
-                
+
                 if self.stream.sample_rate and self.stream.sample_rate >= 16000:
                     self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
                     hd_label = NSLocalizedString("Wideband", "Label")
@@ -721,7 +750,7 @@ class AudioController(MediaStream):
                     self.audioStatus.setTextColor_(NSColor.blackColor())
                     hd_label = NSLocalizedString("Narrowband", "Label")
                 #self.audioStatus.setStringValue_(u"%s (%s %0.fkHz)" % (hd_label, codec, sample_rate))
-                self.audioStatus.setStringValue_("%s (%s)" % (hd_label, codec))
+                self.setAudioStatusWithStereoSymbol("%s (%s)" % (hd_label, codec))
 
         self.sizeAudioStatusToFit()
 

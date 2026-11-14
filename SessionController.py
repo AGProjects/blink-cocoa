@@ -76,6 +76,7 @@ from HistoryManager import preview_call
 from MessageHost import CALL_CONTENT_TYPE, build_call_record, call_summary, dominant_media
 from MessageHost import this_device_id
 from HistoryManager import is_blocked_party
+from StereoCalls import StereoCalls
 from MediaStream import STATE_IDLE, STATE_CONNECTED, STATE_CONNECTING, STATE_DNS_LOOKUP, STATE_DNS_FAILED, STATE_FINISHED, STATE_FAILED
 from MediaStream import STREAM_IDLE, STREAM_FAILED, STREAM_CONNECTED, STREAM_CANCELLING
 from SessionRinger import Ringer
@@ -1476,6 +1477,8 @@ class SessionControllersManager(object, metaclass=Singleton):
         if not silent_auto_accept:
             self.ringer.add_incoming(session, streams)
         session.blink_supported_streams = streams
+        # a stereo offer, with stereo enabled: the SDK in stereo while it rings, to answer it in stereo
+        StereoCalls().incoming(session, streams)
 
         if match_contact:
             if settings.chat.auto_accept and stream_type_list == ['chat'] and NSApp.delegate().contactsWindowController.my_device_is_active:
@@ -2366,8 +2369,10 @@ class SessionController(NSObject):
         for stype in stype_tuple:
             if type(stype) == tuple:
                 stype, kwargs = stype
+                kwargs = dict(kwargs)
             else:
                 kwargs = {}
+            stereo = bool(kwargs.pop('stereo', False))     # for the stream (a stereo call, StereoCalls.py), not its controller
 
             if stype not in self.streams_log:
                 self.streams_log.append(stype)
@@ -2386,7 +2391,10 @@ class SessionController(NSObject):
                         self.log_info("Cannot find media handler for stream of type %s" % stype)
                         return False
 
-                    stream = handlerClass.createStream()
+                    if stype == 'audio' and stereo:      # a stereo call (StereoCalls.py)
+                        stream = handlerClass.createStream(stereo=True)
+                    else:
+                        stream = handlerClass.createStream()
                     #self.log_info('Created stream %s' % stream)
 
                 if not stream:
