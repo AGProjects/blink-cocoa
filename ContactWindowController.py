@@ -572,7 +572,13 @@ class ContactWindowController(NSWindowController):
         self.participantsTableView.registerForDraggedTypes_(NSArray.arrayWithObject_("x-blink-sip-uri"))
         self.participantsTableView.setTarget_(self)
         self.participantsTableView.setDoubleAction_("doubleClickReceived:")
+        self.participantsTableView.setRowHeight_(40)    # two lines (the name, its device or address) and the avatar, as in the chat window's drawer
         self.addConferenceChatButton()
+        # the participants' VU meters, from the RFC 6465 levels a conference focus sends (ConferenceLevels), as
+        # in the drawer of the chat window
+        self.participantsLevelsTimer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(0.1, self, "participantsLevelsTimer:", None, True)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.participantsLevelsTimer, NSModalPanelRunLoopMode)
+        NSRunLoop.currentRunLoop().addTimer_forMode_(self.participantsLevelsTimer, NSDefaultRunLoopMode)
 
         nc = NotificationCenter()
         nc.add_observer(self, name="AudioDevicesDidChange")
@@ -1700,8 +1706,27 @@ class ContactWindowController(NSWindowController):
                         session.session.conference.add_participant(uri)
 
     @objc.python_method
-    def removeParticipant(self, uri):
+    def removeConferenceDevice(self, session, uri, device):
+        """Remove one device of an account in the room from several (maybe ours): just its SIP legs, never by
+        the address alone, which ends them all (us too, when it is our account)."""
+        if not device.direct_ids:
+            session.log_info("Cannot remove one device of %s (%s): %s" % (uri, device.label, 'its WebRTC session is removed from the chat window' if device.webrtc else 'the room tells no participant_id for it'))
+            return
+        session.pending_removal_participants.update(device.ids)
+        for participant_id in device.direct_ids:
+            session.log_info("Request server for removal of the SIP leg of %s (%s, participant_id %s)" % (uri, device.label, participant_id))
+            session.session.conference.remove_participant('sip:%s;participant_id=%s' % (uri, participant_id))
+
+    @objc.python_method
+    def removeParticipant(self, uri, contact=None):
         session = self.getSelectedAudioSession()
+        if session and getattr(contact, 'multi_device', False) and getattr(contact, 'device', None) is not None:
+            # one device of an account in the room from several: that one only
+            if session.remote_focus and not contact.this_device:
+                self.removeConferenceDevice(session, uri, contact.device)
+            self.participantsTableView.deselectAll_(self)
+            self.updateParticipantsView()
+            return
         if session:
             # remove uri from invited participants
             try:
@@ -1749,10 +1774,14 @@ class ContactWindowController(NSWindowController):
         return False
 
     @objc.python_method
-    def canBeRemovedFromConference(self, uri):
+    def canBeRemovedFromConference(self, uri, contact=None):
         session = self.getSelectedAudioSession()
+        if not session:
+            return False
+        if getattr(contact, 'multi_device', False):
+            return not contact.this_device      # another device of an account (ours too): that device only
         own_uri = '%s@%s' % (session.account.id.username, session.account.id.domain)
-        return session and (self.isConferenceParticipant(uri) or self.isInvitedParticipant(uri)) and own_uri != uri
+        return (self.isConferenceParticipant(uri) or self.isInvitedParticipant(uri)) and own_uri != uri
 
     @objc.python_method
     def getConferenceTitle(self):
@@ -1848,10 +1877,30 @@ class ContactWindowController(NSWindowController):
             window.deminiaturize_(None)
         window.makeKeyAndOrderFront_(None)
 
+    def participantsLevelsTimer_(self, timer):
+        if not self.participants or not self.drawer.isOpen():
+            return
+        session = self.getSelectedAudioSession()
+        if session is None or not session.remote_focus:
+            return
+        try:
+            import ConferenceLevels
+            handler = session.streamHandlerOfType("audio")
+            stream = handler.stream if handler is not None else None
+            contacts = [contact for contact in self.participants if hasattr(contact, 'audio_ssrcs')]
+            if ConferenceLevels.participant_levels(stream, contacts, getattr(session, 'conference_bridge_ssrcs', set())):
+                self.participantsTableView.setNeedsDisplay_(True)
+        except Exception:
+            import traceback
+            BlinkLogger().log_error("Cannot update the audio levels of the participants in the audio drawer: %s" % traceback.format_exc())
+
     @objc.python_method
     def updateParticipantsView(self):
         session = self.getSelectedAudioSession()
 
+        # the meters of the participants, kept across the rebuild (participantsLevelsTimer_)
+        old_levels = {(contact.uri, frozenset(contact.device.ids)): getattr(contact, 'audio_levels', None)
+                      for contact in self.participants if getattr(contact, 'device', None) is not None}
         participants, self.participants = self.participants, []
         for item in set(participants).difference(session.invited_participants if session else []):
             item.destroy()
@@ -1865,42 +1914,61 @@ class ContactWindowController(NSWindowController):
             else:
                 own_uri = '%s@%s' % (session.account.id.username, session.account.id.domain)
 
-            path = self.iconPathForSelf()
-            own_icon = NSImage.alloc().initWithContentsOfFile_(path) if path else None
-
+            # a tile per device of each account (ConferenceDevices), as in the drawer of the chat window: an
+            # account in the room from several devices (ours too) is a tile per device, its user agent telling which
+            import ConferenceDevices
+            from ConferenceLevels import media_ssrcs
+            from ContactListModel import BlinkMyselfConferenceContact
+            from SMSWindowManager import bare_instance_id
+            from sipsimple.configuration.settings import SIPSimpleSettings
+            own_instance = ConferenceDevices.normalize_id(bare_instance_id(SIPSimpleSettings().instance_id))
             for user in session.conference_info.users:
+                if re.search(r';app=[^;]*bridge', str(user.entity)):
+                    continue    # the room's audio bridge (its level is the WebRTC participants')
                 uri = sip_prefix_pattern.sub("", user.entity)
-                active_media = []
+                user_devices = ConferenceDevices.devices(user)
+                multi_device = len(user_devices) > 1
+                for device in user_devices:
+                    this_device = bool(own_uri) and uri == own_uri and (own_instance in device.instance_ids if multi_device else True)
+                    display_name = device.display_text.value if device.display_text is not None and device.display_text.value else None
+                    if this_device:
+                        contact = BlinkMyselfConferenceContact(session.account, name=display_name)
+                    else:
+                        presence_contact = self.getFirstContactFromAllContactsGroupMatchingURI(uri)
+                        if presence_contact:
+                            contact = BlinkConferenceContact(uri, name=display_name or presence_contact.name, icon=presence_contact.icon, presence_contact=presence_contact)
+                        else:
+                            contact = BlinkConferenceContact(uri, name=display_name or uri)
+                    contact.device = device
+                    contact.multi_device = multi_device
+                    contact.this_device = this_device
+                    # its VU meter (ConferenceLevels): the SSRCs of its audio, in the room's video room (the
+                    # bridge's level), us (what we send)
+                    contact.webrtc = bool(device.webrtc)
+                    contact.audio_ssrcs = media_ssrcs(device)
+                    contact.audio_levels = old_levels.get((uri, frozenset(device.ids)))     # until the levels timer has fresh ones
+                    if multi_device and device.label:
+                        contact.detail = NSLocalizedString("%s (this device)", "Contact detail") % device.label if this_device else device.label
 
-                chat_endpoints = [endpoint for endpoint in user if any(media.media_type == 'message' for media in endpoint)]
-                if chat_endpoints:
-                    active_media.append('message')
+                    active_media = []
+                    if any(media.media_type == 'message' for media in chain(*device)):
+                        active_media.append('message')
+                    audio_endpoints = [endpoint for endpoint in device if any(media.media_type == 'audio' for media in endpoint)]
+                    user_on_hold = all(endpoint.status == 'on-hold' for endpoint in audio_endpoints)
+                    if audio_endpoints and not user_on_hold:
+                        active_media.append('audio')
+                    elif audio_endpoints and user_on_hold:
+                        active_media.append('audio-onhold')
+                    if getattr(device, 'stereo', False) and audio_endpoints:
+                        active_media.append('stereo')
+                    if not this_device and device.webrtc and 'audio' not in active_media and 'audio-onhold' not in active_media:
+                        active_media.append('audio')    # in the room's video room: its audio there, through the bridge
+                    contact.active_media = active_media
 
-                audio_endpoints = [endpoint for endpoint in user if any(media.media_type == 'audio' for media in endpoint)]
-                user_on_hold = all(endpoint.status == 'on-hold' for endpoint in audio_endpoints)
-                if audio_endpoints and not user_on_hold:
-                    active_media.append('audio')
-                elif audio_endpoints and user_on_hold:
-                    active_media.append('audio-onhold')
+                    # detail will be reset on receiving of the next conference-info update
+                    if uri in session.pending_removal_participants or (multi_device and device.ids & session.pending_removal_participants):
+                        contact.detail = NSLocalizedString("Removal requested...", "Participants contextual menu item")
 
-                presence_contact = self.getFirstContactFromAllContactsGroupMatchingURI(uri)
-                if presence_contact:
-                    display_name = user.display_text.value if user.display_text is not None and user.display_text.value else presence_contact.name
-                    contact = BlinkConferenceContact(uri, name=display_name, icon=presence_contact.icon, presence_contact=presence_contact)
-                else:
-                    display_name = user.display_text.value if user.display_text is not None and user.display_text.value else uri
-                    contact = BlinkConferenceContact(uri, name=display_name)
-
-                contact.active_media = active_media
-
-                # detail will be reset on receiving of the next conference-info update
-                if uri in session.pending_removal_participants:
-                    contact.detail = NSLocalizedString("Removal requested...", "Participants contextual menu item")
-
-                if own_uri and own_icon and contact.uri == own_uri:
-                    contact.avatar = Avatar(own_icon)
-
-                if contact not in self.participants:
                     self.participants.append(contact)
 
             self.participants.sort(key=attrgetter('name'))
@@ -3210,12 +3278,17 @@ class ContactWindowController(NSWindowController):
                 h3 = 0
                 must_resize = True
 
-        # we have conference participants (and above them the Conference chat button)
+        # we have conference participants (and above them the Conference chat button: room for it when it
+        # comes or goes, the height the divider was dragged to kept otherwise)
         if len(self.participants):
-            wanted = 170 + (self.conference_chat_button_height if self.conferenceChatSession() is not None else 0)
-            if h2 == 0 or abs(h2 - wanted) == self.conference_chat_button_height:
-                h2 = wanted
+            button_shown = self.conferenceChatSession() is not None
+            if h2 == 0:
+                h2 = 170 + (self.conference_chat_button_height if button_shown else 0)
                 must_resize = True
+            elif button_shown != getattr(self, '_conference_chat_button_room', button_shown):
+                h2 += self.conference_chat_button_height if button_shown else -self.conference_chat_button_height
+                must_resize = True
+            self._conference_chat_button_room = button_shown
         else:
             if h2 != 0:
                 h2 = 0
@@ -8151,7 +8224,7 @@ class ContactWindowController(NSWindowController):
             # remote_uri = format_identity_to_string(session.remoteIdentity)
 
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_ADD_CONTACT).setEnabled_(False if (self.hasContactMatchingURI(contact.uri) or contact.uri == own_uri or isinstance(session.account, BonjourAccount)) else True)
-            self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_REMOVE_FROM_CONFERENCE).setEnabled_(True if self.canBeRemovedFromConference(contact.uri) else False)
+            self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_REMOVE_FROM_CONFERENCE).setEnabled_(True if self.canBeRemovedFromConference(contact.uri, contact) else False)
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_START_AUDIO_SESSION).setEnabled_(True if contact.uri != own_uri and not isinstance(session.account, BonjourAccount) else False)
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_START_CHAT_SESSION).setEnabled_(True if contact.uri != own_uri and not isinstance(session.account, BonjourAccount) else False)
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_START_VIDEO_SESSION).setEnabled_(False)
@@ -8291,7 +8364,7 @@ class ContactWindowController(NSWindowController):
                 message = re.sub("%", "%%", message)
                 ret = NSRunAlertPanel(NSLocalizedString("Remove from conference", "Window title"), message, NSLocalizedString("Remove", "Button title"), NSLocalizedString("Cancel", "Button title"), None)
                 if ret == NSAlertDefaultReturn:
-                    self.removeParticipant(uri)
+                    self.removeParticipant(uri, object)
             elif tag == PARTICIPANTS_MENU_INVITE_TO_CONFERENCE:
                 self.addParticipants()
             elif tag == PARTICIPANTS_MENU_GOTO_CONFERENCE_WEBSITE:
@@ -8304,6 +8377,28 @@ class ContactWindowController(NSWindowController):
                 self.startSessionWithTarget(uri, media_type="chat", local_uri=session.account.id)
             elif tag == PARTICIPANTS_MENU_SEND_FILES:
                 openFileTransferSelectionDialog(session.account, uri)
+
+    drawer_min_sessions_height = 62
+    drawer_min_participants_height = 60
+
+    def splitView_effectiveRect_forDrawnRect_ofDividerAtIndex_(self, splitView, proposedEffectiveRect, drawnRect, dividerIndex):
+        # the drawer's dividers are thin (one point): a few points either side to grab them by
+        if splitView is self.drawerSplitView:
+            return NSMakeRect(drawnRect.origin.x, drawnRect.origin.y - 3, drawnRect.size.width, drawnRect.size.height + 6)
+        return proposedEffectiveRect
+
+    def splitView_constrainMinCoordinate_ofSubviewAt_(self, splitView, proposedMinimumPosition, dividerIndex):
+        if splitView is self.drawerSplitView and dividerIndex == 0:
+            return max(proposedMinimumPosition, self.drawer_min_sessions_height)    # the audio sessions keep a tile in view
+        return proposedMinimumPosition
+
+    def splitView_constrainMaxCoordinate_ofSubviewAt_(self, splitView, proposedMaximumPosition, dividerIndex):
+        if splitView is self.drawerSplitView and dividerIndex == 0 and len(self.participants):
+            # the participants keep a few rows (and the Conference chat button) in view
+            video_height = self.videoView.superview().frame().size.height
+            minimum = self.drawer_min_participants_height + (self.conference_chat_button_height if self.conferenceChatSession() is not None else 0)
+            return min(proposedMaximumPosition, self.drawerSplitView.frame().size.height - video_height - minimum)
+        return proposedMaximumPosition
 
     def drawerSplitViewDidResize_(self, notification):
         if notification.userInfo() is not None:
