@@ -161,7 +161,7 @@ from ContactListModel import presence_status_for_contact, BlinkContact, BlinkBlo
 from ContactListModel import BlinkPendingWatcher, LdapSearchResultContact, HistoryBlinkContact, VoicemailBlinkContact, SearchResultContact, SystemAddressBookBlinkContact, Avatar
 from ContactListModel import DefaultUserAvatar, DefaultMultiUserAvatar, ICON_SIZE, HistoryBlinkGroup, MissedCallsBlinkGroup, IncomingCallsBlinkGroup, OutgoingCallsBlinkGroup, OnlineGroup
 from ContactListModel import bonjour_offline_uri
-from MediaStream import STREAM_CONNECTED, STREAM_RINGING, STREAM_PROPOSING
+from MediaStream import STATE_CONNECTED, STREAM_CONNECTED, STREAM_RINGING, STREAM_PROPOSING
 from EnrollmentController import EnrollmentController
 from FileTransferWindowController import openFileTransferSelectionDialog, FileTransferWindowController
 from ConferenceController import random_room, default_conference_server, JoinConferenceWindowController, AddParticipantsWindowController
@@ -572,6 +572,7 @@ class ContactWindowController(NSWindowController):
         self.participantsTableView.registerForDraggedTypes_(NSArray.arrayWithObject_("x-blink-sip-uri"))
         self.participantsTableView.setTarget_(self)
         self.participantsTableView.setDoubleAction_("doubleClickReceived:")
+        self.addConferenceChatButton()
 
         nc = NotificationCenter()
         nc.add_observer(self, name="AudioDevicesDidChange")
@@ -1764,6 +1765,88 @@ class ContactWindowController(NSWindowController):
             else:
                 title = "%s" % session.displayTitleShort if isinstance(session.account, BonjourAccount) else "%s" % session.displayTitleLong
         return title
+
+    conference_chat_button_height = 40     # the button and its margins
+
+    @objc.python_method
+    def addConferenceChatButton(self):
+        """A wide Conference chat button above the participants of the audio drawer: the participants'
+        scroll view goes in a view of its own, the button on top of it. Joined with audio and chat, the
+        chat window does not come up by itself: this opens it."""
+        from AppKit import NSButton, NSImageLeft, NSViewMinYMargin
+        try:
+            from AppKit import NSBezelStyleRegularSquare as bezel_style
+        except ImportError:
+            from AppKit import NSRegularSquareBezelStyle as bezel_style
+        scroll_view = self.participantsView
+        frame = scroll_view.frame()
+        container = NSView.alloc().initWithFrame_(frame)
+        container.setAutoresizingMask_(scroll_view.autoresizingMask())
+        scroll_view.superview().replaceSubview_with_(scroll_view, container)
+        scroll_view.setFrame_(NSMakeRect(0, 0, frame.size.width, frame.size.height))
+        scroll_view.setAutoresizingMask_(NSViewWidthSizable | NSViewHeightSizable)
+        container.addSubview_(scroll_view)
+        button = NSButton.alloc().initWithFrame_(NSMakeRect(5, 0, frame.size.width - 10, 32))
+        button.setBezelStyle_(bezel_style)
+        button.setTitle_(NSLocalizedString("Conference chat", "Button title"))
+        image = NSImage.imageNamed_("chat")
+        if image is not None:
+            image = image.copy()
+            image.setSize_(NSMakeSize(18, 18))
+            button.setImage_(image)
+            button.setImagePosition_(NSImageLeft)
+        button.setFont_(NSFont.boldSystemFontOfSize_(NSFont.systemFontSize()))
+        button.setToolTip_(NSLocalizedString("Open the chat of the conference in the chat window", "Button tooltip"))
+        button.setAutoresizingMask_(NSViewWidthSizable | NSViewMinYMargin)
+        button.setTarget_(self)
+        button.setAction_("conferenceChatButtonClicked:")
+        button.setHidden_(True)
+        container.addSubview_(button)
+        self.participantsScrollView = scroll_view
+        self.conferenceChatButton = button
+        self.participantsView = container     # what the drawer's splitter sizes
+
+    @objc.python_method
+    def conferenceChatSession(self):
+        """The selected call when it is a conference connected with chat, else None."""
+        session = self.getSelectedAudioSession()
+        if session is None or not (session.remote_focus or getattr(session, 'is_conference', False)):
+            return None
+        if not session.hasStreamOfType("chat") or session.state != STATE_CONNECTED:
+            return None
+        return session
+
+    @objc.python_method
+    def layoutConferenceChatButton(self):
+        button = getattr(self, 'conferenceChatButton', None)
+        if button is None:
+            return
+        shown = self.conferenceChatSession() is not None
+        button.setHidden_(not shown)
+        frame = self.participantsView.frame()
+        top = self.conference_chat_button_height if shown else 0
+        self.participantsScrollView.setFrame_(NSMakeRect(0, 0, frame.size.width, max(frame.size.height - top, 0)))
+        button.setFrame_(NSMakeRect(5, max(frame.size.height - top + 4, 0), frame.size.width - 10, 32))
+
+    def conferenceChatButtonClicked_(self, sender):
+        session = self.conferenceChatSession() or self.getSelectedAudioSession()
+        if session is None:
+            return
+        chat_window = getattr(NSApp.delegate(), 'chatWindowController', None)
+        if chat_window is None:
+            return
+        session.chat_window_deferred = False       # from now on its chat window comes up as for any chat
+        if not chat_window.hasSession_(session):
+            handler = session.streamHandlerOfType("chat")
+            if handler is None:
+                return
+            handler.openChatWindow()
+            return
+        chat_window.selectSession_(session)
+        window = chat_window.window()
+        if window.isMiniaturized():
+            window.deminiaturize_(None)
+        window.makeKeyAndOrderFront_(None)
 
     @objc.python_method
     def updateParticipantsView(self):
@@ -3127,10 +3210,11 @@ class ContactWindowController(NSWindowController):
                 h3 = 0
                 must_resize = True
 
-        # we have conference participants
+        # we have conference participants (and above them the Conference chat button)
         if len(self.participants):
-            if h2 == 0:
-                h2 = 170
+            wanted = 170 + (self.conference_chat_button_height if self.conferenceChatSession() is not None else 0)
+            if h2 == 0 or abs(h2 - wanted) == self.conference_chat_button_height:
+                h2 = wanted
                 must_resize = True
         else:
             if h2 != 0:
@@ -3160,6 +3244,7 @@ class ContactWindowController(NSWindowController):
         self.drawerSplitterPosition = position
         if must_resize:
             self.resizeDrawerSplitter()
+        self.layoutConferenceChatButton()
 
     @objc.python_method
     def getSelectedAudioSession(self):
@@ -3682,7 +3767,7 @@ class ContactWindowController(NSWindowController):
         if add_to_conference:
             streamController.addToConference()
 
-        if not streamController.sessionController.hasStreamOfType("chat"):
+        if not streamController.sessionController.hasStreamOfType("chat") or getattr(streamController.sessionController, 'chat_window_deferred', False):
             if (streamController.sessionController.hasStreamOfType("video") and streamController.sessionController.video_consumer == "audio") or not streamController.sessionController.hasStreamOfType("video"):
                 self.window().makeFirstResponder_(streamController.view)
                 self.showAudioDrawer()
@@ -5584,6 +5669,14 @@ class ContactWindowController(NSWindowController):
         # joining a conference. remote_focus is not known yet (it arrives with
         # the remote Contact header), so say so up front.
         session_controller.is_conference = True
+        media_types = media_type if type(media_type) in (tuple, list) else (media_type,)
+        if not for_videoroom and 'audio' in media_types and 'chat' in media_types:
+            # audio and chat with the chat window not in view: the call is in the audio drawer and the chat
+            # window does not come up, its Conference chat button (above the participants) opens it
+            chat_window = getattr(NSApp.delegate(), 'chatWindowController', None)
+            window = chat_window.window() if chat_window is not None else None
+            if window is None or not window.isVisible() or window.isMiniaturized():
+                session_controller.chat_window_deferred = True
 
         if participants:
             # Add invited participants to the drawer

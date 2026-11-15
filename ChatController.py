@@ -479,7 +479,11 @@ class ChatController(MediaStream):
             self.chatWindowController.selectSession_(self.sessionController)
 
         window = self.chatWindowController.window()
-        if getattr(self.sessionController, 'open_chat_window_minimized', False):
+        if getattr(self.sessionController, 'chat_window_deferred', False):
+            # a conference joined with audio and chat while the chat window was not in view: its tab is
+            # there, the window comes up from the Conference chat button of the audio drawer
+            pass
+        elif getattr(self.sessionController, 'open_chat_window_minimized', False):
             # the chat of a video room joined with video: its window in front of the chat would only hide it,
             # so the chat window opens minimized, or is left as it is when it is already there
             self.sessionController.open_chat_window_minimized = False
