@@ -1865,6 +1865,8 @@ class ChatWindowController(NSWindowController):
                         active_media.append('audio')
                     elif audio_endpoints and user_on_hold:
                         active_media.append('audio-onhold')
+                    if device.stereo and audio_endpoints:
+                        active_media.append('stereo')       # joined the stereo room in stereo (the stereo symbol for its audio)
 
                     if this_device and video_room is not None:
                         active_media.extend(media for media in ('audio', 'video') if media not in active_media)

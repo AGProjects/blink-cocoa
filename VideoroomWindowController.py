@@ -133,6 +133,14 @@ CALL_BAR_LIFT = TILE_GAP + NAME_PILL_MARGIN + NAME_PILL_HEIGHT + 6.0     # the c
 ENDED_LINGER = 2.5              # seconds the window stays to show why the room ended
 CONTROLS_IDLE_TIME = 5.0        # seconds without the mouse moving before the call bar hides
 FLASH_TIME = 3.0                # seconds a note stays in the status pill
+# the tiles' LED VU meters (Videoroom.meter_from_*: WebRTC feeds and our microphone by their statistics, SIP callers
+# by the room's conference-audio-levels)
+METER_SEGMENTS = 10             # LEDs of a tile's meter; green, then yellow from 70%, red from 90%
+METER_SEGMENTS_COMPACT = 8
+METER_WIDTH = 66.0              # beside the name pill, as high as it
+METER_INTERVAL = 0.05           # seconds between the meters' frames
+METER_FALL = 1.5                # the meter falls by this much (of its full scale) a second, between readings
+METER_PEAK_HOLD = 1.0           # seconds the peak LED stays before it falls
 WINDOW_SIZE = (960.0, 600.0)
 WINDOW_MINIMUM = (360.0, 240.0)
 VIDEO_PAUSE_DELAY = 2.0         # seconds out of sight before the feeds' video is paused
@@ -371,6 +379,34 @@ def _draw_hand_badge(badge):
     _draw_symbol('hand.raised.fill', 'dark', _inset(badge, size * 0.18, size * 0.18), size=size * 0.5)
 
 
+def _meter_color(index, segments):
+    fraction = (index + 1) / float(segments)
+    if fraction > 0.9:
+        return _rgb(255, 59, 48)
+    if fraction > 0.7:
+        return _rgb(255, 204, 0)
+    return _speaking_color()
+
+
+def _draw_led_meter(frame, lit, peak, segments, pad_x, pad_y):
+    """A LED bar: segments LEDs left to right on a dark pill, the first lit ones and the peak one in their colour
+    (green, yellow, red), the others dim."""
+    _black(0.55).setFill()
+    radius = frame.size.height / 2
+    NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(frame, radius, radius).fill()
+    inner = _inset(frame, pad_x, pad_y)
+    gap = 2.0 if inner.size.height >= 6 else 1.0
+    width = (inner.size.width - gap * (segments - 1)) / segments
+    if width <= 0 or inner.size.height <= 0:
+        return
+    corner = min(1.5, width / 3)
+    for index in range(segments):
+        led = _rect(inner.origin.x + index * (width + gap), inner.origin.y, width, inner.size.height)
+        on = index < lit or index == peak - 1
+        (_meter_color(index, segments) if on else _white(0.16)).setFill()
+        NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(led, corner, corner).fill()
+
+
 def _draw_speaking(rect, compact=False):
     width = 2.0 if compact else 3.0
     _speaking_color().setStroke()
@@ -473,6 +509,13 @@ class VideoroomTileView(NSView):
         # our own tile
         self.thumbnail_enabled = False
         self.floating = False
+        # the LED VU meter: its reading (falling between levels), its peak, what was drawn
+        self.meter_value = 0.0
+        self.meter_peak = 0.0
+        self.meter_peak_until = 0.0
+        self.meter_seen = 0.0       # when the level last taken was read (Participant.meter_at)
+        self.meter_tick = None
+        self.meter_drawn = None     # (LEDs lit, the peak LED) drawn; None: no meter
         self.setWantsLayer_(True)
         self.layer().setCornerRadius_(TILE_RADIUS)
         self.layer().setMasksToBounds_(True)
@@ -522,6 +565,79 @@ class VideoroomTileView(NSView):
             return self.participant.speaking
         # ourselves: only when someone else is there to hear it
         return self.session.speaking and any(participant.visible for participant in self.session.participants.values())
+
+    @objc.python_method
+    def meterSource(self):
+        """(audio level 0-1, when it was read) for the VU meter; None for a tile without audio levels (an extra
+        video, a feed whose level never came)."""
+        participant = self.participant
+        if participant is None:
+            session = self.session
+            if not session.meter_at:
+                return None
+            return (0.0 if session.audio_muted else session.meter), session.meter_at
+        if participant.extra_video is not None or participant.parent or not participant.meter_at:
+            return None
+        return participant.meter, participant.meter_at
+
+    @objc.python_method
+    def tickMeter(self, now):
+        """A frame of the meter: a new level lifts it at once, it falls by METER_FALL a second between them, the
+        peak holds METER_PEAK_HOLD. Whether what is drawn changed."""
+        source = self.meterSource()
+        if source is None:
+            changed = self.meter_drawn is not None
+            self.meter_drawn = None
+            self.meter_value = self.meter_peak = 0.0
+            self.meter_tick = None
+            return changed
+        level, at = source
+        elapsed = now - self.meter_tick if self.meter_tick is not None else 0.0
+        self.meter_tick = now
+        fall = METER_FALL * elapsed
+        value = max(0.0, self.meter_value - fall)
+        if at != self.meter_seen:
+            self.meter_seen = at
+            value = max(value, level)
+        self.meter_value = value
+        if value >= self.meter_peak:
+            self.meter_peak = value
+            self.meter_peak_until = now + METER_PEAK_HOLD
+        elif now >= self.meter_peak_until:
+            self.meter_peak = max(value, self.meter_peak - fall)
+        segments = METER_SEGMENTS_COMPACT if self.compact() else METER_SEGMENTS
+        lit = int(round(value * segments))
+        peak = int(ceil(self.meter_peak * segments - 0.05)) if self.meter_peak > 0.5 / segments else 0
+        drawn = (lit, peak)
+        changed = drawn != self.meter_drawn
+        self.meter_drawn = drawn
+        return changed
+
+    @objc.python_method
+    def drawMeter(self, rect, pill=None):
+        """The LED VU meter: beside the name pill (its other side from the tile's edge), along the bottom of a
+        carousel thumbnail, under an avatar's circle."""
+        if self.meter_drawn is None:
+            return
+        lit, peak = self.meter_drawn
+        if pill is not None:
+            if self.label_corner[1] == 'right':
+                frame = _rect(pill.origin.x - 4.0 - METER_WIDTH, pill.origin.y, METER_WIDTH, NAME_PILL_HEIGHT)
+            else:
+                frame = _rect(pill.origin.x + pill.size.width + 4.0, pill.origin.y, METER_WIDTH, NAME_PILL_HEIGHT)
+            if frame.origin.x < rect.origin.x + 2 or frame.origin.x + frame.size.width > rect.origin.x + rect.size.width - 2:
+                return      # no room beside the name
+            if self.hand and _intersects(frame, _hand_rect(rect, self.label_corner)):
+                return
+            _draw_led_meter(frame, lit, peak, METER_SEGMENTS, 8.0, 7.0)
+        elif self.avatar():
+            diameter = min(rect.size.width, rect.size.height) - 4
+            width = diameter * 0.8
+            frame = _rect(rect.origin.x + (rect.size.width - width) / 2, rect.origin.y + (rect.size.height + diameter) / 2 - 8.0, width, 7.0)
+            _draw_led_meter(frame, lit, peak, METER_SEGMENTS_COMPACT, 3.5, 1.5)
+        else:
+            frame = _rect(rect.origin.x + 4.0, rect.origin.y + rect.size.height - 10.0, min(rect.size.width - 8.0, 60.0), 7.0)
+            _draw_led_meter(frame, lit, peak, METER_SEGMENTS_COMPACT, 3.5, 1.5)
 
     @objc.python_method
     def in_grid(self):
@@ -736,12 +852,17 @@ class VideoroomTileView(NSView):
         compact = self.compact()
         if self.avatar():
             self._drawAvatar(rect)
+            self.drawMeter(rect)
             return
         if not self.showingVideo():
             _draw_placeholder(rect, self.name(), None if compact else self.detail())
         if not compact:
-            _draw_name_pill(rect, self.label(), self.muted(), self.label_corner, self.controller.labelAvoid(self))
-        elif self.muted():
+            avoid = self.controller.labelAvoid(self)
+            _draw_name_pill(rect, self.label(), self.muted(), self.label_corner, avoid)
+            self.drawMeter(rect, _name_pill_rect(rect, self.label(), self.muted(), self.label_corner, avoid)[0])
+        else:
+            self.drawMeter(rect)
+        if compact and self.muted():
             _draw_symbol('mic.slash.fill', 'red', _rect(rect.size.width - 18, 3, 15, 12), size=9.0)
         if self.hand:
             _draw_hand_badge(_hand_rect(rect, self.label_corner, compact))
@@ -1254,6 +1375,7 @@ class VideoroomWindowController(NSObject):
         self.idle_timer = None
         self.clock = None
         self.pause_timer = None
+        self.meter_timer = None     # the tiles' VU meters, while the room is established
         self.flash_until = 0.0
         self.drag = None            # the offset of the press in the floating thumbnail, while dragging it
         self.last_hands = []
@@ -1407,10 +1529,10 @@ class VideoroomWindowController(NSObject):
         if self.closing:
             return
         self.closing = True
-        for timer in (self.idle_timer, self.clock, self.pause_timer):
+        for timer in (self.idle_timer, self.clock, self.pause_timer, self.meter_timer):
             if timer is not None:
                 timer.invalidate()
-        self.idle_timer = self.clock = self.pause_timer = None
+        self.idle_timer = self.clock = self.pause_timer = self.meter_timer = None
         notification_center = NotificationCenter()
         for name in SESSION_NOTIFICATIONS:
             notification_center.discard_observer(self, sender=self.session, name=name)
@@ -2423,6 +2545,8 @@ class VideoroomWindowController(NSObject):
                 self.joined_at = time.monotonic()
             if self.clock is None:
                 self.clock = _timer(1.0, self.tick, repeats=True)
+            if self.meter_timer is None:
+                self.meter_timer = _timer(METER_INTERVAL, self.updateMeters, repeats=True)
             self.setStatus(None)
             self.updateTitle()
             self.showControls()
@@ -2487,6 +2611,16 @@ class VideoroomWindowController(NSObject):
     @objc.python_method
     def _NH_VideoroomSessionParticipantsDidChange(self, notification):
         self.updateTitle()
+
+    @objc.python_method
+    def updateMeters(self):
+        """A frame of the tiles' VU meters: the tiles whose LEDs changed are drawn again."""
+        if self.closing:
+            return
+        now = time.monotonic()
+        for tile in [self.localTile] + list(self.tiles.values()):
+            if tile.tickMeter(now) and tile.overlay is not None:
+                tile.overlay.setNeedsDisplay_(True)
 
     @objc.python_method
     def _NH_VideoroomSessionParticipantSpeakingDidChange(self, notification):

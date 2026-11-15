@@ -5004,7 +5004,7 @@ class ContactWindowController(NSWindowController):
 
         if start_now:
             self.joinConference(conference.target, conference.media_type, conference.participants, conference.nickname, video_room=getattr(conference, 'video_room', None),
-                                video_sources=getattr(conference, 'video_sources', None))
+                                video_sources=getattr(conference, 'video_sources', None), stereo=getattr(conference, 'stereo', False))
             return True
         else:
             settings = SIPSimpleSettings()
@@ -8228,7 +8228,7 @@ class ContactWindowController(NSWindowController):
         conference = self.showJoinConferenceWindow(target=target, participants=participants, media_type=media_type, default_domain=account.id.domain)
         if conference is not None:
             self.joinConference(conference.target, conference.media_type, conference.participants, video_room=getattr(conference, 'video_room', None),
-                                video_sources=getattr(conference, 'video_sources', None))
+                                video_sources=getattr(conference, 'video_sources', None), stereo=getattr(conference, 'stereo', False))
 
         self.joinConferenceWindow.release()
         self.joinConferenceWindow = None
@@ -8480,7 +8480,7 @@ class ContactWindowController(NSWindowController):
             ret = NSRunAlertPanel(NSLocalizedString("Start Scheduled Conference", "Window title"), label, NSLocalizedString("Start Now", "Button title"), NSLocalizedString("Cancel", "Button title"), None)
 
             if ret == NSAlertDefaultReturn:
-                self.joinConference(conference.target, conference.media_type, conference.participants, conference.nickname)
+                self.joinConference(conference.target, conference.media_type, conference.participants, conference.nickname, stereo=getattr(conference, 'stereo', False))
 
             self.scheduled_conferences.discard(conference)
 

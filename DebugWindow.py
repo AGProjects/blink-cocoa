@@ -660,6 +660,7 @@ class DebugWindow(NSObject):
         "No stereo call left",
         "Stereo audio:",
         "(stereo audio)",
+        "Conference stereo:",
         # Remote-side stream descriptors
         "Remote video stream at",
         "Remote aspect ratio is",

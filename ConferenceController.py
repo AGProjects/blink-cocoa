@@ -5,6 +5,7 @@ from AppKit import (NSApp,
                     NSButton,
                     NSCancelButton,
                     NSColor,
+                    NSControlSizeSmall,
                     NSControlTextDidChangeNotification,
                     NSFont,
                     NSMakeRect,
@@ -16,6 +17,8 @@ from AppKit import (NSApp,
                     NSOKButton,
                     NSOnState,
                     NSRunAlertPanel,
+                    NSSegmentedControl,
+                    NSSegmentSwitchTrackingSelectOne,
                     NSAlertDefaultReturn)
 
 from Foundation import (NSArray,
@@ -48,6 +51,7 @@ from zope.interface import implementer
 
 from BlinkLogger import BlinkLogger
 from SIPManager import SIPManager
+from StereoCalls import stereo_available, stereo_sdk_available
 from ConferenceConfigurationPanel import ConferenceConfigurationPanel
 from util import format_uri_type, log_gui_exception, run_in_gui_thread, sip_prefix_pattern
 
@@ -120,8 +124,10 @@ default_conference_server = 'conference.sip2sip.info'
 
 
 class ServerConferenceRoom(object):
-    def __init__(self, target, media_type=None, participants=None, nickname=None, start_when_participants_available=False, video_room=None, video_sources=None):
+    def __init__(self, target, media_type=None, participants=None, nickname=None, start_when_participants_available=False, video_room=None, video_sources=None, stereo=False):
         self.target = target
+        # the room's audio in stereo (Join Conference: Audio as Stereo, StereoCalls.py)
+        self.stereo = stereo
         # (the video room address, its WebRTCSupport.RoomTarget or None) when joined with video over WebRTC
         self.video_room = video_room
         # with video: (our camera or None for the camera off, the screen to share once joined or None,
@@ -136,15 +142,16 @@ class ServerConferenceRoom(object):
 class ConferenceConfiguration(object):
     """A saved composition of Join Conference (a profile): the room, the media, the invitees and, with Video,
     the checked lines of the Publish list (keys camera:<device>, screen:<device>, rtsp:<url>; None when saved
-    without Video, or by an older Blink)."""
+    without Video, or by an older Blink) and Audio as Mono or Stereo (missing when saved by an older Blink)."""
 
-    def __init__(self, name, target, participants=None, media_type=None, nickname=None, video_sources=None):
+    def __init__(self, name, target, participants=None, media_type=None, nickname=None, video_sources=None, stereo=False):
         self.name = name
         self.target = target
         self.participants = participants
         self.media_type = media_type
         self.nickname = nickname
         self.video_sources = video_sources
+        self.stereo = stereo
 
 
 def validateParticipant(uri):
@@ -334,10 +341,80 @@ class JoinConferenceWindowController(NSObject):
         self.publish = PublishList.alloc().initWithOwner_(self)
         self.publish_shown = False
         self.publish.setHidden(True)
+        self._addStereoControl()
+
+    @objc.python_method
+    def _addStereoControl(self):
+        """Audio as Mono or Stereo (the room's audio in stereo, StereoCalls.py): a toggle right of Audio, Video after
+        it when shown. Only with an SDK that has stereo audio; Stereo can be chosen while Enable Stereo Mode is on,
+        Audio is checked and Video is not (with Video the room's audio goes over WebRTC). Mono every time the panel
+        opens."""
+        self.stereo = None
+        if not stereo_sdk_available():
+            return
+        self.stereo = NSSegmentedControl.segmentedControlWithLabels_trackingMode_target_action_(
+            [NSLocalizedString("Mono", "Segmented control label"), NSLocalizedString("Stereo", "Segmented control label")],
+            NSSegmentSwitchTrackingSelectOne, self, "stereoClicked:")
+        self.stereo.setControlSize_(NSControlSizeSmall)
+        self.stereo.setFont_(NSFont.systemFontOfSize_(NSFont.smallSystemFontSize()))
+        self.stereo.sizeToFit()
+        self.stereo.setSelectedSegment_(0)
+        self.stereo.setAutoresizingMask_(self.audio.autoresizingMask())
+        self.audio.superview().addSubview_(self.stereo)
+        self.audio.setTarget_(self)
+        self.audio.setAction_("audioClicked:")
+        self.updateStereoControl()
+
+    @objc.python_method
+    def setStereo(self, stereo):
+        if self.stereo is not None:
+            self.stereo.setSelectedSegment_(1 if stereo else 0)
+            self.updateStereoControl()
+
+    @objc.python_method
+    def updateStereoControl(self):
+        """The media line laid out tight (Audio, its Mono/Stereo toggle, Video when shown: the panel is too narrow
+        for them at Audio's width) and the toggle enabled as it can be used."""
+        if getattr(self, 'stereo', None) is None:
+            return
+        audio_frame = self.audio.frame()
+        x = audio_frame.origin.x + self.audio.cell().cellSize().width + 4
+        frame = self.stereo.frame()
+        self.stereo.setFrame_(NSMakeRect(x, audio_frame.origin.y + (audio_frame.size.height - frame.size.height) / 2, frame.size.width, frame.size.height))
+        x += frame.size.width + 10
+        if not self.video.isHidden():
+            self.video.setFrame_(NSMakeRect(x, audio_frame.origin.y, self.video.cell().cellSize().width, audio_frame.size.height))
+        if not stereo_available():
+            enabled = False
+            tooltip = NSLocalizedString("Turn on Enable Stereo Mode in Preferences, Audio Calls, to join conferences in stereo", "Tooltip")
+        elif self.videoChecked():
+            enabled = False
+            tooltip = NSLocalizedString("Mono with Video: the room's audio and video go over WebRTC", "Tooltip")
+        elif self.audio.state() != NSOnState:
+            enabled = False
+            tooltip = None
+        else:
+            enabled = True
+            tooltip = NSLocalizedString("Stereo: the room's audio in stereo (Opus stereo, no echo cancellation: use a headset)", "Tooltip")
+        self.stereo.setEnabled_(enabled)
+        self.stereo.setToolTip_(tooltip)
+
+    @objc.python_method
+    def stereoChecked(self):
+        return getattr(self, 'stereo', None) is not None and self.stereo.isEnabled() and self.stereo.selectedSegment() == 1
+
+    @objc.IBAction
+    def stereoClicked_(self, sender):
+        self.updateStereoControl()
+
+    @objc.IBAction
+    def audioClicked_(self, sender):
+        self.updateStereoControl()
 
     @objc.IBAction
     def videoClicked_(self, sender):
         self.updatePublish()
+        self.updateStereoControl()
 
     @objc.python_method
     def roomWsServer(self):
@@ -458,6 +535,7 @@ class JoinConferenceWindowController(NSObject):
             video = True
             text = NSLocalizedString("Conferencing provided by SylkServer at %s", "Label") % (account.conference.server_address or default_conference_server)
         self.video.setHidden_(not video)
+        self.updateStereoControl()
         self.providerLabel.setStringValue_(text)
         if not isinstance(account, BonjourAccount):
             self.ok_button.setEnabled_(self.lookup_pending is None)
@@ -513,6 +591,7 @@ class JoinConferenceWindowController(NSObject):
                     media_type = "audio"
 
                 video_sources = self.publish.checked_keys() if self.videoChecked() else None
+                stereo = self.stereoChecked()
                 if configuration_name and configuration_name != self.selected_configuration and configuration_name in self.conference_configurations:
                     # another saved configuration of that name: replaced only when the user says so
                     if NSRunAlertPanel(NSLocalizedString("Save configuration", "Window title"),
@@ -527,9 +606,10 @@ class JoinConferenceWindowController(NSObject):
                         self.conference_configurations[configuration_name].media_type = media_type
                         self.conference_configurations[configuration_name].nickname = self.nickname
                         self.conference_configurations[configuration_name].video_sources = video_sources
+                        self.conference_configurations[configuration_name].stereo = stereo
                     else:
                         configuration = ConferenceConfiguration(configuration_name, self.target, participants=self._participants, media_type=media_type,
-                                                                nickname=self.nickname, video_sources=video_sources)
+                                                                nickname=self.nickname, video_sources=video_sources, stereo=stereo)
                         self.conference_configurations[configuration_name] = configuration
 
                     self.selected_configuration = configuration_name
@@ -573,6 +653,7 @@ class JoinConferenceWindowController(NSObject):
                 else:
                     self.audio.setState_(NSOnState)
                     self.video.setState_(NSOffState)
+                self.setStereo(getattr(configuration, 'stereo', False))
                 self.chat.setState_(NSOnState)
                 # its videos are chosen with its room (setting the room from here does not uncheck its RTSP cameras)
                 keys = getattr(configuration, 'video_sources', None)
@@ -659,6 +740,7 @@ class JoinConferenceWindowController(NSObject):
         self.audio.setState_(NSOnState)
         self.chat.setState_(NSOnState)
         self.video.setState_(NSOffState)
+        self.setStereo(False)
         self.publish.checked = None     # the default videos again, when Video is checked
         self.lookupRoom()
         self.startWhenParticipantsAvailable.setEnabled_(False)
@@ -759,6 +841,7 @@ class JoinConferenceWindowController(NSObject):
             rc = NSApp.runModalForWindow_(self.window)
         # the chosen videos, then the window back to its height (its frame is saved: frameAutosaveName)
         video_sources = self.publish.chosen() if self.video_room is not None and self.videoChecked() else None
+        stereo = self.video_room is None and self.audio.state() == NSOnState and self.stereoChecked()
         self.window.orderOut_(self)
         self.setPublishShown(False)
         contactsWindow.setWorksWhenModal_(worksWhenModal)
@@ -790,7 +873,7 @@ class JoinConferenceWindowController(NSObject):
                 participants.remove(self.target)
             return ServerConferenceRoom(self.target, media_type=media_type, participants=participants, nickname=self.nickname,
                                         start_when_participants_available=bool(self.startWhenParticipantsAvailable.state()), video_room=self.video_room,
-                                        video_sources=video_sources)
+                                        video_sources=video_sources, stereo=stereo)
         else:
             return None
 

@@ -16,11 +16,12 @@ devices, so each device is a participant of its own:
 
 import re
 
-from sipsimple.payloads import XMLStringElement
-from sipsimple.payloads.conference import ConferenceDocument, Endpoint, EndpointExtension, agp_conf_namespace
+from sipsimple.payloads import XMLBooleanElement, XMLStringElement
+from sipsimple.payloads.conference import (ConferenceDescription, ConferenceDescriptionExtension, ConferenceDocument, Endpoint,
+                                           EndpointExtension, agp_conf_namespace)
 
 
-__all__ = ('Device', 'devices', 'normalize_id')
+__all__ = ('Device', 'devices', 'normalize_id', 'room_stereo')
 
 
 # the AG Projects endpoint elements read here, registered with the parser unless something else did
@@ -35,6 +36,31 @@ for _attribute in ('participant_id', 'user_agent', 'instance_id'):
             import logging
             logging.getLogger(__name__).warning('cannot register <agp-conf:%s> with the conference-info parser: %s', _attribute, e)
 del _attribute
+
+# stereo (SylkServer, StereoCalls.py): <agp-conf:stereo> on the room's conference-description (a stereo room) and
+# <agp-conf:audio_stereo> on an endpoint whose audio joined it in stereo
+for _parent, _base, _attribute in ((ConferenceDescription, ConferenceDescriptionExtension, 'stereo'), (Endpoint, EndpointExtension, 'audio_stereo')):
+    if not hasattr(_parent, _attribute):
+        try:
+            _element = type(''.join(part.capitalize() for part in _attribute.split('_')) + 'Flag', (XMLBooleanElement, _base),
+                            dict(_xml_tag=_attribute, _xml_namespace=agp_conf_namespace, _xml_document=ConferenceDocument))
+            _parent.register_extension(_attribute, _element)
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).warning('cannot register <agp-conf:%s> with the conference-info parser: %s', _attribute, e)
+del _parent, _base, _attribute
+
+
+def _flag(element, attribute):
+    value = getattr(element, attribute, None)
+    if value is None:
+        return False
+    return bool(getattr(value, 'value', value))
+
+
+def room_stereo(conference_info):
+    """Whether the room mixes its audio in stereo (<agp-conf:stereo> on its conference-description)."""
+    return _flag(getattr(conference_info, 'conference_description', None), 'stereo')
 
 
 _gateway_re = re.compile(r'^(sips?:)?sylkserver@', re.I)
@@ -91,6 +117,8 @@ class Device(object):
         agents = [agent for agent in agents if agent]
         self.user_agent = agents[0] if agents else None
         self.webrtc_display_name = next((_display_text(endpoint) for endpoint in self.endpoints if is_gateway(endpoint) and _display_text(endpoint)), None)
+        # its audio joined the stereo room in stereo (<agp-conf:audio_stereo>)
+        self.stereo = any(_flag(endpoint, 'audio_stereo') for endpoint in self.endpoints)
 
     def __iter__(self):
         return iter(self.endpoints)

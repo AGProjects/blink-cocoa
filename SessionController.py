@@ -3228,6 +3228,10 @@ class SessionController(NSObject):
             stream_types = {s.type for s in data.streams}
             if 'audio' in stream_types:
                 audio_list = list(settings.rtp.audio_codec_list or [])
+                if any(s.type == 'audio' and getattr(s, 'stereo', False) for s in data.streams):
+                    # a stereo call (StereoCalls.py): the stream offers only the codecs that carry stereo
+                    audio_list = [codec for codec in audio_list if codec.lower() == 'opus'] or ['opus']
+                    audio_list[0] += ' (stereo=1; sprop-stereo=1)'
                 self.log_info("Proposed audio codecs: %s" % (', '.join(audio_list) if audio_list else '(none)'))
             if 'video' in stream_types:
                 video_list = list(settings.rtp.video_codec_list or [])
@@ -3540,6 +3544,29 @@ class SessionController(NSObject):
         return False
 
     @objc.python_method
+    def _logConferenceStereo(self, info):
+        """The room's stereo and who joined it in stereo or mono (SylkServer: agp-conf:stereo, agp-conf:audio_stereo), when
+        it changes; also shown in the RTP tab of the debug window."""
+        try:
+            import ConferenceDevices
+            if not ConferenceDevices.room_stereo(info):
+                text = 'Conference stereo: mono room'
+            else:
+                stereo, mono = [], []
+                for user in info.users:
+                    audio = [endpoint for endpoint in user if any(media.media_type == 'audio' for media in endpoint)]
+                    if not audio:
+                        continue
+                    uri = sip_prefix_pattern.sub("", str(user.entity))
+                    (stereo if any(ConferenceDevices._flag(endpoint, 'audio_stereo') for endpoint in audio) else mono).append(uri)
+                text = 'Conference stereo: stereo room, in stereo: %s; in mono: %s' % (', '.join(stereo) or 'none', ', '.join(mono) or 'none')
+        except Exception as e:
+            text = 'Conference stereo: cannot tell (%s)' % e
+        if text != getattr(self, '_logged_conference_stereo', None):
+            self._logged_conference_stereo = text
+            self.log_info(text)
+
+    @objc.python_method
     def _NH_SIPSessionGotConferenceInfo(self, sender, data):
         try:
             self._applyConferenceInfo(data)
@@ -3556,7 +3583,10 @@ class SessionController(NSObject):
         if users != getattr(self, '_logged_conference_users', None):
             self._logged_conference_users = users
             info = data.conference_info
-            self.log_info("Conference-info version %s, state %s, %d users: %s" % (info.version, info.state, len(users), ", ".join(users)))
+            import ConferenceDevices
+            stereo = ', stereo room' if ConferenceDevices.room_stereo(info) else ''
+            self.log_info("Conference-info version %s, state %s%s, %d users: %s" % (info.version, info.state, stereo, len(users), ", ".join(users)))
+        self._logConferenceStereo(data.conference_info)
         self.pending_removal_participants = set()
         self.failed_to_join_participants = {}
         self.conference_shared_files = []

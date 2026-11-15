@@ -101,6 +101,28 @@ def format_last_message_time(stamp):
 
 from BlinkLogger import BlinkLogger
 import RadioPTT
+
+
+_stereo_audio_icon = None
+
+
+def stereo_audio_icon():
+    """The stereo symbol (hifispeaker.2, blue as in the alert panel) for the audio of a participant in stereo; None
+    without SF Symbols."""
+    global _stereo_audio_icon
+    if _stereo_audio_icon is None:
+        from AppKit import NSColor, NSFontWeightRegular, NSImage, NSImageSymbolConfiguration
+        from Foundation import NSLocalizedString
+        image = NSImage.imageWithSystemSymbolName_accessibilityDescription_('hifispeaker.2', NSLocalizedString("Stereo", "Label"))
+        if image is not None:
+            try:
+                configuration = NSImageSymbolConfiguration.configurationWithPointSize_weight_(14, NSFontWeightRegular)
+                configuration = configuration.configurationByApplyingConfiguration_(NSImageSymbolConfiguration.configurationWithHierarchicalColor_(NSColor.systemBlueColor()))
+                image = image.imageWithSymbolConfiguration_(configuration) or image
+            except Exception:
+                pass
+        _stereo_audio_icon = image or False
+    return _stereo_audio_icon or None
 from Avatars import GLYPH_AVATARS, NO_PHOTO_AVATAR, draw_avatar
 
 from sipsimple.configuration.settings import SIPSimpleSettings
@@ -543,7 +565,9 @@ class ContactCell(NSTextFieldCell):
             self.drawIcon(self.audioHoldIcon, left, self.frame.origin.y +14, 16, 16)
         elif 'audio' in self.contact.active_media:
             left = left - padding
-            self.drawIcon(self.audioIcon, left, self.frame.origin.y +14, 16, 16)
+            # the stereo symbol for a participant whose audio joined the stereo room in stereo
+            icon = stereo_audio_icon() if 'stereo' in self.contact.active_media else None
+            self.drawIcon(icon or self.audioIcon, left, self.frame.origin.y +14, 16, 16)
 
         if 'video' in self.contact.active_media and self.videoIcon is not None:
             # our own row while the room's video room is up (its audio and video over WebRTC)

@@ -128,6 +128,29 @@ STATS_INTERVAL = 0.3            # seconds between reads of the PeerConnections' 
 SPEAKING_LEVEL = 10 ** (-38 / 20.0)     # audioLevel (0-1, linear) above which someone speaks: -38 dBFS
 SPEAKING_SIP_LEVEL = 25         # the same for the room's audio levels of SIP participants (the mixer's 0-255 scale)
 SPEAKING_HOLD = 0.6             # seconds speaking lasts after the last loud level, so a tile does not flicker between words
+METER_FLOOR_DB = -50.0          # the tiles' VU meters: from this level (dBFS, nothing lit) to 0 dBFS (all lit)
+
+
+def meter_from_linear(level):
+    """A VU meter's reading (0-1) of a WebRTC audioLevel (0-1, linear): its dBFS between METER_FLOOR_DB and 0."""
+    try:
+        level = float(level)
+    except (TypeError, ValueError):
+        return 0.0
+    if level <= 0.0:
+        return 0.0
+    from math import log10
+    return max(0.0, min(1.0, (20.0 * log10(min(level, 1.0)) - METER_FLOOR_DB) / -METER_FLOOR_DB))
+
+
+def meter_from_sip(level):
+    """A VU meter's reading (0-1) of a level of the room's conference-audio-levels (pjmedia's 0-255, u-law
+    companded): expanded to linear, then as meter_from_linear."""
+    try:
+        companded = max(0.0, min(1.0, float(level) / 255.0))
+    except (TypeError, ValueError):
+        return 0.0
+    return meter_from_linear((256.0 ** companded - 1.0) / 255.0)
 AUDIO_BITRATE = 64000           # bit/s of our Opus: libwebrtc takes it from the answer's maxaveragebitrate (32000 without)
 # the microphone: echo cancelling only, as the SIP audio; no noise suppression or gain control
 AUDIO_CONSTRAINTS = {'googEchoCancellation': 'true', 'googHighpassFilter': 'true',
@@ -491,6 +514,9 @@ class Participant(object):
         self.stats = {}             # (type, kind) -> values, the last statistics of its PeerConnection (Conference info)
         self.speaking = False
         self._speaking_until = 0.0
+        # its audio level for the tile's VU meter (0-1, meter_from_*) and when it came (0: never)
+        self.meter = 0.0
+        self.meter_at = 0.0
         self.feed = None            # feed id once attached
         self.state = None           # None, attaching, connecting, established, failed
         self.peer_connection = None
@@ -541,6 +567,10 @@ class Participant(object):
     @property
     def has_video(self):
         return self.video_track is not None
+
+    def set_meter(self, meter):
+        self.meter = meter
+        self.meter_at = time.monotonic()
 
     def set_level(self, loud):
         """loud is whether this level counts as speech; speaking holds for SPEAKING_HOLD after the
@@ -626,6 +656,8 @@ class VideoroomSession(object):
         self.raised_hands = []      # publisher ids with a raised hand, in the order raised
         self.speaking = False       # our own microphone (after mute)
         self._speaking_until = 0.0
+        self.meter = 0.0            # our own microphone's level for our tile's VU meter (0-1; 0 muted)
+        self.meter_at = 0.0         # when it was read (0: never)
         self._muting_everyone = False   # we asked: the room's mute-audio is not for us
         self._sending_screen = None     # the video profile in use: the screen's or the camera's
         self._stats_timer = None
@@ -1137,6 +1169,8 @@ class VideoroomSession(object):
         if self._levels_at is not None and time.monotonic() - self._levels_at > 2.0:
             self._levels_at = None
             for participant in list(self.participants.values()):
+                if participant.type == 'sip' and participant.meter_at:
+                    participant.set_meter(0.0)
                 if participant.type == 'sip' and participant.speaking:
                     participant._speaking_until = 0.0
                     if participant.set_level(False):
@@ -1177,6 +1211,8 @@ class VideoroomSession(object):
             levels = [float(level) for level in levels if level is not None]
             if levels:
                 self._own_level(max(levels) > SPEAKING_LEVEL and not self.audio_muted)
+                self.meter = 0.0 if self.audio_muted else meter_from_linear(max(levels))
+                self.meter_at = time.monotonic()
             return
         participant = self.feeds.get(label)
         if participant is None:
@@ -1187,6 +1223,7 @@ class VideoroomSession(object):
                 continue
             media = values.get('kind') or values.get('mediaType')
             if media == 'audio' and values.get('audioLevel') is not None:
+                participant.set_meter(meter_from_linear(values['audioLevel']))
                 if participant.set_level(float(values['audioLevel']) > SPEAKING_LEVEL):
                     self._post('VideoroomSessionParticipantSpeakingDidChange', participant=participant)
             elif media == 'video':
@@ -1407,6 +1444,7 @@ class VideoroomSession(object):
             if participant is None:
                 continue
             level = entry.get('rx_peak') if entry.get('rx_peak') is not None else entry.get('rx', 0)
+            participant.set_meter(meter_from_sip(level))
             try:
                 loud = float(level) > SPEAKING_SIP_LEVEL
             except (TypeError, ValueError):
