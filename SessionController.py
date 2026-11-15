@@ -3594,6 +3594,10 @@ class SessionController(NSObject):
         # Hide server-side bridge components from the participant list,
         # they are plumbing, not real participants
         bridge_users = [user for user in data.conference_info.users if self.isConferenceBridgeUser(user)]
+        # the SSRC of the bridge's audio (<src-id>) is the video room's mix: the level of the WebRTC
+        # participants in the RFC 6465 levels the focus sends (ConferenceLevels)
+        from ConferenceLevels import media_ssrcs
+        self.conference_bridge_ssrcs = set().union(*(media_ssrcs(user) for user in bridge_users)) if bridge_users else set()
         for user in bridge_users:
             self.log_debug("Hiding conference bridge participant %s" % user.entity)
             data.conference_info.users.remove(user)

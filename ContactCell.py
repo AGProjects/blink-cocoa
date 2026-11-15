@@ -568,6 +568,9 @@ class ContactCell(NSTextFieldCell):
             # the stereo symbol for a participant whose audio joined the stereo room in stereo
             icon = stereo_audio_icon() if 'stereo' in self.contact.active_media else None
             self.drawIcon(icon or self.audioIcon, left, self.frame.origin.y +14, 16, 16)
+            levels = getattr(self.contact, 'audio_levels', None)
+            if levels:
+                left = self.drawLevels(levels, left)
 
         if 'video' in self.contact.active_media and self.videoIcon is not None:
             # our own row while the room's video room is up (its audio and video over WebRTC)
@@ -589,6 +592,29 @@ class ContactCell(NSTextFieldCell):
             edge = left - 4.0
             if self.contentRightEdge is None or edge < self.contentRightEdge:
                 self.contentRightEdge = edge
+
+    @objc.python_method
+    def drawLevels(self, levels, left):
+        """The participant's VU meter left of its audio icon (ConferenceLevels): a bar per channel, lit from the
+        bottom, green, yellow near the top, red at it. The new left edge."""
+        bar, gap, height = 3.0, 1.0, 14.0
+        left -= 2.0 + len(levels) * (bar + gap)
+        top = self.frame.origin.y + 15
+        for index, level in enumerate(levels):
+            x = left + index * (bar + gap)
+            NSColor.colorWithCalibratedWhite_alpha_(0.5, 0.25).set()
+            NSRectFillUsingOperation(NSMakeRect(x, top, bar, height), NSCompositeSourceOver)
+            lit = height * max(0.0, min(1.0, level))
+            if lit > 0:
+                if level > 0.95:
+                    NSColor.colorWithCalibratedRed_green_blue_alpha_(0.86, 0.24, 0.16, 1.0).set()
+                elif level > 0.8:
+                    NSColor.colorWithCalibratedRed_green_blue_alpha_(0.9, 0.7, 0.12, 1.0).set()
+                else:
+                    NSColor.colorWithCalibratedRed_green_blue_alpha_(0.24, 0.7, 0.3, 1.0).set()
+                # the view is flipped: the bottom of the bar is at top + height
+                NSRectFillUsingOperation(NSMakeRect(x, top + height - lit, bar, lit), NSCompositeSourceOver)
+        return left
 
     @objc.python_method
     def drawPresenceIcon(self):

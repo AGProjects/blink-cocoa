@@ -76,6 +76,7 @@ import FancyTabSwitcher
 import ParticipantsTableView
 import RadioPTT
 import ConferenceDevices     # also registers <agp-conf:participant_id>, user_agent, instance_id
+import ConferenceLevels
 from BlinkLogger import BlinkLogger
 from ChatPrivateMessageController import ChatPrivateMessageController
 from MediaStream import STREAM_CONNECTED, STREAM_WAITING_DNS_LOOKUP
@@ -221,6 +222,10 @@ class ChatWindowController(NSWindowController):
             self.refresh_drawer_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(0.3, self, "refreshDrawerTimer:", None, True)
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.refresh_drawer_timer, NSModalPanelRunLoopMode)
             NSRunLoop.currentRunLoop().addTimer_forMode_(self.refresh_drawer_timer, NSDefaultRunLoopMode)
+            # the participants' VU meters, from the RFC 6465 levels a conference focus sends (ConferenceLevels)
+            self.levels_timer = NSTimer.timerWithTimeInterval_target_selector_userInfo_repeats_(0.1, self, "levelsTimer:", None, True)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.levels_timer, NSModalPanelRunLoopMode)
+            NSRunLoop.currentRunLoop().addTimer_forMode_(self.levels_timer, NSDefaultRunLoopMode)
 
             self.backend = SIPManager()
 
@@ -526,6 +531,8 @@ class ChatWindowController(NSWindowController):
     def _NH_SIPApplicationWillEnd(self, sender, data):
         if self.refresh_drawer_timer:
             self.refresh_drawer_timer.invalidate()
+        if getattr(self, 'levels_timer', None):
+            self.levels_timer.invalidate()
         if self.contact_timer:
             self.contact_timer.invalidate()
 
@@ -1650,6 +1657,20 @@ class ChatWindowController(NSWindowController):
 
             self.toolbar.validateVisibleItems()
 
+    def levelsTimer_(self, timer):
+        session = self.selectedSessionController()
+        if session is None or not session.remote_focus:
+            return
+        try:
+            handler = session.streamHandlerOfType("audio")
+            stream = handler.stream if handler is not None else None
+            contacts = [contact for contact in self.participants if getattr(contact, 'device', None) is not None]
+            if ConferenceLevels.participant_levels(stream, contacts, getattr(session, 'conference_bridge_ssrcs', set())):
+                self.participantsTableView.setNeedsDisplay_(True)
+        except Exception:
+            import traceback
+            BlinkLogger().log_error("Cannot update the participants' audio levels: %s" % traceback.format_exc())
+
     def refreshDrawerTimer_(self, timer):
         if self.refresh_drawer_counter:
             self.refresh_drawer_counter = 0
@@ -1682,6 +1703,9 @@ class ChatWindowController(NSWindowController):
             self.participantMenu.itemWithTag_(CONFERENCE_ROOM_MENU_SILENCE_NOTIFICATIONS).setState_(NSOnState if chat_stream.silence_notifications else NSOffState)
 
         participants, self.participants = self.participants, []
+        # the meters of the participants, kept across the rebuild (ConferenceLevels)
+        old_levels = {(contact.uri, frozenset(contact.device.ids)): getattr(contact, 'audio_levels', None)
+                      for contact in participants if getattr(contact, 'device', None) is not None}
         for item in set(participants).difference(session.invited_participants if session else []):
             item.destroy()
         del participants
@@ -1851,6 +1875,9 @@ class ChatWindowController(NSWindowController):
                     contact.device = device
                     contact.multi_device = multi_device
                     contact.this_device = this_device
+                    contact.webrtc = bool(device.webrtc)
+                    contact.audio_ssrcs = ConferenceLevels.media_ssrcs(device)
+                    contact.audio_levels = old_levels.get((uri, frozenset(device.ids)))     # until the levels timer has fresh ones
                     if multi_device and device.label:
                         contact.detail = NSLocalizedString("%s (this device)", "Contact detail") % device.label if this_device else device.label
 
