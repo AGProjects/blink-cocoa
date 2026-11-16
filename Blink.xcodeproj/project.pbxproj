@@ -795,6 +795,8 @@
 		ADFEED000000000000000001 /* PlaybackMonitor.py in Resources */ = {isa = PBXBuildFile; fileRef = ADFEED000000000000000000 /* PlaybackMonitor.py */; };
 		ADFEED000000000000000003 /* PlaybackMonitor.py in Resources */ = {isa = PBXBuildFile; fileRef = ADFEED000000000000000000 /* PlaybackMonitor.py */; };
 		B199B0EA7AEFF92918BF5138 /* AvatarConflictPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 357D1EE3CE09B6CB0F7E08D5 /* AvatarConflictPanel.py */; };
+		CE1E00000000000000000002 /* ConferenceLevels.py in Resources */ = {isa = PBXBuildFile; fileRef = CE1E00000000000000000001 /* ConferenceLevels.py */; };
+		CE1E00000000000000000003 /* ConferenceLevels.py in Resources */ = {isa = PBXBuildFile; fileRef = CE1E00000000000000000001 /* ConferenceLevels.py */; };
 		DD1A00000000000000000002 /* DataImport.py in Resources */ = {isa = PBXBuildFile; fileRef = DD1A00000000000000000001 /* DataImport.py */; };
 		DD1A00000000000000000004 /* DataImportPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = DD1A00000000000000000003 /* DataImportPanel.py */; };
 		DD1A00000000000000000006 /* DataManage.py in Resources */ = {isa = PBXBuildFile; fileRef = DD1A00000000000000000005 /* DataManage.py */; };
@@ -1674,6 +1676,7 @@
 		AD00000000000000C5900000 /* CuteMusic.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = CuteMusic.py; sourceTree = "<group>"; };
 		AD00000000000000C5A00000 /* ag-cute-music.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "ag-cute-music.png"; path = "icons/ag-cute-music.png"; sourceTree = "<group>"; };
 		ADFEED000000000000000000 /* PlaybackMonitor.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = PlaybackMonitor.py; sourceTree = "<group>"; };
+		CE1E00000000000000000001 /* ConferenceLevels.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ConferenceLevels.py; sourceTree = "<group>"; };
 		DD1A00000000000000000001 /* DataImport.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = DataImport.py; sourceTree = "<group>"; };
 		DD1A00000000000000000003 /* DataImportPanel.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = DataImportPanel.py; sourceTree = "<group>"; };
 		DD1A00000000000000000005 /* DataManage.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = DataManage.py; sourceTree = "<group>"; };
@@ -2271,6 +2274,7 @@
 				4F7410FEAB8A4215BAEDD154 /* KeyStorage.py */,
 				1F2D05C515A459DA00A7079A /* ContactController.py */,
 				2BC594740FCCDA910017CB1B /* ContactCell.py */,
+				CE1E00000000000000000001 /* ConferenceLevels.py */,
 				2BAF38080FE088C70040117A /* Contact.xib */,
 				2B4CA93110AA5FAE00D5F19E /* GroupController.py */,
 				2B068492C79CC554E4C527B0 /* KeyEscrow.py */,
@@ -2677,6 +2681,7 @@
 				1F762C321D9C75FA00F3D455 /* memory_debug.py in Resources */,
 				1F22729612B554F50010A8B2 /* ContactWindowController.py in Resources */,
 				1F22729712B554F50010A8B2 /* ContactCell.py in Resources */,
+				CE1E00000000000000000002 /* ConferenceLevels.py in Resources */,
 				1F22729812B554F50010A8B2 /* ContactListModel.py in Resources */,
 				6CBAA7DFDC18422D94A76FE7 /* KeyStorage.py in Resources */,
 				1F22729A12B554F50010A8B2 /* reconnect.png in Resources */,
@@ -3022,6 +3027,7 @@
 				5A1E00010000000000000013 /* ShareController.py in Resources */,
 				2B6596C10FCCB75500FC8CF2 /* ContactWindowController.py in Resources */,
 				2BC594750FCCDA910017CB1B /* ContactCell.py in Resources */,
+				CE1E00000000000000000003 /* ConferenceLevels.py in Resources */,
 				2BC596600FCE1EA90017CB1B /* ContactListModel.py in Resources */,
 				4223CE0CEF0142AC8B96E9A2 /* KeyStorage.py in Resources */,
 				2B24517A0FCF8A9F0023DBFB /* reconnect.png in Resources */,
