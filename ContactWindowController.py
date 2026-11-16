@@ -3739,6 +3739,15 @@ class ContactWindowController(NSWindowController):
         self.backend.set_delegate(self)
 
     @objc.python_method
+    def _bellImage(self, name):
+        # bellon/belloff ship as 1022px artwork (511pt); left unsized, the
+        # cell draws them at full size and they spill over the window.
+        image = NSImage.imageNamed_(name)
+        if image is not None:
+            image.setSize_(NSMakeSize(18, 18))
+        return image
+
+    @objc.python_method
     def setupFinished(self):
         # BlinkLogger().log_info('startup: setupFinished mute/silent state')
         if self.backend.is_muted():
@@ -3749,10 +3758,10 @@ class ContactWindowController(NSWindowController):
             self.muteButton.setState_(NSOffState)
 
         if self.backend.is_silent():
-            self.silentButton.setImage_(NSImage.imageNamed_("belloff"))
+            self.silentButton.setImage_(self._bellImage("belloff"))
             self.silentButton.setState_(NSOnState)
         else:
-            self.silentButton.setImage_(NSImage.imageNamed_("bellon"))
+            self.silentButton.setImage_(self._bellImage("bellon"))
             self.silentButton.setState_(NSOffState)
         active = self.activeAccount()
         if active and active.display_name != self.nameText.stringValue():
@@ -9459,10 +9468,10 @@ class ContactWindowController(NSWindowController):
         settings = SIPSimpleSettings()
         if "audio.silent" in notification.data.modified:
             if self.backend.is_silent():
-                self.silentButton.setImage_(NSImage.imageNamed_("belloff"))
+                self.silentButton.setImage_(self._bellImage("belloff"))
                 self.silentButton.setState_(NSOnState)
             else:
-                self.silentButton.setImage_(NSImage.imageNamed_("bellon"))
+                self.silentButton.setImage_(self._bellImage("bellon"))
                 self.silentButton.setState_(NSOffState)
 
         if "gui.mangle_contacts" in notification.data.modified:
