@@ -614,7 +614,8 @@ class ContactCell(NSTextFieldCell):
                     NSColor.colorWithCalibratedRed_green_blue_alpha_(0.24, 0.7, 0.3, 1.0).set()
                 # the view is flipped: the bottom of the bar is at top + height
                 NSRectFillUsingOperation(NSMakeRect(x, top + height - lit, bar, lit), NSCompositeSourceOver)
-        return left
+        # the next icon is placed a bare icon width left of this edge: leave it some room off the meter
+        return left - 4.0
 
     @objc.python_method
     def drawPresenceIcon(self):
