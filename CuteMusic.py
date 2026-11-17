@@ -19,7 +19,7 @@
   call on its usual output.
 """
 
-__all__ = ['CuteMusicLink', 'selected', 'device_name', 'menu_devices', 'unavailable_reason', 'open_mixer']
+__all__ = ['CuteMusicLink', 'selected', 'device_name', 'menu_devices', 'highlight_menu_device', 'unavailable_reason', 'open_mixer']
 
 import fcntl
 import json
@@ -46,6 +46,7 @@ MUSIC_SAMPLE_RATE = 48000
 
 DEVICE_NAME = 'AG Podcast Mixer'
 DRIVER = '/Library/Audio/Plug-Ins/HAL/AGPodcastMixer.driver'
+FEED_NAME = 'AG Podcast Mixer Feed'      # the driver's output AG CuteMusic plays into: not for Blink
 
 
 def _engine():
@@ -166,11 +167,24 @@ def menu_devices(devices):
     """The Devices menu's list: AG Podcast Mixer first when it is there; when it is not, the title of a greyed out
     item saying why (always shown), else None."""
     name = device_name()
-    devices = list(devices)
+    # the driver's Feed: AG CuteMusic's output into the driver, never Blink's (listed by macOS so GStreamer can open it)
+    devices = [device for device in devices if device != FEED_NAME]
     if name in devices:
         return [name] + [device for device in devices if device != name], None
     reason = unavailable_reason()
     return devices, ('%s (%s)' % (name, reason) if reason else None)
+
+
+def highlight_menu_device(item, device):
+    """The Devices menu's AG Podcast Mixer item on a blue background (its title; the state's tick kept): found at a
+    glance among the other devices."""
+    if device != device_name():
+        return
+    from AppKit import NSAttributedString, NSBackgroundColorAttributeName, NSColor, NSFont, NSFontAttributeName
+    title = ' %s ' % item.title()
+    attributes = {NSBackgroundColorAttributeName: NSColor.systemBlueColor().colorWithAlphaComponent_(0.35),
+                  NSFontAttributeName: NSFont.menuFontOfSize_(0)}
+    item.setAttributedTitle_(NSAttributedString.alloc().initWithString_attributes_(title, attributes))
 
 
 def selected(settings=None):
@@ -201,8 +215,8 @@ class CuteMusicLink(object, metaclass=Singleton):
         self._timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(2.0, NSApp.delegate(), 'callTimerObject:', self._tick, True)
         NotificationCenter().add_observer(self, name='CFGSettingsObjectDidChange', sender=SIPSimpleSettings())
         self._apply_music_mode()
-        if not self.running and selected():        # chosen, but AG CuteMusic is gone: as an unplugged headset
-            self._fall_back()
+        # (chosen while AG CuteMusic's mixer is down: kept; with the driver the device is always there, silent until
+        # the mixer comes up, Blink started before or after it)
 
     def stop(self):
         if self._timer is not None:
@@ -244,15 +258,6 @@ class CuteMusicLink(object, metaclass=Singleton):
             except Exception as e:
                 BlinkLogger().log_info('Cannot refresh the sound devices: %s' % e)
         self._publish_calls()
-
-    def _fall_back(self):
-        settings = SIPSimpleSettings()
-        BlinkLogger().log_info('%s chosen but AG CuteMusic is not running: the system default devices' % device_name())
-        if settings.audio.input_device == device_name():
-            settings.audio.input_device = 'system_default'
-        if settings.audio.output_device == device_name():
-            settings.audio.output_device = 'system_default'
-        settings.save()
 
     # Music mode
 
@@ -332,7 +337,13 @@ class CuteMusicLink(object, metaclass=Singleton):
                 audio = controller.streamHandlerOfType('audio')
                 address = str(controller.target_uri).replace('sip:', '', 1)
                 name = controller.titleShort or address
-                calls.append({'kind': 'call', 'name': name, 'address': address, 'held': bool(getattr(audio, 'holdByLocal', False))})
+                call = {'kind': 'call', 'name': name, 'address': address, 'held': bool(getattr(audio, 'holdByLocal', False))}
+                statistics = getattr(audio, 'statistics', None) or {}
+                if getattr(audio, 'last_stats', None) is not None:      # measured (the session info window's figures)
+                    call['rtt'] = int(round(2 * (statistics.get('rtt') or 0)))            # ms, the round trip (Blink keeps half)
+                    call['loss_rx'] = round(float(statistics.get('loss_rx') or 0), 1)     # %, what we receive
+                    call['loss_tx'] = round(float(statistics.get('loss_tx') or 0), 1)     # %, what they receive
+                calls.append(call)
             except Exception:
                 continue
         calls.sort(key=lambda call: call['held'])

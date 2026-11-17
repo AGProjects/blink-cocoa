@@ -179,7 +179,7 @@ from util import allocate_autorelease_pool, format_date, format_identity_to_stri
 from util import pstn_uri_spellings_for_accounts, is_conference_uri, call_later, active_account_uris, preferred_media_choice
 from HistoryManager import block_contacts, unblock_contacts, _blocked_group
 from StereoCalls import StereoCalls, stereo_available
-from CuteMusic import menu_devices
+from CuteMusic import menu_devices, highlight_menu_device
 from util import log_gui_exception, run_in_gui_thread, sip_prefix_pattern, sipuri_components_from_string, translate_alpha2digit, AccountInfo, utc_to_local
 
 
@@ -7860,6 +7860,7 @@ class ContactWindowController(NSWindowController):
                 item.setTarget_(self)
                 item.setTag_(tag * 100 + i)
                 item.setIndentationLevel_(2)
+                highlight_menu_device(item, dev)     # AG Podcast Mixer: on a blue background, found at a glance
                 i += 1
                 item.setState_(NSOnState if value == dev else NSOffState)
                 index += 1
@@ -7968,6 +7969,7 @@ class ContactWindowController(NSWindowController):
                     item.setTarget_(self)
                     item.setTag_(tag*100+i)
                     item.setIndentationLevel_(2)
+                    highlight_menu_device(item, dev)     # AG Podcast Mixer: on a blue background, found at a glance
                     i += 1
                     index += 1
 
