@@ -12,6 +12,11 @@
   settings before are kept (cutemusic.json) and put back when another input is chosen.
 - blink.lock is held while Blink runs (AG CuteMusic shows its BLINK strip then) and calls.json says who is in the
   calls (shown at the top of that strip).
+- v2, the AG Podcast Mixer driver (AG CuteMusic installs it, /Library/Audio/Plug-Ins/HAL/AGPodcastMixer.driver):
+  "AG Podcast Mixer" is then a CoreAudio input like any other, there while the mixer runs (the SDK's
+  AudioDevicesDidChange as for a device plugged in), the only way for a sandboxed Blink (Blink Pro). The SDK's own
+  device is not listed then (AG CuteMusic holds no mixer.lock): one "AG Podcast Mixer", input only; Blink plays the
+  call on its usual output.
 """
 
 __all__ = ['CuteMusicLink', 'selected', 'device_name', 'menu_devices', 'unavailable_reason', 'open_mixer']
@@ -39,14 +44,38 @@ from Foundation import NSLocalizedString
 MUSIC_SAMPLE_RATE = 48000
 
 
+DEVICE_NAME = 'AG Podcast Mixer'
+DRIVER = '/Library/Audio/Plug-Ins/HAL/AGPodcastMixer.driver'
+
+
 def _engine():
-    engine = SIPApplication.engine
-    return engine if engine is not None and hasattr(engine, 'podcast_mixer_available') else None
+    return SIPApplication.engine
+
+
+def _link_dir():
+    """The SDK's link directory (v1), None with an SDK without the link."""
+    engine = _engine()
+    return getattr(engine, 'podcast_mixer_dir', None) if engine is not None else None
 
 
 def device_name():
     engine = _engine()
-    return engine.podcast_mixer_device if engine is not None else 'AG Podcast Mixer'
+    return getattr(engine, 'podcast_mixer_device', DEVICE_NAME) if engine is not None else DEVICE_NAME
+
+
+def driver_installed():
+    """Whether the AG Podcast Mixer driver is installed (v2)."""
+    return os.path.isdir(DRIVER)
+
+
+def sandboxed():
+    """Blink Pro (App Sandbox): no SDK link (its directory is another app's), only the driver."""
+    return 'APP_SANDBOX_CONTAINER_ID' in os.environ
+
+
+def _mixer_running(engine):
+    """The device there: the driver's input listed, or the SDK's link up."""
+    return device_name() in engine.input_devices or bool(getattr(engine, 'podcast_mixer_available', False))
 
 
 BUNDLE_ID = 'com.ag-projects.ag-cute-music'
@@ -60,13 +89,22 @@ def installed():
         return False
 
 
+def _app_running():
+    """Whether AG CuteMusic runs as an app (one run from its source tree: only its cutemusic.lock says so)."""
+    from AppKit import NSRunningApplication
+    try:
+        return bool(NSRunningApplication.runningApplicationsWithBundleIdentifier_(BUNDLE_ID))
+    except Exception:
+        return False
+
+
 def _held(name):
     """Whether another process holds an exclusive flock on name in the link's directory."""
-    engine = _engine()
-    if engine is None:
+    directory = _link_dir()
+    if directory is None:
         return False
     try:
-        with open(os.path.join(engine.podcast_mixer_dir, name), 'rb') as file:
+        with open(os.path.join(directory, name), 'rb') as file:
             try:
                 fcntl.flock(file.fileno(), fcntl.LOCK_SH | fcntl.LOCK_NB)
             except OSError:
@@ -82,25 +120,27 @@ def unavailable_reason():
     engine = _engine()
     if engine is None:
         return None
-    if engine.podcast_mixer_device in engine.input_devices:
+    if device_name() in engine.input_devices:
         return None
-    if engine.podcast_mixer_available:
+    if getattr(engine, 'podcast_mixer_available', False):
         return NSLocalizedString("starting", "Menu item")      # listed at the next refresh (2 s)
-    if _held('cutemusic.lock'):     # AG CuteMusic runs, its mixer is off
+    if not installed() and not _held('cutemusic.lock'):
+        return NSLocalizedString("install AG CuteMusic", "Menu item")
+    if not driver_installed() and (sandboxed() or _link_dir() is None):     # no link here: the driver or nothing
+        return NSLocalizedString("install the driver from AG CuteMusic's Play menu", "Menu item")
+    if _held('cutemusic.lock') or _app_running():     # AG CuteMusic runs, its mixer is off
         return NSLocalizedString("turn on POWER in AG CuteMusic's mixer", "Menu item")
-    if installed():
-        return NSLocalizedString("start AG CuteMusic", "Menu item")
-    return NSLocalizedString("install AG CuteMusic", "Menu item")
+    return NSLocalizedString("start AG CuteMusic", "Menu item")
 
 
 def open_mixer():
     """AG CuteMusic in front, on its Mixer view: asked through the link's directory (show-mixer.request, which it
     checks twice a second); started with --mixer when it is installed but not running."""
-    engine = _engine()
-    if engine is not None:
+    directory = _link_dir()
+    if directory is not None and not sandboxed():
         try:
-            os.makedirs(engine.podcast_mixer_dir, mode=0o700, exist_ok=True)
-            with open(os.path.join(engine.podcast_mixer_dir, 'show-mixer.request'), 'w'):
+            os.makedirs(directory, mode=0o700, exist_ok=True)
+            with open(os.path.join(directory, 'show-mixer.request'), 'w'):
                 pass
         except OSError as e:
             BlinkLogger().log_info('Cannot ask AG CuteMusic for its mixer: %s' % e)
@@ -154,8 +194,9 @@ class CuteMusicLink(object, metaclass=Singleton):
         engine = _engine()
         if engine is None or self._timer is not None:
             return
-        self.running = engine.podcast_mixer_available
-        self._hold_lock(engine.podcast_mixer_dir)
+        self.running = _mixer_running(engine)
+        if _link_dir() is not None and not sandboxed():
+            self._hold_lock(_link_dir())
         # (BlinkAppDelegate.callTimerObject_ calls the timer's userInfo: this is no NSObject to be a timer's target)
         self._timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(2.0, NSApp.delegate(), 'callTimerObject:', self._tick, True)
         NotificationCenter().add_observer(self, name='CFGSettingsObjectDidChange', sender=SIPSimpleSettings())
@@ -194,7 +235,7 @@ class CuteMusicLink(object, metaclass=Singleton):
         engine = _engine()
         if engine is None:
             return
-        running = engine.podcast_mixer_available
+        running = _mixer_running(engine)
         if running != self.running:
             self.running = running
             BlinkLogger().log_info('AG CuteMusic %s' % ('runs: %s listed' % device_name() if running else 'is gone: %s no longer listed' % device_name()))
@@ -277,8 +318,8 @@ class CuteMusicLink(object, metaclass=Singleton):
     # Who is in the calls, for AG CuteMusic's BLINK strip
 
     def _calls_path(self):
-        engine = _engine()
-        return os.path.join(engine.podcast_mixer_dir, 'calls.json') if engine is not None else None
+        directory = _link_dir()
+        return os.path.join(directory, 'calls.json') if directory is not None else None
 
     def _calls(self):
         from SessionController import SessionControllersManager
