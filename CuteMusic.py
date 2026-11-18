@@ -11,7 +11,9 @@
 - Chosen as the input, calls carry music (music mode): echo cancelling off, 48 kHz and the SDK in stereo. The
   settings before are kept (cutemusic.json) and put back when another input is chosen.
 - blink.lock is held while Blink runs (AG CuteMusic shows its BLINK strip then) and calls.json says who is in the
-  calls (shown at the top of that strip).
+  calls (shown at the top of that strip). AG CuteMusic's HANG UP and REDIAL buttons ask through blink.request.
+- With the driver (v2), the same over the device's control channel ('agbc': our calls and redial target, every 2 s;
+  'agrq': AG CuteMusic's request, listened to): the only way for Blink Pro (sandboxed), used by Blink classic too.
 - v2, the AG Podcast Mixer driver (AG CuteMusic installs it, /Library/Audio/Plug-Ins/HAL/AGPodcastMixer.driver):
   "AG Podcast Mixer" is then a CoreAudio input like any other, there while the mixer runs (the SDK's
   AudioDevicesDidChange as for a device plugged in), the only way for a sandboxed Blink (Blink Pro). The SDK's own
@@ -21,9 +23,12 @@
 
 __all__ = ['CuteMusicLink', 'selected', 'device_name', 'menu_devices', 'highlight_menu_device', 'unavailable_reason', 'open_mixer']
 
+import ctypes
 import fcntl
 import json
 import os
+import struct
+import sys
 
 from AppKit import NSApp, NSWorkspace
 from Foundation import NSTimer
@@ -193,6 +198,153 @@ def selected(settings=None):
     return settings.audio.input_device == device_name()
 
 
+# The control channel on "AG Podcast Mixer" (the AG Podcast Mixer driver, v2): two custom CFString properties of the
+# device, reached through CoreAudio by any app, a sandboxed one too. 'agbc': each Blink's calls, set as
+# "<pid> <json>", read as {"<pid>": <json>, ...}; 'agrq': AG CuteMusic's last request, {"seq", "pid", "op", ...}.
+
+CONTROL_DEVICE_UID = 'com.ag-projects.podcast-mixer.input'
+
+
+def _fourcc(code):
+    return struct.unpack('>I', code.encode('ascii'))[0]
+
+
+BLINK_CALLS = _fourcc('agbc')
+REQUEST = _fourcc('agrq')
+_TRANSLATE_UID = _fourcc('uidd')        # kAudioHardwarePropertyTranslateUIDToDevice
+_SCOPE_GLOBAL = _fourcc('glob')
+_SYSTEM_OBJECT = 1
+_UTF8 = 0x08000100
+
+
+class _Address(ctypes.Structure):
+    _fields_ = [('mSelector', ctypes.c_uint32), ('mScope', ctypes.c_uint32), ('mElement', ctypes.c_uint32)]
+
+
+_ListenerProc = ctypes.CFUNCTYPE(ctypes.c_int32, ctypes.c_uint32, ctypes.c_uint32, ctypes.POINTER(_Address), ctypes.c_void_p)
+
+
+class _Libraries(object):
+    def __init__(self):
+        self.ca = ctypes.CDLL('/System/Library/Frameworks/CoreAudio.framework/CoreAudio')
+        self.cf = ctypes.CDLL('/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation')
+        cf, ca = self.cf, self.ca
+        cf.CFStringCreateWithCString.restype = ctypes.c_void_p
+        cf.CFStringCreateWithCString.argtypes = [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_uint32]
+        cf.CFStringGetLength.restype = ctypes.c_long
+        cf.CFStringGetLength.argtypes = [ctypes.c_void_p]
+        cf.CFStringGetMaximumSizeForEncoding.restype = ctypes.c_long
+        cf.CFStringGetMaximumSizeForEncoding.argtypes = [ctypes.c_long, ctypes.c_uint32]
+        cf.CFStringGetCString.restype = ctypes.c_bool
+        cf.CFStringGetCString.argtypes = [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_long, ctypes.c_uint32]
+        cf.CFRelease.restype = None
+        cf.CFRelease.argtypes = [ctypes.c_void_p]
+        ca.AudioObjectGetPropertyData.restype = ctypes.c_int32
+        ca.AudioObjectGetPropertyData.argtypes = [ctypes.c_uint32, ctypes.POINTER(_Address), ctypes.c_uint32, ctypes.c_void_p,
+                                                  ctypes.POINTER(ctypes.c_uint32), ctypes.c_void_p]
+        ca.AudioObjectSetPropertyData.restype = ctypes.c_int32
+        ca.AudioObjectSetPropertyData.argtypes = [ctypes.c_uint32, ctypes.POINTER(_Address), ctypes.c_uint32, ctypes.c_void_p,
+                                                  ctypes.c_uint32, ctypes.c_void_p]
+        ca.AudioObjectAddPropertyListener.restype = ctypes.c_int32
+        ca.AudioObjectAddPropertyListener.argtypes = [ctypes.c_uint32, ctypes.POINTER(_Address), _ListenerProc, ctypes.c_void_p]
+        ca.AudioObjectRemovePropertyListener.restype = ctypes.c_int32
+        ca.AudioObjectRemovePropertyListener.argtypes = [ctypes.c_uint32, ctypes.POINTER(_Address), _ListenerProc, ctypes.c_void_p]
+
+    def cfstring(self, text):
+        return self.cf.CFStringCreateWithCString(None, text.encode('utf-8'), _UTF8)
+
+    def text(self, cfstring):
+        size = self.cf.CFStringGetMaximumSizeForEncoding(self.cf.CFStringGetLength(cfstring), _UTF8) + 1
+        buffer = ctypes.create_string_buffer(size)
+        if not self.cf.CFStringGetCString(cfstring, buffer, size, _UTF8):
+            return None
+        return buffer.value.decode('utf-8', 'replace')
+
+
+_libraries = None
+
+
+def _libs():
+    global _libraries
+    if _libraries is None and sys.platform == 'darwin':
+        try:
+            _libraries = _Libraries()
+        except OSError:
+            _libraries = False
+    return _libraries or None
+
+
+def control_device():
+    """The AudioObjectID of "AG Podcast Mixer" (the driver installed and loaded), else None."""
+    libs = _libs()
+    if libs is None:
+        return None
+    uid = ctypes.c_void_p(libs.cfstring(CONTROL_DEVICE_UID))
+    device = ctypes.c_uint32(0)
+    size = ctypes.c_uint32(ctypes.sizeof(device))
+    address = _Address(_TRANSLATE_UID, _SCOPE_GLOBAL, 0)
+    try:
+        status = libs.ca.AudioObjectGetPropertyData(_SYSTEM_OBJECT, ctypes.byref(address), ctypes.sizeof(uid),
+                                                    ctypes.byref(uid), ctypes.byref(size), ctypes.byref(device))
+    finally:
+        libs.cf.CFRelease(uid)
+    return device.value if status == 0 and device.value else None
+
+
+def get_property(device, selector):
+    """A control property's text, None when it cannot be read (an older driver: no such property)."""
+    libs = _libs()
+    if libs is None or device is None:
+        return None
+    value = ctypes.c_void_p(0)
+    size = ctypes.c_uint32(ctypes.sizeof(value))
+    address = _Address(selector, _SCOPE_GLOBAL, 0)
+    if libs.ca.AudioObjectGetPropertyData(device, ctypes.byref(address), 0, None, ctypes.byref(size), ctypes.byref(value)) != 0 or not value.value:
+        return None
+    try:
+        return libs.text(value)
+    finally:
+        libs.cf.CFRelease(value)
+
+
+def set_property(device, selector, text):
+    """Set a control property; the OSStatus (0: done)."""
+    libs = _libs()
+    if libs is None or device is None:
+        return -1
+    value = ctypes.c_void_p(libs.cfstring(text))
+    address = _Address(selector, _SCOPE_GLOBAL, 0)
+    try:
+        return libs.ca.AudioObjectSetPropertyData(device, ctypes.byref(address), 0, None, ctypes.sizeof(value), ctypes.byref(value))
+    finally:
+        libs.cf.CFRelease(value)
+
+
+class PropertyListener(object):
+    """callback() whenever the property is set (called on a CoreAudio thread: hand it over to your own)."""
+
+    def __init__(self, device, selector, callback):
+        self.device = device
+        self._address = _Address(selector, _SCOPE_GLOBAL, 0)
+        self._callback = callback
+        self._proc = _ListenerProc(self._changed)       # kept: ctypes must not free it while CoreAudio holds it
+        libs = _libs()
+        self.active = libs is not None and libs.ca.AudioObjectAddPropertyListener(device, ctypes.byref(self._address), self._proc, None) == 0
+
+    def _changed(self, device, count, addresses, data):
+        try:
+            self._callback()
+        except Exception:
+            pass
+        return 0
+
+    def remove(self):
+        libs = _libs()
+        if self.active and libs is not None:
+            libs.ca.AudioObjectRemovePropertyListener(self.device, ctypes.byref(self._address), self._proc, None)
+        self.active = False
+
+
 @implementer(IObserver)
 class CuteMusicLink(object, metaclass=Singleton):
 
@@ -201,6 +353,10 @@ class CuteMusicLink(object, metaclass=Singleton):
         self._timer = None
         self._lock = None
         self._calls_written = None
+        self._device = None         # "AG Podcast Mixer" (the driver): the control channel
+        self._listener = None       # on its 'agrq'
+        self._seq = None            # the last request seen ('agrq', blink.request): each acted on once
+        self._control_failed = None  # the last write to 'agbc' that failed (logged once)
 
     # Start and stop
 
@@ -211,9 +367,12 @@ class CuteMusicLink(object, metaclass=Singleton):
         self.running = _mixer_running(engine)
         if _link_dir() is not None and not sandboxed():
             self._hold_lock(_link_dir())
+        self._attach_control()
         # (BlinkAppDelegate.callTimerObject_ calls the timer's userInfo: this is no NSObject to be a timer's target)
         self._timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(2.0, NSApp.delegate(), 'callTimerObject:', self._tick, True)
         NotificationCenter().add_observer(self, name='CFGSettingsObjectDidChange', sender=SIPSimpleSettings())
+        for name in self._CALL_CHANGES:
+            NotificationCenter().add_observer(self, name=name)
         self._apply_music_mode()
         # (chosen while AG CuteMusic's mixer is down: kept; with the driver the device is always there, silent until
         # the mixer comes up, Blink started before or after it)
@@ -223,7 +382,15 @@ class CuteMusicLink(object, metaclass=Singleton):
             self._timer.invalidate()
             self._timer = None
         NotificationCenter().discard_observer(self, name='CFGSettingsObjectDidChange', sender=SIPSimpleSettings())
+        for name in self._CALL_CHANGES:
+            NotificationCenter().discard_observer(self, name=name)
         self._remove_calls()
+        if self._device is not None:
+            set_property(self._device, BLINK_CALLS, str(os.getpid()))      # our entry gone from 'agbc'
+        if self._listener is not None:
+            self._listener.remove()
+            self._listener = None
+        self._device = None
         if self._lock is not None:
             try:
                 fcntl.flock(self._lock.fileno(), fcntl.LOCK_UN)
@@ -257,7 +424,9 @@ class CuteMusicLink(object, metaclass=Singleton):
                 engine.refresh_sound_devices()      # the SDK falls back to the system default for a device gone
             except Exception as e:
                 BlinkLogger().log_info('Cannot refresh the sound devices: %s' % e)
+        self._attach_control()
         self._publish_calls()
+        self._check_file_request()
 
     # Music mode
 
@@ -265,6 +434,8 @@ class CuteMusicLink(object, metaclass=Singleton):
     def handle_notification(self, notification):
         if notification.name == 'CFGSettingsObjectDidChange' and 'audio.input_device' in notification.data.modified:
             self._apply_music_mode()
+        elif notification.name in self._CALL_CHANGES and self._timer is not None:
+            self._publish_calls()       # at once, not at the next tick: AG CuteMusic follows the call's progress
 
     def _state_path(self):
         return ApplicationData.get('cutemusic.json')
@@ -326,20 +497,33 @@ class CuteMusicLink(object, metaclass=Singleton):
         directory = _link_dir()
         return os.path.join(directory, 'calls.json') if directory is not None else None
 
+    # A call's progress as AG CuteMusic shows it: its audio stream's status ('state' left out once connected)
+    _PROGRESS = {'WAITING_DNS_LOOKUP': 'dialing', 'CONNECTING': 'calling', 'RINGING': 'ringing',
+                 'INCOMING': 'incoming', 'PROPOSING': 'adding audio', 'DISCONNECTING': 'hanging up',
+                 'CANCELLING': 'hanging up'}
+
     def _calls(self):
         from SessionController import SessionControllersManager
-        from MediaStream import STATE_CONNECTED
+        from MediaStream import STATE_DNS_LOOKUP, STATE_CONNECTING, STATE_CONNECTED
         calls = []
         for controller in list(SessionControllersManager().sessionControllers):
             try:
-                if controller.state != STATE_CONNECTED or not controller.hasStreamOfType('audio'):
+                # from dialing (or ringing in) to hung up, not only while connected
+                if controller.state not in (STATE_DNS_LOOKUP, STATE_CONNECTING, STATE_CONNECTED):
                     continue
                 audio = controller.streamHandlerOfType('audio')
+                status = getattr(audio, 'status', None) if audio is not None else None
+                if status is None or status in ('IDLE', 'FAILED'):
+                    continue
                 address = str(controller.target_uri).replace('sip:', '', 1)
                 name = controller.titleShort or address
-                call = {'kind': 'call', 'name': name, 'address': address, 'held': bool(getattr(audio, 'holdByLocal', False))}
+                call = {'kind': 'call', 'id': str(controller.identifier), 'name': name, 'address': address,
+                        'held': bool(getattr(audio, 'holdByLocal', False))}
+                progress = None if status == 'CONNECTED' else self._PROGRESS.get(status)
+                if progress is not None:
+                    call['state'] = progress
                 statistics = getattr(audio, 'statistics', None) or {}
-                if getattr(audio, 'last_stats', None) is not None:      # measured (the session info window's figures)
+                if progress is None and getattr(audio, 'last_stats', None) is not None:      # measured (the session info window's figures)
                     call['rtt'] = int(round(2 * (statistics.get('rtt') or 0)))            # ms, the round trip (Blink keeps half)
                     call['loss_rx'] = round(float(statistics.get('loss_rx') or 0), 1)     # %, what we receive
                     call['loss_tx'] = round(float(statistics.get('loss_tx') or 0), 1)     # %, what they receive
@@ -349,22 +533,110 @@ class CuteMusicLink(object, metaclass=Singleton):
         calls.sort(key=lambda call: call['held'])
         return calls
 
+    # A call's progress, hold, start and end: published at once
+    _CALL_CHANGES = ('BlinkSessionChangedState', 'BlinkStreamHandlerChangedState', 'BlinkStreamHandlersChanged',
+                     'BlinkSessionDidStart', 'BlinkSessionDidEnd', 'BlinkSessionDidFail',
+                     'BlinkAudioStreamChangedHoldState')
+
+    def _redial(self):
+        """What REDIAL calls: the Status menu's Redial target, None when there is none."""
+        try:
+            uri = NSApp.delegate().contactsWindowController.sessionControllersManager.redial_uri
+        except AttributeError:
+            return None
+        return {'address': str(uri)} if uri else None
+
     def _publish_calls(self):
+        state = {'pid': os.getpid(), 'calls': self._calls(), 'redial': self._redial()}
+        # the control channel: every tick, unchanged or not (the driver forgets an entry not set for 10 s)
+        if self._device is not None:
+            status = set_property(self._device, BLINK_CALLS, '%d %s' % (os.getpid(), json.dumps(state)))
+            if status != self._control_failed:
+                if status:
+                    BlinkLogger().log_info('%s: cannot set its control channel (OSStatus %d): AG CuteMusic will not see our calls that way' % (device_name(), status))
+                elif self._control_failed is not None:
+                    BlinkLogger().log_info('%s: its control channel works again' % device_name())
+                self._control_failed = status or None
         path = self._calls_path()
         if path is None or self._lock is None:
             return
-        calls = self._calls()
-        if calls == self._calls_written:
+        if state == self._calls_written:
             return
-        self._calls_written = calls
+        self._calls_written = state
         try:
             temporary = path + '.new'
             descriptor = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
             with os.fdopen(descriptor, 'w') as file:
-                json.dump({'calls': calls}, file)
+                json.dump(state, file)
             os.replace(temporary, path)
         except OSError as e:
             BlinkLogger().log_info('Cannot write %s: %s' % (path, e))
+
+    # AG CuteMusic's requests: HANG UP, REDIAL
+
+    def _attach_control(self):
+        """The driver's control channel, once "AG Podcast Mixer" is there (also when the driver is installed or
+        coreaudiod restarted while we run: its AudioObjectID changes then)."""
+        device = control_device()
+        if device == self._device:
+            return
+        if self._listener is not None:
+            self._listener.remove()
+            self._listener = None
+        self._device = device
+        if device is None:
+            return
+        self._seq = self._request_seq(get_property(device, REQUEST))       # a request from before we started: not ours
+        self._listener = PropertyListener(device, REQUEST, self._check_request)
+        BlinkLogger().log_info('%s: control channel %s' % (device_name(), 'attached' if self._listener.active else 'not available (an older driver?)'))
+
+    @staticmethod
+    def _request_seq(text):
+        try:
+            return int(json.loads(text).get('seq'))
+        except (TypeError, ValueError, AttributeError):
+            return None
+
+    @run_in_gui_thread
+    def _check_request(self):
+        """'agrq' set (its listener, on a CoreAudio thread: handed over to ours)."""
+        if self._device is not None:
+            self._handle_request(get_property(self._device, REQUEST))
+
+    def _check_file_request(self):
+        """blink.request in the link's directory: AG CuteMusic's request to a Blink seen through calls.json."""
+        path = os.path.join(_link_dir(), 'blink.request') if self._lock is not None and _link_dir() else None
+        if path is None:
+            return
+        try:
+            with open(path) as file:
+                text = file.read()
+            os.unlink(path)
+        except OSError:
+            return
+        self._handle_request(text)
+
+    def _handle_request(self, text):
+        try:
+            request = json.loads(text)
+            seq, pid, op = int(request.get('seq')), int(request.get('pid')), request.get('op')
+        except (TypeError, ValueError, AttributeError):
+            return
+        if pid != os.getpid() or (self._seq is not None and seq <= self._seq):
+            return
+        self._seq = seq
+        if op == 'hangup':
+            from SessionController import SessionControllersManager
+            controller = next((controller for controller in list(SessionControllersManager().sessionControllers)
+                               if str(controller.identifier) == str(request.get('id'))), None)
+            if controller is None:
+                BlinkLogger().log_info('AG CuteMusic asked to hang up a call that is gone')
+                return
+            BlinkLogger().log_info('AG CuteMusic: hang up the call with %s' % controller.remoteAOR)
+            controller.end()
+        elif op == 'redial':
+            BlinkLogger().log_info('AG CuteMusic: redial')
+            NSApp.delegate().contactsWindowController.redialLast_(None)
 
     def _remove_calls(self):
         path = self._calls_path()
