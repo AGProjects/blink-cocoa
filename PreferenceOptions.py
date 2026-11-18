@@ -1095,7 +1095,9 @@ class AudioInputDeviceOption(PopUpMenuOption):
         default_device = Engine().default_input_device
         if default_device is not None and default_device.strip() in dead_inputs:
             self.popup.lastItem().setEnabled_(False)
-        for item in Engine().input_devices:
+        from CuteMusic import separate_devices
+        # AG CuteMusic's devices left out (its mixer chosen in the Devices menu's combined section; kept when chosen)
+        for item in separate_devices(Engine().input_devices, keep=getattr(SIPSimpleSettings().audio, 'input_device', None)):
             dead = item.strip() in dead_inputs
             # titles must stay unique, NSPopUpButton drops duplicates
             self.popup.addItemWithTitle_("%s \u2014 %s" % (item, unavailable) if dead else item)
@@ -1120,7 +1122,11 @@ class AudioOutputDeviceOption(PopUpMenuOption):
         self.popup.lastItem().setRepresentedObject_(None)
         self.popup.addItemWithTitle_(NSLocalizedString("System Default", "Popup title"))
         self.popup.lastItem().setRepresentedObject_("system_default")
-        for item in Engine().output_devices:
+        from CuteMusic import separate_devices
+        # AG CuteMusic's devices left out: alerts never there; the output keeps the mixer only when it is chosen
+        alert = str(getattr(self, 'option', '')).endswith('alert_device')
+        keep = None if alert else getattr(SIPSimpleSettings().audio, 'output_device', None)
+        for item in separate_devices(Engine().output_devices, keep=keep):
             self.popup.addItemWithTitle_(item)
             self.popup.lastItem().setRepresentedObject_(item)
 

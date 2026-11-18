@@ -21,7 +21,8 @@
   call on its usual output.
 """
 
-__all__ = ['CuteMusicLink', 'selected', 'device_name', 'menu_devices', 'highlight_menu_device', 'unavailable_reason', 'open_mixer']
+__all__ = ['CuteMusicLink', 'selected', 'device_name', 'menu_devices', 'separate_devices', 'podcast_device',
+           'highlight_menu_device', 'unavailable_reason', 'open_mixer']
 
 import ctypes
 import fcntl
@@ -52,6 +53,9 @@ MUSIC_SAMPLE_RATE = 48000
 DEVICE_NAME = 'AG Podcast Mixer'
 DRIVER = '/Library/Audio/Plug-Ins/HAL/AGPodcastMixer.driver'
 FEED_NAME = 'AG Podcast Mixer Feed'      # the driver's output AG CuteMusic plays into: not for Blink
+# the driver's streaming devices (AG CuteMusic's STREAMING): for a streaming app, never Blink's
+STREAMING_NAMES = ('AG Podcast Streaming', 'AG Podcast Streaming Feed')
+NOT_FOR_BLINK = (FEED_NAME,) + STREAMING_NAMES
 
 
 def _engine():
@@ -59,9 +63,10 @@ def _engine():
 
 
 def _link_dir():
-    """The SDK's link directory (v1), None with an SDK without the link."""
+    """The SDK's link directory (v1), None with an SDK without the link (macOS now: the driver only, the SDK built
+    without the rings gives '')."""
     engine = _engine()
-    return getattr(engine, 'podcast_mixer_dir', None) if engine is not None else None
+    return (getattr(engine, 'podcast_mixer_dir', None) or None) if engine is not None else None
 
 
 def device_name():
@@ -168,12 +173,24 @@ def open_mixer():
     BlinkLogger().log_info('Starting AG CuteMusic on its mixer')
 
 
+def podcast_device(name):
+    """Whether name is one of AG CuteMusic's devices (the mixer, its Feed, the streaming ones)."""
+    return bool(name) and (name == device_name() or name in NOT_FOR_BLINK)
+
+
+def separate_devices(devices, keep=None):
+    """An input, output or alert device list: AG CuteMusic's devices left out. The mixer is chosen once, in the
+    combined input and output section (menu_devices); keep: the one the setting has now, kept so that it shows."""
+    mixer = device_name()
+    return [device for device in devices if device not in NOT_FOR_BLINK and (device != mixer or device == keep)]
+
+
 def menu_devices(devices):
-    """The Devices menu's list: AG Podcast Mixer first when it is there; when it is not, the title of a greyed out
-    item saying why (always shown), else None."""
+    """The Devices menu's combined input and output list: AG Podcast Mixer first when it is there; when it is not,
+    the title of a greyed out item saying why (always shown), else None."""
     name = device_name()
-    # the driver's Feed: AG CuteMusic's output into the driver, never Blink's (listed by macOS so GStreamer can open it)
-    devices = [device for device in devices if device != FEED_NAME]
+    # the driver's Feed and streaming devices: AG CuteMusic's, never Blink's (listed by macOS for other apps)
+    devices = [device for device in devices if device not in NOT_FOR_BLINK]
     if name in devices:
         return [name] + [device for device in devices if device != name], None
     reason = unavailable_reason()
@@ -357,6 +374,7 @@ class CuteMusicLink(object, metaclass=Singleton):
         self._listener = None       # on its 'agrq'
         self._seq = None            # the last request seen ('agrq', blink.request): each acted on once
         self._control_failed = None  # the last write to 'agbc' that failed (logged once)
+        self._alert_device = None   # the alert device as last chosen, never one of AG CuteMusic's
 
     # Start and stop
 
@@ -368,6 +386,7 @@ class CuteMusicLink(object, metaclass=Singleton):
         if _link_dir() is not None and not sandboxed():
             self._hold_lock(_link_dir())
         self._attach_control()
+        self._keep_alert_device()
         # (BlinkAppDelegate.callTimerObject_ calls the timer's userInfo: this is no NSObject to be a timer's target)
         self._timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(2.0, NSApp.delegate(), 'callTimerObject:', self._tick, True)
         NotificationCenter().add_observer(self, name='CFGSettingsObjectDidChange', sender=SIPSimpleSettings())
@@ -427,15 +446,31 @@ class CuteMusicLink(object, metaclass=Singleton):
         self._attach_control()
         self._publish_calls()
         self._check_file_request()
+        self._keep_alert_device()
 
     # Music mode
 
     @run_in_gui_thread
     def handle_notification(self, notification):
+        if notification.name == 'CFGSettingsObjectDidChange' and 'audio.alert_device' in notification.data.modified:
+            self._keep_alert_device()
         if notification.name == 'CFGSettingsObjectDidChange' and 'audio.input_device' in notification.data.modified:
             self._apply_music_mode()
         elif notification.name in self._CALL_CHANGES and self._timer is not None:
             self._publish_calls()       # at once, not at the next tick: AG CuteMusic follows the call's progress
+
+    def _keep_alert_device(self):
+        """Alerts never on AG CuteMusic's devices: one set there (by hand, or by a device switch that took it along)
+        goes back to the alert device as it was before (System Default when none was known)."""
+        settings = SIPSimpleSettings()
+        current = settings.audio.alert_device
+        if not podcast_device(current):
+            self._alert_device = current
+            return
+        back = self._alert_device or 'system_default'
+        BlinkLogger().log_info('Alert device %s is AG CuteMusic\'s: back to %s' % (current, back))
+        settings.audio.alert_device = back
+        settings.save()
 
     def _state_path(self):
         return ApplicationData.get('cutemusic.json')
@@ -515,13 +550,32 @@ class CuteMusicLink(object, metaclass=Singleton):
                 status = getattr(audio, 'status', None) if audio is not None else None
                 if status is None or status in ('IDLE', 'FAILED'):
                     continue
-                address = str(controller.target_uri).replace('sip:', '', 1)
-                name = controller.titleShort or address
+                # the address always user@domain (the remote identity once known, else the target), the name only a
+                # real display name (the remote's, or the contact's): never titleShort's username without its domain
+                from util import format_identity_to_string
+                identity = getattr(controller, 'remoteIdentity', None) or controller.target_uri
+                address = format_identity_to_string(identity, format='aor') or str(controller.target_uri).replace('sip:', '', 1)
+                name = ''
+                display = getattr(controller, 'display_name', None)
+                user = address.split('@', 1)[0].lower()
+                if display and display not in ('None', address) and not str(display).startswith(('sip:', 'sips:')) \
+                        and str(display).strip().lower() != user:       # (its username as its name: not a name)
+                    name = str(display)
+                else:
+                    full = format_identity_to_string(identity, check_contact=True, format='full')
+                    if full and '<' in full and not full.startswith('<'):
+                        name = full.split('<', 1)[0].strip().strip('"')
+                        if name.lower() == user:
+                            name = ''
                 call = {'kind': 'call', 'id': str(controller.identifier), 'name': name, 'address': address,
                         'held': bool(getattr(audio, 'holdByLocal', False))}
                 progress = None if status == 'CONNECTED' else self._PROGRESS.get(status)
                 if progress is not None:
                     call['state'] = progress
+                else:       # connected: since when (epoch seconds), its duration shown counting
+                    start = getattr(getattr(controller, 'session', None), 'start_time', None)
+                    if start is not None:
+                        call['started'] = round(start.timestamp(), 1)
                 statistics = getattr(audio, 'statistics', None) or {}
                 if progress is None and getattr(audio, 'last_stats', None) is not None:      # measured (the session info window's figures)
                     call['rtt'] = int(round(2 * (statistics.get('rtt') or 0)))            # ms, the round trip (Blink keeps half)
@@ -544,7 +598,20 @@ class CuteMusicLink(object, metaclass=Singleton):
             uri = NSApp.delegate().contactsWindowController.sessionControllersManager.redial_uri
         except AttributeError:
             return None
-        return {'address': str(uri)} if uri else None
+        if not uri:
+            return None
+        # as a call's: the address user@domain, the name only a real display name ("Name <user@domain>")
+        text = str(uri).strip()
+        name, address = '', text
+        if '<' in text and text.endswith('>'):
+            name, address = text.split('<', 1)[0].strip().strip('"'), text.split('<', 1)[1][:-1]
+        for prefix in ('sip:', 'sips:'):
+            if address.startswith(prefix):
+                address = address[len(prefix):]
+        address = address.split(';', 1)[0]
+        if name.lower() == address.split('@', 1)[0].lower():
+            name = ''
+        return {'address': address, 'name': name}
 
     def _publish_calls(self):
         state = {'pid': os.getpid(), 'calls': self._calls(), 'redial': self._redial()}

@@ -153,6 +153,7 @@ class AudioController(MediaStream):
 
     status = STREAM_IDLE
     hangup_reason = None
+    ending_session = False     # hangup pressed: the whole session ends, not only its audio
     early_media = False
     audio_has_quality_issues = False
     previous_rx_bytes = 0
@@ -313,6 +314,7 @@ class AudioController(MediaStream):
             self.timer.invalidate()
         self.timer = None
         self.hangup_reason = None
+        self.ending_session = False
         self.view.removeFromSuperview()
         self.view.release()
         self.sessionController.log_debug("Dealloc %s" % self)
@@ -838,7 +840,7 @@ class AudioController(MediaStream):
 
             NSApp.delegate().contactsWindowController.updateAudioButtons()
         elif status == STREAM_DISCONNECTING:
-            if len(self.sessionController.streamHandlers) > 1:
+            if len(self.sessionController.streamHandlers) > 1 and not self.ending_session:
                 self.hangup_reason = NSLocalizedString("Audio Removed", "Audio status label")
                 self.updateAudioStatusWithSessionState(NSLocalizedString("Audio Removed", "Audio status label"))
             elif oldstatus == STREAM_WAITING_DNS_LOOKUP:
@@ -1345,8 +1347,13 @@ class AudioController(MediaStream):
             else:
                 self.startAudioRecording()
         elif action == 'hangup':
-            self.end()
+            # the whole session ends (chat, files, video with it), not just its audio
             self.user_hanged_up = True
+            if len(self.sessionController.streamHandlers) > 1:
+                self.ending_session = True
+                self.sessionController.end()
+            else:
+                self.end()
             sender.setSelected_forSegment_(False, self.hangup_segment)
         elif action == 'mute_conference':
             # mute (in conference)
