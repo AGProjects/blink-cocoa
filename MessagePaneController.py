@@ -73,7 +73,9 @@ import objc
 from application.notification import NotificationCenter, IObserver
 from application.python import Null
 from sipsimple.account import BonjourAccount
-from MediaStream import STATE_DNS_LOOKUP, STATE_CONNECTING, STATE_CONNECTED
+from MediaStream import (STATE_DNS_LOOKUP, STATE_CONNECTING, STATE_CONNECTED,
+                         STREAM_WAITING_DNS_LOOKUP, STREAM_RINGING, STREAM_CONNECTING,
+                         STREAM_PROPOSING, STREAM_CONNECTED, STREAM_INCOMING)
 from zope.interface import implementer
 
 from BlinkLogger import BlinkLogger
@@ -514,6 +516,7 @@ class MessagePaneController(NSObject):
                 # The audio | video segments follow a call to the
                 # conversation's party (updateCallSegmentState).
                 for name in ('BlinkSessionChangedState', 'BlinkStreamHandlersChanged',
+                             'BlinkStreamHandlerChangedState',
                              'BlinkSessionDidStart', 'BlinkSessionDidEnd', 'BlinkSessionDidFail'):
                     NotificationCenter().add_observer(self, name=name)
             except Exception as e:
@@ -535,6 +538,7 @@ class MessagePaneController(NSObject):
             self.updateCallSegmentState()
 
     _NH_BlinkStreamHandlersChanged = _NH_BlinkSessionChangedState
+    _NH_BlinkStreamHandlerChangedState = _NH_BlinkSessionChangedState
     _NH_BlinkSessionDidStart = _NH_BlinkSessionChangedState
     _NH_BlinkSessionDidEnd = _NH_BlinkSessionChangedState
     _NH_BlinkSessionDidFail = _NH_BlinkSessionChangedState
@@ -860,6 +864,11 @@ class MessagePaneController(NSObject):
 
     # A call that is on: being set up or connected
     _CALL_ACTIVE_STATES = (STATE_DNS_LOOKUP, STATE_CONNECTING, STATE_CONNECTED)
+    # ... and whose audio is: the session state alone lags behind the end of
+    # a call (end() in DNS lookup never leaves it, a session that was never
+    # started stays CONNECTING), which left the handset pressed and dead.
+    _AUDIO_LIVE_STATES = (STREAM_WAITING_DNS_LOOKUP, STREAM_RINGING, STREAM_CONNECTING,
+                          STREAM_PROPOSING, STREAM_CONNECTED, STREAM_INCOMING)
 
     @objc.python_method
     def _callSessionFor(self, viewer):
@@ -884,7 +893,10 @@ class MessagePaneController(NSObject):
         except Exception:
             return None
         for controller in controllers:
-            if controller.state not in self._CALL_ACTIVE_STATES or not controller.hasStreamOfType('audio'):
+            if controller.state not in self._CALL_ACTIVE_STATES:
+                continue
+            audio = controller.streamHandlerOfType('audio')
+            if audio is None or getattr(audio, 'status', None) not in self._AUDIO_LIVE_STATES:
                 continue
             if account is not None and controller.account is not account:
                 continue
@@ -906,6 +918,7 @@ class MessagePaneController(NSObject):
         if controller is None:
             control.setSelected_forSegment_(False, 0)
             control.setSelected_forSegment_(False, 1)
+            control.setEnabled_forSegment_(viewer is not None, 0)
             if not self.isConferenceViewer(viewer):
                 cell.setToolTip_forSegment_(NSLocalizedString("Start an audio call", "Tooltip"), 0)
                 cell.setToolTip_forSegment_(NSLocalizedString("Start a video call", "Tooltip"), 1)
