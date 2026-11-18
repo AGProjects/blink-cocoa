@@ -687,7 +687,7 @@ class AudioController(MediaStream):
         if error:
             self.audioStatus.setTextColor_(NSColor.redColor())
         else:
-            self.audioStatus.setTextColor_(NSColor.blackColor())
+            self.audioStatus.setTextColor_(NSColor.labelColor())
             
         formattedText = NSAttributedString.alloc().initWithString_attributes_(NSLocalizedString(text, "audio_status_Label"), NSDictionary.dictionaryWithObject_forKey_(NSColor.orangeColor(), NSForegroundColorAttributeName))
 
@@ -747,7 +747,7 @@ class AudioController(MediaStream):
                     self.audioStatus.setTextColor_(NSColor.colorWithDeviceRed_green_blue_alpha_(53/256.0, 100/256.0, 204/256.0, 1.0))
                     hd_label = NSLocalizedString("Wideband", "Label")
                 else:
-                    self.audioStatus.setTextColor_(NSColor.blackColor())
+                    self.audioStatus.setTextColor_(NSColor.labelColor())
                     hd_label = NSLocalizedString("Narrowband", "Label")
                 #self.audioStatus.setStringValue_(u"%s (%s %0.fkHz)" % (hd_label, codec, sample_rate))
                 self.setAudioStatusWithStereoSymbol("%s (%s)" % (hd_label, codec))

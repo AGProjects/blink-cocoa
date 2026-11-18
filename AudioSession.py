@@ -133,7 +133,7 @@ class AudioSession(NSView):
             NSColor.grayColor().set()
         path.stroke()
 
-        NSColor.blackColor().set()
+        NSColor.labelColor().set()
         point = NSMakePoint(8, NSMaxY(frame)-20)
         uri = format_identity_to_string(self.delegate.sessionController.remoteIdentity, check_contact=False, format='compact')
         NSString.stringWithString_(uri).drawAtPoint_withAttributes_(point,

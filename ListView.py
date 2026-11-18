@@ -23,7 +23,9 @@ class ListView(VerticalBoxView):
     def initWithFrame_(self, frame):
         self = objc.super(ListView, self).initWithFrame_(frame)
         if self:
-            self.setBackgroundColor_(NSColor.whiteColor())
+            # A dynamic colour: white in Aqua, the dark list background in
+            # Dark Aqua, re-resolved on every draw when the appearance flips.
+            self.setBackgroundColor_(NSColor.controlBackgroundColor())
             NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, "windowChangedKey:", NSWindowDidBecomeKeyNotification, None)
             NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, "windowChangedKey:", NSWindowDidResignKeyNotification, None)
         return self
@@ -47,7 +49,7 @@ class ListView(VerticalBoxView):
 
         if self.alternateRows:
             i = 0
-            NSColor.colorWithCalibratedRed_green_blue_alpha_(237/256.0, 243/256.0, 254/256.0, 1.0).set()
+            self._alternateRowColor().set()
             for v in self.subviews():
                 if i % 2 == 1:
                     NSRectFill(v.frame())
@@ -59,6 +61,22 @@ class ListView(VerticalBoxView):
             else:
                 NSColor.lightGrayColor().set()
             NSRectFill(self.subviews()[self.selection].frame())
+
+    def _isDark(self):
+        try:
+            best = self.effectiveAppearance().bestMatchFromAppearancesWithNames_(['NSAppearanceNameAqua', 'NSAppearanceNameDarkAqua'])
+            return str(best) == 'NSAppearanceNameDarkAqua'
+        except Exception:
+            return False
+
+    def _alternateRowColor(self):
+        if self._isDark():
+            # The system's own striping for dark lists
+            return NSColor.alternatingContentBackgroundColors()[1]
+        return NSColor.colorWithCalibratedRed_green_blue_alpha_(237/256.0, 243/256.0, 254/256.0, 1.0)
+
+    def viewDidChangeEffectiveAppearance(self):
+        self.setNeedsDisplay_(True)
 
     def minimumHeight(self):
         return max(VerticalBoxView.minimumHeight(self), 1)#NSHeight(self.enclosingScrollView().documentVisibleRect()))
