@@ -3744,7 +3744,7 @@ class ContactWindowController(NSWindowController):
         # cell draws them at full size and they spill over the window.
         image = NSImage.imageNamed_(name)
         if image is not None:
-            image.setSize_(NSMakeSize(18, 18))
+            image.setSize_(NSMakeSize(24, 24))
         return image
 
     @objc.python_method
