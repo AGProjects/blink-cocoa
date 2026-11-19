@@ -742,6 +742,8 @@
 		AD00000000000000005E0003 /* SylkDiscovery.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005E0000 /* SylkDiscovery.py */; };
 		AD00000000000000005F0001 /* MapTileCache.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005F0000 /* MapTileCache.py */; };
 		AD00000000000000005F0003 /* MapTileCache.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005F0000 /* MapTileCache.py */; };
+		AD00000000000000C5B00001 /* VideoroomAudio.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000C5B00000 /* VideoroomAudio.py */; };
+		AD00000000000000C5B00003 /* VideoroomAudio.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000C5B00000 /* VideoroomAudio.py */; };
 		AD0000000000000000600001 /* ContactMangler.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000600000 /* ContactMangler.py */; };
 		AD0000000000000000600003 /* ContactMangler.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000600000 /* ContactMangler.py */; };
 		AD0000000000000000610001 /* Profiles.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000610000 /* Profiles.py */; };
@@ -1649,6 +1651,7 @@
 		AD00000000000000005D0000 /* MacLocation.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MacLocation.py; sourceTree = "<group>"; };
 		AD00000000000000005E0000 /* SylkDiscovery.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SylkDiscovery.py; sourceTree = "<group>"; };
 		AD00000000000000005F0000 /* MapTileCache.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MapTileCache.py; sourceTree = "<group>"; };
+		AD00000000000000C5B00000 /* VideoroomAudio.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoroomAudio.py; sourceTree = "<group>"; };
 		AD0000000000000000600000 /* ContactMangler.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ContactMangler.py; sourceTree = "<group>"; };
 		AD0000000000000000610000 /* Profiles.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = Profiles.py; sourceTree = "<group>"; };
 		AD00000000000000006A0000 /* JournalProgressStrip.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = JournalProgressStrip.py; sourceTree = "<group>"; };
@@ -2042,6 +2045,7 @@
 				AD00000000000000760000 /* Avatars.py */,
 				AD00000000000000006F0000 /* FileTransferCache.py */,
 				AD00000000000000005F0000 /* MapTileCache.py */,
+				AD00000000000000C5B00000 /* VideoroomAudio.py */,
 				AD00000000000000004C0000 /* MessageListView.py */,
 				AD00000000000000004B0000 /* MessageBubbleView.py */,
 				AD00000000000000005C0000 /* AudioPlayback.py */,
@@ -2826,6 +2830,7 @@
 				AD00000000000000760001 /* Avatars.py in Resources */,
 				AD00000000000000006F0001 /* FileTransferCache.py in Resources */,
 				AD00000000000000005F0001 /* MapTileCache.py in Resources */,
+				AD00000000000000C5B00001 /* VideoroomAudio.py in Resources */,
 				AD00000000000000004C0001 /* MessageListView.py in Resources */,
 				AD00000000000000004B0001 /* MessageBubbleView.py in Resources */,
 				AD00000000000000005C0001 /* AudioPlayback.py in Resources */,
@@ -3174,6 +3179,7 @@
 				AD00000000000000760003 /* Avatars.py in Resources */,
 				AD00000000000000006F0003 /* FileTransferCache.py in Resources */,
 				AD00000000000000005F0003 /* MapTileCache.py in Resources */,
+				AD00000000000000C5B00003 /* VideoroomAudio.py in Resources */,
 				AD00000000000000004C0003 /* MessageListView.py in Resources */,
 				AD00000000000000004B0003 /* MessageBubbleView.py in Resources */,
 				AD00000000000000005C0003 /* AudioPlayback.py in Resources */,

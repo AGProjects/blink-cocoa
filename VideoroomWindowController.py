@@ -170,7 +170,7 @@ SESSION_NOTIFICATIONS = ('VideoroomSessionDidChangeState', 'VideoroomSessionAudi
                          'VideoroomSessionParticipantsDidChange', 'VideoroomSessionSpeakersDidChange', 'VideoroomSessionRaisedHandsDidChange',
                          'VideoroomSessionWasMutedByOther', 'VideoroomSessionGotInviteStatus', 'VideoroomSessionSpeakingDidChange',
                          'VideoroomSessionParticipantSpeakingDidChange', 'VideoroomSessionLocalVideoDidChange',
-                         'VideoroomSessionExtraVideoDidChangeState')
+                         'VideoroomSessionExtraVideoDidChangeState', 'VideoroomSessionHoldDidChange')
 
 _windows = {}       # session -> VideoroomWindowController
 
@@ -2105,7 +2105,12 @@ class VideoroomWindowController(NSObject):
             minutes, seconds = divmod(rest, 60)
             parts.append('%d:%02d:%02d' % (hours, minutes, seconds) if hours else '%02d:%02d' % (minutes, seconds))
         self.window.setTitle_('  ·  '.join(parts))
-        if time.monotonic() >= self.flash_until and not self.statusLabel.isHidden():
+        if time.monotonic() < self.flash_until:
+            return
+        if getattr(self.session, 'on_hold', False):
+            # held while another call in the Audio drawer has the focus (VideoroomAudio.py): said for as long as it lasts
+            self.setStatus(_t("On hold: select this conference in the Audio drawer to resume"))
+        elif not self.statusLabel.isHidden():
             self.setStatus(None)     # once connected the title says it; the pill is for connecting, ending and notes
 
     @objc.python_method
@@ -2566,6 +2571,10 @@ class VideoroomWindowController(NSObject):
     @objc.python_method
     def _NH_VideoroomSessionAudioMutedDidChange(self, notification):
         self.updateMuteButton()
+
+    @objc.python_method
+    def _NH_VideoroomSessionHoldDidChange(self, notification):
+        self.updateTitle()
 
     @objc.python_method
     def _NH_VideoroomSessionVideoMutedDidChange(self, notification):

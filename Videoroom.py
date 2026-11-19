@@ -56,6 +56,7 @@ Notifications (sender the VideoroomSession):
 
   VideoroomSessionDidChangeState          state, reason, room
   VideoroomSessionAudioMutedDidChange     muted, room
+  VideoroomSessionHoldDidChange           on_hold, room (VideoroomAudio.py: the room's box in the Audio drawer)
   VideoroomSessionVideoMutedDidChange     muted, room
   VideoroomSessionParticipantDidJoin      participant
   VideoroomSessionParticipantDidLeave     participant
@@ -78,6 +79,12 @@ with parent (the owner's publisher id) and label. Someone else's are participant
 named "<owner> · <label>" (no microphone, no hand of their own); ours are ExtraVideo
 objects (session.extra_videos), shown from their own track, and the room's publishers
 event for them is skipped.
+
+On hold (VideoroomAudio.py): one audio call at a time, as for SIP calls. The room
+is put on hold when another call in the Audio drawer takes the focus; WebRTC has
+no hold, so it is local only: our microphone track and the audio track of every
+feed (the SIP callers' bridge too) are disabled, nothing is signalled to the room.
+The user's own mute (audio_muted) is kept apart and comes back as it was.
 """
 
 __all__ = ['VideoroomManager', 'VideoroomSession', 'Participant']
@@ -626,6 +633,7 @@ class VideoroomSession(object):
         self.participants = {}      # publisher id -> Participant
         self.feeds = {}             # feed id -> Participant
         self.audio_muted = not audio    # joined without audio: the microphone starts muted
+        self.on_hold = False            # another call has the focus: microphone and feeds' audio off (set_on_hold)
         self.video_muted = not video    # joined without video: the camera starts off (black is sent)
         self.connection = None
         self.ice_servers = []
@@ -811,7 +819,7 @@ class VideoroomSession(object):
         constraints = _cls('RTCMediaConstraints').alloc().initWithMandatoryConstraints_optionalConstraints_(AUDIO_CONSTRAINTS, None)
         audio_source = factory.audioSourceWithConstraints_(constraints)
         self._audio_track = factory.audioTrackWithSource_trackId_(audio_source, 'audio-%s' % self.id)
-        self._audio_track.setIsEnabled_(not self.audio_muted)
+        self._audio_track.setIsEnabled_(self._microphone_enabled())
         init = _cls('RTCRtpTransceiverInit').alloc().init()
         init.setDirection_(DIRECTION_SEND_ONLY)
         init.setStreamIds_([stream_id])
@@ -1139,14 +1147,46 @@ class VideoroomSession(object):
         self.log('inviting %s' % ', '.join(uris))
         self.connection.request(dict(sylkrtc='videoroom-invite', session=self.id, participants=uris))
 
+    def _microphone_enabled(self):
+        return not (self.audio_muted or self.on_hold)
+
     def set_audio_muted(self, muted):
         self.audio_muted = bool(muted)
         if self._audio_track is not None:
-            self._audio_track.setIsEnabled_(not self.audio_muted)
+            self._audio_track.setIsEnabled_(self._microphone_enabled())
         self.log('microphone muted' if self.audio_muted else 'microphone unmuted')
         self._post('VideoroomSessionAudioMutedDidChange', muted=self.audio_muted, room=self.room)
         if self.audio_muted:
             self._own_level(False)
+
+    def set_on_hold(self, on_hold):
+        """Local hold: our microphone and every feed's audio off, or back (the microphone as the user left it)."""
+        on_hold = bool(on_hold)
+        if on_hold == self.on_hold:
+            return
+        self.on_hold = on_hold
+        if self._audio_track is not None:
+            self._audio_track.setIsEnabled_(self._microphone_enabled())
+        for participant in list(self.participants.values()):
+            self._apply_feed_audio(participant)
+        if on_hold:
+            self._own_level(False)
+        self.log('on hold: microphone and room audio off' if on_hold else 'resumed from hold')
+        self._post('VideoroomSessionHoldDidChange', on_hold=self.on_hold, room=self.room)
+
+    def _apply_feed_audio(self, participant):
+        """A feed's received audio played, or not while on hold."""
+        peer_connection = getattr(participant, 'peer_connection', None)
+        if peer_connection is None:
+            return
+        try:
+            for transceiver in peer_connection.transceivers():
+                if transceiver.mediaType() == MEDIA_AUDIO:
+                    track = transceiver.receiver().track()
+                    if track is not None:
+                        track.setIsEnabled_(not self.on_hold)
+        except Exception as e:
+            self.log('cannot %s the audio of %s: %s' % ('mute' if self.on_hold else 'unmute', participant.uri, e), 'warning')
 
     # Statistics: who speaks (audio levels), how much video comes (the window's video loss check)
 
@@ -1570,6 +1610,7 @@ class VideoroomSession(object):
             if transceiver.mediaType() == MEDIA_VIDEO and transceiver.receiver().track() is not None:
                 participant.video_track = transceiver.receiver().track()
                 break
+        self._apply_feed_audio(participant)     # a feed attached while on hold starts silent
 
         def answered(description, error):
             call_in_gui_thread(self._feed_answer_created, participant, feed, description, _error_text(error))

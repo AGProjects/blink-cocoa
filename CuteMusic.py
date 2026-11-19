@@ -584,13 +584,42 @@ class CuteMusicLink(object, metaclass=Singleton):
                 calls.append(call)
             except Exception:
                 continue
+        calls.extend(self._room_calls())
         calls.sort(key=lambda call: call['held'])
+        return calls
+
+    _ROOM_PROGRESS = {'idle': 'dialing', 'connecting': 'calling', 'accepted': 'calling'}
+
+    def _room_calls(self):
+        """The WebRTC rooms (VideoroomAudio.py: their boxes in the Audio drawer), as calls: id videoroom:<session>."""
+        try:
+            from VideoroomAudio import VideoroomAudio
+            controllers = list(VideoroomAudio().controllers)
+        except Exception:
+            return []
+        calls = []
+        for controller in controllers:
+            session = controller.session
+            if session.state == 'terminated':
+                continue
+            # as a SIP call's: the address user@domain, the name only a contact's real display name
+            call = {'kind': 'call', 'id': 'videoroom:%s' % session.id, 'name': controller.display_name(),
+                    'address': session.room, 'held': bool(session.on_hold)}
+            progress = self._ROOM_PROGRESS.get(session.state)
+            if progress is not None:
+                call['state'] = progress
+            else:
+                started = controller.started()
+                if started is not None:
+                    call['started'] = round(started, 1)
+            calls.append(call)
         return calls
 
     # A call's progress, hold, start and end: published at once
     _CALL_CHANGES = ('BlinkSessionChangedState', 'BlinkStreamHandlerChangedState', 'BlinkStreamHandlersChanged',
                      'BlinkSessionDidStart', 'BlinkSessionDidEnd', 'BlinkSessionDidFail',
-                     'BlinkAudioStreamChangedHoldState')
+                     'BlinkAudioStreamChangedHoldState',
+                     'VideoroomSessionDidChangeState', 'VideoroomSessionHoldDidChange', 'VideoroomAudioDidChange')
 
     def _redial(self):
         """What REDIAL calls: the Status menu's Redial target, None when there is none."""
@@ -692,7 +721,15 @@ class CuteMusicLink(object, metaclass=Singleton):
         if pid != os.getpid() or (self._seq is not None and seq <= self._seq):
             return
         self._seq = seq
-        if op == 'hangup':
+        if op == 'hangup' and str(request.get('id', '')).startswith('videoroom:'):
+            from VideoroomAudio import VideoroomAudio
+            controller = VideoroomAudio().find(str(request.get('id')).split(':', 1)[1])
+            if controller is None:
+                BlinkLogger().log_info('AG CuteMusic asked to leave a video conference that is gone')
+                return
+            BlinkLogger().log_info('AG CuteMusic: leave the video conference %s' % controller.session.room)
+            controller.hangup()
+        elif op == 'hangup':
             from SessionController import SessionControllersManager
             controller = next((controller for controller in list(SessionControllersManager().sessionControllers)
                                if str(controller.identifier) == str(request.get('id'))), None)

@@ -4880,6 +4880,15 @@ class ContactWindowController(NSWindowController):
             self.openAudioDrawerFitted()
 
     @objc.python_method
+    def showVideoroomAudioSession(self, controller):
+        """A WebRTC room's box in the Audio drawer (VideoroomAudio.py). Not a SIP call: no sessionController, never
+        conferenced or transferred. Selected as it comes, as a new call is: the SIP calls go on hold."""
+        self.audioSessionsListView.addItemView_(controller.view)
+        self.updateAudioButtons()
+        controller.view.setSelected_(True)
+        self.showAudioDrawer()
+
+    @objc.python_method
     def shuffleUpAudioSession(self, audioSessionView):
         # move up the given view in the audio call list so that it is after
         # all other conferenced sessions already at the top and before anything else
@@ -7580,6 +7589,8 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def hangupAllClicked_(self, sender):
+        from VideoroomAudio import VideoroomAudio
+        VideoroomAudio().leave_all()        # the WebRTC rooms' boxes are in the drawer too
         for session in self.sessionControllersManager.sessionControllers:
             if session.hasStreamOfType("audio"):
                 if len(session.streamHandlers) == 1:

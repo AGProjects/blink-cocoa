@@ -996,6 +996,9 @@ class BlinkAppDelegate(NSObject):
 
         # BlinkLogger().log_info('startup: contactsWindowController.setupFinished enter')
         self.contactsWindowController.setupFinished()
+        # the WebRTC rooms' boxes in the Audio drawer (one audio call at a time, the others on hold)
+        from VideoroomAudio import VideoroomAudio
+        VideoroomAudio().start()
         # BlinkLogger().log_info('startup: contactsWindowController.setupFinished exit')
         # BlinkLogger().log_info('startup: SMSWindowManager.setOwner enter')
         SMSWindowManager.SMSWindowManager().setOwner_(self.contactsWindowController)
