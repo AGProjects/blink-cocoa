@@ -3740,8 +3740,8 @@ class ContactWindowController(NSWindowController):
 
     @objc.python_method
     def _bellImage(self, name):
-        # bellon/belloff ship as 1022px artwork (511pt); left unsized, the
-        # cell draws them at full size and they spill over the window.
+        # bellon/belloff are 48px artwork for a 24pt box, the same box and
+        # glyph metrics as mute/muted next to them, so both buttons match.
         image = NSImage.imageNamed_(name)
         if image is not None:
             image.setSize_(NSMakeSize(24, 24))

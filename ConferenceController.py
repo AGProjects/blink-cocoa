@@ -243,6 +243,9 @@ class JoinConferenceWindowController(NSObject):
         self.lookupRoom()
 
     def dealloc(self):
+        alive = getattr(self, 'lookup_alive', None)     # absent when init bailed out early
+        if alive is not None:
+            alive[0] = False
         NSNotificationCenter.defaultCenter().removeObserver_(self)
         self.notification_center.remove_observer(self, name='BonjourConferenceServicesDidRemoveServer')
         self.notification_center.remove_observer(self, name='BonjourConferenceServicesDidUpdateServer')
@@ -322,6 +325,9 @@ class JoinConferenceWindowController(NSObject):
         self.resolved_room = None       # (room, host) that remote_target is the answer for
         self.lookup_pending = None      # (room, host) being looked up
         self.lookup_timer = None
+        # cleared once the panel is done (run() returned, or dealloc): a room lookup outlives
+        # the panel, and its callback must not touch self then -- after dealloc self is NIL
+        self.lookup_alive = [True]
         self.video_room = None
         audio_frame = self.audio.frame()
         self.video = NSButton.checkboxWithTitle_target_action_(NSLocalizedString("Video", "Checkbox title"), self, "videoClicked:")
@@ -494,9 +500,10 @@ class JoinConferenceWindowController(NSObject):
             if key != self.resolved_room and key != self.lookup_pending:
                 from WebRTCSupport import resolve_room
                 self.lookup_pending = key
+                alive = self.lookup_alive
 
                 def resolved(target, key=key):
-                    if self.lookup_pending != key:
+                    if not alive[0] or self.lookup_pending != key:
                         return
                     self.lookup_pending = None
                     self.resolved_room = key
@@ -846,6 +853,7 @@ class JoinConferenceWindowController(NSObject):
         self.setPublishShown(False)
         contactsWindow.setWorksWhenModal_(worksWhenModal)
         NSNotificationCenter.defaultCenter().removeObserver_name_object_(self, NSControlTextDidChangeNotification, self.room)
+        self.lookup_alive[0] = False
         if self.lookup_timer is not None:
             self.lookup_timer.invalidate()
             self.lookup_timer = None
