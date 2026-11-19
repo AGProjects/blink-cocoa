@@ -12,7 +12,8 @@ One line per background job, shown together, each with its own bar:
 - the background decryption of stored messages, with its speed menu
   (BlinkBackgroundDecryptionProgress, PGPDecryptor);
 - above them, a notice while AG CuteMusic's mixer is the audio device, no bar
-  (BlinkPodcastMixerSelected, CuteMusic.py: data selected).
+  (BlinkPodcastMixerSelected, CuteMusic.py: data selected), with an Open Mixer
+  button and the Enable Stereo Mode setting (audio.enable_stereo) under its text.
 
 A line is shown only when its job takes a while: it appears 1.5 seconds after
 the job's first progress and goes away when the job is done. The contact list
@@ -63,7 +64,10 @@ BAR_WIDTH = 70
 SPEED_WIDTH = 78
 
 NOTICE_HEIGHT = 34     # the mixer's notice: two lines of text, at least
-ICON_MARGIN = 2        # AG CuteMusic's icon, left of the notice: its height less this above and below
+ICON_MARGIN = 2        # AG CuteMusic's icon, left of the notice, above Open Mixer: margin above and below it
+CONTROLS_HEIGHT = 22   # the notice's bottom row: Open Mixer under the icon, Enable Stereo Mode under the text
+MIXER_BUTTON_WIDTH = 84    # also the width of the icon's column
+ICON_SCALE = 0.7           # AG CuteMusic's icon: this much of the height of the text beside it
 
 # the order of the lines, top to bottom
 JOBS = ('mixer', 'journal', 'backlog', 'decryption')
@@ -130,6 +134,7 @@ class ProgressLine(object):
             self.label.cell().setWraps_(True)
             self.label.cell().setLineBreakMode_(0)      # NSLineBreakByWordWrapping
             self.label.setTextColor_(NSColor.controlAccentColor())
+            self._add_notice_controls(strip, font)
         self.view.addSubview_(self.label)
 
         self.bar = NSProgressIndicator.alloc().initWithFrame_(NSMakeRect(width - BAR_WIDTH - 6, 4, BAR_WIDTH, 12))
@@ -154,6 +159,39 @@ class ProgressLine(object):
 
         strip.view.addSubview_(self.view)
         self.layout()
+
+    def _add_notice_controls(self, strip, font):
+        """Under the notice's text: a button that says what the icon does, and the stereo setting."""
+        self.mixer_button = NSButton.alloc().initWithFrame_(NSMakeRect(0, 0, MIXER_BUTTON_WIDTH, CONTROLS_HEIGHT))
+        self.mixer_button.setBezelStyle_(1)             # NSBezelStyleRounded
+        self.mixer_button.cell().setControlSize_(1)     # small
+        self.mixer_button.setFont_(font)
+        self.mixer_button.setTitle_(NSLocalizedString("Open Mixer", "Button title"))
+        self.mixer_button.setTarget_(strip)
+        self.mixer_button.setAction_('openMixer:')
+        self.mixer_button.setToolTip_(NSLocalizedString("Open AG CuteMusic's mixer", "Tooltip"))
+        self.view.addSubview_(self.mixer_button)
+
+        from StereoCalls import stereo_sdk_available
+        self.stereo_check = None
+        if stereo_sdk_available():      # an SDK without stereo audio: the setting is hidden in the preferences too
+            self.stereo_check = NSButton.checkboxWithTitle_target_action_(NSLocalizedString("Enable Stereo Mode", "Label"), strip, 'stereoClicked:')
+            self.stereo_check.cell().setControlSize_(1)
+            self.stereo_check.setFont_(font)
+            self.stereo_check.setToolTip_(NSLocalizedString("Adds Start Stereo Audio Call to the contact menus and answers stereo calls in stereo. A stereo call offers only Opus, and echo cancellation is off during stereo calls: use a headset", "Label"))
+            self.view.addSubview_(self.stereo_check)
+            # its state is read when the notice is shown: the strip is made in awakeFromNib, before the
+            # configuration is loaded, when SIPSimpleSettings cannot be read yet
+
+    def update_stereo(self):
+        if getattr(self, 'stereo_check', None) is None:
+            return
+        from sipsimple.configuration.settings import SIPSimpleSettings
+        try:
+            enabled = bool(getattr(SIPSimpleSettings().audio, 'enable_stereo', False))
+        except Exception:       # the configuration not loaded yet
+            return
+        self.stereo_check.setState_(NSOnState if enabled else NSOffState)
 
     def _build_speed_menu(self):
         """Fast / Normal / Gentle, then Pause (Resume while paused)."""
@@ -194,33 +232,37 @@ class ProgressLine(object):
         self.speed_button.setTitle_(label)
 
     def _icon_size(self):
-        """The icon fills the notice's height (a square, ICON_MARGIN above and below)."""
-        return self.height - 2 * ICON_MARGIN
+        """The icon above Open Mixer: ICON_SCALE of the space beside the text (what it filled before)."""
+        return int((self.height - CONTROLS_HEIGHT - 2 * ICON_MARGIN) * ICON_SCALE)
 
     def _text_x(self):
-        return 6 + (self._icon_size() + 8 if self.icon is not None else 0)
+        """The text and the stereo setting right of the column of the icon and Open Mixer."""
+        return 6 + MIXER_BUTTON_WIDTH + 8
 
     def fit(self, width):
-        """The notice as tall as its text needs at width (all of it shown, however narrow the window); the icon as
-        tall as the notice, so the text's width depends on the height: settled in a few rounds."""
+        """The notice as tall as its text needs at width (all of it shown, however narrow the window), plus its
+        bottom row of controls."""
         if not self.notice:
             return
-        self.height = NOTICE_HEIGHT
-        for _ in range(4):
-            size = self.label.cell().cellSizeForBounds_(NSMakeRect(0, 0, max(20, width - self._text_x() - 6), 10000))
-            height = max(NOTICE_HEIGHT, int(size.height) + 6)
-            if height == self.height:
-                break
-            self.height = height
+        size = self.label.cell().cellSizeForBounds_(NSMakeRect(0, 0, max(20, width - self._text_x() - 6), 10000))
+        self.height = max(NOTICE_HEIGHT, int(size.height) + 6) + CONTROLS_HEIGHT
 
     def layout(self):
         width = self.strip.view.bounds().size.width
         if self.notice:
             x = self._text_x()
-            self.label.setFrame_(NSMakeRect(x, 2, max(20, width - x - 6), self.height - 4))
-            if self.icon is not None:       # the notice's whole height
-                size = self._icon_size()
-                self.icon.setFrame_(NSMakeRect(6, ICON_MARGIN, size, size))
+            # left column: the icon, Open Mixer under it; right: the text, the stereo setting under it
+            if self.stereo_check is not None:
+                self.stereo_check.setFrame_(NSMakeRect(x, 3, max(20, width - x - 6), CONTROLS_HEIGHT - 4))
+            self.label.setFrame_(NSMakeRect(x, CONTROLS_HEIGHT + 2, max(20, width - x - 6), self.height - CONTROLS_HEIGHT - 4))
+            # the icon with Open Mixer right under it, one group, centred in the notice's height
+            size = self._icon_size() if self.icon is not None else 0
+            button_height = CONTROLS_HEIGHT - 2
+            group = size + ICON_MARGIN + button_height if size else button_height
+            y = max(2, (self.height - group) // 2)
+            self.mixer_button.setFrame_(NSMakeRect(6, y, MIXER_BUTTON_WIDTH, button_height))
+            if self.icon is not None:
+                self.icon.setFrame_(NSMakeRect(6 + (MIXER_BUTTON_WIDTH - size) // 2, y + button_height + ICON_MARGIN, size, size))
             return
         if self.has_speed:
             bar_x = width - SPEED_WIDTH - BAR_WIDTH - 6
@@ -274,6 +316,7 @@ class JournalProgressStrip(NSObject):
         notification_center.add_observer(self, name='BlinkJournalBacklogProgress')
         notification_center.add_observer(self, name='BlinkBackgroundDecryptionProgress')
         notification_center.add_observer(self, name='BlinkPodcastMixerSelected')
+        notification_center.add_observer(self, name='CFGSettingsObjectDidChange')      # Enable Stereo Mode changed in the preferences
         # the window resized: the notice's height follows the width
         self.container.setPostsFrameChangedNotifications_(True)
         NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, 'containerResized:', NSViewFrameDidChangeNotification, self.container)
@@ -290,6 +333,12 @@ class JournalProgressStrip(NSObject):
     def openMixer_(self, sender):
         from CuteMusic import open_mixer
         open_mixer()
+
+    def stereoClicked_(self, sender):
+        from sipsimple.configuration.settings import SIPSimpleSettings
+        settings = SIPSimpleSettings()
+        settings.audio.enable_stereo = sender.state() == NSOnState
+        settings.save()
 
     def speedChosen_(self, sender):
         job, speed = sender.representedObject().split(':', 1)
@@ -387,12 +436,18 @@ class JournalProgressStrip(NSObject):
         handler(notification)
 
     @objc.python_method
+    def _NH_CFGSettingsObjectDidChange(self, notification):
+        if 'audio.enable_stereo' in getattr(notification.data, 'modified', {}):
+            self.lines['mixer'].update_stereo()
+
+    @objc.python_method
     def _NH_BlinkPodcastMixerSelected(self, notification):
         """AG CuteMusic's mixer chosen as the audio device, or no longer: the notice shown at once, or gone."""
         line = self.lines['mixer']
         if notification.data.selected:
             text = NSLocalizedString("You are now using AG CuteMusic Podcast Mixer for mixing audio. Wear headsets to make sure echo is cancelled. To change the device, go to the Devices menu.", "Label")
             line.label.setStringValue_(text)
+            line.update_stereo()
             for view in (line.view, line.label):
                 view.setToolTip_(NSLocalizedString("Echo cancelling is off while AG CuteMusic Podcast Mixer is the audio device, for music: without headsets, the other party hears themselves", "Tooltip"))
             line.wanted = True
