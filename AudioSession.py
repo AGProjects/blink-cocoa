@@ -364,29 +364,9 @@ class AudioSession(NSView):
             NSColor.grayColor().set()
             border.stroke()
 
-            # hack: if we're the 1st item, draw the border around all conferenced boxes
-            subviews = self.superview().subviews()
-            if subviews.objectAtIndex_(0) == self:
-                # first in conference list
-                rect.size.height += 5
-                rect.origin.y -= 5
-                path = NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(rect, 5.0, 5.0)
-            else:
-                prev = None
-                last = True
-                for view in subviews:
-                    if prev == self:
-                        last = not view.conferencing
-                        break
-                    prev = view
-                # last in conference list
-                if last:
-                    rect.size.height += 5
-                    path = NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(rect, 5.0, 5.0)
-                else:
-                    rect.origin.y -= 5
-                    rect.size.height += 10
-                    path = NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(rect, 5.0, 5.0)
+            # each conferenced tile draws inside its own bounds: the list spaces them apart, and since
+            # macOS 14 views no longer clip to bounds, so drawing past them painted over the neighbours
+            path = border
 
             if self.selected or self.highlighted:
                 path.setLineWidth_(3)

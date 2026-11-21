@@ -4923,7 +4923,12 @@ class ContactWindowController(NSWindowController):
             self.conference = AudioConference()
             BlinkLogger().log_info("Audio conference started")
 
-        self.conference.add(stream.stream)
+        try:
+            self.conference.add(stream.stream)
+        except Exception as e:
+            stream.sessionController.log_error("Cannot add to the audio conference: %s" % e)
+        else:
+            stream.sessionController.log_info("Added to the audio conference (%d in conference)" % len(self.conference.streams))
 
         stream.view.setConferencing_(True)
         self.shuffleUpAudioSession(stream.view)
@@ -4935,7 +4940,22 @@ class ContactWindowController(NSWindowController):
         # if we're in a conference and the session is selected, then select back the conference
         # after removing
         wasSelected = stream.view.selected
-        self.conference.remove(stream.stream)
+        if self.conference is not None:
+            if stream.stream is not None and stream.stream in self.conference.streams:
+                try:
+                    self.conference.remove(stream.stream)
+                except Exception as e:
+                    # the stream's audio bridge can be replaced after it joined (sipsimple follows the voice
+                    # mixer until the transport is made), then the conference no longer holds it
+                    stream.sessionController.log_error("Cannot remove from the audio conference: %s" % e)
+                    try:
+                        self.conference.streams.remove(stream.stream)
+                    except ValueError:
+                        pass
+                else:
+                    stream.sessionController.log_info("Removed from the audio conference (%d left)" % len(self.conference.streams))
+            else:
+                stream.sessionController.log_info("Removed from the audio conference (its stream was not in it)")
         stream.view.setConferencing_(False)
         self.shuffleDownAudioSession(stream.view)
 
@@ -4969,7 +4989,10 @@ class ContactWindowController(NSWindowController):
             if session.hasStreamOfType("audio"):
                 stream = session.streamHandlerOfType("audio")
                 if stream.isConferencing:
-                    stream.removeFromConference()
+                    try:
+                        stream.removeFromConference()
+                    except Exception as e:
+                        session.log_error("Cannot remove from the audio conference while disbanding it: %s" % e)
         self.conference = None
         self.disbandingConference = False
         self.conferenceButton.setState_(NSOffState)
@@ -4998,10 +5021,18 @@ class ContactWindowController(NSWindowController):
 
     @objc.python_method
     def finalizeAudioSession(self, streamController):
-        if streamController.isConferencing and self.conference is not None:
-            self.removeAudioSessionFromConference(streamController)
+        # the tile must go even if leaving the conference fails, else it stays in the drawer for ever
+        if streamController.isConferencing:
+            streamController.sessionController.log_info("Audio session finalized while in the audio conference")
+            if self.conference is not None:
+                try:
+                    self.removeAudioSessionFromConference(streamController)
+                except Exception as e:
+                    streamController.sessionController.log_error("Cannot leave the audio conference: %s" % e)
+            streamController.view.setConferencing_(False)
 
         self.audioSessionsListView.removeItemView_(streamController.view)
+        streamController.sessionController.log_info("Audio tile removed from the drawer (%d left)" % self.audioSessionsListView.numberOfItems())
         self.updateAudioButtons()
         count = self.audioSessionsListView.numberOfItems()
         if self.drawer.isOpen() and count == 0 and not self.shouldDrawerStayOpen():

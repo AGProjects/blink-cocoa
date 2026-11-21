@@ -14,8 +14,13 @@ offer in feed-attached and our videoroom-feed-answer.
 The media are WebRTC.framework's (libwebrtc), one RTCPeerConnectionFactory for
 the process:
 
-  - the microphone and the speakers are its audio device (the system's default
-    devices), with its own echo canceller; every feed's audio is played by it;
+  - the microphone and the speakers are Blink's audio input and output
+    (audio.input_device, audio.output_device), AG Podcast Mixer included, through
+    our own audio device (BlinkRTCAudioDevice.m, libwebrtc's custom audio device;
+    RoomAudioDevice below follows the settings); without it, libwebrtc's own, which
+    only knows the system's default devices. Its echo canceller is on, off while
+    AG Podcast Mixer is the input (music, as for SIP calls). Every feed's audio is
+    played by it;
   - the camera is the SDK's (SIPApplication.video_device), read through a
     FrameBufferVideoRenderer like any other view of it and handed to an
     RTCVideoSource as 32ARGB pixel buffers, so the camera chosen in Blink, the
@@ -162,6 +167,17 @@ AUDIO_BITRATE = 64000           # bit/s of our Opus: libwebrtc takes it from the
 # the microphone: echo cancelling only, as the SIP audio; no noise suppression or gain control
 AUDIO_CONSTRAINTS = {'googEchoCancellation': 'true', 'googHighpassFilter': 'true',
                      'googNoiseSuppression': 'false', 'googAutoGainControl': 'false'}
+# AG Podcast Mixer as the input: music, as CuteMusic.py's music mode for SIP calls (no echo cancelling, no filter)
+MUSIC_AUDIO_CONSTRAINTS = dict(AUDIO_CONSTRAINTS, googEchoCancellation='false', googHighpassFilter='false')
+
+
+def audio_constraints():
+    try:
+        from CuteMusic import selected
+        music = selected()
+    except Exception:
+        music = False
+    return MUSIC_AUDIO_CONSTRAINTS if music else AUDIO_CONSTRAINTS
 
 # libwebrtc's enums (RTCPeerConnection.h, RTCConfiguration.h, RTCRtpTransceiver.h, ...)
 SDP_OFFER, SDP_ANSWER = 0, 2                            # RTCSdpType
@@ -249,12 +265,67 @@ def peer_connection_factory():
     objc.loadBundleFunctions(webrtc_bundle(), functions, [('RTCInitializeSSL', b'Z')])
     if not functions['RTCInitializeSSL']():
         _log('[videoroom] RTCInitializeSSL failed', 'warning')
-    _factory = _cls('RTCPeerConnectionFactory').alloc().initWithEncoderFactory_decoderFactory_(
-        _cls('RTCDefaultVideoEncoderFactory').alloc().init(), _cls('RTCDefaultVideoDecoderFactory').alloc().init())
+    encoders, decoders = _cls('RTCDefaultVideoEncoderFactory').alloc().init(), _cls('RTCDefaultVideoDecoderFactory').alloc().init()
+    device = RoomAudioDevice().device()
+    if device is not None:
+        _factory = _cls('RTCPeerConnectionFactory').alloc().initWithEncoderFactory_decoderFactory_audioDevice_(encoders, decoders, device)
+        _log('[videoroom] audio: Blink\'s devices, input %s, output %s' % (device.inputDescription(), device.outputDescription()))
+    else:
+        _factory = _cls('RTCPeerConnectionFactory').alloc().initWithEncoderFactory_decoderFactory_(encoders, decoders)
+        _log('[videoroom] audio: the system\'s default devices (libwebrtc\'s own audio device)')
     formats = set(int(number) for number in _cls('RTCCVPixelBuffer').supportedPixelFormats())
     if int(kCVPixelFormatType_32ARGB) not in formats:
         _log('[videoroom] RTCCVPixelBuffer does not take 32ARGB pixel buffers: the camera cannot be sent', 'warning')
     return _factory
+
+
+@implementer(IObserver)
+class RoomAudioDevice(object, metaclass=Singleton):
+    """The rooms' audio device (BlinkRTCAudioDevice.m), kept on Blink's audio input and output.
+
+    None, and libwebrtc's own device (the system's defaults) used, when the class is not in the binary (a build
+    without BlinkRTCAudioDevice.m), the framework has no custom audio device, or the user default
+    WebRTCSystemAudioDevice is set (the way back if ours misbehaves: defaults write com.agprojects.Blink
+    WebRTCSystemAudioDevice -bool YES). Decided once: the factory is made once per process."""
+
+    def __init__(self):
+        self._device = None
+        self._decided = False
+
+    def device(self):
+        if self._decided:
+            return self._device
+        self._decided = True
+        from Foundation import NSUserDefaults
+        if NSUserDefaults.standardUserDefaults().boolForKey_('WebRTCSystemAudioDevice'):
+            _log('[videoroom] audio: WebRTCSystemAudioDevice is set, the system\'s default devices are used')
+            return None
+        try:
+            cls = objc.lookUpClass('BlinkRTCAudioDevice')
+        except objc.nosuchclass_error:
+            _log('[videoroom] audio: BlinkRTCAudioDevice is not in this build, the system\'s default devices are used', 'warning')
+            return None
+        if not _cls('RTCPeerConnectionFactory').instancesRespondToSelector_(b'initWithEncoderFactory:decoderFactory:audioDevice:'):
+            _log('[videoroom] audio: WebRTC.framework has no custom audio device, the system\'s default devices are used', 'warning')
+            return None
+        self._device = cls.sharedDevice()
+        self._apply()
+        NotificationCenter().add_observer(self, name='CFGSettingsObjectDidChange')
+        return self._device
+
+    def _apply(self):
+        from sipsimple.configuration.settings import SIPSimpleSettings
+        settings = SIPSimpleSettings()
+        self._device.setInputDeviceName_(settings.audio.input_device)
+        self._device.setOutputDeviceName_(settings.audio.output_device)
+
+    @run_in_gui_thread
+    def handle_notification(self, notification):
+        modified = getattr(notification.data, 'modified', {})
+        if self._device is not None and ('audio.input_device' in modified or 'audio.output_device' in modified):
+            self._apply()
+            _log('[videoroom] audio: Blink\'s devices changed: input %s, output %s'
+                 % (self._device.inputDescription(), self._device.outputDescription()))
 
 
 # SDP, for the Activity log
@@ -816,7 +887,7 @@ class VideoroomSession(object):
         stream_id = 'blink-%s' % self.id
 
         # microphone: the audio device's; muted is a disabled track (silence is sent)
-        constraints = _cls('RTCMediaConstraints').alloc().initWithMandatoryConstraints_optionalConstraints_(AUDIO_CONSTRAINTS, None)
+        constraints = _cls('RTCMediaConstraints').alloc().initWithMandatoryConstraints_optionalConstraints_(audio_constraints(), None)
         audio_source = factory.audioSourceWithConstraints_(constraints)
         self._audio_track = factory.audioTrackWithSource_trackId_(audio_source, 'audio-%s' % self.id)
         self._audio_track.setIsEnabled_(self._microphone_enabled())
@@ -1263,6 +1334,9 @@ class VideoroomSession(object):
                 continue
             media = values.get('kind') or values.get('mediaType')
             if media == 'audio' and values.get('audioLevel') is not None:
+                codec = codecs.get(str(values.get('codecId')))      # mono or stereo, for AG CuteMusic's meters
+                if codec is not None and codec.get('channels'):
+                    participant.audio_channels = int(codec['channels'])
                 participant.set_meter(meter_from_linear(values['audioLevel']))
                 if participant.set_level(float(values['audioLevel']) > SPEAKING_LEVEL):
                     self._post('VideoroomSessionParticipantSpeakingDidChange', participant=participant)

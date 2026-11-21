@@ -12,8 +12,9 @@
   settings before are kept (cutemusic.json) and put back when another input is chosen.
 - blink.lock is held while Blink runs (AG CuteMusic shows its BLINK strip then) and calls.json says who is in the
   calls (shown at the top of that strip). AG CuteMusic's HANG UP and REDIAL buttons ask through blink.request.
-- With the driver (v2), the same over the device's control channel ('agbc': our calls and redial target, every 2 s;
-  'agrq': AG CuteMusic's request, listened to): the only way for Blink Pro (sandboxed), used by Blink classic too.
+- With the driver (v2), the same over the device's control channel ('agbc': our calls, redial target, chosen
+  sound devices and how the last call ended, every 2 s; 'agrq': AG CuteMusic's request, listened to: hangup, redial,
+  call an address, its auto-redial): the only way for Blink Pro (sandboxed), used by Blink classic too.
 - v2, the AG Podcast Mixer driver (AG CuteMusic installs it, /Library/Audio/Plug-Ins/HAL/AGPodcastMixer.driver):
   "AG Podcast Mixer" is then a CoreAudio input like any other, there while the mixer runs (the SDK's
   AudioDevicesDidChange as for a device plugged in), the only way for a sandboxed Blink (Blink Pro). The SDK's own
@@ -30,6 +31,7 @@ import json
 import os
 import struct
 import sys
+import time
 
 from AppKit import NSApp, NSWorkspace
 from Foundation import NSTimer
@@ -375,6 +377,7 @@ class CuteMusicLink(object, metaclass=Singleton):
         self._seq = None            # the last request seen ('agrq', blink.request): each acted on once
         self._control_failed = None  # the last write to 'agbc' that failed (logged once)
         self._alert_device = None   # the alert device as last chosen, never one of AG CuteMusic's
+        self._ended = None          # how our last call ended, for AG CuteMusic's auto-redial ({"seq", "at", "by", "address"})
 
     # Start and stop
 
@@ -389,8 +392,11 @@ class CuteMusicLink(object, metaclass=Singleton):
         self._keep_alert_device()
         # (BlinkAppDelegate.callTimerObject_ calls the timer's userInfo: this is no NSObject to be a timer's target)
         self._timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(2.0, NSApp.delegate(), 'callTimerObject:', self._tick, True)
+        self._fast_timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(0.3, NSApp.delegate(), 'callTimerObject:', self._fast_tick, True)
         NotificationCenter().add_observer(self, name='CFGSettingsObjectDidChange', sender=SIPSimpleSettings())
         for name in self._CALL_CHANGES:
+            NotificationCenter().add_observer(self, name=name)
+        for name in self._CALL_ENDS:
             NotificationCenter().add_observer(self, name=name)
         self._apply_music_mode()
         # (chosen while AG CuteMusic's mixer is down: kept; with the driver the device is always there, silent until
@@ -399,9 +405,14 @@ class CuteMusicLink(object, metaclass=Singleton):
     def stop(self):
         if self._timer is not None:
             self._timer.invalidate()
+            if getattr(self, '_fast_timer', None) is not None:
+                self._fast_timer.invalidate()
+                self._fast_timer = None
             self._timer = None
         NotificationCenter().discard_observer(self, name='CFGSettingsObjectDidChange', sender=SIPSimpleSettings())
         for name in self._CALL_CHANGES:
+            NotificationCenter().discard_observer(self, name=name)
+        for name in self._CALL_ENDS:
             NotificationCenter().discard_observer(self, name=name)
         self._remove_calls()
         if self._device is not None:
@@ -456,6 +467,9 @@ class CuteMusicLink(object, metaclass=Singleton):
             self._keep_alert_device()
         if notification.name == 'CFGSettingsObjectDidChange' and 'audio.input_device' in notification.data.modified:
             self._apply_music_mode()
+        elif notification.name in self._CALL_ENDS and self._timer is not None:
+            self._call_ended(notification)
+            self._publish_calls()
         elif notification.name in self._CALL_CHANGES and self._timer is not None:
             self._publish_calls()       # at once, not at the next tick: AG CuteMusic follows the call's progress
 
@@ -604,7 +618,7 @@ class CuteMusicLink(object, metaclass=Singleton):
                 continue
             # as a SIP call's: the address user@domain, the name only a contact's real display name
             call = {'kind': 'call', 'id': 'videoroom:%s' % session.id, 'name': controller.display_name(),
-                    'address': session.room, 'held': bool(session.on_hold)}
+                    'address': session.room, 'held': bool(session.on_hold), 'participants': self._participants(session)}
             progress = self._ROOM_PROGRESS.get(session.state)
             if progress is not None:
                 call['state'] = progress
@@ -615,11 +629,64 @@ class CuteMusicLink(object, metaclass=Singleton):
             calls.append(call)
         return calls
 
+    LEVEL_STALE = 1.5       # s: a participant's level older than this is not sent (none: silent, or not read)
+
+    def _participants(self, session):
+        """Who is in a room, for AG CuteMusic's BLINK strip (a VU meter and a MUTE each): {"id", "name", "level"
+        (dBFS, None: none now), "channels" (1, 2; None: not known), "muted"}. The levels are the room window's
+        (Videoroom.py: the WebRTC statistics every 0.3 s, the room's audio levels for SIP callers)."""
+        from Videoroom import METER_FLOOR_DB
+        now = time.monotonic()
+        found = []
+        for participant in list(session.participants.values()):
+            if getattr(participant, 'parent', None):        # an extra video of someone: not a person
+                continue
+            meter, at = getattr(participant, 'meter', 0.0), getattr(participant, 'meter_at', 0.0)
+            level = round(METER_FLOOR_DB * (1.0 - meter), 1) if meter > 0 and now - at < self.LEVEL_STALE else None
+            found.append({'id': str(participant.id), 'name': participant.name, 'level': level,
+                          'channels': getattr(participant, 'audio_channels', None), 'muted': bool(participant.muted)})
+        return found
+
+    def _fast_tick(self):
+        """While a room is joined: our entry set every 0.3 s, the participants' levels moving in AG CuteMusic."""
+        try:
+            from VideoroomAudio import VideoroomAudio
+            rooms = any(controller.session.state == 'established' for controller in list(VideoroomAudio().controllers))
+        except Exception:
+            rooms = False
+        if rooms and self._device is not None:
+            self._publish_calls()
+
     # A call's progress, hold, start and end: published at once
     _CALL_CHANGES = ('BlinkSessionChangedState', 'BlinkStreamHandlerChangedState', 'BlinkStreamHandlersChanged',
                      'BlinkSessionDidStart', 'BlinkSessionDidEnd', 'BlinkSessionDidFail',
                      'BlinkAudioStreamChangedHoldState',
                      'VideoroomSessionDidChangeState', 'VideoroomSessionHoldDidChange', 'VideoroomAudioDidChange')
+
+    _CALL_ENDS = ('SIPSessionDidEnd', 'SIPSessionDidFail')
+
+    def _call_ended(self, notification):
+        """How an audio call ended, for AG CuteMusic's auto-redial: 'local' (hung up, cancelled or declined here),
+        'remote' (the other side hung up) or 'failed' (not reached: busy, declined there, no answer, network)."""
+        session, data = notification.sender, notification.data
+        streams = list(getattr(session, 'streams', None) or getattr(session, 'proposed_streams', None) or [])
+        if not any(getattr(stream, 'type', None) == 'audio' for stream in streams):
+            return
+        originator = getattr(data, 'originator', None)
+        if notification.name == 'SIPSessionDidEnd':
+            by = 'remote' if originator == 'remote' else 'local'
+        elif originator == 'local' and (getattr(data, 'code', None) == 487 or getattr(session, 'direction', None) == 'incoming'):
+            by = 'local'
+        else:
+            by = 'failed'
+        try:
+            uri = session.remote_identity.uri
+            address = '%s@%s' % (uri.user.decode() if isinstance(uri.user, bytes) else uri.user,
+                                 uri.host.decode() if isinstance(uri.host, bytes) else uri.host)
+        except AttributeError:
+            address = ''
+        self._ended = {'seq': (self._ended or {}).get('seq', 0) + 1, 'at': time.time(), 'by': by, 'address': address}
+        BlinkLogger().log_info('Call with %s ended (%s): told AG CuteMusic' % (address or '?', by))
 
     def _redial(self):
         """What REDIAL calls: the Status menu's Redial target, None when there is none."""
@@ -642,8 +709,24 @@ class CuteMusicLink(object, metaclass=Singleton):
             name = ''
         return {'address': address, 'name': name}
 
+    @staticmethod
+    def _devices():
+        """The sound devices chosen in Blink, for AG CuteMusic to tell whether its mixer is Blink's microphone and
+        where Blink plays the call: {"input", "output"}, a device's name ("system_default" read as the system's
+        default device now), None: none."""
+        settings = SIPSimpleSettings()
+        engine = _engine()
+        found = {}
+        for key, chosen, default in (('input', settings.audio.input_device, 'default_input_device'),
+                                     ('output', settings.audio.output_device, 'default_output_device')):
+            if chosen == 'system_default':
+                chosen = getattr(engine, default, None) if engine is not None else None
+            found[key] = str(chosen) if chosen else None
+        return found
+
     def _publish_calls(self):
-        state = {'pid': os.getpid(), 'calls': self._calls(), 'redial': self._redial()}
+        state = {'pid': os.getpid(), 'calls': self._calls(), 'redial': self._redial(), 'devices': self._devices(),
+                 'ended': self._ended}
         # the control channel: every tick, unchanged or not (the driver forgets an entry not set for 10 s)
         if self._device is not None:
             status = set_property(self._device, BLINK_CALLS, '%d %s' % (os.getpid(), json.dumps(state)))
@@ -741,6 +824,23 @@ class CuteMusicLink(object, metaclass=Singleton):
         elif op == 'redial':
             BlinkLogger().log_info('AG CuteMusic: redial')
             NSApp.delegate().contactsWindowController.redialLast_(None)
+        elif op == 'mute' and str(request.get('id', '')).startswith('videoroom:'):     # a room's participant, from its MUTE
+            from VideoroomAudio import VideoroomAudio
+            controller = VideoroomAudio().find(str(request.get('id')).split(':', 1)[1])
+            participant = controller.session.participants.get(request.get('participant')) if controller is not None else None
+            if participant is None:     # (publisher ids: numbers in the room, strings in JSON)
+                participant = next((p for p in (controller.session.participants.values() if controller is not None else [])
+                                    if str(p.id) == str(request.get('participant'))), None)
+            if participant is None:
+                BlinkLogger().log_info('AG CuteMusic asked to mute someone no longer in the room')
+                return
+            muted = bool(request.get('muted', True))
+            BlinkLogger().log_info('AG CuteMusic: %s %s' % ('mute' if muted else 'unmute', participant.uri))
+            controller.session.mute_participant(participant, muted)
+        elif op == 'call' and request.get('address'):       # (auto-redial: the one the dropped call was with)
+            address = str(request.get('address'))
+            BlinkLogger().log_info('AG CuteMusic: call %s again' % address)
+            NSApp.delegate().contactsWindowController.startSessionWithTarget(address, media_type='audio')
 
     def _remove_calls(self):
         path = self._calls_path()

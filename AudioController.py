@@ -614,12 +614,20 @@ class AudioController(MediaStream):
         if self.status in [STREAM_IDLE, STREAM_FAILED, STREAM_DISCONNECTING, STREAM_CANCELLING] or self.user_hanged_up:
             if not self.sessionController.try_next_hop or self.user_hanged_up:
                 if self.audioEndTime and (time.time() - self.audioEndTime > settings.gui.close_delay):
-                    self.removeFromSession()
-                    NSApp.delegate().contactsWindowController.finalizeAudioSession(self)
+                    # clear first: an exception below must not make the timer retry this every second
+                    self.audioEndTime = None
                     if timer.isValid():
                         timer.invalidate()
-                    
-                    self.audioEndTime = None
+                    try:
+                        self.removeFromSession()
+                    except Exception as e:
+                        self.sessionController.log_error("Cannot remove the audio stream handler: %s" % e)
+                    try:
+                        NSApp.delegate().contactsWindowController.finalizeAudioSession(self)
+                    except Exception as e:
+                        import traceback
+                        self.sessionController.log_error("Cannot finalize the audio session: %s\n%s" % (e, traceback.format_exc()))
+                    return
 
         if self.stream and self.stream.recorder is not None and self.stream.recorder.is_active:
             if self.isConferencing:

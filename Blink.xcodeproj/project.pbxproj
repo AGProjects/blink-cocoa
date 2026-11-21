@@ -742,8 +742,6 @@
 		AD00000000000000005E0003 /* SylkDiscovery.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005E0000 /* SylkDiscovery.py */; };
 		AD00000000000000005F0001 /* MapTileCache.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005F0000 /* MapTileCache.py */; };
 		AD00000000000000005F0003 /* MapTileCache.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000005F0000 /* MapTileCache.py */; };
-		AD00000000000000C5B00001 /* VideoroomAudio.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000C5B00000 /* VideoroomAudio.py */; };
-		AD00000000000000C5B00003 /* VideoroomAudio.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000C5B00000 /* VideoroomAudio.py */; };
 		AD0000000000000000600001 /* ContactMangler.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000600000 /* ContactMangler.py */; };
 		AD0000000000000000600003 /* ContactMangler.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000600000 /* ContactMangler.py */; };
 		AD0000000000000000610001 /* Profiles.py in Resources */ = {isa = PBXBuildFile; fileRef = AD0000000000000000610000 /* Profiles.py */; };
@@ -794,6 +792,14 @@
 		AD00000000000000C5900003 /* CuteMusic.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000C5900000 /* CuteMusic.py */; };
 		AD00000000000000C5A00001 /* ag-cute-music.png in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000C5A00000 /* ag-cute-music.png */; };
 		AD00000000000000C5A00003 /* ag-cute-music.png in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000C5A00000 /* ag-cute-music.png */; };
+		AD00000000000000C5B00001 /* VideoroomAudio.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000C5B00000 /* VideoroomAudio.py */; };
+		AD00000000000000C5B00003 /* VideoroomAudio.py in Resources */ = {isa = PBXBuildFile; fileRef = AD00000000000000C5B00000 /* VideoroomAudio.py */; };
+		AD00000000000000C5C00002 /* BlinkRTCAudioDevice.m in Sources */ = {isa = PBXBuildFile; fileRef = AD00000000000000C5C00001 /* BlinkRTCAudioDevice.m */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
+		AD00000000000000C5C00003 /* BlinkRTCAudioDevice.m in Sources */ = {isa = PBXBuildFile; fileRef = AD00000000000000C5C00001 /* BlinkRTCAudioDevice.m */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
+		AD00000000000000C5C00011 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AD00000000000000C5C00010 /* CoreAudio.framework */; };
+		AD00000000000000C5C00012 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AD00000000000000C5C00010 /* CoreAudio.framework */; };
+		AD00000000000000C5C00021 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AD00000000000000C5C00020 /* AudioToolbox.framework */; };
+		AD00000000000000C5C00022 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AD00000000000000C5C00020 /* AudioToolbox.framework */; };
 		ADFEED000000000000000001 /* PlaybackMonitor.py in Resources */ = {isa = PBXBuildFile; fileRef = ADFEED000000000000000000 /* PlaybackMonitor.py */; };
 		ADFEED000000000000000003 /* PlaybackMonitor.py in Resources */ = {isa = PBXBuildFile; fileRef = ADFEED000000000000000000 /* PlaybackMonitor.py */; };
 		B199B0EA7AEFF92918BF5138 /* AvatarConflictPanel.py in Resources */ = {isa = PBXBuildFile; fileRef = 357D1EE3CE09B6CB0F7E08D5 /* AvatarConflictPanel.py */; };
@@ -1651,7 +1657,6 @@
 		AD00000000000000005D0000 /* MacLocation.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MacLocation.py; sourceTree = "<group>"; };
 		AD00000000000000005E0000 /* SylkDiscovery.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = SylkDiscovery.py; sourceTree = "<group>"; };
 		AD00000000000000005F0000 /* MapTileCache.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MapTileCache.py; sourceTree = "<group>"; };
-		AD00000000000000C5B00000 /* VideoroomAudio.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoroomAudio.py; sourceTree = "<group>"; };
 		AD0000000000000000600000 /* ContactMangler.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ContactMangler.py; sourceTree = "<group>"; };
 		AD0000000000000000610000 /* Profiles.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = Profiles.py; sourceTree = "<group>"; };
 		AD00000000000000006A0000 /* JournalProgressStrip.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = JournalProgressStrip.py; sourceTree = "<group>"; };
@@ -1678,6 +1683,11 @@
 		AD00000000000000C5700000 /* StereoCalls.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = StereoCalls.py; sourceTree = "<group>"; };
 		AD00000000000000C5900000 /* CuteMusic.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = CuteMusic.py; sourceTree = "<group>"; };
 		AD00000000000000C5A00000 /* ag-cute-music.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "ag-cute-music.png"; path = "icons/ag-cute-music.png"; sourceTree = "<group>"; };
+		AD00000000000000C5B00000 /* VideoroomAudio.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = VideoroomAudio.py; sourceTree = "<group>"; };
+		AD00000000000000C5C00000 /* BlinkRTCAudioDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BlinkRTCAudioDevice.h; sourceTree = "<group>"; };
+		AD00000000000000C5C00001 /* BlinkRTCAudioDevice.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BlinkRTCAudioDevice.m; sourceTree = "<group>"; };
+		AD00000000000000C5C00010 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
+		AD00000000000000C5C00020 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		ADFEED000000000000000000 /* PlaybackMonitor.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = PlaybackMonitor.py; sourceTree = "<group>"; };
 		CE1E00000000000000000001 /* ConferenceLevels.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ConferenceLevels.py; sourceTree = "<group>"; };
 		DD1A00000000000000000001 /* DataImport.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = DataImport.py; sourceTree = "<group>"; };
@@ -1708,6 +1718,8 @@
 				1F6EF7F818E61CC8008592D2 /* OpenGL.framework in Frameworks */,
 				1F6EF7F618E61CC1008592D2 /* QuartzCore.framework in Frameworks */,
 				1F22732412B554F50010A8B2 /* Cocoa.framework in Frameworks */,
+				AD00000000000000C5C00011 /* CoreAudio.framework in Frameworks */,
+				AD00000000000000C5C00021 /* AudioToolbox.framework in Frameworks */,
 				1F27974015D2996200FB33D9 /* Security.framework in Frameworks */,
 				1F27973F15D2996000FB33D9 /* Carbon.framework in Frameworks */,
 			);
@@ -1727,6 +1739,8 @@
 				1F08F3822D7FAE3700F91619 /* libpython.dylib in Frameworks */,
 				1FF63CD619128C4800A502FB /* AVFoundation.framework in Frameworks */,
 				8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */,
+				AD00000000000000C5C00012 /* CoreAudio.framework in Frameworks */,
+				AD00000000000000C5C00022 /* AudioToolbox.framework in Frameworks */,
 				1F27973215D24E2C00FB33D9 /* Security.framework in Frameworks */,
 				1F27973415D24E3500FB33D9 /* Carbon.framework in Frameworks */,
 				1FC6343318F9D38A0098945F /* ScriptingBridge.framework in Frameworks */,
@@ -1899,6 +1913,8 @@
 			children = (
 				1F6009CD18F74D22005517FA /* mbFlipWindow.h */,
 				1F6009CE18F74D22005517FA /* mbFlipWindow.m */,
+				AD00000000000000C5C00000 /* BlinkRTCAudioDevice.h */,
+				AD00000000000000C5C00001 /* BlinkRTCAudioDevice.m */,
 				1F0D4A3619BF351D002AB989 /* VideoRecorder.py */,
 				5A1E000200000000000000F1 /* VideoFrameSource.py */,
 				5C1E00040000000000000001 /* WebRTCSupport.py */,
@@ -2008,6 +2024,8 @@
 				1F0F2A9C15456DAD00ECB98E /* AddressBook.framework */,
 				1F0F2AA115456DAD00ECB98E /* AppKit.framework */,
 				1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */,
+				AD00000000000000C5C00010 /* CoreAudio.framework */,
+				AD00000000000000C5C00020 /* AudioToolbox.framework */,
 				1F0F2AA215456DAD00ECB98E /* CoreData.framework */,
 				1F27973315D24E3500FB33D9 /* Carbon.framework */,
 				29B97325FDCFA39411CA2CEA /* Foundation.framework */,
@@ -3361,6 +3379,7 @@
 				1F22732212B554F50010A8B2 /* main.m in Sources */,
 				1F9268F714868A82006F2FD8 /* EMKeychainItem.m in Sources */,
 				1F6009D018F74D22005517FA /* mbFlipWindow.m in Sources */,
+				AD00000000000000C5C00002 /* BlinkRTCAudioDevice.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3379,6 +3398,7 @@
 				8D11072D0486CEB800E47090 /* main.m in Sources */,
 				1F9268F614868A82006F2FD8 /* EMKeychainItem.m in Sources */,
 				1F6009CF18F74D22005517FA /* mbFlipWindow.m in Sources */,
+				AD00000000000000C5C00003 /* BlinkRTCAudioDevice.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

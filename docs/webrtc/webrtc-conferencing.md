@@ -470,7 +470,11 @@ Open:
 
 Limits:
 
-- Audio uses the system's default devices (libwebrtc's audio device), not Blink's audio settings.
+- Audio uses Blink's audio input and output (AG Podcast Mixer included) through our own audio device,
+  BlinkRTCAudioDevice.m (libwebrtc's custom audio device, two AUHAL units, 16-bit PCM at the devices'
+  rates); echo cancelling is off while AG Podcast Mixer is the input, decided when the room is joined.
+  `defaults write com.agprojects.Blink WebRTCSystemAudioDevice -bool YES` goes back to libwebrtc's own
+  device (the system's defaults). Opus is mono: stereo needs the room's SDP to ask for it.
 - Outgoing camera video is 640×480 at 24 fps; the screen 1280×720 at 15 fps (H264 level 3.1).
 - No composing indications or file transfers over WebRTC; the room's `file-sharing` event is not
   shown; no conference recording.
