@@ -330,6 +330,37 @@ class AddContactController(NSObject):
         self.addButton.setEnabled_(True if self.uris else False)
         self.setUpStereoCheckbox(None)
 
+    @objc.python_method
+    def setUpStereoCheckbox(self, sip_contact):
+        """Enable Stereo: audio calls to this contact in stereo (shared over XCAP, StereoCalls.py), right of
+        Automatically Answer Calls (and No Media Relay, when shown). Enabled only while Enable Stereo Mode is on. Here,
+        in AddContactController, as both panels use it: Add Contact (None) and Edit Contact (EditContactController)."""
+        self.stereoCheckbox = None
+        previous = getattr(self, '_stereoCheckboxView', None)      # the panel set up again: the one added before goes
+        if previous is not None:
+            previous.removeFromSuperview()
+            self._stereoCheckboxView = None
+        anchor = getattr(self, 'noMediaRelayCheckbox', None) or self.autoanswerCheckbox
+        anchor.sizeToFit()
+        frame = anchor.frame()
+        checkbox = NSButton.alloc().initWithFrame_(NSMakeRect(frame.origin.x + frame.size.width + 12, frame.origin.y, 160, frame.size.height))
+        checkbox.setButtonType_(NSSwitchButton)
+        checkbox.setTitle_(NSLocalizedString("Enable Stereo", "Checkbox title"))
+        checkbox.setFont_(self.autoanswerCheckbox.font())
+        available = stereo_available()
+        if available:
+            checkbox.setToolTip_(NSLocalizedString("Audio calls to this contact, started with the Audio button or a double click, are made in stereo (Opus stereo, no echo cancellation: use a headset). Shared with your other devices", "Tooltip"))
+        else:
+            checkbox.setToolTip_(NSLocalizedString("Turn on Enable Stereo Mode in Preferences, Audio Calls, to make stereo calls", "Tooltip"))
+        checkbox.setState_(NSOnState if sip_contact is not None and getattr(sip_contact, 'stereo', False) else NSOffState)
+        checkbox.setEnabled_(available)
+        checkbox.sizeToFit()
+        checkbox.setAutoresizingMask_(anchor.autoresizingMask())
+        anchor.superview().addSubview_(checkbox)
+        self._stereoCheckboxView = checkbox
+        if available:
+            self.stereoCheckbox = checkbox      # saved only while it can be changed
+
     PREFERRED_MEDIA_TAGS = ('messages', 'audio', 'video')     # the popup item tags, in order
 
     @objc.python_method
@@ -1480,31 +1511,6 @@ class EditContactController(AddContactController):
                 contact['stereo'] = self.stereoCheckbox.state() == NSOnState
             return contact
         return False
-
-    @objc.python_method
-    def setUpStereoCheckbox(self, sip_contact):
-        """Enable Stereo: audio calls to this contact in stereo (shared over XCAP, StereoCalls.py), right of
-        Automatically Answer Calls (and No Media Relay, when shown). Enabled only while Enable Stereo Mode is on."""
-        self.stereoCheckbox = None
-        anchor = getattr(self, 'noMediaRelayCheckbox', None) or self.autoanswerCheckbox
-        anchor.sizeToFit()
-        frame = anchor.frame()
-        checkbox = NSButton.alloc().initWithFrame_(NSMakeRect(frame.origin.x + frame.size.width + 12, frame.origin.y, 160, frame.size.height))
-        checkbox.setButtonType_(NSSwitchButton)
-        checkbox.setTitle_(NSLocalizedString("Enable Stereo", "Checkbox title"))
-        checkbox.setFont_(self.autoanswerCheckbox.font())
-        available = stereo_available()
-        if available:
-            checkbox.setToolTip_(NSLocalizedString("Audio calls to this contact, started with the Audio button or a double click, are made in stereo (Opus stereo, no echo cancellation: use a headset). Shared with your other devices", "Tooltip"))
-        else:
-            checkbox.setToolTip_(NSLocalizedString("Turn on Enable Stereo Mode in Preferences, Audio Calls, to make stereo calls", "Tooltip"))
-        checkbox.setState_(NSOnState if sip_contact is not None and getattr(sip_contact, 'stereo', False) else NSOffState)
-        checkbox.setEnabled_(available)
-        checkbox.sizeToFit()
-        checkbox.setAutoresizingMask_(anchor.autoresizingMask())
-        anchor.superview().addSubview_(checkbox)
-        if available:
-            self.stereoCheckbox = checkbox      # saved only while it can be changed
 
     @objc.python_method
     def setUpNoMediaRelayCheckbox(self, blink_contact):
