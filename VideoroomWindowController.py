@@ -259,6 +259,42 @@ def _contains(rect, point):
 # Drawing
 
 _symbol_cache = {}
+
+_led_meter = []
+
+
+def led_meter_image():
+    """The Mixer button's icon: a stereo LED VU meter, two columns of LEDs lit green, yellow, red from the bottom
+    (the left one higher), the unlit ones dim -- AG CuteMusic's mixer at a glance. Drawn once, at 2x."""
+    if _led_meter:
+        return _led_meter[0]
+    rows, lit = 7, (6, 4)
+    width, height = 18.0, 18.0
+    scale = 2.0
+    image = NSImage.alloc().initWithSize_(NSMakeSize(width * scale, height * scale))
+    image.lockFocus()
+    led_w, gap_x = 6.0 * scale, 2.0 * scale
+    led_h, gap_y = 2.0 * scale, 0.6 * scale
+    x0 = (width * scale - (2 * led_w + gap_x)) / 2
+    y0 = (height * scale - (rows * led_h + (rows - 1) * gap_y)) / 2
+    for column, on in enumerate(lit):
+        for row in range(rows):
+            if row >= on:
+                color = NSColor.colorWithCalibratedWhite_alpha_(1.0, 0.22)
+            elif row == rows - 1:
+                color = NSColor.colorWithCalibratedRed_green_blue_alpha_(1.0, 0.27, 0.22, 1.0)       # red
+            elif row >= rows - 3:
+                color = NSColor.colorWithCalibratedRed_green_blue_alpha_(1.0, 0.80, 0.20, 1.0)       # yellow
+            else:
+                color = NSColor.colorWithCalibratedRed_green_blue_alpha_(0.30, 0.90, 0.40, 1.0)      # green
+            color.setFill()
+            rect = NSMakeRect(x0 + column * (led_w + gap_x), y0 + row * (led_h + gap_y), led_w, led_h)
+            NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(rect, 0.6 * scale, 0.6 * scale).fill()
+    image.unlockFocus()
+    image.setSize_(NSMakeSize(width, height))
+    image.setTemplate_(False)       # its colours its own (the bar's tint is for symbols)
+    _led_meter.append(image)
+    return image
 _TONES = {'white': lambda: _white(0.95), 'red': NSColor.systemRedColor, 'dark': lambda: _rgb(40, 30, 0)}
 
 
@@ -1398,10 +1434,12 @@ class VideoroomWindowController(NSObject):
             notification_center.add_observer(self, sender=session, name=name)
         notification_center.add_observer(self, name='VideoDeviceDidChangeCamera')
         notification_center.add_observer(self, name='VideoDeviceDidStop')
+        notification_center.add_observer(self, name='CFGSettingsObjectDidChange')       # the input: the Mixer button
         for participant in list(session.participants.values()):
             self.addParticipant(participant)
         self.updateMuteButton()
         self.updateCameraButton()
+        self.updateMixerButton()
         self.updateScreenState(initial=True)
         self.setStatus(_t("Connecting…"))
         return self
@@ -1465,6 +1503,11 @@ class VideoroomWindowController(NSObject):
         self.speakersButton = add('person.wave.2.fill', _t("Speakers"), 'userClickedSpeakersButton:', tooltip=_t("Speaker selection: the room's layout, for everyone"))
         self.speakersButton.setHidden_(True)
         self.chatButton = add('message.fill', _t("Chat"), 'userClickedChatButton:', tooltip=_t("The room's chat, in the chat window"))
+        # AG CuteMusic's mixer, shown while AG Podcast Mixer is the input (updateMixerButton)
+        self.mixerButton = add(None, _t("Mixer"), 'userClickedMixerButton:',
+                               tooltip=_t("AG Podcast Mixer is the input: open AG CuteMusic's mixer"))
+        self.mixerButton.iconView.setImage_(led_meter_image())
+        self.mixerButton.setHidden_(True)
         self.handButton = add('hand.raised.fill', _t("Raise hand"), 'userClickedHandButton:')
         self.handButton.setHidden_(True)      # with more than two of us (updateRoomButtons)
         self.moreButton = add('ellipsis.circle', _t("More"), 'userClickedMoreButton:')
@@ -1538,6 +1581,7 @@ class VideoroomWindowController(NSObject):
             notification_center.discard_observer(self, sender=self.session, name=name)
         notification_center.discard_observer(self, name='VideoDeviceDidChangeCamera')
         notification_center.discard_observer(self, name='VideoDeviceDidStop')
+        notification_center.discard_observer(self, name='CFGSettingsObjectDidChange')
         if self.sharing_screen and self.device_before_screen is not None:
             self.stopSharingScreen()        # the room is over: the camera is the device again
         if 'ConferenceInfoPanel' in sys.modules:
@@ -2588,6 +2632,27 @@ class VideoroomWindowController(NSObject):
     @objc.python_method
     def _NH_VideoDeviceDidChangeCamera(self, notification):
         self.updateScreenState()
+
+    @objc.python_method
+    def _NH_CFGSettingsObjectDidChange(self, notification):
+        if 'audio.input_device' in notification.data.modified:
+            self.updateMixerButton()
+
+    @objc.python_method
+    def updateMixerButton(self):
+        """The Mixer button: there while AG Podcast Mixer is the input."""
+        try:
+            from CuteMusic import selected
+            shown = bool(selected())
+        except Exception:
+            shown = False
+        if self.mixerButton.isHidden() == shown:
+            self.mixerButton.setHidden_(not shown)
+            self.callBar.tile()
+
+    def userClickedMixerButton_(self, sender):
+        from CuteMusic import open_mixer
+        open_mixer()
 
     @objc.python_method
     def _NH_VideoDeviceDidStop(self, notification):

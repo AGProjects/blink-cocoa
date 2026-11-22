@@ -164,6 +164,7 @@ def meter_from_sip(level):
         return 0.0
     return meter_from_linear((256.0 ** companded - 1.0) / 255.0)
 AUDIO_BITRATE = 64000           # bit/s of our Opus: libwebrtc takes it from the answer's maxaveragebitrate (32000 without)
+STEREO_AUDIO_BITRATE = 128000   # a podcast's (session.stereo): music and voices in stereo
 # the microphone: echo cancelling only, as the SIP audio; no noise suppression or gain control
 AUDIO_CONSTRAINTS = {'googEchoCancellation': 'true', 'googHighpassFilter': 'true',
                      'googNoiseSuppression': 'false', 'googAutoGainControl': 'false'}
@@ -171,7 +172,10 @@ AUDIO_CONSTRAINTS = {'googEchoCancellation': 'true', 'googHighpassFilter': 'true
 MUSIC_AUDIO_CONSTRAINTS = dict(AUDIO_CONSTRAINTS, googEchoCancellation='false', googHighpassFilter='false')
 
 
-def audio_constraints():
+def audio_constraints(stereo=False):
+    """stereo (a podcast): no processing at all, or libwebrtc's audio processing makes the microphone mono."""
+    if stereo:
+        return MUSIC_AUDIO_CONSTRAINTS
     try:
         from CuteMusic import selected
         music = selected()
@@ -386,6 +390,23 @@ def _opus_bitrate(sdp, bitrate):
             continue
         params = [param for param in fmtp.group(1).split(';') if param.strip() and not param.strip().lower().startswith('maxaveragebitrate=')]
         params.append('maxaveragebitrate=%d' % bitrate)
+        sdp = sdp[:fmtp.start(1)] + ';'.join(params) + sdp[fmtp.end(1):]
+    return sdp
+
+
+def _opus_stereo(sdp):
+    """The SDP with stereo=1 and sprop-stereo=1 in the fmtp of every Opus payload type: in an answer to our offer, the
+    room takes stereo (libwebrtc's encoder then sends two channels); in our offer and in our answers to the feeds, we
+    send and take stereo (a feed's two channels decoded as two)."""
+    eol = '\r\n' if '\r\n' in sdp else '\n'
+    for pt in re.findall(r'^a=rtpmap:(\d+) opus/48000', sdp, re.M | re.I):
+        fmtp = re.search(r'^a=fmtp:%s ([^\r\n]*)' % pt, sdp, re.M)
+        if fmtp is None:
+            sdp = re.sub(r'^(a=rtpmap:%s [^\r\n]*)' % pt, r'\1%sa=fmtp:%s stereo=1;sprop-stereo=1' % (eol, pt), sdp, count=1, flags=re.M)
+            continue
+        params = [param for param in fmtp.group(1).split(';')
+                  if param.strip() and param.strip().lower().split('=')[0] not in ('stereo', 'sprop-stereo')]
+        params += ['stereo=1', 'sprop-stereo=1']
         sdp = sdp[:fmtp.start(1)] + ';'.join(params) + sdp[fmtp.end(1):]
     return sdp
 
@@ -700,6 +721,7 @@ class VideoroomSession(object):
         self.id = str(uuid.uuid4())
         self.state = 'idle'         # idle, connecting, accepted, established, terminated
         self.reason = ''
+        self.stereo = False         # a podcast (Join Podcast): our audio and the feeds' in stereo, Opus at 128 kbit/s
         self.duration = None        # seconds the room had existed when we joined
         self.participants = {}      # publisher id -> Participant
         self.feeds = {}             # feed id -> Participant
@@ -887,7 +909,7 @@ class VideoroomSession(object):
         stream_id = 'blink-%s' % self.id
 
         # microphone: the audio device's; muted is a disabled track (silence is sent)
-        constraints = _cls('RTCMediaConstraints').alloc().initWithMandatoryConstraints_optionalConstraints_(audio_constraints(), None)
+        constraints = _cls('RTCMediaConstraints').alloc().initWithMandatoryConstraints_optionalConstraints_(audio_constraints(self.stereo), None)
         audio_source = factory.audioSourceWithConstraints_(constraints)
         self._audio_track = factory.audioTrackWithSource_trackId_(audio_source, 'audio-%s' % self.id)
         self._audio_track.setIsEnabled_(self._microphone_enabled())
@@ -921,6 +943,9 @@ class VideoroomSession(object):
             self._terminate('cannot create the offer: %s' % error)
             return
         sdp = str(description.sdp())
+        if self.stereo:         # we send stereo, and take it
+            sdp = _opus_stereo(sdp)
+            description = _cls('RTCSessionDescription').alloc().initWithType_sdp_(SDP_OFFER, sdp)
 
         def local_set(error):
             if error is not None:
@@ -951,7 +976,9 @@ class VideoroomSession(object):
             self._terminate('cannot join: %s' % error)
 
     def _on_answer(self, sdp):
-        sdp = _opus_bitrate(sdp, AUDIO_BITRATE)     # what our Opus encoder sends at
+        sdp = _opus_bitrate(sdp, STEREO_AUDIO_BITRATE if self.stereo else AUDIO_BITRATE)     # what our Opus encoder sends at
+        if self.stereo:         # the room takes stereo: our encoder sends two channels
+            sdp = _opus_stereo(sdp)
         self.log('answer: %s' % _media_summary(sdp))
         for line in _rtp_answer_lines(sdp):
             self.log('publishing: %s' % line)
@@ -1704,6 +1731,8 @@ class VideoroomSession(object):
             if error is not None:
                 call_in_gui_thread(self.log, 'cannot use our answer to %s: %s' % (participant.uri, _error_text(error)), 'error')
 
+        if self.stereo:         # a feed's stereo decoded as stereo
+            description = _cls('RTCSessionDescription').alloc().initWithType_sdp_(SDP_ANSWER, _opus_stereo(str(description.sdp())))
         participant.peer_connection.setLocalDescription_completionHandler_(description, local_set)
         sdp = str(description.sdp())
         participant.video_codec = participant.video_codec or _chosen_video_codec(sdp)
@@ -1752,7 +1781,7 @@ class VideoroomManager(object, metaclass=Singleton):
         room = room.replace('sip:', '', 1).lower()
         return next((session for session in self.sessions if room in (session.room.lower(), session.sip_room.lower()) and session.state != 'terminated'), None)
 
-    def join(self, account, room, audio=True, video=True, target=None, extra_sources=None, screen=None):
+    def join(self, account, room, audio=True, video=True, target=None, extra_sources=None, screen=None, stereo=False):
         """Join room from account (its window shown), or bring forward the session already in it. extra_sources:
         [(source, label)] published as our extra videos once the room is joined (ExtraVideo.py); screen: a
         screen device shared once joined (the window starts both)."""
@@ -1762,6 +1791,7 @@ class VideoroomManager(object, metaclass=Singleton):
             window_for_session(session).show()
             return session
         session = VideoroomSession(account, room, audio=audio, video=video, target=target)
+        session.stereo = bool(stereo)
         session.pending_extra_sources = list(extra_sources or [])
         session.pending_screen = screen
         self.sessions.append(session)

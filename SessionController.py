@@ -2557,7 +2557,39 @@ class SessionController(NSObject):
             self.endStream(chatStream)
 
     @objc.python_method
+    def conferenceVideoRoom(self):
+        """(video room address, RoomTarget or None) when this session is to a conference room that can have video
+        over WebRTC (SylkServer; a room of another SylkServer included), else None (ChatController.conferenceVideo)."""
+        if self.account is None or self.account is BonjourAccount() or self.target_uri is None:
+            return None
+        from WebRTCSupport import room_video, split_uri
+        user, host = split_uri(self.target_uri)
+        if not (self.remote_focus or self.is_conference or (host or '').startswith(('conference.', 'videoconference.'))):
+            return None
+        return room_video(self.target_uri, self.account)
+
+    @objc.python_method
     def addVideoToSession(self):
+        # a conference room with video over WebRTC: there (its audio too, the chat staying here), never SIP video --
+        # from wherever Add Video is asked (the audio tile's menu, the Call menu, the chat window's toolbar)
+        if not self.hasStreamOfType("video"):
+            try:
+                from WebRTCSupport import active_videoroom, join_video_conference, show_videoroom_window
+                room = active_videoroom(self.target_uri)
+                if room is not None:
+                    show_videoroom_window(room)
+                    return
+                video = self.conferenceVideoRoom()
+                if video is not None:
+                    room = join_video_conference(self.account, video[0], audio=True, video=True, target=video[1])
+                    if room is not None:
+                        self.log_info("Add Video: the conference goes to its video room %s over WebRTC" % room.room)
+                        return
+                    self.log_info("Add Video: cannot join the video room %s, adding SIP video" % video[0])
+            except Exception:
+                from util import log_gui_exception
+                log_gui_exception('adding video to the conference %s' % self.remoteAOR)
+                return
         if not self.hasStreamOfType("video"):
             if not self.hasStreamOfType("audio"):
                 self.startCompositeSessionWithStreamsOfTypes(("audio", "video"))

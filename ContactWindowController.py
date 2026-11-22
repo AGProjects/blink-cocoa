@@ -101,6 +101,7 @@ from ClamshellMonitor import ClamshellMonitor
 from AVFoundation import AVCaptureDevice
 
 import pickle
+import traceback
 import datetime
 import hashlib
 import os
@@ -282,6 +283,115 @@ class _DeletedGroupMenuPolicy(object):
     # there -- Restore and Delete Permanently are offered instead.
     delete_contact_allowed = False
     remove_contact_allowed = False
+
+
+@implementer(IObserver)
+class PodcastWatcher(object):
+    """The podcast in progress (Join Podcast), from its start until it really ends: then Blink's audio back to the
+    system default devices, and Do Not Disturb off again (when on air turned it on: do_not_disturb, and it was off).
+
+    Really ends: left here (Leave, Hang Up, AG CuteMusic's Off: the room's reason 'left'), or, when the room ended
+    by itself (the server, the network), no redial of it within REDIAL_GRACE (AG CuteMusic's auto-redial: 5 s), or
+    AG Podcast Mixer gone meanwhile (the mixer powered down, AG CuteMusic quit). A redial joins the same podcast
+    (attach): the devices and Do Not Disturb stay as they are."""
+
+    REDIAL_GRACE = 30.0     # s
+    current = None          # the one podcast watched
+
+    def __init__(self, session, do_not_disturb=False):
+        self.session = None
+        self.room = session.room
+        self.account = session.account
+        self.do_not_disturb = False
+        self.waiting = False        # the room ended by itself: a redial expected
+        self.waited = 0.0
+        self.timer = None
+        if do_not_disturb and self.account is not None and not isinstance(self.account, BonjourAccount) and not self.account.audio.do_not_disturb:
+            self.account.audio.do_not_disturb = True
+            self.account.save()
+            self.do_not_disturb = True
+            BlinkLogger().log_info("Do Not Disturb on for %s while on air in %s" % (self.account.id, session.room))
+            self._refresh()
+        PodcastWatcher.current = self
+        self.attach(session)
+
+    def attach(self, session):
+        if self.session is not None:
+            NotificationCenter().discard_observer(self, sender=self.session, name='VideoroomSessionDidChangeState')
+        if self.waiting:
+            BlinkLogger().log_info("The podcast in %s goes on (redialled)" % session.room)
+        self.session = session
+        self.room = session.room
+        self.waiting = False
+        self._stop_timer()
+        NotificationCenter().add_observer(self, sender=session, name='VideoroomSessionDidChangeState')
+
+    @staticmethod
+    def _refresh():
+        controller = NSApp.delegate().contactsWindowController
+        controller.setStatusBarIcon(SIPSimpleSettings().presence_state.status)
+        controller.refreshAccountList()
+
+    @staticmethod
+    def mixer_present():
+        try:
+            from CuteMusic import device_name
+            return device_name() in NSApp.delegate().contactsWindowController.backend._app.engine.input_devices
+        except Exception:
+            return False
+
+    def _stop_timer(self):
+        if self.timer is not None:
+            self.timer.invalidate()
+            self.timer = None
+
+    @run_in_gui_thread
+    def handle_notification(self, notification):
+        if notification.sender is not self.session or notification.data.state != 'terminated':
+            return
+        NotificationCenter().discard_observer(self, sender=self.session, name='VideoroomSessionDidChangeState')
+        reason = notification.data.reason or ''
+        if reason == 'left':
+            self.finish('left')
+            return
+        BlinkLogger().log_info("The podcast in %s ended by itself (%s): waiting %ds for a redial" % (self.room, reason, self.REDIAL_GRACE))
+        self.waiting = True
+        self.waited = 0.0
+        self._stop_timer()
+        self.timer = NSTimer.scheduledTimerWithTimeInterval_repeats_block_(1.0, True, lambda timer: self._tick())
+
+    def _tick(self):
+        if not self.waiting:
+            self._stop_timer()
+            return
+        self.waited += 1.0
+        if not self.mixer_present():
+            self.finish('AG Podcast Mixer is gone')
+        elif self.waited >= self.REDIAL_GRACE:
+            self.finish('not redialled')
+
+    def finish(self, why, keep_devices=False):
+        self._stop_timer()
+        if self.session is not None:
+            NotificationCenter().discard_observer(self, sender=self.session, name='VideoroomSessionDidChangeState')
+        self.waiting = False
+        if PodcastWatcher.current is self:
+            PodcastWatcher.current = None
+        BlinkLogger().log_info("The podcast in %s is over (%s)" % (self.room, why))
+        if self.do_not_disturb and self.account.audio.do_not_disturb:
+            self.account.audio.do_not_disturb = False
+            self.account.save()
+            BlinkLogger().log_info("Do Not Disturb off for %s: the podcast ended" % self.account.id)
+            self._refresh()
+        if not keep_devices and PodcastWatcher.current is None:     # (another podcast on: its devices kept)
+            settings = SIPSimpleSettings()
+            if settings.audio.input_device != 'system_default' or settings.audio.output_device != 'system_default':
+                BlinkLogger().log_info("Audio back to the system default devices (were %s, %s)"
+                                       % (settings.audio.input_device, settings.audio.output_device))
+                settings.audio.input_device = 'system_default'
+                settings.audio.output_device = 'system_default'
+                settings.save()
+        self.session = None
 
 
 @implementer(IObserver)
@@ -1226,7 +1336,42 @@ class ContactWindowController(NSWindowController):
         self.callMeMaybeDialog.runSheetForWindow(self.window())
 
     @objc.python_method
+    def updateJoinPodcastMenuItem(self, menu, account):
+        """Join Podcast... (tag 47; 45 and 46 are Call me, maybe? and its separator) right under Join Conference...
+        (tag 44), made once."""
+        conference = menu.itemWithTag_(44)
+        podcast = menu.itemWithTag_(47)
+        if podcast is None:
+            podcast = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(NSLocalizedString("Join Podcast...", "Menu item"), "joinPodcastClicked:", "")
+            podcast.setTag_(47)
+            podcast.setTarget_(self)
+            menu.insertItem_atIndex_(podcast, menu.indexOfItem_(conference) + 1 if conference is not None else 0)
+        from WebRTCSupport import media_missing
+        bonjour = account is None or isinstance(account, BonjourAccount)
+        missing = [] if bonjour else list(media_missing())
+        podcast.setHidden_(bonjour or bool(missing))
+        podcast.setEnabled_(True)
+        reason = 'no SIP account' if bonjour else (', '.join(map(str, missing)) if missing else None)
+        if reason != getattr(self, '_podcast_hidden_logged', ''):
+            self._podcast_hidden_logged = reason
+            BlinkLogger().log_info("Join Podcast is %s" % ('in the Call menu' if reason is None else 'hidden: %s' % reason))
+
+    @objc.python_method
     def updateCallMenu(self):
+        # Join Podcast... under Join Conference: for a SIP account when WebRTC media can be done here. Whether the room
+        # is on a SylkServer is the panel's to find out, as Join Conference does: a room of another domain is looked up
+        # there (the account's own domain need not have a wsServer), and the join refused if it has no WebRTC room.
+        try:
+            self.updateJoinPodcastMenuItem(self.callMenu, self.activeAccount() or AccountManager().default_account)
+        except Exception:
+            BlinkLogger().log_error("Cannot update Join Podcast in the Call menu: %s" % traceback.format_exc())
+        try:
+            self._updateCallMenu()
+        except Exception:
+            BlinkLogger().log_error("Cannot update the Call menu: %s" % traceback.format_exc())
+
+    @objc.python_method
+    def _updateCallMenu(self):
         menu = self.callMenu
 
         item = menu.itemWithTag_(300)  # mute
@@ -1259,6 +1404,7 @@ class ContactWindowController(NSWindowController):
         # Not gated on chat.enable_msrp_chat: a conference room is not a
         # one-to-one chat, so it stays reachable with MSRP chat off.
         item.setEnabled_(True)
+
 
         # outbound proxy
         if not isinstance(account, BonjourAccount) and (account.sip.primary_proxy or account.sip.alternative_proxy):
@@ -5021,18 +5167,22 @@ class ContactWindowController(NSWindowController):
 
     @objc.python_method
     def finalizeAudioSession(self, streamController):
-        # the tile must go even if leaving the conference fails, else it stays in the drawer for ever
+        # the tile must go even if leaving the conference fails, else it stays in the drawer for ever.
+        # A video room's audio (VideoroomAudioController) has no SIP session controller: logged without one.
+        session_controller = getattr(streamController, 'sessionController', None)
+        log_info = session_controller.log_info if session_controller is not None else BlinkLogger().log_info
+        log_error = session_controller.log_error if session_controller is not None else BlinkLogger().log_error
         if streamController.isConferencing:
-            streamController.sessionController.log_info("Audio session finalized while in the audio conference")
+            log_info("Audio session finalized while in the audio conference")
             if self.conference is not None:
                 try:
                     self.removeAudioSessionFromConference(streamController)
                 except Exception as e:
-                    streamController.sessionController.log_error("Cannot leave the audio conference: %s" % e)
+                    log_error("Cannot leave the audio conference: %s" % e)
             streamController.view.setConferencing_(False)
 
         self.audioSessionsListView.removeItemView_(streamController.view)
-        streamController.sessionController.log_info("Audio tile removed from the drawer (%d left)" % self.audioSessionsListView.numberOfItems())
+        log_info("Audio tile removed from the drawer (%d left)" % self.audioSessionsListView.numberOfItems())
         self.updateAudioButtons()
         count = self.audioSessionsListView.numberOfItems()
         if self.drawer.isOpen() and count == 0 and not self.shouldDrawerStayOpen():
@@ -5210,8 +5360,15 @@ class ContactWindowController(NSWindowController):
                     start_now = False
 
         if start_now:
+            if getattr(conference, 'podcast', False):
+                # redialled as it was started (rejoinPodcast): the panel's choices, the account it was joined from
+                if getattr(conference, 'account', None) is None:
+                    conference.account = self.activeAccount()
+                self.lastPodcast = conference
             self.joinConference(conference.target, conference.media_type, conference.participants, conference.nickname, video_room=getattr(conference, 'video_room', None),
-                                video_sources=getattr(conference, 'video_sources', None), stereo=getattr(conference, 'stereo', False))
+                                video_sources=getattr(conference, 'video_sources', None), stereo=getattr(conference, 'stereo', False),
+                                podcast=getattr(conference, 'podcast', False), do_not_disturb=getattr(conference, 'do_not_disturb', False),
+                                account=getattr(conference, 'account', None))
             return True
         else:
             settings = SIPSimpleSettings()
@@ -5748,14 +5905,20 @@ class ContactWindowController(NSWindowController):
         return session_controller
 
     @objc.python_method
-    def joinConference(self, target, media_type, participants=(), nickname=None, video_room=None, video_sources=None, stereo=False):
-        BlinkLogger().log_info("Join conference %s with media %s%s" % (target, media_type, " (stereo audio)" if stereo else ""))
+    def joinConference(self, target, media_type, participants=(), nickname=None, video_room=None, video_sources=None, stereo=False, podcast=False, do_not_disturb=False, account=None):
+        """account: the one to join from (a podcast redialled: the one it was started from), else the selected one.
+        do_not_disturb (a podcast): the account's Do Not Disturb on while in the room, off again when it ends.
+        podcast (Join Podcast): the room's audio in stereo over WebRTC, never SIP, its chat over MSRP; video only
+        when asked for (else the camera off, to be turned on in the room)."""
+        BlinkLogger().log_info("Join %s %s with media %s%s" % ('podcast' if podcast else 'conference', target, media_type,
+                                                              " (stereo audio)" if stereo else ""))
         if participants:
             BlinkLogger().log_info("Inviting participants: %s" % participants)
 
         # activate the app in case the app is not active
         NSApp.activateIgnoringOtherApps_(True)
-        account = self.activeAccount()
+        if account is None or not account.enabled:
+            account = self.activeAccount()
         if not account:
             NSRunAlertPanel(NSLocalizedString("Cannot Initiate Session", "Window title"), NSLocalizedString("There are currently no active accounts", "Label"), NSLocalizedString("OK", "Button title"), None, None)
             return
@@ -5766,10 +5929,28 @@ class ContactWindowController(NSWindowController):
 
         for_videoroom = False
         video_session = None
+        if podcast:     # WebRTC whatever the media: the camera off unless Video was checked
+            with_video = type(media_type) in (tuple, list) and 'video' in media_type
+            media_type = ('chat', 'audio', 'video')
+            if not with_video:
+                video_sources = (None, None, [])
         if type(media_type) in (tuple, list) and 'video' in media_type:
             # video over WebRTC (SylkServer video rooms): the room's audio and video go there, its chat over MSRP
             try:
-                media_type, video_session = self.joinVideoConference(account, target, media_type, video_room, video_sources)
+                media_type, video_session = self.joinVideoConference(account, target, media_type, video_room, video_sources, stereo=podcast)
+                if podcast and video_session is None:
+                    NSRunAlertPanel(NSLocalizedString("Join Podcast", "Window title"),
+                                    NSLocalizedString("The podcast room %s cannot be joined over WebRTC", "Label") % target,
+                                    NSLocalizedString("OK", "Button title"), None, None)
+                    return None
+                if podcast and video_session is not None:
+                    watcher = PodcastWatcher.current
+                    if watcher is not None and watcher.waiting:      # redialled: the same podcast goes on
+                        watcher.attach(video_session)
+                    else:
+                        if watcher is not None:
+                            watcher.finish('another podcast started', keep_devices=True)
+                        PodcastWatcher(video_session, do_not_disturb=do_not_disturb)
                 for_videoroom = video_session is not None
             except Exception:
                 log_gui_exception('joining the video room of %s' % target)
@@ -5834,7 +6015,7 @@ class ContactWindowController(NSWindowController):
         return session_controller
 
     @objc.python_method
-    def joinVideoConference(self, account, target, media_type, video_room=None, video_sources=None):
+    def joinVideoConference(self, account, target, media_type, video_room=None, video_sources=None, stereo=False):
         """Join the video room of target over WebRTC (audio muted when media_type has no audio); (the media
         left for the SIP session, the VideoroomSession or None when it was not joined): chat only when it
         was, else the media without video. video_sources: (our camera or None for the camera off, the screen
@@ -5858,7 +6039,7 @@ class ContactWindowController(NSWindowController):
                 if extras:
                     BlinkLogger().log_info("[conference] %s: publishing also %s" % (target, ', '.join(label for source, label in extras)))
             session = join_video_conference(account, video_uri, audio='audio' in media_type, video=send_camera, target=room_target,
-                                            extra_sources=extras, screen=screen)
+                                            extra_sources=extras, screen=screen, stereo=stereo)
         if session is None:
             BlinkLogger().log_warning("[conference] %s: no video room can be joined, joining without video" % target)
             remaining = tuple(media for media in media_type if media != 'video')
@@ -7412,6 +7593,67 @@ class ContactWindowController(NSWindowController):
             return
         conference = self.showJoinConferenceWindow(default_domain=account.id.domain)
         if conference is not None:
+            self.startConferenceIfAppropriate(conference, play_initial_announcement=True)
+        self.joinConferenceWindow.release()
+        self.joinConferenceWindow = None
+
+    @objc.python_method
+    def podcastFor(self, address):
+        """The last podcast started, when address (user@domain, a SIP URI, "Name <uri>") is its room or the room's chat."""
+        conference = getattr(self, 'lastPodcast', None)
+        if conference is None or not address:
+            return None
+
+        def bare(text):
+            text = str(text).strip()
+            if '<' in text and '>' in text:
+                text = text[text.index('<') + 1:text.index('>')]
+            text = re.sub(r'^sips?:', '', text, flags=re.I).split(';')[0].lower()
+            return text if '@' in text else None
+
+        wanted = bare(address)
+        rooms = {bare(conference.target)}
+        watcher = PodcastWatcher.current
+        if watcher is not None and watcher.room:
+            rooms.add(bare(watcher.room))
+        return conference if wanted is not None and wanted in rooms else None
+
+    @objc.python_method
+    def rejoinPodcast(self, conference):
+        """A podcast again, exactly as it was started: from the same account, its panel's choices (video, Do Not Disturb),
+        AG Podcast Mixer as the input again."""
+        BlinkLogger().log_info("Rejoining the podcast %s as it was started" % conference.target)
+        self.selectPodcastMixer()
+        self.startConferenceIfAppropriate(conference)
+
+    @objc.python_method
+    def selectPodcastMixer(self):
+        """Join Podcast: AG Podcast Mixer as the input when it is listed (AG CuteMusic's mixer on); the output left as it is
+        (the mixer is an input only)."""
+        try:
+            from CuteMusic import device_name
+            name = device_name()
+            engine = self.backend._app.engine
+        except Exception:
+            return
+        if not name or name not in engine.input_devices:
+            return
+        settings = SIPSimpleSettings()
+        if settings.audio.input_device != name:
+            BlinkLogger().log_info("Join Podcast: %s selected as the input" % name)
+            settings.audio.input_device = name
+            settings.save()
+
+    @objc.IBAction
+    def joinPodcastClicked_(self, sender):
+        """Join Podcast: Join Conference's panel without invitations, stereo audio over WebRTC, Video the one option."""
+        account = self.activeAccount()
+        if account is None:
+            return
+        self.joinConferenceWindow = JoinConferenceWindowController(default_domain=account.id.domain, podcast=True)
+        conference = self.joinConferenceWindow.run()
+        if conference is not None:
+            self.selectPodcastMixer()       # only once joining: the panel alone (or Cancel) changes no device
             self.startConferenceIfAppropriate(conference, play_initial_announcement=True)
         self.joinConferenceWindow.release()
         self.joinConferenceWindow = None

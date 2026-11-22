@@ -377,6 +377,7 @@ class CuteMusicLink(object, metaclass=Singleton):
         self._seq = None            # the last request seen ('agrq', blink.request): each acted on once
         self._control_failed = None  # the last write to 'agbc' that failed (logged once)
         self._alert_device = None   # the alert device as last chosen, never one of AG CuteMusic's
+        self._rooms_joined = set()  # the podcasts' rooms (their session ids) once established: their end is 'remote'
         self._ended = None          # how our last call ended, for AG CuteMusic's auto-redial ({"seq", "at", "by", "address"})
 
     # Start and stop
@@ -469,6 +470,9 @@ class CuteMusicLink(object, metaclass=Singleton):
             self._apply_music_mode()
         elif notification.name in self._CALL_ENDS and self._timer is not None:
             self._call_ended(notification)
+            self._publish_calls()
+        elif notification.name == 'VideoroomSessionDidChangeState' and self._timer is not None:
+            self._room_changed(notification)
             self._publish_calls()
         elif notification.name in self._CALL_CHANGES and self._timer is not None:
             self._publish_calls()       # at once, not at the next tick: AG CuteMusic follows the call's progress
@@ -688,6 +692,36 @@ class CuteMusicLink(object, metaclass=Singleton):
         self._ended = {'seq': (self._ended or {}).get('seq', 0) + 1, 'at': time.time(), 'by': by, 'address': address}
         BlinkLogger().log_info('Call with %s ended (%s): told AG CuteMusic' % (address or '?', by))
 
+    def _room_changed(self, notification):
+        """A podcast's room (Join Podcast: stereo over WebRTC) ending, told AG CuteMusic as a call's end, for its
+        auto-redial: 'local' (left here), 'remote' (ended once joined: the server, the network) or 'failed' (never
+        joined). Its address the podcast's (its chat's): AG CuteMusic's call request for it rejoins the podcast as it
+        was started (ContactWindowController.rejoinPodcast). Other rooms: not told (no redial of them)."""
+        session, state = notification.sender, notification.data.state
+        if not getattr(session, 'stereo', False):
+            return
+        if state == 'established':
+            self._rooms_joined.add(session.id)
+            return
+        if state != 'terminated':
+            return
+        joined = session.id in self._rooms_joined
+        self._rooms_joined.discard(session.id)
+        reason = notification.data.reason or ''
+        by = 'local' if reason == 'left' else ('remote' if joined else 'failed')
+        try:
+            conference = getattr(NSApp.delegate().contactsWindowController, 'lastPodcast', None)
+        except AttributeError:
+            conference = None
+        address = str(conference.target) if conference is not None else str(session.room)
+        address = address.split(':', 1)[1] if address.lower().startswith(('sip:', 'sips:')) else address
+        self._ended = {'seq': (self._ended or {}).get('seq', 0) + 1, 'at': time.time(), 'by': by, 'address': address}
+        BlinkLogger().log_info('Podcast in %s ended (%s, %s): told AG CuteMusic' % (session.room, by, reason))
+
+    def _redial_address(self):
+        redial = self._redial()
+        return redial['address'] if redial else None
+
     def _redial(self):
         """What REDIAL calls: the Status menu's Redial target, None when there is none."""
         try:
@@ -822,8 +856,14 @@ class CuteMusicLink(object, metaclass=Singleton):
             BlinkLogger().log_info('AG CuteMusic: hang up the call with %s' % controller.remoteAOR)
             controller.end()
         elif op == 'redial':
+            controller = NSApp.delegate().contactsWindowController
+            podcast = controller.podcastFor(self._redial_address())
+            if podcast is not None:     # the last call was a podcast: rejoined as it was started
+                BlinkLogger().log_info('AG CuteMusic: redial the podcast %s' % podcast.target)
+                controller.rejoinPodcast(podcast)
+                return
             BlinkLogger().log_info('AG CuteMusic: redial')
-            NSApp.delegate().contactsWindowController.redialLast_(None)
+            controller.redialLast_(None)
         elif op == 'mute' and str(request.get('id', '')).startswith('videoroom:'):     # a room's participant, from its MUTE
             from VideoroomAudio import VideoroomAudio
             controller = VideoroomAudio().find(str(request.get('id')).split(':', 1)[1])
@@ -839,8 +879,14 @@ class CuteMusicLink(object, metaclass=Singleton):
             controller.session.mute_participant(participant, muted)
         elif op == 'call' and request.get('address'):       # (auto-redial: the one the dropped call was with)
             address = str(request.get('address'))
+            controller = NSApp.delegate().contactsWindowController
+            podcast = controller.podcastFor(address)
+            if podcast is not None:     # a podcast: rejoined as it was started (stereo over WebRTC, its choices)
+                BlinkLogger().log_info('AG CuteMusic: rejoin the podcast %s' % address)
+                controller.rejoinPodcast(podcast)
+                return
             BlinkLogger().log_info('AG CuteMusic: call %s again' % address)
-            NSApp.delegate().contactsWindowController.startSessionWithTarget(address, media_type='audio')
+            controller.startSessionWithTarget(address, media_type='audio')
 
     def _remove_calls(self):
         path = self._calls_path()

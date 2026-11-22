@@ -123,9 +123,16 @@ def remember_conference(uri, account):
 default_conference_server = 'conference.sip2sip.info'
 
 
+PODCAST_DND_KEY = "JoinPodcastDoNotDisturb"      # Join Podcast's Do Not Disturb while on air, last chosen (on at first)
+
+
 class ServerConferenceRoom(object):
-    def __init__(self, target, media_type=None, participants=None, nickname=None, start_when_participants_available=False, video_room=None, video_sources=None, stereo=False):
+    def __init__(self, target, media_type=None, participants=None, nickname=None, start_when_participants_available=False, video_room=None, video_sources=None, stereo=False, podcast=False,
+                 do_not_disturb=False):
         self.target = target
+        self.do_not_disturb = do_not_disturb
+        # a podcast (Join Podcast): its audio in stereo over WebRTC, never SIP, its chat over MSRP, video when asked
+        self.podcast = podcast
         # the room's audio in stereo (Join Conference: Audio as Stereo, StereoCalls.py)
         self.stereo = stereo
         # (the video room address, its WebRTCSupport.RoomTarget or None) when joined with video over WebRTC
@@ -189,9 +196,13 @@ class JoinConferenceWindowController(NSObject):
     def __new__(cls, *args, **kwargs):
         return cls.alloc().init()
 
-    def __init__(self, target=None, participants=[], media_type=["chat"], default_domain=None, autostart=False):
+    def __init__(self, target=None, participants=[], media_type=["chat"], default_domain=None, autostart=False, podcast=False):
         NSBundle.loadNibNamed_owner_("JoinConferenceWindow", self)
 
+        # Join Podcast: the same panel without the invitations, its audio stereo over WebRTC (no SIP audio), Video the
+        # one choice; Join Conference: as it was before WebRTC rooms (no Video, no Mono/Stereo: SIP audio and chat)
+        self.podcast = podcast
+        self.do_not_disturb = False      # a podcast: Do Not Disturb on while on air, back off when it ends
         self.autostart = autostart
         self.notification_center = NotificationCenter()
         self.notification_center.add_observer(self, name='BonjourConferenceServicesDidRemoveServer')
@@ -238,6 +249,8 @@ class JoinConferenceWindowController(NSObject):
         self.chat.setState_(NSOnState)
         self.chat.setEnabled_(False)
         self._addVideoControls(media_type)
+        if self.podcast:
+            self._podcastPanel()
 
         self.updatePopupButtons()
         self.lookupRoom()
@@ -320,6 +333,78 @@ class JoinConferenceWindowController(NSObject):
     # 0.4 seconds after the typing stops, and OK waits for the answer.
 
     @objc.python_method
+    def _podcastPanel(self):
+        """Join Podcast: titled so, its invitations (the participants, adding them, starting once they are there) and its
+        saved configurations hidden, Audio always on (in stereo), Video the one choice."""
+        self.window.setTitle_(NSLocalizedString("Join Podcast", "Window title"))
+        # its shorter frame not saved as Join Conference's (the same nib, frameAutosaveName startConferenceWindow)
+        self.window.setFrameAutosaveName_("")
+        for view in (self.participantsTable.enclosingScrollView(), self.participant, self.addRemove, self.removeAllParticipants,
+                     self.startWhenParticipantsAvailable, self.configurationsButton):
+            if view is not None:
+                view.setHidden_(True)
+        # the labels of the hidden parts (the nib's, found by what they say)
+        content = self.window.contentView()
+        for view in content.subviews():
+            if view.isKindOfClass_(NSTextField) and not view.isEditable() and view is not getattr(self, 'providerLabel', None):
+                text = str(view.stringValue()).lower()
+                if 'participant' in text or 'invite' in text or 'configuration' in text:
+                    view.setHidden_(True)
+        self.audio.setState_(NSOnState)
+        self.audio.setEnabled_(False)
+        # the media line: "Media: Stereo audio [ ] Enable video" (chat always goes along: not shown)
+        for view in content.subviews():
+            if view.isKindOfClass_(NSTextField) and not view.isEditable() and str(view.stringValue()).strip().lower().startswith('proposed media'):
+                view.setStringValue_(NSLocalizedString("Media:", "Label"))
+        chat = self.chat.frame()
+        self.chat.setHidden_(True)
+        self.audio.setHidden_(True)
+        stereo = NSTextField.labelWithString_(NSLocalizedString("Stereo audio", "Label"))
+        stereo.setToolTip_(NSLocalizedString("In stereo over WebRTC (Opus 128 kbit/s, no echo cancellation: use a headset)", "Tooltip"))
+        stereo.sizeToFit()
+        size = stereo.frame().size
+        stereo.setFrameOrigin_((chat.origin.x + 2, chat.origin.y + (chat.size.height - size.height) / 2))
+        self.chat.superview().addSubview_(stereo)
+        self.video.setTitle_(NSLocalizedString("Enable video", "Checkbox title"))
+        self.video.sizeToFit()
+        self.video.setState_(NSOffState)
+        video = self.video.frame()
+        self.video.setFrameOrigin_((chat.origin.x + 2 + size.width + 16, chat.origin.y + (chat.size.height - video.size.height) / 2))
+        # under it (where the hidden "Start Conference When Participants are Available" was): Do Not Disturb, the note
+        from Foundation import NSUserDefaults
+        defaults = NSUserDefaults.standardUserDefaults()
+        dnd = defaults.objectForKey_(PODCAST_DND_KEY)
+        self.dnd = NSButton.checkboxWithTitle_target_action_(NSLocalizedString("Do Not Disturb while on air", "Checkbox title"), None, None)
+        self.dnd.setToolTip_(NSLocalizedString("Blink's Do Not Disturb turned on when the podcast starts and off when it ends", "Tooltip"))
+        self.dnd.setState_(NSOnState if dnd is None or bool(dnd) else NSOffState)
+        self.dnd.sizeToFit()
+        dnd_frame = self.dnd.frame()
+        self.dnd.setFrameOrigin_((chat.origin.x, chat.origin.y - dnd_frame.size.height - 6))
+        self.chat.superview().addSubview_(self.dnd)
+        note = NSTextField.labelWithString_(NSLocalizedString("Always wear a headset: echo cancellation is not active", "Label"))
+        note.setFont_(NSFont.systemFontOfSize_(NSFont.smallSystemFontSize()))
+        note.setTextColor_(NSColor.secondaryLabelColor())
+        note.sizeToFit()
+        note.setFrameOrigin_((chat.origin.x + 2, self.dnd.frame().origin.y - note.frame().size.height - 4))
+        self.chat.superview().addSubview_(note)
+        # the room of the invitations taken out: what is above them (room, nickname) moved down to the media line,
+        # the window as much shorter (its subviews not moved by the resize: moved here, once)
+        nickname = self.nickname_textfield.frame()
+        audio = self.audio.frame()
+        drop = nickname.origin.y - (audio.origin.y + audio.size.height + 14)
+        if drop > 0:
+            content.setAutoresizesSubviews_(False)
+            frame = self.window.frame()
+            frame.origin.y += drop
+            frame.size.height -= drop
+            self.window.setFrame_display_(frame, False)
+            for view in content.subviews():
+                old = view.frame()
+                if old.origin.y >= nickname.origin.y - 4:
+                    view.setFrame_(NSMakeRect(old.origin.x, old.origin.y - drop, old.size.width, old.size.height))
+            content.setAutoresizesSubviews_(True)
+
+    @objc.python_method
     def _addVideoControls(self, media_type):
         self.remote_target = None       # the RoomTarget of a room of another SylkServer, once looked up
         self.resolved_room = None       # (room, host) that remote_target is the answer for
@@ -347,7 +432,7 @@ class JoinConferenceWindowController(NSObject):
         self.publish = PublishList.alloc().initWithOwner_(self)
         self.publish_shown = False
         self.publish.setHidden(True)
-        self._addStereoControl()
+        self.stereo = None          # (Mono/Stereo: not offered; a podcast is stereo, a conference as before WebRTC)
 
     @objc.python_method
     def _addStereoControl(self):
@@ -541,7 +626,7 @@ class JoinConferenceWindowController(NSObject):
         elif conference_video_available(account):
             video = True
             text = NSLocalizedString("Conferencing provided by SylkServer at %s", "Label") % (account.conference.server_address or default_conference_server)
-        self.video.setHidden_(not video)
+        self.video.setHidden_(not video)        # Join Conference and Join Podcast: Video when the room can have it (no Mono/Stereo in either)
         self.updateStereoControl()
         self.providerLabel.setStringValue_(text)
         if not isinstance(account, BonjourAccount):
@@ -849,6 +934,11 @@ class JoinConferenceWindowController(NSObject):
         # the chosen videos, then the window back to its height (its frame is saved: frameAutosaveName)
         video_sources = self.publish.chosen() if self.video_room is not None and self.videoChecked() else None
         stereo = self.video_room is None and self.audio.state() == NSOnState and self.stereoChecked()
+        if self.podcast:        # (its stereo is WebRTC's, not the SIP call's)
+            stereo = False
+            self.do_not_disturb = self.dnd.state() == NSOnState
+            from Foundation import NSUserDefaults
+            NSUserDefaults.standardUserDefaults().setBool_forKey_(self.do_not_disturb, PODCAST_DND_KEY)
         self.window.orderOut_(self)
         self.setPublishShown(False)
         contactsWindow.setWorksWhenModal_(worksWhenModal)
@@ -859,7 +949,10 @@ class JoinConferenceWindowController(NSObject):
             self.lookup_timer = None
 
         if (self.autostart and self.validateConference()) or rc == NSOKButton:
-            if self.video_room is not None:
+            if self.podcast:
+                # its audio (and video, when checked) over WebRTC, its chat over MSRP (joinConference)
+                media_type = ("chat", "audio", "video") if self.videoChecked() else ("chat", "audio")
+            elif self.video_room is not None:
                 # the room's audio and video over WebRTC, its chat over MSRP
                 media_type = ("chat", "audio", "video") if self.audio.state() == NSOnState else ("chat", "video")
             elif self.audio.state() == NSOnState and self.chat.state() == NSOnState:
@@ -879,9 +972,10 @@ class JoinConferenceWindowController(NSObject):
             # prevent loops
             if self.target in participants:
                 participants.remove(self.target)
-            return ServerConferenceRoom(self.target, media_type=media_type, participants=participants, nickname=self.nickname,
-                                        start_when_participants_available=bool(self.startWhenParticipantsAvailable.state()), video_room=self.video_room,
-                                        video_sources=video_sources, stereo=stereo)
+            return ServerConferenceRoom(self.target, media_type=media_type, participants=[] if self.podcast else participants, nickname=self.nickname,
+                                        start_when_participants_available=False if self.podcast else bool(self.startWhenParticipantsAvailable.state()),
+                                        video_room=self.video_room, video_sources=video_sources, stereo=stereo, podcast=self.podcast,
+                                        do_not_disturb=self.do_not_disturb)
         else:
             return None
 
@@ -1033,9 +1127,14 @@ class JoinConferenceWindowController(NSObject):
             return False
 
         self.video_room = None
-        if self.videoChecked():
+        if self.videoChecked() or self.podcast:        # a podcast: its room over WebRTC, video or not
             from WebRTCSupport import room_video
             self.video_room = room_video(self.target, account)
+            if self.podcast and self.video_room is None:
+                NSRunAlertPanel(NSLocalizedString("Join Podcast", "Window title"),
+                                NSLocalizedString("%s has no WebRTC room: a podcast cannot be joined there", "Label") % self.target,
+                                NSLocalizedString("OK", "Button title"), None, None)
+                return False
 
         return True
 
