@@ -735,6 +735,7 @@ class VideoroomSession(object):
         self.video_codec = None         # the video codec the answer chose for us
         self.extra_videos = {}          # session id -> ExtraVideo: our extra videos in the room (ExtraVideo.py)
         self.stats = {}                 # (type, kind) -> values, the publisher's last statistics (Conference info)
+        self.transport_stats = {}       # the publisher's transport statistics: dtlsState, tlsVersion, dtlsCipher, srtpCipher
         self.pending_extra_sources = [] # [(source, label)] from Join Conference, started by the window once joined
         self.pending_screen = None      # the screen device Join Conference chose, shared once joined
         self._delegate = None
@@ -1339,6 +1340,9 @@ class VideoroomSession(object):
         stats = _stats_by_kind(entries)
         if label == self.id:
             self.stats = stats
+            transport = next((values for kind, id, values in entries if kind == 'transport'), None)
+            if transport is not None:
+                self.transport_stats = transport
         elif label in self.extra_videos:
             self.extra_videos[label].participant.stats = stats
             return
@@ -1376,6 +1380,46 @@ class VideoroomSession(object):
                 codec = codecs.get(str(values.get('codecId')))
                 if codec is not None and codec.get('mimeType'):
                     participant.video_codec = str(codec['mimeType']).rpartition('/')[2].upper()
+
+    QUALITY_WINDOW = 2.0    # s: the loss measured over this, as a SIP call's (AG CuteMusic asks more often)
+
+    def audio_quality(self):
+        """{rtt (ms, the round trip), loss_rx (%, what we receive of the room), loss_tx (%, what the room receives of
+        us)} from the WebRTC statistics, as a SIP call's for AG CuteMusic's mixer; None until measured. The loss is
+        over the last QUALITY_WINDOW: our publisher's remote-inbound-rtp against its outbound-rtp (sent), the feeds'
+        inbound-rtp (received)."""
+        if self.state != 'established':
+            return None
+        now = time.monotonic()
+        last = getattr(self, '_quality', None)
+        if last is not None and now - last[0] < self.QUALITY_WINDOW:
+            return last[1]
+        stats = self.stats or {}
+        remote = stats.get(('remote-inbound-rtp', 'audio')) or {}
+        outbound = stats.get(('outbound-rtp', 'audio')) or {}
+        sent, lost_tx = int(outbound.get('packetsSent') or 0), int(remote.get('packetsLost') or 0)
+        received = lost_rx = 0
+        for participant in list(self.feeds.values()):
+            inbound = (getattr(participant, 'stats', None) or {}).get(('inbound-rtp', 'audio')) or {}
+            received += int(inbound.get('packetsReceived') or 0)
+            lost_rx += max(0, int(inbound.get('packetsLost') or 0))
+        counters = (sent, lost_tx, received, lost_rx)
+        before = getattr(self, '_quality_counters', None)
+        self._quality_counters = counters
+
+        def loss(lost, total):
+            # a feed gone (its counters with it) makes a difference negative: nothing to tell for that window
+            return round(100.0 * lost / total, 1) if lost > 0 and total > 0 else 0.0
+
+        quality = None
+        if before is not None:
+            d_sent, d_lost_tx, d_received, d_lost_rx = (now_ - then for now_, then in zip(counters, before))
+            rtt = remote.get('roundTripTime')
+            quality = {'rtt': int(round(float(rtt) * 1000)) if rtt is not None else 0,
+                       'loss_rx': loss(d_lost_rx, d_received + d_lost_rx) if d_received >= 0 else 0.0,
+                       'loss_tx': loss(d_lost_tx, d_sent) if d_sent >= 0 else 0.0}
+        self._quality = (now, quality)
+        return quality
 
     def _own_level(self, loud):
         now = time.monotonic()
@@ -1781,14 +1825,17 @@ class VideoroomManager(object, metaclass=Singleton):
         room = room.replace('sip:', '', 1).lower()
         return next((session for session in self.sessions if room in (session.room.lower(), session.sip_room.lower()) and session.state != 'terminated'), None)
 
-    def join(self, account, room, audio=True, video=True, target=None, extra_sources=None, screen=None, stereo=False):
+    def join(self, account, room, audio=True, video=True, target=None, extra_sources=None, screen=None, stereo=False, show=True):
         """Join room from account (its window shown), or bring forward the session already in it. extra_sources:
         [(source, label)] published as our extra videos once the room is joined (ExtraVideo.py); screen: a
-        screen device shared once joined (the window starts both)."""
+        screen device shared once joined (the window starts both). show: its window shown, else made but not
+        shown (a podcast joined without video: the room in the audio drawer only, its window from there), the
+        feeds' video paused at the server till the window is seen."""
         from VideoroomWindowController import window_for_session
         session = self.find(room)
         if session is not None:
-            window_for_session(session).show()
+            if show:
+                window_for_session(session).show()
             return session
         session = VideoroomSession(account, room, audio=audio, video=video, target=target)
         session.stereo = bool(stereo)
@@ -1796,7 +1843,11 @@ class VideoroomManager(object, metaclass=Singleton):
         session.pending_screen = screen
         self.sessions.append(session)
         NotificationCenter().post_notification('VideoroomManagerDidAddSession', sender=self, data=NotificationData(session=session))
-        window_for_session(session).show()
+        window = window_for_session(session)
+        if show:
+            window.show()
+        else:
+            session.video_paused = True     # out of sight from the start: the feeds subscribed without video
         session.join()
         return session
 

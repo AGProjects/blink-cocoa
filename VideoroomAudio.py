@@ -29,6 +29,8 @@ from AppKit import (NSApp,
                     NSDragOperationNone,
                     NSFont,
                     NSImage,
+                    NSMenu,
+                    NSMenuItem,
                     NSPasteboard,
                     NSSegmentedControl,
                     NSStringPboardType,
@@ -37,6 +39,7 @@ from AppKit import (NSApp,
                     NSViewWidthSizable)
 from Foundation import (NSArray,
                         NSLocalizedString,
+                        NSMakePoint,
                         NSMakeRect,
                         NSMakeSize,
                         NSObject,
@@ -55,7 +58,7 @@ from util import run_in_gui_thread
 
 
 BOX_WIDTH, BOX_HEIGHT = 265, 57     # AudioSession.xib's box
-HOLD_SEGMENT, WINDOW_SEGMENT, HANGUP_SEGMENT = 0, 1, 2
+ENCRYPTION_SEGMENT, HOLD_SEGMENT, WINDOW_SEGMENT, HANGUP_SEGMENT = 0, 1, 2, 3     # the lock first, as a SIP call's
 
 ICON_SIZE = 14      # the buttons' images: some icons are large artwork (video.png), drawn at full size otherwise
 
@@ -145,20 +148,23 @@ class VideoroomAudioController(NSObject):
             self.view.addSubview_(field)
             return field
 
-        self.title = label(NSMakeRect(4, 37, BOX_WIDTH - 8, 16), NSFont.systemFontOfSize_(NSFont.systemFontSize()))
+        # as AudioSession.xib lays out a SIP call: the name in bold, the duration under it on the left, the
+        # status at the bottom left, the buttons at the bottom right
+        self.title = label(NSMakeRect(4, 37, BOX_WIDTH - 21, 16), NSFont.boldSystemFontOfSize_(12))
         self.title.setAutoresizingMask_(NSViewWidthSizable)
         self.title.setStringValue_(self.display_name() or self.session.room)
         self.title.setToolTip_(self.session.room)
-        self.elapsed = label(NSMakeRect(61, 21, BOX_WIDTH - 65, 15), NSFont.systemFontOfSize_(NSFont.smallSystemFontSize() - 1), 1)     # right
+        self.elapsed = label(NSMakeRect(4, 20, BOX_WIDTH - 7, 16), NSFont.systemFontOfSize_(NSFont.smallSystemFontSize()))     # left
         self.elapsed.setAutoresizingMask_(NSViewWidthSizable)
-        self.status = label(NSMakeRect(4, 6, BOX_WIDTH - 100, 14), NSFont.systemFontOfSize_(NSFont.smallSystemFontSize()))
+        self.status = label(NSMakeRect(4, 6, BOX_WIDTH - 92 - 8, 14), NSFont.systemFontOfSize_(NSFont.smallSystemFontSize()))
         self.status.setAutoresizingMask_(NSViewWidthSizable)
 
-        self.buttons = NSSegmentedControl.alloc().initWithFrame_(NSMakeRect(BOX_WIDTH - 69, 3, 66, 20))
-        self.buttons.setSegmentCount_(3)
+        self.buttons = NSSegmentedControl.alloc().initWithFrame_(NSMakeRect(BOX_WIDTH - 92, 3, 89, 20))
+        self.buttons.setSegmentCount_(4)
         self.buttons.cell().setControlSize_(1)      # small
         self.buttons.setTrackingMode_(2)            # NSSegmentSwitchTrackingMomentary
-        for segment, image, tooltip in ((HOLD_SEGMENT, 'pause', NSLocalizedString("Put the conference on hold", "Audio call tooltip")),
+        for segment, image, tooltip in ((ENCRYPTION_SEGMENT, 'unlocked-darkgray', NSLocalizedString("Not encrypted yet", "Audio call tooltip")),
+                                        (HOLD_SEGMENT, 'pause', NSLocalizedString("Put the conference on hold", "Audio call tooltip")),
                                         (WINDOW_SEGMENT, 'video', NSLocalizedString("Show the video conference window", "Audio call tooltip")),
                                         (HANGUP_SEGMENT, 'hangup', NSLocalizedString("Leave the conference", "Audio call tooltip"))):
             self.buttons.setImage_forSegment_(_icon(image), segment)
@@ -202,7 +208,17 @@ class VideoroomAudioController(NSObject):
 
     def userClickedButtons_(self, sender):
         segment = sender.selectedSegment()
-        if segment == HOLD_SEGMENT:
+        if segment == ENCRYPTION_SEGMENT:      # what the lock stands for (nothing to choose: always DTLS-SRTP)
+            menu = NSMenu.alloc().init()
+            menu.setAutoenablesItems_(False)
+            for line in self.encryption_lines():
+                item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(line, None, '')
+                item.setEnabled_(False)
+                menu.addItem_(item)
+            bounds = self.buttons.bounds()
+            y = bounds.origin.y + bounds.size.height + 4 if self.buttons.isFlipped() else bounds.origin.y - 4
+            menu.popUpMenuPositioningItem_atLocation_inView_(None, NSMakePoint(bounds.origin.x, y), self.buttons)
+        elif segment == HOLD_SEGMENT:
             # as a SIP call's hold: resuming takes the focus (the others go on hold)
             self.view.setSelected_(not self.view.selected)
         elif segment == WINDOW_SEGMENT:
@@ -210,6 +226,22 @@ class VideoroomAudioController(NSObject):
             window_for_session(self.session).show()
         elif segment == HANGUP_SEGMENT:
             self.hangup()
+
+    @objc.python_method
+    def encryption_lines(self):
+        """The lock's tooltip and menu: DTLS-SRTP, and what the publisher's transport negotiated (its statistics)."""
+        if self.session.state != 'established':
+            return [NSLocalizedString("Not encrypted yet", "Audio call tooltip")]
+        transport = getattr(self.session, 'transport_stats', None) or {}
+        lines = [NSLocalizedString("Audio and video encrypted with DTLS-SRTP", "Audio call tooltip")]
+        dtls = ' '.join(str(value) for value in (transport.get('tlsVersion'), transport.get('dtlsCipher')) if value)
+        if transport.get('dtlsState'):
+            dtls = '%s (%s)' % (dtls, transport['dtlsState']) if dtls else str(transport['dtlsState'])
+        if dtls:
+            lines.append('DTLS: %s' % dtls)
+        if transport.get('srtpCipher'):
+            lines.append('SRTP: %s' % transport['srtpCipher'])
+        return lines
 
     @objc.python_method
     def hangup(self):
@@ -311,6 +343,14 @@ class VideoroomAudioController(NSObject):
             hours, rest = divmod(elapsed, 3600)
             minutes, seconds = divmod(rest, 60)
             self.elapsed.setStringValue_('%d:%02d:%02d' % (hours, minutes, seconds) if hours else '%02d:%02d' % (minutes, seconds))
+        encrypted = state == 'established'      # WebRTC media: always DTLS-SRTP, once the room's connection is up
+        if encrypted != getattr(self, '_encrypted', None):
+            self._encrypted = encrypted
+            self.buttons.setImage_forSegment_(_icon('locked-green' if encrypted else 'unlocked-darkgray'), ENCRYPTION_SEGMENT)
+        tooltip = '\n'.join(self.encryption_lines())        # with the ciphers once the statistics have them
+        if tooltip != getattr(self, '_encryption_tooltip', None):
+            self._encryption_tooltip = tooltip
+            self.buttons.cell().setToolTip_forSegment_(tooltip, ENCRYPTION_SEGMENT)
         image = 'paused' if self.session.on_hold else 'pause'
         if image != getattr(self, '_hold_image', None):
             self._hold_image = image

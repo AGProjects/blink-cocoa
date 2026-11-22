@@ -167,8 +167,9 @@ def media_report():
     return ', '.join(parts)
 
 
-def join_video_conference(account, room, audio=True, video=True, target=None, extra_sources=None, screen=None, stereo=False):
-    """Join room (user@host) over WebRTC from account, its window shown, the microphone muted without audio
+def join_video_conference(account, room, audio=True, video=True, target=None, extra_sources=None, screen=None, stereo=False, show=True):
+    """Join room (user@host) over WebRTC from account, its window shown (not with show False: the room in the
+    audio drawer only, its window opened from there), the microphone muted without audio
     and the camera off without video (both can be turned on in the room); the VideoroomSession, or None
     when that cannot be done. target (a RoomTarget) is a room of another SylkServer: joined through its server."""
     if target is not None and target.remote:
@@ -178,7 +179,7 @@ def join_video_conference(account, room, audio=True, video=True, target=None, ex
         return None
     from Videoroom import VideoroomManager
     video_room = VideoroomManager().join(account, room, audio=audio, video=video, target=target, extra_sources=extra_sources,
-                                         screen=screen, stereo=stereo)
+                                         screen=screen, stereo=stereo, show=show)
     if video_room is not None:
         drop_sip_audio(video_room)
     return video_room

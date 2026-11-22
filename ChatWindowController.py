@@ -376,7 +376,8 @@ class ChatWindowController(NSWindowController):
         else:
             self.closeDrawer()
 
-        if session.mustCloseAudioDrawer:
+        # a video room's chat (opened_for_videoroom) leaves the audio drawer alone: the room's box is there
+        if session.mustCloseAudioDrawer and not getattr(session, 'opened_for_videoroom', False):
             NSApp.delegate().contactsWindowController.drawer.close()
             self.participantsTableView.deselectAll_(self)
 
@@ -2070,7 +2071,7 @@ class ChatWindowController(NSWindowController):
             else:
                 self.closeDrawer()
 
-            if session.mustCloseAudioDrawer:
+            if session.mustCloseAudioDrawer and not getattr(session, 'opened_for_videoroom', False):     # (the room's box is there)
                 NSApp.delegate().contactsWindowController.drawer.close()
                 self.participantsTableView.deselectAll_(self)
                 self.conferenceFilesTableView.deselectAll_(self)

@@ -141,6 +141,23 @@ static UInt32 ChannelCount(AudioDeviceID device, BOOL input)
     return channels;
 }
 
+// Devices hidden from the system's list (kAudioDevicePropertyIsHidden), reached by UID only.
+static NSArray<NSString *> *HiddenDeviceUIDs(void)
+{
+    return @[@"com.ag-projects.podcast-mixer.input"];      // AG Podcast Mixer (ag-cute-music macos/driver)
+}
+
+static AudioDeviceID DeviceForUID(NSString *uid)
+{
+    AudioObjectPropertyAddress address = {kAudioHardwarePropertyTranslateUIDToDevice, kAudioObjectPropertyScopeGlobal, BLINK_ELEMENT_MAIN};
+    CFStringRef qualifier = (__bridge CFStringRef)uid;
+    AudioDeviceID device = kAudioObjectUnknown;
+    UInt32 size = sizeof(device);
+    if (AudioObjectGetPropertyData(kAudioObjectSystemObject, &address, sizeof(qualifier), &qualifier, &size, &device) != noErr)
+        return kAudioObjectUnknown;
+    return device;
+}
+
 static AudioDeviceID FindDevice(NSString *name, BOOL input)
 {
     if (IsDefaultName(name))
@@ -160,6 +177,13 @@ static AudioDeviceID FindDevice(NSString *name, BOOL input)
         free(devices);
         if (found != kAudioObjectUnknown)
             return found;
+    }
+    // hidden devices are not in the list: AG CuteMusic's "AG Podcast Mixer" (its driver hides it from other apps,
+    // the SDK opens it by UID, coreaudio_dev.m), found by UID here too
+    for (NSString *uid in HiddenDeviceUIDs()) {
+        AudioDeviceID device = DeviceForUID(uid);
+        if (device != kAudioObjectUnknown && ChannelCount(device, input) > 0 && [DeviceName(device) isEqualToString:name])
+            return device;
     }
     BlinkLog(@"%@ device %@ not found, using the system's default", input ? @"input" : @"output", name);
     return DefaultDevice(input);
@@ -204,15 +228,45 @@ static OSStatus InputProc(void *reference, AudioUnitRenderActionFlags *flags, co
     IOContext *io = (IOContext *)reference;
     if (io->deliver == nil || io->unit == NULL || frames > MAX_FRAMES)
         return noErr;
-    AudioBufferList list;
-    list.mNumberBuffers = 1;
-    list.mBuffers[0].mNumberChannels = io->channels;
-    list.mBuffers[0].mDataByteSize = frames * io->channels * sizeof(int16_t);
-    list.mBuffers[0].mData = io->buffer;
-    OSStatus status = AudioUnitRender(io->unit, flags, timestamp, 1, frames, &list);
-    if (status != noErr)
-        return status;
-    return io->deliver(flags, timestamp, 1, frames, &list, NULL, nil);
+    // libwebrtc renders into its own buffer through the block: that path sizes it frames x channels. Handing it
+    // our buffer (inputData) is sized by frames alone in libwebrtc (objc_audio_device.mm, OnDeliverRecordedData,
+    // M155): a stereo input (AG Podcast Mixer) lost half of every buffer and was sent garbled. The block captures
+    // nothing (a global block, no allocation on the I/O thread): the unit comes as renderContext.
+    return io->deliver(flags, timestamp, 1, frames, NULL, io,
+                       ^OSStatus(AudioUnitRenderActionFlags *renderFlags, const AudioTimeStamp *renderTimestamp,
+                                 NSInteger bus, UInt32 count, AudioBufferList *data, void *context) {
+        IOContext *renderIO = (IOContext *)context;
+        if (renderIO == NULL || renderIO->unit == NULL)
+            return kAudioUnitErr_Uninitialized;
+        UInt32 wanted = data->mBuffers[0].mNumberChannels;      // libwebrtc's channels: what it last took in
+        if (wanted == renderIO->channels)
+            return AudioUnitRender(renderIO->unit, renderFlags, renderTimestamp, 1, count, data);
+        // libwebrtc kept its channels when the input changed under it (the mono microphone, then AG Podcast Mixer's
+        // two, for the next podcast in the same run): rendered into our buffer, as the device gives it, then
+        // converted (stereo to mono averaged, mono to stereo in both); rendered straight, the render failed and
+        // nothing at all was sent
+        if (renderIO->buffer == NULL || count > MAX_FRAMES || wanted < 1 || wanted > 2 || renderIO->channels > 2)
+            return kAudioUnitErr_FormatNotSupported;
+        AudioBufferList own;
+        own.mNumberBuffers = 1;
+        own.mBuffers[0].mNumberChannels = renderIO->channels;
+        own.mBuffers[0].mDataByteSize = count * renderIO->channels * sizeof(int16_t);
+        own.mBuffers[0].mData = renderIO->buffer;
+        OSStatus status = AudioUnitRender(renderIO->unit, renderFlags, renderTimestamp, 1, count, &own);
+        if (status != noErr)
+            return status;
+        int16_t *from = renderIO->buffer, *to = (int16_t *)data->mBuffers[0].mData;
+        if (to == NULL || data->mBuffers[0].mDataByteSize < count * wanted * sizeof(int16_t))
+            return kAudioUnitErr_TooManyFramesToProcess;
+        if (wanted == 1) {
+            for (UInt32 i = 0; i < count; i++)
+                to[i] = (int16_t)(((int32_t)from[2 * i] + (int32_t)from[2 * i + 1]) / 2);
+        } else {
+            for (UInt32 i = 0; i < count; i++)
+                to[2 * i] = to[2 * i + 1] = from[i];
+        }
+        return noErr;
+    });
 }
 
 static OSStatus OutputProc(void *reference, AudioUnitRenderActionFlags *flags, const AudioTimeStamp *timestamp,

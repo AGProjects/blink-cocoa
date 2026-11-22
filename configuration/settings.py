@@ -54,6 +54,7 @@ class EchoCancellerSettingsExtension(EchoCancellerSettings):
 class AudioSettingsExtension(AudioSettings):
     directory = Setting(type=UserDataPath, default=UserDataPath('history'))
     alert_device = Setting(type=str, default='system_default', nillable=True)
+    do_not_disturb = Setting(type=bool, default=False)     # Blink-wide (the bell): incoming calls refused on every account
     input_device = Setting(type=str, default='system_default', nillable=True)
     output_device = Setting(type=str, default='system_default', nillable=True)
     sample_rate = Setting(type=SampleRate, default=32000)

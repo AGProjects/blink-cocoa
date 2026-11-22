@@ -18,8 +18,9 @@
 - v2, the AG Podcast Mixer driver (AG CuteMusic installs it, /Library/Audio/Plug-Ins/HAL/AGPodcastMixer.driver):
   "AG Podcast Mixer" is then a CoreAudio input like any other, there while the mixer runs (the SDK's
   AudioDevicesDidChange as for a device plugged in), the only way for a sandboxed Blink (Blink Pro). The SDK's own
-  device is not listed then (AG CuteMusic holds no mixer.lock): one "AG Podcast Mixer", input only; Blink plays the
-  call on its usual output.
+  device is not listed then (AG CuteMusic holds no mixer.lock): one "AG Podcast Mixer", Blink's input and output both
+  (the driver's comment, AG CuteMusic's mixer warning): the mix is the microphone, the call goes to the BLINK strip.
+  With the output left on another device, nothing of the mix reached a WebRTC room (Join Podcast chooses both).
 """
 
 __all__ = ['CuteMusicLink', 'selected', 'device_name', 'menu_devices', 'separate_devices', 'podcast_device',
@@ -630,6 +631,9 @@ class CuteMusicLink(object, metaclass=Singleton):
                 started = controller.started()
                 if started is not None:
                     call['started'] = round(started, 1)
+                quality = session.audio_quality()       # as a SIP call's: round trip and loss each way
+                if quality is not None:
+                    call.update(quality)
             calls.append(call)
         return calls
 

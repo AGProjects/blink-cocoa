@@ -306,12 +306,12 @@ class PodcastWatcher(object):
         self.waiting = False        # the room ended by itself: a redial expected
         self.waited = 0.0
         self.timer = None
-        if do_not_disturb and self.account is not None and not isinstance(self.account, BonjourAccount) and not self.account.audio.do_not_disturb:
-            self.account.audio.do_not_disturb = True
-            self.account.save()
+        settings = SIPSimpleSettings()
+        if do_not_disturb and not settings.audio.do_not_disturb:       # Blink's Do Not Disturb (the bell), not the account's
+            settings.audio.do_not_disturb = True
+            settings.save()
             self.do_not_disturb = True
-            BlinkLogger().log_info("Do Not Disturb on for %s while on air in %s" % (self.account.id, session.room))
-            self._refresh()
+            BlinkLogger().log_info("Do Not Disturb on while on air in %s" % session.room)
         PodcastWatcher.current = self
         self.attach(session)
 
@@ -378,11 +378,11 @@ class PodcastWatcher(object):
         if PodcastWatcher.current is self:
             PodcastWatcher.current = None
         BlinkLogger().log_info("The podcast in %s is over (%s)" % (self.room, why))
-        if self.do_not_disturb and self.account.audio.do_not_disturb:
-            self.account.audio.do_not_disturb = False
-            self.account.save()
-            BlinkLogger().log_info("Do Not Disturb off for %s: the podcast ended" % self.account.id)
-            self._refresh()
+        settings = SIPSimpleSettings()
+        if self.do_not_disturb and settings.audio.do_not_disturb:
+            settings.audio.do_not_disturb = False
+            settings.save()
+            BlinkLogger().log_info("Do Not Disturb off: the podcast ended")
         if not keep_devices and PodcastWatcher.current is None:     # (another podcast on: its devices kept)
             settings = SIPSimpleSettings()
             if settings.audio.input_device != 'system_default' or settings.audio.output_device != 'system_default':
@@ -1382,8 +1382,7 @@ class ContactWindowController(NSWindowController):
         item.setState_(NSOnState if settings.audio.silent else NSOffState)
 
         item = menu.itemWithTag_(302)  # dnd
-        account = AccountManager().default_account
-        item.setState_(NSOnState if account is not None and account.audio.do_not_disturb else NSOffState)
+        item.setState_(NSOnState if SIPSimpleSettings().audio.do_not_disturb else NSOffState)
         item.setEnabled_(True)
 
         settings = SIPSimpleSettings()
@@ -3894,6 +3893,14 @@ class ContactWindowController(NSWindowController):
         return image
 
     @objc.python_method
+    def updateDoNotDisturbBell(self):
+        on = bool(SIPSimpleSettings().audio.do_not_disturb)
+        self.silentButton.setImage_(self._bellImage("belloff" if on else "bellon"))
+        self.silentButton.setState_(NSOnState if on else NSOffState)
+        self.silentButton.setToolTip_(NSLocalizedString("Do Not Disturb is on: incoming calls are refused", "Tooltip") if on
+                                      else NSLocalizedString("Do Not Disturb", "Tooltip"))
+
+    @objc.python_method
     def setupFinished(self):
         # BlinkLogger().log_info('startup: setupFinished mute/silent state')
         if self.backend.is_muted():
@@ -3903,12 +3910,10 @@ class ContactWindowController(NSWindowController):
             self.muteButton.setImage_(NSImage.imageNamed_("mute"))
             self.muteButton.setState_(NSOffState)
 
-        if self.backend.is_silent():
-            self.silentButton.setImage_(self._bellImage("belloff"))
-            self.silentButton.setState_(NSOnState)
-        else:
-            self.silentButton.setImage_(self._bellImage("bellon"))
-            self.silentButton.setState_(NSOffState)
+        # the bell: Blink's Do Not Disturb (audio.do_not_disturb), on and off; Silence Alerts stays in the Call menu
+        self.silentButton.setTarget_(self)
+        self.silentButton.setAction_('dndClicked:')
+        self.updateDoNotDisturbBell()
         active = self.activeAccount()
         if active and active.display_name != self.nameText.stringValue():
             self.updateNameLabel(active.display_name or "")
@@ -5929,15 +5934,21 @@ class ContactWindowController(NSWindowController):
 
         for_videoroom = False
         video_session = None
+        show_window = True
         if podcast:     # WebRTC whatever the media: the camera off unless Video was checked
+            # the audio drawer comes up with the room's box: the message pane closed first, the window back to the list
+            if self.isMessagesPaneVisible():
+                BlinkLogger().log_info('[conference] Join Podcast: the message pane closed for the audio drawer')
+                self.hideMessagesPane()
             with_video = type(media_type) in (tuple, list) and 'video' in media_type
             media_type = ('chat', 'audio', 'video')
             if not with_video:
                 video_sources = (None, None, [])
+                show_window = False     # audio only: no video window, the room in the audio drawer (its window from there)
         if type(media_type) in (tuple, list) and 'video' in media_type:
             # video over WebRTC (SylkServer video rooms): the room's audio and video go there, its chat over MSRP
             try:
-                media_type, video_session = self.joinVideoConference(account, target, media_type, video_room, video_sources, stereo=podcast)
+                media_type, video_session = self.joinVideoConference(account, target, media_type, video_room, video_sources, stereo=podcast, show=show_window)
                 if podcast and video_session is None:
                     NSRunAlertPanel(NSLocalizedString("Join Podcast", "Window title"),
                                     NSLocalizedString("The podcast room %s cannot be joined over WebRTC", "Label") % target,
@@ -5951,6 +5962,7 @@ class ContactWindowController(NSWindowController):
                         if watcher is not None:
                             watcher.finish('another podcast started', keep_devices=True)
                         PodcastWatcher(video_session, do_not_disturb=do_not_disturb)
+                    self.showAudioDrawer()      # (open already when its box came: then nothing)
                 for_videoroom = video_session is not None
             except Exception:
                 log_gui_exception('joining the video room of %s' % target)
@@ -6015,11 +6027,12 @@ class ContactWindowController(NSWindowController):
         return session_controller
 
     @objc.python_method
-    def joinVideoConference(self, account, target, media_type, video_room=None, video_sources=None, stereo=False):
+    def joinVideoConference(self, account, target, media_type, video_room=None, video_sources=None, stereo=False, show=True):
         """Join the video room of target over WebRTC (audio muted when media_type has no audio); (the media
         left for the SIP session, the VideoroomSession or None when it was not joined): chat only when it
         was, else the media without video. video_sources: (our camera or None for the camera off, the screen
-        to share once joined or None, [(source, label)] our other videos), from Join Conference's Publish list."""
+        to share once joined or None, [(source, label)] our other videos), from Join Conference's Publish list.
+        show: the room's window shown (not for a podcast joined without video: the audio drawer has it)."""
         from WebRTCSupport import join_video_conference, room_video
         from util import call_later
         video_room = video_room or room_video(target, account)
@@ -6039,15 +6052,15 @@ class ContactWindowController(NSWindowController):
                 if extras:
                     BlinkLogger().log_info("[conference] %s: publishing also %s" % (target, ', '.join(label for source, label in extras)))
             session = join_video_conference(account, video_uri, audio='audio' in media_type, video=send_camera, target=room_target,
-                                            extra_sources=extras, screen=screen, stereo=stereo)
+                                            extra_sources=extras, screen=screen, stereo=stereo, show=show)
         if session is None:
             BlinkLogger().log_warning("[conference] %s: no video room can be joined, joining without video" % target)
             remaining = tuple(media for media in media_type if media != 'video')
             return (remaining if len(remaining) > 1 else (remaining[0] if remaining else 'chat')), None
         BlinkLogger().log_info("[conference] %s: audio and video over WebRTC in %s, chat over MSRP" % (target, session.room))
-        # the chat window opens behind the video conference window
-        from VideoroomWindowController import window_for_session
-        call_later(1.5, lambda: window_for_session(session).show() if session.state != 'terminated' else None)
+        if show:        # the chat window opens behind the video conference window
+            from VideoroomWindowController import window_for_session
+            call_later(1.5, lambda: window_for_session(session).show() if session.state != 'terminated' else None)
         return 'chat', session
 
     @objc.python_method
@@ -7310,16 +7323,12 @@ class ContactWindowController(NSWindowController):
 
     @objc.IBAction
     def dndClicked_(self, sender):
-        account = AccountManager().default_account
-        if account is not BonjourAccount and account is not None:
-            account.audio.do_not_disturb = not account.audio.do_not_disturb
-            account.save()
-
-            settings = SIPSimpleSettings()
-            status = settings.presence_state.status
-            self.setStatusBarIcon(status)
-
-        self.refreshAccountList()
+        """The bell and Call > Do Not Disturb: Blink's Do Not Disturb, every account (no account changed)."""
+        settings = SIPSimpleSettings()
+        settings.audio.do_not_disturb = not settings.audio.do_not_disturb
+        settings.save()
+        BlinkLogger().log_info("Do Not Disturb %s" % ('on' if settings.audio.do_not_disturb else 'off'))
+        self.updateDoNotDisturbBell()
 
     @objc.IBAction
     def checkForUpdates_(self, sender):
@@ -7628,8 +7637,9 @@ class ContactWindowController(NSWindowController):
 
     @objc.python_method
     def selectPodcastMixer(self):
-        """Join Podcast: AG Podcast Mixer as the input when it is listed (AG CuteMusic's mixer on); the output left as it is
-        (the mixer is an input only)."""
+        """Join Podcast: AG Podcast Mixer as the input and the output when it is listed (AG CuteMusic's mixer on), as AG
+        CuteMusic asks of Blink (its mixer warns otherwise): the mix is the microphone, the room's audio goes to its
+        BLINK strip. With the output left elsewhere, nothing of the mix reached the room."""
         try:
             from CuteMusic import device_name
             name = device_name()
@@ -7639,9 +7649,15 @@ class ContactWindowController(NSWindowController):
         if not name or name not in engine.input_devices:
             return
         settings = SIPSimpleSettings()
+        chosen = []
         if settings.audio.input_device != name:
-            BlinkLogger().log_info("Join Podcast: %s selected as the input" % name)
             settings.audio.input_device = name
+            chosen.append('input')
+        if name in engine.output_devices and settings.audio.output_device != name:
+            settings.audio.output_device = name
+            chosen.append('output')
+        if chosen:
+            BlinkLogger().log_info("Join Podcast: %s selected as the %s" % (name, ' and '.join(chosen)))
             settings.save()
 
     @objc.IBAction
@@ -8306,8 +8322,7 @@ class ContactWindowController(NSWindowController):
             item.setState_(NSOnState if settings.audio.silent else NSOffState)
 
             item = menu.itemWithTag_(302)  # dnd
-            account = AccountManager().default_account
-            item.setState_(NSOnState if account is not None and account.audio.do_not_disturb else NSOffState)
+            item.setState_(NSOnState if SIPSimpleSettings().audio.do_not_disturb else NSOffState)
             item.setEnabled_(True)
             self.updateHistoryMenu()
 
@@ -9745,13 +9760,8 @@ class ContactWindowController(NSWindowController):
     @objc.python_method
     def _NH_CFGSettingsObjectDidChange(self, notification):
         settings = SIPSimpleSettings()
-        if "audio.silent" in notification.data.modified:
-            if self.backend.is_silent():
-                self.silentButton.setImage_(self._bellImage("belloff"))
-                self.silentButton.setState_(NSOnState)
-            else:
-                self.silentButton.setImage_(self._bellImage("bellon"))
-                self.silentButton.setState_(NSOffState)
+        if "audio.do_not_disturb" in notification.data.modified:       # the bell (also set by a podcast on air)
+            self.updateDoNotDisturbBell()
 
         if "gui.mangle_contacts" in notification.data.modified:
             # Everything that draws a name or an address, redrawn: the

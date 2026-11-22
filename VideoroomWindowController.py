@@ -1553,6 +1553,8 @@ class VideoroomWindowController(NSObject):
         self.window.makeKeyAndOrderFront_(None)
         self.window.makeFirstResponder_(self.contentView)
         self.showControls()
+        if self.pause_timer is None:        # made out of sight (a podcast without video): its video wanted now
+            self.session.set_video_paused(False)
 
     def windowWillClose_(self, notification):
         if self.session.state not in ('idle', 'terminated'):

@@ -1396,7 +1396,7 @@ class SessionControllersManager(object, metaclass=Singleton):
             return
 
         if 'audio' in stream_type_list and session.account is not BonjourAccount():
-            if session.account.audio.do_not_disturb:
+            if session.account.audio.do_not_disturb or SIPSimpleSettings().audio.do_not_disturb:     # the account's, or Blink's (the bell)
                 nc_title = 'Do Not Disturb'
                 nc_body = 'Call refused with code %s' % session.account.sip.do_not_disturb_code
                 NSApp.delegate().gui_notify(nc_title, nc_body, subtitle=caller_name)
