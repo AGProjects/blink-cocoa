@@ -97,6 +97,8 @@ __all__ = ['VideoroomManager', 'VideoroomSession', 'Participant']
 import os
 import re
 import time
+
+from collections import deque
 import uuid
 
 from hashlib import md5
@@ -644,7 +646,14 @@ class Participant(object):
                 return '%s · %s' % (owner.name, self.label or 'Camera')
             return self.display_name or '%s · %s' % (self.uri, self.label or 'Camera')
         name = getattr(self.contact, 'name', None)
-        return str(name) if name else (self.display_name or self.uri)
+        name = str(name) if name else (self.display_name or self.uri)
+        # Mangle Contacts (Preferences, Advanced): an invented name on screen, for screenshots; self.uri stays real
+        # (muting and removing go by it)
+        try:
+            from ContactMangler import mangled_name
+            return mangled_name(name, self.uri)
+        except Exception:
+            return name
 
     @property
     def icon(self):
@@ -736,6 +745,11 @@ class VideoroomSession(object):
         self.extra_videos = {}          # session id -> ExtraVideo: our extra videos in the room (ExtraVideo.py)
         self.stats = {}                 # (type, kind) -> values, the publisher's last statistics (Conference info)
         self.transport_stats = {}       # the publisher's transport statistics: dtlsState, tlsVersion, dtlsCipher, srtpCipher
+        # the audio quality, a point every QUALITY_WINDOW (10 minutes kept): Conference info's graphs, as a SIP call's
+        self.rtt_history = deque(maxlen=300)
+        self.loss_rx_history = deque(maxlen=300)
+        self.loss_tx_history = deque(maxlen=300)
+        self.concealed_history = deque(maxlen=300)
         self.pending_extra_sources = [] # [(source, label)] from Join Conference, started by the window once joined
         self.pending_screen = None      # the screen device Join Conference chose, shared once joined
         self._delegate = None
@@ -1316,6 +1330,7 @@ class VideoroomSession(object):
                         self._post('VideoroomSessionParticipantSpeakingDidChange', participant=participant)
         if self._speaking_until and time.monotonic() >= self._speaking_until:
             self._own_level(False)
+        self.audio_quality()        # a point for the graphs every QUALITY_WINDOW (cached in between)
 
     def _request_stats(self, label, peer_connection):
         if label in self._stats_pending:
@@ -1384,10 +1399,11 @@ class VideoroomSession(object):
     QUALITY_WINDOW = 2.0    # s: the loss measured over this, as a SIP call's (AG CuteMusic asks more often)
 
     def audio_quality(self):
-        """{rtt (ms, the round trip), loss_rx (%, what we receive of the room), loss_tx (%, what the room receives of
-        us)} from the WebRTC statistics, as a SIP call's for AG CuteMusic's mixer; None until measured. The loss is
-        over the last QUALITY_WINDOW: our publisher's remote-inbound-rtp against its outbound-rtp (sent), the feeds'
-        inbound-rtp (received)."""
+        """{rtt (ms, the round trip), loss_rx (%, what we lose of the room), loss_tx (%, what the room loses of us),
+        concealed (%, what libwebrtc filled in of what we received: packets late or lost, the gaps heard), jitter (ms,
+        the worst feed's)} from the WebRTC statistics, as a SIP call's for AG CuteMusic's mixer; None until measured.
+        Each over the last QUALITY_WINDOW: our publisher's remote-inbound-rtp against its outbound-rtp (sent), the
+        feeds' inbound-rtp (received). Logged when anything was lost or concealed (and the first figures)."""
         if self.state != 'established':
             return None
         now = time.monotonic()
@@ -1398,26 +1414,50 @@ class VideoroomSession(object):
         remote = stats.get(('remote-inbound-rtp', 'audio')) or {}
         outbound = stats.get(('outbound-rtp', 'audio')) or {}
         sent, lost_tx = int(outbound.get('packetsSent') or 0), int(remote.get('packetsLost') or 0)
-        received = lost_rx = 0
+        received = lost_rx = samples = concealed = events = 0
+        jitter = 0.0
         for participant in list(self.feeds.values()):
             inbound = (getattr(participant, 'stats', None) or {}).get(('inbound-rtp', 'audio')) or {}
             received += int(inbound.get('packetsReceived') or 0)
             lost_rx += max(0, int(inbound.get('packetsLost') or 0))
-        counters = (sent, lost_tx, received, lost_rx)
+            samples += int(inbound.get('totalSamplesReceived') or 0)
+            concealed += int(inbound.get('concealedSamples') or 0)
+            events += int(inbound.get('concealmentEvents') or 0)
+            jitter = max(jitter, float(inbound.get('jitter') or 0))
+        counters = (sent, lost_tx, received, lost_rx, samples, concealed, events)
         before = getattr(self, '_quality_counters', None)
         self._quality_counters = counters
 
-        def loss(lost, total):
+        def percent(part, total):
             # a feed gone (its counters with it) makes a difference negative: nothing to tell for that window
-            return round(100.0 * lost / total, 1) if lost > 0 and total > 0 else 0.0
+            return round(100.0 * part / total, 1) if part > 0 and total > 0 else 0.0
 
         quality = None
         if before is not None:
-            d_sent, d_lost_tx, d_received, d_lost_rx = (now_ - then for now_, then in zip(counters, before))
+            d_sent, d_lost_tx, d_received, d_lost_rx, d_samples, d_concealed, d_events = (a - b for a, b in zip(counters, before))
             rtt = remote.get('roundTripTime')
             quality = {'rtt': int(round(float(rtt) * 1000)) if rtt is not None else 0,
-                       'loss_rx': loss(d_lost_rx, d_received + d_lost_rx) if d_received >= 0 else 0.0,
-                       'loss_tx': loss(d_lost_tx, d_sent) if d_sent >= 0 else 0.0}
+                       'loss_rx': percent(d_lost_rx, d_received + d_lost_rx) if d_received >= 0 else 0.0,
+                       'loss_tx': percent(d_lost_tx, d_sent) if d_sent >= 0 else 0.0,
+                       'concealed': percent(d_concealed, d_samples) if d_samples >= 0 else 0.0,
+                       'jitter': int(round(jitter * 1000))}
+            first = not getattr(self, '_quality_logged', False)
+            # a podcast: every window, to be set beside the sender's (sylk-conference --rtp-log); else only trouble
+            if first or self.stereo or quality['loss_rx'] or quality['loss_tx'] or quality['concealed'] >= 1.0:
+                self._quality_logged = True
+                elapsed = now - last[0] if last is not None else self.QUALITY_WINDOW
+                remote_jitter = remote.get('jitter')        # the server's, of what we send: our pacing as it sees it
+                self.log('audio over the last %.1f s: in %.0f pkt/s, loss %.1f%%, %.1f%% concealed (%d gap(s)), jitter %d ms; '
+                         'out %.0f pkt/s, loss %.1f%%, jitter at the server %s; rtt %s'
+                         % (elapsed, max(0, d_received) / elapsed, quality['loss_rx'], quality['concealed'], max(0, d_events),
+                            quality['jitter'], max(0, d_sent) / elapsed, quality['loss_tx'],
+                            '%d ms' % round(float(remote_jitter) * 1000) if remote_jitter is not None else 'not reported',
+                            '%d ms' % quality['rtt'] if rtt is not None else 'not reported'))
+        if quality is not None:
+            self.rtt_history.append(quality['rtt'])
+            self.loss_rx_history.append(quality['loss_rx'])
+            self.loss_tx_history.append(quality['loss_tx'])
+            self.concealed_history.append(quality['concealed'])
         self._quality = (now, quality)
         return quality
 

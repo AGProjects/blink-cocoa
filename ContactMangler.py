@@ -428,6 +428,35 @@ def mangled_username(value):
     return _remember(_identity(name=stripped).username)
 
 
+OWN_DOMAINS = ('sip2sip.info', 'sylk.link', 'ag-projects.com')     # AG Projects' own services: shown as they are
+_DOMAIN_NAMES = ('voxline', 'callbridge', 'sipwave', 'talkport', 'linkvox', 'ringhub', 'netcall', 'phonora', 'viacall',
+                 'opentone', 'clearsip', 'bluevoice')
+_DOMAIN_TLDS = ('net', 'com', 'eu', 'io', 'org')
+
+
+def mangled_domain(domain):
+    """A domain as shown with Mangle Contacts on: an invented one, the same for the same domain (a provider's, in the
+    accounts of Preferences); AG Projects' own (OWN_DOMAINS) and their subdomains kept."""
+    if not domain or not mangling_enabled():
+        return domain
+    text = str(domain).strip().lower()
+    if any(text == own or text.endswith('.' + own) for own in OWN_DOMAINS):
+        return domain
+    import hashlib
+    digest = hashlib.sha1(text.encode()).digest()
+    return '%s.%s' % (_DOMAIN_NAMES[digest[0] % len(_DOMAIN_NAMES)], _DOMAIN_TLDS[digest[1] % len(_DOMAIN_TLDS)])
+
+
+def mangled_account_address(address):
+    """One of my own accounts' address with its domain invented too (Preferences, Accounts: the providers are as
+    telling as the user part); the user part as mangled_account_label makes it."""
+    label = mangled_account_label(address)
+    if not label or not mangling_enabled() or '@' not in str(label):
+        return label
+    user, domain = str(label).rsplit('@', 1)
+    return '%s@%s' % (user, mangled_domain(domain))
+
+
 def mangled_account_label(label):
     """One of my own accounts, as the account menu and the pane pill show it.
 

@@ -2025,6 +2025,11 @@ class ContactWindowController(NSWindowController):
     def participantsLevelsTimer_(self, timer):
         if not self.participants or not self.drawer.isOpen():
             return
+        room = self.selectedVideoroomAudio()
+        if room is not None:        # a WebRTC room's tile: the meters from its WebRTC statistics
+            if self.roomParticipantLevels(room):
+                self.participantsTableView.setNeedsDisplay_(True)
+            return
         session = self.getSelectedAudioSession()
         if session is None or not session.remote_focus:
             return
@@ -2040,6 +2045,85 @@ class ContactWindowController(NSWindowController):
             BlinkLogger().log_error("Cannot update the audio levels of the participants in the audio drawer: %s" % traceback.format_exc())
 
     @objc.python_method
+    def selectedVideoroomAudio(self):
+        """The controller of the WebRTC room's tile selected in the audio drawer (VideoroomAudio.py), or None."""
+        view = next((view for view in self.audioSessionsListView.subviews() if view.selected is True), None)
+        delegate = getattr(view, 'delegate', None) if view is not None else None
+        return delegate if delegate is not None and getattr(delegate, 'sessionController', 1) is None and hasattr(delegate, 'session') else None
+
+    @objc.python_method
+    def roomParticipants(self, controller):
+        """The drawer's participant rows for a WebRTC room: us first, then everyone in the room (the audio bridge, our
+        own SIP leg for the chat and the extra videos left out), each with its VU meter (roomParticipantLevels)."""
+        from ContactListModel import BlinkMyselfConferenceContact
+        session = controller.session
+        me = BlinkMyselfConferenceContact(session.account)
+        me.this_device = True
+        me.room_participant = None
+        me.active_media = ['audio'] + (['stereo'] if getattr(session, 'stereo', False) else [])
+        others = []
+        for participant in list(session.participants.values()):
+            if participant.type == 'bridge' or participant.parent or participant.is_self or participant.extra_video is not None \
+                    or participant.id == session.id:
+                continue
+            presence_contact = self.getFirstContactFromAllContactsGroupMatchingURI(participant.uri)
+            contact = BlinkConferenceContact(participant.uri, name=participant.name,
+                                             icon=presence_contact.icon if presence_contact else None, presence_contact=presence_contact)
+            contact.room_participant = participant
+            contact.this_device = False
+            contact.active_media = ['audio'] + (['stereo'] if getattr(participant, 'audio_channels', None) == 2 else [])
+            if participant.muted:
+                contact.detail = NSLocalizedString("Muted", "Contact detail")
+            others.append(contact)
+        others.sort(key=attrgetter('name'))
+        contacts = [me] + others
+        self.roomParticipantLevels(controller, contacts)
+        return contacts
+
+    @objc.python_method
+    def roomParticipantMenu(self, row):
+        """The menu of a WebRTC room's participant row in the audio drawer: the room window's tile menu for them
+        (VideoroomWindowController.tileMenu: mute, lower hand, speaker, remove from the conference), its window made
+        if it was never shown (an audio-only podcast). None for a SIP conference's row (the SIP menu then)."""
+        room = self.selectedVideoroomAudio()
+        if room is None or not 0 <= row < len(self.participants):
+            return None
+        participant = getattr(self.participants[row], 'room_participant', 'none')
+        if participant == 'none':
+            return None
+        from VideoroomWindowController import window_for_session
+        window = window_for_session(room.session)
+        tile = getattr(window, 'localTile', None) if participant is None else window.tiles.get(participant)
+        if tile is None:        # no tile (yet): only its name, nothing to do on it
+            menu = NSMenu.alloc().init()
+            item = menu.addItemWithTitle_action_keyEquivalent_(getattr(participant, 'name', '') or room.session.account.id, None, '')
+            item.setEnabled_(False)
+            return menu
+        return window.tileMenu(tile, drawer=True)      # the audio only: no hands, speakers nor own picture
+
+    @objc.python_method
+    def roomParticipantLevels(self, controller, contacts=None):
+        """Each row's meter (contact.audio_levels, one channel: the WebRTC statistics give one level) from the room:
+        ours from our microphone, the others' from their audio; 0 for a stale or muted one. True when one changed."""
+        session = controller.session
+        now = time.monotonic()
+        changed = False
+        for contact in (self.participants if contacts is None else contacts):
+            participant = getattr(contact, 'room_participant', 'none')
+            if participant == 'none':
+                continue
+            if participant is None:     # us
+                quiet = session.audio_muted or session.on_hold or now - session.meter_at > 1.5
+                meter = (0.0 if quiet else float(session.meter),)
+            else:
+                quiet = participant.muted or now - participant.meter_at > 1.5
+                meter = (0.0 if quiet else float(participant.meter),)
+            if getattr(contact, 'audio_levels', None) != meter:
+                contact.audio_levels = meter
+                changed = True
+        return changed
+
+    @objc.python_method
     def updateParticipantsView(self):
         session = self.getSelectedAudioSession()
 
@@ -2050,6 +2134,13 @@ class ContactWindowController(NSWindowController):
         for item in set(participants).difference(session.invited_participants if session else []):
             item.destroy()
         del participants
+
+        room = self.selectedVideoroomAudio()
+        if room is not None:        # a WebRTC room's tile selected: who is in the room, as a SIP conference's participants
+            self.participants = self.roomParticipants(room)
+            self.participantsTableView.reloadData()
+            self.recalculateDrawerSplitter()
+            return
 
         if session and session.conference_info is not None:
             self.participantMenu.itemWithTag_(PARTICIPANTS_MENU_GOTO_CONFERENCE_WEBSITE).setEnabled_(True if self.canGoToConferenceWebsite() else False)
@@ -3438,6 +3529,23 @@ class ContactWindowController(NSWindowController):
             if h2 != 0:
                 h2 = 0
                 must_resize = True
+
+        # a short drawer: the calls first. The participants' list only while the calls' tiles keep their room above it
+        # (all of them, and the buttons under them); left out otherwise, back at its height when the window is taller
+        if h2:
+            try:
+                calls = self.audioSessionsListView.minimumHeight()
+            except Exception:
+                calls = 57
+            needed = max(150, calls + 60)
+            if h0 - h2 - h3 < needed:
+                h2 = 0
+                must_resize = True
+                if not getattr(self, '_participants_left_out', False):
+                    BlinkLogger().log_debug('Audio drawer too short: the participants list left out')
+                self._participants_left_out = True
+            else:
+                self._participants_left_out = False
 
         if h3 > parent_frame.size.height - 62 - h2:
             h3 = 0
@@ -8550,7 +8658,10 @@ class ContactWindowController(NSWindowController):
                     if type(self.participants[row]) in (str, str):
                         return self.participants[row]
                     else:
-                        return self.participants[row].name
+                        # Mangle Contacts: the name as everywhere else (the conference gives ours as the server knows it)
+                        from ContactMangler import mangled_name
+                        contact = self.participants[row]
+                        return mangled_name(contact.name, uri=getattr(contact, 'uri', None))
             except Exception:
                 log_gui_exception('the audio participants data source (row %s)' % row)
         return None

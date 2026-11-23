@@ -49,11 +49,12 @@ from AppKit import (NSApp,
                     NSTableColumn,
                     NSTableView,
                     NSTextField,
+                    NSTextFieldCell,
                     NSView,
                     NSWindowStyleMaskClosable,
                     NSWindowStyleMaskResizable,
                     NSWindowStyleMaskTitled)
-from Foundation import NSLocalizedString, NSMakeRect, NSMakeSize, NSNotificationCenter, NSObject
+from Foundation import NSLocalizedString, NSMakeRect, NSMakeSize, NSNotificationCenter, NSObject, NSRunLoop, NSRunLoopCommonModes, NSTimer
 
 from BlinkLogger import BlinkLogger
 
@@ -96,6 +97,45 @@ def _split_credentials(text):
         return url, None, None
     netloc = ('[%s]' % host if ':' in host else host) + (':%d' % port if port else '')
     return urlunsplit((parts.scheme, netloc, parts.path, parts.query, parts.fragment)), unquote(user), unquote(password or '')
+
+
+def _shown_mac(mac):
+    """A MAC address as shown: Mangle Contacts (Preferences, Advanced) on, an invented one (the same for the same
+    address while Blink runs, locally administered), for screenshots; the real one is what is kept and used."""
+    try:
+        from ContactMangler import mangling_enabled
+        if not mac or not mangling_enabled():
+            return mac
+    except Exception:
+        return mac
+    import hashlib
+    digest = hashlib.sha1(str(mac).lower().encode()).digest()
+    octets = [(digest[0] & 0xfc) | 0x02] + list(digest[1:6])
+    return ':'.join('%02x' % octet for octet in octets)
+
+
+class _CenteredTextCell(NSTextFieldCell):
+    """A table's text cell drawn in the middle of its row's height (a plain one sits at the top of the taller rows
+    tables have now)."""
+
+    def titleRectForBounds_(self, rect):
+        rect = objc.super(_CenteredTextCell, self).titleRectForBounds_(rect)
+        height = self.attributedStringValue().size().height
+        if 0 < height < rect.size.height:
+            rect.origin.y += (rect.size.height - height) / 2.0
+            rect.size.height = height
+        return rect
+
+    def drawInteriorWithFrame_inView_(self, frame, view):
+        objc.super(_CenteredTextCell, self).drawInteriorWithFrame_inView_(self.titleRectForBounds_(frame), view)
+
+
+def _centered_cell(alignment=None):
+    cell = _CenteredTextCell.alloc().initTextCell_('')
+    cell.setLineBreakMode_(4)       # NSLineBreakByTruncatingTail
+    if alignment is not None:
+        cell.setAlignment_(alignment)
+    return cell
 
 
 class _PasswordField(NSObject):
@@ -383,13 +423,14 @@ class NetworkCameraPanel(_ModalPanel):
         column.setResizingMask_(1)
         column.setWidth_(scroll.bounds().size.width - 20 - 70)
         column.headerCell().setStringValue_(_t("Camera"))
+        column.setDataCell_(_centered_cell())          # the name in the middle of its row, not at its top
         self.table.addTableColumn_(column)
         column = NSTableColumn.alloc().initWithIdentifier_('verified')
         column.setResizingMask_(0)
         column.setWidth_(64)
         column.headerCell().setStringValue_(_t("Verified"))
         column.headerCell().setAlignment_(1)         # NSTextAlignmentCenter
-        column.dataCell().setAlignment_(1)
+        column.setDataCell_(_centered_cell(1))       # centred both ways
         self.table.addTableColumn_(column)
         self.table.setDataSource_(self)
         self.table.setDelegate_(self)
@@ -441,6 +482,17 @@ class NetworkCameraPanel(_ModalPanel):
         self.findMacButton.setAutoresizingMask_(1)     # NSViewMinXMargin
         self.macField.setDelegate_(self)
         view.addSubview_(self.findMacButton)
+        # Mangle Contacts: the field (what is saved, what Find uses) hidden behind an invented address, read only; its
+        # editing back when the setting is off. Kept in step by a timer while the panel is up (it runs modally)
+        self.macShown = NSTextField.labelWithString_('')
+        self.macShown.setFrame_(self.macField.frame())
+        self.macShown.setAutoresizingMask_(2)
+        self.macShown.setHidden_(True)
+        self.macShown.setToolTip_(_t("Mangle Contacts is on: an invented address is shown, the real one is kept"))
+        self.macField.superview().addSubview_(self.macShown)
+        self._macShownTimer = NSTimer.timerWithTimeInterval_repeats_block_(0.3, True, lambda timer: self.refreshMacShown(timer))
+        NSRunLoop.mainRunLoop().addTimer_forMode_(self._macShownTimer, NSRunLoopCommonModes)
+        self._macShownSeen = False
         self.finding = False
         for field in (self.labelField, self.urlField, self.userField, self.passwordField):
             field.setAutoresizingMask_(2)
@@ -691,7 +743,7 @@ class NetworkCameraPanel(_ModalPanel):
             details = [camera.host, how]
             mac = (self.macs.get(saved['url']) or saved.get('mac')) if saved else None
             if mac:
-                details.insert(1, mac)
+                details.insert(1, _shown_mac(mac))
             if camera.hardware and camera.hardware != self.cameraName(camera):
                 details.insert(0, camera.hardware)
             title = self.cameraName(camera) + '  ·  ' + ', '.join(details)
@@ -805,6 +857,27 @@ class NetworkCameraPanel(_ModalPanel):
         self.editing = next((source for source in self.saved if source['url'] == saved['url']), None)
         self.showFound()
         self.updateButtons()
+
+    @objc.python_method
+    def refreshMacShown(self, timer):
+        panel = getattr(self, 'panel', None)
+        if panel is None or not panel.isVisible():
+            if self._macShownSeen:      # shown, then closed: done
+                timer.invalidate()
+                self._macShownTimer = None
+            return
+        self._macShownSeen = True
+        from ContactMangler import mangling_enabled
+        on = mangling_enabled()
+        if self.macField.isHidden() != on:
+            self.macField.setHidden_(on)
+            self.macShown.setHidden_(not on)
+            self.findMacButton.setEnabled_(not on)
+        if on:
+            text = str(self.macField.stringValue()).strip()
+            shown = _shown_mac(text) if text else ''
+            if str(self.macShown.stringValue()) != shown:
+                self.macShown.setStringValue_(shown)
 
     def controlTextDidEndEditing_(self, notification):
         if notification.object() is self.urlField:
@@ -1303,7 +1376,11 @@ class PublishList(NSObject):
                 view.addSubview_(control)
         self.scroll.setFrame_(NSMakeRect(list_x, y, width, height))
         self.label.setFrame_(NSMakeRect(list_x - 126, y + height - 19, 121, 17))
-        self.forgetButton.setFrame_(NSMakeRect(list_x - 152, y + height - 50, 150, 24))
+        # Forget under the label, right-aligned with it next to the list, as wide as its title (150 wide from 152 to the
+        # left reached the window's edge in Join Podcast and was clipped there)
+        self.forgetButton.sizeToFit()
+        width = max(70.0, self.forgetButton.frame().size.width + 8)
+        self.forgetButton.setFrame_(NSMakeRect(list_x - 5 - width, y + height - 48, width, 24))
         self.table.sizeLastColumnToFit()
 
     @objc.python_method

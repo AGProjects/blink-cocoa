@@ -421,6 +421,30 @@ class ChatController(MediaStream):
         return self.chatViewController.view
 
     @objc.python_method
+    def shownRoomNotice(self, content):
+        """A conference room's notice (joined, left, welcome) as shown: with Mangle Contacts on (Preferences, Advanced),
+        everyone in it invented, "Name <address>" as one person (the name and the address that go together), other
+        addresses too; the room's own address kept, as in the window's title."""
+        try:
+            from ContactMangler import mangling_enabled, mangled_name, mangled_text, mangled_uri
+            if not mangling_enabled():
+                return content
+            import re
+            room = str(getattr(self.sessionController, 'remoteAOR', '') or '')
+            room = room.split(':', 1)[1] if room.startswith(('sip:', 'sips:')) else room
+            marker = '\u2063ROOM\u2063'
+            text = content.replace(room, marker) if room else content
+
+            def person(match):
+                name, address = match.group(1), match.group(2)
+                return '%s <%s>' % (mangled_name(name, uri=address), mangled_uri(address))
+            text = re.sub(r"((?:[\w.'-]+ ){0,3}[\w.'-]+) <([^<>\s@]+@[^<>\s]+)>", person, text)
+            text = mangled_text(text)
+            return text.replace(marker, room) if room else text
+        except Exception:
+            return content
+
+    @objc.python_method
     def showSystemMessage(self, message, timestamp, is_error=False):
         if self.chatViewController:
             self.chatViewController.showSystemMessage(message, timestamp, is_error, call_id=self.sessionController.call_id)
@@ -1687,7 +1711,7 @@ class ChatController(MediaStream):
                 content = content.decode('utf-8', 'replace')
             content = content.strip()
             if content:
-                self.showSystemMessage(content, message.timestamp or ISOTimestamp.now())
+                self.showSystemMessage(self.shownRoomNotice(content), message.timestamp or ISOTimestamp.now())
             return
 
         hash = hashlib.sha1()

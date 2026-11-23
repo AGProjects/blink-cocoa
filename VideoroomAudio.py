@@ -27,6 +27,7 @@ import objc
 
 from AppKit import (NSApp,
                     NSDragOperationNone,
+                    NSButton,
                     NSFont,
                     NSImage,
                     NSMenu,
@@ -73,7 +74,8 @@ def _icon(name):
     return image
 
 
-ROOM_NOTIFICATIONS = ('VideoroomSessionDidChangeState', 'VideoroomSessionHoldDidChange', 'VideoroomSessionAudioMutedDidChange')
+ROOM_NOTIFICATIONS = ('VideoroomSessionDidChangeState', 'VideoroomSessionHoldDidChange', 'VideoroomSessionAudioMutedDidChange',
+                      'VideoroomSessionParticipantsDidChange', 'VideoroomSessionParticipantDidChange')
 
 
 class VideoroomAudioBox(AudioSession):
@@ -154,6 +156,16 @@ class VideoroomAudioController(NSObject):
         self.title.setAutoresizingMask_(NSViewWidthSizable)
         self.title.setStringValue_(self.display_name() or self.session.room)
         self.title.setToolTip_(self.session.room)
+        # the info button, where a SIP call's is (AudioSession.xib): the room's Conference info, with its audio graphs
+        self.info_button = NSButton.alloc().initWithFrame_(NSMakeRect(245, 37, 16, 16))
+        self.info_button.setBordered_(False)
+        self.info_button.setImage_(NSImage.imageNamed_('panel-info'))
+        self.info_button.setImageScaling_(3)        # NSImageScaleProportionallyUpOrDown
+        self.info_button.setToolTip_(NSLocalizedString("Conference info: participants, round trip, loss and gaps", "Audio call tooltip"))
+        self.info_button.setTarget_(self)
+        self.info_button.setAction_('userClickedInfoButton:')
+        self.info_button.setAutoresizingMask_(NSViewMinXMargin)
+        self.view.addSubview_(self.info_button)
         self.elapsed = label(NSMakeRect(4, 20, BOX_WIDTH - 7, 16), NSFont.systemFontOfSize_(NSFont.smallSystemFontSize()))     # left
         self.elapsed.setAutoresizingMask_(NSViewWidthSizable)
         self.status = label(NSMakeRect(4, 6, BOX_WIDTH - 92 - 8, 14), NSFont.systemFontOfSize_(NSFont.smallSystemFontSize()))
@@ -205,6 +217,11 @@ class VideoroomAudioController(NSObject):
         pass
 
     # Buttons
+
+    def userClickedInfoButton_(self, sender):
+        from ConferenceInfoPanel import show_conference_info
+        from VideoroomWindowController import window_for_session
+        show_conference_info(window_for_session(self.session))     # (its window made, not shown, for an audio-only podcast)
 
     def userClickedButtons_(self, sender):
         segment = sender.selectedSegment()
@@ -285,6 +302,16 @@ class VideoroomAudioController(NSObject):
     def handle_notification(self, notification):
         handler = getattr(self, '_NH_%s' % notification.name, Null)
         handler(notification)
+
+    @objc.python_method
+    def _NH_VideoroomSessionParticipantsDidChange(self, notification):
+        # who is in the room, in the drawer's participant list while this tile is selected (as a SIP conference's)
+        if self.view.selected:
+            NSApp.delegate().contactsWindowController.updateParticipantsView()
+
+    @objc.python_method
+    def _NH_VideoroomSessionParticipantDidChange(self, notification):
+        self._NH_VideoroomSessionParticipantsDidChange(notification)       # (muted, its name, its channels)
 
     @objc.python_method
     def _NH_VideoroomSessionDidChangeState(self, notification):

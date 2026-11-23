@@ -64,6 +64,7 @@ BAR_WIDTH = 70
 SPEED_WIDTH = 78
 
 NOTICE_HEIGHT = 34     # the mixer's notice: two lines of text, at least
+MIN_LIST_WITH_NOTICE = 200     # the contact list keeps at least this much, or the mixer's notice is left out
 ICON_MARGIN = 2        # AG CuteMusic's icon, left of the notice, above Open Mixer: margin above and below it
 CONTROLS_HEIGHT = 22   # the notice's bottom row: Open Mixer under the icon, Enable Stereo Mode under the text
 MIXER_BUTTON_WIDTH = 84    # also the width of the icon's column
@@ -324,11 +325,8 @@ class JournalProgressStrip(NSObject):
 
     def containerResized_(self, notification):
         line = self.lines['mixer']
-        if line.visible:
-            height = line.height
-            line.fit(self.container.bounds().size.width)
-            if line.height != height:
-                self._relayout()
+        if line.visible:        # its height follows the width, and it comes and goes with the window's height
+            self._relayout()
 
     def openMixer_(self, sender):
         from CuteMusic import open_mixer
@@ -405,15 +403,20 @@ class JournalProgressStrip(NSObject):
 
     @objc.python_method
     def _relayout(self):
-        shown = [self.lines[job] for job in JOBS if self.lines[job].visible]
         bounds = self.container.bounds()
-        for line in shown:
-            line.fit(bounds.size.width)
-        height = sum(line.height for line in shown)
         frame = self.scroll_view.frame()
         # the list's height as if no line were shown, adjusted for what the window did meanwhile
         full = frame.size.height + self.taken
         bottom = frame.origin.y - self.taken
+        shown = [self.lines[job] for job in JOBS if self.lines[job].visible]
+        for line in shown:
+            line.fit(bounds.size.width)
+        # the mixer's notice only while the contact list keeps MIN_LIST_WITH_NOTICE (a window made short: left out, back
+        # when it is taller again); the progress lines always
+        mixer = self.lines['mixer']
+        if mixer in shown and full - sum(line.height for line in shown) < MIN_LIST_WITH_NOTICE:
+            shown.remove(mixer)
+        height = sum(line.height for line in shown)
         height = min(height, full)
         self.scroll_view.setFrame_(NSMakeRect(frame.origin.x, bottom + height, frame.size.width, full - height))
         self.taken = height
@@ -421,7 +424,7 @@ class JournalProgressStrip(NSObject):
         self.view.setHidden_(not shown)
         for job in JOBS:
             line = self.lines[job]
-            line.view.setHidden_(not line.visible)
+            line.view.setHidden_(line not in shown)
         y = height
         for line in shown:
             y -= line.height
@@ -445,7 +448,7 @@ class JournalProgressStrip(NSObject):
         """AG CuteMusic's mixer chosen as the audio device, or no longer: the notice shown at once, or gone."""
         line = self.lines['mixer']
         if notification.data.selected:
-            text = NSLocalizedString("You are now using AG CuteMusic Podcast Mixer for mixing audio. Wear headsets to make sure echo is cancelled. To change the device, go to the Devices menu.", "Label")
+            text = NSLocalizedString("You are now using AG CuteMusic Podcast Mixer for mixing audio. Echo cancellation is off: wear headphones. To change the device, go to the Devices menu.", "Label")
             line.label.setStringValue_(text)
             line.update_stereo()
             for view in (line.view, line.label):

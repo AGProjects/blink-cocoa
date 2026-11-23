@@ -8,6 +8,7 @@ from AppKit import (NSApp,
                     NSControlSizeSmall,
                     NSControlTextDidChangeNotification,
                     NSFont,
+                    NSImageView,
                     NSMakeRect,
                     NSTextField,
                     NSDragOperationNone,
@@ -19,9 +20,16 @@ from AppKit import (NSApp,
                     NSRunAlertPanel,
                     NSSegmentedControl,
                     NSSegmentSwitchTrackingSelectOne,
+                    NSViewHeightSizable,
+                    NSViewMaxXMargin,
+                    NSViewMaxYMargin,
+                    NSViewMinYMargin,
+                    NSViewWidthSizable,
+                    NSWindowStyleMaskResizable,
                     NSAlertDefaultReturn)
 
 from Foundation import (NSArray,
+                        NSMakeSize,
                         NSBundle,
                         NSDate,
                         NSEvent,
@@ -379,14 +387,29 @@ class JoinConferenceWindowController(NSObject):
         self.dnd.setState_(NSOnState if dnd is None or bool(dnd) else NSOffState)
         self.dnd.sizeToFit()
         dnd_frame = self.dnd.frame()
-        self.dnd.setFrameOrigin_((chat.origin.x, chat.origin.y - dnd_frame.size.height - 6))
+        self.dnd.setFrameOrigin_((chat.origin.x, chat.origin.y - dnd_frame.size.height - 12))      # (room above it)
         self.chat.superview().addSubview_(self.dnd)
         note = NSTextField.labelWithString_(NSLocalizedString("Always wear a headset: echo cancellation is not active", "Label"))
         note.setFont_(NSFont.systemFontOfSize_(NSFont.smallSystemFontSize()))
         note.setTextColor_(NSColor.secondaryLabelColor())
         note.sizeToFit()
-        note.setFrameOrigin_((chat.origin.x + 2, self.dnd.frame().origin.y - note.frame().size.height - 4))
+        note.setFrameOrigin_((chat.origin.x + 2, self.dnd.frame().origin.y - note.frame().size.height - 8))
         self.chat.superview().addSubview_(note)
+        # resized: the media line stays with the top (as the nib's fields), Do Not Disturb and the note with the bottom,
+        # the list of videos to publish (Video) taking the height between (setPublishShown)
+        for view in (stereo, self.video):
+            view.setAutoresizingMask_(NSViewMinYMargin | NSViewMaxXMargin)
+        for view in (self.dnd, note):
+            view.setAutoresizingMask_(NSViewMaxYMargin | NSViewMaxXMargin)
+        # resized (only while the list of videos is shown, setPublishShown): the list alone grows. Everything from the
+        # media line up (the group icon, the labels, the room and nickname fields: the nib makes some width-sizable or
+        # leaves them unanchored) keeps its size at the top left; Do Not Disturb and the note stay at the bottom
+        top = self.audio.frame().origin.y - 4
+        for view in content.subviews():
+            if view is getattr(self, 'providerLabel', None) or view in (self.dnd, note):
+                continue
+            if view.frame().origin.y >= top or view.isKindOfClass_(NSImageView):
+                view.setAutoresizingMask_(NSViewMinYMargin | NSViewMaxXMargin)
         # the room of the invitations taken out: what is above them (room, nickname) moved down to the media line,
         # the window as much shorter (its subviews not moved by the resize: moved here, once)
         nickname = self.nickname_textfield.frame()
@@ -403,6 +426,28 @@ class JoinConferenceWindowController(NSObject):
                 if old.origin.y >= nickname.origin.y - 4:
                     view.setFrame_(NSMakeRect(old.origin.x, old.origin.y - drop, old.size.width, old.size.height))
             content.setAutoresizesSubviews_(True)
+        # a margin between the headset note and the buttons' row (OK, Cancel, the provider line beside them): the
+        # window taller at the bottom by what is missing, all but that row moved up by as much
+        ok = self.ok_button.frame()
+        bottom_row = ok.origin.y + ok.size.height
+        provider = getattr(self, 'providerLabel', None)
+        if provider is not None:
+            bottom_row = max(bottom_row, provider.frame().origin.y + provider.frame().size.height)
+        missing = bottom_row + 18 - note.frame().origin.y
+        if missing > 0:
+            content.setAutoresizesSubviews_(False)
+            frame = self.window.frame()
+            frame.origin.y -= missing
+            frame.size.height += missing
+            self.window.setFrame_display_(frame, False)
+            for view in content.subviews():
+                old = view.frame()
+                if old.origin.y > ok.origin.y + ok.size.height - 1 or view in (stereo, self.video, self.dnd, note):
+                    view.setFrame_(NSMakeRect(old.origin.x, old.origin.y + missing, old.size.width, old.size.height))
+            content.setAutoresizesSubviews_(True)
+        # fixed until the list of videos is shown (setPublishShown makes it resizable then, the list taking the size)
+        self.window.setContentMinSize_(content.frame().size)
+        self.window.setContentMaxSize_(content.frame().size)
 
     @objc.python_method
     def _addVideoControls(self, media_type):
@@ -538,6 +583,19 @@ class JoinConferenceWindowController(NSObject):
         self.publish_shown = shown
         delta = PublishList.HEIGHT if shown else -PublishList.HEIGHT
         content = self.window.contentView()
+        podcast = getattr(self, 'podcast', False)
+        if podcast and not shown and getattr(self, '_shown_size', None) is not None:
+            # enlarged by hand while the list was shown: back to the size it was shown at first (top left kept), the
+            # views moving by their anchoring (the list shrinks, the buttons follow the right edge)
+            width, height = self._shown_size
+            frame = self.window.frame()
+            content_size = content.frame().size
+            frame.origin.y += content_size.height - height
+            frame.size.width -= content_size.width - width
+            frame.size.height -= content_size.height - height
+            self.window.setContentMinSize_(NSMakeSize(1, 1))
+            self.window.setFrame_display_animate_(frame, True, False)
+            self._shown_size = None
         threshold = self.audio.frame().origin.y - 4      # the media line and everything above it
         ours = self.publish.views()
         frames = [(view, view.frame()) for view in content.subviews() if view not in ours]
@@ -549,11 +607,34 @@ class JoinConferenceWindowController(NSObject):
             y = old.origin.y + delta if old.origin.y >= threshold else old.origin.y
             view.setFrame_(NSMakeRect(old.origin.x, y, old.size.width, old.size.height))
         if shown:
-            below = self.startWhenParticipantsAvailable.frame()
+            # under it: Join Podcast's Do Not Disturb (it stays at the bottom), else the hidden "Start Conference When
+            # Participants are Available" (the nib keeps that one with the top: in an enlarged Join Podcast window it
+            # was up near the fields, and the list went over them)
+            below = self.dnd.frame() if getattr(self, 'podcast', False) and getattr(self, 'dnd', None) is not None \
+                else self.startWhenParticipantsAvailable.frame()
             list_x = self.participantsTable.enclosingScrollView().frame().origin.x
             width = self.participantsTable.enclosingScrollView().frame().size.width
-            self.publish.place(content, list_x, below.origin.y + below.size.height + 6, width, PublishList.HEIGHT - 8)
+            y = below.origin.y + below.size.height + (10 if getattr(self, 'podcast', False) else 6)
+            # the room up to the media line: more than the list's own height in a window made larger by hand
+            height = max(PublishList.HEIGHT - 8, self.audio.frame().origin.y - 8 - y)
+            self.publish.place(content, list_x, y, width, height)
+            # resized afterwards: the list takes the height and the width, its label and Forget stay at its top left
+            self.publish.scroll.setAutoresizingMask_(NSViewWidthSizable | NSViewHeightSizable)
+            for view in (self.publish.label, self.publish.forgetButton):
+                view.setAutoresizingMask_(NSViewMinYMargin | NSViewMaxXMargin)
         self.publish.setHidden(not shown)
+        if podcast:
+            # Join Podcast: resizable while the list is shown, the list taking the size; fixed again without it
+            size = content.frame().size
+            if shown:
+                self._shown_size = (size.width, size.height)
+                self.window.setStyleMask_(self.window.styleMask() | NSWindowStyleMaskResizable)
+                self.window.setContentMinSize_(size)
+                self.window.setContentMaxSize_(NSMakeSize(100000, 100000))
+            else:
+                self.window.setStyleMask_(self.window.styleMask() & ~NSWindowStyleMaskResizable)
+                self.window.setContentMinSize_(size)
+                self.window.setContentMaxSize_(size)
         content.setNeedsDisplay_(True)
 
     def roomTextDidChange_(self, notification):

@@ -16,6 +16,12 @@ class ParticipantsTableView(NSTableView):
 
         if row != -1:
             self.selectRowIndexes_byExtendingSelection_(NSIndexSet.indexSetWithIndex_(row), False)
+            # a WebRTC room's participant (the audio drawer, its room tile selected): the room window's own menu
+            # for that participant (mute, lower hand, speaker, remove: the room's primitives), not the SIP one
+            room_menu = getattr(self.delegate(), 'roomParticipantMenu', None)
+            menu = room_menu(row) if room_menu is not None else None
+            if menu is not None:
+                return menu
             return self.menu()
 
     def mouseDown_(self, event):

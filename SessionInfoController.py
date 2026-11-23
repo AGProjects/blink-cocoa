@@ -275,8 +275,14 @@ class SessionInfoController(NSObject):
             self.resetSession()
         else:
             self.updateSessionStatus()
-            self.remote_party.setStringValue_(self.sessionController.displayTitleLong)
-            self.account.setStringValue_(str(self.sessionController.account.id))
+            # Mangle Contacts (Preferences, Advanced): invented, as everywhere else, for screenshots
+            from ContactMangler import mangled_account_address, mangled_text
+            controller = self.sessionController
+            room = bool(getattr(controller, 'remote_focus', False) or getattr(controller, 'is_conference', False))
+            # a conference room is no person: its address as it is (as on its tile and in its window's title)
+            self.remote_party.setStringValue_(controller.displayTitleLong if room else
+                                              (mangled_text(controller.displayTitleLong, uri=str(getattr(controller, 'remoteAOR', '') or '')) or ''))
+            self.account.setStringValue_(mangled_account_address(str(self.sessionController.account.id)) or '')
             if self.sessionController.conference_info is not None and self.sessionController.remote_focus:
                 pass
             if hasattr(self.sessionController.session, 'remote_user_agent') and self.sessionController.session.remote_user_agent is not None:

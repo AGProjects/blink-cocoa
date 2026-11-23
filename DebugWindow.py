@@ -645,6 +645,7 @@ class DebugWindow(NSObject):
         " video stalled, asking for it again",
         " video lost (no new frames",
         " has no video for ",
+        ": audio over the last ",               # the room's audio quality every 2 s: rtt, loss, gaps, jitter, pkt/s
         # Encryption outcomes
         "RTP encryption:",                      # our new verbose form
         "SRTP/SDES audio encryption active",

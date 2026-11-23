@@ -2037,7 +2037,9 @@ class VideoroomWindowController(NSObject):
         menu.popUpMenuPositioningItem_atLocation_inView_(None, point, segment)
 
     @objc.python_method
-    def tileMenu(self, tile):
+    def tileMenu(self, tile, drawer=False):
+        """A tile's menu. drawer: for the audio drawer's participant list (ContactWindowController.roomParticipantMenu):
+        only what is about the audio, no hands, speakers nor our own picture (those belong with the video)."""
         session = self.session
         menu = self._menu()
         speakers = list(session.speakers)
@@ -2045,6 +2047,19 @@ class VideoroomWindowController(NSObject):
         aors = self.aorCount()
         room_controls = aors >= ROOM_CONTROLS_AORS          # hands and muting
         speaker_controls = len(self.speakerCandidates()) >= SPEAKER_CONTROLS_STREAMS    # promoting speakers
+        if drawer:      # the audio: who it is, mute, remove
+            participant = tile.participant
+            self._item(menu, participant.name if participant is not None else session.account.id)
+            if participant is not None and room_controls:
+                menu.addItem_(NSMenuItem.separatorItem())
+                self._item(menu, _t("Unmute") if participant.muted else _t("Mute"), lambda: session.mute_participant(participant, not participant.muted), enabled=established)
+            if participant is not None:
+                target = participant.uri if participant.type == 'sip' else participant.id
+                if target:
+                    menu.addItem_(NSMenuItem.separatorItem())
+                    self._item(menu, _t("Remove from the conference"),
+                               lambda: self.confirmRemoveParticipant(participant, target), enabled=established)
+            return menu
         if tile.participant is None:
             id = session.id
             if tile.thumbnail_enabled:

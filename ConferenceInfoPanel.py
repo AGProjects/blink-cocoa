@@ -39,7 +39,12 @@ from Foundation import NSLocalizedString, NSMakeRect, NSMakeSize, NSObject, NSRu
 
 
 REFRESH = 2.0       # seconds
-WIDTH, HEIGHT = 420.0, 640.0
+WIDTH, HEIGHT = 420.0, 780.0
+# the audio quality graphs, as the SIP call info panel's (CBGraphView): the room's history (Videoroom.py, a point every
+# 2 s), its last value beside it, red above the limit
+GRAPHS = (('RTT', 'rtt_history', 'rtt'), ('Loss \u2193', 'loss_rx_history', 'loss'), ('Loss \u2191', 'loss_tx_history', 'loss'),
+          ('Gaps', 'concealed_history', 'loss'))
+GRAPH_HEIGHT, GRAPH_ROW = 30.0, 36.0
 GAP = 8.0           # between the room's window and this one
 FIELDS = ('Room', 'State', 'Sending', 'Server', 'Upload', 'Download')
 
@@ -66,6 +71,32 @@ def close_conference_info(controller):
     window = _windows.get(controller)
     if window is not None:
         window.window.close()
+
+
+def _shown_uri(uri):
+    """An address as shown: invented with Mangle Contacts on (Preferences, Advanced), its domain kept, for screenshots."""
+    try:
+        from ContactMangler import mangled_uri
+        return mangled_uri(uri) if uri else uri
+    except Exception:
+        return uri
+
+
+def _shown_ips(text):
+    """IPv4 addresses in text (an RTSP camera's URL) replaced, with Mangle Contacts on, by addresses of the range kept
+    for documentation (192.0.2.x), the same for the same address."""
+    try:
+        from ContactMangler import mangling_enabled
+        if not text or not mangling_enabled():
+            return text
+    except Exception:
+        return text
+    import hashlib
+    import re
+
+    def replace(match):
+        return '192.0.2.%d' % (1 + hashlib.sha1(match.group(0).encode()).digest()[0] % 254)
+    return re.sub(r'\b\d{1,3}(?:\.\d{1,3}){3}\b', replace, str(text))
 
 
 def _join(*parts):
@@ -131,7 +162,7 @@ class ConferenceInfoWindow(NSObject):
         self.window.setReleasedWhenClosed_(False)
         self.window.setTitle_(_t("Conference info: %s") % self.controller.title)
         self.window.setDelegate_(self)
-        self.window.setContentMinSize_(NSMakeSize(320, 360))
+        self.window.setContentMinSize_(NSMakeSize(320, 500))
         view = ConferenceInfoFlippedView.alloc().initWithFrame_(NSMakeRect(0, 0, WIDTH, HEIGHT))
         self.window.setContentView_(view)
         margin, label_w = 10.0, 78.0
@@ -153,6 +184,7 @@ class ConferenceInfoWindow(NSObject):
             self.fields[name] = value
             y += 20
         y += 6
+        y = self._build_graphs(view, margin, label_w, y)
         note_h = 30.0
         scroll = NSScrollView.alloc().initWithFrame_(NSMakeRect(margin, y, WIDTH - 2 * margin, HEIGHT - y - note_h - 2 * margin))
         scroll.setHasVerticalScroller_(True)
@@ -184,6 +216,59 @@ class ConferenceInfoWindow(NSObject):
         note.setFrame_(NSMakeRect(margin, HEIGHT - note_h - margin + 4, WIDTH - 2 * margin, note_h))
         note.setAutoresizingMask_(2 | 8)        # width sizable, stays at the bottom (flipped: min Y margin flexible)
         view.addSubview_(note)
+
+    @objc.python_method
+    def _build_graphs(self, view, margin, label_w, y):
+        """The audio quality graphs (GRAPHS): label, last value, graph; none when CBGraphView is not in this build."""
+        self.graphs = {}
+        try:
+            graph_class = objc.lookUpClass('CBGraphView')
+        except objc.nosuchclass_error:
+            return y
+        from sipsimple.configuration.settings import SIPSimpleSettings
+        rtt_limit = SIPSimpleSettings().gui.rtt_threshold
+        value_w = 64.0
+        for title, history, kind in GRAPHS:
+            label = NSTextField.labelWithString_(_t(title))
+            label.setAlignment_(2)
+            label.setTextColor_(NSColor.secondaryLabelColor())
+            label.setFrame_(NSMakeRect(margin, y + (GRAPH_HEIGHT - 17) / 2, label_w, 17))
+            view.addSubview_(label)
+            value = NSTextField.labelWithString_('')
+            value.setFont_(NSFont.monospacedDigitSystemFontOfSize_weight_(NSFont.smallSystemFontSize(), 0.0))
+            value.setFrame_(NSMakeRect(margin + label_w + 8, y + (GRAPH_HEIGHT - 17) / 2, value_w, 17))
+            view.addSubview_(value)
+            left = margin + label_w + 8 + value_w + 4
+            graph = graph_class.alloc().initWithFrame_(NSMakeRect(left, y, WIDTH - margin - left, GRAPH_HEIGHT))
+            graph.setAutoresizingMask_(2)       # NSViewWidthSizable
+            graph.setLineWidth_(1.0)
+            graph.setLineSpacing_(1.0)
+            if kind == 'rtt':
+                graph.setAboveLimit_(rtt_limit)         # red above it, as the SIP panel's
+                graph.setMinimumHeigth_(rtt_limit)
+            else:
+                graph.setAboveLimit_(3)                 # red above 3%
+                graph.setLineColor_(NSColor.greenColor())
+                graph.setMinimumHeigth_(5)
+            view.addSubview_(graph)
+            self.graphs[history] = (graph, value, kind)
+            y += GRAPH_ROW
+        return y + 4
+
+    @objc.python_method
+    def refresh_graphs(self):
+        visible = bool(self.window.isVisible())
+        for history, (graph, value, kind) in self.graphs.items():
+            data = getattr(self.session, history, None)
+            if data is None:
+                continue
+            graph.setDataQueue_needsDisplay_(data, visible)
+            if not data:
+                value.setStringValue_('\u2014')
+            elif kind == 'rtt':
+                value.setStringValue_('%d ms' % data[-1] if data[-1] else _t('not reported'))
+            else:
+                value.setStringValue_('%.1f%%' % data[-1])
 
     @objc.python_method
     def place(self):
@@ -251,6 +336,7 @@ class ConferenceInfoWindow(NSObject):
                 entries.append(self.bridgeEntry(participant, now))
         self.show(entries)
         self.summary()
+        self.refresh_graphs()
 
     @objc.python_method
     def show(self, entries):
@@ -323,7 +409,7 @@ class ConferenceInfoWindow(NSObject):
         session = self.session
         outbound = session.stats.get(('outbound-rtp', 'video'), {})
         remote = session.stats.get(('remote-inbound-rtp', 'video'), {})
-        self.fields['Room'].setStringValue_(session.room)
+        self.fields['Room'].setStringValue_(session.room)      # (a room, not a person: as in the window's title)
         if session.state == 'terminated':
             self.fields['State'].setStringValue_(_t("ended: %s") % (session.reason or 'left'))
             if self.timer is not None:
@@ -399,7 +485,7 @@ class ConferenceInfoWindow(NSObject):
         source = extra.describe()
         if extra.capture_size:
             source = _join(source, '%dx%d' % tuple(extra.capture_size))
-        fields = [('Source', source),
+        fields = [('Source', _shown_ips(source)),
                   ('Video', _join(video_out.get('codec') or session.video_codec, _size(video_out) or '%dx%d' % (width, height),
                                   '%d fps' % round(float(fps)) if fps else None)),
                   ('Video sent', _join(_rate_text(rate), _lost(video_remote))),
@@ -435,7 +521,7 @@ class ConferenceInfoWindow(NSObject):
         jitter = video_in.get('jitter') if video_in else audio_in.get('jitter')
         audio_rate = self.kbits((key, 'audio'), audio_in.get('bytesReceived'), now, 'down')
         video_rate = self.kbits((key, 'video'), video_in.get('bytesReceived'), now, 'down')
-        fields = [('Address', participant.uri),
+        fields = [('Address', _shown_uri(participant.uri)),
                   ('Audio', _join(audio, _rate_text(audio_rate), _lost(audio_in))),
                   ('Video', _join(video, _size(video_in) if participant.video else None, None if fps is None else '%.0f fps' % fps)),
                   ('Video received', _join(_rate_text(video_rate), _lost(video_in))),
@@ -450,7 +536,7 @@ class ConferenceInfoWindow(NSObject):
     def bridgeEntry(self, participant, now):
         audio_in = participant.stats.get(('inbound-rtp', 'audio'), {})
         rate = self.kbits((participant.id, 'audio'), audio_in.get('bytesReceived'), now, 'down')
-        fields = [('Address', participant.uri),
+        fields = [('Address', participant.uri),   # (the room's bridge: its address is the room's, not a person's)
                   ('Audio', _join('mix', _rate_text(rate), _lost(audio_in))),
                   ('Jitter', None if audio_in.get('jitter') is None else '%d ms' % round(float(audio_in['jitter']) * 1000))]
         return (participant.id, _t("SIP callers, mixed"), _join(participant.state, None if rate is None else '↓ %d kbit/s' % round(rate)), fields, False)

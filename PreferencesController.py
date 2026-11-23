@@ -827,7 +827,8 @@ class PreferencesController(NSWindowController, object):
         if account is not BonjourAccount():
             # Read-only field (setEditable_(False) below), so nothing can
             # carry the invented address back into the account.
-            self.addressText.setStringValue_(mangled_account_label(str(account.id)))
+            from ContactMangler import mangled_account_address
+            self.addressText.setStringValue_(mangled_account_address(str(account.id)))     # as in the list beside it
             self.passwordText.setStringValue_(account.auth.password)
 
             userdef = NSUserDefaults.standardUserDefaults()
@@ -1402,9 +1403,9 @@ class PreferencesController(NSWindowController, object):
                 account_info = self.getAccountForRow(row)
                 return NSOnState if account_info and account_info.account.enabled else NSOffState
             elif column.identifier() == "name":
-                from ContactMangler import mangled_account_label
+                from ContactMangler import mangled_account_address
                 account_info = self.getAccountForRow(row)
-                return account_info and mangled_account_label(account_info.name)
+                return account_info and mangled_account_address(account_info.name)       # (its provider's domain too)
         except Exception:
             log_gui_exception('the accounts data source (row %s)' % row)
             return None
